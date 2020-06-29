@@ -23,6 +23,7 @@ lsblk -dno NAME,SIZE
 
 ### PARTITION DRIVE
 amlogic_partition_emmc () {
+dd if=/dev/zero of=/dev/mmcblk0 bs=512 count=1
 truncate -s 1850MB /dev/mmcblk0
 fdisk /dev/mmcblk0 <<EOF
 o
@@ -38,6 +39,7 @@ p
 w
 EOF
 
+partprobe /dev/mmcblk0
 echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk0p1
 mount /dev/mmcblk0p1 /mnt
 sync
@@ -49,6 +51,7 @@ resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
 }
 
 nanopi_partition_emmc () {
+dd if=/dev/zero of=/dev/mmcblk2 bs=512 count=1
 truncate -s 1850MB /dev/mmcblk2
 fdisk /dev/mmcblk2 <<EOF
 o
@@ -64,6 +67,7 @@ p
 w
 EOF
 
+partprobe /dev/mmcblk2
 echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk2p1
 mount /dev/mmcblk2p1 /mnt
 sync
