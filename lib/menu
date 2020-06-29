@@ -1,0 +1,74 @@
+#!/bin/bash
+### DO NOT EDIT
+
+DIALOG_CANCEL=1
+DIALOG_ESC=255
+HEIGHT=0
+WIDTH=0
+
+display_result() {
+  dialog --title "$1" \
+    --no-collapse \
+    --msgbox "$result" 0 0
+}
+
+while true; do
+  exec 3>&1
+  selection=$(dialog \
+    --backtitle "Debian Image Builder" \
+    --title "Boards" \
+    --clear \
+    --cancel-label "Exit" \
+    --menu "Select:" $HEIGHT $WIDTH 6 \
+    "1" "Le Potato" \
+    "2" "Odroid C4" \
+    "3" "Odroid N2" \
+    "4" "NanoPi NEO Plus2" \
+    "5" "Pine64" \
+    "6" "Tritium" \
+    2>&1 1>&3)
+  exit_status=$?
+  exec 3>&-;
+  case $exit_status in
+    $DIALOG_CANCEL)
+      clear
+      echo -e "\e[0;31m Program terminated.\e[0m"
+      exit
+      ;;
+    $DIALOG_ESC)
+      clear
+      echo -e "\e[0;31m Program aborted.\e[0m" >&2
+      exit 1
+      ;;
+  esac
+  case $selection in
+    0 )
+      clear
+      echo -e "\e[0;31m Program terminated.\e[0m"
+      ;;
+    1 )
+      chmod +x lib/lepotato
+      ./lib/lepotato
+      ;;
+    2 )
+      chmod +x lib/odroidc4
+      ./lib/odroidc4
+      ;;
+    3 )
+      chmod +x lib/odroidn2
+      ./lib/odroidn2
+      ;;
+    4 )
+      chmod +x lib/npineoplus2
+      ./lib/npineoplus2
+      ;;
+    5 )
+      chmod +x lib/pine64
+      ./lib/pine64
+      ;;
+    6 )
+      chmod +x lib/tritium
+      ./lib/tritium
+      ;;
+  esac
+done

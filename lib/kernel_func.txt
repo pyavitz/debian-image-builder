@@ -1,0 +1,70 @@
+# KERNEL
+stable_download () {
+echo
+echo Downloading stable linux.
+wget -cq --show-progress https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz
+echo Done.
+}
+
+mainline_download () {
+echo
+echo Downloading mainline linux.
+wget -cq --show-progress https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz
+echo Done.
+}
+
+stable_extract () {
+echo
+echo Extracting archive.
+tar xf ${KERNEL}-${VERSION}.tar.xz
+#rm -f ${KERNEL}-${VERSION}.tar.xz #remove archive
+echo Done.
+}
+
+mainline_extract () {
+echo
+echo Extracting archive.
+tar xf ${KERNEL}-${VERSION}.tar.gz
+#rm -f ${KERNEL}-${VERSION}.tar.gz #remove archive
+echo Done.
+}
+
+setup () {
+sleep 1s
+cd ${KERNEL}-${VERSION}
+export ARCH=arm64
+rm -f scripts/package/builddeb
+rm -f scripts/package/mkdebian
+cp -R ../${PACKAGING}/builddeb scripts/package/
+cp -R ../${PACKAGING}/mkdebian scripts/package/
+chmod +x scripts/package/builddeb
+chmod +x scripts/package/mkdebian
+#make clean
+#make mrproper
+}
+
+cconfig () {
+    echo Making ${MYCONFIG}.
+    cp -f ../${DEF}/${MYCONFIG} arch/arm64/configs/
+    make ARCH=arm64 ${MYCONFIG} &> /dev/null
+    echo Done.
+}
+
+menu_config () {
+    echo
+    echo Opening menuconfig.
+    sleep 1s
+    make menuconfig
+}
+
+ccompile () {
+    echo -- CC
+    echo --- Building deb packages.
+    make -j${CORES} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bindeb-pkg
+}
+
+ncompile () {
+    echo -- NC
+    echo --- Building deb packages.
+    make -j${CORES} ARCH=arm64 bindeb-pkg
+}
