@@ -1,0 +1,170 @@
+### BIND EMMC
+libre_bind_emmc () {
+if [ "$USER" != "root" ]; then
+        echo "Please run this as root or with sudo privileges."
+        exit 1
+fi
+echo -n d0074000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/unbind
+echo -n d0074000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/bind
+sleep 1
+lsblk -dno NAME,SIZE
+}
+
+odroidc4_bind_emmc () {
+if [ "$USER" != "root" ]; then
+        echo "Please run this as root or with sudo privileges."
+        exit 1
+fi
+echo -n ffe07000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/unbind
+echo -n ffe07000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/bind
+sleep 1
+lsblk -dno NAME,SIZE
+}
+
+### PARTITION DRIVE
+amlogic_partition_emmc () {
+truncate -s 1850MB /dev/mmcblk0
+fdisk /dev/mmcblk0 <<EOF
+o
+n
+p
+1
+2248
+a
+t
+b
+3613280
+p
+w
+EOF
+
+echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk0p1
+mount /dev/mmcblk0p1 /mnt
+sync
+umount /mnt
+mount -o defaults,noatime /dev/mmcblk0p1 /mnt
+bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
+}
+
+nanopi_partition_emmc () {
+truncate -s 1850MB /dev/mmcblk2
+fdisk /dev/mmcblk2 <<EOF
+o
+n
+p
+1
+2048
+a
+t
+b
+3613280
+p
+w
+EOF
+
+echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk2p1
+mount /dev/mmcblk2p1 /mnt
+sync
+umount /mnt
+mount -o defaults,noatime /dev/mmcblk2p1 /mnt
+bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
+}
+
+### TRANSFER TO EMMC
+transfer_to_emmc () {
+cd /
+time tar -S -cf - . |tar -C /mnt -xf -
+}
+
+### FETCH UUID
+amlogic_fetch_uuid () {
+echo 'ROOT_UUID="' > root1
+blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+nanopi_fetch_uuid () {
+echo 'ROOT_UUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+### FSTAB
+create_fstab () {
+source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
+rm -f /mnt/etc/fstab
+tee /mnt/etc/fstab <<EOF
+UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
+EOF
+}
+
+### EXTLINUX
+libre_create_extlinux () {
+source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/amlogic/meson-gxl-s905x-libretech-cc.dtb
+    append  earlyprintk console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+}
+
+odroidc4_create_extlinux () {
+source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
+    append  earlyprintk console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+}
+
+nanopi_create_extlinux () {
+source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
+    append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+}
+
+### WRITE UBOOT
+amlogic_flash_uboot () {
+dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk0 bs=512 seek=1
+}
+
+allwinner_flash_uboot () {
+dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk2 conv=fsync bs=1024 seek=8
+}
