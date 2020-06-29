@@ -1,0 +1,108 @@
+#!/bin/bash
+source /etc/opt/emmc_func.txt
+
+echo
+case `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    echo Binding eMMC.
+    libre_bind_emmc
+    ;;
+esac
+case `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    echo Binding eMMC.
+    odroidc4_bind_emmc
+    ;;
+esac
+echo Done.
+
+echo
+echo Partitioning.
+case `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    amlogic_partition_emmc > /dev/null 2>&1
+    ;;
+esac
+case `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    amlogic_partition_emmc > /dev/null 2>&1
+    ;;
+esac
+case `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    nanopi_partition_emmc > /dev/null 2>&1
+    ;;
+esac
+echo Done.
+
+echo
+echo Copying to eMMC.
+transfer_to_emmc > /dev/null 2>&1
+echo Done.
+
+echo
+echo Writing u-boot.
+case `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    amlogic_flash_uboot
+    ;;
+esac
+case `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    amlogic_flash_uboot
+    ;;
+esac
+case `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    allwinner_flash_uboot
+    ;;
+esac
+echo Done.
+
+echo
+echo Fetching UUID.
+case `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    amlogic_fetch_uuid
+    ;;
+esac
+case `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    amlogic_fetch_uuid
+    ;;
+esac
+case `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    nanopi_fetch_uuid
+    ;;
+esac
+echo Done.
+
+echo
+echo Setting up boot.
+source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
+create_fstab
+case `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    libre_create_extlinux
+    ;;
+esac
+case `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    odroidc4_create_extlinux
+    ;;
+esac
+case `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null; echo $?` in
+  0)
+    nanopi_create_extlinux
+    ;;
+esac
+echo Done.
+
+echo 
+echo Unmounting eMMC.
+umount /mnt
+echo Done.
+echo
+echo You may now power down and remove the sdcard.
