@@ -1,0 +1,182 @@
+#!/bin/bash
+source lib/allwinner_func.txt
+source lib/source.txt
+source userdata.txt
+source board.txt
+
+set -x
+RAM=0
+PROXY=""
+IMAGE_FOLDER="img/"
+case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
+  0)
+	DEVICE_SOC="libretech-all-h5-cc"
+    ;;
+esac
+case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
+  0)
+	DEVICE_SOC="nanopi-neo-plus2"
+    ;;
+esac
+case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
+  0)
+	DEVICE_SOC="a64-pine64-plus"
+    ;;
+esac
+set -eux -o pipefail
+IMAGE_LINUX_LOADADDR="0x1080000"
+IMAGE_FILE_SUFFIX="$(date +%F)"
+IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_FILE_SUFFIX}.img"
+if [ $RAM -ne 0 ]; then
+	IMAGE_FOLDER="ram/"
+fi
+mkdir -p "$IMAGE_FOLDER"
+if [ $RAM -ne 0 ]; then
+	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
+fi
+truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
+o
+n
+p
+1
+2048
+a
+t
+b
+3613280
+
+p
+w
+
+EOF
+IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+partprobe "${IMAGE_LOOP_DEV}"
+mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
+mkdir -p p1
+mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
+sync
+umount p1
+mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
+
+### Fetch partition uuid
+echo 'ROOT_UUID="' > root1
+blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > root-pid.txt
+rm -f root1 root2 root3
+
+source root-id.txt
+source root-pid.txt
+
+### Debian Rootfs
+tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
+
+mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
+echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
+
+mkdir -p p1/usr/bin
+cp $(which "qemu-aarch64-static") p1/usr/bin
+
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
+deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
+EOF
+
+tee p1/etc/fstab <<EOF
+UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
+EOF
+
+if [ -n "$PROXY" ] ; then
+	tee "p1/etc/apt/apt.conf.d/30proxy" <<EOF
+Acquire::http::proxy "http://127.0.0.1:3142";
+EOF
+fi
+
+# Setup stage2
+cp scripts/allwinner-stage2 p1/root
+cp lib/allwinner_func.txt p1/root
+cp lib/source.txt p1/root
+cp userdata.txt p1/root
+cp root-pid.txt p1/root
+cp board.txt p1/root
+cp files/misc/* p1/root
+cp files/rules/* p1/root
+cp files/scripts/* p1/root
+cp files/users/* p1/root
+cp firmware/fw-0a5c_21e8.hcd p1/root
+case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
+  0)
+    cp ${TMP1}/*.deb p1/root
+    ;;
+esac
+case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
+  0)
+    cp ${TMP6}/*.deb p1/root
+    ;;
+esac
+case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
+  0)
+    cp ${TMP2}/*.deb p1/root
+    ;;
+esac
+# Mount and chroot
+mount -o bind /dev p1/dev
+mount -o bind /dev/pts p1/dev/pts
+chroot p1 /root/allwinner-stage2
+# unmount
+umount p1/dev/pts
+umount p1/dev
+
+rm p1/usr/bin/qemu-aarch64-static
+rm p1/root/allwinner-stage2
+rm p1/root/source.txt
+rm p1/root/userdata.txt
+rm p1/root/root-pid.txt
+rm p1/root/allwinner_func.txt
+rm p1/root/board.txt
+
+if [ -n "$PROXY" ] ; then
+	rm p1/etc/apt/apt.conf.d/30proxy
+fi
+rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
+
+### Finish
+
+e4defrag -c p1
+umount p1
+
+case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
+  0)
+   tritium_finish
+    ;;
+esac
+case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
+  0)
+   nanopi_finish
+    ;;
+esac
+case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
+  0)
+   pine64_finish
+    ;;
+esac
+
+losetup -d "${IMAGE_LOOP_DEV}"
+mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
+if [ $RAM -ne 0 ]; then
+	umount "${IMAGE_FOLDER}"
+fi
+rmdir "${IMAGE_FOLDER}"
+rmdir p1
+rm -f root-id.txt root-pid.txt board.txt
