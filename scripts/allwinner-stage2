@@ -146,11 +146,13 @@ echo Moving scripts.
 sleep 1s
 cd ~
 mkdir -p /usr/local/bin
-mkdir -p /usr/local/src
+mv -f firstboot.init /etc/init.d/firstboot
 mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 mv -f temp-monitor /usr/local/bin/tmon
 mv -f wifiscan /usr/local/bin/
+chmod +x /etc/init.d/firstboot
+chown root:root /etc/init.d/firstboot
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 echo Done.
@@ -327,11 +329,16 @@ echo Creating first boot.
 sleep 1s
 tee /etc/systemd/system/firstboot.service <<EOF
 [Unit]
-Description=First Boot
+Description=First boot
+After=network.target
+Before=rc-local.service
 ConditionPathExists=/usr/local/sbin/firstboot
+
 [Service]
-Type=forking
-ExecStart=/usr/local/sbin/firstboot &>/dev/null
+ExecStart=/etc/init.d/firstboot start > /dev/null 2>&1
+Type=oneshot
+RemainAfterExit=no
+
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -405,6 +412,7 @@ systemctl enable ifplugd
 systemctl enable resolvconf
 systemctl enable haveged
 systemctl enable zramswap
+update-rc.d firstboot defaults 2
 systemctl enable firstboot
 systemctl enable governor
 
