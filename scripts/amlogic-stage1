@@ -58,6 +58,21 @@ mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 sync
 umount p1
+case `grep -Fx "lepotato" "board.txt" >/dev/null; echo $?` in
+  0)
+    lepotato_flashbin
+    ;;
+esac
+case `grep -Fx "odroidc4" "board.txt" >/dev/null; echo $?` in
+  0)
+    odroidc4_flashbin
+    ;;
+esac
+case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
+  0)
+    odroidn2_flashbin
+    ;;
+esac
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
 ### Fetch partition uuid
@@ -154,22 +169,6 @@ rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 ### Finish
 e4defrag -c p1
 umount p1
-
-case `grep -Fx "lepotato" "board.txt" >/dev/null; echo $?` in
-  0)
-    lepotato_finish
-    ;;
-esac
-case `grep -Fx "odroidc4" "board.txt" >/dev/null; echo $?` in
-  0)
-    odroidc4_finish
-    ;;
-esac
-case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
-  0)
-    odroidn2_finish
-    ;;
-esac
 
 losetup -d "${IMAGE_LOOP_DEV}"
 mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"

@@ -58,6 +58,21 @@ mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 sync
 umount p1
+case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
+  0)
+   tritium_flashbin
+    ;;
+esac
+case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
+  0)
+   nanopi_flashbin
+    ;;
+esac
+case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
+  0)
+   pine64_flashbin
+    ;;
+esac
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
 ### Fetch partition uuid
@@ -155,22 +170,6 @@ rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 
 e4defrag -c p1
 umount p1
-
-case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
-  0)
-   tritium_finish
-    ;;
-esac
-case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
-  0)
-   nanopi_finish
-    ;;
-esac
-case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
-  0)
-   pine64_finish
-    ;;
-esac
 
 losetup -d "${IMAGE_LOOP_DEV}"
 mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
