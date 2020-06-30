@@ -257,6 +257,25 @@ rm -fdr cypress
 echo Done.
 }
 
+extra_firmware () {
+echo
+echo Adding extra firmware.
+sleep 1s
+mkdir -p /lib/firmware/brcm
+cd /lib/firmware/brcm
+wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
+cd ~
+wget -cq --show-progress https://github.com/armbian/firmware/archive/master.tar.gz
+tar xf master.tar.gz
+cp -R firmware-master/* /lib/firmware
+rm -fdr firmware-master master.tar.gz
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+echo Done.
+}
+
 pine64_bt_helper () {
 echo
 echo Creating bluetooth helper.
