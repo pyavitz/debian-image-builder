@@ -52,6 +52,13 @@ custom_defconfig=1
 MYCONFIG="nameofyour_defconfig"
 ```
 
+#### Write to eMMC
+```sh
+Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
+1. Boot from sdcard
+2. Attach eMMC module (be careful)
+3. Execute: sudo write_to_emmc
+```
 
 ### Funding
 
