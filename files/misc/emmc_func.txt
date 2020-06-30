@@ -1,9 +1,13 @@
-### BIND EMMC
-libre_bind_emmc () {
+### RUN AS ROOT
+run_as_root () {
 if [ "$USER" != "root" ]; then
         echo "Please run this as root or with sudo privileges."
         exit 1
 fi
+}
+
+### BIND EMMC
+libre_bind_emmc () {
 echo -n d0074000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/unbind
 echo -n d0074000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/bind
 sleep 1
@@ -11,10 +15,6 @@ lsblk -dno NAME,SIZE
 }
 
 odroidc4_bind_emmc () {
-if [ "$USER" != "root" ]; then
-        echo "Please run this as root or with sudo privileges."
-        exit 1
-fi
 echo -n ffe07000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/unbind
 echo -n ffe07000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/bind
 sleep 1
