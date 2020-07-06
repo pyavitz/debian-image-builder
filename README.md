@@ -6,8 +6,8 @@ Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato and NanoPi 
 ### Dependencies for Debian Buster aarch64 system
 
 ```
-sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip qemu debootstrap \ 
-                 qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev parted \
+sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
+                 debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
                  device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
                  lzop lz4 crossbuild-essential-arm64
 ```
@@ -58,7 +58,3 @@ Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
 2. Attach eMMC module (be careful)
 3. Execute: sudo write_to_emmc
 ```
-
-### Funding
-
-Please [donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=VG8GP2SY4CEEW&item_name=Buy+me+a+beer) if you'd like to support development.
