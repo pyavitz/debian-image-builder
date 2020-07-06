@@ -311,33 +311,13 @@ odroidn2_defconfig () {
 
 ### STAGE1
 lepotato_flashbin () {
-case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
-  0)
-    dd if=binary/lepotato/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
-    ;;
-  1)
-    dd if=binary/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
-    dd if=binary/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
-    ;;
-  *)
-    #
-    ;;
-esac
+dd if=binary/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
+dd if=binary/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
 }
 
 odroidc4_flashbin () {
-case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
-  0)
-    dd if=binary/odroidc4/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
-    ;;
-  1)
-    dd if=binary/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
-    dd if=binary/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
-    ;;
-  *)
-    #
-    ;;
-esac
+dd if=binary/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
+dd if=binary/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
 }
 
 odroidn2_flashbin () {
