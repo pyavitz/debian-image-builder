@@ -35,7 +35,6 @@ Branch:         # Selected kernel branch
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
-eMMC:           # 1 to create img for mmc | 0 for sd 
 ```
 #### Miscellaneous
 
