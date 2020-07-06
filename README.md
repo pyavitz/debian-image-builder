@@ -1,7 +1,7 @@
 ## Debian image builder
 
 ```
-Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato and NanoPi NEO Plus 2
+Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato and NanoPi NEO Plus2
 ```
 ### Dependencies for Debian Buster aarch64 system
 
@@ -57,4 +57,11 @@ Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
 1. Boot from sdcard
 2. Attach eMMC module (be careful)
 3. Execute: sudo write_to_emmc
+```
+
+#### Odroid N2 eMMC
+```sh
+nano userdata.txt
+# change from 0 to 1
+emmc=1
 ```
