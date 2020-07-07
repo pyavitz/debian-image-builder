@@ -36,13 +36,6 @@ Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
 ```
-#### Miscellaneous
-
-```sh
-make cleanup    # Clean up image errors
-make purge      # Remove tmp directory
-```
-
 #### User defconfig
 ```sh
 nano userdata.txt
@@ -50,6 +43,20 @@ nano userdata.txt
 custom_defconfig=1
 MYCONFIG="nameofyour_defconfig"
 ```
+#### Odroid N2 eMMC
+```sh
+nano userdata.txt
+# change from 0 to 1
+emmc=1
+```
+#### Miscellaneous
+
+```sh
+make cleanup    # Clean up image errors
+make purge      # Remove tmp directory
+```
+
+### Usage
 
 #### Write to eMMC
 ```sh
@@ -57,11 +64,4 @@ Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
 1. Boot from sdcard
 2. Attach eMMC module (be careful)
 3. Execute: sudo write_to_emmc
-```
-
-#### Odroid N2 eMMC
-```sh
-nano userdata.txt
-# change from 0 to 1
-emmc=1
 ```
