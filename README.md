@@ -31,6 +31,7 @@ make dialogrc   # Set builder theme (optional)
 ```sh
 Username:       # Your username
 Password:       # Your password
+Debian:         # OS Release
 Branch:         # Selected kernel branch
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run kernel menuconfig
