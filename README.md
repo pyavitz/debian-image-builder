@@ -11,7 +11,7 @@ sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip 
                  device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
                  lzop lz4 crossbuild-essential-arm64
 ```
-### Instructions
+## Instructions
 
 #### Install dependencies
 
@@ -57,7 +57,7 @@ make cleanup    # Clean up image errors
 make purge      # Remove tmp directory
 ```
 
-### Usage
+## Usage
 
 #### Write to eMMC
 ```sh
@@ -66,3 +66,25 @@ Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
 2. Attach eMMC module (be careful)
 3. Execute: sudo write_to_emmc
 ```
+#### Simple wifi helper
+```sh
+swh -h
+
+   -s       Scan for SSID's
+   -u       Bring up interface
+   -d       Bring down interface
+   -r       Restart interface
+   -W       Edit wpa supplicant
+   -I       Edit interfaces
+```
+
+#### Install wifi drivers
+```sh
+wifidrv -h
+
+   -1     rtl88x2bu (cilynx)
+   -2     rtl8812au (aircrack)
+   -u     update script
+
+```
+
