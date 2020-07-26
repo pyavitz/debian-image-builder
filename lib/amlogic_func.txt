@@ -3,14 +3,15 @@ lepotato_uboot () {
 ### LE POTATO
 echo
 echo Downloading u-boot.
-wget -cq --show-progress https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+#echo Done.
 echo
 echo Extracting archive.
 tar -xf u-boot-${UBOOT_VERSION}.tar.gz
 echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp -f ${DEF}/libretech-cc_defconfig u-boot/configs/libretech-cc_defconfig
+cp board.txt u-boot/
 echo
 echo Building.
 cd u-boot
@@ -23,12 +24,12 @@ make -j${CORES}
 echo Done.
 echo
 cd ..
-echo Downloading blobs and toolchains.
+echo Downloading toolchains and blobs.
 sleep 1s
 mkdir blobs
 cd blobs
-wget -cq --show-progress https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz
-wget -cq --show-progress https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-arm-none-eabi-4.8-2013.11_linux.tar.xz
+aria2c -c --show-files=false https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz
+aria2c -c --show-files=false https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-arm-none-eabi-4.8-2013.11_linux.tar.xz
 echo
 echo Extracting archives.
 tar xfJ gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz
@@ -50,13 +51,13 @@ odroidc4_uboot () {
 ### ODROID-C4
 echo
 echo Downloading amlogic boot bits.
-wget -cq --show-progress https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
+#echo Done.
 export ARCH=arm64
 echo
 echo Downloading u-boot.
-wget -cq --show-progress https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+#echo Done.
 echo
 echo Extracting archives.
 tar -xf amlogic-boot-fip-master.tar.gz
@@ -64,6 +65,7 @@ tar -xf u-boot-${UBOOT_VERSION}.tar.gz
 echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp ${DEF}/g12a-odroidc4_defconfig u-boot/configs/g12a-odroidc4_defconfig
+cp board.txt u-boot/
 cd u-boot
 for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
 echo
@@ -77,13 +79,13 @@ odroidn2_uboot () {
 ### ODROID-N2
 echo
 echo Downloading amlogic boot bits.
-wget -cq --show-progress https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
+#echo Done.
 export ARCH=arm64
 echo
 echo Downloading u-boot.
-wget -cq --show-progress https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+#echo Done.
 echo
 echo Extracting archives.
 tar -xf amlogic-boot-fip-master.tar.gz
@@ -91,6 +93,7 @@ tar -xf u-boot-${UBOOT_VERSION}.tar.gz
 echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp ${DEF}/g12b-odroidn2_defconfig u-boot/configs/g12b-odroidn2_defconfig
+cp board.txt u-boot/
 cd u-boot
 for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
 echo
@@ -254,6 +257,51 @@ cp -f fip/u-boot.bin ../${BINODN2}
 cp -f fip/u-boot.bin.sd.bin ../${BINODN2}
 cp -f tools/mkimage ../${BINODN2}
 echo Done.
+}
+
+lepotato_uboot_string () {
+mkdir -p ${TMP5}
+cp board.txt ${TMP5}/
+cd ${TMP5}
+
+# LE POTATO
+lepotato_uboot
+
+# FIP
+lepotato_fip
+
+# BINARY
+lepotato_binary
+}
+
+odroidn2_uboot_string () {
+mkdir -p ${TMP4}
+cp board.txt ${TMP4}/
+cd ${TMP4}
+
+# ODROID-N2
+odroidn2_uboot
+
+# FIP
+odroidn2_fip
+
+# BINARY
+odroidn2_binary
+}
+
+odroidc4_uboot_string () {
+mkdir -p ${TMP3}
+cp board.txt ${TMP3}/
+cd ${TMP3}
+
+# ODROID-C4
+odroidc4_uboot
+
+# FIP
+odroidc4_fip
+
+# BINARY
+odroidc4_binary
 }
 
 ### KERNEL

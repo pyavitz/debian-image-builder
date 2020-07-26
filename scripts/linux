@@ -1,0 +1,142 @@
+#!/bin/bash
+source lib/source.txt
+source lib/kernel_func.txt
+source lib/amlogic_func.txt
+source lib/allwinner_func.txt
+source userdata.txt
+
+# AMLOGIC
+case `grep -Fx "lepotato" "board.txt" >/dev/null; echo $?` in
+  0)
+    mkdir -p ${TMP5}
+    cp -f board.txt ${TMP5}/
+    cd ${TMP5}
+    ;;
+esac
+case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
+  0)
+    mkdir -p ${TMP4}
+    cp -f board.txt ${TMP4}/
+    cd ${TMP4}
+    ;;
+esac
+case `grep -Fx "odroidc4" "board.txt" >/dev/null; echo $?` in
+  0)
+    mkdir -p ${TMP3}
+    cp -f board.txt ${TMP3}/
+    cd ${TMP3}
+    ;;
+esac
+
+# ALLWINNER
+case `grep -Fx "tritum" "board.txt" >/dev/null; echo $?` in
+  0)
+    mkdir -p ${TMP1}
+    cp -f board.txt ${TMP1}/
+    cd ${TMP1}
+    ;;
+esac
+case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
+  0)
+    mkdir -p ${TMP2}
+    cp -f board.txt ${TMP2}/
+    cd ${TMP2}
+    ;;
+esac
+case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
+  0)
+    mkdir -p ${TMP6}
+    cp -f board.txt ${TMP6}/
+    cd ${TMP6}
+    ;;
+esac
+
+### Download kernel
+case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
+  0)
+    mainline_download
+    ;;
+  1)
+    stable_download
+    ;;
+  *)
+    #
+    ;;
+esac
+
+
+### Extract
+case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
+  0)
+    mainline_extract
+    ;;
+  1)
+    stable_extract
+    ;;
+  *)
+    #
+    ;;
+esac
+
+### Setup
+setup
+
+### Patches and Defconfigs
+# AMLOGIC
+case `grep -Fx "lepotato" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    le_potato
+    ;;
+esac
+case `grep -Fx "odroidn2" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    odroid_n2
+    ;;
+esac
+case `grep -Fx "odroidc4" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    odroid_c4
+    ;;
+esac
+
+# ALLWINNER
+case `grep -Fx "tritum" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    tritium_h5
+    ;;
+esac
+case `grep -Fx "pine64" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    pine_a64
+    ;;
+esac
+case `grep -Fx "nanopi" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    nanopi_neo_plus2
+    ;;
+esac
+
+### Menuconfig
+case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    menu_config
+    ;;
+  *)
+    #
+    ;;
+esac
+
+### Build deb
+case `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    ccompile
+    ;;
+  1)
+    ncompile
+    ;;
+  *)
+    #
+    ;;
+esac
+echo
+echo Done.

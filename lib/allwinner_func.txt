@@ -15,8 +15,8 @@ echo Done.
 npineoplus2_uboot () {
 echo
 echo Downloading u-boot.
-wget -cq --show-progress https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+#echo Done.
 echo
 echo Extracting archive.
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
@@ -24,6 +24,7 @@ echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
 cp ${DEF}/h5-npineoplus2_defconfig u-boot/configs/h5-npineoplus2_defconfig
+cp board.txt u-boot/
 cd u-boot
 echo
 echo Compiling uboot.
@@ -36,8 +37,8 @@ make -j${CORES}
 pine64_uboot () {
 echo
 echo Downloading u-boot.
-wget -cq --show-progress https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+#echo Done.
 echo
 echo Extracting archive.
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
@@ -45,6 +46,7 @@ echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
 cp ${DEF}/a64-pine64-plus_defconfig u-boot/configs/a64-pine64-plus_defconfig
+cp board.txt u-boot/
 cd u-boot
 echo
 echo Compiling.
@@ -57,8 +59,8 @@ make -j${CORES}
 tritium_uboot () {
 echo
 echo Downloading u-boot.
-wget -cq --show-progress https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+aria2c -c --show-files=false https://gitlab.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+#echo Done.
 echo
 echo Extracting archive.
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
@@ -66,6 +68,7 @@ echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
 cp ${DEF}/libretech-all-h5-cc_defconfig u-boot/configs/libretech-all-h5-cc_defconfig
+cp board.txt u-boot/
 cd u-boot
 echo
 echo Compiling uboot.
@@ -94,6 +97,54 @@ cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
 cp -f tools/mkimage ../${BINTRI}/
 echo Done.
 echo
+}
+
+tritium_uboot_string () {
+echo
+mkdir -p ${TMP1}
+cp board.txt ${TMP1}/
+cd ${TMP1}
+
+# ATF
+armtrusted_firmware
+
+# UBOOT
+tritium_uboot
+
+# BINARY
+tritium_binary
+}
+
+pine64_uboot_string () {
+echo
+mkdir -p ${TMP2}
+cp board.txt ${TMP2}/
+cd ${TMP2}
+
+# ATF
+armtrusted_firmware
+
+# UBOOT
+pine64_uboot
+
+# BINARY
+pine64_binary
+}
+
+nanopi_uboot_string () {
+echo
+mkdir -p ${TMP6}
+cp board.txt ${TMP6}/
+cd ${TMP6}
+
+# ATF
+armtrusted_firmware
+
+# UBOOT
+npineoplus2_uboot
+
+# BINARY
+npineoplus2_binary
 }
 
 ## KERNEL
@@ -247,7 +298,7 @@ echo Adding brcm firmware from cypress.
 sleep 1s
 mkdir cypress
 cd cypress
-wget -cq --show-progress https://community.cypress.com/servlet/JiveServlet/download/19375-1-53475/cypress-fmac-v5.4.18-2020_0402.zip
+aria2c -c --show-files=false https://community.cypress.com/servlet/JiveServlet/download/19375-1-53475/cypress-fmac-v5.4.18-2020_0402.zip
 unzip -qq cypress-fmac-v5.4.18-2020_0402.zip
 tar -xf cypress-firmware-v5.4.18-2020_0402.tar.gz
 rm -f firmware/*pcie*
@@ -263,9 +314,9 @@ echo Adding extra firmware.
 sleep 1s
 mkdir -p /lib/firmware/brcm
 cd /lib/firmware/brcm
-wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
+aria2c -c --show-files=false https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
 cd ~
-wget -cq --show-progress https://github.com/armbian/firmware/archive/master.tar.gz
+aria2c -c --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
 tar xf master.tar.gz
 cp -R firmware-master/* /lib/firmware
 rm -fdr firmware-master master.tar.gz
