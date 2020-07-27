@@ -81,23 +81,10 @@ case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
 esac
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
-### Fetch partition uuid
-echo 'ROOT_UUID="' > root1
-blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > root-id.txt
-rm -f root1 root2 root3
+### fetch partition uuid
+partition_uuid
 
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > root-pid.txt
-rm -f root1 root2 root3
-
-source root-id.txt
-source root-pid.txt
-
-### Debian Rootfs
+### Rootfs
 tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
 
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
@@ -106,21 +93,8 @@ echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
 cp $(which "qemu-aarch64-static") p1/usr/bin
 
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
-EOF
-    ;;
-   1)
-tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
-deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
-deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
-deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
-EOF
-   ;;
-esac
+# sources dot list
+choose_release
 
 tee p1/etc/fstab <<EOF
 UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
@@ -133,7 +107,7 @@ Acquire::http::proxy "http://127.0.0.1:3142";
 EOF
 fi
 
-# Setup stage2
+# setup stage2
 cp scripts/amlogic-stage2 p1/root
 cp lib/amlogic_func.txt p1/root
 cp lib/source.txt p1/root
@@ -163,7 +137,7 @@ case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
     cp binary/odroidn2/u-boot.bin.odroid-n2 p1/root/u-boot.bin
     ;;
 esac
-# Mount and chroot
+# mount and chroot
 mount -o bind /dev p1/dev
 mount -o bind /dev/pts p1/dev/pts
 chroot p1 /root/amlogic-stage2
@@ -178,6 +152,7 @@ rm p1/root/userdata.txt
 rm p1/root/root-pid.txt
 rm p1/root/amlogic_func.txt
 rm p1/root/board.txt
+rm -f p1/var/cache/debconf/*
 
 if [ -n "$PROXY" ] ; then
 	rm p1/etc/apt/apt.conf.d/30proxy

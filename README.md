@@ -16,7 +16,8 @@ sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip 
 #### Install dependencies
 
 ```sh
-make install-depends        # (cross compile)
+make install-depends	# cross compile
+make native		# native compile
 ```
 
 #### Menu interface
@@ -31,7 +32,7 @@ make dialogrc   # Set builder theme (optional)
 ```sh
 Username:       # Your username
 Password:       # Your password
-Debian:         # OS Release (buster or unstable)
+Debian:         # Supported: buster and unstable
 Branch:         # Selected kernel branch
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run kernel menuconfig
@@ -87,4 +88,3 @@ wifidrv -h
    -u     update script
 
 ```
-

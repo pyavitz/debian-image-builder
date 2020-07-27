@@ -36,6 +36,7 @@ help:
 	@echo "Boards: tritium pine64 odroidc4 odroidn2 lepotato nanopi"
 	@echo
 	@echo "  make install-depends         Install all dependencies"
+	@echo "  make native                  Install all native dependencies"
 	@echo "  make config                  Create user data file"
 	@echo "  make menu                    Menu interface"
 	@echo "  make cleanup                 Clean up image errors"
@@ -60,6 +61,14 @@ install-depends:
 	kmod cpio flex libssl-dev libncurses5-dev parted device-tree-compiler \
 	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
 	aria2 crossbuild-essential-arm64
+
+native:
+	# Install all dependencies
+	sudo apt install build-essential bison bc git dialog patch \
+	dosfstools zip unzip qemu debootstrap qemu-user-static rsync \
+	kmod cpio flex libssl-dev libncurses5-dev parted device-tree-compiler \
+	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
+	aria2
 
 ### TRITIUM
 tritium-uboot:
@@ -101,7 +110,7 @@ tritium-all:
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
 
-### PINE64
+### PINEA64
 pine64-uboot:
 	# Compiling u-boot
 	@ echo pine64 > board.txt
@@ -141,7 +150,7 @@ pine64-all:
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
 
-### NANOPI NEO PLUS 2
+### NANOPI NEO PLUS2
 nanopi-uboot:
 	# Compiling u-boot
 	@ echo nanopi > board.txt 
@@ -261,8 +270,7 @@ odroidn2-all:
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
 
-
-### LEPOTATO
+### LE POTATO
 lepotato-uboot:
 	# Compiling u-boot
 	@ echo lepotato > board.txt
@@ -329,4 +337,3 @@ cleanup:
 purge:
 	# Removing tmp directory
 	@${PURGE}
-##
