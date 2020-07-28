@@ -26,7 +26,7 @@ echo
 cd ..
 echo Downloading toolchains and blobs.
 sleep 1s
-mkdir blobs
+mkdir -p blobs
 cd blobs
 aria2c -c --show-files=false https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz
 aria2c -c --show-files=false https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-arm-none-eabi-4.8-2013.11_linux.tar.xz
@@ -259,10 +259,17 @@ cp -f tools/mkimage ../${BINODN2}
 echo Done.
 }
 
+aml_source () {
+echo
+mkdir -p ${AMLSRC}
+cp -f board.txt ${AMLSRC}/
+cd ${AMLSRC}
+rm -fdr amlogic-boot-fip-master blobs/amlogic-u-boot u-boot
+}
+
 lepotato_uboot_string () {
-mkdir -p ${TMP5}
-cp board.txt ${TMP5}/
-cd ${TMP5}
+# SOURCE
+aml_source
 
 # LE POTATO
 lepotato_uboot
@@ -275,9 +282,8 @@ lepotato_binary
 }
 
 odroidn2_uboot_string () {
-mkdir -p ${TMP4}
-cp board.txt ${TMP4}/
-cd ${TMP4}
+# SOURCE
+aml_source
 
 # ODROID-N2
 odroidn2_uboot
@@ -290,9 +296,8 @@ odroidn2_binary
 }
 
 odroidc4_uboot_string () {
-mkdir -p ${TMP3}
-cp board.txt ${TMP3}/
-cd ${TMP3}
+# SOURCE
+aml_source
 
 # ODROID-C4
 odroidc4_uboot
