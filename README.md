@@ -3,7 +3,7 @@
 ```
 Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato and NanoPi NEO Plus2
 ```
-### Dependencies for Debian Buster aarch64 system
+### Dependencies for Debian Buster AMD64/x86_64 cross compile
 
 ```
 sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
