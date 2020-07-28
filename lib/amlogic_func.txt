@@ -332,7 +332,14 @@ odroidc4_patch () {
 echo
 echo Applying patches.
 patch -p1 < ../${PACKAGING}/odroidc4-packaging.patch
-for i in ../${ODC4KD}/*.patch; do patch -p1 < $i; done
+case `grep -Fx "mainline=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    echo -e "\e[1;31mMainline? Good luck!\e[0m"
+    ;;
+  1)
+    for i in ../${ODC4KD}/*.patch; do patch -p1 < $i; done
+    ;;
+esac
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo Done.
 echo
