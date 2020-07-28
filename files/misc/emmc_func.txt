@@ -91,6 +91,12 @@ blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
 paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
 rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
 }
 
 nanopi_fetch_uuid () {
@@ -98,6 +104,12 @@ echo 'ROOT_UUID="' > root1
 blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
 paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
 rm -f root1 root2 root3
 }
 
@@ -113,38 +125,38 @@ EOF
 
 ### EXTLINUX
 libre_create_extlinux () {
-source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
 mkdir -p /mnt/boot/extlinux
 rm -f /mnt/boot/extlinux/extlinux.conf
 tee /mnt/boot/extlinux/extlinux.conf <<EOF
 label kernel
     kernel /boot/Image
     fdt /boot/amlogic/meson-gxl-s905x-libretech-cc.dtb
-    append  earlyprintk console=ttyAML0,115200 rw root=/dev/mmcblk0p1 rootwait rootfstype=ext4 init=/sbin/init
+    append  earlyprintk console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
 EOF
 }
 
 odroidc4_create_extlinux () {
-source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
 mkdir -p /mnt/boot/extlinux
 rm -f /mnt/boot/extlinux/extlinux.conf
 tee /mnt/boot/extlinux/extlinux.conf <<EOF
 label kernel
     kernel /boot/Image
     fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
-    append  earlyprintk console=ttyAML0,115200 rw root=/dev/mmcblk0p1 rootwait rootfstype=ext4 init=/sbin/init
+    append  earlyprintk console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
 EOF
 }
 
 nanopi_create_extlinux () {
-source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
 mkdir -p /mnt/boot/extlinux
 rm -f /mnt/boot/extlinux/extlinux.conf
 tee /mnt/boot/extlinux/extlinux.conf <<EOF
 label kernel
     kernel /boot/Image
     fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
-    append  earlyprintk console=ttyS2,115200n8 rw root=/dev/mmcblk2p1 rootwait rootfstype=ext4 init=/sbin/init
+    append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
 EOF
 }
 
