@@ -63,9 +63,9 @@ make purge      # Remove tmp directory
 #### Write to eMMC
 ```sh
 Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
-1. Boot from sdcard
-2. Attach eMMC module (be careful)
-3. Execute: sudo write_to_emmc
+1. Attach eMMC module       # In some cases the module may need to be attached after boot
+2. Boot from sdcard
+3. Execute: sudo write2mmc
 ```
 #### Simple wifi helper
 ```sh
