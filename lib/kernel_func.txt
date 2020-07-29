@@ -76,14 +76,15 @@ ncompile () {
 
 # AMLOGIC
 amlogic_defconfig () {
-    echo Making builder defconfig.
+    echo Checking gcc and making builder defconfig.
     cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
-    case `grep -Fx "gcc=8" "../../userdata.txt" >/dev/null; echo $?` in
+    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
-       echo -e "\e[1;32mUsing default defconfig \e[0m"
+       echo -e "\e[1;32mGCC . . . OK! \e[0m"
        ;;
      1)
-       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128 \e[0m"
+       echo -e "\e[1;31mGCC version not officially supported. \e[0m"
+       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128. \e[0m"
        gcc_woes &> /dev/null
        ;;
     esac
@@ -132,14 +133,15 @@ esac
 
 # ALLWINNER
 allwinner_defconfig () {
-    echo Making builder defconfig.
+    echo Checking gcc and making builder defconfig.
     cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
-    case `grep -Fx "gcc=8" "../../userdata.txt" >/dev/null; echo $?` in
+    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
-       echo -e "\e[1;32mUsing default defconfig \e[0m"
+       echo -e "\e[1;32mGCC . . . OK! \e[0m"
        ;;
      1)
-       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128 \e[0m"
+       echo -e "\e[1;31mGCC version not officially supported. \e[0m"
+       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128. \e[0m"
        gcc_woes &> /dev/null
        ;;
     esac
