@@ -83,8 +83,9 @@ swh -h
 ```sh
 wifidrv -h
 
-   -1     rtl88x2bu (cilynx)
-   -2     rtl8812au (aircrack)
+   -1     rtl8812au (aircrack)
+   -2     rtl88x2bu (cilynx)
+   -3     rtl8821cu (brektrou)
    -u     update script
 
 ```
