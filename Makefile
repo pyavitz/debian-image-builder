@@ -9,12 +9,8 @@ ROOTFS=sudo ./scripts/rootfs
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
-PURGE=$(shell sudo rm -fdr potato) \
-$(shell sudo rm -fdr odroidc4) \
-$(shell sudo rm -fdr odroidn2) \
-$(shell sudo rm -fdr tritium) \
-$(shell sudo rm -fdr pine64) \
-$(shell sudo rm -fdr nanopi)
+PURGE=$(shell sudo rm -fdr allwinner) \
+$(shell sudo rm -fdr amlogic)
 
 # uboot and linux
 UBOOT=./scripts/uboot
@@ -80,6 +76,7 @@ tritium-uboot:
 tritium-kernel:
 	# Compiling kernel
 	@ echo tritium > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 
@@ -99,6 +96,7 @@ tritium-all:
 	@${UBOOT}
 	# Building linux package
 	@ echo tritium > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -120,6 +118,7 @@ pine64-uboot:
 pine64-kernel:
 	# Compiling kernel
 	@ echo pine64 > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 
@@ -139,6 +138,7 @@ pine64-all:
 	@${UBOOT}
 	# Building linux package
 	@ echo pine64 > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -159,7 +159,8 @@ nanopi-uboot:
 
 nanopi-kernel:
 	# Compiling kernel
-	@ echo nanopi > board.txt 
+	@ echo nanopi > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 
@@ -178,7 +179,8 @@ nanopi-all:
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
-	@ echo nanopi > board.txt 
+	@ echo nanopi > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -199,7 +201,8 @@ odroidc4-uboot:
 
 odroidc4-kernel:
 	# Compiling kernel
-	@ echo odroidc4 > board.txt 
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt 
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 
@@ -218,7 +221,8 @@ odroidc4-all:
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
-	@ echo odroidc4 > board.txt 
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -239,7 +243,8 @@ odroidn2-uboot:
 
 odroidn2-kernel:
 	# Compiling kernel
-	@ echo odroidn2 > board.txt 
+	@ echo odroidn2 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	
@@ -258,7 +263,8 @@ odroidn2-all:
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
-	@ echo odroidn2 > board.txt 
+	@ echo odroidn2 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -280,6 +286,7 @@ lepotato-uboot:
 lepotato-kernel:
 	# Compiling kernel
 	@ echo lepotato > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 
@@ -299,6 +306,7 @@ lepotato-all:
 	@${UBOOT}
 	# Building linux package
 	@ echo lepotato > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${KERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
