@@ -16,8 +16,8 @@ sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip 
 #### Install dependencies
 
 ```sh
-make install-depends	# cross compile
-make native		# native compile
+make ccompile-depends   # Cross compile
+make ncompile-depends   # Native compile
 ```
 
 #### Menu interface
@@ -33,7 +33,7 @@ make dialogrc   # Set builder theme (optional)
 Username:       # Your username
 Password:       # Your password
 Debian:         # Supported: buster and unstable
-Branch:         # Selected kernel branch
+Branch:         # Supported: 5.8.y and above
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
