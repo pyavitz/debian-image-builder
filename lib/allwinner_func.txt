@@ -1,33 +1,57 @@
+# COLOR
+COL="\e[1;31m"
+FIN="\e[0m"
+
+# ECHOES
+echo_duboot () {
+echo -e "${COL}Downloading u-boot${FIN}".
+}
+
+echo_cuboot () {
+echo -e "${COL}Compiling uboot${FIN}".
+}
+
+echo_extract () {
+echo -e "${COL}Extracting archive${FIN}".
+}
+
+echo_patch () {
+echo -e "${COL}Applying patches${FIN}".
+}
+
+echo_done () {
+echo -e "${COL}Done${FIN}".
+}
+
 # ATF
 armtrusted_firmware () {
-echo Downloading arm trusted firmware.
+echo -e "${COL}Downloading arm trusted firmware${FIN}."
 git clone https://github.com/ARM-software/arm-trusted-firmware.git
 cd arm-trusted-firmware
 echo
-echo Compiling ATF.
+echo -e "${COL}Compiling ATF${FIN}."
 export CROSS_COMPILE=aarch64-linux-gnu-
 make -j${CORES} PLAT=sun50i_a64 DEBUG=1 bl31 &> /dev/null
 cd ..
-echo Done.
+echo_done
 }
 
 # UBOOT
 npineoplus2_uboot () {
 echo
-echo Downloading u-boot.
+echo_duboot
 aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-#echo Done.
 echo
-echo Extracting archive.
+echo_extract
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
 cp ${DEF}/h5-npineoplus2_defconfig u-boot/configs/h5-npineoplus2_defconfig
 cp board.txt u-boot/
 cd u-boot
 echo
-echo Compiling uboot.
+echo_cuboot
 export CROSS_COMPILE=aarch64-linux-gnu-
 make h5-npineoplus2_defconfig
 #make menuconfig
@@ -36,11 +60,10 @@ make -j${CORES}
 
 pine64_uboot () {
 echo
-echo Downloading u-boot.
+echo_duboot
 aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-#echo Done.
 echo
-echo Extracting archive.
+echo_extract
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
 echo Done.
 mv -f u-boot-${UBOOT_VERSION} u-boot
@@ -49,7 +72,7 @@ cp ${DEF}/a64-pine64-plus_defconfig u-boot/configs/a64-pine64-plus_defconfig
 cp board.txt u-boot/
 cd u-boot
 echo
-echo Compiling.
+echo_cuboot
 export CROSS_COMPILE=aarch64-linux-gnu-
 make a64-pine64-plus_defconfig
 #make menuconfig
@@ -58,20 +81,19 @@ make -j${CORES}
 
 tritium_uboot () {
 echo
-echo Downloading u-boot.
+echo_duboot
 aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-#echo Done.
 echo
-echo Extracting archive.
+echo_extract
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
 cp ${DEF}/libretech-all-h5-cc_defconfig u-boot/configs/libretech-all-h5-cc_defconfig
 cp board.txt u-boot/
 cd u-boot
 echo
-echo Compiling uboot.
+echo_cuboot
 export CROSS_COMPILE=aarch64-linux-gnu-
 make libretech-all-h5-cc_defconfig
 #make menuconfig
@@ -82,20 +104,20 @@ make -j${CORES}
 npineoplus2_binary () {
 cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
 cp -f tools/mkimage ../${BINNPI}/
-echo Done.
+echo_done
 echo
 }
 
 pine64_binary () {
 cp -f u-boot-sunxi-with-spl.bin ../${BINPINE}/
 cp -f tools/mkimage ../${BINPINE}/
-echo Done.
+echo_done
 }
 
 tritium_binary () {
 cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
 cp -f tools/mkimage ../${BINTRI}/
-echo Done.
+echo_done
 echo
 }
 
@@ -160,35 +182,35 @@ cd ${ALLSRC}
 # TRITIUM
 tritium_patch () {
     echo
-    echo Applying patches.
+    echo_patch
     patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
     for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
     cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-    echo Done.
+    echo_done
     echo
 }
 
 # PINE64
 pine64_patch () {
 echo
-echo Applying patches.
+echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
 for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo Done.
+echo_done
 echo
 }
 
 # NANOPI
 nanopi_patch () {
 echo
-echo Applying patches.
+echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
 for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo Done.
+echo_done
 echo
 }
 

@@ -1,19 +1,55 @@
+# COLOR
+COL="\e[1;31m"
+FIN="\e[0m"
+
+# ECHOES
+echo_duboot () {
+echo -e "${COL}Downloading u-boot${FIN}".
+}
+
+echo_cuboot () {
+echo -e "${COL}Compiling uboot${FIN}".
+}
+
+echo_extract () {
+echo -e "${COL}Extracting archive${FIN}".
+}
+
+echo_extracts () {
+echo -e "${COL}Extracting archives${FIN}".
+}
+
+echo_blobs () {
+echo -e "${COL}Downloading toolchains and blobs${FIN}".
+}
+
+echo_bootbits () {
+echo -e "${COL}Downloading amlogic boot bits${FIN}".
+}
+
+echo_patch () {
+echo -e "${COL}Applying patches${FIN}".
+}
+
+echo_done () {
+echo -e "${COL}Done${FIN}".
+}
+
 # U-BOOT
 lepotato_uboot () {
 ### LE POTATO
 echo
-echo Downloading u-boot.
+echo_duboot
 aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-#echo Done.
 echo
-echo Extracting archive.
+echo_extract
 tar -xf u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp -f ${DEF}/libretech-cc_defconfig u-boot/configs/libretech-cc_defconfig
 cp board.txt u-boot/
 echo
-echo Building.
+echo_cuboot
 cd u-boot
 for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
 export ARCH=arm
@@ -21,25 +57,25 @@ export CROSS_COMPILE=aarch64-linux-gnu-
 make -j${CORES} libretech-cc_defconfig
 #make menuconfig
 make -j${CORES}
-echo Done.
+echo_done
 echo
 cd ..
-echo Downloading toolchains and blobs.
+echo_blobs
 sleep 1s
 mkdir -p blobs
 cd blobs
 aria2c -c --show-files=false https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz
 aria2c -c --show-files=false https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-arm-none-eabi-4.8-2013.11_linux.tar.xz
 echo
-echo Extracting archives.
+echo_extracts
 tar xfJ gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz
 tar xfJ gcc-linaro-arm-none-eabi-4.8-2013.11_linux.tar.xz
-echo Done.
+echo_done
 echo
 export PATH=$PWD/gcc-linaro-aarch64-none-elf-4.8-2013.11_linux/bin:$PWD/gcc-linaro-arm-none-eabi-4.8-2013.11_linux/bin:$PATH
 git clone https://github.com/BayLibre/u-boot.git -b libretech-cc amlogic-u-boot
 echo
-echo Building.
+echo_cuboot
 cd amlogic-u-boot
 sed -i 's/aarch64-linux-gnu-/aarch64-none-elf-/' Makefile
 sed -i 's/arm-linux-/arm-none-eabi-/' arch/arm/cpu/armv8/gxb/firmware/scp_task/Makefile
@@ -50,26 +86,25 @@ make -j${CORES}
 odroidc4_uboot () {
 ### ODROID-C4
 echo
-echo Downloading amlogic boot bits.
+echo_bootbits
 aria2c -c --show-files=false https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
-#echo Done.
 export ARCH=arm64
 echo
-echo Downloading u-boot.
+echo_duboot
 aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-#echo Done.
 echo
-echo Extracting archives.
+echo_extracts
 tar -xf amlogic-boot-fip-master.tar.gz
 tar -xf u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp ${DEF}/g12a-odroidc4_defconfig u-boot/configs/g12a-odroidc4_defconfig
 cp board.txt u-boot/
 cd u-boot
+echo
 for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
 echo
-echo Building.
+echo_cuboot
 make -j${CORES} g12a-odroidc4_defconfig
 #make menuconfig
 make -j${CORES} CROSS_COMPILE=aarch64-linux-gnu-
@@ -78,26 +113,25 @@ make -j${CORES} CROSS_COMPILE=aarch64-linux-gnu-
 odroidn2_uboot () {
 ### ODROID-N2
 echo
-echo Downloading amlogic boot bits.
+echo_bootbits
 aria2c -c --show-files=false https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
-#echo Done.
 export ARCH=arm64
 echo
-echo Downloading u-boot.
+echo_duboot
 aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-#echo Done.
 echo
-echo Extracting archives.
+echo_extracts
 tar -xf amlogic-boot-fip-master.tar.gz
 tar -xf u-boot-${UBOOT_VERSION}.tar.gz
-echo Done.
+echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp ${DEF}/g12b-odroidn2_defconfig u-boot/configs/g12b-odroidn2_defconfig
 cp board.txt u-boot/
 cd u-boot
+echo
 for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
 echo
-echo Building.
+echo_cuboot
 make -j${CORES} g12b-odroidn2_defconfig
 #make menuconfig
 make -j${CORES} CROSS_COMPILE=aarch64-linux-gnu-
@@ -242,21 +276,21 @@ lepotato_binary () {
 cp -f fip/u-boot.bin ../${BINLEP}
 cp -f fip/u-boot.bin.sd.bin ../${BINLEP}
 cp -f tools/mkimage ../${BINLEP}
-echo Done.
+echo_done
 }
 
 odroidc4_binary () {
 cp -f fip/u-boot.bin ../${BINODC4}
 cp -f fip/u-boot.bin.sd.bin ../${BINODC4}
 cp -f tools/mkimage ../${BINODC4}
-echo Done.
+echo_done
 }
 
 odroidn2_binary () {
 cp -f fip/u-boot.bin ../${BINODN2}
 cp -f fip/u-boot.bin.sd.bin ../${BINODN2}
 cp -f tools/mkimage ../${BINODN2}
-echo Done.
+echo_done
 }
 
 aml_source () {
@@ -320,30 +354,30 @@ cd ${AMLSRC}
 # LE POTATO
 potato_patch () {
 echo
-echo Applying patches.
+echo_patch
 patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo Done.
+echo_done
 echo
 }
 
 # ODROIDC4
 odroidc4_patch () {
 echo
-echo Applying patches.
+echo_patch
 patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo Done.
+echo_done
 echo
 }
 
 # ODROIDN2
 odroidn2_patch () {
 echo
-echo Applying patches.
+echo_patch
 patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo Done.
+echo_done
 echo
 }
 

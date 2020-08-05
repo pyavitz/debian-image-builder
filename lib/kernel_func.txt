@@ -1,3 +1,32 @@
+# COLOR
+COL="\e[1;31m"
+FIN="\e[0m"
+
+# ECHOES
+echo_stable () {
+echo -e "${COL}Downloading stable linux${FIN}".
+}
+
+echo_mainline () {
+echo -e "${COL}Downloading mainline linux${FIN}".
+}
+
+echo_cconfig () {
+echo -e "${COL}Making ${MYCONFIG}${FIN}."
+}
+
+echo_menuconfig () {
+echo -e "${COL}Opening menuconfig${FIN}."
+}
+
+echo_build () {
+echo -e "${COL}--- Building deb packages${FIN}."
+}
+
+echo_defconfig () {
+echo -e "${COL}Checking gcc and making builder defconfig${FIN}".
+}
+
 # KERNEL
 gcc_woes () {
 sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/amlogic_defconfig
@@ -6,30 +35,30 @@ sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/a
 
 stable_download () {
 echo
-echo Downloading stable linux.
+echo_stable
 aria2c -c --show-files=false https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz
 }
 
 mainline_download () {
 echo
-echo Downloading mainline linux.
+echo_mainline
 aria2c -c --show-files=false https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz
 }
 
 stable_extract () {
 echo
-echo Extracting archive.
+echo_extract
 tar xf ${KERNEL}-${VERSION}.tar.xz
 #rm -f ${KERNEL}-${VERSION}.tar.xz #remove archive
-echo Done.
+echo_done
 }
 
 mainline_extract () {
 echo
-echo Extracting archive.
+echo_extract
 tar xf ${KERNEL}-${VERSION}.tar.gz
 #rm -f ${KERNEL}-${VERSION}.tar.gz #remove archive
-echo Done.
+echo_done
 }
 
 setup () {
@@ -47,34 +76,34 @@ chmod +x scripts/package/mkdebian
 }
 
 cconfig () {
-    echo Making ${MYCONFIG}.
+    echo_cconfig
     cp -f ../${DEF}/${MYCONFIG} arch/arm64/configs/
     make ARCH=arm64 ${MYCONFIG} &> /dev/null
-    echo Done.
+    echo_done
 }
 
 menu_config () {
     echo
-    echo Opening menuconfig.
+    echo_menuconfig
     sleep 1s
     make menuconfig
 }
 
 ccompile () {
     echo -- CC
-    echo --- Building deb packages.
+    echo_build
     echo 'y' | make -j${CORES} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bindeb-pkg
 }
 
 ncompile () {
     echo -- NC
-    echo --- Building deb packages.
+    echo_build
     echo 'y' | make -j${CORES} ARCH=arm64 bindeb-pkg
 }
 
 # AMLOGIC
 amlogic_defconfig () {
-    echo Checking gcc and making builder defconfig.
+    echo_defconfig
     cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
@@ -87,7 +116,7 @@ amlogic_defconfig () {
        ;;
     esac
     make ARCH=arm64 amlogic_defconfig &> /dev/null
-    echo Done.
+    echo_done
 }
 
 ### LE POTATO
@@ -131,7 +160,7 @@ esac
 
 # ALLWINNER
 allwinner_defconfig () {
-    echo Checking gcc and making builder defconfig.
+    echo_defconfig
     cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
@@ -144,7 +173,7 @@ allwinner_defconfig () {
        ;;
     esac
     make ARCH=arm64 allwinner_defconfig &> /dev/null
-    echo Done.
+    echo_done
 }
 
 ### TRITIUM
