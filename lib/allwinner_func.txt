@@ -6,7 +6,7 @@ cd arm-trusted-firmware
 echo
 echo -e "${COL}Compiling ATF${FIN}."
 export CROSS_COMPILE=aarch64-linux-gnu-
-make -j${CORES} PLAT=common DEBUG=1 bl31 &> /dev/null
+make -j${CORES} PLAT=sun50i_a64 DEBUG=1 bl31 &> /dev/null
 cd ..
 echo_done
 }
@@ -75,26 +75,6 @@ make libretech-all-h5-cc_defconfig
 make -j${CORES}
 }
 
-opir1_uboot () {
-echo
-echo_duboot
-aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo
-echo_extract
-tar xf u-boot-${UBOOT_VERSION}.tar.gz
-echo_done
-mv -f u-boot-${UBOOT_VERSION} u-boot
-cp -fR ${DEF}/sun8i-h2-plus-orangepi-r1_defconfig u-boot/configs/sun8i-h2-plus-orangepi-r1_defconfig
-cp board.txt u-boot/
-cd u-boot
-echo
-echo_cuboot
-export CROSS_COMPILE=arm-linux-gnueabi-
-make sun8i-h2-plus-orangepi-r1_defconfig
-#make menuconfig
-make -j${CORES}
-}
-
 # BINARY
 npineoplus2_binary () {
 cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
@@ -112,13 +92,6 @@ echo_done
 tritium_binary () {
 cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
 cp -f tools/mkimage ../${BINTRI}/
-echo_done
-echo
-}
-
-opir1_binary () {
-cp -f u-boot-sunxi-with-spl.bin ../${BINR1}/
-cp -f tools/mkimage ../${BINR1}/
 echo_done
 echo
 }
@@ -173,17 +146,6 @@ npineoplus2_uboot
 npineoplus2_binary
 }
 
-orangepi-r1_uboot_string () {
-# SOURCE
-all_source
-
-# UBOOT
-opir1_uboot
-
-# BINARY
-opir1_binary
-}
-
 ## KERNEL
 all_kernel () {
 echo
@@ -222,18 +184,6 @@ echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
 for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
-for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo_done
-echo
-}
-
-# ORANGEPI R1
-opir1_patch () {
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch
-for i in ../${SUN8I}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
 echo
@@ -250,10 +200,6 @@ dd if=binary/nanopi/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync 
 
 pine64_flashbin () {
 dd if=binary/pine64/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
-}
-
-opir1_flashbin () {
-dd if=binary/opir1/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
 partition_uuid () {
@@ -331,21 +277,6 @@ tee /boot/extlinux/extlinux.conf <<EOF
 label /boot/kernel
     kernel /boot/Image
     fdt /boot/allwinner/sun50i-a64-pine64-plus.dtb
-    append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
-EOF
-echo Done.
-}
-
-opir1_extlinux () {
-cd ~
-echo
-echo Adding extlinux file.
-sleep 1s
-mkdir -p /boot/extlinux
-tee /boot/extlinux/extlinux.conf <<EOF
-label /boot/kernel
-    kernel /boot/Image
-    fdt /boot/allwinner/sun8i-h2-plus-orangepi-r1.dtb
     append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
 EOF
 echo Done.
