@@ -35,7 +35,7 @@ make dialogrc   # Set builder theme (optional)
 ```sh
 Username:       # Your username
 Password:       # Your password
-Branding:       # Set ASCII Text Banner
+Branding:       # Set ASCII text banner
 Hostname:       # Set the system's host name
 Debian:         # Supported: buster and unstable
 Branch:         # Supported: 5.8.y and above
