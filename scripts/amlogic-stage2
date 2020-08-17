@@ -37,9 +37,9 @@ case `grep -Fx 'DEBIAN_VERSION="unstable"' "/root/userdata.txt" >/dev/null; echo
     ;;
 esac
 echo
-echo -n 'amlogic' > /etc/hostname
-sed -i '1 a 127.0.1.1	amlogic' /etc/hosts
-adduser ${user} --gecos "amlogic" --disabled-password
+echo -n "${HOSTNAME}" > /etc/hostname
+sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
+adduser ${user} --gecos "${HOSTNAME}" --disabled-password
 echo "${user}:${passwd}" | chpasswd
 adduser ${user} sudo
 adduser ${user} audio
@@ -195,7 +195,7 @@ mkdir -p /etc/update-motd.d
 tee /etc/update-motd.d/15-brand <<EOF
 #!/bin/bash
 echo
-toilet -f small --filter metal '${AMLMOTD}'
+toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
 mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo

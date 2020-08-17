@@ -148,6 +148,18 @@ label kernel
 EOF
 }
 
+odroidn2_create_extlinux () {
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/amlogic/meson-g12b-odroid-n2.dtb
+    append  earlyprintk console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+}
+
 nanopi_create_extlinux () {
 source /etc/opt/root-pid.txt
 mkdir -p /mnt/boot/extlinux

@@ -1,6 +1,7 @@
 #!/bin/bash
 ### DO NOT EDIT
-
+RED="\e[0;31m"
+FIN="\e[0m"
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 HEIGHT=0
@@ -19,32 +20,33 @@ while true; do
     --title "Boards" \
     --clear \
     --cancel-label "Exit" \
-    --menu "Select:" $HEIGHT $WIDTH 6 \
+    --menu "Select:" $HEIGHT $WIDTH 7 \
     "1" "Le Potato" \
     "2" "Odroid C4" \
     "3" "Odroid N2" \
     "4" "NanoPi NEO Plus2" \
-    "5" "Pine64" \
-    "6" "Tritium" \
+    "5" "Orange Pi R1" \
+    "6" "Pine64" \
+    "7" "Tritium" \
     2>&1 1>&3)
   exit_status=$?
   exec 3>&-;
   case $exit_status in
     $DIALOG_CANCEL)
       clear
-      echo -e "\e[0;31m Program terminated.\e[0m"
+      echo -e "${RED}Program terminated.${FIN}"
       exit
       ;;
     $DIALOG_ESC)
       clear
-      echo -e "\e[0;31m Program aborted.\e[0m" >&2
+      echo -e "${RED}Program aborted.${FIN}" >&2
       exit 1
       ;;
   esac
   case $selection in
     0 )
       clear
-      echo -e "\e[0;31m Program terminated.\e[0m"
+      echo -e "${RED}Program terminated.${FIN}"
       ;;
     1 )
       chmod +x lib/lepotato
@@ -63,10 +65,14 @@ while true; do
       ./lib/npineoplus2
       ;;
     5 )
+      chmod +x lib/opir1
+      ./lib/opir1
+      ;;
+    6 )
       chmod +x lib/pine64
       ./lib/pine64
       ;;
-    6 )
+    7 )
       chmod +x lib/tritium
       ./lib/tritium
       ;;

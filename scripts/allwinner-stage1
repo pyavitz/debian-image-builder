@@ -22,6 +22,11 @@ case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
 	DEVICE_SOC="a64-pine64-plus"
     ;;
 esac
+case `grep -Fx "opir1" "board.txt" >/dev/null; echo $?` in
+  0)
+	DEVICE_SOC="h2-plus-orangepi-r1"
+    ;;
+esac
 set -eux -o pipefail
 IMAGE_LINUX_LOADADDR="0x1080000"
 IMAGE_FILE_SUFFIX="$(date +%F)"
@@ -79,19 +84,39 @@ case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
    pine64_flashbin
     ;;
 esac
+case `grep -Fx "opir1" "board.txt" >/dev/null; echo $?` in
+  0)
+   opir1_flashbin
+    ;;
+esac
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
 ### fetch partition uuid
 partition_uuid
 
 ### Rootfs
-tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
+
+case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
+  0)
+    tar -xf debian-${DEBIAN_VERSION}-rootfs-armhf.tar.xz -C p1/
+    ;;
+  1)
+    tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
+    ;;
+esac
 
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 
 mkdir -p p1/usr/bin
-cp $(which "qemu-aarch64-static") p1/usr/bin
+case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
+  0)
+    cp $(which "qemu-arm-static") p1/usr/bin
+    ;;
+  1)
+    cp $(which "qemu-aarch64-static") p1/usr/bin
+    ;;
+esac
 
 # sources dot list
 choose_release
@@ -135,6 +160,12 @@ case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
     cp binary/pine64/u-boot-sunxi-with-spl.bin p1/root
     ;;
 esac
+case `grep -Fx "opir1" "board.txt" >/dev/null; echo $?` in
+  0)
+    cp binary/opir1/u-boot-sunxi-with-spl.bin p1/root
+    cp binary/opir1/mkimage p1/boot
+    ;;
+esac
 # mount and chroot
 mount -o bind /dev p1/dev
 mount -o bind /dev/pts p1/dev/pts
@@ -142,8 +173,14 @@ chroot p1 /root/allwinner-stage2
 # unmount
 umount p1/dev/pts
 umount p1/dev
-
-rm p1/usr/bin/qemu-aarch64-static
+case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
+  0)
+    rm p1/usr/bin/qemu-arm-static
+    ;;
+  1)
+    rm p1/usr/bin/qemu-aarch64-static
+    ;;
+esac
 rm p1/root/allwinner-stage2
 rm p1/root/source.txt
 rm p1/root/userdata.txt

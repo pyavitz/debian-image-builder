@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# uInitrd generator for U-Boot
+# place this file to /etc/initramfs/post-update.d/ directory,
+# and make it executable
+# reference: https://forum.doozan.com/read.php?2,12096
+
+uInitrd="/boot/uInitrd"
+
+die () {
+	echo >&2 "Error: $@"
+	echo >&2 "uInitrd generation failed - exiting."
+	exit 1
+}
+
+echo "Generating uInitrd for U-Boot:"
+
+if [ "$#" -eq 2 ]; then
+  if [ ! -z "$1" ] && [ -f "$2" ];then
+	  name="initramfs-$1"
+	  file="$2"
+	  mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${uInitrd}
+  else
+	  die "wrong arguments: '$1', '$2'"
+  fi
+else 
+	die "2 arguments required, $# provided"
+fi

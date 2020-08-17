@@ -1,7 +1,11 @@
 #!/bin/bash
+RED="\e[0;31m"
+FIN="\e[0m"
 
 user=""
 passwd=""
+MOTD="Debian"
+HOSTNAME="computer"
 DEBIAN_VERSION="buster"
 VERSION="5.8.1"
 menuconfig="0"
@@ -16,15 +20,17 @@ VALUES=$(dialog --ok-label "Submit" \
 	  --backtitle "Debian Image Builder" \
 	  --title "Config Menu" \
 	  --form "Choose:" \
-14 31 7 \
+16 31 9 \
 	"Username:"	1 1	"$user" 		1 10 18 0 \
 	"Password:"	2 1	"$passwd"  		2 10 18 0 \
-	"Debian:"	3 1	"$DEBIAN_VERSION"  	3 10 18 0 \
-        "Branch:"   	4 1     "$VERSION"        	4 10 18 0 \
-        "Mainline:"   	5 1     "$mainline"        	5 15 2 0 \
-	"Menuconfig:"	6 1	"$menuconfig"  		6 15 2 0 \
-	"Crosscompile:" 7 1	"$crosscompile" 	7 15 2 0 \
-	""		8 1	""			8 15 0 0 \
+	"Branding:"	3 1	"$MOTD"			3 10 18 0 \
+	"Hostname:"	4 1	"$HOSTNAME"		4 10 18 0 \
+	"Debian:"	5 1	"$DEBIAN_VERSION"  	5 10 18 0 \
+        "Branch:"   	6 1     "$VERSION"        	6 10 18 0 \
+        "Mainline:"   	7 1     "$mainline"        	7 15 2 0 \
+	"Menuconfig:"	8 1	"$menuconfig"  		8 15 2 0 \
+	"Crosscompile:" 9 1	"$crosscompile" 	9 15 2 0 \
+	""		10 1	""			10 15 0 0 \
 2>&1 1>&3)
 
 # close fd
@@ -34,6 +40,8 @@ exec 3>&-
 echo "$VALUES" > tmp1
 echo user='"' > tmp0
 echo passwd='"' >> tmp0
+echo MOTD='"' >> tmp0
+echo HOSTNAME='"' >> tmp0
 echo DEBIAN_VERSION='"' >> tmp0
 echo VERSION='"' >> tmp0
 echo mainline= >> tmp0
@@ -43,6 +51,8 @@ echo emmc=0 >> tmp0
 echo custom_defconfig=0 >> tmp0
 echo MYCONFIG='"'nameofyour_defconfig'"' >> tmp0
 echo '"' > tmp2
+echo '"' >> tmp2
+echo '"' >> tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
@@ -56,5 +66,5 @@ echo GCC='"'$(gcc --version | grep gcc | awk '{print $4}')'"' >> userdata.txt
 clear
 
 # userdata
-echo -e "\e[0;31m userdata file created.\e[0m"
+echo -e "${RED}userdata file created.${FIN}"
 echo

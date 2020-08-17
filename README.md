@@ -1,7 +1,8 @@
 ## Debian image builder
 
 ```
-Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato and NanoPi NEO Plus2
+Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato, NanoPi NEO Plus2
+                  and Orange Pi R1
 ```
 ### Dependencies for Debian Buster AMD64/x86_64 cross compile
 
@@ -10,6 +11,8 @@ sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip 
                  debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
                  device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
                  lzop lz4 aria2 crossbuild-essential-arm64
+                 
+Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
 ```
 ## Instructions
 
@@ -32,6 +35,8 @@ make dialogrc   # Set builder theme (optional)
 ```sh
 Username:       # Your username
 Password:       # Your password
+Branding:       # Set ASCII Text Banner
+Hostname:       # Set the system's host name
 Debian:         # Supported: buster and unstable
 Branch:         # Supported: 5.8.y and above
 Mainline:       # 1 for any x.y-rc
@@ -62,7 +67,7 @@ make purge      # Remove tmp directory
 
 #### Write to eMMC
 ```sh
-Supported: Le Potato, Odroid C4 and NanoPi NEO Plus2
+Supported: Le Potato, Odroid C4, Odroid N2 and NanoPi NEO Plus2
 1. Attach eMMC module       # In some cases the module may need to be attached after boot
 2. Boot from sdcard
 3. Execute: sudo write2mmc

@@ -56,7 +56,14 @@ case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
 esac
 
 ### Setup
-setup
+case `grep -Fx "armv7" "../board.txt" >/dev/null; echo $?` in
+  0)
+    setupv7
+    ;;
+  1)
+    setup
+    ;;
+esac
 
 ### Patches and Defconfigs
 # AMLOGIC
@@ -92,6 +99,11 @@ case `grep -Fx "nanopi" "../../board.txt" >/dev/null; echo $?` in
     nanopi_neo_plus2
     ;;
 esac
+case `grep -Fx "opir1" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    orangepi_r1
+    ;;
+esac
 
 ### Menuconfig
 case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
@@ -101,12 +113,12 @@ case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
 esac
 
 ### Build deb
-case `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null; echo $?` in
+case `grep -Fx "armv7" "../../board.txt" >/dev/null; echo $?` in
   0)
-    ccompile
+    architecture_v7
     ;;
   1)
-    ncompile
+    architecture_v8
     ;;
 esac
 echo

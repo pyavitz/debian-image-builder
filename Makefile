@@ -6,6 +6,8 @@ DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
 # functions
 RFS=./scripts/rootfs
 ROOTFS=sudo ./scripts/rootfs
+RFSV7=./scripts/rootfsv7
+ROOTFSV7=sudo ./scripts/rootfsv7
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
@@ -172,7 +174,7 @@ nanopi-image:
 	@${ALL-IMAGE}
 
 nanopi-all:
-	# N A N O P I N E O + 2
+	# N A N O  P I  N E O + 2
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo nanopi > board.txt 
@@ -188,6 +190,54 @@ nanopi-all:
 	@${ROOTFS}
 	# Making bootable Debian image
 	@ echo nanopi > board.txt 
+	@chmod +x ${ALL-IMG}
+	@chmod +x ${ALL-STG2}
+	@${ALL-IMAGE}
+
+### ORANGEPI R1
+opir1-uboot:
+	# Compiling u-boot
+	@ echo opir1 > board.txt
+	@ echo armv7 >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+
+opir1-kernel:
+	# Compiling kernel
+	@ echo opir1 > board.txt
+	@ echo armv7 >> board.txt
+	@ echo allwinner >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+
+opir1-image:
+	# Making bootable Debian image
+	@ echo opir1 > board.txt
+	@ echo armv7 >> board.txt
+	@chmod +x ${ALL-IMG}
+	@chmod +x ${ALL-STG2}
+	@${ALL-IMAGE}
+
+opir1-all:
+	# O R A N G E  P I  R 1
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo opir1 > board.txt
+	@ echo armv7 >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo opir1 > board.txt
+	@ echo armv7 >> board.txt
+	@ echo allwinner >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFSV7}
+	@${ROOTFSV7}
+	# Making bootable Debian image
+	@ echo opir1 > board.txt
+	@ echo armv7 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -336,6 +386,11 @@ rootfs:
 	# DEBIAN ROOTFS 
 	@chmod +x ${RFS}
 	@${ROOTFS}
+
+rootfsv7:
+	# DEBIAN ROOTFS 
+	@chmod +x ${RFSV7}
+	@${ROOTFSV7}
 
 cleanup:
 	# Cleaning up
