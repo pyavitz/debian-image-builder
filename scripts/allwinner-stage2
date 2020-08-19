@@ -142,17 +142,6 @@ case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
     ;;
 esac
 
-#### Set governor
-echo
-echo Creating set governor.
-tee /usr/local/sbin/set-governor <<EOF
-#!/bin/bash
-# set governor
-echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-EOF
-chmod +x /usr/local/sbin/*
-chown -R root:root /usr/local/sbin/
-
 #### eMMC flash tools
 echo
 echo Setting up eMMC tools
@@ -196,6 +185,8 @@ wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/maste
 mv -f swh /usr/local/bin/
 wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/wifidrv
 mv -f wifidrv /usr/local/bin/
+wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/governor
+mv -f governor /usr/local/bin/
 chmod +x /etc/init.d/firstboot
 chown root:root /etc/init.d/firstboot
 chmod +x /usr/local/bin/*
@@ -393,10 +384,12 @@ sleep 1s
 tee /etc/systemd/system/governor.service <<EOF
 [Unit]
 Description=Set Governor
-ConditionPathExists=/usr/local/sbin/set-governor
+ConditionPathExists=/usr/local/bin/governor
+
 [Service]
 Type=forking
-ExecStart=/usr/local/sbin/set-governor &>/dev/null
+ExecStart=/usr/local/bin/governor -r &>/dev/null
+
 [Install]
 WantedBy=multi-user.target
 EOF
