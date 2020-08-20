@@ -31,7 +31,7 @@ AML-STG2=./scripts/amlogic-stage2
 
 help:
 	@echo
-	@echo "Boards: tritium pine64 odroidc4 odroidn2 lepotato nanopi"
+	@echo "Boards: tritium pine64 odroidc4 odroidn2 lepotato nanopi opir1"
 	@echo
 	@echo "  make ccompile-depends        Install all dependencies"
 	@echo "  make ncompile-depends        Install all native dependencies"
@@ -44,7 +44,8 @@ help:
 	@echo
 	@echo "  make board-uboot             Make u-boot"
 	@echo "  make board-kernel            Make linux kernel"
-	@echo "  make rootfs                  Make ROOTFS tarball"
+	@echo "  make rootfs                  Make arm64 ROOTFS tarball"
+	@echo "  make rootfsv7                Make armhf ROOTFS tarball"
 	@echo "  make board-image             Make bootable Debian image"
 	@echo "  make board-all               Feeling lucky?"
 	@echo
