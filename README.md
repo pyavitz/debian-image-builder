@@ -92,5 +92,19 @@ wifidrv -h
    -2     rtl88x2bu (cilynx)
    -3     rtl8821cu (brektrou)
    -u     update script
-
 ```
+
+#### CPU frequency scaling
+```sh
+governor -h
+
+   -c       Conservative
+   -o       Ondemand
+   -p       Performance
+
+   -r       Run
+   -u       Update
+   
+A systemd service runs 'governor -r' during boot.
+```
+
