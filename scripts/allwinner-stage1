@@ -7,26 +7,18 @@ set -x
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
-case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
-  0)
-	DEVICE_SOC="h5-libretech-all-h3-cc"
-    ;;
-esac
-case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
-  0)
-	DEVICE_SOC="h5-nanopi-neo-plus2"
-    ;;
-esac
-case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
-  0)
-	DEVICE_SOC="a64-pine64-plus"
-    ;;
-esac
-case `grep -Fx "opir1" "board.txt" >/dev/null; echo $?` in
-  0)
-	DEVICE_SOC="h2-plus-orangepi-r1"
-    ;;
-esac
+if `grep -Fx "tritium" "board.txt" >/dev/null;`
+	then DEVICE_SOC="h5-libretech-all-h3-cc"
+fi
+if `grep -Fx "nanopi" "board.txt" >/dev/null;`
+	then DEVICE_SOC="h5-nanopi-neo-plus2"
+fi
+if `grep -Fx "pine64" "board.txt" >/dev/null;`
+	then DEVICE_SOC="a64-pine64-plus"
+fi
+if `grep -Fx "opir1" "board.txt" >/dev/null;`
+	then DEVICE_SOC="h2-plus-orangepi-r1"
+fi
 set -eux -o pipefail
 IMAGE_LINUX_LOADADDR="0x1080000"
 IMAGE_FILE_SUFFIX="$(date +%F)"
@@ -69,26 +61,18 @@ mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 sync
 umount p1
-case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
-  0)
-   tritium_flashbin
-    ;;
-esac
-case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
-  0)
-   nanopi_flashbin
-    ;;
-esac
-case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
-  0)
-   pine64_flashbin
-    ;;
-esac
-case `grep -Fx "opir1" "board.txt" >/dev/null; echo $?` in
-  0)
-   opir1_flashbin
-    ;;
-esac
+if `grep -Fx "tritium" "board.txt" >/dev/null;`
+   then tritium_flashbin
+fi
+if `grep -Fx "nanopi" "board.txt" >/dev/null;`
+   then nanopi_flashbin
+fi
+if `grep -Fx "pine64" "board.txt" >/dev/null;`
+   then pine64_flashbin
+fi
+if `grep -Fx "opir1" "board.txt" >/dev/null;`
+   then opir1_flashbin
+fi
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
 ### fetch partition uuid
@@ -145,27 +129,18 @@ cp files/scripts/* p1/root
 cp files/users/* p1/root
 cp firmware/fw-0a5c_21e8.hcd p1/root
 cp ${ALLSRC}/*.deb p1/root
-case `grep -Fx "tritium" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/tritium/u-boot-sunxi-with-spl.bin p1/root
-    ;;
-esac
-case `grep -Fx "nanopi" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/nanopi/u-boot-sunxi-with-spl.bin p1/root
-    ;;
-esac
-case `grep -Fx "pine64" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/pine64/u-boot-sunxi-with-spl.bin p1/root
-    ;;
-esac
-case `grep -Fx "opir1" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/opir1/u-boot-sunxi-with-spl.bin p1/root
-    cp binary/opir1/mkimage p1/boot
-    ;;
-esac
+if `grep -Fx "tritium" "board.txt" >/dev/null;`
+    then cp binary/tritium/u-boot-sunxi-with-spl.bin p1/root
+fi
+if `grep -Fx "nanopi" "board.txt" >/dev/null;`
+    then cp binary/nanopi/u-boot-sunxi-with-spl.bin p1/root
+fi
+if `grep -Fx "pine64" "board.txt" >/dev/null;`
+    then cp binary/pine64/u-boot-sunxi-with-spl.bin p1/root
+fi
+if `grep -Fx "opir1" "board.txt" >/dev/null;`
+    then cp binary/opir1/u-boot-sunxi-with-spl.bin p1/root && cp binary/opir1/mkimage p1/boot
+fi
 # mount and chroot
 mount -o bind /dev p1/dev
 mount -o bind /dev/pts p1/dev/pts

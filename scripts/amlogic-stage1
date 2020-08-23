@@ -7,21 +7,15 @@ set -x
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
-case `grep -Fx "lepotato" "board.txt" >/dev/null; echo $?` in
-  0)
-    DEVICE_SOC="s905x-libretech-cc"
-    ;;
-esac
-case `grep -Fx "odroidc4" "board.txt" >/dev/null; echo $?` in
-  0)
-    DEVICE_SOC="sm1-odroid-c4"
-    ;;
-esac
-case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
-  0)
-    DEVICE_SOC="g12b-odroid-n2"
-    ;;
-esac
+if `grep -Fx "lepotato" "board.txt" >/dev/null;`
+    then DEVICE_SOC="s905x-libretech-cc"
+fi
+if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
+    then DEVICE_SOC="sm1-odroid-c4"
+fi
+if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
+    then DEVICE_SOC="g12b-odroid-n2"
+fi
 set -eux -o pipefail
 IMAGE_LINUX_LOADADDR="0x1080000"
 IMAGE_FILE_SUFFIX="$(date +%F)"
@@ -64,21 +58,15 @@ mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 sync
 umount p1
-case `grep -Fx "lepotato" "board.txt" >/dev/null; echo $?` in
-  0)
-    lepotato_flashbin
-    ;;
-esac
-case `grep -Fx "odroidc4" "board.txt" >/dev/null; echo $?` in
-  0)
-    odroidc4_flashbin
-    ;;
-esac
-case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
-  0)
-    odroidn2_flashbin
-    ;;
-esac
+if `grep -Fx "lepotato" "board.txt" >/dev/null;`
+    then lepotato_flashbin
+fi
+if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
+    then odroidc4_flashbin
+fi
+if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
+    then odroidn2_flashbin
+fi
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
 ### fetch partition uuid
@@ -120,21 +108,15 @@ cp files/scripts/* p1/root
 cp files/users/* p1/root
 cp firmware/fw-0a5c_21e8.hcd p1/root
 cp ${AMLSRC}/*.deb p1/root
-case `grep -Fx "lepotato" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/lepotato/u-boot.bin p1/root
-    ;;
-esac
-case `grep -Fx "odroidc4" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/odroidc4/u-boot.bin p1/root
-    ;;
-esac
-case `grep -Fx "odroidn2" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp binary/odroidn2/u-boot.bin.odroid-n2 p1/root/u-boot.bin
-    ;;
-esac
+if `grep -Fx "lepotato" "board.txt" >/dev/null;`
+    then cp binary/lepotato/u-boot.bin p1/root
+fi
+if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
+    then cp binary/odroidc4/u-boot.bin p1/root
+fi
+if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
+    then cp binary/odroidn2/u-boot.bin.odroid-n2 p1/root/u-boot.bin
+fi
 # mount and chroot
 mount -o bind /dev p1/dev
 mount -o bind /dev/pts p1/dev/pts

@@ -49,26 +49,18 @@ adduser ${user} disk
 echo Done.
 
 #### Extlinux file
-case `grep -Fx "tritium" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    tritium_extlinux
-    ;;
-esac
-case `grep -Fx "nanopi" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    nanopi_extlinux
-    ;;
-esac
-case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    pine64_extlinux
-    ;;
-esac
-case `grep -Fx "opir1" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    opir1_extlinux
-    ;;
-esac
+if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
+    then tritium_extlinux
+fi
+if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
+    then nanopi_extlinux
+fi
+if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
+    then pine64_extlinux
+fi
+if `grep -Fx "opir1" "/root/board.txt" >/dev/null;`
+    then opir1_extlinux
+fi
 
 #### Sudoers file 
 echo
@@ -129,18 +121,14 @@ rm -f /usr/local/sbin/firstboot
 EOF
 
 #### LED triggers
-case `grep -Fx "tritium" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    tritium_led_triggers
-    ;;
-esac
+if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
+    then tritium_led_triggers
+fi
 
 ### Bluetooth helper
-case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    pine64_bt_helper
-    ;;
-esac
+if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
+    then pine64_bt_helper
+fi
 
 #### eMMC flash tools
 echo
@@ -292,7 +280,7 @@ cd ~
 rm -fdr wireless-regdb
 echo Done.
 
-case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
+case `grep -Fx "armv7" "/root/board.txt" >/dev/null; echo $?` in
   0)
     echo
     wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/ca-certificates-udeb_20200601.deb10u1_all.udeb
@@ -395,11 +383,9 @@ WantedBy=multi-user.target
 EOF
 
 ####
-case `grep -Fx "tritium" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    tritium_led_service
-    ;;
-esac
+if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
+    then tritium_led_service
+fi
 
 ####
 echo
