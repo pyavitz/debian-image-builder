@@ -381,6 +381,36 @@ EOF
 systemctl enable leds
 }
 
+nanopi_led_triggers (){
+echo
+echo Creating LED triggers.
+tee /usr/local/sbin/led-triggers <<EOF
+#!/bin/bash
+# led triggers
+echo 1 > /sys/class/leds/nanopi:green:status/brightness
+sleep 2s
+echo 0 > /sys/class/leds/nanopi:green:status/brightness
+echo 0 > /sys/class/leds/nanopi:red:pwr/brightness
+EOF
+}
+
+nanopi_led_service () {
+echo
+echo Creating led service.
+sleep 1s
+tee /etc/systemd/system/leds.service <<EOF
+[Unit]
+Description=Set LEDs
+ConditionPathExists=/usr/local/sbin/led-triggers
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/led-triggers &>/dev/null
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable leds
+}
+
 cypress_firmware () {
 echo
 echo Adding brcm firmware from cypress.
