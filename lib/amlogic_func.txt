@@ -318,7 +318,10 @@ cd ${AMLSRC}
 potato_patch () {
 echo
 echo_patch
-patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
+if `grep -Fx "lepotato" "../board.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/amlogic-noc4-packaging.patch;
+	else patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
+fi
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
@@ -340,7 +343,10 @@ echo
 odroidn2_patch () {
 echo
 echo_patch
-patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
+if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`;
+	then patch -p1 < ../${PACKAGING}/amlogic-noc4-packaging.patch;
+	else patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
+fi
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
