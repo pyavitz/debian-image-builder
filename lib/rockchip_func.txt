@@ -1,0 +1,183 @@
+# RENEGADE
+roc_source (){
+echo
+mkdir -p ${ROCSRC}
+cp -f board.txt ${ROCSRC}/
+cd ${ROCSRC}
+rm -fdr rkbin-rk3328-firefly* u-boot-rk3328-firefly* rkbin u-boot prebuilts/*
+}
+
+renegade_uboot (){
+echo_duboot
+aria2c -c https://github.com/FireflyTeam/u-boot/archive/rk3328/firefly.tar.gz
+aria2c -c https://github.com/FireflyTeam/rkbin/archive/rk3328/firefly.tar.gz
+echo
+echo_toolchain
+aria2c -c https://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/aarch64-linux-gnu/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
+echo
+echo_extracts
+tar -xf rkbin-rk3328-firefly.tar.gz
+tar -xf u-boot-rk3328-firefly.tar.gz
+tar -xf gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
+echo_done
+mv -f u-boot-rk3328-firefly u-boot
+mv -f rkbin-rk3328-firefly rkbin
+mkdir -p prebuilts/gcc/linux-x86/aarch64
+mv -f gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu prebuilts/gcc/linux-x86/aarch64/
+cd u-boot
+echo
+./make.sh firefly-rk3328
+}
+
+renegade_binary (){
+cp -f idbloader.img ../${BINRNG}/
+cp -f trust.img ../${BINRNG}/
+cp -f uboot.img ../${BINRNG}/
+echo_done
+echo
+}
+
+renegade_uboot_string (){
+roc_source
+renegade_uboot
+renegade_binary
+}
+
+## KERNEL
+roc_kernel (){
+echo
+mkdir -p ${ROCSRC}
+cp -f board.txt ${ROCSRC}/
+cd ${ROCSRC}
+}
+
+rockchip_patch (){
+    echo
+    echo_patch
+    patch -p1 < ../${PACKAGING}/rockchip-packaging.patch
+    for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done
+    cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+    echo_done
+    echo
+}
+
+## STAGE1
+renegade_flashbin () {
+dd if=binary/renegade/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
+dd if=binary/renegade/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
+dd if=binary/renegade/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
+}
+
+rock64_flashbin () {
+dd if=binary/rock64/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
+dd if=binary/rock64/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
+dd if=binary/rock64/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
+}
+
+partition_uuid () {
+ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
+ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
+
+echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
+
+source part-uuid.txt
+}
+
+choose_release () {
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+EOF
+    ;;
+   1)
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
+deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
+EOF
+   ;;
+esac
+}
+
+## STAGE2
+renegade_extlinux () {
+cd ~
+echo
+echo Adding extlinux file.
+sleep 1s
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/rockchip/rk3328-roc-cc.dtb
+    append  earlyprintk console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done
+}
+
+rock64_extlinux () {
+cd ~
+echo
+echo Adding extlinux file.
+sleep 1s
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/rockchip/rk3328-rock64.dtb
+    append  earlyprintk console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done
+}
+
+extra_firmware () {
+echo
+echo Adding extra firmware.
+sleep 1s
+mkdir -p /lib/firmware/brcm
+cd /lib/firmware/brcm
+wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
+cd ~
+aria2c -c --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
+tar xf firmware-master.tar.gz
+cp -R firmware-master/* /lib/firmware
+rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+echo Done.
+}
+
+htop_stable () {
+echo
+echo Installing htop with cpufreq and thermal support.
+sleep 1s
+git clone https://github.com/leeadama/htop.git
+cd htop
+./autogen.sh
+./configure --prefix=/usr
+make -j4
+make install
+cd ~
+rm -fdr htop
+echo Done.
+}
+
+htop_unstable () {
+echo
+echo Installing htop with cpufreq and thermal support.
+sleep 1s
+git clone https://github.com/leeadama/htop.git
+cd htop
+./autogen.sh
+./configure --prefix=/usr
+make -j4 CC=gcc-9
+make install
+cd ~
+rm -fdr htop
+echo Done.
+}
