@@ -29,7 +29,7 @@ apt upgrade -y
 apt dist-upgrade -y
 case `grep -Fx 'DEBIAN_VERSION="unstable"' "/root/userdata.txt" >/dev/null; echo $?` in
   0)
-    apt install -y ${PKGS1} gcc-9
+    apt install -y ${PKGS1} gpt gcc-9
     export CC=/usr/bin/gcc-9
     ;;
   1)
@@ -48,12 +48,12 @@ adduser ${user} video
 adduser ${user} disk
 echo Done.
 
-#### Extlinux file
-if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
-    then renegade_extlinux
-fi
+#### boot file
 if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
-    then rock64_extlinux
+    then rock64_extlinux;
+fi
+if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
+    then renegade_uinitrd && renegade_bootcmd;
 fi
 #### Sudoers file 
 echo
@@ -123,7 +123,6 @@ echo Moving scripts.
 sleep 1s
 cd ~
 mkdir -p /usr/local/bin
-rm -f 99-uboot
 mv -f firstboot.init /etc/init.d/firstboot
 mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
@@ -139,6 +138,14 @@ chown root:root /etc/init.d/firstboot
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 echo Done.
+
+# Leds
+if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
+    then rock64_led_trigger;
+fi
+if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
+    then renegade_led_trigger;
+fi
 
 #### MOTD
 echo
@@ -277,6 +284,10 @@ cd ~
 dpkg -i *.deb
 rm -f *.deb
 echo Done.
+echo
+if `grep -Fx "renegade" "board.txt" >/dev/null;`
+	then echo Creating mkimage boot dot scr. && mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr
+fi
 
 #### Service
 echo
@@ -317,9 +328,7 @@ WantedBy=multi-user.target
 EOF
 
 ####
-#if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
-#    then tritium_led_service
-#fi
+rockchip_led_service
 
 ####
 echo
