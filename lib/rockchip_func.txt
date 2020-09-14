@@ -62,19 +62,19 @@ rockchip_patch (){
 }
 
 ## STAGE1
-renegade_flashbin () {
+renegade_flashbin (){
 dd if=binary/renegade/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=binary/renegade/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
 dd if=binary/renegade/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
 }
 
-rock64_flashbin () {
+rock64_flashbin (){
 dd if=binary/rock64/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=binary/rock64/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
 dd if=binary/rock64/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
 }
 
-partition_uuid () {
+partition_uuid (){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
 
@@ -84,7 +84,7 @@ echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 source part-uuid.txt
 }
 
-choose_release () {
+choose_release (){
 case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
   0)
 tee p1/etc/apt/sources.list <<EOF
@@ -103,22 +103,7 @@ esac
 }
 
 ## STAGE2
-renegade_extlinux () {
-cd ~
-echo
-echo Adding extlinux file.
-sleep 1s
-mkdir -p /boot/extlinux
-tee /boot/extlinux/extlinux.conf <<EOF
-label kernel
-    kernel /boot/Image
-    fdt /boot/rockchip/rk3328-roc-cc.dtb
-    append  earlyprintk console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
-EOF
-echo Done
-}
-
-rock64_extlinux () {
+rock64_extlinux (){
 cd ~
 echo
 echo Adding extlinux file.
@@ -133,7 +118,29 @@ EOF
 echo Done
 }
 
-extra_firmware () {
+renegade_uinitrd (){
+cd ~
+echo
+echo  Adding needed boot files.
+mkdir -p /etc/initramfs/post-update.d/
+mv -f 99-uboot /etc/initramfs/post-update.d/
+mv -f boot.cmd /boot/
+chmod +x /etc/initramfs/post-update.d/99-uboot
+chown root:root /etc/initramfs/post-update.d/99-uboot
+rm -f 99-uboot
+}
+
+renegade_bootcmd (){
+tee /boot/bootEnv.txt <<EOF
+verbosity=1
+rootdev=PARTUUID=${ROOT_PARTUUID}
+rootfstype=ext4
+EOF
+chown root:root /boot/bootEnv.txt
+echo Done.
+}
+
+extra_firmware (){
 echo
 echo Adding extra firmware.
 sleep 1s
@@ -152,7 +159,7 @@ chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 echo Done.
 }
 
-htop_stable () {
+htop_stable (){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -167,7 +174,7 @@ rm -fdr htop
 echo Done.
 }
 
-htop_unstable () {
+htop_unstable (){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -180,4 +187,41 @@ make install
 cd ~
 rm -fdr htop
 echo Done.
+}
+
+rock64_led_trigger (){
+echo
+echo Creating LED triggers.
+tee /usr/local/sbin/led-trigger <<EOF
+#!/bin/bash
+# led trigger
+echo 0 > /sys/class/leds/led-1/brightness
+EOF
+}
+
+renegade_led_trigger (){
+echo
+echo Creating LED triggers.
+tee /usr/local/sbin/led-trigger <<EOF
+#!/bin/bash
+# led triggers
+echo 0 > /sys/class/leds/firefly:blue:power/brightness
+EOF
+}
+
+rockchip_led_service (){
+echo
+echo Creating led service.
+sleep 1s
+tee /etc/systemd/system/leds.service <<EOF
+[Unit]
+Description=Turn off Light-emitting diode
+ConditionPathExists=/usr/local/sbin/led-trigger
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/led-trigger &>/dev/null
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable leds
 }
