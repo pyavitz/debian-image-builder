@@ -3,8 +3,6 @@
 ```
 Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato, NanoPi NEO Plus2
                   Orange Pi R1, Rock64 and Renegade
-
-Rockchip notes: The u-boot bins are already in place, so don't bother trying to compile uboot.
 ```
 ### Dependencies for Debian Buster AMD64/x86_64 cross compile
 
