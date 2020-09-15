@@ -4,55 +4,96 @@ echo
 mkdir -p ${ROCSRC}
 cp -f board.txt ${ROCSRC}/
 cd ${ROCSRC}
-rm -fdr rkbin-rk3328-firefly* u-boot-rk3328-firefly* rkbin u-boot prebuilts/*
+rm -fdr u-boot rkbin *tar*
 }
 
-renegade_uboot (){
+rk3328_uboot (){
 echo_duboot
-aria2c -c https://github.com/FireflyTeam/u-boot/archive/rk3328/firefly.tar.gz
-aria2c -c https://github.com/FireflyTeam/rkbin/archive/rk3328/firefly.tar.gz
-echo
-echo_toolchain
-aria2c -c https://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/aarch64-linux-gnu/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
+aria2c -c https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz
+aria2c -c https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/rkbin-master.tar.gz
 echo
 echo_extracts
-tar -xf rkbin-rk3328-firefly.tar.gz
-tar -xf u-boot-rk3328-firefly.tar.gz
-tar -xf gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
+tar -xf u-boot-v2020.07.tar.gz
+tar -xf rkbin-master.tar.gz
 echo_done
-mv -f u-boot-rk3328-firefly u-boot
-mv -f rkbin-rk3328-firefly rkbin
-mkdir -p prebuilts/gcc/linux-x86/aarch64
-mv -f gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu prebuilts/gcc/linux-x86/aarch64/
+mv -f u-boot-v2020.07 u-boot
+mv -f rkbin-master rkbin
+cp -f board.txt u-boot/
 cd u-boot
-echo
-./make.sh firefly-rk3328
+echo 
+export ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then make roc-cc-rk3328_defconfig && make menuconfig && make -j${CORES};
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then make rock64-rk3328_defconfig && make menuconfig && make -j${CORES};
+fi
+}
+
+rk3328_rkbin (){
+rm -f idbloader.img
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then tools/mkimage -n rk3328 -T rksd -d ../rkbin/rk33/rk3328_ddr_786MHz_v1.13.bin idbloader.bin
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then tools/mkimage -n rk3328 -T rksd -d ../rkbin/rk33/rk3328_ddr_786MHz_v1.13.bin idbloader.bin
+fi
+cat ../rkbin/rk33/rk3328_miniloader_v2.46.bin >> idbloader.bin
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then ../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then ../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
+fi
+cp ../rkbin/rk33/rk3328_loader_ddr786_v1.06.243.bin ./
+cat >trust.ini <<EOF
+[VERSION]
+MAJOR=1
+MINOR=2
+[BL30_OPTION]
+SEC=0
+[BL31_OPTION]
+SEC=1
+PATH=../rkbin/rk33/rk3328_bl31_v1.34.bin
+ADDR=0x10000
+[BL32_OPTION]
+SEC=0
+[BL33_OPTION]
+SEC=0
+[OUTPUT]
+PATH=trust.img
+EOF
+../rkbin/tools/trust_merger trust.ini
 }
 
 renegade_binary (){
-cp -f idbloader.img ../${BINRNG}/
-cp -f trust.img ../${BINRNG}/
+cp -f idbloader.bin ../${BINRNG}/idbloader.bin
+cp -f trust.img ../${BINRNG}/trust.bin
 cp -f uboot.img ../${BINRNG}/
+echo_done
+echo
+}
+
+rock64_binary (){
+cp -f idbloader.bin ../${BINR64}/idbloader.bin
+cp -f trust.img ../${BINR64}/trust.bin
+cp -f uboot.img ../${BINR64}/
 echo_done
 echo
 }
 
 renegade_uboot_string (){
 roc_source
-renegade_uboot
+rk3328_uboot
+rk3328_rkbin
 renegade_binary
 }
 
-renegade_uboot_found (){
-if ls binary/renegade/*.img binary/renegade/*.bin &>/dev/null; then exit; 
-	else echo "Did you delete the boot bins?";
-fi
-}
-
-rock64_uboot_found (){
-if ls binary/rock64/*.img binary/rock64/*.bin &>/dev/null; then exit; 
-	else echo "Did you delete the boot bins?";
-fi
+rock64_uboot_string (){
+roc_source
+rk3328_uboot
+rk3328_rkbin
+rock64_binary
 }
 
 ## KERNEL
