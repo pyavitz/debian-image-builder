@@ -7,15 +7,19 @@ sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/a
 stable_download () {
 echo
 echo_stable
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz
-echo_done
+if ls ${KERNEL}-${VERSION}.tar.xz > /dev/null 2>&1;
+	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.xz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz && echo_ok;
+fi
 }
 
 mainline_download () {
 echo
 echo_mainline
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz
-echo_done
+if ls ${KERNEL}-${VERSION}.tar.gz > /dev/null 2>&1;
+	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz && echo_ok;
+fi
 }
 
 stable_extract () {
@@ -113,7 +117,7 @@ amlogic_defconfig () {
     cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
-       echo -e "\e[1;32mGCC . . . OK! \e[0m"
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
        ;;
      1)
        echo -e "\e[1;31mGCC version not officially supported. \e[0m"
@@ -170,7 +174,7 @@ allwinner_defconfig () {
     cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
-       echo -e "\e[1;32mGCC . . . OK! \e[0m"
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
        ;;
      1)
        echo -e "\e[1;31mGCC version not officially supported. \e[0m"
@@ -187,7 +191,7 @@ allwinner-r1_defconfig () {
     cp -f ../${DEF}/allwinner-r1_defconfig arch/arm/configs/
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
-       echo -e "\e[1;32mGCC . . . OK! \e[0m"
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
        ;;
      1)
        echo -e "\e[1;31mGCC version not officially supported. \e[0m"
@@ -257,7 +261,7 @@ rockchip_defconfig () {
     cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
-       echo -e "\e[1;32mGCC . . . OK! \e[0m"
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
        ;;
      1)
        echo -e "\e[1;31mGCC version not officially supported. \e[0m"
