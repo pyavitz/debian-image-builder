@@ -248,7 +248,12 @@ echo Creating LED triggers.
 tee /usr/local/sbin/led-trigger <<EOF
 #!/bin/bash
 # led trigger
-echo 0 > /sys/class/leds/led-1/brightness
+if ls /sys/class/leds/standby/brightness > /dev/null 2>&1;
+        then echo 0 > /sys/class/leds/standby/brightness;
+fi
+if ls /sys/class/leds/led-1/brightness  > /dev/null 2>&1;
+        then echo 0 > /sys/class/leds/led-1/brightness;
+fi
 EOF
 }
 
