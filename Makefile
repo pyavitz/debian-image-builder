@@ -419,7 +419,7 @@ renegade-all:
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
 
-# RENEGADE
+# ROCK64
 rock64-uboot:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
