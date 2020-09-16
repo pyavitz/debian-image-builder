@@ -4,13 +4,20 @@ echo
 mkdir -p ${ROCSRC}
 cp -f board.txt ${ROCSRC}/
 cd ${ROCSRC}
-rm -fdr u-boot rkbin *tar*
+rm -fdr u-boot rkbin
 }
 
 rk3328_uboot (){
 echo_duboot
-aria2c -c https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz
-aria2c -c https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/rkbin-master.tar.gz
+if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz;
+fi
+if ls rkbin-master.tar.gz > /dev/null 2>&1
+	then echo -e "${YLW}rkbin-master.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/rkbin-master.tar.gz;
+fi
+echo_done
 echo
 echo_extracts
 tar -xf u-boot-v2020.07.tar.gz
@@ -23,28 +30,20 @@ cd u-boot
 echo 
 export ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then make roc-cc-rk3328_defconfig && make menuconfig && make -j${CORES};
+	then make roc-cc-rk3328_defconfig;
 fi
 if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then make rock64-rk3328_defconfig && make menuconfig && make -j${CORES};
+	then make rock64-rk3328_defconfig;
 fi
+make menuconfig
+make -j${CORES}
 }
 
 rk3328_rkbin (){
 rm -f idbloader.img
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then tools/mkimage -n rk3328 -T rksd -d ../rkbin/rk33/rk3328_ddr_786MHz_v1.13.bin idbloader.bin
-fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then tools/mkimage -n rk3328 -T rksd -d ../rkbin/rk33/rk3328_ddr_786MHz_v1.13.bin idbloader.bin
-fi
+tools/mkimage -n rk3328 -T rksd -d ../rkbin/rk33/rk3328_ddr_786MHz_v1.13.bin idbloader.bin
 cat ../rkbin/rk33/rk3328_miniloader_v2.46.bin >> idbloader.bin
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then ../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
-fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then ../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
-fi
+../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
 cp ../rkbin/rk33/rk3328_loader_ddr786_v1.06.243.bin ./
 cat >trust.ini <<EOF
 [VERSION]
@@ -82,18 +81,16 @@ echo_done
 echo
 }
 
-renegade_uboot_string (){
+rk3328_uboot_string (){
 roc_source
 rk3328_uboot
 rk3328_rkbin
-renegade_binary
-}
-
-rock64_uboot_string (){
-roc_source
-rk3328_uboot
-rk3328_rkbin
-rock64_binary
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then renegade_binary;
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then rock64_binary;
+fi
 }
 
 ## KERNEL
@@ -201,7 +198,7 @@ mkdir -p /lib/firmware/brcm
 cd /lib/firmware/brcm
 wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
 cd ~
-aria2c -c --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
 tar xf firmware-master.tar.gz
 cp -R firmware-master/* /lib/firmware
 rm -fdr firmware-master firmware-master.tar.gz master.tar.gz

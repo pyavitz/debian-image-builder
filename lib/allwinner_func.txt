@@ -1,5 +1,5 @@
 # ATF
-armtrusted_firmware () {
+armtrusted_firmware (){
 echo -e "${COL}Downloading arm trusted firmware${FIN}."
 git clone https://github.com/ARM-software/arm-trusted-firmware.git
 cd arm-trusted-firmware
@@ -12,73 +12,55 @@ echo_done
 }
 
 # UBOOT
-npineoplus2_uboot () {
+allwinner_uboot (){
 echo
 echo_duboot
-aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz;
+fi
+echo_done
 echo
 echo_extract
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
 echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
-cp ${DEF}/h5-npineoplus2_defconfig u-boot/configs/h5-npineoplus2_defconfig
 cp board.txt u-boot/
+if `grep -Fx "tritium" "../board.txt" >/dev/null;`
+	then cp ${DEF}/libretech-all-h5-cc_defconfig u-boot/configs/libretech-all-h5-cc_defconfig;
+fi
+if `grep -Fx "pine64" "../board.txt" >/dev/null;`
+	then cp ${DEF}/a64-pine64-plus_defconfig u-boot/configs/a64-pine64-plus_defconfig;
+fi
+if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
+	then cp ${DEF}/h5-npineoplus2_defconfig u-boot/configs/h5-npineoplus2_defconfig;
+fi
 cd u-boot
 echo
 echo_cuboot
 export CROSS_COMPILE=aarch64-linux-gnu-
-make h5-npineoplus2_defconfig
+if `grep -Fx "tritium" "../board.txt" >/dev/null;`
+	then make libretech-all-h5-cc_defconfig;
+fi
+if `grep -Fx "pine64" "../board.txt" >/dev/null;`
+	then make a64-pine64-plus_defconfig;
+fi
+if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
+	then make h5-npineoplus2_defconfig;
+fi
 #make menuconfig
 make -j${CORES}
 }
 
-pine64_uboot () {
+opir1_uboot (){
 echo
 echo_duboot
-aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo
-echo_extract
-tar xf u-boot-${UBOOT_VERSION}.tar.gz
+if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz;
+fi
 echo_done
-mv -f u-boot-${UBOOT_VERSION} u-boot
-cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
-cp ${DEF}/a64-pine64-plus_defconfig u-boot/configs/a64-pine64-plus_defconfig
-cp board.txt u-boot/
-cd u-boot
-echo
-echo_cuboot
-export CROSS_COMPILE=aarch64-linux-gnu-
-make a64-pine64-plus_defconfig
-#make menuconfig
-make -j${CORES}
-}
-
-tritium_uboot () {
-echo
-echo_duboot
-aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-echo
-echo_extract
-tar xf u-boot-${UBOOT_VERSION}.tar.gz
-echo_done
-mv -f u-boot-${UBOOT_VERSION} u-boot
-cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
-cp ${DEF}/libretech-all-h5-cc_defconfig u-boot/configs/libretech-all-h5-cc_defconfig
-cp board.txt u-boot/
-cd u-boot
-echo
-echo_cuboot
-export CROSS_COMPILE=aarch64-linux-gnu-
-make libretech-all-h5-cc_defconfig
-#make menuconfig
-make -j${CORES}
-}
-
-opir1_uboot () {
-echo
-echo_duboot
-aria2c -c --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
 echo
 echo_extract
 tar xf u-boot-${UBOOT_VERSION}.tar.gz
@@ -91,39 +73,39 @@ echo
 echo_cuboot
 export CROSS_COMPILE=arm-linux-gnueabihf-
 make sun8i-h2-plus-orangepi-r1_defconfig
-make menuconfig
+#make menuconfig
 make -j${CORES}
 }
 
 # BINARY
-npineoplus2_binary () {
+npineoplus2_binary (){
 cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
 cp -f tools/mkimage ../${BINNPI}/
 echo_done
 echo
 }
 
-pine64_binary () {
+pine64_binary (){
 cp -f u-boot-sunxi-with-spl.bin ../${BINPINE}/
 cp -f tools/mkimage ../${BINPINE}/
 echo_done
 }
 
-tritium_binary () {
+tritium_binary (){
 cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
 cp -f tools/mkimage ../${BINTRI}/
 echo_done
 echo
 }
 
-opir1_binary () {
+opir1_binary (){
 cp -f u-boot-sunxi-with-spl.bin ../${BINR1}/
 cp -f tools/mkimage ../${BINR1}/
 echo_done
 echo
 }
 
-all_source () {
+all_source (){
 echo
 mkdir -p ${ALLSRC}
 cp -f board.txt ${ALLSRC}/
@@ -131,61 +113,29 @@ cd ${ALLSRC}
 rm -fdr arm-trusted-firmware u-boot
 }
 
-tritium_uboot_string () {
-# SOURCE
+allwinner_uboot_string (){
 all_source
-
-# ATF
 armtrusted_firmware
-
-# UBOOT
-tritium_uboot
-
-# BINARY
-tritium_binary
+allwinner_uboot
+if `grep -Fx "tritium" "../board.txt" >/dev/null;`
+	then tritium_binary;
+fi
+if `grep -Fx "pine64" "../board.txt" >/dev/null;`
+	then pine64_binary;
+fi
+if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
+	then npineoplus2_binary;
+fi
 }
 
-pine64_uboot_string () {
-# ALLWINNER SOURCE
+orangepi-r1_uboot_string (){
 all_source
-
-# ATF
-armtrusted_firmware
-
-# UBOOT
-pine64_uboot
-
-# BINARY
-pine64_binary
-}
-
-nanopi_uboot_string () {
-# ALLWINNER SOURCE
-all_source
-
-# ATF
-armtrusted_firmware
-
-# UBOOT
-npineoplus2_uboot
-
-# BINARY
-npineoplus2_binary
-}
-
-orangepi-r1_uboot_string () {
-# SOURCE
-all_source
-
-# UBOOT
 opir1_uboot
-
-# BINARY
 opir1_binary
 }
 
 ## KERNEL
-all_kernel () {
+all_kernel (){
 echo
 mkdir -p ${ALLSRC}
 cp -f board.txt ${ALLSRC}/
@@ -193,18 +143,18 @@ cd ${ALLSRC}
 }
 
 # TRITIUM
-tritium_patch () {
-    echo
-    echo_patch
-    patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
-    for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
-    cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-    echo_done
-    echo
+tritium_patch (){
+echo
+echo_patch
+patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
+for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
+cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo_done
+echo
 }
 
 # PINE64
-pine64_patch () {
+pine64_patch (){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
@@ -217,7 +167,7 @@ echo
 }
 
 # NANOPI
-nanopi_patch () {
+nanopi_patch (){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
@@ -229,7 +179,7 @@ echo
 }
 
 # ORANGEPI R1
-opir1_patch () {
+opir1_patch (){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch
@@ -240,23 +190,23 @@ echo
 }
 
 ## STAGE1
-tritium_flashbin () {
+tritium_flashbin (){
 dd if=binary/tritium/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-nanopi_flashbin () {
+nanopi_flashbin (){
 dd if=binary/nanopi/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-pine64_flashbin () {
+pine64_flashbin (){
 dd if=binary/pine64/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-opir1_flashbin () {
+opir1_flashbin (){
 dd if=binary/opir1/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-partition_uuid () {
+partition_uuid (){
 echo 'ROOT_UUID="' > root1
 blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
@@ -273,7 +223,7 @@ source root-id.txt
 source root-pid.txt
 }
 
-choose_release () {
+choose_release (){
 case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
   0)
 tee p1/etc/apt/sources.list <<EOF
@@ -292,7 +242,7 @@ esac
 }
 
 ## STAGE2
-tritium_extlinux () {
+tritium_extlinux (){
 cd ~
 echo
 echo Adding extlinux file.
@@ -307,7 +257,7 @@ EOF
 echo Done
 }
 
-nanopi_extlinux () {
+nanopi_extlinux (){
 cd ~
 echo
 echo Creating extlinux file.
@@ -321,7 +271,7 @@ EOF
 echo Done
 }
 
-pine64_extlinux () {
+pine64_extlinux (){
 cd ~
 echo
 echo Adding extlinux file.
@@ -336,7 +286,7 @@ EOF
 echo Done.
 }
 
-opir1_extlinux () {
+opir1_extlinux (){
 cd ~
 echo
 echo Adding extlinux file.
@@ -351,7 +301,7 @@ EOF
 echo Done.
 }
 
-tritium_led_triggers () {
+tritium_led_triggers (){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-triggers <<EOF
@@ -364,7 +314,7 @@ echo 0 > /sys/class/leds/librecomputer:blue:status/brightness
 EOF
 }
 
-tritium_led_service () {
+tritium_led_service (){
 echo
 echo Creating led service.
 sleep 1s
@@ -394,7 +344,7 @@ echo 0 > /sys/class/leds/nanopi:red:pwr/brightness
 EOF
 }
 
-nanopi_led_service () {
+nanopi_led_service (){
 echo
 echo Creating led service.
 sleep 1s
@@ -411,13 +361,13 @@ EOF
 systemctl enable leds
 }
 
-cypress_firmware () {
+cypress_firmware (){
 echo
 echo Adding brcm firmware from cypress.
 sleep 1s
 mkdir cypress
 cd cypress
-aria2c -c --show-files=false https://community.cypress.com/servlet/JiveServlet/download/19375-1-53475/cypress-fmac-v5.4.18-2020_0402.zip
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://community.cypress.com/servlet/JiveServlet/download/19375-1-53475/cypress-fmac-v5.4.18-2020_0402.zip
 unzip -qq cypress-fmac-v5.4.18-2020_0402.zip
 tar -xf cypress-firmware-v5.4.18-2020_0402.tar.gz
 rm -f firmware/*pcie*
@@ -427,7 +377,7 @@ rm -fdr cypress
 echo Done.
 }
 
-extra_firmware () {
+extra_firmware (){
 echo
 echo Adding extra firmware.
 sleep 1s
@@ -435,7 +385,7 @@ mkdir -p /lib/firmware/brcm
 cd /lib/firmware/brcm
 wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
 cd ~
-aria2c -c --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
 tar xf firmware-master.tar.gz
 cp -R firmware-master/* /lib/firmware
 rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
@@ -446,7 +396,7 @@ chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 echo Done.
 }
 
-pine64_bt_helper () {
+pine64_bt_helper (){
 echo
 echo Creating bluetooth helper.
 tee /usr/local/sbin/start-bluetooth <<EOF
@@ -459,7 +409,7 @@ hciconfig hci0 up
 EOF
 }
 
-pine64_bt_install () {
+pine64_bt_install (){
 echo
 echo Installing bluetooth helper.
 sleep 1s
@@ -473,7 +423,7 @@ rm -fdr rtl8723bs_bt
 echo Done.
 }
 
-pine64_wifi_bt () {
+pine64_wifi_bt (){
 echo
 echo Bluetooth and wifi help.
 sleep 1s
@@ -489,7 +439,7 @@ options r8723bs rtw_power_mgnt=0
 EOF
 }
 
-pine64_bt_service () {
+pine64_bt_service (){
 echo
 echo Creating bluetooth service.
 sleep 1s
@@ -506,7 +456,7 @@ EOF
 systemctl enable bluetooth-module
 }
 
-htop_stable () {
+htop_stable (){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -521,7 +471,7 @@ rm -fdr htop
 echo Done.
 }
 
-htop_unstable () {
+htop_unstable (){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s

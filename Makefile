@@ -79,6 +79,7 @@ ncompile-depends:
 tritium-uboot:
 	# Compiling u-boot
 	@ echo tritium > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -101,6 +102,7 @@ tritium-all:
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo tritium > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -121,6 +123,7 @@ tritium-all:
 pine64-uboot:
 	# Compiling u-boot
 	@ echo pine64 > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -143,6 +146,7 @@ pine64-all:
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo pine64 > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -162,7 +166,8 @@ pine64-all:
 ### NANOPI NEO PLUS2
 nanopi-uboot:
 	# Compiling u-boot
-	@ echo nanopi > board.txt 
+	@ echo nanopi > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -184,7 +189,8 @@ nanopi-all:
 	# N A N O  P I  N E O + 2
 	# - - - - - - - -
 	# Compiling u-boot
-	@ echo nanopi > board.txt 
+	@ echo nanopi > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -252,7 +258,8 @@ opir1-all:
 ### ODROID-C4
 odroidc4-uboot:
 	# Compiling u-boot
-	@ echo odroidc4 > board.txt 
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -274,7 +281,8 @@ odroidc4-all:
 	# O D R O I D - C 4
 	# - - - - - - - -
 	# Compiling u-boot
-	@ echo odroidc4 > board.txt 
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -294,7 +302,8 @@ odroidc4-all:
 ### ODROID-N2
 odroidn2-uboot:
 	# Compiling u-boot
-	@ echo odroidn2 > board.txt 
+	@ echo odroidn2 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -316,7 +325,8 @@ odroidn2-all:
 	# O D R O I D - N 2
 	# - - - - - - - -
 	# Compiling u-boot
-	@ echo odroidn2 > board.txt 
+	@ echo odroidn2 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -379,6 +389,7 @@ lepotato-all:
 renegade-uboot:
 	# Compiling u-boot
 	@ echo renegade > board.txt
+	@ echo rockchip >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -402,6 +413,7 @@ renegade-all:
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo renegade > board.txt
+	@ echo rockchip >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -419,10 +431,11 @@ renegade-all:
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
 
-# ROCK64
+# RENEGADE
 rock64-uboot:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
+	@ echo rockchip >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -446,6 +459,7 @@ rock64-all:
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo rock64 > board.txt
+	@ echo rockchip >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
