@@ -2,7 +2,7 @@
 
 ```
 Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato, NanoPi NEO Plus2
-                  Orange Pi R1, Renegade and Rock64
+                  Orange Pi R1, NanoPC-T4, Renegade and Rock64
 ```
 ### Dependencies for Debian Buster AMD64/x86_64 cross compile
 

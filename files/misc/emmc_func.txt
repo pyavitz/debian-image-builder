@@ -78,6 +78,34 @@ sleep 1s
 resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
 }
 
+nanopc_partition_emmc () {
+dd if=/dev/zero of=/dev/mmcblk2 bs=512 count=1
+truncate -s 1850MB /dev/mmcblk2
+fdisk /dev/mmcblk2 <<EOF
+o
+n
+p
+1
+32767
+a
+t
+b
+3613280
+p
+w
+
+partprobe /dev/mmcblk2
+echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk2p1
+mount /dev/mmcblk2p1 /mnt
+sync
+umount /mnt
+mount -o defaults,noatime /dev/mmcblk2p1 /mnt
+bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
+}
+
+
 ### TRANSFER TO EMMC
 transfer_to_emmc () {
 cd /
@@ -100,6 +128,20 @@ rm -f root1 root2 root3
 }
 
 nanopi_fetch_uuid () {
+echo 'ROOT_UUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+nanopc_fetch_uuid () {
 echo 'ROOT_UUID="' > root1
 blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
@@ -172,6 +214,18 @@ label kernel
 EOF
 }
 
+nanopc_create_extlinux () {
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/rockchip/rk3399-nanopc-t4.dtb
+    append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+}
+
 ### WRITE UBOOT
 amlogic_flash_uboot () {
 dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk0 bs=512 seek=1
@@ -179,4 +233,10 @@ dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk0 bs=512 seek=1
 
 allwinner_flash_uboot () {
 dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk2 conv=fsync bs=1024 seek=8
+}
+
+nanopc_flash_uboot () {
+dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk2 seek=64
+dd if=/usr/lib/u-boot/uboot.img of=/dev/mmcblk2 seek=16384
+dd if=/usr/lib/u-boot/trust.bin of=/dev/mmcblk2 seek=24576
 }

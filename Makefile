@@ -37,7 +37,7 @@ ROC-STG2=./scripts/rockchip-stage2
 
 help:
 	@echo
-	@echo "Boards: tritium pine64 odroidc4 odroidn2 lepotato nanopi opir1 renegade rock64"
+	@echo "Boards: tritium pine64 odroidc4 odroidn2 lepotato nanopi opir1 renegade rock64 nanopc"
 	@echo
 	@echo "  make ccompile-depends        Install all dependencies"
 	@echo "  make ncompile-depends        Install all native dependencies"
@@ -389,7 +389,7 @@ lepotato-all:
 renegade-uboot:
 	# Compiling u-boot
 	@ echo renegade > board.txt
-	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -409,11 +409,11 @@ renegade-image:
 	@${ROC-IMAGE}
 
 renegade-all:
-	# L E P O T A T O
+	# R E N E G A D E
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo renegade > board.txt
-	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -435,7 +435,7 @@ renegade-all:
 rock64-uboot:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
-	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -455,11 +455,11 @@ rock64-image:
 	@${ROC-IMAGE}
 
 rock64-all:
-	# L E P O T A T O
+	# R O C K 6 4
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo rock64 > board.txt
-	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -472,6 +472,52 @@ rock64-all:
 	@${ROOTFS}
 	# Making bootable Debian image
 	@ echo rock64 > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${ROC-IMG}
+	@chmod +x ${ROC-STG2}
+	@${ROC-IMAGE}
+
+# NANOPC-T4
+nanopc-uboot:
+	# Compiling u-boot
+	@ echo nanopc > board.txt
+	@ echo rk3399 >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+
+nanopc-kernel:
+	# Compiling kernel
+	@ echo nanopc > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+
+nanopc-image:
+	# Making bootable Debian image
+	@ echo nanopc > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${ROC-IMG}
+	@chmod +x ${ROC-STG2}
+	@${ROC-IMAGE}
+
+nanopc-all:
+	# N A N O P C - T 4
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo nanopc > board.txt
+	@ echo rk3399 >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo nanopc > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Making bootable Debian image
+	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}

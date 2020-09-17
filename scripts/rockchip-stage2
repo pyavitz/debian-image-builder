@@ -55,6 +55,9 @@ fi
 if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
     then renegade_uinitrd && renegade_bootcmd;
 fi
+if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
+    then nanopc_extlinux;
+fi
 #### Sudoers file 
 echo
 echo Create sudoers file.
@@ -81,12 +84,22 @@ sleep 1s
 resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
 }
 
+grow_mmcblk2 () {
+bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
+}
+
 ### Grow Partition
 if ls /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
         else echo "" &>/dev/null;
 fi
 
 if ls /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
+        else echo "" &>/dev/null;
+fi
+
+if ls /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
         else echo "" &>/dev/null;
 fi
 
