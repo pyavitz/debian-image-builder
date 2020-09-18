@@ -138,8 +138,16 @@ cd ~
 mkdir -p /usr/local/bin
 mv -f firstboot.init /etc/init.d/firstboot
 mv -f run-setup /usr/local/bin/
-mv -f sysinfo /usr/local/bin/
-mv -f temp-monitor /usr/local/bin/tmon
+if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
+    then mv -f sysinfo /usr/local/bin/ && rm -f sysinfo.bl
+fi
+if `grep -Fx "rock65" "/root/board.txt" >/dev/null;`
+    then mv -f sysinfo /usr/local/bin/ && rm -f sysinfo.bl
+fi
+if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
+    then mv -f sysinfo.bl /usr/local/bin/sysinfo && rm -f sysinfo
+fi
+mv -f smon /usr/local/bin/
 wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/swh
 mv -f swh /usr/local/bin/
 wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/wifidrv
@@ -171,7 +179,15 @@ echo
 toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
-mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo
+if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
+    then mv -f 20-sysinfo /etc/update-motd.d/ && rm -f 20-sysinfo.bl
+fi
+if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
+    then mv -f 20-sysinfo /etc/update-motd.d/ && rm -f 20-sysinfo.bl
+fi
+if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
+    then mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo && rm -f 20-sysinfo
+fi
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand
 chown root:root /etc/update-motd.d/20-sysinfo
