@@ -39,8 +39,8 @@ help:
 	@echo
 	@echo "Boards: tritium pine64 odroidc4 odroidn2 lepotato nanopi opir1 renegade rock64 nanopc"
 	@echo
-	@echo "  make ccompile-depends        Install all dependencies"
-	@echo "  make ncompile-depends        Install all native dependencies"
+	@echo "  make ccompile                Install all dependencies"
+	@echo "  make ncompile                Install all native dependencies"
 	@echo "  make config                  Create user data file"
 	@echo "  make menu                    Menu interface"
 	@echo "  make cleanup                 Clean up image errors"
@@ -59,7 +59,7 @@ help:
 	@echo
 
 
-ccompile-depends:
+ccompile:
 	# Install all dependencies
 	sudo apt install build-essential bison bc git dialog patch \
 	dosfstools zip unzip qemu debootstrap qemu-user-static rsync \
@@ -67,7 +67,7 @@ ccompile-depends:
 	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
 	aria2 crossbuild-essential-arm64
 
-ncompile-depends:
+ncompile:
 	# Install all dependencies
 	sudo apt install build-essential bison bc git dialog patch \
 	dosfstools zip unzip qemu debootstrap qemu-user-static rsync \
