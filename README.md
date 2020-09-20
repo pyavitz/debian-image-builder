@@ -19,8 +19,8 @@ Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
 #### Install dependencies
 
 ```sh
-make ccompile-depends   # Cross compile
-make ncompile-depends   # Native compile
+make ccompile   # Cross compile
+make ncompile   # Native compile
 ```
 
 #### Menu interface
