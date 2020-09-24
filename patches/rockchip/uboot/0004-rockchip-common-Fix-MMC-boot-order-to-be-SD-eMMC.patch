@@ -1,0 +1,27 @@
+From 4cd75868c92da374618b2dfee81034a5d6112621 Mon Sep 17 00:00:00 2001
+From: pcm720 <pcm720@users.noreply.github.com>
+Date: Sun, 28 Jun 2020 21:05:04 +0300
+Subject: [PATCH 4/4] rockchip-common: fix MMC boot order to be SD -> eMMC
+
+---
+ include/configs/rockchip-common.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/configs/rockchip-common.h b/include/configs/rockchip-common.h
+index 0b9e24d1db..6610f95b7b 100644
+--- a/include/configs/rockchip-common.h
++++ b/include/configs/rockchip-common.h
+@@ -17,8 +17,8 @@
+ /* First try to boot from SD (index 0), then eMMC (index 1) */
+ #if CONFIG_IS_ENABLED(CMD_MMC)
+ 	#define BOOT_TARGET_MMC(func) \
+-		func(MMC, mmc, 0) \
+-		func(MMC, mmc, 1)
++		func(MMC, mmc, 1) \
++		func(MMC, mmc, 0)
+ #else
+ 	#define BOOT_TARGET_MMC(func)
+ #endif
+-- 
+2.27.0
+
