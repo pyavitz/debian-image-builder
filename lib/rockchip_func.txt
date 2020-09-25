@@ -1,13 +1,27 @@
-# RENEGADE
 roc_source (){
 echo
 mkdir -p ${ROCSRC}
 cp -f board.txt ${ROCSRC}/
 cd ${ROCSRC}
-rm -fdr u-boot rkbin
+rm -fdr u-boot rkbin arm-trusted-firmware
 }
 
-rockchip_uboot (){
+# ATF
+rk_armtrusted_firmware(){
+echo -e "${COL}Downloading arm trusted firmware${FIN}."
+git clone https://github.com/ARM-software/arm-trusted-firmware.git
+cd arm-trusted-firmware
+echo
+echo -e "${COL}Compiling ATF${FIN}."
+export CROSS_COMPILE=aarch64-linux-gnu-
+make realclean > /dev/null 2>&1
+make -j${CORES} PLAT=rk3399 bl31 &> /dev/null
+cd ..
+echo_done
+}
+
+rk3328_uboot (){
+echo
 echo_duboot
 if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
@@ -17,17 +31,52 @@ if ls rkbin-master.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}rkbin-master.tar.gz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/armbian/rkbin/archive/master.tar.gz && echo_bdone;
 fi
+build_uboot
+}
+
+rk3399_uboot (){
 echo
-echo_extracts
+echo_duboot
+if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz && echo_bdone;
+fi
+build_uboot
+}
+
+build_uboot(){
+echo
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then echo_extracts;
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then echo_extracts;
+fi
+if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
+	then echo_extract;
+fi
 tar -xf u-boot-v2020.07.tar.gz
-tar -xf rkbin-master.tar.gz
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then tar -xf rkbin-master.tar.gz;
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then tar -xf rkbin-master.tar.gz;
+fi
 echo_done
 mv -f u-boot-v2020.07 u-boot
-mv -f rkbin-master rkbin
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then mv -f rkbin-master rkbin;
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then mv -f rkbin-master rkbin;
+fi
 cp -f board.txt u-boot/
 cd u-boot
+if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
+	then cp ../arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf bl31.elf;
+fi
+echo
 for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done
-echo 
 export ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 if `grep -Fx "renegade" "../board.txt" >/dev/null;`
 	then make roc-cc-rk3328_defconfig;
@@ -68,31 +117,6 @@ EOF
 ../rkbin/tools/trust_merger trust.ini
 }
 
-rk3399_rkbin (){
-rm -f idbloader.img
-tools/mkimage -n rk3399 -T rksd -d ../rkbin/rk33/rk3399_ddr_933MHz_v1.24.bin idbloader.bin
-cat ../rkbin/rk33/rk3399_miniloader_v1.19.bin >> idbloader.bin
-../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
-cat >trust.ini <<EOF
-[VERSION]
-MAJOR=1
-MINOR=2
-[BL30_OPTION]
-SEC=0
-[BL31_OPTION]
-SEC=1
-PATH=../rkbin/rk33/rk3399_bl31_v1.30.elf
-ADDR=0x10000
-[BL32_OPTION]
-SEC=0
-[BL33_OPTION]
-SEC=0
-[OUTPUT]
-PATH=trust.img
-EOF
-../rkbin/tools/trust_merger trust.ini
-}
-
 renegade_binary (){
 cp -f idbloader.bin ../${BINRNG}/idbloader.bin
 cp -f trust.img ../${BINRNG}/trust.bin
@@ -110,16 +134,15 @@ echo
 }
 
 nanopc_binary (){
-cp -f idbloader.bin ../${BINNPC}/idbloader.bin
-cp -f trust.img ../${BINNPC}/trust.bin
-cp -f uboot.img ../${BINNPC}/
+cp -f idbloader.img ../${BINNPC}/idbloader.bin
+cp -f u-boot.itb ../${BINNPC}/
 echo_done
 echo
 }
 
 rk3328_uboot_string (){
 roc_source
-rockchip_uboot
+rk3328_uboot
 rk3328_rkbin
 if `grep -Fx "renegade" "../board.txt" >/dev/null;`
 	then renegade_binary;
@@ -131,16 +154,10 @@ fi
 
 rk3399_uboot_string (){
 roc_source
-rockchip_uboot
-rk3399_rkbin
+rk_armtrusted_firmware
+rk3399_uboot
 if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
 	then nanopc_binary;
-fi
-}
-
-rk3399_uboot_broken (){
-if ls binary/nanopc/*.bin *.img &>/dev/null; then exit; 
-	else echo && echo "U-boot is currently broken. We will be using the binaries already in place." && echo;
 fi
 }
 
@@ -187,8 +204,7 @@ dd if=binary/rock64/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
 
 nanopc_flashbin (){
 dd if=binary/nanopc/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
-dd if=binary/nanopc/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
-dd if=binary/nanopc/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
+dd if=binary/nanopc/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
 partition_uuid (){

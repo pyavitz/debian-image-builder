@@ -65,7 +65,7 @@ ccompile:
 	dosfstools zip unzip qemu debootstrap qemu-user-static rsync \
 	kmod cpio flex libssl-dev libncurses5-dev parted device-tree-compiler \
 	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
-	aria2 pv crossbuild-essential-arm64
+	aria2 pv crossbuild-essential-arm64 gcc-arm-none-eabi
 
 ncompile:
 	# Install all dependencies
@@ -73,7 +73,7 @@ ncompile:
 	dosfstools zip unzip qemu debootstrap qemu-user-static rsync \
 	kmod cpio flex libssl-dev libncurses5-dev parted device-tree-compiler \
 	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
-	aria2 pv
+	aria2 pv gcc-arm-none-eabi
 
 ### TRITIUM
 tritium-uboot:

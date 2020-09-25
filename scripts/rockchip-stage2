@@ -124,7 +124,15 @@ mkdir -p /etc/opt
 mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
-mv -f *.img *.bin /usr/lib/u-boot/
+if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
+    then mv -f *.img *.bin /usr/lib/u-boot/ && rm -f *.cmd;
+fi
+if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
+    then mv -f *.img *.bin /usr/lib/u-boot/;
+fi
+if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
+    then mv -f *.itb *.bin /usr/lib/u-boot/ && rm -f *.cmd;
+fi
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
 echo Done.
@@ -316,6 +324,7 @@ echo
 if `grep -Fx "renegade" "board.txt" >/dev/null;`
 	then echo Creating mkimage boot dot scr. && mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr
 fi
+
 
 #### Service
 echo

@@ -10,7 +10,7 @@ Supported Boards: Tritium, Pine A64, Odroid C4, Odroid N2, Le Potato, NanoPi NEO
 sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
                  debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
                  device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
-                 lzop lz4 aria2 pv crossbuild-essential-arm64
+                 lzop lz4 aria2 pv crossbuild-essential-arm64 gcc-arm-none-eabi
                  
 Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
 ```
