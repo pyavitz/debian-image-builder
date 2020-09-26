@@ -1,77 +1,72 @@
-roc_source (){
+roc_source(){
 echo
 mkdir -p ${ROCSRC}
 cp -f board.txt ${ROCSRC}/
 cd ${ROCSRC}
-rm -fdr u-boot rkbin arm-trusted-firmware
+rm -fdr u-boot
 }
 
-# ATF
 rk_armtrusted_firmware(){
-echo -e "${COL}Downloading arm trusted firmware${FIN}."
-git clone https://github.com/ARM-software/arm-trusted-firmware.git
-cd arm-trusted-firmware
+if ls arm-trusted-firmware > /dev/null 2>&1
+	then atf_clean && cd arm-trusted-firmware;
+	else atf_dl && git clone https://github.com/ARM-software/arm-trusted-firmware.git && cd arm-trusted-firmware;
+fi
 echo
 echo -e "${COL}Compiling ATF${FIN}."
 export CROSS_COMPILE=aarch64-linux-gnu-
 make realclean > /dev/null 2>&1
-make -j${CORES} PLAT=rk3399 bl31 &> /dev/null
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then echo "rk3328" && make -j${CORES} PLAT=rk3328 bl31 > /dev/null 2>&1;
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then echo "rk3328" && make -j${CORES} PLAT=rk3328 bl31 > /dev/null 2>&1;
+fi
+if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
+	then echo "rk3399" && make -j${CORES} PLAT=rk3399 bl31 > /dev/null 2>&1;
+fi
 cd ..
 echo_done
 }
 
-rk3328_uboot (){
+rockchip_uboot(){
 echo
 echo_duboot
 if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz && echo_bdone;
-fi
-if ls rkbin-master.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}rkbin-master.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/armbian/rkbin/archive/master.tar.gz && echo_bdone;
 fi
 build_uboot
 }
 
-rk3399_uboot (){
-echo
-echo_duboot
-if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz && echo_bdone;
-fi
-build_uboot
+rock64_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/rock64-rk3328_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/rock64-rk3328_defconfig
+}
+
+renegade_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/roc-cc-rk3328_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/roc-cc-rk3328_defconfig
+}
+
+nanopct4_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/nanopc-t4-rk3399_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/nanopc-t4-rk3399_defconfig
 }
 
 build_uboot(){
 echo
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then echo_extracts;
-fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then echo_extracts;
-fi
-if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
-	then echo_extract;
-fi
+echo_extract
 tar -xf u-boot-v2020.07.tar.gz
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then tar -xf rkbin-master.tar.gz;
-fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then tar -xf rkbin-master.tar.gz;
-fi
 echo_done
 mv -f u-boot-v2020.07 u-boot
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then mv -f rkbin-master rkbin;
-fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then mv -f rkbin-master rkbin;
-fi
 cp -f board.txt u-boot/
 cd u-boot
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+	then cp ../arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf bl31.elf;
+fi
+if `grep -Fx "rock64" "../board.txt" >/dev/null;`
+	then cp ../arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf bl31.elf;
+fi
 if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
 	then cp ../arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf bl31.elf;
 fi
@@ -79,97 +74,63 @@ echo
 for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done
 export ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then make roc-cc-rk3328_defconfig;
+	then renegade_defconfig && make roc-cc-rk3328_defconfig;
 fi
 if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then make rock64-rk3328_defconfig;
+	then rock64_defconfig && make rock64-rk3328_defconfig;
 fi
 if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
-	then make nanopc-t4-rk3399_defconfig;
+	then nanopct4_defconfig && make nanopc-t4-rk3399_defconfig;
 fi
-make menuconfig
+#make menuconfig
 make -j${CORES}
 }
 
-rk3328_rkbin (){
-rm -f idbloader.img
-tools/mkimage -n rk3328 -T rksd -d ../rkbin/rk33/rk3328_ddr_786MHz_v1.13.bin idbloader.bin
-cat ../rkbin/rk33/rk3328_miniloader_v2.46.bin >> idbloader.bin
-../rkbin/tools/loaderimage --pack --uboot ./u-boot-dtb.bin uboot.img 0x200000
-cp ../rkbin/rk33/rk3328_loader_ddr786_v1.06.243.bin ./
-cat >trust.ini <<EOF
-[VERSION]
-MAJOR=1
-MINOR=2
-[BL30_OPTION]
-SEC=0
-[BL31_OPTION]
-SEC=1
-PATH=../rkbin/rk33/rk3328_bl31_v1.34.bin
-ADDR=0x10000
-[BL32_OPTION]
-SEC=0
-[BL33_OPTION]
-SEC=0
-[OUTPUT]
-PATH=trust.img
-EOF
-../rkbin/tools/trust_merger trust.ini
-}
-
-renegade_binary (){
-cp -f idbloader.bin ../${BINRNG}/idbloader.bin
-cp -f trust.img ../${BINRNG}/trust.bin
-cp -f uboot.img ../${BINRNG}/
+renegade_binary(){
+cp -f idbloader.img ../${BINRNG}/idbloader.bin
+cp -f u-boot.itb ../${BINRNG}/
 echo_done
 echo
 }
 
-rock64_binary (){
-cp -f idbloader.bin ../${BINR64}/idbloader.bin
-cp -f trust.img ../${BINR64}/trust.bin
-cp -f uboot.img ../${BINR64}/
+rock64_binary(){
+cp -f idbloader.img ../${BINR64}/idbloader.bin
+cp -f u-boot.itb ../${BINR64}/
 echo_done
 echo
 }
 
-nanopc_binary (){
+nanopc_binary(){
 cp -f idbloader.img ../${BINNPC}/idbloader.bin
 cp -f u-boot.itb ../${BINNPC}/
 echo_done
 echo
 }
 
-rk3328_uboot_string (){
+rockchip_uboot_string(){
 roc_source
-rk3328_uboot
-rk3328_rkbin
+rk_armtrusted_firmware
+rockchip_uboot
 if `grep -Fx "renegade" "../board.txt" >/dev/null;`
 	then renegade_binary;
 fi
 if `grep -Fx "rock64" "../board.txt" >/dev/null;`
 	then rock64_binary;
 fi
-}
-
-rk3399_uboot_string (){
-roc_source
-rk_armtrusted_firmware
-rk3399_uboot
 if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
 	then nanopc_binary;
 fi
 }
 
 ## KERNEL
-roc_kernel (){
+roc_kernel(){
 echo
 mkdir -p ${ROCSRC}
 cp -f board.txt ${ROCSRC}/
 cd ${ROCSRC}
 }
 
-rk3328_patch (){
+rk3328_patch(){
     echo
     echo_patch
     patch -p1 < ../${PACKAGING}/rockchip-packaging.patch
@@ -179,7 +140,7 @@ rk3328_patch (){
     echo
 }
 
-rk3399_patch (){
+rk3399_patch(){
     echo
     echo_patch
     patch -p1 < ../${PACKAGING}/rockchip-packaging.patch
@@ -190,24 +151,22 @@ rk3399_patch (){
 }
 
 ## STAGE1
-renegade_flashbin (){
+renegade_flashbin(){
 dd if=binary/renegade/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
-dd if=binary/renegade/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
-dd if=binary/renegade/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
+dd if=binary/renegade/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
-rock64_flashbin (){
+rock64_flashbin(){
 dd if=binary/rock64/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
-dd if=binary/rock64/uboot.img of="${IMAGE_LOOP_DEV}" seek=16384
-dd if=binary/rock64/trust.bin of="${IMAGE_LOOP_DEV}" seek=24576
+dd if=binary/rock64/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
-nanopc_flashbin (){
+nanopc_flashbin(){
 dd if=binary/nanopc/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=binary/nanopc/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
-partition_uuid (){
+partition_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
 
@@ -217,7 +176,7 @@ echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 source part-uuid.txt
 }
 
-choose_release (){
+choose_release(){
 case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
   0)
 tee p1/etc/apt/sources.list <<EOF
@@ -236,7 +195,7 @@ esac
 }
 
 ## STAGE2
-rock64_extlinux (){
+rock64_extlinux(){
 cd ~
 echo
 echo Adding extlinux file.
@@ -251,7 +210,7 @@ EOF
 echo Done
 }
 
-nanopc_extlinux (){
+nanopc_extlinux(){
 cd ~
 echo
 echo Adding extlinux file.
@@ -266,7 +225,7 @@ EOF
 echo Done
 }
 
-renegade_uinitrd (){
+renegade_uinitrd(){
 cd ~
 echo
 echo  Adding needed boot files.
@@ -278,7 +237,7 @@ chown root:root /etc/initramfs/post-update.d/99-uboot
 rm -f 99-uboot
 }
 
-renegade_bootcmd (){
+renegade_bootcmd(){
 tee /boot/bootEnv.txt <<EOF
 verbosity=1
 rootdev=PARTUUID=${ROOT_PARTUUID}
@@ -288,7 +247,7 @@ chown root:root /boot/bootEnv.txt
 echo Done.
 }
 
-extra_firmware (){
+extra_firmware(){
 echo
 echo Adding extra firmware.
 sleep 1s
@@ -307,7 +266,7 @@ chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 echo Done.
 }
 
-htop_stable (){
+htop_stable(){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -322,7 +281,7 @@ rm -fdr htop
 echo Done.
 }
 
-htop_unstable (){
+htop_unstable(){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -337,7 +296,7 @@ rm -fdr htop
 echo Done.
 }
 
-rock64_led_trigger (){
+rock64_led_trigger(){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-trigger <<EOF
@@ -352,7 +311,7 @@ fi
 EOF
 }
 
-renegade_led_trigger (){
+renegade_led_trigger(){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-trigger <<EOF
@@ -362,7 +321,7 @@ echo 0 > /sys/class/leds/firefly:blue:power/brightness
 EOF
 }
 
-rockchip_led_service (){
+rockchip_led_service(){
 echo
 echo Creating led service.
 sleep 1s

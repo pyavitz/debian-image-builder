@@ -1,5 +1,5 @@
 # U-BOOT
-lepotato_uboot (){
+lepotato_uboot(){
 ### LE POTATO
 echo
 echo_duboot
@@ -55,7 +55,7 @@ make -j${CORES} libretech_cc_defconfig
 make -j${CORES}
 }
 
-odroid_uboot (){
+odroid_uboot(){
 ### ODROID
 echo
 echo_bootbits
@@ -84,9 +84,8 @@ if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`
 fi
 cd u-boot
 echo
-for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
-echo
 echo_cuboot
+for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done
 export ARCH=arm64
 if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
 	then make -j${CORES} g12a-odroidc4_defconfig;
@@ -99,7 +98,7 @@ make -j${CORES} CROSS_COMPILE=aarch64-linux-gnu-
 }
 
 # FIP
-lepotato_fip (){
+lepotato_fip(){
 export FIPDIR=$PWD/fip
 cd ../../u-boot
  mkdir fip
@@ -120,7 +119,7 @@ $FIPDIR/gxl/aml_encrypt_gxl --bl2sig --input fip/bl2_new.bin --output fip/bl2.n.
 $FIPDIR/gxl/aml_encrypt_gxl --bootmk --output fip/u-boot.bin --bl2 fip/bl2.n.bin.sig --bl30 fip/bl30_new.bin.enc --bl31 fip/bl31.img.enc --bl33 fip/bl33.bin.enc
 }
 
-odroidc4_fip (){
+odroidc4_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
 cp -f ../amlogic-boot-fip-master/odroid-c4/* fip/
@@ -176,7 +175,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 		--level v3
 }
 
-odroidn2_fip (){
+odroidn2_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
 cp -f ../amlogic-boot-fip-master/odroid-n2/* fip/
@@ -233,28 +232,28 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 }
 
 # BINARY
-lepotato_binary (){
+lepotato_binary(){
 cp -f fip/u-boot.bin ../${BINLEP}
 cp -f fip/u-boot.bin.sd.bin ../${BINLEP}
 cp -f tools/mkimage ../${BINLEP}
 echo_done
 }
 
-odroidc4_binary (){
+odroidc4_binary(){
 cp -f fip/u-boot.bin ../${BINODC4}
 cp -f fip/u-boot.bin.sd.bin ../${BINODC4}
 cp -f tools/mkimage ../${BINODC4}
 echo_done
 }
 
-odroidn2_binary (){
+odroidn2_binary(){
 cp -f fip/u-boot.bin ../${BINODN2}
 cp -f fip/u-boot.bin.sd.bin ../${BINODN2}
 cp -f tools/mkimage ../${BINODN2}
 echo_done
 }
 
-aml_source (){
+aml_source(){
 echo
 mkdir -p ${AMLSRC}
 cp -f board.txt ${AMLSRC}/
@@ -262,14 +261,14 @@ cd ${AMLSRC}
 rm -fdr amlogic-boot-fip-master blobs/amlogic-u-boot u-boot
 }
 
-lepotato_uboot_string (){
+lepotato_uboot_string(){
 aml_source
 lepotato_uboot
 lepotato_fip
 lepotato_binary
 }
 
-odroid_uboot_string (){
+odroid_uboot_string(){
 aml_source
 odroid_uboot
 if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
@@ -281,7 +280,7 @@ fi
 }
 
 ### KERNEL
-aml_kernel (){
+aml_kernel(){
 echo
 mkdir -p ${AMLSRC}
 cp -f board.txt ${AMLSRC}/
@@ -289,7 +288,7 @@ cd ${AMLSRC}
 }
 
 # LE POTATO
-potato_patch (){
+potato_patch(){
 echo
 echo_patch
 if `grep -Fx "lepotato" "../board.txt" >/dev/null;`
@@ -302,7 +301,7 @@ echo
 }
 
 # ODROIDC4
-odroidc4_patch (){
+odroidc4_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
@@ -313,7 +312,7 @@ echo
 }
 
 # ODROIDN2
-odroidn2_patch (){
+odroidn2_patch(){
 echo
 echo_patch
 if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`;
@@ -326,17 +325,17 @@ echo
 }
 
 ### STAGE1
-lepotato_flashbin (){
+lepotato_flashbin(){
 dd if=binary/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
 dd if=binary/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
 }
 
-odroidc4_flashbin (){
+odroidc4_flashbin(){
 dd if=binary/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
 dd if=binary/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
 }
 
-odroidn2_flashbin (){
+odroidn2_flashbin(){
 case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
   0)
     dd if=binary/odroidn2/u-boot.bin.odroid-n2 of="${IMAGE_LOOP_DEV}" bs=512 seek=1
@@ -348,7 +347,7 @@ case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
 esac
 }
 
-partition_uuid (){
+partition_uuid(){
 echo 'ROOT_UUID="' > root1
 blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
@@ -365,7 +364,7 @@ source root-id.txt
 source root-pid.txt
 }
 
-choose_release (){
+choose_release(){
 case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
   0)
 tee p1/etc/apt/sources.list <<EOF
@@ -384,7 +383,7 @@ esac
 }
 
 ### STAGE2
-lepotato_extlinux (){
+lepotato_extlinux(){
 cd ~
 echo
 echo Creating extlinux file.
@@ -398,7 +397,7 @@ EOF
 echo Done.
 }
 
-odroidc4_extlinux (){
+odroidc4_extlinux(){
 cd ~
 echo
 echo Creating extlinux file.
@@ -412,7 +411,7 @@ EOF
 echo Done.
 }
 
-odroidn2_extlinux (){
+odroidn2_extlinux(){
 cd ~
 echo
 echo Creating extlinux file.
@@ -426,7 +425,7 @@ EOF
 echo Done.
 }
 
-lepotato_led_triggers (){
+lepotato_led_triggers(){
 echo
 echo Creating led trigger
 tee /usr/local/sbin/led-trigger <<EOF
@@ -441,7 +440,7 @@ chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 }
 
-odroidc4_led_triggers (){
+odroidc4_led_triggers(){
 echo
 echo Creating led trigger
 tee /usr/local/sbin/led-trigger <<EOF
@@ -453,7 +452,7 @@ chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 }
 
-odroidn2_led_triggers (){
+odroidn2_led_triggers(){
 echo
 echo Creating led trigger
 tee /usr/local/sbin/led-trigger <<EOF
@@ -465,7 +464,7 @@ chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 }
 
-htop_stable (){
+htop_stable(){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -480,7 +479,7 @@ rm -fdr htop
 echo Done.
 }
 
-htop_unstable (){
+htop_unstable(){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s

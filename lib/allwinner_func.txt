@@ -1,18 +1,20 @@
 # ATF
-armtrusted_firmware (){
-echo -e "${COL}Downloading arm trusted firmware${FIN}."
-git clone https://github.com/ARM-software/arm-trusted-firmware.git
-cd arm-trusted-firmware
+armtrusted_firmware(){
+if ls arm-trusted-firmware > /dev/null 2>&1
+	then atf_clean && cd arm-trusted-firmware;
+	else atf_dl && git clone https://github.com/ARM-software/arm-trusted-firmware.git && cd arm-trusted-firmware;
+fi
 echo
 echo -e "${COL}Compiling ATF${FIN}."
 export CROSS_COMPILE=aarch64-linux-gnu-
+make realclean > /dev/null 2>&1
 make -j${CORES} PLAT=sun50i_a64 DEBUG=1 bl31 &> /dev/null
 cd ..
 echo_done
 }
 
 # UBOOT
-allwinner_uboot (){
+allwinner_uboot(){
 echo
 echo_duboot
 if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
@@ -52,7 +54,7 @@ fi
 make -j${CORES}
 }
 
-opir1_uboot (){
+opir1_uboot(){
 echo
 echo_duboot
 if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
@@ -76,42 +78,42 @@ make -j${CORES}
 }
 
 # BINARY
-npineoplus2_binary (){
+npineoplus2_binary(){
 cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
 cp -f tools/mkimage ../${BINNPI}/
 echo_done
 echo
 }
 
-pine64_binary (){
+pine64_binary(){
 cp -f u-boot-sunxi-with-spl.bin ../${BINPINE}/
 cp -f tools/mkimage ../${BINPINE}/
 echo_done
 }
 
-tritium_binary (){
+tritium_binary(){
 cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
 cp -f tools/mkimage ../${BINTRI}/
 echo_done
 echo
 }
 
-opir1_binary (){
+opir1_binary(){
 cp -f u-boot-sunxi-with-spl.bin ../${BINR1}/
 cp -f tools/mkimage ../${BINR1}/
 echo_done
 echo
 }
 
-all_source (){
+all_source(){
 echo
 mkdir -p ${ALLSRC}
 cp -f board.txt ${ALLSRC}/
 cd ${ALLSRC}
-rm -fdr arm-trusted-firmware u-boot
+rm -fdr u-boot
 }
 
-allwinner_uboot_string (){
+allwinner_uboot_string(){
 all_source
 armtrusted_firmware
 allwinner_uboot
@@ -126,14 +128,14 @@ if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
 fi
 }
 
-orangepi-r1_uboot_string (){
+orangepi-r1_uboot_string(){
 all_source
 opir1_uboot
 opir1_binary
 }
 
 ## KERNEL
-all_kernel (){
+all_kernel(){
 echo
 mkdir -p ${ALLSRC}
 cp -f board.txt ${ALLSRC}/
@@ -141,7 +143,7 @@ cd ${ALLSRC}
 }
 
 # TRITIUM
-tritium_patch (){
+tritium_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
@@ -152,7 +154,7 @@ echo
 }
 
 # PINE64
-pine64_patch (){
+pine64_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
@@ -165,7 +167,7 @@ echo
 }
 
 # NANOPI
-nanopi_patch (){
+nanopi_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
@@ -177,7 +179,7 @@ echo
 }
 
 # ORANGEPI R1
-opir1_patch (){
+opir1_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch
@@ -188,23 +190,23 @@ echo
 }
 
 ## STAGE1
-tritium_flashbin (){
+tritium_flashbin(){
 dd if=binary/tritium/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-nanopi_flashbin (){
+nanopi_flashbin(){
 dd if=binary/nanopi/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-pine64_flashbin (){
+pine64_flashbin(){
 dd if=binary/pine64/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-opir1_flashbin (){
+opir1_flashbin(){
 dd if=binary/opir1/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-partition_uuid (){
+partition_uuid(){
 echo 'ROOT_UUID="' > root1
 blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
@@ -221,7 +223,7 @@ source root-id.txt
 source root-pid.txt
 }
 
-choose_release (){
+choose_release(){
 case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
   0)
 tee p1/etc/apt/sources.list <<EOF
@@ -240,7 +242,7 @@ esac
 }
 
 ## STAGE2
-tritium_extlinux (){
+tritium_extlinux(){
 cd ~
 echo
 echo Adding extlinux file.
@@ -255,7 +257,7 @@ EOF
 echo Done
 }
 
-nanopi_extlinux (){
+nanopi_extlinux(){
 cd ~
 echo
 echo Creating extlinux file.
@@ -269,7 +271,7 @@ EOF
 echo Done
 }
 
-pine64_extlinux (){
+pine64_extlinux(){
 cd ~
 echo
 echo Adding extlinux file.
@@ -284,7 +286,7 @@ EOF
 echo Done.
 }
 
-opir1_extlinux (){
+opir1_extlinux(){
 cd ~
 echo
 echo Adding extlinux file.
@@ -299,7 +301,7 @@ EOF
 echo Done.
 }
 
-tritium_led_triggers (){
+tritium_led_triggers(){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-triggers <<EOF
@@ -312,7 +314,7 @@ echo 0 > /sys/class/leds/librecomputer:blue:status/brightness
 EOF
 }
 
-tritium_led_service (){
+tritium_led_service(){
 echo
 echo Creating led service.
 sleep 1s
@@ -329,7 +331,7 @@ EOF
 systemctl enable leds
 }
 
-nanopi_led_triggers (){
+nanopi_led_triggers(){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-triggers <<EOF
@@ -342,7 +344,7 @@ echo 0 > /sys/class/leds/nanopi:red:pwr/brightness
 EOF
 }
 
-nanopi_led_service (){
+nanopi_led_service(){
 echo
 echo Creating led service.
 sleep 1s
@@ -359,7 +361,7 @@ EOF
 systemctl enable leds
 }
 
-cypress_firmware (){
+cypress_firmware(){
 echo
 echo Adding brcm firmware from cypress.
 sleep 1s
@@ -375,7 +377,7 @@ rm -fdr cypress
 echo Done.
 }
 
-extra_firmware (){
+extra_firmware(){
 echo
 echo Adding extra firmware.
 sleep 1s
@@ -394,7 +396,7 @@ chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 echo Done.
 }
 
-pine64_bt_helper (){
+pine64_bt_helper(){
 echo
 echo Creating bluetooth helper.
 tee /usr/local/sbin/start-bluetooth <<EOF
@@ -407,7 +409,7 @@ hciconfig hci0 up
 EOF
 }
 
-pine64_bt_install (){
+pine64_bt_install(){
 echo
 echo Installing bluetooth helper.
 sleep 1s
@@ -421,7 +423,7 @@ rm -fdr rtl8723bs_bt
 echo Done.
 }
 
-pine64_wifi_bt (){
+pine64_wifi_bt(){
 echo
 echo Bluetooth and wifi help.
 sleep 1s
@@ -437,7 +439,7 @@ options r8723bs rtw_power_mgnt=0
 EOF
 }
 
-pine64_bt_service (){
+pine64_bt_service(){
 echo
 echo Creating bluetooth service.
 sleep 1s
@@ -454,7 +456,7 @@ EOF
 systemctl enable bluetooth-module
 }
 
-htop_stable (){
+htop_stable(){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
@@ -469,7 +471,7 @@ rm -fdr htop
 echo Done.
 }
 
-htop_unstable (){
+htop_unstable(){
 echo
 echo Installing htop with cpufreq and thermal support.
 sleep 1s
