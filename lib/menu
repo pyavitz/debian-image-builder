@@ -1,0 +1,96 @@
+#!/bin/bash
+### DO NOT EDIT
+RED="\e[0;31m"
+FIN="\e[0m"
+DIALOG_CANCEL=1
+DIALOG_ESC=255
+HEIGHT=0
+WIDTH=0
+
+display_result() {
+  dialog --title "$1" \
+    --no-collapse \
+    --msgbox "$result" 0 0
+}
+
+while true; do
+  exec 3>&1
+  selection=$(dialog \
+    --backtitle "Debian Image Builder" \
+    --title "Boards" \
+    --clear \
+    --cancel-label "Exit" \
+    --menu "Select:" $HEIGHT $WIDTH 10 \
+    "1" "Le Potato" \
+    "2" "NanoPC-T4" \
+    "3" "NanoPi NEO Plus2" \
+    "4" "Odroid C4" \
+    "5" "Odroid N2" \
+    "6" "Orange Pi R1" \
+    "7" "Pine64" \
+    "8" "Renegade" \
+    "9" "Rock64" \
+    "10" "Tritium" \
+    2>&1 1>&3)
+  exit_status=$?
+  exec 3>&-;
+  case $exit_status in
+    $DIALOG_CANCEL)
+      clear
+      echo -e "${RED}Program terminated${FIN}."
+      exit
+      ;;
+    $DIALOG_ESC)
+      clear
+      echo -e "${RED}Program aborted${FIN}." >&2
+      exit 1
+      ;;
+  esac
+  case $selection in
+    0 )
+      clear
+      echo -e "${RED}Program terminated${FIN}."
+      ;;
+    1 )
+      chmod +x lib/lepotato
+      ./lib/lepotato
+      ;;
+    2 )
+      chmod +x lib/nanopct4
+      ./lib/nanopct4
+      ;;
+    3 )
+      chmod +x lib/npineoplus2
+      ./lib/npineoplus2
+      ;;
+    4 )
+      chmod +x lib/odroidc4
+      ./lib/odroidc4
+      ;;
+    5 )
+      chmod +x lib/odroidn2
+      ./lib/odroidn2
+      ;;
+    6 )
+      chmod +x lib/opir1
+      ./lib/opir1
+      ;;
+    7 )
+      chmod +x lib/pine64
+      ./lib/pine64
+      ;;
+    8 )
+      chmod +x lib/renegade
+      ./lib/renegade
+      ;;
+    9 )
+      chmod +x lib/rock64
+      ./lib/rock64
+      ;;
+    10 )
+      chmod +x lib/tritium
+      ./lib/tritium
+      ;;
+
+  esac
+done

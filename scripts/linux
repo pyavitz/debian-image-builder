@@ -1,0 +1,120 @@
+#!/bin/bash
+source lib/source.txt
+source lib/echo_func.txt
+source lib/kernel_func.txt
+source lib/amlogic_func.txt
+source lib/allwinner_func.txt
+source lib/rockchip_func.txt
+source userdata.txt
+
+# AMLOGIC
+if `grep -Fx "amlogic" "board.txt" >/dev/null;`
+	then aml_kernel;
+fi
+
+# ALLWINNER
+if `grep -Fx "allwinner" "board.txt" >/dev/null;`
+	then all_kernel;
+fi
+
+if `grep -Fx "rockchip" "board.txt" >/dev/null;`
+	then roc_kernel;
+fi
+
+if ls ${KERNEL}-${VERSION} > /dev/null 2>&1;
+	then echo -e "${PNK}Cleaning${FIN} ..." && rm -fdr ${KERNEL}-${VERSION};
+fi
+
+### Download kernel
+case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
+  0)
+    mainline_download
+    ;;
+  1)
+    stable_download
+    ;;
+esac
+
+
+### Extract
+case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
+  0)
+    mainline_extract
+    ;;
+  1)
+    stable_extract
+    ;;
+esac
+
+### Setup
+case `grep -Fx "armv7" "../board.txt" >/dev/null; echo $?` in
+  0)
+    setupv7
+    ;;
+  1)
+    setup
+    ;;
+esac
+
+### Patches and Defconfigs
+# AMLOGIC
+if `grep -Fx "lepotato" "../../board.txt" >/dev/null;`
+	then le_potato;
+fi
+if `grep -Fx "odroidn2" "../../board.txt" >/dev/null;`
+	then odroid_n2;
+fi
+if `grep -Fx "odroidc4" "../../board.txt" >/dev/null;`
+	then odroid_c4;
+fi
+
+# ALLWINNER
+if `grep -Fx "tritium" "../../board.txt" >/dev/null;`
+	then tritium_h5;
+fi
+if `grep -Fx "pine64" "../../board.txt" >/dev/null;`
+	then pine_a64;
+fi
+if `grep -Fx "nanopi" "../../board.txt" >/dev/null;`
+	then nanopi_neo_plus2;
+fi
+if `grep -Fx "opir1" "../../board.txt" >/dev/null;`
+	then orangepi_r1;
+fi
+
+# ROCKCHIP
+if `grep -Fx "renegade" "../../board.txt" >/dev/null;`
+	then rk3328_roc_cc;
+fi
+if `grep -Fx "rock64" "../../board.txt" >/dev/null;`
+	then rk3328_rock64;
+fi
+if `grep -Fx "nanopc" "../../board.txt" >/dev/null;`
+	then rk3399_nanopc;
+fi
+
+### Menuconfig
+if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
+    then menu_config;
+fi
+
+### Build deb
+case `grep -Fx "armv7" "../../board.txt" >/dev/null; echo $?` in
+  0)
+    architecture_v7
+    ;;
+  1)
+    architecture_v8
+    ;;
+esac
+echo
+
+### 
+cd ..
+rm -f linux-libc-dev*.deb
+rm -f *.buildinfo
+rm -f *.changes
+allwinner_output
+amlogic_output
+rockchip_output
+echo_done

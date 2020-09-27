@@ -1,0 +1,158 @@
+#!/bin/bash
+source lib/rockchip_func.txt
+source lib/source.txt
+source userdata.txt
+
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+   then set -x;
+fi
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+   then set -eux -o pipefail;
+fi
+
+RAM=0
+PROXY=""
+IMAGE_FOLDER="img/"
+if `grep -Fx "renegade" "board.txt" >/dev/null;`
+	then DEVICE_SOC="rk3328-roc-cc"
+fi
+if `grep -Fx "rock64" "board.txt" >/dev/null;`
+	then DEVICE_SOC="rk3328-rock64"
+fi
+if `grep -Fx "nanopc" "board.txt" >/dev/null;`
+	then DEVICE_SOC="rk3399-nanopct4"
+fi
+IMAGE_FILE_SUFFIX="$(date +%F)"
+IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_FILE_SUFFIX}.img"
+if [ $RAM -ne 0 ]; then
+	IMAGE_FOLDER="ram/"
+fi
+mkdir -p "$IMAGE_FOLDER"
+if [ $RAM -ne 0 ]; then
+	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
+fi
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+    truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+    ;;
+  1)
+    truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+    ;;
+esac
+fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
+o
+n
+p
+1
+32767
+a
+t
+b
+3613280
+p
+w
+
+EOF
+IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+partprobe "${IMAGE_LOOP_DEV}"
+mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
+mkdir -p p1
+mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
+if `grep -Fx "renegade" "board.txt" >/dev/null;`
+   then renegade_flashbin
+fi
+if `grep -Fx "rock64" "board.txt" >/dev/null;`
+   then rock64_flashbin
+fi
+if `grep -Fx "nanopc" "board.txt" >/dev/null;`
+   then nanopc_flashbin
+fi
+sync
+umount p1
+mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
+
+### fetch partition uuid
+partition_uuid
+
+### Rootfs
+tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
+
+mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
+echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
+
+mkdir -p p1/usr/bin
+cp $(which "qemu-aarch64-static") p1/usr/bin
+
+# sources dot list
+choose_release
+echo
+tee p1/etc/fstab <<EOF
+UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
+EOF
+echo
+if [ -n "$PROXY" ] ; then
+	tee "p1/etc/apt/apt.conf.d/30proxy" <<EOF
+Acquire::http::proxy "http://127.0.0.1:3142";
+EOF
+fi
+
+# setup stage2
+cp scripts/rockchip-stage2 p1/root
+cp lib/rockchip_func.txt p1/root
+cp lib/source.txt p1/root
+cp userdata.txt p1/root
+cp part-uuid.txt p1/root
+cp board.txt p1/root
+cp files/misc/* p1/root
+cp files/rules/* p1/root
+cp files/scripts/* p1/root
+cp files/users/* p1/root
+cp firmware/fw-0a5c_21e8.hcd p1/root
+if `grep -Fx "renegade" "board.txt" >/dev/null;`
+    then cp output/renegade/{*.itb,*.bin,*.deb} p1/root
+fi
+if `grep -Fx "rock64" "board.txt" >/dev/null;`
+    then cp output/rock64/{*.itb,*.bin,*.deb} p1/root
+fi
+if `grep -Fx "nanopc" "board.txt" >/dev/null;`
+    then cp output/nanopc/{*.itb,*.bin,*.deb} p1/root
+fi
+# mount and chroot
+mount -o bind /dev p1/dev
+mount -o bind /dev/pts p1/dev/pts
+chroot p1 /root/rockchip-stage2
+# unmount
+umount p1/dev/pts
+umount p1/dev
+rm p1/usr/bin/qemu-aarch64-static
+rm p1/root/rockchip-stage2
+rm p1/root/source.txt
+rm p1/root/userdata.txt
+rm p1/root/part-uuid.txt
+rm p1/root/rockchip_func.txt
+rm p1/root/board.txt
+rm -f p1/var/cache/debconf/*
+
+if [ -n "$PROXY" ] ; then
+	rm p1/etc/apt/apt.conf.d/30proxy
+fi
+rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
+
+### Finish
+
+e4defrag -c p1
+umount p1
+
+losetup -d "${IMAGE_LOOP_DEV}"
+mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
+if [ $RAM -ne 0 ]; then
+	umount "${IMAGE_FOLDER}"
+fi
+rmdir "${IMAGE_FOLDER}"
+rmdir p1
+rm -f part-uuid.txt board.txt
+echo
+ls *.img
+echo

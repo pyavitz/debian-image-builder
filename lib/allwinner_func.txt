@@ -1,0 +1,520 @@
+# ATF
+armtrusted_firmware(){
+if ls arm-trusted-firmware > /dev/null 2>&1
+	then atf_clean && cd arm-trusted-firmware;
+	else atf_dl && git clone https://github.com/ARM-software/arm-trusted-firmware.git && cd arm-trusted-firmware;
+fi
+echo
+echo -e "${COL}Compiling ATF${FIN}."
+export CROSS_COMPILE=aarch64-linux-gnu-
+make realclean > /dev/null 2>&1
+make -j${CORES} PLAT=sun50i_a64 DEBUG=1 bl31 &> /dev/null
+cd ..
+echo_done
+}
+
+tritium_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/libretech_all_h3_cc_h5_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/libretech_all_h3_cc_h5_defconfig
+}
+
+pine64_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/pine64_plus_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/pine64_plus_defconfig
+}
+
+nanopi_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_plus2_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_plus2_defconfig
+}
+
+opir1_defconfig(){
+echo CONFIG_SD_BOOT=y >> configs/orangepi_r1_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/orangepi_r1_defconfig
+}
+
+# UBOOT
+allwinner_uboot(){
+echo
+echo_duboot
+if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_bdone;
+fi
+echo
+echo_extract
+tar xf u-boot-${UBOOT_VERSION}.tar.gz
+echo_done
+mv -f u-boot-${UBOOT_VERSION} u-boot
+cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
+cp board.txt u-boot/
+cd u-boot
+echo
+echo_cuboot
+export CROSS_COMPILE=aarch64-linux-gnu-
+if `grep -Fx "tritium" "../board.txt" >/dev/null;`
+	then tritium_defconfig && make libretech_all_h3_cc_h5_defconfig;
+fi
+if `grep -Fx "pine64" "../board.txt" >/dev/null;`
+	then pine64_defconfig && make pine64_plus_defconfig;
+fi
+if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
+	then nanopi_defconfig && make nanopi_neo_plus2_defconfig;
+fi
+if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
+    then make menuconfig;
+fi
+make -j${CORES}
+}
+
+opir1_uboot(){
+echo
+echo_duboot
+if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_ok;
+fi
+echo
+echo_extract
+tar xf u-boot-${UBOOT_VERSION}.tar.gz
+echo_done
+mv -f u-boot-${UBOOT_VERSION} u-boot
+cp board.txt u-boot/
+cd u-boot
+echo
+echo_cuboot
+export CROSS_COMPILE=arm-linux-gnueabihf-
+opir1_defconfig && make orangepi_r1_defconfig
+if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
+    then make menuconfig;
+fi
+make -j${CORES}
+}
+
+# BINARY
+npineoplus2_binary(){
+mkdir -p ../${BINNPI}
+cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
+cp -f tools/mkimage ../${BINNPI}/
+echo_done
+echo
+}
+
+pine64_binary(){
+mkdir -p ../${BINPINE}
+cp -f u-boot-sunxi-with-spl.bin ../${BINPINE}/
+cp -f tools/mkimage ../${BINPINE}/
+echo_done
+}
+
+tritium_binary(){
+mkdir -p ../${BINTRI}
+cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
+cp -f tools/mkimage ../${BINTRI}/
+echo_done
+echo
+}
+
+opir1_binary(){
+mkdir -p ../${BINR1}
+cp -f u-boot-sunxi-with-spl.bin ../${BINR1}/
+cp -f tools/mkimage ../${BINR1}/
+echo_done
+echo
+}
+
+all_source(){
+echo
+mkdir -p ${ALLSRC}
+cp -f board.txt ${ALLSRC}/
+cd ${ALLSRC}
+rm -fdr u-boot
+}
+
+allwinner_uboot_string(){
+all_source
+armtrusted_firmware
+allwinner_uboot
+if `grep -Fx "tritium" "../board.txt" >/dev/null;`
+	then tritium_binary;
+fi
+if `grep -Fx "pine64" "../board.txt" >/dev/null;`
+	then pine64_binary;
+fi
+if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
+	then npineoplus2_binary;
+fi
+}
+
+orangepi-r1_uboot_string(){
+all_source
+opir1_uboot
+opir1_binary
+}
+
+## KERNEL
+all_kernel(){
+echo
+mkdir -p ${ALLSRC}
+cp -f board.txt ${ALLSRC}/
+cd ${ALLSRC}
+}
+
+# TRITIUM
+tritium_patch(){
+echo
+echo_patch
+patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
+for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
+cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo_done
+echo
+}
+
+# PINE64
+pine64_patch(){
+echo
+echo_patch
+patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
+for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
+for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
+for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
+cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo_done
+echo
+}
+
+# NANOPI
+nanopi_patch(){
+echo
+echo_patch
+patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
+for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
+for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
+cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo_done
+echo
+}
+
+# ORANGEPI R1
+opir1_patch(){
+echo
+echo_patch
+patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch
+for i in ../${SUN8I}/*.patch; do patch -p1 < $i; done
+cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo_done
+echo
+}
+
+allwinner_output(){
+if `grep -Fx "tritium" "../board.txt" >/dev/null;`
+	then mkdir -p ../output/tritium && mv -f *.deb ../output/tritium/;
+fi
+if `grep -Fx "pine64" "../board.txt" >/dev/null;`
+	then mkdir -p ../output/pine64 && mv -f *.deb ../output/pine64/;
+fi
+if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
+	then mkdir -p ../output/nanopi && mv -f *.deb ../output/nanopi/;
+fi
+if `grep -Fx "opir1" "../board.txt" >/dev/null;`
+	then mkdir -p ../output/opir1 && mv -f *.deb ../output/opir1/;
+fi
+}
+
+## STAGE1
+tritium_flashbin(){
+dd if=output/tritium/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
+}
+
+nanopi_flashbin(){
+dd if=output/nanopi/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
+}
+
+pine64_flashbin(){
+dd if=output/pine64/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
+}
+
+opir1_flashbin(){
+dd if=output/opir1/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
+}
+
+partition_uuid(){
+echo 'ROOT_UUID="' > root1
+blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > root-pid.txt
+rm -f root1 root2 root3
+
+source root-id.txt
+source root-pid.txt
+}
+
+choose_release(){
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+EOF
+    ;;
+   1)
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
+deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
+EOF
+   ;;
+esac
+}
+
+## STAGE2
+tritium_extlinux(){
+cd ~
+echo
+echo Adding extlinux file.
+sleep 1s
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb
+    append  earlyprintk console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done
+}
+
+nanopi_extlinux(){
+cd ~
+echo
+echo Creating extlinux file.
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
+    append  earlyprintk console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done
+}
+
+pine64_extlinux(){
+cd ~
+echo
+echo Adding extlinux file.
+sleep 1s
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label /boot/kernel
+    kernel /boot/Image
+    fdt /boot/allwinner/sun50i-a64-pine64-plus.dtb
+    append  earlyprintk console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done.
+}
+
+opir1_extlinux(){
+cd ~
+echo
+echo Adding extlinux file.
+sleep 1s
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label /boot/kernel
+    kernel /boot/Image
+    fdt /boot/allwinner/sun8i-h2-plus-orangepi-r1.dtb
+    append  earlyprintk console=ttyS0,115200n8 rw root=/dev/mmcblk0p1 rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done.
+}
+
+tritium_led_triggers(){
+echo
+echo Creating LED triggers.
+tee /usr/local/sbin/led-triggers <<EOF
+#!/bin/bash
+# led triggers
+echo 0 > /sys/class/leds/librecomputer:green:pwr/brightness
+echo 1 > /sys/class/leds/librecomputer:blue:status/brightness
+sleep 2s
+echo 0 > /sys/class/leds/librecomputer:blue:status/brightness
+EOF
+}
+
+tritium_led_service(){
+echo
+echo Creating led service.
+sleep 1s
+tee /etc/systemd/system/leds.service <<EOF
+[Unit]
+Description=Set LEDs
+ConditionPathExists=/usr/local/sbin/led-triggers
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/led-triggers &>/dev/null
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable leds
+}
+
+nanopi_led_triggers(){
+echo
+echo Creating LED triggers.
+tee /usr/local/sbin/led-triggers <<EOF
+#!/bin/bash
+# led triggers
+echo 1 > /sys/class/leds/nanopi:green:status/brightness
+sleep 2s
+echo 0 > /sys/class/leds/nanopi:green:status/brightness
+echo 0 > /sys/class/leds/nanopi:red:pwr/brightness
+EOF
+}
+
+nanopi_led_service(){
+echo
+echo Creating led service.
+sleep 1s
+tee /etc/systemd/system/leds.service <<EOF
+[Unit]
+Description=Set LEDs
+ConditionPathExists=/usr/local/sbin/led-triggers
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/led-triggers &>/dev/null
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable leds
+}
+
+cypress_firmware(){
+echo
+echo Adding brcm firmware from cypress.
+sleep 1s
+mkdir cypress
+cd cypress
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://community.cypress.com/servlet/JiveServlet/download/19375-1-53475/cypress-fmac-v5.4.18-2020_0402.zip
+unzip -qq cypress-fmac-v5.4.18-2020_0402.zip
+tar -xf cypress-firmware-v5.4.18-2020_0402.tar.gz
+rm -f firmware/*pcie*
+cp -f firmware/* /lib/firmware/brcm/
+cd ~
+rm -fdr cypress
+echo Done.
+}
+
+extra_firmware(){
+echo
+echo Adding extra firmware.
+sleep 1s
+mkdir -p /lib/firmware/brcm
+cd /lib/firmware/brcm
+wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
+cd ~
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
+tar xf firmware-master.tar.gz
+cp -R firmware-master/* /lib/firmware
+rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+echo Done.
+}
+
+pine64_bt_helper(){
+echo
+echo Creating bluetooth helper.
+tee /usr/local/sbin/start-bluetooth <<EOF
+#!/bin/bash
+echo 1 > /sys/class/rfkill/rfkill0/state
+sleep 1s
+rtk_hciattach /dev/ttyS1 rtk_h5
+sleep 2s
+hciconfig hci0 up
+EOF
+}
+
+pine64_bt_install(){
+echo
+echo Installing bluetooth helper.
+sleep 1s
+git clone https://github.com/lwfinger/rtl8723bs_bt.git
+cd rtl8723bs_bt
+make
+make install
+mv rtk_hciattach /usr/local/bin/
+cd ~
+rm -fdr rtl8723bs_bt
+echo Done.
+}
+
+pine64_wifi_bt(){
+echo
+echo Bluetooth and wifi help.
+sleep 1s
+tee /etc/modules-load.d/pine64.conf <<EOF
+r8723bs
+hci_uart
+
+EOF
+
+tee /etc/modprobe.d/wifi-pwrmgnt.conf <<EOF
+options r8723bs rtw_power_mgnt=0
+
+EOF
+}
+
+pine64_bt_service(){
+echo
+echo Creating bluetooth service.
+sleep 1s
+tee /etc/systemd/system/bluetooth-module.service <<EOF
+[Unit]
+Description=Enable Bluetooth
+ConditionPathExists=/usr/local/sbin/start-bluetooth
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/start-bluetooth &>/dev/null
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable bluetooth-module
+}
+
+htop_stable(){
+echo
+echo Installing htop with cpufreq and thermal support.
+sleep 1s
+git clone https://github.com/leeadama/htop.git
+cd htop
+./autogen.sh
+./configure --prefix=/usr
+make -j4
+make install
+cd ~
+rm -fdr htop
+echo Done.
+}
+
+htop_unstable(){
+echo
+echo Installing htop with cpufreq and thermal support.
+sleep 1s
+git clone https://github.com/leeadama/htop.git
+cd htop
+./autogen.sh
+./configure --prefix=/usr
+make -j4 CC=gcc-9
+make install
+cd ~
+rm -fdr htop
+echo Done.
+}

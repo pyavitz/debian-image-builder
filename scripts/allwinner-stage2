@@ -1,0 +1,461 @@
+#!/usr/bin/env bash
+source /root/source.txt
+source /root/userdata.txt
+source /root/allwinner_func.txt
+source /root/root-pid.txt
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
+
+mount -t proc proc proc/
+mount -t sysfs sys sys/
+
+export DEBIAN_FRONTEND="noninteractive"
+
+apt-get update
+apt-get install -y apt-utils
+#### Locales
+apt install -y locales locales-all
+localedef -c -f UTF-8 -i en_US en_US.UTF-8
+dpkg-reconfigure locales
+#### Timezone
+ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
+echo -n 'America/New_York' > /etc/timezone
+apt upgrade -y
+apt dist-upgrade -y
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "/root/userdata.txt" >/dev/null; echo $?` in
+  0)
+    apt install -y ${PKGS1} gcc-9
+    export CC=/usr/bin/gcc-9
+    ;;
+  1)
+    apt install -y ${PKGS1}
+    ;;
+esac
+echo
+echo -n "${HOSTNAME}" > /etc/hostname
+sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
+adduser ${user} --gecos "${HOSTNAME}" --disabled-password
+echo "${user}:${passwd}" | chpasswd
+adduser ${user} sudo
+adduser ${user} audio
+adduser ${user} dialout
+adduser ${user} video
+adduser ${user} disk
+echo Done.
+
+#### Extlinux file
+if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
+    then tritium_extlinux
+fi
+if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
+    then nanopi_extlinux
+fi
+if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
+    then pine64_extlinux
+fi
+if `grep -Fx "opir1" "/root/board.txt" >/dev/null;`
+    then opir1_extlinux
+fi
+
+#### Sudoers file 
+echo
+echo Create sudoers file.
+sleep 1s
+tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
+${user} ALL=(ALL) NOPASSWD: ALL
+EOF
+
+#### Firstboot
+echo
+echo Creating firstboot.
+tee /usr/local/sbin/firstboot <<EOF
+#!/bin/bash
+### Functions
+grow_mmcblk () {
+bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
+}
+
+grow_mmcblk1 () {
+bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
+}
+
+grow_mmcblk2 () {
+bash growpart mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs mmcblk2p1 > /dev/null 2>&1
+}
+
+### Grow Partition
+if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
+        else echo "" &>/dev/null;
+fi
+
+if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
+        else echo "" &>/dev/null;
+fi
+
+if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
+        else echo "" &>/dev/null;
+fi
+
+### Renew SSH keys
+sleep 1s
+/bin/rm -v /etc/ssh/ssh_host_* > /dev/null 2>&1
+dpkg-reconfigure openssh-server > /dev/null 2>&1
+systemctl restart ssh > /dev/null 2>&1
+
+### Clean up
+systemctl disable firstboot > /dev/null 2>&1
+update-rc.d firstboot remove > /dev/null 2>&1
+rm -f /var/cache/debconf/*
+rm -f /usr/local/sbin/firstboot
+EOF
+
+#### LED triggers
+if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
+    then tritium_led_triggers
+fi
+if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
+    then nanopi_led_triggers
+fi
+
+### Bluetooth helper
+if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
+    then pine64_bt_helper
+fi
+
+#### eMMC flash tools
+echo
+echo Setting up eMMC tools
+sleep 1s
+mkdir -p /etc/opt
+mkdir -p /usr/lib/u-boot
+cp board.txt /etc/opt/
+mv -f write2mmc /usr/local/bin/
+mv -f *.bin /usr/lib/u-boot/
+chmod +x /usr/local/bin/write2mmc
+chown root:root /usr/local/bin/write2mmc
+echo Done.
+
+case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
+  0)
+    echo
+    echo Uinitrd script.
+    mkdir -p /etc/initramfs/post-update.d/
+    mv -f 99-uboot /etc/initramfs/post-update.d/
+    chmod +x /etc/initramfs/post-update.d/99-uboot
+    chown root:root /etc/initramfs/post-update.d/99-uboot
+    echo Done.
+    ;;
+  1)
+    rm -f 99-uboot
+    ;;
+esac
+
+#### Scripts
+echo
+echo Moving scripts.
+sleep 1s
+cd ~
+mkdir -p /usr/local/bin
+mv -f firstboot.init /etc/init.d/firstboot
+mv -f run-setup /usr/local/bin/
+mv -f sysinfo /usr/local/bin/
+rm -f sysinfo.bl
+mv -f smon /usr/local/bin/
+wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/swh
+mv -f swh /usr/local/bin/
+wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/wifidrv
+mv -f wifidrv /usr/local/bin/
+wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/governor
+mv -f governor /usr/local/bin/
+chmod +x /etc/init.d/firstboot
+chown root:root /etc/init.d/firstboot
+chmod +x /usr/local/bin/*
+chown -R root:root /usr/local/bin/
+echo Done.
+
+#### MOTD
+echo
+echo Adding motd.
+sleep 1s
+mkdir -p /etc/update-motd.d
+tee /etc/update-motd.d/15-brand <<EOF
+#!/bin/bash
+echo
+toilet -f small --filter metal '${MOTD}'
+echo 
+EOF
+mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo
+rm -f 20-sysinfo.bl
+chmod +x /etc/update-motd.d/*
+chown root:root /etc/update-motd.d/15-brand
+chown root:root /etc/update-motd.d/20-sysinfo
+echo Done.
+
+### Move mc skins
+echo
+echo Adding mc skins.
+sleep 1s
+mkdir -p /usr/share/mc/skins
+mv -f darkgreen.ini /usr/share/mc/skins/darkgreen.ini
+mv -f darkred.ini /usr/share/mc/skins/darkred.ini
+echo Done.
+echo
+echo Adding mc ini and nanorc.
+sleep 1s
+mkdir -p /root/.config/mc
+mv -f root-ini /root/.config/mc/ini
+mv -f nanorc-root /root/.nanorc
+mkdir -p /home/${user}/.config/mc
+mv -f user-ini /home/${user}/.config/mc/ini
+mv -f nanorc-user /home/${user}/.nanorc
+chown -R root:root /root
+chown -R ${user}:${user} /home/${user}
+echo Done.
+
+#### Extra firmware
+extra_firmware
+
+#### Software
+echo
+echo Installing firmware and needed packages.
+sleep 1s
+apt update
+apt install -y ${PKGS2} ${FIRMWARE}
+echo Done.
+
+### Network Setup
+echo
+echo Adding network configs and rules.
+sleep 1s
+rm -f /etc/network/interfaces
+mv -f interfaces /etc/network/interfaces
+chown root:root /etc/network/interfaces
+mv -f wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+chown root:root /etc/wpa_supplicant/wpa_supplicant.conf
+mkdir -p /etc/udev/rules.d
+mv -f 80-net-setup-link.rules /etc/udev/rules.d/80-net-setup-link.rules
+chown root:root /etc/udev/rules.d/80-net-setup-link.rules
+echo Done.
+
+### ZSWAP
+echo
+echo Adding zramswap config.
+sleep 1s
+rm -f /etc/default/zramswap
+mv -f zramswap /etc/default/zramswap
+chown root:root /etc/default/zramswap
+echo Done.
+
+### MOTD instructions
+echo
+echo Adding motd first boot.
+sleep 1s
+rm -f /etc/motd
+mv -f motd /etc/motd
+mv -f new.motd /etc/new.motd
+chown root:root /etc/motd
+chown root:root /etc/new.motd
+echo Done.
+
+### Regulatory db
+echo
+echo Adding regdb.
+sleep 1s
+apt install -y crda
+git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
+echo
+echo Moving db files.
+sleep 1s
+cd wireless-regdb
+cp -f regulatory.db /lib/firmware/regulatory.db
+cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
+cd ~
+rm -fdr wireless-regdb
+echo Done.
+
+case `grep -Fx "armv7" "/root/board.txt" >/dev/null; echo $?` in
+  0)
+    echo
+    wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/ca-certificates-udeb_20200601.deb10u1_all.udeb
+    wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/ca-certificates_20200601.deb10u1_all.deb
+    dpkg -i ca-certificates_20200601.deb10u1_all.deb ca-certificates-udeb_20200601.deb10u1_all.udeb
+    rm -fR ca-certificates_20200601.deb10u1_all.deb ca-certificates-udeb_20200601.deb10u1_all.udeb
+    ;;
+esac
+
+### Cypress wifi firmware
+case `grep -Fx "nanopi" "/root/board.txt" >/dev/null; echo $?` in
+  0)
+    cypress_firmware
+    ;;
+esac
+
+### Htop
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "/root/userdata.txt" >/dev/null; echo $?` in
+  0)
+    htop_unstable
+    ;;
+  1)
+    htop_stable
+    ;;
+esac
+
+### Adding groups
+echo
+echo Adding user to more groups.
+sleep 1s
+adduser ${user} plugdev
+adduser ${user} netdev
+adduser ${user} bluetooth
+adduser ${user} input
+adduser ${user} tty
+echo Done.
+
+#### Clean up packages
+echo
+echo Cleaning up.
+sleep 1s
+apt -y autoremove
+apt -y clean
+apt -y autoclean
+echo Done.
+
+#### Kernel
+echo
+echo Installing kernel.
+sleep 1s
+cd ~
+dpkg -i *.deb
+rm -f *.deb
+echo Done.
+
+### Bluetooth and wifi helper install
+case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
+  0)
+    pine64_bt_install
+    pine64_wifi_bt
+    pine64_bt_service
+    ;;
+esac
+
+#### Service
+echo
+echo Creating first boot.
+sleep 1s
+tee /etc/systemd/system/firstboot.service <<EOF
+[Unit]
+Description=First boot
+After=network.target
+Before=rc-local.service
+ConditionPathExists=/usr/local/sbin/firstboot
+
+[Service]
+ExecStart=/etc/init.d/firstboot start > /dev/null 2>&1
+Type=oneshot
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+####
+echo
+echo Creating governor service.
+sleep 1s
+tee /etc/systemd/system/governor.service <<EOF
+[Unit]
+Description=Set Governor
+ConditionPathExists=/usr/local/bin/governor
+
+[Service]
+ExecStart=/usr/local/bin/governor -r &>/dev/null
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+####
+if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
+    then tritium_led_service
+fi
+if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
+    then nanopi_led_service
+fi
+####
+echo
+echo Creating rc-local.
+sleep 1s
+tee /etc/systemd/system/rc-local.service <<EOF
+[Unit]
+Description=/etc/rc.local
+ConditionPathExists=/etc/rc.local
+
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+
+[Install]
+WantedBy=multi-user.target
+EOF
+tee /etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+exit 0
+EOF
+chmod +x /etc/rc.local
+echo Done.
+### Enable services
+echo
+echo Enabling Services
+sleep 1s
+systemctl enable rc-local
+systemctl enable ifplugd
+systemctl enable resolvconf
+systemctl enable haveged
+systemctl enable zramswap
+update-rc.d firstboot defaults 2
+systemctl enable firstboot
+systemctl enable governor
+
+#### Own it
+chown -R ${user}:${user} /home/${user}
+chmod +x /usr/local/bin/*
+chown -R root:root /usr/local/bin/
+chmod +x /usr/local/sbin/*
+chown -R root:root /usr/local/sbin/
+
+#### Finish
+echo
+echo Moving out of stage2 and creating image.
+echo
+sleep 2s
+
+umount /proc /sys

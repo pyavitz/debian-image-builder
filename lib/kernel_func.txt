@@ -1,0 +1,332 @@
+# KERNEL
+gcc_woes(){
+sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/amlogic_defconfig
+sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/allwinner_defconfig
+}
+
+stable_download(){
+echo
+echo_stable
+if ls ${KERNEL}-${VERSION}.tar.xz > /dev/null 2>&1;
+	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.xz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz && echo_bdone;
+fi
+}
+
+mainline_download(){
+echo
+echo_mainline
+if ls ${KERNEL}-${VERSION}.tar.gz > /dev/null 2>&1;
+	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz && echo_bdone;
+fi
+}
+
+stable_extract(){
+echo
+echo_extract
+echo -e -n "${WHT}"
+pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+echo -e -n "${FIN}"
+}
+
+mainline_extract(){
+echo
+echo_extract
+echo -e -n "${WHT}"
+pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+echo -e -n "${FIN}"
+}
+
+setup(){
+sleep 1s
+cd ${KERNEL}-${VERSION}
+export ARCH=arm64
+rm -f scripts/package/builddeb
+rm -f scripts/package/mkdebian
+cp -R ../${PACKAGING}/builddeb scripts/package/
+cp -R ../${PACKAGING}/mkdebian scripts/package/
+chmod +x scripts/package/builddeb
+chmod +x scripts/package/mkdebian
+#make clean
+#make mrproper
+}
+
+setupv7(){
+sleep 1s
+cd ${KERNEL}-${VERSION}
+export ARCH=arm
+rm -f scripts/package/builddeb
+rm -f scripts/package/mkdebian
+cp -R ../${PACKAGING}/builddeb scripts/package/
+cp -R ../${PACKAGING}/mkdebian scripts/package/
+chmod +x scripts/package/builddeb
+chmod +x scripts/package/mkdebian
+#make clean
+#make mrproper
+}
+
+cconfig(){
+    echo_cconfig
+    cp -f ../${DEF}/${MYCONFIG} arch/arm64/configs/
+    make ARCH=arm64 ${MYCONFIG} &> /dev/null
+    echo_done
+}
+
+cconfigv7(){
+    echo_cconfig
+    cp -f ../${DEF}/${MYCONFIG} arch/arm/configs/
+    make KBUILD_DEBARCH=armhf ARCH=arm ${MYCONFIG} &> /dev/null
+    echo_done
+}
+
+menu_config(){
+    echo
+    echo_menuconfig
+    sleep 1s
+    make menuconfig
+}
+
+ccompile(){
+    echo -- CC
+    echo_build
+    echo 'y' | make -j${CORES} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bindeb-pkg
+}
+
+ncompile(){
+    echo -- NC
+    echo_build
+    echo 'y' | make -j${CORES} ARCH=arm64 bindeb-pkg
+}
+
+ccompilev7(){
+    echo -- CC
+    echo_build
+    echo 'y' | make -j${CORES} KBUILD_DEBARCH=armhf  ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bindeb-pkg
+}
+
+ncompilev7(){
+    echo -- NC
+    echo_build
+    echo 'y' | make -j${CORES} KBUILD_DEBARCH=armhf ARCH=arm bindeb-pkg
+}
+
+# AMLOGIC
+amlogic_defconfig(){
+    echo_defconfig
+    cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
+    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
+     0)
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
+       ;;
+     1)
+       echo -e "\e[1;31mGCC version not officially supported. \e[0m"
+       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128. \e[0m"
+       gcc_woes &> /dev/null
+       ;;
+    esac
+    make ARCH=arm64 amlogic_defconfig &> /dev/null
+    echo_done
+}
+
+### LE POTATO
+le_potato(){
+potato_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    amlogic_defconfig
+    ;;
+esac
+}
+
+### ODROID C4
+odroid_c4(){
+odroidc4_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    amlogic_defconfig
+    ;;
+esac
+}
+
+### ODROID N2
+odroid_n2(){
+odroidn2_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    amlogic_defconfig
+    ;;
+esac
+}
+
+# ALLWINNER
+allwinner_defconfig(){
+    echo_defconfig
+    cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
+    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
+     0)
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
+       ;;
+     1)
+       echo -e "\e[1;31mGCC version not officially supported. \e[0m"
+       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128. \e[0m"
+       gcc_woes &> /dev/null
+       ;;
+    esac
+    make ARCH=arm64 allwinner_defconfig &> /dev/null
+    echo_done
+}
+
+allwinner-r1_defconfig(){
+    echo_defconfig
+    cp -f ../${DEF}/allwinner-r1_defconfig arch/arm/configs/
+    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
+     0)
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
+       ;;
+     1)
+       echo -e "\e[1;31mGCC version not officially supported. \e[0m"
+       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128. \e[0m"
+       gcc_woes &> /dev/null
+       ;;
+    esac
+    make ARCH=arm allwinner-r1_defconfig &> /dev/null
+    echo_done
+}
+
+### TRITIUM
+tritium_h5(){
+tritium_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    allwinner_defconfig
+    ;;
+esac
+}
+
+### PINEA64 PLUS
+pine_a64(){
+pine64_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    allwinner_defconfig
+    ;;
+esac
+}
+
+### NANOPI NEO PLUS2
+nanopi_neo_plus2(){
+nanopi_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    allwinner_defconfig
+    ;;
+esac
+}
+
+### ORANGEPI R1
+orangepi_r1(){
+opir1_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfigv7
+    ;;
+  1)
+    allwinner-r1_defconfig
+    ;;
+esac
+}
+
+### ROCKCHIP
+rockchip_defconfig(){
+    echo_defconfig
+    cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
+    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
+     0)
+       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
+       ;;
+     1)
+       echo -e "\e[1;31mGCC version not officially supported. \e[0m"
+       echo -e "\e[1;31mWARNING: Removing CRYPTO_AEGIS128. \e[0m"
+       gcc_woes &> /dev/null
+       ;;
+    esac
+    make ARCH=arm64 rockchip64_defconfig &> /dev/null
+    echo_done
+}
+
+rk3328_roc_cc (){
+rk3328_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    rockchip_defconfig
+    ;;
+esac
+}
+
+rk3328_rock64 (){
+rk3328_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    rockchip_defconfig
+    ;;
+esac
+}
+
+rk3399_nanopc (){
+rk3399_patch
+case `grep -Fx "custom_defconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    cconfig
+    ;;
+  1)
+    rockchip_defconfig
+    ;;
+esac
+}
+
+architecture_v8(){
+case `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    ccompile
+    ;;
+  1)
+    ncompile
+    ;;
+esac
+}
+
+architecture_v7(){
+case `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+    ccompilev7
+    ;;
+  1)
+    ncompilev7
+    ;;
+esac
+}
