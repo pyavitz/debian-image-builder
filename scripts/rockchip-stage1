@@ -14,13 +14,13 @@ RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
 if `grep -Fx "renegade" "board.txt" >/dev/null;`
-	then DEVICE_SOC="rk3328-roc-cc"
+	then DEVICE_SOC="rk3328-roc-cc";
 fi
 if `grep -Fx "rock64" "board.txt" >/dev/null;`
-	then DEVICE_SOC="rk3328-rock64"
+	then DEVICE_SOC="rk3328-rock64";
 fi
 if `grep -Fx "nanopc" "board.txt" >/dev/null;`
-	then DEVICE_SOC="rk3399-nanopct4"
+	then DEVICE_SOC="rk3399-nanopct4";
 fi
 IMAGE_FILE_SUFFIX="$(date +%F)"
 IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_FILE_SUFFIX}.img"
@@ -60,13 +60,13 @@ mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 if `grep -Fx "renegade" "board.txt" >/dev/null;`
-   then renegade_flashbin
+   then renegade_flashbin;
 fi
 if `grep -Fx "rock64" "board.txt" >/dev/null;`
-   then rock64_flashbin
+   then rock64_flashbin;
 fi
 if `grep -Fx "nanopc" "board.txt" >/dev/null;`
-   then nanopc_flashbin
+   then nanopc_flashbin;
 fi
 sync
 umount p1
@@ -111,13 +111,13 @@ cp files/scripts/* p1/root
 cp files/users/* p1/root
 cp firmware/fw-0a5c_21e8.hcd p1/root
 if `grep -Fx "renegade" "board.txt" >/dev/null;`
-    then cp output/renegade/{*.itb,*.bin,*.deb} p1/root
+    then cp output/renegade/{*.itb,*.bin,*.deb} p1/root && cp files/boot/boot.cmd p1/root;
 fi
 if `grep -Fx "rock64" "board.txt" >/dev/null;`
-    then cp output/rock64/{*.itb,*.bin,*.deb} p1/root
+    then cp output/rock64/{*.itb,*.bin,*.deb} p1/root;
 fi
 if `grep -Fx "nanopc" "board.txt" >/dev/null;`
-    then cp output/nanopc/{*.itb,*.bin,*.deb} p1/root
+    then cp output/nanopc/{*.itb,*.bin,*.deb} p1/root;
 fi
 # mount and chroot
 mount -o bind /dev p1/dev
