@@ -37,7 +37,7 @@ echo CONFIG_EXT4_WRITE=y >> configs/orangepi_r1_defconfig
 allwinner_uboot(){
 echo
 echo_duboot
-if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
+if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_bdone;
 fi
@@ -70,7 +70,7 @@ make -j${CORES}
 opir1_uboot(){
 echo
 echo_duboot
-if ls u-boot-${UBOOT_VERSION}.tar.gz  > /dev/null 2>&1
+if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_ok;
 fi
@@ -223,6 +223,53 @@ fi
 }
 
 ## STAGE1
+partition(){
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+    truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+    ;;
+  1)
+    truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+    ;;
+esac
+fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
+o
+n
+p
+1
+2048
+a
+t
+b
+3613280
+
+p
+w
+
+EOF
+IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+partprobe "${IMAGE_LOOP_DEV}"
+mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
+mkdir -p p1
+mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
+sync
+umount p1
+if `grep -Fx "tritium" "board.txt" >/dev/null;`
+   then tritium_flashbin
+fi
+if `grep -Fx "nanopi" "board.txt" >/dev/null;`
+   then nanopi_flashbin
+fi
+if `grep -Fx "pine64" "board.txt" >/dev/null;`
+   then pine64_flashbin
+fi
+if `grep -Fx "opir1" "board.txt" >/dev/null;`
+   then opir1_flashbin
+fi
+mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
+}
+
 tritium_flashbin(){
 dd if=output/tritium/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
@@ -272,6 +319,13 @@ deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-f
 EOF
    ;;
 esac
+}
+
+create_fstab(){
+tee p1/etc/fstab <<EOF
+UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
+EOF
 }
 
 ## STAGE2

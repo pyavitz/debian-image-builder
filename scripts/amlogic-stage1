@@ -1,15 +1,18 @@
 #!/bin/bash
 source lib/amlogic_func.txt
+source lib/echo_func.txt
 source lib/source.txt
 source userdata.txt
 
 if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-   then set -x;
+	then set -x && set -eux -o pipefail;
 fi
-if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-   then set -eux -o pipefail;
+echo
+if ls /usr/bin/toilet > /dev/null 2>&1
+	then toilet -f term --filter metal 'Debian Image Builder';
+	else echo -e "${COL}Debian Image Builder${FIN}";
 fi
-
+echo
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
@@ -31,53 +34,20 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then
 	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
 fi
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-    truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-    ;;
-  1)
-    truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-    ;;
-esac
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2248
-a
-t
-b
-3613280
 
-p
-w
-
-EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
-partprobe "${IMAGE_LOOP_DEV}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-sync
-umount p1
-if `grep -Fx "lepotato" "board.txt" >/dev/null;`
-    then lepotato_flashbin
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then partition;
+	else partition > /dev/null 2>&1;
 fi
-if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
-    then odroidc4_flashbin
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then partition_uuid;
+	else partition_uuid > /dev/null 2>&1;
 fi
-if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
-    then odroidn2_flashbin
+
+if ls debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz > /dev/null 2>&1;
+	then tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
+	else echo -e "${YLW}Missing rootfs tarball!${FIN}" && make cleanup && exit;
 fi
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
-
-### fetch partition uuid
-partition_uuid
-
-### Rootfs
-tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p1/
 
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
@@ -85,14 +55,15 @@ echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
 cp $(which "qemu-aarch64-static") p1/usr/bin
 
-# sources dot list
-choose_release
-echo
-tee p1/etc/fstab <<EOF
-UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
-tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
-EOF
-echo
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then choose_release;
+	else choose_release > /dev/null 2>&1;
+fi
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then create_fstab;
+	else create_fstab > /dev/null 2>&1;
+fi
+
 if [ -n "$PROXY" ] ; then
 	tee "p1/etc/apt/apt.conf.d/30proxy" <<EOF
 Acquire::http::proxy "http://127.0.0.1:3142";
@@ -120,6 +91,7 @@ fi
 if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
     then output/odroidc4/*.deb p1/root && cp files/boot/u-boot.bin.odroid-n2 p1/root/u-boot.bin;
 fi
+echo -e "${WHT}Starting chroot${FIN} ..."
 # mount and chroot
 mount -o bind /dev p1/dev
 mount -o bind /dev/pts p1/dev/pts

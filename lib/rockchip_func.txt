@@ -184,6 +184,49 @@ dd if=output/nanopc/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=output/nanopc/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
+partition(){
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+    truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+    ;;
+  1)
+    truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+    ;;
+esac
+fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
+o
+n
+p
+1
+32767
+a
+t
+b
+3613280
+p
+w
+
+EOF
+IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+partprobe "${IMAGE_LOOP_DEV}"
+mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
+mkdir -p p1
+mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
+if `grep -Fx "renegade" "board.txt" >/dev/null;`
+   then renegade_flashbin;
+fi
+if `grep -Fx "rock64" "board.txt" >/dev/null;`
+   then rock64_flashbin;
+fi
+if `grep -Fx "nanopc" "board.txt" >/dev/null;`
+   then nanopc_flashbin;
+fi
+sync
+umount p1
+mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
+}
+
 partition_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
@@ -210,6 +253,13 @@ deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-f
 EOF
    ;;
 esac
+}
+
+create_fstab(){
+tee p1/etc/fstab <<EOF
+UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
+EOF
 }
 
 ## STAGE2
