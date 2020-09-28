@@ -5,8 +5,28 @@ source lib/kernel_func.txt
 source lib/amlogic_func.txt
 source lib/allwinner_func.txt
 source lib/rockchip_func.txt
-source userdata.txt
+source userdata.txt > /dev/null 2>&1
+UD=userdata.txt > /dev/null 2>&1
 
+userdata () {
+echo ""
+echo "Please create a userdata.txt file"
+while [ true ] ; do
+read -t 10 -n 1
+if [ $? = 0 ] ; then
+exit ;
+else
+echo "run make config"
+fi
+done
+}
+
+if [ -f "$UD" ]; then
+    echo ""
+    echo "$UD file found." > /dev/null 2>&1
+else 
+    userdata
+fi
 # AMLOGIC
 if `grep -Fx "amlogic" "board.txt" >/dev/null;`
 	then aml_kernel;
