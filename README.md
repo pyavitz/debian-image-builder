@@ -2,7 +2,7 @@
 ```sh
 Allwinner:      # NanoPi NEO Plus2, Orange Pi R1, Pine A64+ and Tritium
 Amlogic:        # Le Potato, Odroid C4 and Odroid N2
-Broardcom:      # Raspberry Pi 4B
+Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
 ### Dependencies for Debian Buster AMD64/x86_64 cross compile
