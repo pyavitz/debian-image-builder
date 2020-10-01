@@ -108,6 +108,7 @@ mount /boot
 ### Clean up
 systemctl disable firstboot > /dev/null 2>&1
 update-rc.d firstboot remove > /dev/null 2>&1
+/usr/local/sbin/actled > /dev/null 2>&1
 rm -f /var/cache/debconf/*
 rm -f /usr/local/sbin/firstboot
 EOF
@@ -178,12 +179,11 @@ echo Done.
 echo
 echo Adding pi firmware.
 sleep 1s
-pv firmware-nonfree-master.tar.gz | tar -xzf - -C .
-rm -f firmware-nonfree-master.tar.gz
-mkdir -p /lib/firmware
-cp -fr firmware-nonfree-master/* /lib/firmware
-rm -fdR firmware-nonfree-master
+wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/firmware-brcm80211_20190114-1+rpt8_all.deb
+dpkg -i firmware-brcm80211_20190114-1+rpt8_all.deb
+rm -f firmware-brcm80211_20190114-1+rpt8_all.deb
 cd /lib/firmware/brcm
+bcm_sdio_3-b-plus
 bcm_sdio_4-b
 cd ~
 echo Done.
