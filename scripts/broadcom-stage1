@@ -3,7 +3,36 @@ source lib/broadcom_func.txt
 source lib/echo_func.txt
 source lib/source.txt
 source userdata.txt > /dev/null 2>&1
+UD=userdata.txt > /dev/null 2>&1
 
+userdata () {
+echo ""
+echo "Please create a userdata.txt file"
+while [ true ] ; do
+read -t 10 -n 1
+if [ $? = 0 ] ; then
+exit ;
+else
+echo "run make config"
+fi
+done
+}
+
+if [ -f "$UD" ]; then
+    echo ""
+    echo "$UD file found." > /dev/null 2>&1
+else 
+    userdata
+fi
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then set -eux -o pipefail;
+	else set -eu -o pipefail;
+fi
+echo
+if ls /usr/bin/toilet > /dev/null 2>&1
+	then toilet -f small --filter metal 'Debian';
+	else echo -e "${COL}Debian Image Builder${FIN}";
+fi
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
@@ -28,7 +57,7 @@ if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 fi
 ### cmdline
 echo && echo
-echo -e -n "${RED}Installing boot bits${FIN}."
+echo -e -n "${COL}Installing boot bits${FIN}."
 if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
 	then create_extlinux;
 fi
@@ -115,8 +144,8 @@ cp files/scripts/* p2/root
 cp files/users/* p2/root
 cp files/raspi4/* p2/root
 if ls firmware/firmware-nonfree-master.tar.gz > /dev/null 2>&1;
-	then echo -e "${RED}Starting chroot${FIN} ..." && cp firmware/firmware-nonfree-master.tar.gz p2/root > /dev/null 2>&1;
-	else rpi-firmware && cp firmware/firmware-nonfree-master.tar.gz p2/root && echo -e " ${RED}Starting chroot${FIN} ...";
+	then echo -e "${COL}Starting chroot${FIN} ..." && cp firmware/firmware-nonfree-master.tar.gz p2/root > /dev/null 2>&1;
+	else rpi-firmware && cp firmware/firmware-nonfree-master.tar.gz p2/root && echo -e " ${COL}Starting chroot${FIN} ...";
 fi
 cp firmware/fw-0a5c_21e8.hcd p2/root
 # Mount and chroot
