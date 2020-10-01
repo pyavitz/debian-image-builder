@@ -422,37 +422,30 @@ echo Done.
 
 led_service(){
 echo
-echo Creating actled switch.
+echo Creating actled service.
 tee /usr/local/sbin/actled <<EOF
 #!/bin/bash
-# activity led switch
-rpi_switch (){
-sh -c 'echo 0 > /sys/devices/platform/leds/leds/led0/brightness'
+# activity led on mmc1
+rpi_switch(){
+sh -c 'echo mmc1 >/sys/class/leds/ACT/trigger'
 }
 
-ml_switch (){
-sh -c 'echo 0 > /sys/devices/platform/leds/leds/ACT/brightness'
-}
-
-if ls /sys/devices/platform/leds/leds/led0/brightness > /dev/null 2>&1;
+if ls /sys/class/leds/ACT/trigger > /dev/null 2>&1;
 	then rpi_switch;
-fi
-if ls /sys/devices/platform/leds/leds/ACT/brightness > /dev/null 2>&1;
-	then ml_switch;
 fi
 
 EOF
 
 echo
-echo Creating pwrled switch.
+echo Creating pwrled service.
 tee /usr/local/sbin/pwrled <<EOF
 #!/bin/bash
 # power led switch
-rpi_switch (){
+rpi_switch(){
 sh -c 'echo 0 > /sys/devices/platform/leds/leds/led1/brightness'
 }
 
-ml_switch (){
+ml_switch(){
 sh -c 'echo 0 > /sys/devices/platform/leds/leds/PWR/brightness'
 }
 
@@ -471,32 +464,41 @@ chown root:root /usr/local/sbin/pwrled
 
 led_switches(){
 echo
-echo Creating power led switch.
+echo Creating power led off switch.
 sleep 1s
 tee /etc/systemd/system/pwrledoff.service <<EOF
 [Unit]
 Description=Turn off power led
 ConditionPathExists=/usr/local/sbin/pwrled
+
 [Service]
-Type=forking
+Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/local/sbin/pwrled &>/dev/null
+
 [Install]
 WantedBy=multi-user.target
 EOF
 
 echo
-echo Creating activity led switch. 
+echo Creating activity led on mmc1 switch. 
 sleep 1s
-tee /etc/systemd/system/actledoff.service <<EOF
+tee /etc/systemd/system/actled.service <<EOF
 [Unit]
 Description=Turn off activity led
 ConditionPathExists=/usr/local/sbin/actled
+
 [Service]
-Type=forking
+Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/local/sbin/actled &>/dev/null
+
 [Install]
 WantedBy=multi-user.target
+
 EOF
+systemctl enable pwrledoff
+systemctl enable actled
 }
 
 htop_stable(){
