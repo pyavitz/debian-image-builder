@@ -35,7 +35,7 @@ if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz && echo_bdone;
 fi
-build_uboot
+rkbuild_uboot
 }
 
 rock64_defconfig(){
@@ -54,7 +54,7 @@ echo CONFIG_EXT4_WRITE=y >> configs/nanopc-t4-rk3399_defconfig
 echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
 }
 
-build_uboot(){
+rkbuild_uboot(){
 echo
 echo_extract
 tar -xf u-boot-v2020.07.tar.gz
@@ -275,6 +275,7 @@ label kernel
     fdt /boot/rockchip/rk3328-rock64.dtb
     append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
 EOF
+rm -f 99-uboot
 echo Done
 }
 
@@ -290,6 +291,7 @@ label kernel
     fdt /boot/rockchip/rk3399-nanopc-t4.dtb
     append  earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u init=/sbin/init
 EOF
+rm -f 99-uboot
 echo Done
 }
 
@@ -302,7 +304,6 @@ mv -f 99-uboot /etc/initramfs/post-update.d/
 mv -f boot.cmd /boot/
 chmod +x /etc/initramfs/post-update.d/99-uboot
 chown root:root /etc/initramfs/post-update.d/99-uboot
-rm -f 99-uboot
 }
 
 renegade_bootcmd(){

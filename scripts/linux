@@ -5,6 +5,7 @@ source lib/kernel_func.txt
 source lib/amlogic_func.txt
 source lib/allwinner_func.txt
 source lib/rockchip_func.txt
+source lib/broadcom_func.txt
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -39,6 +40,11 @@ fi
 
 if `grep -Fx "rockchip" "board.txt" >/dev/null;`
 	then roc_kernel;
+fi
+
+# BROADCOM
+if `grep -Fx "broadcom" "board.txt" >/dev/null;`
+	then bcm_kernel;
 fi
 
 if ls ${KERNEL}-${VERSION} > /dev/null 2>&1;
@@ -113,6 +119,11 @@ if `grep -Fx "nanopc" "../../board.txt" >/dev/null;`
 	then rk3399_nanopc;
 fi
 
+# BROADCOM
+if `grep -Fx "bcm2711" "../../board.txt" >/dev/null;`
+	then bcm_2711;
+fi
+
 ### Menuconfig
 if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
     then menu_config;
@@ -137,4 +148,5 @@ rm -f *.changes
 allwinner_output
 amlogic_output
 rockchip_output
+broadcom_output
 echo_done

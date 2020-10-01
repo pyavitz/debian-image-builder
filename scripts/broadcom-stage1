@@ -1,0 +1,158 @@
+#!/bin/bash
+source lib/broadcom_func.txt
+source lib/echo_func.txt
+source lib/source.txt
+source userdata.txt > /dev/null 2>&1
+
+RAM=0
+PROXY=""
+IMAGE_FOLDER="img/"
+DEVICE_SOC="bcm2711"
+IMAGE_DATE="$(date +%F)"
+IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img"
+if [ $RAM -ne 0 ]; then
+	IMAGE_FOLDER="ram/"
+fi
+mkdir -p "$IMAGE_FOLDER"
+if [ $RAM -ne 0 ]; then
+	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
+fi
+
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then partitions;
+	else partitions > /dev/null 2>&1;
+fi
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then partition_uuid;
+	else partition_uuid > /dev/null 2>&1;
+fi
+### cmdline
+echo && echo
+echo -e -n "${RED}Installing boot bits${FIN}."
+if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
+	then create_extlinux;
+fi
+### config.txt
+if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
+	then bcm2711_config > /dev/null 2>&1;
+fi
+if ls p1/config.txt > /dev/null 2>&1
+	then echo && echo -n "config.txt " && sleep 1s && echo_nok;
+	else echo && echo -n "config.txt " && sleep 1s && echo_fail && exit;
+fi
+### Fetching boot bits
+if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
+	then bcm2711_boot;
+fi
+
+### clean boot bits
+rm -f firmware/boot/*
+
+### extract rootfs
+if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
+	then aarch64_rootfs;
+fi
+
+mkdir -p p2/etc/apt/apt.conf.d p2/etc/dpkg/dpkg.cfg.d
+echo "force-unsafe-io" > "p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
+
+mkdir -p p2/usr/bin
+cp $(which "qemu-aarch64-static") p2/usr/bin
+
+distro_release(){
+case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+EOF
+    ;;
+   1)
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
+deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
+EOF
+   ;;
+esac
+}
+
+create_fstab(){
+tee p2/etc/fstab <<EOF
+UUID=${BOOT_UUID}	/boot		vfat    defaults 0 2
+UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
+EOF
+}
+
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then distro_release;
+	else distro_release > /dev/null 2>&1;
+fi
+if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
+	then create_fstab;
+	else create_fstab > /dev/null 2>&1;
+fi
+
+if [ -n "$PROXY" ] ; then
+	tee "p2/etc/apt/apt.conf.d/30proxy" <<EOF
+Acquire::http::proxy "http://127.0.0.1:3142";
+EOF
+fi
+
+# setup stage2
+cp scripts/broadcom-stage2 p2/root
+cp lib/broadcom_func.txt p2/root
+cp lib/source.txt p2/root
+cp userdata.txt p2/root
+cp board.txt p2/root
+if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
+	then cp output/raspi4/{*.deb,u-boot.bin} p2/root;
+fi
+cp files/misc/* p2/root
+cp files/rules/* p2/root
+cp files/scripts/* p2/root
+cp files/users/* p2/root
+cp files/raspi4/* p2/root
+if ls firmware/firmware-nonfree-master.tar.gz > /dev/null 2>&1;
+	then echo -e "${RED}Starting chroot${FIN} ..." && cp firmware/firmware-nonfree-master.tar.gz p2/root > /dev/null 2>&1;
+	else rpi-firmware && cp firmware/firmware-nonfree-master.tar.gz p2/root && echo -e " ${RED}Starting chroot${FIN} ...";
+fi
+cp firmware/fw-0a5c_21e8.hcd p2/root
+# Mount and chroot
+mount -o bind p1 p2/boot
+mount -o bind /dev p2/dev
+mount -o bind /dev/pts p2/dev/pts
+chroot p2 /root/broadcom-stage2
+# unmount
+umount p2/dev/pts
+umount p2/dev
+umount p2/boot
+
+rm p2/usr/bin/qemu-aarch64-static
+rm p2/root/broadcom-stage2
+rm p2/root/broadcom_func.txt
+rm p2/root/source.txt
+rm p2/root/userdata.txt
+rm p2/root/board.txt
+rm -f p2/var/cache/debconf/*
+
+if [ -n "$PROXY" ] ; then
+	rm p2/etc/apt/apt.conf.d/30proxy
+fi
+rm p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
+
+### Finish
+e4defrag -c p2
+
+umount p2
+umount p1
+
+losetup -d "${IMAGE_LOOP_DEV}"
+mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
+if [ $RAM -ne 0 ]; then
+	umount "${IMAGE_FOLDER}"
+fi
+rmdir "${IMAGE_FOLDER}"
+rmdir p1 p2
+rm -f part-uuid.txt board.txt

@@ -31,6 +31,11 @@ AML-STG2=./scripts/amlogic-stage2
 ROC-IMG=./scripts/rockchip-stage1
 ROC-IMAGE=sudo ./scripts/rockchip-stage1
 ROC-STG2=./scripts/rockchip-stage2
+
+# rockchip
+RPI-IMG=./scripts/broadcom-stage1
+RPI-IMAGE=sudo ./scripts/broadcom-stage1
+RPI-STG2=./scripts/broadcom-stage2
 # do not edit above this line
 
 help:
@@ -40,6 +45,7 @@ help:
 	@echo "Boards:\e[0m"
 	@echo "  Allwinner:  nanopi opir1 pine64 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2"
+	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
@@ -526,6 +532,52 @@ nanopc-all:
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
+
+# RASPBERRY PI 4B
+raspi4-uboot:
+	# Compiling u-boot
+	@ echo bcm2711 > board.txt
+	@ echo broadcom >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+
+raspi4-kernel:
+	# Compiling kernel
+	@ echo bcm2711 > board.txt
+	@ echo broadcom >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+
+raspi4-image:
+	# Making bootable Debian image
+	@ echo bcm2711 > board.txt
+	@ echo broadcom >> board.txt
+	@chmod +x ${RPI-IMG}
+	@chmod +x ${RPI-STG2}
+	@${RPI-IMAGE}
+
+raspi4-all:
+	# R A S P B E R R Y  P I  4 B
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo bcm2711 > board.txt
+	@ echo broadcom >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo bcm2711 > board.txt
+	@ echo broadcom >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Making bootable Debian image
+	@ echo bcm2711 > board.txt
+	@ echo broadcom >> board.txt
+	@chmod +x ${RPI-IMG}
+	@chmod +x ${RPI-STG2}
+	@${RPI-IMAGE}
 
 ### MISCELLANEOUS
 menu:
