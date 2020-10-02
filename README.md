@@ -38,7 +38,7 @@ Username:       # Your username
 Password:       # Your password
 Branding:       # Set ASCII text banner
 Hostname:       # Set the system's host name
-Debian:         # Supported: buster and unstable
+Debian:         # Supported: buster (unstable is hit-and-miss)
 Branch:         # Supported: 5.8.y and above
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
