@@ -73,6 +73,18 @@ Supported: Le Potato, Odroid C4, Odroid N2 and NanoPi NEO Plus2
 2. Boot from sdcard
 3. Execute: sudo write2mmc
 ```
+#### Deb EEPROM ([usb_storage.quirks](https://github.com/pyavitz/rpi-img-builder/issues/17))
+
+```sh
+Raspberry Pi 4B EEPROM Helper Script
+Usage: deb-eeprom -opt
+
+   -v       Edit version variable
+   -U       Upgrade eeprom package
+   -w       Setup and install usb boot
+   -u       Update script
+
+```
 #### Simple wifi helper
 ```sh
 swh -h
