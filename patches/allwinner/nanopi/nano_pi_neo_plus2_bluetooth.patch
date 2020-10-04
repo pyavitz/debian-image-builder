@@ -1,0 +1,139 @@
+diff -Naur a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts	2020-10-04 04:29:50.949760148 -0400
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts	2020-10-04 04:26:00.193090623 -0400
+@@ -16,6 +16,7 @@
+ 	aliases {
+ 		ethernet0 = &emac;
+ 		serial0 = &uart0;
++		serial3 = &uart3;
+ 	};
+ 
+ 	chosen {
+@@ -73,6 +74,22 @@
+ 		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>; /* PL7 */
+ 		post-power-on-delay-ms = <200>;
+ 	};
++
++	rfkill_bt {
++		compatible = "rfkill-gpio";
++		pinctrl-names = "default";
++		pinctrl-0 = <&bt_pwr_pin>;
++		reset-gpios = <&pio 6 13 GPIO_ACTIVE_HIGH>; /* PG13 */
++		clocks = <&osc32k>;
++		clock-frequency = <32768>;
++		rfkill-name = "sunxi-bt";
++		rfkill-type = "bluetooth";
++	};
++
++	bt_pwr_pin: bt_pwr_pin@0 {
++		pins = "PG13";
++		function = "gpio_out";
++	};
+ };
+ 
+ &codec {
+@@ -152,6 +169,12 @@
+ 	status = "okay";
+ };
+ 
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart3_pins>, <&uart3_rts_cts_pins>;
++	status = "okay";
++};
++
+ &usb_otg {
+ 	dr_mode = "host";
+ 	status = "okay";
+diff -Naur a/drivers/rtc/rtc-sun6i.c b/drivers/rtc/rtc-sun6i.c
+--- a/drivers/rtc/rtc-sun6i.c	2020-10-04 04:29:56.773283804 -0400
++++ b/drivers/rtc/rtc-sun6i.c	2020-10-04 04:27:07.481286678 -0400
+@@ -67,6 +67,9 @@
+ #define SUN6I_ALARM_CONFIG_WAKEUP		BIT(0)
+ 
+ #define SUN6I_LOSC_OUT_GATING			0x0060
++#define SUN6I_LOSC_OUT_GATING_EN		BIT(0)
++
++#define SUN6I_LOSC_OUT_GATING			0x0060
+ #define SUN6I_LOSC_OUT_GATING_EN_OFFSET		0
+ 
+ /*
+@@ -257,6 +260,9 @@
+ 	}
+ 	writel(reg, rtc->base + SUN6I_LOSC_CTRL);
+ 
++	writel(SUN6I_LOSC_OUT_GATING_EN,
++			   rtc->base + SUN6I_LOSC_OUT_GATING);
++
+ 	/* Yes, I know, this is ugly. */
+ 	sun6i_rtc = rtc;
+ 
+diff -Naur a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+--- a/net/rfkill/rfkill-gpio.c	2020-10-04 04:30:03.520737753 -0400
++++ b/net/rfkill/rfkill-gpio.c	2020-10-04 04:27:56.024206311 -0400
+@@ -22,7 +22,7 @@
+ 
+ 	struct rfkill		*rfkill_dev;
+ 	struct clk		*clk;
+-
++	int             clk_frequency; 
+ 	bool			clk_enabled;
+ };
+ 
+@@ -31,13 +31,13 @@
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
+ 	if (!blocked && !IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+-		clk_enable(rfkill->clk);
++		clk_prepare_enable(rfkill->clk);
+ 
+ 	gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
+ 	gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
+ 
+ 	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+-		clk_disable(rfkill->clk);
++		clk_disable_unprepare(rfkill->clk);
+ 
+ 	rfkill->clk_enabled = !blocked;
+ 
+@@ -82,8 +82,9 @@
+ 	if (!rfkill)
+ 		return -ENOMEM;
+ 
+-	device_property_read_string(&pdev->dev, "name", &rfkill->name);
+-	device_property_read_string(&pdev->dev, "type", &type_name);
++	device_property_read_string(&pdev->dev, "rfkill-name", &rfkill->name);
++	device_property_read_string(&pdev->dev, "rfkill-type", &type_name);
++	device_property_read_u32(&pdev->dev, "clock-frequency", &rfkill->clk_frequency);
+ 
+ 	if (!rfkill->name)
+ 		rfkill->name = dev_name(&pdev->dev);
+@@ -97,6 +98,9 @@
+ 	}
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
++	if (!IS_ERR(rfkill->clk) && rfkill->clk_frequency > 0) {
++		clk_set_rate(rfkill->clk, rfkill->clk_frequency); 
++	}
+ 
+ 	gpio = devm_gpiod_get_optional(&pdev->dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpio))
+@@ -156,6 +160,10 @@
+ };
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
+ #endif
++static const struct of_device_id rfkill_of_match[] = { 
++	{ .compatible = "rfkill-gpio", }, 
++	{},
++}; 
+ 
+ static struct platform_driver rfkill_gpio_driver = {
+ 	.probe = rfkill_gpio_probe,
+@@ -163,6 +171,7 @@
+ 	.driver = {
+ 		.name = "rfkill_gpio",
+ 		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
++		.of_match_table = of_match_ptr(rfkill_of_match),
+ 	},
+ };
+ 
