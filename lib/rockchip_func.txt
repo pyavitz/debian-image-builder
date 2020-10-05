@@ -31,9 +31,9 @@ echo_done
 rockchip_uboot(){
 echo
 echo_duboot
-if ls u-boot-v2020.07.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}u-boot-v2020.07.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.07/u-boot-v2020.07.tar.gz && echo_bdone;
+if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
+	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
+	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_bdone;
 fi
 rkbuild_uboot
 }
@@ -57,9 +57,9 @@ echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
 rkbuild_uboot(){
 echo
 echo_extract
-tar -xf u-boot-v2020.07.tar.gz
+tar -xf u-boot-${UBOOT_VERSION}.tar.gz
 echo_done
-mv -f u-boot-v2020.07 u-boot
+mv -f u-boot-${UBOOT_VERSION} u-boot
 cp -f board.txt u-boot/
 cd u-boot
 if `grep -Fx "renegade" "../board.txt" >/dev/null;`
