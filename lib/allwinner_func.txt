@@ -159,12 +159,24 @@ cp -f board.txt ${ALLSRC}/
 cd ${ALLSRC}
 }
 
+allwinner_h5_cpufreq(){
+if `grep "5.8" "../../userdata.txt" >/dev/null;` 
+	then for i in ../${ALLWINNER}/cpufreq/*.patch; do patch -p1 < $i; done;
+fi
+if `grep "5.7" "../../userdata.txt" >/dev/null;` 
+	then for i in ../${ALLWINNER}/cpufreq/*.patch; do patch -p1 < $i; done;
+fi
+if `grep "5.6" "../../userdata.txt" >/dev/null;` 
+	then for i in ../${ALLWINNER}/cpufreq/*.patch; do patch -p1 < $i; done;
+fi
+}
+
 # TRITIUM
 tritium_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
-for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
+allwinner_h5_cpufreq
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
 echo
@@ -188,7 +200,7 @@ nanopi_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
-for i in ../${ALLWINNER}/*.patch; do patch -p1 < $i; done
+allwinner_h5_cpufreq
 for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
