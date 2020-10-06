@@ -135,11 +135,20 @@ cp -f board.txt ${ROCSRC}/
 cd ${ROCSRC}
 }
 
+rk3328_apply(){
+if `grep "5.8" "../../userdata.txt" >/dev/null;`
+	then for i in ../${RK3328}/5.8.y/*.patch; do patch -p1 < $i; done
+fi
+if `grep "5.9" "../../userdata.txt" >/dev/null;`
+	then for i in ../${RK3328}/5.9.y/*.patch; do patch -p1 < $i; done
+fi
+}
+
 rk3328_patch(){
     echo
     echo_patch
     patch -p1 < ../${PACKAGING}/rockchip-packaging.patch
-    for i in ../${RK3328}/*.patch; do patch -p1 < $i; done
+    rk3328_apply
     cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
     echo_done
     echo
