@@ -44,6 +44,7 @@ Branch:         # Supported: 5.8.y and above
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
+rtl8812au:      # 1 to add RTL8812AU/21AU and RTL8814AU wireless support
 ```
 #### User defconfig
 ```sh
