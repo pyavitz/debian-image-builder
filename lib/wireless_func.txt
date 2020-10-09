@@ -1,0 +1,70 @@
+### WIRELESS
+
+# RTL8189ES
+rtl8189es_download(){
+echo
+echo -e "${COL}Downloading rtl8189es wifi module${FIN}."
+if ls rtl8189es > /dev/null 2>&1;
+	then echo -e "${YLW}rtl8189es found${FIN}.";
+	else git clone https://github.com/jwrdegoede/rtl8189ES_linux rtl8189es ;
+fi
+echo_done
+}
+
+rtl8189es(){
+rm -rf ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8189es
+mkdir -p ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8189es/
+cp -R rtl8189es/{core,hal,include,os_dep,platform} ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8189es
+cp -R rtl8189es/Makefile ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8189es/Makefile
+sed -i 's/---help---/help/g' rtl8189es/Kconfig
+cp -R rtl8189es/Kconfig ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8189es/Kconfig
+echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/Makefile
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8189es\/Kconfig"' \
+${KERNEL}-${VERSION}/drivers/net/wireless/Kconfig
+}
+
+rtl8189es_module(){
+if `grep -Fx "opir1" "../../board.txt" >/dev/null;`
+	then echo CONFIG_RTL8189ES=m >> arch/arm/configs/allwinner-r1_defconfig ;
+fi
+}
+
+# RTL8812AU
+rtl8812au_download(){
+echo
+echo -e "${COL}Downloading rtl8812au wifi module${FIN}."
+if ls rtl8812au > /dev/null 2>&1;
+	then echo -e "${YLW}rtl8812au found${FIN}.";
+	else git clone https://github.com/aircrack-ng/rtl8812au rtl8812au ;
+fi
+echo_done
+}
+
+rtl8812au(){
+rm -rf ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8812au
+mkdir -p ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8812au/
+cp -R rtl8812au/{core,hal,include,os_dep,platform} ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8812au
+cp -R rtl8812au/Makefile ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8812au/Makefile
+cp -R rtl8812au/Kconfig ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8812au/Kconfig
+echo "obj-\$(CONFIG_88XXAU) += rtl8812au/" >> "${KERNEL}-${VERSION}/drivers/net/wireless/Makefile"
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8812au\/Kconfig"' \
+${KERNEL}-${VERSION}/drivers/net/wireless/Kconfig
+}
+
+rtl8812au_select(){
+if ls arch/arm64/configs/allwinner_defconfig > /dev/null 2>&1;
+	then echo CONFIG_88XXAU=m >> arch/arm64/configs/allwinner_defconfig ;
+fi
+if ls arch/arm64/configs/amlogic_defconfig > /dev/null 2>&1;
+	then echo CONFIG_88XXAU=m >> arch/arm64/configs/amlogic_defconfig ;
+fi
+if ls arch/arm64/configs/rockchip64_defconfig > /dev/null 2>&1;
+	then echo CONFIG_88XXAU=m >> arch/arm64/configs/rockchip64_defconfig ;
+fi
+}
+
+rtl8812au_module(){
+if `grep -Fx "rtl8812au=1" "../../userdata.txt" >/dev/null;`
+	then rtl8812au_select;
+fi
+}

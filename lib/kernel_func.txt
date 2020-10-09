@@ -11,6 +11,12 @@ if ls ${KERNEL}-${VERSION}.tar.xz > /dev/null 2>&1;
 	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.xz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz && echo_bdone;
 fi
+if `grep -Fx "opir1" "../board.txt" >/dev/null;`
+	then rtl8189es_download;
+fi
+if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
+	then rtl8812au_download;
+fi
 }
 
 mainline_download(){
@@ -19,6 +25,12 @@ echo_mainline
 if ls ${KERNEL}-${VERSION}.tar.gz > /dev/null 2>&1;
 	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.gz found${FIN}.";
 	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz && echo_bdone;
+fi
+if `grep -Fx "opir1" "../board.txt" >/dev/null;`
+	then rtl8189es_download;
+fi
+if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
+	then rtl8812au_download;
 fi
 }
 
@@ -40,6 +52,9 @@ echo -e -n "${FIN}"
 
 setup(){
 sleep 1s
+if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
+	then rtl8812au;
+fi
 cd ${KERNEL}-${VERSION}
 export ARCH=arm64
 rm -f scripts/package/builddeb
@@ -54,6 +69,9 @@ chmod +x scripts/package/mkdebian
 
 setupv7(){
 sleep 1s
+if `grep -Fx "opir1" "../board.txt" >/dev/null;`
+	then rtl8189es;
+fi
 cd ${KERNEL}-${VERSION}
 export ARCH=arm
 rm -f scripts/package/builddeb
@@ -115,6 +133,7 @@ ncompilev7(){
 amlogic_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
+    rtl8812au_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
@@ -172,6 +191,7 @@ esac
 allwinner_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
+    rtl8812au_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
@@ -189,6 +209,7 @@ allwinner_defconfig(){
 allwinner-r1_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/allwinner-r1_defconfig arch/arm/configs/
+    rtl8189es_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
@@ -259,6 +280,7 @@ esac
 rockchip_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
+    rtl8812au_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
