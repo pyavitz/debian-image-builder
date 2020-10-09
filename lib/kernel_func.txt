@@ -17,6 +17,9 @@ fi
 if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
 	then rtl8812au_download;
 fi
+if `grep -Fx "rtl8811cu=1" "../userdata.txt" >/dev/null;`
+	then rtl8811cu_download;
+fi
 }
 
 mainline_download(){
@@ -31,6 +34,9 @@ if `grep -Fx "opir1" "../board.txt" >/dev/null;`
 fi
 if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
 	then rtl8812au_download;
+fi
+if `grep -Fx "rtl8811cu=1" "../userdata.txt" >/dev/null;`
+	then rtl8811cu_download;
 fi
 }
 
@@ -54,6 +60,9 @@ setup(){
 sleep 1s
 if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
 	then rtl8812au;
+fi
+if `grep -Fx "rtl8811cu=1" "../userdata.txt" >/dev/null;`
+	then rtl8811cu;
 fi
 cd ${KERNEL}-${VERSION}
 export ARCH=arm64
@@ -134,6 +143,7 @@ amlogic_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
     rtl8812au_module
+    rtl8811cu_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
@@ -192,6 +202,7 @@ allwinner_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
     rtl8812au_module
+    rtl8811cu_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
@@ -281,6 +292,7 @@ rockchip_defconfig(){
     echo_defconfig
     cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
     rtl8812au_module
+    rtl8811cu_module
     case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
      0)
        echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"

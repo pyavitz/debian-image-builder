@@ -32,9 +32,9 @@ fi
 # RTL8812AU
 rtl8812au_download(){
 echo
-echo -e "${COL}Downloading rtl8812au wifi module${FIN}."
+echo -e "${COL}Downloading rtl88XXau wifi module${FIN}."
 if ls rtl8812au > /dev/null 2>&1;
-	then echo -e "${YLW}rtl8812au found${FIN}.";
+	then echo -e "${YLW}rtl88XXau found${FIN}.";
 	else git clone https://github.com/aircrack-ng/rtl8812au rtl8812au ;
 fi
 echo_done
@@ -66,5 +66,51 @@ fi
 rtl8812au_module(){
 if `grep -Fx "rtl8812au=1" "../../userdata.txt" >/dev/null;`
 	then rtl8812au_select;
+fi
+}
+
+# RTL8811CU
+rtl8811cu_download(){
+echo
+echo -e "${COL}Downloading rtl88XXcu wifi module${FIN}."
+if ls rtl8811cu > /dev/null 2>&1;
+	then echo -e "${YLW}rtl88XXcu found${FIN}.";
+	else git clone https://github.com/brektrou/rtl8821CU rtl8811cu ;
+fi
+echo_done
+}
+
+rtl8811cu(){
+rm -rf ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu
+mkdir -p ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu/
+cp -R rtl8811cu/{core,hal,include,os_dep,platform,rtl8821c.mk} \
+${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu
+cp -R rtl8811cu/Makefile ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu/Makefile
+cp -R rtl8811cu/Kconfig ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu/Kconfig
+sed -i 's/---help---/help/g' ${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu/Kconfig
+sed -i "s/^CONFIG_RTW_DEBUG.*/CONFIG_RTW_DEBUG = n/" \
+${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu/Makefile
+sed -i "s/^CONFIG_MP_VHT_HW_TX_MODE.*/CONFIG_MP_VHT_HW_TX_MODE = n/" \
+${KERNEL}-${VERSION}/drivers/net/wireless/rtl8811cu/Makefile
+echo "obj-\$(CONFIG_RTL8821CU) += rtl8811cu/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/Makefile
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8811cu\/Kconfig"' \
+${KERNEL}-${VERSION}/drivers/net/wireless/Kconfig
+}
+
+rtl8811cu_select(){
+if ls arch/arm64/configs/allwinner_defconfig > /dev/null 2>&1;
+	then echo CONFIG_RTL8821CU=m >> arch/arm64/configs/allwinner_defconfig ;
+fi
+if ls arch/arm64/configs/amlogic_defconfig > /dev/null 2>&1;
+	then echo CONFIG_RTL8821CU=m >> arch/arm64/configs/amlogic_defconfig ;
+fi
+if ls arch/arm64/configs/rockchip64_defconfig > /dev/null 2>&1;
+	then echo CONFIG_RTL8821CU=m >> arch/arm64/configs/rockchip64_defconfig ;
+fi
+}
+
+rtl8811cu_module(){
+if `grep -Fx "rtl8811cu=1" "../../userdata.txt" >/dev/null;`
+	then rtl8811cu_select;
 fi
 }
