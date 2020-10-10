@@ -581,11 +581,11 @@ raspi4-all:
 
 ### MISCELLANEOUS
 menu:
-	# Builder Menu
+	# Menu
 	@chmod +x ${MENU}
 	@${MENU}
 config:
-	# User Data File
+	# Config Menu
 	@chmod +x ${CONF}
 	@${CONF}
 
@@ -594,12 +594,12 @@ dialogrc:
 	@${DIALOGRC}
 
 rootfs:
-	# DEBIAN ROOTFS 
+	# Rootfs: arm64
 	@chmod +x ${RFS}
 	@${ROOTFS}
 
 rootfsv7:
-	# DEBIAN ROOTFS 
+	# Rootfs: armhf 
 	@chmod +x ${RFSV7}
 	@${ROOTFSV7}
 
