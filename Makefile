@@ -32,7 +32,7 @@ ROC-IMG=./scripts/rockchip-stage1
 ROC-IMAGE=sudo ./scripts/rockchip-stage1
 ROC-STG2=./scripts/rockchip-stage2
 
-# rockchip
+# broadcom
 RPI-IMG=./scripts/broadcom-stage1
 RPI-IMAGE=sudo ./scripts/broadcom-stage1
 RPI-STG2=./scripts/broadcom-stage2
