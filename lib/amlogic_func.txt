@@ -292,6 +292,15 @@ cp -f board.txt ${AMLSRC}/
 cd ${AMLSRC}
 }
 
+sm1_g12b_patches(){
+if `grep "5.8" "../../userdata.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/5.8.y/*.patch; do patch -p1 < $i; done
+fi
+if `grep "5.9" "../../userdata.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/5.9.y/*.patch; do patch -p1 < $i; done
+fi
+}
+
 # LE POTATO
 potato_patch(){
 echo
@@ -310,6 +319,7 @@ odroidc4_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/amlogic-packaging.patch
+sm1_g12b_patches
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
@@ -323,6 +333,7 @@ echo_patch
 if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`;
 	then patch -p1 < ../${PACKAGING}/amlogic-noc4-packaging.patch;
 fi
+sm1_g12b_patches
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
