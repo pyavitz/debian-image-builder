@@ -159,15 +159,21 @@ cp -f board.txt ${ALLSRC}/
 cd ${ALLSRC}
 }
 
-allwinner_h5_cpufreq(){
+sun50i_h5_cpufreq(){
+if `grep "5.10" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${ALLWINNER}/cpufreq/allwinner_sun50i_h5_cpufreq_revert.patch;
+fi
+if `grep "5.9" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${ALLWINNER}/cpufreq/allwinner_sun50i_h5_cpufreq_revert.patch;
+fi
 if `grep "5.8" "../../userdata.txt" >/dev/null;`
-	then for i in ../${ALLWINNER}/cpufreq/*.patch; do patch -p1 < $i; done;
+	then patch -p1 < ../${ALLWINNER}/cpufreq/allwinner_sun50i_h5_cpufreq_5.6-5.8.y.patch;
 fi
 if `grep "5.7" "../../userdata.txt" >/dev/null;` 
-	then for i in ../${ALLWINNER}/cpufreq/*.patch; do patch -p1 < $i; done;
+	then patch -p1 < ../${ALLWINNER}/cpufreq/allwinner_sun50i_h5_cpufreq_5.6-5.8.y.patch;
 fi
 if `grep "5.6" "../../userdata.txt" >/dev/null;` 
-	then for i in ../${ALLWINNER}/cpufreq/*.patch; do patch -p1 < $i; done;
+	then patch -p1 < ../${ALLWINNER}/cpufreq/allwinner_sun50i_h5_cpufreq_5.6-5.8.y.patch;
 fi
 }
 
@@ -176,7 +182,7 @@ tritium_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
-allwinner_h5_cpufreq
+sun50i_h5_cpufreq
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
 echo
@@ -200,7 +206,7 @@ nanopi_patch(){
 echo
 echo_patch
 patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
-allwinner_h5_cpufreq
+sun50i_h5_cpufreq
 for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
