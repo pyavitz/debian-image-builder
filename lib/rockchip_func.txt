@@ -145,26 +145,36 @@ fi
 }
 
 rk3328_patch(){
-    echo
-    echo_patch
-    patch -p1 < ../${PACKAGING}/rockchip-packaging.patch
-    rk3328_patches
-    if `grep -Fx "renegade" "../board.txt" >/dev/null;`
+echo
+echo_patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/rockchip-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch ;
+fi
+rk3328_patches
+if `grep -Fx "renegade" "../board.txt" >/dev/null;`
 	then for i in ../${RK3328}/renegade/*.patch; do patch -p1 < $i; done ;
-    fi
-    cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-    echo_done
-    echo
+fi
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+fi
+echo_done
+echo
 }
 
 rk3399_patch(){
-    echo
-    echo_patch
-    patch -p1 < ../${PACKAGING}/rockchip-packaging.patch
-    for i in ../${RK3399}/*.patch; do patch -p1 < $i; done
-    cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-    echo_done
-    echo
+echo
+echo_patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/rockchip-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch ;
+fi
+for i in ../${RK3399}/*.patch; do patch -p1 < $i; done
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+fi
+echo_done
+echo
 }
 
 rockchip_output(){
@@ -196,14 +206,7 @@ dd if=output/nanopc/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
 partition(){
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-    truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-    ;;
-  1)
-    truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-    ;;
-esac
+image_size
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
 o
 n
@@ -246,24 +249,6 @@ echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
 echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 
 source part-uuid.txt
-}
-
-choose_release(){
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
-EOF
-    ;;
-   1)
-tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
-deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
-deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
-deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
-EOF
-   ;;
-esac
 }
 
 create_fstab(){

@@ -1,0 +1,89 @@
+image_size(){
+if `grep -Fx 'DEBIAN_VERSION="buster"' "userdata.txt" >/dev/null;`
+	then truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if `grep -Fx 'DEBIAN_VERSION="bullseye"' "userdata.txt" >/dev/null;`
+	then truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null;`
+	then truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if `grep -Fx 'DEBIAN_VERSION="sid"' "userdata.txt" >/dev/null;`
+	then truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+}
+
+image_size2(){
+if `grep -Fx 'DEBIAN_VERSION="buster"' "userdata.txt" >/dev/null;`
+	then truncate -s ${RPISIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if `grep -Fx 'DEBIAN_VERSION="bullseye"' "userdata.txt" >/dev/null;`
+	then truncate -s ${RPISIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null;`
+	then truncate -s ${RPISIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if `grep -Fx 'DEBIAN_VERSION="sid"' "userdata.txt" >/dev/null;`
+	then truncate -s ${RPISIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+}
+
+sources_unstable(){
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+EOF
+}
+
+sources_stable(){
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
+deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
+EOF
+}
+
+sources_unstable2(){
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+EOF
+}
+
+sources_stable2(){
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
+deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
+EOF
+}
+
+choose_release(){
+if `grep -Fx 'DEBIAN_VERSION="buster"' "userdata.txt" >/dev/null;`
+	then sources_stable;
+fi
+if `grep -Fx 'DEBIAN_VERSION="bullseye"' "userdata.txt" >/dev/null;`
+	then sources_unstable;
+fi
+if `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null;`
+	then sources_unstable;
+fi
+if `grep -Fx 'DEBIAN_VERSION="sid"' "userdata.txt" >/dev/null;`
+	then sources_unstable;
+fi
+}
+
+choose_release2(){
+if `grep -Fx 'DEBIAN_VERSION="buster"' "userdata.txt" >/dev/null;`
+	then sources_stable2;
+fi
+if `grep -Fx 'DEBIAN_VERSION="bullseye"' "userdata.txt" >/dev/null;`
+	then sources_unstable2;
+fi
+if `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null;`
+	then sources_unstable2;
+fi
+if `grep -Fx 'DEBIAN_VERSION="sid"' "userdata.txt" >/dev/null;`
+	then sources_unstable2;
+fi
+}

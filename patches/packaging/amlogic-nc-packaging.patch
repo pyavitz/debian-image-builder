@@ -1,0 +1,87 @@
+diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
+--- a/scripts/package/builddeb	2020-10-22 06:41:03.000000000 -0400
++++ b/scripts/package/builddeb	2020-10-22 08:58:53.160649803 -0400
+@@ -51,8 +51,8 @@
+ kernel_headers_dir="$objtree/debian/hdrtmp"
+ libc_headers_dir="$objtree/debian/headertmp"
+ dbg_dir="$objtree/debian/dbgtmp"
+-packagename=linux-image-$version
+-kernel_headers_packagename=linux-headers-$version
++packagename=meson64-linux-image
++kernel_headers_packagename=meson64-linux-headers
+ libc_headers_packagename=linux-libc-dev
+ dbg_packagename=$packagename-dbg
+ 
+@@ -92,6 +92,7 @@
+ else
+ 	cp System.map "$tmpdir/boot/System.map-$version"
+ 	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
++	cp arch/arm64/boot/Image "$tmpdir/boot/Image"
+ fi
+ cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
+ 
+@@ -139,6 +140,12 @@
+ 	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
+ fi
+ 
++# install dtb
++mkdir -p "$tmpdir/boot/amlogic"
++cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2.dtb"
++cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-gxl-s905x-libretech-cc.dtb" "$tmpdir/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb"
++cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-c4.dtb" "$tmpdir/boot/amlogic/meson-sm1-odroid-c4.dtb"
++
+ # Install the maintainer scripts
+ # Note: hook scripts under /etc/kernel are also executed by official Debian
+ # kernel packages, as well as kernel packages built using make-kpkg.
+@@ -164,6 +171,18 @@
+ 	chmod 755 "$tmpdir/DEBIAN/$script"
+ done
+ 
++       # remove initrd 
++        cat > $tmpdir/DEBIAN/preinst <<EOT
++#!/bin/sh
++# remove initrd
++
++set -e
++
++rm -f /boot/initrd.img* 2>/dev/null
++exit 0
++EOT
++        chmod 755 $tmpdir/DEBIAN/preinst
++
+ # Build kernel header package
+ (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
+ (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
+@@ -184,6 +203,18 @@
+ ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
+ rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
+ 
++       # remove old linux headers 
++        cat > $kernel_headers_dir/DEBIAN/preinst <<EOT
++#!/bin/sh
++# remove old linux headers
++
++set -e
++
++rm -fdr /usr/src/linux-headers-* 2>/dev/null
++exit 0
++EOT
++        chmod 755 $kernel_headers_dir/DEBIAN/preinst
++
+ if [ "$ARCH" != "um" ]; then
+ 	create_package "$kernel_headers_packagename" "$kernel_headers_dir"
+ 	create_package "$libc_headers_packagename" "$libc_headers_dir"
+diff -Naur a/scripts/package/mkdebian b/scripts/package/mkdebian
+--- a/scripts/package/mkdebian	2020-10-22 06:41:03.000000000 -0400
++++ b/scripts/package/mkdebian	2020-10-22 08:58:22.800208927 -0400
+@@ -94,8 +94,8 @@
+ 	packageversion=$version-$revision
+ fi
+ sourcename=$KDEB_SOURCENAME
+-packagename=linux-image-$version
+-kernel_headers_packagename=linux-headers-$version
++packagename=meson64-linux-image
++kernel_headers_packagename=meson64-linux-headers
+ dbg_packagename=$packagename-dbg
+ debarch=
+ set_debarch

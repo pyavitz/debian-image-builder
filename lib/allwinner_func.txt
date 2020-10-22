@@ -181,9 +181,13 @@ fi
 tritium_patch(){
 echo
 echo_patch
-patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
-#sun50i_h5_cpufreq
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
+fi
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+fi
 echo_done
 echo
 }
@@ -192,11 +196,16 @@ echo
 pine64_patch(){
 echo
 echo_patch
-patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
+fi
 for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+fi
 echo_done
 echo
 }
@@ -205,10 +214,15 @@ echo
 nanopi_patch(){
 echo
 echo_patch
-patch -p1 < ../${PACKAGING}/allwinner-packaging.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
+fi
 sun50i_h5_cpufreq
 for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+fi
 echo_done
 echo
 }
@@ -217,9 +231,14 @@ echo
 opir1_patch(){
 echo
 echo_patch
-patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/allwinner-v7-nc-packaging.patch ;
+fi
 for i in ../${SUN8I}/*.patch; do patch -p1 < $i; done
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+fi
 echo_done
 echo
 }
@@ -241,14 +260,7 @@ fi
 
 ## STAGE1
 partition(){
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-    truncate -s ${IMGSIZE_UNSTABLE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-    ;;
-  1)
-    truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-    ;;
-esac
+image_size
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
 o
 n
@@ -318,24 +330,6 @@ rm -f root1 root2 root3
 
 source root-id.txt
 source root-pid.txt
-}
-
-choose_release(){
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
-EOF
-    ;;
-   1)
-tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DEBIAN_VERSION} main contrib non-free
-deb http://deb.debian.org/debian ${DEBIAN_VERSION}-updates main contrib non-free
-deb http://security.debian.org/debian-security ${DEBIAN_VERSION}/updates main contrib non-free
-deb http://deb.debian.org/debian/ ${DEBIAN_VERSION}-backports main contrib non-free
-EOF
-   ;;
-esac
 }
 
 create_fstab(){

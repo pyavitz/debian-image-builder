@@ -26,16 +26,10 @@ ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
 echo -n 'America/New_York' > /etc/timezone
 apt upgrade -y
 apt dist-upgrade -y
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "/root/userdata.txt" >/dev/null; echo $?` in
-  0)
-    apt install -y ${PKGS1} ${RPI} gcc-9
-    export CC=/usr/bin/gcc-9
-    ;;
-  1)
-    apt install -y ${PKGS1} ${RPI}
-    ;;
-esac
-
+if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} ${RPI} ;
+	else apt install -y ${PKGS1} ${RPI} gcc-9 && export CC=/usr/bin/gcc-9 ;
+fi
 #### Firstboot
 echo
 echo Creating firstboot.
