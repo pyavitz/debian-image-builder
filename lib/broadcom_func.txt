@@ -327,14 +327,9 @@ echo Done.
 }
 
 bluez_choose(){
-case `grep -Fx 'DEBIAN_VERSION="unstable"' "/root/userdata.txt" >/dev/null; echo $?` in
-  0)
-	bluez_unstable
-    ;;
-  1)
-	bluez_stable
-    ;;
-esac
+if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
+	then bluez_stable; else bluez_unstable;
+fi
 }
 
 user_eeprom(){
@@ -375,7 +370,7 @@ mv rpi-eeprom-control.patch rpi-eeprom-${EEPROM_VERSION}/
 cd rpi-eeprom-${EEPROM_VERSION}
 patch -p1 < rpi-eeprom-control.patch
 rm -f rpi-eeprom-control.patch
-dpkg-buildpackage -us -uc
+dpkg-buildpackage -us -nc -uc
 cd ..
 dpkg -i *.deb
 cd ..
