@@ -1,8 +1,8 @@
 #!/bin/bash
-source lib/broadcom_func.txt
-source lib/release_func.txt
-source lib/echo_func.txt
-source lib/source.txt
+source lib/function/broadcom
+source lib/function/release
+source lib/function/echoes
+source lib/source
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -113,8 +113,8 @@ fi
 
 # setup stage2
 cp scripts/broadcom-stage2 p2/root
-cp lib/broadcom_func.txt p2/root
-cp lib/source.txt p2/root
+cp lib/function/broadcom p2/root/broadcom.txt
+cp lib/source p2/root/source.txt
 cp userdata.txt p2/root
 cp board.txt p2/root
 if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
@@ -139,10 +139,7 @@ umount p2/boot
 
 rm p2/usr/bin/qemu-aarch64-static
 rm p2/root/broadcom-stage2
-rm p2/root/broadcom_func.txt
-rm p2/root/source.txt
-rm p2/root/userdata.txt
-rm p2/root/board.txt
+rm -f p2/root/*.txt
 rm -f p2/var/cache/debconf/*
 
 if [ -n "$PROXY" ] ; then

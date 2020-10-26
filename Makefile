@@ -1,6 +1,6 @@
 # menu
-MENU=./lib/menu
-CONF=./lib/config
+MENU=./lib/dialog/menu
+CONF=./lib/dialog/config
 DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
 
 # functions

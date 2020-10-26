@@ -1,8 +1,8 @@
 #!/bin/bash
-source lib/rockchip_func.txt
-source lib/release_func.txt
-source lib/echo_func.txt
-source lib/source.txt
+source lib/function/rockchip
+source lib/function/release
+source lib/function/echoes
+source lib/source
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -94,8 +94,8 @@ fi
 
 # setup stage2
 cp scripts/rockchip-stage2 p1/root
-cp lib/rockchip_func.txt p1/root
-cp lib/source.txt p1/root
+cp lib/function/rockchip p1/root/rockchip.txt
+cp lib/source p1/root/source.txt
 cp userdata.txt p1/root
 cp part-uuid.txt p1/root
 cp board.txt p1/root
@@ -123,11 +123,7 @@ umount p1/dev/pts
 umount p1/dev
 rm p1/usr/bin/qemu-aarch64-static
 rm p1/root/rockchip-stage2
-rm p1/root/source.txt
-rm p1/root/userdata.txt
-rm p1/root/part-uuid.txt
-rm p1/root/rockchip_func.txt
-rm p1/root/board.txt
+rm -f p1/root/*.txt
 rm -f p1/var/cache/debconf/*
 
 if [ -n "$PROXY" ] ; then

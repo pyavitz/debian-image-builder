@@ -1,8 +1,8 @@
 #!/bin/bash
-source lib/allwinner_func.txt
-source lib/release_func.txt
-source lib/echo_func.txt
-source lib/source.txt
+source lib/function/allwinner
+source lib/function/release
+source lib/function/echoes
+source lib/source
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -115,8 +115,8 @@ fi
 
 # setup stage2
 cp scripts/allwinner-stage2 p1/root
-cp lib/allwinner_func.txt p1/root
-cp lib/source.txt p1/root
+cp lib/function/allwinner p1/root/allwinner.txt
+cp lib/source p1/root/source.txt
 cp userdata.txt p1/root
 cp root-pid.txt p1/root
 cp board.txt p1/root
@@ -154,11 +154,7 @@ case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
     ;;
 esac
 rm p1/root/allwinner-stage2
-rm p1/root/source.txt
-rm p1/root/userdata.txt
-rm p1/root/root-pid.txt
-rm p1/root/allwinner_func.txt
-rm p1/root/board.txt
+rm -f p1/root/*.txt
 rm -f p1/var/cache/debconf/*
 
 if [ -n "$PROXY" ] ; then
