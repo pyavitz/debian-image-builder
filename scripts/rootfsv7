@@ -1,6 +1,11 @@
 #!/bin/bash
 #ARMHF ROOTFS
-source userdata.txt
+RED="\e[0;31m"
+GRN="\e[0;32m"
+YLW="\e[1;33m"
+GRY="\e[0;37m"
+WHT="\e[1;37m"
+FIN="\e[0m"
 source lib/source
 source lib/function/rootfs
 source userdata.txt > /dev/null 2>&1
@@ -34,9 +39,10 @@ PROXY=""
 IMAGE_FOLDER="img/"
 IMAGE_VERSION="rootfs-armhf"
 FILE=debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.tar.xz
-if ls $FILE &>/dev/null; then exit; 
-	else echo "Starting debootstrap ...";
+if ls $FILE &>/dev/null; then echo -e "${WHT}$FILE found${FIN}." && exit; 
+	else echo -e "${RED}Starting debootstrap${FIN} ...";
 fi
+echo -e -n ${GRN}
 IMAGE_LINUX_LOADADDR="0x1080000"
 IMAGE_FILE_SUFFIX="$(date +%F)"
 IMAGE_FILE_NAME="debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.img"
@@ -76,12 +82,18 @@ fi
 rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 
 ### Finish
-e4defrag -c p1
 echo
-echo "Archiving root filesystem ..."
+echo -e -n ${FIN}
+echo -e -n ${GRY}
+e4defrag -c p1
+echo -e -n ${FIN}
+echo
+echo -e "${RED}Archiving root filesystem${FIN} ..."
 cd p1
+echo -e -n ${WHT}
 #tar cfJ ../debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.tar.xz *
 tar cfJ - * | (pv > ../debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.tar.xz)
+echo -e -n ${FIN}
 cd ..
 
 umount p1
