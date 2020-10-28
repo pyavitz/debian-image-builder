@@ -263,7 +263,7 @@ opir1-all:
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
 
-### ODROID-C4
+### ODROID C4
 odroidc4-uboot:
 	# Compiling u-boot
 	@ echo odroidc4 > board.txt
@@ -286,7 +286,7 @@ odroidc4-image:
 	@${AML-IMAGE}
 
 odroidc4-all:
-	# O D R O I D - C 4
+	# O D R O I D  C 4
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo odroidc4 > board.txt
@@ -307,7 +307,7 @@ odroidc4-all:
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
 
-### ODROID-N2
+### ODROID N2
 odroidn2-uboot:
 	# Compiling u-boot
 	@ echo odroidn2 > board.txt
@@ -330,7 +330,7 @@ odroidn2-image:
 	@${AML-IMAGE}
 
 odroidn2-all:
-	# O D R O I D - N 2
+	# O D R O I D  N 2
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo odroidn2 > board.txt
@@ -347,6 +347,43 @@ odroidn2-all:
 	@${ROOTFS}
 	# Making bootable Debian image
 	@ echo odroidn2 > board.txt 
+	@chmod +x ${AML-IMG}
+	@chmod +x ${AML-STG2}
+	@${AML-IMAGE}
+
+### ODROID N2 Plus
+odroidn2plus-kernel:
+	# Compiling kernel
+	@ echo odroidn2plus > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+	
+odroidn2plus-image:
+	# Making bootable Debian image
+	@ echo odroidn2plus > board.txt 
+	@chmod +x ${AML-IMG}
+	@chmod +x ${AML-STG2}
+	@${AML-IMAGE}
+
+odroidn2plus-all:
+	# O D R O I D  N 2  P L U S
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo odroidn2plus > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo odroidn2plus > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${KERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Making bootable Debian image
+	@ echo odroidn2plus > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
