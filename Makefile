@@ -370,7 +370,7 @@ odroidn2plus-all:
 	# O D R O I D  N 2  P L U S
 	# - - - - - - - -
 	# Compiling u-boot
-	@ echo odroidn2plus > board.txt
+	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
