@@ -1,7 +1,7 @@
 ## Supported boards
 ```sh
 Allwinner:      # NanoPi NEO Plus2, Orange Pi R1, Pine A64+ and Tritium
-Amlogic:        # Le Potato, Odroid C4 and Odroid N2
+Amlogic:        # Le Potato, Odroid C4 and Odroid N2/Plus
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
@@ -54,7 +54,7 @@ nano userdata.txt
 custom_defconfig=1
 MYCONFIG="nameofyour_defconfig"
 ```
-#### Odroid N2 eMMC
+#### Odroid N2/Plus eMMC
 ```sh
 nano userdata.txt
 # change from 0 to 1
@@ -71,7 +71,7 @@ make purge      # Remove sources directory
 
 #### Write to eMMC
 ```sh
-Supported: Le Potato, Odroid C4, Odroid N2 and NanoPi NEO Plus2
+Supported: Le Potato, Odroid C4, Odroid N2/Plus and NanoPi NEO Plus2
 1. Attach eMMC module       # In some cases the module may need to be attached after boot
 2. Boot from sdcard
 3. Execute: sudo write2mmc
