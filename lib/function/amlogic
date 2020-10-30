@@ -65,13 +65,19 @@ cd u-boot
 echo
 echo_cuboot
 if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then for i in ../${AMLUBOOT}/*.patch; do patch -p1 < $i; done ;
+	then for i in ../${OC4UBOOT}/*.patch; do patch -p1 < $i; done ;
+fi
+if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
+	then for i in ../${ON2PUBOOT}/*.patch; do patch -p1 < $i; done ;
 fi
 export ARCH=arm64
 if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
 	then odroidc4_defconfig && make odroid-c4_defconfig;
 fi
 if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`
+	then odroidn2_defconfig && make odroid-n2_defconfig;
+fi
+if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
 	then odroidn2_defconfig && make odroid-n2_defconfig;
 fi
 if `grep -Fx "lepotato" "../board.txt" >/dev/null;`
@@ -265,10 +271,14 @@ echo_done
 
 odroidn2_binary(){
 mkdir -p ../${BINODN2}
-mkdir -p ../${BINODN2P}
 cp -f fip/u-boot.bin ../${BINODN2}
 cp -f fip/u-boot.bin.sd.bin ../${BINODN2}
 cp -f tools/mkimage ../${BINODN2}
+echo_done
+}
+
+odroidn2_binary(){
+mkdir -p ../${BINODN2P}
 cp -f fip/u-boot.bin ../${BINODN2P}
 cp -f fip/u-boot.bin.sd.bin ../${BINODN2P}
 cp -f tools/mkimage ../${BINODN2P}
@@ -282,6 +292,9 @@ if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
 	then odroidc4_fip && odroidc4_binary;
 fi
 if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`
+	then odroidn2_fip && odroidn2_binary;
+fi
+if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
 	then odroidn2_fip && odroidn2_binary;
 fi
 if `grep -Fx "lepotato" "../board.txt" >/dev/null;`

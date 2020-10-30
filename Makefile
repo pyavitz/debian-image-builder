@@ -360,6 +360,13 @@ odroidn2-all:
 	@${AML-IMAGE}
 
 ### ODROID N2 Plus
+odroidn2plus-uboot:
+	# Compiling u-boot
+	@ echo odroidn2plus > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${UBOOT}
+	@${UBOOT}
+
 odroidn2plus-kernel:
 	# Compiling kernel
 	@ echo odroidn2plus > board.txt
@@ -378,7 +385,7 @@ odroidn2plus-all:
 	# O D R O I D  N 2  P L U S
 	# - - - - - - - -
 	# Compiling u-boot
-	@ echo odroidn2 > board.txt
+	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
