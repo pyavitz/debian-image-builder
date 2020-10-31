@@ -46,6 +46,7 @@ Menuconfig:     # 1 to run uboot and kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
 rtl88XXau:      # 1 to add Realtek 8812AU/14AU/21AU wireless support
 rtl88XXcu:      # 1 to add Realtek 8811CU/21CU wireless support
+rtl88XXbu:      # 1 to add Realtek 88X2BU wireless support
 ```
 #### User defconfig
 ```sh
