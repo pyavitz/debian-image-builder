@@ -301,13 +301,30 @@ EOF
 echo Done
 }
 
+renegade_extlinux(){
+cd ~
+echo
+echo Adding extlinux file.
+sleep 1s
+mkdir -p /boot/extlinux
+tee /boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/rockchip/
+    fdt /boot/rockchip/rk3328-roc-cc.dtb
+    append earlyprintk console=tty1 console=ttyS2,1500000 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 init=/sbin/init
+EOF
+echo Done
+}
+
 renegade_uinitrd(){
 cd ~
 echo
 echo  Adding needed boot files.
 mkdir -p /etc/initramfs/post-update.d/
 mv -f 99-uboot /etc/initramfs/post-update.d/
-mv -f boot.cmd /boot/
+#mv -f boot.cmd /boot/
 chmod +x /etc/initramfs/post-update.d/99-uboot
 chown root:root /etc/initramfs/post-update.d/99-uboot
 }
