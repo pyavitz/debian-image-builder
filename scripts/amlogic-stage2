@@ -45,16 +45,16 @@ echo Done.
 
 #### Extlinux file
 if `grep -Fx "lepotato" "/root/board.txt" >/dev/null;`
-    then lepotato_extlinux
+    then uinitrd && lepotato_extlinux
 fi
 if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
-    then odroidc4_extlinux
+    then uinitrd && odroidc4_extlinux
 fi
 if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
-    then odroidn2_extlinux
+    then uinitrd && odroidn2_extlinux
 fi
 if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
-    then odroidn2plus_extlinux
+    then uinitrd && odroidn2plus_extlinux
 fi
 #### Sudoers file 
 echo
@@ -165,7 +165,6 @@ mv -f wifidrv /usr/local/bin/
 wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
-rm -f 99-uboot
 chmod +x /usr/bin/growpart
 chmod +x /etc/init.d/firstboot
 chown root:root /etc/init.d/firstboot
@@ -256,6 +255,8 @@ chown root:root /etc/udev/rules.d/80-net-setup-link.rules
 mkdir -p /etc/modprobe.d
 echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
 chown root:root /etc/modprobe.d/8821cu.conf
+rtl88x2bu_conf
+rtl8821cu_conf
 echo Done.
 
 ### ZSWAP

@@ -135,8 +135,7 @@ mv -f growpart /usr/bin/
 rm -f write2mmc
 rm -f sysinfo.bl
 # Service
-mkdir -p /etc/initramfs/post-update.d/
-mv -f 99-uboot /etc/initramfs/post-update.d/
+uinitrd
 mv -f firstboot.init /etc/init.d/firstboot
 chmod +x /usr/bin/growpart
 chown root:root /usr/bin/growpart
@@ -220,6 +219,11 @@ chown root:root /etc/wpa_supplicant/wpa_supplicant.conf
 mkdir -p /etc/udev/rules.d
 mv -f 80-net-setup-link.rules /etc/udev/rules.d/80-net-setup-link.rules
 chown root:root /etc/udev/rules.d/80-net-setup-link.rules
+mkdir -p /etc/modprobe.d
+echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
+chown root:root /etc/modprobe.d/8821cu.conf
+rtl88x2bu_conf
+rtl8821cu_conf
 echo Done.
 
 ### ZSWAP

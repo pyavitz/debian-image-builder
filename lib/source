@@ -61,3 +61,45 @@ EEPROM_VERSION="10.1"
 
 FIRMWARE="firmware-linux-nonfree firmware-linux \
           firmware-misc-nonfree firmware-realtek firmware-ralink"
+
+# uinitrd
+uinitrd(){
+cd ~
+echo
+echo Adding uInitrd script.
+mkdir -p /etc/initramfs/post-update.d/
+mv -f 99-uboot /etc/initramfs/post-update.d/
+chmod +x /etc/initramfs/post-update.d/99-uboot
+chown root:root /etc/initramfs/post-update.d/99-uboot
+}
+
+# wireless
+rtl88x2bu_conf(){
+mkdir -p /usr/lib/NetworkManager/conf.d/
+tee /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf <<EOF
+# Certain drivers are known not to support changing the MAC address.
+# Disable touching the MAC address on such devices.
+
+[device-rtl88x2bu]
+match-device=driver:rtl88x2bu
+wifi.scan-rand-mac-address=no
+wifi.cloned-mac-address=preserve
+ethernet.cloned-mac-address=preserve
+EOF
+chown root:root /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf
+}
+
+rtl8821cu_conf(){
+mkdir -p /usr/lib/NetworkManager/conf.d/
+tee /usr/lib/NetworkManager/conf.d/rtl8821cu.conf <<EOF
+# Certain drivers are known not to support changing the MAC address.
+# Disable touching the MAC address on such devices.
+
+[device-rtl8821cu]
+match-device=driver:rtl8821cu
+wifi.scan-rand-mac-address=no
+wifi.cloned-mac-address=preserve
+ethernet.cloned-mac-address=preserve
+EOF
+chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
+}
