@@ -363,7 +363,6 @@ odroidn2-all:
 odroidn2plus-uboot:
 	# Compiling u-boot
 	@ echo odroidn2plus > board.txt
-	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 
@@ -386,7 +385,6 @@ odroidn2plus-all:
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo odroidn2plus > board.txt
-	@ echo amlogic >> board.txt
 	@chmod +x ${UBOOT}
 	@${UBOOT}
 	# Building linux package
