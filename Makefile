@@ -12,10 +12,13 @@ CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
 PURGE=$(shell sudo rm -fdr sources)
+PURGEALL=$(shell sudo rm -fdr sources output)
 
 # uboot and linux
-UBOOT=./scripts/uboot
-KERNEL=./scripts/linux
+XUBOOT=./scripts/uboot
+UBOOT=sudo ./scripts/uboot
+XKERNEL=./scripts/linux
+KERNEL=sudo ./scripts/linux
 
 # allwinner
 ALL-IMG=./scripts/allwinner-stage1
@@ -63,6 +66,7 @@ help:
 	@echo "  make menu                    Menu interface"
 	@echo "  make cleanup                 Clean up image errors"
 	@echo "  make purge                   Remove sources directory"
+	@echo "  make purge-all               Remove sources and output directory"
 	@echo ""
 	@echo "  make board-uboot             Make u-boot"
 	@echo "  make board-kernel            Make linux kernel"
@@ -96,14 +100,14 @@ tritium-uboot:
 	# Compiling u-boot
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 tritium-kernel:
 	# Compiling kernel
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 tritium-image:
@@ -119,12 +123,12 @@ tritium-all:
 	# Compiling u-boot
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -140,14 +144,14 @@ pine64-uboot:
 	# Compiling u-boot
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 pine64-kernel:
 	# Compiling kernel
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 pine64-image:
@@ -163,12 +167,12 @@ pine64-all:
 	# Compiling u-boot
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -184,14 +188,14 @@ nanopi-uboot:
 	# Compiling u-boot
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 nanopi-kernel:
 	# Compiling kernel
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 nanopi-image:
@@ -207,12 +211,12 @@ nanopi-all:
 	# Compiling u-boot
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -228,7 +232,7 @@ opir1-uboot:
 	# Compiling u-boot
 	@ echo opir1 > board.txt
 	@ echo armv7 >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 opir1-kernel:
@@ -236,7 +240,7 @@ opir1-kernel:
 	@ echo opir1 > board.txt
 	@ echo armv7 >> board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 opir1-image:
@@ -253,13 +257,13 @@ opir1-all:
 	# Compiling u-boot
 	@ echo opir1 > board.txt
 	@ echo armv7 >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo opir1 > board.txt
 	@ echo armv7 >> board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFSV7}
@@ -276,14 +280,14 @@ odroidc4-uboot:
 	# Compiling u-boot
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 odroidc4-kernel:
 	# Compiling kernel
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt 
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 odroidc4-image:
@@ -299,12 +303,12 @@ odroidc4-all:
 	# Compiling u-boot
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -320,14 +324,14 @@ odroidn2-uboot:
 	# Compiling u-boot
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 odroidn2-kernel:
 	# Compiling kernel
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	
 odroidn2-image:
@@ -343,12 +347,12 @@ odroidn2-all:
 	# Compiling u-boot
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -363,14 +367,14 @@ odroidn2-all:
 odroidn2plus-uboot:
 	# Compiling u-boot
 	@ echo odroidn2plus > board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 odroidn2plus-kernel:
 	# Compiling kernel
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	
 odroidn2plus-image:
@@ -385,12 +389,12 @@ odroidn2plus-all:
 	# - - - - - - - -
 	# Compiling u-boot
 	@ echo odroidn2plus > board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -406,14 +410,14 @@ lepotato-uboot:
 	# Compiling u-boot
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 lepotato-kernel:
 	# Compiling kernel
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 lepotato-image:
@@ -429,12 +433,12 @@ lepotato-all:
 	# Compiling u-boot
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -450,14 +454,14 @@ renegade-uboot:
 	# Compiling u-boot
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 renegade-kernel:
 	# Compiling kernel
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 renegade-image:
@@ -474,12 +478,12 @@ renegade-all:
 	# Compiling u-boot
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -496,14 +500,14 @@ rock64-uboot:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 rock64-kernel:
 	# Compiling kernel
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 rock64-image:
@@ -520,12 +524,12 @@ rock64-all:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -542,14 +546,14 @@ nanopc-uboot:
 	# Compiling u-boot
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 nanopc-kernel:
 	# Compiling kernel
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 nanopc-image:
@@ -566,12 +570,12 @@ nanopc-all:
 	# Compiling u-boot
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -588,14 +592,14 @@ raspi4-uboot:
 	# Compiling u-boot
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
 raspi4-kernel:
 	# Compiling kernel
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 raspi4-image:
@@ -612,12 +616,12 @@ raspi4-all:
 	# Compiling u-boot
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
-	@chmod +x ${UBOOT}
+	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
-	@chmod +x ${KERNEL}
+	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
@@ -659,9 +663,13 @@ cleanup:
 	@${CLEAN}
 
 purge:
-	# Removing tmp directory
+	# Removing sources directory
 	@${PURGE}
 
+purge-all:
+	# Removing sources and output directory
+	@${PURGEALL}
+	
 ### FEDORA ADDON
 fedora:
 	# Fedora Addon
