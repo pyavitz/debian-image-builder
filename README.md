@@ -66,6 +66,7 @@ emmc=1
 ```sh
 make cleanup    # Clean up image errors
 make purge      # Remove sources directory
+make purge-all  # Remove sources and output directory
 ```
 
 ## Usage
