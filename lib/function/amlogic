@@ -36,7 +36,8 @@ fi
 }
 
 amlogic_uboot(){
-# original - https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
+# armstronge - https://gitlab.com/superna9999/amlogic-boot-fip/-/archive/master/amlogic-boot-fip-master.tar.gz
+# libreeelc - https://github.com/LibreELEC/amlogic-boot-fip/archive/master.tar.gz
 echo_bootbits
 if ls amlogic-boot-fip-master.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}amlogic-boot-fip-master.tar.gz found${FIN}.";
@@ -252,6 +253,62 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 		--level v3
 }
 
+odroidn2plus_fip(){
+export FIPDIR=$PWD/fip
+mkdir -p fip
+cp -f ../amlogic-boot-fip-master/odroid-n2-plus/* fip/
+cp -f u-boot.bin fip/bl33.bin
+
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/acs.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_g12b --bl30sig --input fip/bl30_new.bin \
+					--output fip/bl30_new.bin.g12a.enc \
+					--level v3
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl30_new.bin.g12a.enc \
+					--output fip/bl30_new.bin.enc \
+					--level v3 --type bl30
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl31.img \
+					--output fip/bl31.img.enc \
+					--level v3 --type bl31
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl33.bin --compress lz4 \
+					--output fip/bl33.bin.enc \
+					--level v3 --type bl33 --compress lz4
+$FIPDIR/aml_encrypt_g12b --bl2sig --input fip/bl2_new.bin \
+					--output fip/bl2.n.bin.sig
+$FIPDIR/aml_encrypt_g12b --bootmk \
+		--output fip/u-boot.bin \
+		--bl2 fip/bl2.n.bin.sig \
+		--bl30 fip/bl30_new.bin.enc \
+		--bl31 fip/bl31.img.enc \
+		--bl33 fip/bl33.bin.enc \
+		--ddrfw1 fip/ddr4_1d.fw \
+		--ddrfw2 fip/ddr4_2d.fw \
+		--ddrfw3 fip/ddr3_1d.fw \
+		--ddrfw4 fip/piei.fw \
+		--ddrfw5 fip/lpddr4_1d.fw \
+		--ddrfw6 fip/lpddr4_2d.fw \
+		--ddrfw7 fip/diag_lpddr4.fw \
+		--ddrfw8 fip/aml_ddr.fw \
+		--ddrfw9 fip/lpddr3_1d.fw \
+		--level v3
+}
+
 # BINARY
 lepotato_binary(){
 mkdir -p ../${BINLEP}
@@ -295,7 +352,7 @@ if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`
 	then odroidn2_fip && odroidn2_binary;
 fi
 if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
-	then odroidn2_fip && odroidn2plus_binary;
+	then odroidn2plus_fip && odroidn2plus_binary;
 fi
 if `grep -Fx "lepotato" "../board.txt" >/dev/null;`
 	then lepotato_fip && lepotato_binary;
@@ -409,11 +466,11 @@ esac
 odroidn2plus_flashbin(){
 case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
   0)
-    dd if=files/boot/u-boot.bin.odroid-n2-plus of="${IMAGE_LOOP_DEV}" bs=512 seek=1
+    dd if=output/odroidn2plus/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
     ;;
   1)
-    dd if=files/boot/u-boot.bin.odroid-n2-plus of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
-    dd if=files/boot/u-boot.bin.odroid-n2-plus of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
+    dd if=output/odroidn2plus/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
+    dd if=output/odroidn2plus/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
     ;;
 esac
 }
