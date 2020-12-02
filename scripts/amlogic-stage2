@@ -27,10 +27,8 @@ ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
 echo -n 'America/New_York' > /etc/timezone
 apt upgrade -y
 apt dist-upgrade -y
-if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ;
-	else apt install -y ${PKGS1} gcc-9 && export CC=/usr/bin/gcc-9 ;
-fi
+apt install -y ${PKGS1}
+
 echo
 echo -n "${HOSTNAME}" > /etc/hostname
 sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
@@ -295,7 +293,7 @@ echo Done.
 
 ### Htop
 if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
-	then htop_stable; else htop_unstable;
+	then htop_stable;
 fi
 
 ### Adding groups

@@ -26,10 +26,8 @@ ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
 echo -n 'America/New_York' > /etc/timezone
 apt upgrade -y
 apt dist-upgrade -y
-if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${RPI} ;
-	else apt install -y ${PKGS1} ${RPI} gcc-9 && export CC=/usr/bin/gcc-9 ;
-fi
+apt install -y ${PKGS1} ${RPI}
+
 #### Firstboot
 echo
 echo Creating firstboot.
@@ -172,8 +170,8 @@ echo
 echo Adding pi firmware.
 sleep 1s
 wget -cq --show-progress https://archive.raspberrypi.org/debian/pool/main/f/firmware-nonfree/firmware-brcm80211_20190114-1+rpt9_all.deb
-dpkg -i firmware-brcm80211_20190114-1+rpt8_all.deb
-rm -f firmware-brcm80211_20190114-1+rpt8_all.deb
+dpkg -i firmware-brcm80211_20190114-1+rpt9_all.deb
+rm -f firmware-brcm80211_20190114-1+rpt9_all.deb
 cd /lib/firmware/brcm
 #bcm_sdio_3-b-plus
 bcm_sdio_4-b
@@ -325,7 +323,7 @@ bluez_choose
 
 ### Htop
 if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
-	then htop_stable; else htop_unstable;
+	then htop_stable;
 fi
 
 ###  Raspi userland
