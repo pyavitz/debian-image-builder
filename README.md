@@ -16,6 +16,13 @@ sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip 
                  
 Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
 ```
+
+### Docker
+
+To build using [docker](https://www.docker.com/), following the instructions on the [Wiki](https://wiki.arm-image-builder.xyz/Docker).
+
+---
+
 ## Instructions
 
 #### Install dependencies
