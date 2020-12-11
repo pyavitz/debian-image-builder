@@ -51,8 +51,8 @@ if `grep -Fx "opir1" "board.txt" >/dev/null;`
 	then DEVICE_SOC="h2-plus-orangepi-r1"
 fi
 
-IMAGE_FILE_SUFFIX="$(date +%F)"
-IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_FILE_SUFFIX}.img"
+IMAGE_DATE="$(date +%F)"
+IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img"
 if [ $RAM -ne 0 ]; then
 	IMAGE_FOLDER="ram/"
 fi
@@ -152,6 +152,7 @@ case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
     rm p1/usr/bin/qemu-aarch64-static
     ;;
 esac
+cp -f p1/root/kernel.txt .
 rm p1/root/allwinner-stage2
 rm -f p1/root/*.txt
 rm -f p1/var/cache/debconf/*
@@ -173,7 +174,15 @@ if [ $RAM -ne 0 ]; then
 fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1
-rm -f root-id.txt root-pid.txt board.txt
+if `grep -Fx "auto=1" "userdata.txt" >/dev/null;`
+	then echo && echo_compress && compress_image && echo_done;
+fi
+rm -f root-id.txt root-pid.txt board.txt kernel.txt
 echo
-ls *.img
+if ls *.img > /dev/null 2>&1;
+	then ls -l *.img;
+fi
+if ls *.img.xz > /dev/null 2>&1;
+	then ls -l *.img.xz;
+fi
 echo
