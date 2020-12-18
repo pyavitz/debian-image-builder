@@ -42,6 +42,7 @@ make dialogrc   # Set builder theme (optional)
 #### Config Menu
 
 ```sh
+Name:		# Whats your name?
 Username:       # Your username
 Password:       # Your password
 Branding:       # Set ASCII text banner
