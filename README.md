@@ -118,17 +118,6 @@ swh -h
    -W       Edit wpa supplicant
    -I       Edit interfaces
 ```
-
-#### Install wifi drivers
-```sh
-wifidrv -h
-
-   -1     rtl8812au (aircrack)
-   -2     rtl88x2bu (cilynx)
-   -3     rtl8821cu (brektrou)
-   -u     update script
-```
-
 #### CPU frequency scaling
 ```sh
 governor -h
