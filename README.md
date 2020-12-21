@@ -19,7 +19,7 @@ Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
 
 ### Docker
 
-To build using [Docker](https://www.docker.com/), following the instructions on the [Wiki](https://wiki.arm-image-builder.xyz/Docker) or use the other [builder](https://github.com/pyavitz/arm-img-builder).
+To build using [Docker](https://www.docker.com/), follow the instructions on the [Wiki](https://wiki.arm-image-builder.xyz/Docker) or use the other [builder](https://github.com/pyavitz/arm-img-builder).
 
 ---
 
