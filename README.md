@@ -86,6 +86,31 @@ make purge-all  # Remove sources and output directory
 
 ## Usage
 
+#### /boot/rename_to_credentials.txt
+```sh
+Rename file to credentials.txt and input your wifi information.
+
+SSID=" "			# Service set identifier
+PASSKEY=" "			# Wifi password
+COUNTRYCODE=" "			# Your country code
+
+# set static ip
+MANUAL=n			# Set to y to enable a static ip
+IPADDR=" "			# Static ip address
+NETMASK=" "			# Your Netmask
+GATEWAY=" "			# Your Gateway
+NAMESERVERS=" "			# Your preferred dns
+
+For headless use: ssh user@ipaddress
+
+Note:
+You can also mount the ROOTFS partition and edit the following
+files, whilst leaving rename_to_credentials.txt untouched.
+
+/etc/opt/interfaces.manual
+/etc/opt/wpa_supplicant.manual
+```
+
 #### Write to eMMC
 ```sh
 Supported: Le Potato, Odroid C4, Odroid N2/Plus and NanoPi NEO Plus2
