@@ -48,11 +48,6 @@ FED-IMG=./fedora/stage1
 FED-IMAGE=sudo ./fedora/stage1
 FED-STG2=./fedora/stage2
 
-# docker
-XDMAKE=./scripts/dmakefile
-DMAKE=./scripts/dmakefile
-XBMAKE=./scripts/bmakefile
-BMAKE=./scripts/bmakefile
 # do not edit above this line
 
 help:
@@ -695,14 +690,3 @@ fedora-image:
 	@chmod +x ${FED-IMG}
 	@chmod +x ${FED-STG2}
 	@${FED-IMAGE}
-
-# DOCKER
-dmakefile:
-	# Creating docker makefile
-	@chmod +x ${XDMAKE}
-	@${DMAKE}
-
-bmakefile:
-	# Creating builder makefile
-	@chmod +x ${XBMAKE}
-	@${BMAKE}
