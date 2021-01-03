@@ -1,0 +1,87 @@
+#!/bin/bash
+### Functions
+grow_mmcblk(){
+bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
+}
+
+grow_mmcblk1(){
+bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
+}
+
+grow_mmcblk2(){
+bash growpart mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs mmcblk2p1 > /dev/null 2>&1
+}
+
+find_partuuid(){
+echo 'ROOT_PARTUUID="' > root1
+if ls /dev/mmcblk0p1  > /dev/null 2>&1;
+	then blkid -o export -- "/dev/mmcblk0p1" | sed -ne 's/^PARTUUID=//p' > root2;
+fi
+if ls /dev/mmcblk1p1  > /dev/null 2>&1;
+	then blkid -o export -- "/dev/mmcblk1p1" | sed -ne 's/^PARTUUID=//p' > root2;
+fi
+if ls /dev/mmcblk2p1  > /dev/null 2>&1;
+	then blkid -o export -- "/dev/mmcblk2p1" | sed -ne 's/^PARTUUID=//p' > root2;
+fi
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/partuuid.txt
+rm -f root1 root2 root3
+}
+
+orangepir1_extlinux(){
+source /etc/opt/partuuid.txt
+rm -f /boot/extlinux/extlinux.conf
+tee /boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/allwinner/
+    fdt /boot/allwinner/sun8i-h2-plus-orangepi-r1.dtb
+    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+EOF
+rm -f /etc/opt/partuuid.txt
+}
+
+fix_extlinux(){
+if `grep -Fx "opir1" "/etc/opt/board.txt" >/dev/null;`
+	then find_partuuid > /dev/null 2>&1;
+fi
+if `grep -Fx "opir1" "/etc/opt/board.txt" >/dev/null;`
+	then orangepir1_extlinux > /dev/null 2>&1;
+fi
+}
+
+### Grow Partition
+if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
+        else echo "" &>/dev/null;
+fi
+
+if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
+        else echo "" &>/dev/null;
+fi
+
+if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
+        else echo "" &>/dev/null;
+fi
+
+### Orange Pi R1
+sleep 1s
+fix_extlinux
+
+### Renew SSH keys
+sleep 1s
+/bin/rm -v /etc/ssh/ssh_host_* > /dev/null 2>&1
+dpkg-reconfigure openssh-server > /dev/null 2>&1
+systemctl restart ssh > /dev/null 2>&1
+
+### Clean up
+systemctl disable firstboot > /dev/null 2>&1
+update-rc.d firstboot remove > /dev/null 2>&1
+rm -f /var/cache/debconf/*
+rm -f /usr/local/sbin/firstboot

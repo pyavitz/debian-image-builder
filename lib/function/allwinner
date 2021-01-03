@@ -346,6 +346,66 @@ EOF
 }
 
 ## STAGE2
+allwinner_firstboot(){
+echo
+echo Creating firstboot.
+tee /usr/local/sbin/firstboot <<EOF
+#!/bin/bash
+### Functions
+grow_mmcblk () {
+bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
+}
+
+grow_mmcblk1 () {
+bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
+}
+
+grow_mmcblk2 () {
+bash growpart mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs mmcblk2p1 > /dev/null 2>&1
+}
+
+### Grow Partition
+if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
+        else echo "" &>/dev/null;
+fi
+
+if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
+        else echo "" &>/dev/null;
+fi
+
+if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
+        else echo "" &>/dev/null;
+fi
+
+### Renew SSH keys
+sleep 1s
+/bin/rm -v /etc/ssh/ssh_host_* > /dev/null 2>&1
+dpkg-reconfigure openssh-server > /dev/null 2>&1
+systemctl restart ssh > /dev/null 2>&1
+
+### Clean up
+systemctl disable firstboot > /dev/null 2>&1
+update-rc.d firstboot remove > /dev/null 2>&1
+rm -f /var/cache/debconf/*
+rm -f /usr/local/sbin/firstboot
+EOF
+}
+
+orangepir1_firstboot(){
+echo
+echo Creating firstboot (orange pi r1).
+mkdir -p /usr/local/sbin
+mv -v opir1-firstboot /usr/local/sbin/firstboot
+chmod +x /usr/local/sbin/firstboot
+chown root:root /usr/local/sbin/firstboot
+echo Done.
+
 tritium_extlinux(){
 cd ~
 echo
