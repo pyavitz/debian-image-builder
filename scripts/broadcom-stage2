@@ -316,27 +316,32 @@ echo
 user_config
 user_eeprom
 
-#### Checking for changes
+####
 echo
 echo Checking for changes.
 apt update
 apt upgrade -y
 apt -y clean
 apt -y autoclean
+echo
+echo Purging locales-all.
+apt purge -y locales-all
+localedef -c -f UTF-8 -i en_US en_US.UTF-8
+dpkg-reconfigure locales
 echo Done.
 
 #### Kernel
 echo
 echo Installing kernel.
+apt -y clean
+apt -y autoclean
 sleep 1s
 cd ~
 dpkg -i *.deb
 rm -f *.deb
-fetch_version
-apt -y clean
-apt -y autoclean
 echo Done.
 sleep 1s
+fetch_version
 
 ### Modules
 if `grep -Fx "bcm2711" "/root/board.txt" >/dev/null;`
@@ -434,20 +439,7 @@ EOF
 chmod +x /etc/rc.local
 echo Done.
 ### Enable services
-echo
-echo Enabling Services
-sleep 1s
-systemctl enable rc-local
-systemctl enable ifplugd
-systemctl enable resolvconf
-systemctl enable haveged
-systemctl enable zramswap
-systemctl enable bluetooth
-update-rc.d firstboot defaults 2
-systemctl enable firstboot
-systemctl enable governor
-systemctl enable serial-getty@ttyUSB0.service
-echo Done.
+enable_services > /dev/null 2>&1
 
 ###### Finish
 echo

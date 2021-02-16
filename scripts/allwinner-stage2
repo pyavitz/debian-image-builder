@@ -239,27 +239,6 @@ adduser ${user} input
 adduser ${user} tty
 echo Done.
 
-#### Clean up packages
-echo
-echo Cleaning up.
-sleep 1s
-apt -y autoremove
-apt -y clean
-apt -y autoclean
-echo Done.
-
-#### Kernel
-echo
-echo Installing kernel.
-sleep 1s
-cd ~
-dpkg -i *.deb
-rm -f *.deb
-fetch_version
-apt -y clean
-apt -y autoclean
-echo Done.
-
 ### Bluetooth and wifi helper install
 case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
   0)
@@ -268,6 +247,33 @@ case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
     pine64_bt_service
     ;;
 esac
+
+####
+echo
+echo Checking for changes.
+apt update
+apt upgrade -y
+apt -y clean
+apt -y autoclean
+echo
+echo Purging locales-all.
+apt purge -y locales-all
+localedef -c -f UTF-8 -i en_US en_US.UTF-8
+dpkg-reconfigure locales
+echo Done.
+
+#### Kernel
+echo
+echo Installing kernel.
+apt -y clean
+apt -y autoclean
+sleep 1s
+cd ~
+dpkg -i *.deb
+rm -f *.deb
+echo Done.
+sleep 1s
+fetch_version
 
 #### Service
 echo
@@ -353,17 +359,7 @@ EOF
 chmod +x /etc/rc.local
 echo Done.
 ### Enable services
-echo
-echo Enabling Services
-sleep 1s
-systemctl enable rc-local
-systemctl enable ifplugd
-systemctl enable resolvconf
-systemctl enable haveged
-systemctl enable zramswap
-update-rc.d firstboot defaults 2
-systemctl enable firstboot
-systemctl enable governor
+enable_services > /dev/null 2>&1
 
 #### Own it
 chown -R ${user}:${user} /home/${user}

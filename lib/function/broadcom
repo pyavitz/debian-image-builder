@@ -500,7 +500,7 @@ systemctl enable pwrledoff
 }
 
 bluez_firmware(){
-BRPT="rpt7"
+BRPT="rpt8"
 echo Building bluez firmware package.
 sleep 1s
 mkdir -p bluez-firmware
@@ -523,4 +523,21 @@ WRPT="rpt11"
 wget -cq --show-progress https://archive.raspberrypi.org/debian/pool/main/f/firmware-nonfree/firmware-brcm80211_20190114-1+${WRPT}_all.deb
 dpkg -i firmware-brcm80211_20190114-1+${WRPT}_all.deb
 rm -f firmware-brcm80211_20190114-1+${WRPT}_all.deb
+}
+
+enable_services(){
+echo
+echo Enabling Services
+sleep 1s
+systemctl enable rc-local
+systemctl enable ifplugd
+systemctl enable resolvconf
+systemctl enable haveged
+systemctl enable zramswap
+systemctl enable bluetooth
+update-rc.d firstboot defaults 2
+systemctl enable firstboot
+systemctl enable governor
+systemctl enable serial-getty@ttyUSB0.service
+echo Done.
 }
