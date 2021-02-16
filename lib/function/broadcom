@@ -60,6 +60,16 @@ cp -f board.txt ${BCMSRC}/
 cd ${BCMSRC}
 }
 
+broadcom_patching(){
+if `grep "5.10" "../../userdata.txt" >/dev/null;`
+	then for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done
+fi
+if `grep "5.11" "../../userdata.txt" >/dev/null;`
+	then for i in ../${BROADCOM}/dev/*.patch; do patch -p1 < $i; done
+fi
+}
+
+
 # RASPBERRY PI 4B
 raspberrypi_patch(){
 echo
@@ -68,7 +78,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/raspberrypi-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/raspberrypi-nc-packaging.patch ;
 fi
-for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done
+broadcom_patching
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
 fi
