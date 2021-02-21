@@ -113,6 +113,7 @@ sed -i 's/#SIZE=256/SIZE=1024/g' /etc/default/zramswap
 sed -i 's/#PRIORITY=100/PRIORITY=100/g' /etc/default/zramswap
 }
 
+# grab kernel version
 fetch_version(){
 echo 'INSTALLED_KERNEL="' > /root/kernel1
 cat /usr/src/linux-headers*/include/config/kernel.release > /root/kernel2
@@ -121,17 +122,20 @@ paste -d '\0' kernel1 kernel2 kernel3  > /root/kernel.txt
 rm -f kernel1 kernel2 kernel3
 }
 
+# add kernel version to img
 rename_image(){
 source kernel.txt
 mv -f ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
 }
 
+# compress image to img.xz
 compress_image(){
 source kernel.txt
 mv -f ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
 xz -zev --threads=${CORES} ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
 }
 
+# setup network
 network_setup(){
 echo
 echo Adding network configs and rules.
@@ -258,6 +262,7 @@ systemctl enable credentials
 echo Done.
 }
 
+# first boot service
 firstboot_service(){
 echo
 echo Creating first boot.
@@ -279,6 +284,7 @@ WantedBy=multi-user.target
 EOF
 }
 
+# currently not in use
 ext4_resize(){
 echo
 e2fsck -f "${IMAGE_LOOP_DEV_ROOTFS}"
