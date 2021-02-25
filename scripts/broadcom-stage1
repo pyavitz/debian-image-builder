@@ -6,7 +6,7 @@ source lib/source
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
-userdata () {
+userdata(){
 echo ""
 echo "Please create a userdata.txt file"
 while [ true ] ; do
@@ -57,7 +57,7 @@ if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 fi
 ### cmdline
 echo
-echo -e -n "${RED}Installing boot bits${FIN}."
+echo -e -n "${RED}Setting up boot directory${FIN}."
 if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
 	then create_extlinux;
 fi
@@ -66,16 +66,13 @@ if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
 	then bcm2711_config > /dev/null 2>&1;
 fi
 if ls p1/config.txt > /dev/null 2>&1
-	then echo && echo -n "config.txt " && sleep 1s && echo_nok;
-	else echo && echo -n "config.txt " && sleep 1s && echo_fail && exit;
+	then echo && echo -n "config.txt        " && sleep 1s && echo_nok;
+	else echo && echo -n "config.txt        " && sleep 1s && echo_fail && exit;
 fi
 ### Fetching boot bits
 if `grep -Fx "bcm2711" "board.txt" >/dev/null;`
 	then bcm2711_boot;
 fi
-
-### clean boot bits
-rm -f firmware/boot/*
 
 ### extract rootfs
 if `grep -Fx "bcm2711" "board.txt" >/dev/null;`

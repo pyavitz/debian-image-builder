@@ -7,6 +7,24 @@ sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/a
 sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/bcm2711_defconfig
 }
 
+rpi4_binaries(){
+BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
+mkdir -p binaries
+rm -f binaries/*
+cd binaries
+echo
+echo_bins
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}fixup4.dat
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}start4.elf
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}LICENCE.broadcom
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}COPYING.linux
+cd ..
+if ls binaries/{fixup4.dat,start4.elf} > /dev/null 2>&1
+	then echo_bdone;
+	else echo_fail && exit;
+fi
+}
+
 stable_download(){
 echo
 echo_stable
@@ -77,6 +95,9 @@ if `grep -Fx "rtl8811cu=1" "../userdata.txt" >/dev/null;`
 	then rtl8811cu;
 fi
 cd ${KERNEL}-${VERSION}
+if `grep -Fx "bcm2711" "../board.txt" >/dev/null;`
+	then rpi4_binaries;
+fi
 export ARCH=arm64
 rm -f scripts/package/builddeb
 rm -f scripts/package/mkdebian

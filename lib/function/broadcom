@@ -154,8 +154,8 @@ EOF
 create_extlinux(){
 extlinux > /dev/null 2>&1
 if ls p1/extlinux/extlinux.conf > /dev/null 2>&1
-	then echo && echo -n "extlinux.conf " && sleep 1s && echo_nok;
-	else echo && echo -n "extlinux.conf " && sleep 1s && echo_fail && exit;
+	then echo && echo -n "extlinux.conf     " && sleep 1s && echo_nok;
+	else echo && echo -n "extlinux.conf     " && sleep 1s && echo_fail && exit;
 fi
 }
 
@@ -163,6 +163,7 @@ bcm2711_config(){
 tee p1/config.txt <<EOF
 arm_64bit=1
 kernel=u-boot.bin
+initramfs initrd.gz
 
 disable_overscan=1
 gpu_mem=128
@@ -183,29 +184,15 @@ bcm2711_boot(){
 mkdir -p firmware/boot
 rm -f firmware/boot/*
 echo
-wget -cq -P firmware/boot https://github.com/raspberrypi/firmware/raw/master/boot/fixup4.dat
-if ls firmware/boot/fixup4.dat > /dev/null 2>&1
-	then echo -n "fixup4.dat " && echo_nok;
-	else echo -n "fixup4.dat " && echo_fail && exit;
-fi
-echo
-wget -cq -P firmware/boot https://github.com/raspberrypi/firmware/raw/master/boot/start4.elf
-if ls firmware/boot/start4.elf > /dev/null 2>&1
-	then echo -n "start4.elf " && echo_nok;
-	else echo -n "start4.elf " && echo_fail && exit;
-fi
-echo
 if ls output/raspi4/u-boot.bin > /dev/null 2>&1
-	then echo -n "u-boot.bin " && echo_nok;
-	else echo -n "u-boot.bin " && echo_fail && exit;
+	then echo -n "u-boot.bin        " && echo_nok;
+	else echo -n "u-boot.bin        " && echo_fail && exit;
 fi
 echo
-install -v -m 0644 firmware/boot/fixup4.dat p1/ > /dev/null 2>&1
-install -v -m 0644 firmware/boot/start4.elf p1/ > /dev/null 2>&1
 install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1
-if ls p1/{fixup4.dat,start4.elf,u-boot.bin} > /dev/null 2>&1
-	then echo -n "install " && echo_bdone;
-	else echo -n "install " && echo_fail && exit;
+if ls p1/u-boot.bin > /dev/null 2>&1
+	then echo -n "installing uboot  " && echo_bdone;
+	else echo -n "installing uboot  " && echo_fail && exit;
 fi
 }
 
@@ -229,6 +216,17 @@ mv -f firmware-nonfree-master.tar.gz firmware/
 }
 
 ### STAGE 2
+# Initrd script
+initrd_script(){
+cd ~
+echo
+echo Adding initrd script.
+mkdir -p /etc/initramfs/post-update.d/
+mv -f 99-initrd /etc/initramfs/post-update.d/
+chmod +x /etc/initramfs/post-update.d/99-initrd
+chown root:root /etc/initramfs/post-update.d/99-initrd
+echo Done.
+}
 
 # USER CONFIG
 bcm2711_user(){
