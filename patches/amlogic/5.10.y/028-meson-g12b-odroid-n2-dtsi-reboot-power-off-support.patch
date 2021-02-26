@@ -1,0 +1,30 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2021-02-26 04:14:35.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2021-02-26 13:39:05.974524355 -0500
+@@ -10,6 +10,16 @@
+ #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+ 
+ / {
++
++	reboot: odroid-reboot {
++		compatible = "odroid,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
++		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
++	};
++
+ 	aliases {
+ 		serial0 = &uart_AO;
+ 		ethernet0 = &ethmac;
+@@ -337,6 +347,10 @@
+ 	};
+ };
+ 
++&reboot {
++	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++};
++
+ &acodec {
+ 	AVDD-supply = <&vddao_1v8>;
+ 	status = "okay";
