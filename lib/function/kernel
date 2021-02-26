@@ -98,7 +98,10 @@ cd ${KERNEL}-${VERSION}
 if `grep -Fx "bcm2711" "../board.txt" >/dev/null;`
 	then rpi4_binaries;
 fi
-rtl8811cu_patch
+if `grep "5.10" "../../userdata.txt" >/dev/null;`
+	then : ;
+	else rtl8811cu_patch;
+fi
 export ARCH=arm64
 rm -f scripts/package/builddeb
 rm -f scripts/package/mkdebian
