@@ -18,13 +18,13 @@ export DEBIAN_FRONTEND="noninteractive"
 
 apt-get update
 apt-get install -y apt-utils
-#### Locales
-apt install -y locales locales-all
-localedef -c -f UTF-8 -i en_US en_US.UTF-8
-dpkg-reconfigure locales
-#### Timezone
-ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
-echo -n 'America/New_York' > /etc/timezone
+
+### Locales
+set_locales
+
+### Timezone
+set_timezone
+
 apt upgrade -y
 apt dist-upgrade -y
 apt install -y ${PKGS1}
@@ -293,11 +293,6 @@ apt update
 apt upgrade -y
 apt -y clean
 apt -y autoclean
-echo
-echo Purging locales-all.
-apt purge -y locales-all
-localedef -c -f UTF-8 -i en_US en_US.UTF-8
-dpkg-reconfigure locales
 echo Done.
 
 #### Kernel

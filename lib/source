@@ -64,6 +64,20 @@ EEPROM_VERSION="11.9"
 FIRMWARE="firmware-linux-nonfree firmware-linux \
           firmware-misc-nonfree firmware-realtek firmware-ralink"
 
+set_locales(){
+apt install -y locales
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=C.UTF-8
+locale-gen en_US.UTF-8
+dpkg-reconfigure locales
+}
+
+set_timezone(){
+ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
+echo -n 'America/New_York' > /etc/timezone
+}
+
 # do not edit below this line
 # uinitrd
 uinitrd(){
@@ -283,11 +297,4 @@ RemainAfterExit=no
 [Install]
 WantedBy=multi-user.target
 EOF
-}
-
-# currently not in use
-ext4_resize(){
-echo
-e2fsck -f "${IMAGE_LOOP_DEV_ROOTFS}"
-resize2fs -M "${IMAGE_LOOP_DEV_ROOTFS}"
 }
