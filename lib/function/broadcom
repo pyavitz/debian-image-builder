@@ -101,7 +101,7 @@ fi
 # STAGE1
 ### STAGE 1
 partitions(){
-image_size2
+image_size
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
 o
 n
@@ -139,11 +139,9 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
 partition_uuid(){
 BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
 
 echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
 echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 
 source part-uuid.txt
 }
@@ -153,7 +151,7 @@ mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF
 label kernel
     kernel /Image
-    append earlyprintk initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 rootwait
+    append earlyprintk initrd=/uInitrd console=serial0,115200 console=tty1 rw root=UUID=${ROOT_UUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 rootwait
 EOF
 }
 

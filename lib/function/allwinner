@@ -275,18 +275,7 @@ p
 a
 t
 b
-if `grep -Fx 'DEBIAN_VERSION="buster"' "userdata.txt" >/dev/null;`
-	then 3613280
-fi
-if `grep -Fx 'DEBIAN_VERSION="bullseye"' "userdata.txt" >/dev/null;`
-	then 3906249
-fi
-if `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null;`
-	then 3906249
-fi
-if `grep -Fx 'DEBIAN_VERSION="sid"' "userdata.txt" >/dev/null;`
-	then 3906249
-fi
+4101561
 
 p
 w
@@ -332,20 +321,10 @@ dd if=output/opir1/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync b
 }
 
 partition_uuid(){
-echo 'ROOT_UUID="' > root1
-blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > root-id.txt
-rm -f root1 root2 root3
+ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
+echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
 
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > root-pid.txt
-rm -f root1 root2 root3
-
-source root-id.txt
-source root-pid.txt
+source part-uuid.txt
 }
 
 create_fstab(){
@@ -423,7 +402,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/allwinner/
     fdt /boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
 echo Done
 }
@@ -439,7 +418,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/allwinner/
     fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
 echo Done
 }
@@ -455,7 +434,7 @@ label kernel
     kernel /boot/Image
     fdtdir /boot/allwinner/
     fdt /boot/allwinner/sun50i-a64-pine64-plus.dtb
-    append earlyprintk console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+    append earlyprintk console=ttyS2,115200n8 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
 echo Done.
 }
@@ -472,7 +451,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/allwinner/
     fdt /boot/allwinner/sun8i-h2-plus-orangepi-r1.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyS0,115200n8 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
 echo Done.
 }

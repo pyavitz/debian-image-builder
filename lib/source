@@ -40,10 +40,7 @@ MISC="../patches/misc"
 KERNEL="linux"
 
 # stage1
-IMGSIZE="1850MB"
-IMGSIZE_UNSTABLE="2000MB"
-RPISIZE="1875MB"
-RPISIZE_UNSTABLE="2025MB"
+IMGSIZE="2100MB"
 
 # stage 2
 PKGS1="tzdata keyboard-configuration sudo man-db dbus initramfs-tools \
@@ -134,6 +131,12 @@ cat /usr/src/linux-headers*/include/config/kernel.release > /root/kernel2
 echo '"' > /root/kernel3
 paste -d '\0' kernel1 kernel2 kernel3  > /root/kernel.txt
 rm -f kernel1 kernel2 kernel3
+}
+
+# shrink image
+shrink(){
+echo
+scripts/shrink -s ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img
 }
 
 # add kernel version to img

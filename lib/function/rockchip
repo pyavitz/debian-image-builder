@@ -232,18 +232,7 @@ p
 a
 t
 b
-if `grep -Fx 'DEBIAN_VERSION="buster"' "userdata.txt" >/dev/null;`
-	then 3613280
-fi
-if `grep -Fx 'DEBIAN_VERSION="bullseye"' "userdata.txt" >/dev/null;`
-	then 3906249
-fi
-if `grep -Fx 'DEBIAN_VERSION="unstable"' "userdata.txt" >/dev/null;`
-	then 3906249
-fi
-if `grep -Fx 'DEBIAN_VERSION="sid"' "userdata.txt" >/dev/null;`
-	then 3906249
-fi
+4101561
 
 p
 w
@@ -271,10 +260,7 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 
 partition_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
-
-echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
+echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
 
 source part-uuid.txt
 }
@@ -299,7 +285,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/rockchip/
     fdt /boot/rockchip/rk3328-rock64.dtb
-    append earlyprintk console=tty1 console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyS2,115200n8 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
 echo Done
 }
@@ -316,7 +302,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/rockchip/
     fdt /boot/rockchip/rk3399-nanopc-t4.dtb
-    append earlyprintk console=tty1 console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u init=/sbin/init
+    append earlyprintk console=tty1 console=ttyS2,115200n8 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u init=/sbin/init
 EOF
 echo Done
 }
@@ -333,7 +319,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/rockchip/
     fdt /boot/rockchip/rk3328-roc-cc.dtb
-    append earlyprintk console=tty1 console=ttyS2,1500000 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyS2,1500000 rw root=UUID=${ROOT_UUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
 echo Done
 }
