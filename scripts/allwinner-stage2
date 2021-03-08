@@ -41,18 +41,11 @@ adduser ${user} video
 adduser ${user} disk
 echo Done.
 
-#### Extlinux file
-if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
-    then uinitrd && tritium_extlinux;
-fi
-if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
-    then uinitrd && nanopi_extlinux;
-fi
+#### uInitrd
+cd ~
 if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
-    then pine64_extlinux && rm -f 99-uboot;
-fi
-if `grep -Fx "opir1" "/root/board.txt" >/dev/null;`
-    then uinitrd && opir1_extlinux;
+    then rm -f 99-uboot;
+    else uinitrd;
 fi
 
 #### Sudoers file 

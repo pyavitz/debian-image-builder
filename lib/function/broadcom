@@ -139,9 +139,11 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
 partition_uuid(){
 BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
+ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
 
 echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
 echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 
 source part-uuid.txt
 }
@@ -151,7 +153,7 @@ mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF
 label kernel
     kernel /Image
-    append earlyprintk initrd=/uInitrd console=serial0,115200 console=tty1 rw root=UUID=${ROOT_UUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 rootwait
+    append earlyprintk initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 rootwait
 EOF
 }
 
@@ -552,4 +554,51 @@ systemctl enable firstboot
 systemctl enable governor
 systemctl enable serial-getty@ttyUSB0.service
 echo Done.
+}
+
+shrink(){
+echo
+chmod +x scripts/shrink
+scripts/shrink -s ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img;
+echo
+fix_extlinux
+}
+
+fix_extlinux(){
+echo 'LOOP1="/dev/mapper/' > kpart1
+echo 'LOOP2="/dev/mapper/' >> kpart1
+IMAGE_FILE="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img"
+kpartx="$(kpartx -av $IMAGE_FILE)"
+echo "$kpartx"
+grep -o 'loop.p.' <<<"$kpartx" > kpart2
+echo '"' > kpart3
+echo '"' >> kpart3
+paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
+rm -f {kpart1,kpart2,kpart3}
+source kpart.txt
+BOOT="${LOOP1}"
+mkdir -p p1
+sleep 1s
+mount "${BOOT}" p1
+rm -f p1/extlinux/extlinux.conf
+new_partuuid
+echo
+echo "Correcting extlinux file."
+extlinux
+echo "Done."
+sleep 1s
+umount p1
+rm -fdr p1
+echo
+kpartx -d ${IMAGE_FILE}
+rm -f kpart.txt
+}
+
+new_partuuid(){
+rm -f part-uuid.txt
+ROOTFS="${LOOP2}"
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
+
+source part-uuid.txt
 }

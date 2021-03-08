@@ -1,0 +1,79 @@
+# shrink image
+shrink(){
+echo
+chmod +x scripts/shrink
+scripts/shrink -s ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img
+echo
+create_extlinux
+}
+
+create_extlinux(){
+echo 'LOOP1="/dev/mapper/' > kpart1
+IMAGE_FILE="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img"
+kpartx="$(kpartx -av $IMAGE_FILE)"
+echo "$kpartx"
+grep -o 'loop.p.' <<<"$kpartx" > kpart2
+echo '"' > kpart3
+paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
+rm -f {kpart1,kpart2,kpart3}
+source kpart.txt
+ROOTFS="${LOOP1}"
+mkdir -p p1
+sleep 1s
+mount "${ROOTFS}" p1
+new_partuuid
+extlinux
+sleep 1s
+echo
+e4defrag -c p1
+umount p1
+rm -fdr p1
+echo
+kpartx -d ${IMAGE_FILE}
+rm -f kpart.txt
+}
+
+new_partuuid(){
+rm -f part-uuid.txt
+ROOTFS="${LOOP1}"
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
+
+source part-uuid.txt
+}
+
+extlinux(){
+if `grep -Fx "tritium" "board.txt" >/dev/null;`
+    then tritium_extlinux;
+fi
+if `grep -Fx "nanopi" "board.txt" >/dev/null;`
+    then nanopi_extlinux;
+fi
+if `grep -Fx "pine64" "board.txt" >/dev/null;`
+    then pine64_extlinux;
+fi
+if `grep -Fx "opir1" "board.txt" >/dev/null;`
+    then opir1_extlinux;
+fi
+if `grep -Fx "lepotato" "board.txt" >/dev/null;`
+    then lepotato_extlinux;
+fi
+if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
+    then odroidc4_extlinux;
+fi
+if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
+    then odroidn2_extlinux;
+fi
+if `grep -Fx "odroidn2plus" "board.txt" >/dev/null;`
+    then odroidn2plus_extlinux;
+fi
+if `grep -Fx "rock64" "board.txt" >/dev/null;`
+    then rock64_extlinux;
+fi
+if `grep -Fx "renegade" "board.txt" >/dev/null;`
+    then renegade_extlinux;
+fi
+if `grep -Fx "nanopc" "board.txt" >/dev/null;`
+    then nanopc_extlinux;
+fi
+}
