@@ -127,69 +127,88 @@ chmod +x scripts/package/mkdebian
 }
 
 cconfig(){
-    echo_cconfig
-    cp -f ../${DEF}/${MYCONFIG} arch/arm64/configs/
-    make ARCH=arm64 ${MYCONFIG} &> /dev/null
-    echo_done
+echo_cconfig
+cp -f ../${DEF}/${MYCONFIG} arch/arm64/configs/
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- ${MYCONFIG};
+	else make ARCH=arm64 CC=${NATIVE} ${MYCONFIG};
+fi
+echo_done
 }
 
 cconfigv7(){
-    echo_cconfig
-    cp -f ../${DEF}/${MYCONFIG} arch/arm/configs/
-    make KBUILD_DEBARCH=armhf ARCH=arm ${MYCONFIG} &> /dev/null
-    echo_done
+echo_cconfig
+cp -f ../${DEF}/${MYCONFIG} arch/arm/configs/
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make KBUILD_DEBARCH=armhf ARCH=arm CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- ${MYCONFIG};
+	else make KBUILD_DEBARCH=armhf ARCH=arm CC=${NATIVE} ${MYCONFIG};
+fi
+echo_done
 }
 
-menu_config(){
-    echo
-    echo_menuconfig
-    sleep 1s
-    make menuconfig
+armv8_menuconfig(){
+echo
+echo_menuconfig
+sleep 1s
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
+	else make ARCH=arm64 CC=${NATIVE} menuconfig;
+fi
+}
+
+armv7_menuconfig(){
+echo
+echo_menuconfig
+sleep 1s
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make KBUILD_DEBARCH=armhf ARCH=arm CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- menuconfig;
+	else make KBUILD_DEBARCH=armhf ARCH=arm CC=${NATIVE} menuconfig;
+fi
+}
+
+choose_menuconfig(){
+if `grep -Fx "armv7" "../../board.txt" >/dev/null;`
+	then armv7_menuconfig;
+	else armv8_menuconfig;
+fi
 }
 
 ccompile(){
-    echo -- CC
-    echo_build
-    echo 'y' | make -j${CORES} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bindeb-pkg
+echo -e "-- ${GRN}CC${FIN}"
+echo_build
+echo 'y' | make -j${CORES} ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- bindeb-pkg
 }
 
 ncompile(){
-    echo -- NC
-    echo_build
-    echo 'y' | make -j${CORES} ARCH=arm64 bindeb-pkg
+echo -e "-- ${GRN}NC${FIN}"
+echo_build
+echo 'y' | make -j${CORES} ARCH=arm64 CC=${NATIVE} bindeb-pkg
 }
 
 ccompilev7(){
-    echo -- CC
-    echo_build
-    echo 'y' | make -j${CORES} KBUILD_DEBARCH=armhf  ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bindeb-pkg
+echo -e "-- ${GRN}CC${FIN}"
+echo_build
+echo 'y' | make -j${CORES} KBUILD_DEBARCH=armhf ARCH=arm CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- bindeb-pkg
 }
 
 ncompilev7(){
-    echo -- NC
-    echo_build
-    echo 'y' | make -j${CORES} KBUILD_DEBARCH=armhf ARCH=arm bindeb-pkg
+echo -e "-- ${GRN}NC${FIN}"
+echo_build
+echo 'y' | make -j${CORES} KBUILD_DEBARCH=armhf ARCH=arm CC=${NATIVE} bindeb-pkg
 }
 
 # AMLOGIC
 amlogic_defconfig(){
-    echo_defconfig
-    cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
-    rtl8812au_module
-    rtl88x2bu_module
-    rtl8811cu_module
-    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
-     0)
-       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
-       ;;
-     1)
-       echo -e "${GRN}GCC version not officially supported${FIN}."
-       echo -e "${YLW}WARNING${FIN}${WHT}: Removing CRYPTO_AEGIS128${FIN}"
-       gcc_woes &> /dev/null
-       ;;
-    esac
-    make ARCH=arm64 amlogic_defconfig &> /dev/null
-    echo_done
+echo_defconfig
+cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- amlogic_defconfig &> /dev/null;
+	else make ARCH=arm64 CC=${NATIVE} amlogic_defconfig &> /dev/null;
+fi
+echo_done
 }
 
 ### LE POTATO
@@ -233,41 +252,27 @@ esac
 
 # ALLWINNER
 allwinner_defconfig(){
-    echo_defconfig
-    cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
-    rtl8812au_module
-    rtl88x2bu_module
-    rtl8811cu_module
-    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
-     0)
-       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
-       ;;
-     1)
-       echo -e "${GRN}GCC version not officially supported${FIN}."
-       echo -e "${YLW}WARNING${FIN}${WHT}: Removing CRYPTO_AEGIS128${FIN}"
-       gcc_woes &> /dev/null
-       ;;
-    esac
-    make ARCH=arm64 allwinner_defconfig &> /dev/null
-    echo_done
+echo_defconfig
+cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- allwinner_defconfig &> /dev/null;
+	else make ARCH=arm64 CC=${NATIVE} allwinner_defconfig &> /dev/null;
+fi
+echo_done
 }
 
 allwinner-r1_defconfig(){
-    echo_defconfig
-    cp -f ../${DEF}/allwinner-r1_defconfig arch/arm/configs/
-    rtl8189es_module
-    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
-     0)
-       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
-       ;;
-     1)
-       echo -e "${GRN}GCC version not officially supported${FIN}."
-       echo -e "${YLW}WARNING${FIN}${WHT}: Removing CRYPTO_AEGIS128${FIN}"
-       gcc_woes &> /dev/null
-       ;;
-    esac
-    make ARCH=arm allwinner-r1_defconfig &> /dev/null
-    echo_done
+echo_defconfig
+cp -f ../${DEF}/allwinner-r1_defconfig arch/arm/configs/
+rtl8189es_module
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make KBUILD_DEBARCH=armhf ARCH=arm CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- allwinner-r1_defconfig &> /dev/null;
+	else make KBUILD_DEBARCH=armhf ARCH=arm CC=${NATIVE} allwinner-r1_defconfig &> /dev/null;
+fi
+echo_done
 }
 
 ### TRITIUM
@@ -324,23 +329,16 @@ esac
 
 ### ROCKCHIP
 rockchip_defconfig(){
-    echo_defconfig
-    cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
-    rtl8812au_module
-    rtl88x2bu_module
-    rtl8811cu_module
-    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
-     0)
-       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
-       ;;
-     1)
-       echo -e "${GRN}GCC version not officially supported${FIN}."
-       echo -e "${YLW}WARNING${FIN}${WHT}: Removing CRYPTO_AEGIS128${FIN}"
-       gcc_woes &> /dev/null
-       ;;
-    esac
-    make ARCH=arm64 rockchip64_defconfig &> /dev/null
-    echo_done
+echo_defconfig
+cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rockchip64_defconfig &> /dev/null;
+	else make ARCH=arm64 CC=${NATIVE} rockchip64_defconfig &> /dev/null;
+fi
+echo_done
 }
 
 rk3328_roc_cc (){
@@ -381,23 +379,16 @@ esac
 
 ### BROADCOM
 bcm2711_defconfig(){
-    echo_defconfig
-    cp -f ../${DEF}/bcm2711_defconfig arch/arm64/configs/
-    rtl8812au_module
-    rtl88x2bu_module
-    rtl8811cu_module
-    case `grep -Fx 'GCC="8.3.0"' "../../userdata.txt" >/dev/null; echo $?` in
-     0)
-       echo -e "${GRN}GCC:${FIN} ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
-       ;;
-     1)
-       echo -e "${GRN}GCC version not officially supported${FIN}."
-       echo -e "${YLW}WARNING${FIN}${WHT}: Removing CRYPTO_AEGIS128${FIN}"
-       gcc_woes &> /dev/null
-       ;;
-    esac
-    make ARCH=arm64 bcm2711_defconfig &> /dev/null
-    echo_done
+echo_defconfig
+cp -f ../${DEF}/bcm2711_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig &> /dev/null;
+	else make ARCH=arm64 CC=${NATIVE} bcm2711_defconfig &> /dev/null;
+fi
+echo_done
 }
 
 bcm_2711 (){

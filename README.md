@@ -54,7 +54,7 @@ Password:       # Your password
 Branding:       # Set ASCII text banner
 Hostname:       # Set the system's host name
 Debian:         # Supported: buster, bullseye, unstable and sid
-U-Boot:         # Supported: v2020.10
+U-Boot:         # Supported: v2021.01
 Branch:         # Supported: 5.10.y (if patches fail let me know)
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig

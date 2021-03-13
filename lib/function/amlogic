@@ -385,12 +385,15 @@ cp -f board.txt ${AMLSRC}/
 cd ${AMLSRC}
 }
 
-amlogic_xy_patches(){
-if `grep "5.10" "../../userdata.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/5.10.y/*.patch; do patch -p1 < $i; done
+amlogic_boards(){
+if `grep -Fx "odroidc4" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done
 fi
-if `grep "5.11" "../../userdata.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/5.10.y/*.patch; do patch -p1 < $i; done
+if `grep -Fx "odroidn2" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done
+fi
+if `grep -Fx "odroidn2plus" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done
 fi
 }
 
@@ -418,7 +421,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-amlogic_xy_patches
+amlogic_boards
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
@@ -435,7 +438,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-amlogic_xy_patches
+amlogic_boards
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
