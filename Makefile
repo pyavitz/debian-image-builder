@@ -56,7 +56,7 @@ help:
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
 	@echo "  Allwinner:  nanopi opir1 pine64 tritium"
-	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2plus"
+	@echo "  Amlogic:    lepotato odroidc4 odroidhc4 odroidn2 odroidn2plus"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64"
 	@echo ""
@@ -321,6 +321,50 @@ odroidc4-all:
 	@${ROOTFS}
 	# Making bootable Debian image
 	@ echo odroidc4 > board.txt 
+	@chmod +x ${AML-IMG}
+	@chmod +x ${AML-STG2}
+	@${AML-IMAGE}
+
+### ODROID HC4
+odroidhc4-uboot:
+	# Compiling u-boot
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+odroidhc4-kernel:
+	# Compiling kernel
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt 
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+odroidhc4-image:
+	# Making bootable Debian image
+	@ echo odroidhc4 > board.txt 
+	@chmod +x ${AML-IMG}
+	@chmod +x ${AML-STG2}
+	@${AML-IMAGE}
+
+odroidch4-all:
+	# O D R O I D  H C 4
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Making bootable Debian image
+	@ echo odroidhc4 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}

@@ -104,6 +104,9 @@ fi
 if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
     then odroidc4_led_triggers
 fi
+if `grep -Fx "odroidhc4" "/root/board.txt" >/dev/null;`
+    then odroidc4_led_triggers
+fi
 if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
     then odroidn2_led_triggers
 fi
@@ -137,7 +140,13 @@ fi
 if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
     then mv -f sysinfo /usr/local/bin/ && rm -f sysinfo.bl
 fi
+if `grep -Fx "odroidhc4" "/root/board.txt" >/dev/null;`
+    then mv -f sysinfo /usr/local/bin/ && rm -f sysinfo.bl
+fi
 if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
+    then mv -f sysinfo.bl /usr/local/bin/sysinfo && rm -f sysinfo
+fi
+if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
     then mv -f sysinfo.bl /usr/local/bin/sysinfo && rm -f sysinfo
 fi
 mv -f smon /usr/local/bin/
@@ -170,6 +179,9 @@ if `grep -Fx "lepotato" "/root/board.txt" >/dev/null;`
     then mv -f 20-sysinfo /etc/update-motd.d/ && rm -f 20-sysinfo.bl
 fi
 if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
+    then mv -f 20-sysinfo /etc/update-motd.d/ && rm -f 20-sysinfo.bl
+fi
+if `grep -Fx "odroidhc4" "/root/board.txt" >/dev/null;`
     then mv -f 20-sysinfo /etc/update-motd.d/ && rm -f 20-sysinfo.bl
 fi
 if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
@@ -205,17 +217,7 @@ chown -R ${user}:${user} /home/${user}
 echo Done.
 
 #### Extra firmware
-echo
-echo Adding extra firmware.
-sleep 1s
-mkdir -p /lib/firmware/brcm
-mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
-rm -f UPDATE.mem
-echo Done.
+extra_firmware
 
 #### Software
 echo
