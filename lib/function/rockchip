@@ -13,17 +13,38 @@ if ls arm-trusted-firmware > /dev/null 2>&1
 fi
 echo
 echo -e "${RED}Compiling ATF${FIN}."
-export CROSS_COMPILE=aarch64-linux-gnu-
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then export CROSS_COMPILE=aarch64-linux-gnu-;
+	else export ARCH=arm64;
+fi
 make realclean > /dev/null 2>&1
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then echo "rk3328" && make -j${CORES} PLAT=rk3328 bl31 > /dev/null 2>&1;
+case `grep -Fx "renegade" "../board.txt" >/dev/null; echo $?` in
+  0)
+echo "rk3328"
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3328 bl31;
+	else make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
 fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then echo "rk3328" && make -j${CORES} PLAT=rk3328 bl31 > /dev/null 2>&1;
+    ;;
+esac
+case `grep -Fx "rock64" "../board.txt" >/dev/null; echo $?` in
+  0)
+echo "rk3328"
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3328 bl31;
+	else make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
 fi
-if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
-	then echo "rk3399" && make -j${CORES} PLAT=rk3399 bl31 > /dev/null 2>&1;
+    ;;
+esac
+case `grep -Fx "nanopc" "../board.txt" >/dev/null; echo $?` in
+  0)
+echo "rk3399"
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3399 bl31;
+	else make -j${CORES} CC=${NATIVE} PLAT=rk3399 bl31;
 fi
+    ;;
+esac
 cd ..
 echo_done
 }
@@ -57,8 +78,7 @@ echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
 rkbuild_uboot(){
 echo
 echo_extract
-tar -xf u-boot-${UBOOT_VERSION}.tar.gz
-echo_done
+pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp -f board.txt u-boot/
 cd u-boot
@@ -73,20 +93,50 @@ if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
 fi
 echo
 for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done
-export ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then renegade_defconfig && make roc-cc-rk3328_defconfig;
+export ARCH=arm64
+case `grep -Fx "renegade" "../board.txt" >/dev/null; echo $?` in
+  0)
+renegade_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- roc-cc-rk3328_defconfig;
+	else make -j${CORES} CC=${NATIVE} roc-cc-rk3328_defconfig;
 fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then rock64_defconfig && make rock64-rk3328_defconfig;
+    ;;
+esac
+case `grep -Fx "rock64" "../board.txt" >/dev/null; echo $?` in
+  0)
+rock64_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rock64-rk3328_defconfig;
+	else make -j${CORES} CC=${NATIVE} rock64-rk3328_defconfig;
 fi
-if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
-	then nanopct4_defconfig && make nanopc-t4-rk3399_defconfig;
+    ;;
+esac
+case `grep -Fx "nanopc" "../board.txt" >/dev/null; echo $?` in
+  0)
+nanopct4_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopc-t4-rk3399_defconfig;
+	else make -j${CORES} CC=${NATIVE} nanopc-t4-rk3399_defconfig;
 fi
-if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
-    then make menuconfig;
+    ;;
+esac
+case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+echo
+echo_menuconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
+	else make -j${CORES} CC=${NATIVE} menuconfig;
 fi
-make -j${CORES}
+    ;;
+esac
+echo
+echo_cuboot
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu-;
+	else make -j${CORES} CC=${NATIVE};
+fi
 }
 
 renegade_binary(){

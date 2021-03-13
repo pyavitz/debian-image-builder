@@ -5,16 +5,22 @@ Amlogic:        # Le Potato, Odroid C4 and Odroid N2/Plus
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
-### Dependencies for Debian Buster AMD64/x86_64 cross compile
+### Dependencies for Ubuntu Focal AMD64/x86_64
 
 ```sh
-sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
-                 debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
-                 device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
-                 lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
-                 distro-info-data lsb-release python python-dev kpartx
+sudo apt install \
+	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
+	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
+	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 make \
+	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
+	debian-archive-keyring debian-keyring
                  
-Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
+Orange Pi R1
+sudo apt install \
+	crossbuild-essential-armhf gcc-8-arm-linux-gnueabihf \
+	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf
 ```
 
 ### Docker

@@ -14,9 +14,15 @@ if ls arm-trusted-firmware > /dev/null 2>&1
 fi
 echo
 echo -e "${RED}Compiling ATF${FIN}."
-export CROSS_COMPILE=aarch64-linux-gnu-
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then export CROSS_COMPILE=aarch64-linux-gnu-;
+	else export ARCH=arm64;
+fi
 make realclean > /dev/null 2>&1
-make -j${CORES} PLAT=sun50i_a64 DEBUG=1 bl31 &> /dev/null
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} PLAT=sun50i_a64 DEBUG=1 bl31;
+	else make -j${CORES} CC=${NATIVE} PLAT=sun50i_a64 DEBUG=1 bl31;
+fi
 cd ..
 echo_done
 }
@@ -51,28 +57,56 @@ if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
 fi
 echo
 echo_extract
-tar xf u-boot-${UBOOT_VERSION}.tar.gz
-echo_done
+pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
 cp board.txt u-boot/
 cd u-boot
 echo
+export ARCH=arm64
+case `grep -Fx "tritium" "../board.txt" >/dev/null; echo $?` in
+  0)
+tritium_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech_all_h3_cc_h5_defconfig;
+	else make -j${CORES} CC=${NATIVE} libretech_all_h3_cc_h5_defconfig;
+fi
+    ;;
+esac
+case `grep -Fx "pine64" "../board.txt" >/dev/null; echo $?` in
+  0)
+pine64_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- pine64_plus_defconfig;
+	else make -j${CORES} CC=${NATIVE} pine64_plus_defconfig;
+fi
+    ;;
+esac
+case `grep -Fx "nanopi" "../board.txt" >/dev/null; echo $?` in
+  0)
+nanopi_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopi_neo_plus2_defconfig;
+	else make -j${CORES} CC=${NATIVE} nanopi_neo_plus2_defconfig;
+fi
+    ;;
+esac
+case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+echo
+echo_menuconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
+	else make -j${CORES} CC=${NATIVE} menuconfig;
+fi
+    ;;
+esac
+echo
 echo_cuboot
-export CROSS_COMPILE=aarch64-linux-gnu-
-if `grep -Fx "tritium" "../board.txt" >/dev/null;`
-	then tritium_defconfig && make libretech_all_h3_cc_h5_defconfig;
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu-;
+	else make -j${CORES} CC=${NATIVE};
 fi
-if `grep -Fx "pine64" "../board.txt" >/dev/null;`
-	then pine64_defconfig && make pine64_plus_defconfig;
-fi
-if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
-	then nanopi_defconfig && make nanopi_neo_plus2_defconfig;
-fi
-if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
-    then make menuconfig;
-fi
-make -j${CORES}
 }
 
 opir1_uboot(){
@@ -84,19 +118,38 @@ if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
 fi
 echo
 echo_extract
-tar xf u-boot-${UBOOT_VERSION}.tar.gz
+pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 echo_done
 mv -f u-boot-${UBOOT_VERSION} u-boot
 cp board.txt u-boot/
 cd u-boot
 echo
-echo_cuboot
-export CROSS_COMPILE=arm-linux-gnueabihf-
-opir1_defconfig && make orangepi_r1_defconfig
-if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
-    then make menuconfig;
+export ARCH=arm
+case `grep -Fx "opir1" "../board.txt" >/dev/null; echo $?` in
+  0)
+opir1_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- orangepi_r1_defconfig;
+	else make -j${CORES} CC=${NATIVE} orangepi_r1_defconfig;
 fi
-make -j${CORES}
+    ;;
+esac
+case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+echo
+echo_menuconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- menuconfig;
+	else make -j${CORES} CC=${NATIVE} menuconfig;
+fi
+    ;;
+esac
+echo
+echo_cuboot
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf-;
+	else make -j${CORES} CC=${NATIVE};
+fi
 }
 
 # BINARY
