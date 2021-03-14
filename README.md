@@ -70,10 +70,10 @@ nano userdata.txt
 custom_defconfig=1
 MYCONFIG="nameofyour_defconfig"
 ```
-#### Compression
+#### Compression (turn off)
 ```sh
 nano userdata.txt
-# change from 0 to 1
+# change from 1 to 0
 auto=1        # compresses to img.xz
 ```
 #### Odroid N2/Plus eMMC
