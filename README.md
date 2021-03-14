@@ -1,4 +1,4 @@
-## Supported boards
+## Supported boards ([changelog](https://github.com/pyavitz/debian-image-builder/pull/2))
 ```sh
 Allwinner:      # NanoPi NEO Plus2, Orange Pi R1, Pine A64+ and Tritium
 Amlogic:        # Le Potato, Odroid H/C4 and Odroid N2/Plus
