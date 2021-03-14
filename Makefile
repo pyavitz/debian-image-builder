@@ -347,7 +347,7 @@ odroidhc4-image:
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
 
-odroidch4-all:
+odroidhc4-all:
 	# O D R O I D  H C 4
 	# - - - - - - - -
 	# Compiling u-boot
