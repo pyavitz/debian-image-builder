@@ -1,20 +1,26 @@
 ## Supported boards
 ```sh
 Allwinner:      # NanoPi NEO Plus2, Orange Pi R1, Pine A64+ and Tritium
-Amlogic:        # Le Potato, Odroid C4 and Odroid N2/Plus
+Amlogic:        # Le Potato, Odroid H/C4 and Odroid N2/Plus
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
-### Dependencies for Debian Buster AMD64/x86_64 cross compile
+### Dependencies for Ubuntu Focal AMD64/x86_64
 
 ```sh
-sudo apt install build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
-                 debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
-                 device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
-                 lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
-                 distro-info-data lsb-release python python-dev kpartx
+sudo apt install \
+	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
+	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
+	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 make \
+	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
+	debian-archive-keyring debian-keyring
                  
-Orange Pi R1 - sudo apt install -y crossbuild-essential-armhf
+Orange Pi R1
+sudo apt install \
+	crossbuild-essential-armhf gcc-8-arm-linux-gnueabihf \
+	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf
 ```
 
 ### Docker
@@ -48,7 +54,7 @@ Password:       # Your password
 Branding:       # Set ASCII text banner
 Hostname:       # Set the system's host name
 Debian:         # Supported: buster, bullseye, unstable and sid
-U-Boot:         # Supported: v2020.10
+U-Boot:         # Supported: v2021.01
 Branch:         # Supported: 5.10.y (if patches fail let me know)
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
@@ -64,10 +70,10 @@ nano userdata.txt
 custom_defconfig=1
 MYCONFIG="nameofyour_defconfig"
 ```
-#### Compression
+#### Compression (turn off)
 ```sh
 nano userdata.txt
-# change from 0 to 1
+# change from 1 to 0
 auto=1        # compresses to img.xz
 ```
 #### Odroid N2/Plus eMMC

@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
---- a/scripts/package/builddeb	2020-10-22 06:41:03.000000000 -0400
-+++ b/scripts/package/builddeb	2020-10-22 08:58:53.160649803 -0400
+--- a/scripts/package/builddeb	2021-03-13 09:11:06.651208000 -0500
++++ b/scripts/package/builddeb	2021-03-13 10:04:26.889921846 -0500
 @@ -51,8 +51,8 @@
  kernel_headers_dir="$objtree/debian/hdrtmp"
  libc_headers_dir="$objtree/debian/headertmp"
@@ -20,20 +20,22 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  fi
  cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
  
-@@ -139,6 +140,12 @@
+@@ -139,6 +140,14 @@
  	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
  fi
  
 +# install dtb
 +mkdir -p "$tmpdir/boot/amlogic"
-+cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2.dtb"
-+cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-gxl-s905x-libretech-cc.dtb" "$tmpdir/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb"
 +cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-c4.dtb" "$tmpdir/boot/amlogic/meson-sm1-odroid-c4.dtb"
++cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-hc4.dtb" "$tmpdir/boot/amlogic/meson-sm1-odroid-hc4.dtb"
++cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2.dtb"
 +cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2-plus.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2-plus.dtb"
++cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-gxl-s905x-libretech-cc.dtb" "$tmpdir/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb"
++#
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -164,6 +171,18 @@
+@@ -164,6 +173,18 @@
  	chmod 755 "$tmpdir/DEBIAN/$script"
  done
  
@@ -52,7 +54,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Build kernel header package
  (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
  (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-@@ -184,6 +203,18 @@
+@@ -184,6 +205,18 @@
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
  
@@ -72,8 +74,8 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  	create_package "$kernel_headers_packagename" "$kernel_headers_dir"
  	create_package "$libc_headers_packagename" "$libc_headers_dir"
 diff -Naur a/scripts/package/mkdebian b/scripts/package/mkdebian
---- a/scripts/package/mkdebian	2020-10-22 06:41:03.000000000 -0400
-+++ b/scripts/package/mkdebian	2020-10-22 08:58:22.800208927 -0400
+--- a/scripts/package/mkdebian	2021-03-13 09:11:06.651208000 -0500
++++ b/scripts/package/mkdebian	2021-03-13 10:01:37.499008542 -0500
 @@ -94,8 +94,8 @@
  	packageversion=$version-$revision
  fi

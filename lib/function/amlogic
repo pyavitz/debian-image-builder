@@ -21,13 +21,6 @@ echo CONFIG_SD_BOOT=y >> configs/libretech-cc_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/libretech-cc_defconfig
 }
 
-uboot_v2020.04(){
-if ls u-boot-v2020.04.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}u-boot-v2020.04.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-v2020.04/u-boot-v2020.04.tar.gz && echo_bdone;
-fi
-}
-
 uboot_current(){
 if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
@@ -45,49 +38,75 @@ if ls amlogic-boot-fip-master.tar.gz > /dev/null 2>&1
 fi
 echo
 echo_duboot
-if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then uboot_v2020.04;
-	else uboot_current;
-fi
+uboot_current
 echo
 echo_extracts
-tar -xf amlogic-boot-fip-master.tar.gz
-if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then tar -xf u-boot-v2020.04.tar.gz;
-	else tar -xf u-boot-${UBOOT_VERSION}.tar.gz;
+if ls amlogic-boot-fip-master.tar.gz > /dev/null 2>&1
+	then pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
 fi
-echo_done
-if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then mv -f u-boot-v2020.04 u-boot;
-	else mv -f u-boot-${UBOOT_VERSION} u-boot;
+if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
+	then pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .;
 fi
+mv -f u-boot-${UBOOT_VERSION} u-boot
 cp board.txt u-boot/
 cd u-boot
 echo
-echo_cuboot
-if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then for i in ../${OC4UBOOT}/*.patch; do patch -p1 < $i; done ;
-fi
 if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
 	then for i in ../${ON2PUBOOT}/*.patch; do patch -p1 < $i; done ;
 fi
 export ARCH=arm64
-if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then odroidc4_defconfig && make odroid-c4_defconfig;
+case `grep -Fx "odroidc4" "../board.txt" >/dev/null; echo $?` in
+  0)
+odroidc4_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-c4_defconfig;
+	else make -j${CORES} CC=${NATIVE} odroid-c4_defconfig;
 fi
-if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`
-	then odroidn2_defconfig && make odroid-n2_defconfig;
+    ;;
+esac
+case `grep -Fx "odroidn2" "../board.txt" >/dev/null; echo $?` in
+  0)
+odroidn2_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-n2_defconfig;
+	else make -j${CORES} CC=${NATIVE} odroid-n2_defconfig;
 fi
-if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
-	then odroidn2_defconfig && make odroid-n2_defconfig;
+    ;;
+esac
+case `grep -Fx "odroidn2plus" "../board.txt" >/dev/null; echo $?` in
+  0)
+odroidn2_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-n2_defconfig;
+	else make -j${CORES} CC=${NATIVE} odroid-n2_defconfig;
 fi
-if `grep -Fx "lepotato" "../board.txt" >/dev/null;`
-	then lepotato_defconfig && make libretech-cc_defconfig;
+    ;;
+esac
+case `grep -Fx "lepotato" "../board.txt" >/dev/null; echo $?` in
+  0)
+lepotato_defconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech-cc_defconfig;
+	else make -j${CORES} CC=${NATIVE} libretech-cc_defconfig;
 fi
-if `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null;`
-    then make menuconfig;
+    ;;
+esac
+case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
+  0)
+echo
+echo_menuconfig
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
+	else make -j${CORES} CC=${NATIVE} menuconfig;
 fi
-make -j${CORES} CROSS_COMPILE=aarch64-linux-gnu-
+    ;;
+esac
+echo
+echo_cuboot
+if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
+	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu-;
+	else make -j${CORES} CC=${NATIVE};
+fi
 }
 
 # FIP
@@ -366,12 +385,15 @@ cp -f board.txt ${AMLSRC}/
 cd ${AMLSRC}
 }
 
-amlogic_xy_patches(){
-if `grep "5.10" "../../userdata.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/5.10.y/*.patch; do patch -p1 < $i; done
+amlogic_boards(){
+if `grep -Fx "odroidc4" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done
 fi
-if `grep "5.11" "../../userdata.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/5.10.y/*.patch; do patch -p1 < $i; done
+if `grep -Fx "odroidn2" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done
+fi
+if `grep -Fx "odroidn2plus" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done
 fi
 }
 
@@ -399,7 +421,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-amlogic_xy_patches
+amlogic_boards
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
@@ -416,7 +438,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-amlogic_xy_patches
+amlogic_boards
 for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
@@ -530,6 +552,9 @@ fi
 if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
     then odroidc4_flashbin
 fi
+if `grep -Fx "odroidhc4" "board.txt" >/dev/null;`
+    then odroidc4_flashbin
+fi
 if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
     then odroidn2_flashbin
 fi
@@ -584,6 +609,21 @@ EOF
 echo Done.
 }
 
+odroidhc4_extlinux(){
+echo
+echo Creating extlinux file.
+mkdir -p p1/boot/extlinux
+tee p1/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/amlogic/
+    fdt /boot/amlogic/meson-sm1-odroid-hc4.dtb
+    append earlyprintk console=tty1 console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
+EOF
+echo Done.
+}
+
 odroidn2_extlinux(){
 echo
 echo Creating extlinux file.
@@ -611,6 +651,27 @@ label kernel
     fdt /boot/amlogic/meson-g12b-odroid-n2-plus.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 init=/sbin/init
 EOF
+echo Done.
+}
+
+extra_firmware(){
+echo
+echo Adding extra firmware.
+sleep 1s
+mkdir -p /lib/firmware/brcm
+cd /lib/firmware/brcm
+wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
+cd ~
+aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
+tar xf firmware-master.tar.gz
+cp -R firmware-master/* /lib/firmware
+rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
+rm -f UPDATE.mem
 echo Done.
 }
 
