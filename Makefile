@@ -89,7 +89,8 @@ ccompile:
 	aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
 	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 \
 	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
-	debian-archive-keyring debian-keyring make python-setuptools python3-setuptools
+	debian-archive-keyring debian-keyring make python-setuptools python3-setuptools \
+	python-distutils-extra
 
 ncompile:
 	# Install all dependencies
@@ -99,7 +100,7 @@ ncompile:
 	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
 	aria2 pv toilet figlet gcc-arm-none-eabi distro-info-data lsb-release \
 	python python-dev kpartx gcc-8 gcc-9 gcc-10 debian-archive-keyring \
-	debian-keyring make python-setuptools python3-setuptools
+	debian-keyring make python-setuptools python3-setuptools python-distutils-extra
 
 ### TRITIUM
 tritium-uboot:
