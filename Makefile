@@ -56,7 +56,7 @@ help:
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
 	@echo "  Allwinner:  nanopi opir1 pine64 tritium"
-	@echo "  Amlogic:    lepotato odroidc4 odroidhc4 odroidn2 odroidn2plus"
+	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2plus"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64"
 	@echo ""
