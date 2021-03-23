@@ -55,21 +55,30 @@ Password:       # Your password
 Branding:       # Set ASCII text banner
 Hostname:       # Set the system's host name
 Debian:         # Supported: buster, bullseye, unstable and sid
+
+U-Boot and Linux
 U-Boot:         # Supported: v2021.01
 Branch:         # Supported: 5.10.y (if patches fail let me know)
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
+
+Extra wireless support
 rtl88XXau:      # 1 to add Realtek 8812AU/21AU wireless support
 rtl88XXbu:      # 1 to add Realtek 88X2BU wireless support
 rtl88XXcu:      # 1 to add Realtek 8811CU/21CU wireless support
+
+Customize (user defconfig)
+Defconfig:	# 1 to enable
+Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 ```
+
 #### User defconfig
+
 ```sh
-nano userdata.txt
-# place config in defconfig directory
-custom_defconfig=1
-MYCONFIG="nameofyour_defconfig"
+# config placement: defconfig/$NAME_defconfig
+The config menu will append _defconfig to the end of the name
+in the userdata.txt file.
 ```
 #### Compression (turn off)
 ```sh
