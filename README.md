@@ -58,7 +58,7 @@ Hostname:       # Set the system's host name
 Distribution
 Distro:         # Supported: debian and ubuntu
 Release:	# Debian: buster, bullseye, unstable and sid
-		# Ubuntu: focal, groozy and hirsute
+		# Ubuntu: focal, groovy and hirsute
 
 U-Boot and Linux
 U-Boot:         # Supported: v2021.01
