@@ -118,7 +118,7 @@ tritium-kernel:
 	@${KERNEL}
 
 tritium-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo tritium > board.txt 
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
@@ -140,7 +140,7 @@ tritium-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo tritium > board.txt 
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
@@ -162,7 +162,7 @@ pine64-kernel:
 	@${KERNEL}
 
 pine64-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo pine64 > board.txt 
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
@@ -184,7 +184,7 @@ pine64-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo pine64 > board.txt 
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
@@ -206,7 +206,7 @@ nanopi-kernel:
 	@${KERNEL}
 
 nanopi-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo nanopi > board.txt 
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
@@ -228,7 +228,7 @@ nanopi-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo nanopi > board.txt 
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
@@ -251,7 +251,7 @@ opir1-kernel:
 	@${KERNEL}
 
 opir1-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo opir1 > board.txt
 	@ echo armv7 >> board.txt
 	@chmod +x ${ALL-IMG}
@@ -275,7 +275,7 @@ opir1-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFSV7}
 	@${ROOTFSV7}
-	# Making bootable Debian image
+	# Creating image
 	@ echo opir1 > board.txt
 	@ echo armv7 >> board.txt
 	@chmod +x ${ALL-IMG}
@@ -298,7 +298,7 @@ odroidc4-kernel:
 	@${KERNEL}
 
 odroidc4-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidc4 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -320,7 +320,7 @@ odroidc4-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidc4 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -342,7 +342,7 @@ odroidhc4-kernel:
 	@${KERNEL}
 
 odroidhc4-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidhc4 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -364,7 +364,7 @@ odroidhc4-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidhc4 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -386,7 +386,7 @@ odroidn2-kernel:
 	@${KERNEL}
 	
 odroidn2-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidn2 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -408,7 +408,7 @@ odroidn2-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidn2 > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -430,7 +430,7 @@ odroidn2plus-kernel:
 	@${KERNEL}
 	
 odroidn2plus-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidn2plus > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -452,7 +452,7 @@ odroidn2plus-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo odroidn2plus > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -474,7 +474,7 @@ lepotato-kernel:
 	@${KERNEL}
 
 lepotato-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo lepotato > board.txt 
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -496,7 +496,7 @@ lepotato-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo lepotato > board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
@@ -518,7 +518,7 @@ renegade-kernel:
 	@${KERNEL}
 
 renegade-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
@@ -541,7 +541,7 @@ renegade-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
@@ -564,7 +564,7 @@ rock64-kernel:
 	@${KERNEL}
 
 rock64-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
@@ -587,7 +587,7 @@ rock64-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
@@ -610,7 +610,7 @@ nanopc-kernel:
 	@${KERNEL}
 
 nanopc-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
@@ -633,7 +633,7 @@ nanopc-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
@@ -656,7 +656,7 @@ raspi4-kernel:
 	@${KERNEL}
 
 raspi4-image:
-	# Making bootable Debian image
+	# Creating image
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
 	@chmod +x ${RPI-IMG}
@@ -679,7 +679,7 @@ raspi4-all:
 	# Creating ROOTFS tarball
 	@chmod +x ${RFS}
 	@${ROOTFS}
-	# Making bootable Debian image
+	# Creating image
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
 	@chmod +x ${RPI-IMG}

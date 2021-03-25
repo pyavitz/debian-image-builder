@@ -27,8 +27,12 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-apt install -y ${PKGS1}
-
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} resolvconf;
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} openresolv ifupdown;
+fi
 echo
 echo -n "${HOSTNAME}" > /etc/hostname
 sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
@@ -175,6 +179,9 @@ echo
 toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
+if ls /etc/update-motd.d/10-help-text > /dev/null 2>&1
+	then rm -f /etc/update-motd.d/10-help-text;
+fi
 if `grep -Fx "lepotato" "/root/board.txt" >/dev/null;`
     then mv -f 20-sysinfo /etc/update-motd.d/ && rm -f 20-sysinfo.bl
 fi
@@ -224,7 +231,12 @@ echo
 echo Installing firmware and needed packages.
 sleep 1s
 apt update
-apt install -y ${PKGS2} ${FIRMWARE}
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS2} ${FIRMWARE};
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS2};
+fi
 echo Done.
 
 ### Network Setup
@@ -279,18 +291,11 @@ adduser ${user} input
 adduser ${user} tty
 echo Done.
 
-####
-echo
-echo Checking for changes.
-apt update
-apt upgrade -y
-apt -y clean
-apt -y autoclean
-echo Done.
-
 #### Kernel
 echo
 echo Installing kernel.
+apt update
+apt upgrade -y
 apt -y clean
 apt -y autoclean
 sleep 1s

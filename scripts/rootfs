@@ -39,14 +39,14 @@ RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
 IMAGE_VERSION="rootfs-aarch64"
-FILE=debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.tar.xz
+FILE=${DISTRO}-${DISTRO_VERSION}-${IMAGE_VERSION}.tar.xz
 if ls $FILE &>/dev/null; then echo -e "${WHT}$FILE found${FIN}." && exit; 
 	else echo -e "${RED}Starting debootstrap${FIN} ...";
 fi
 echo -e -n ${GRN}
 IMAGE_LINUX_LOADADDR="0x1080000"
 IMAGE_FILE_SUFFIX="$(date +%F)"
-IMAGE_FILE_NAME="debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.img"
+IMAGE_FILE_NAME="${DISTRO}-${DISTRO_VERSION}-${IMAGE_VERSION}.img"
 if [ $RAM -ne 0 ]; then
 	IMAGE_FOLDER="ram/"
 fi
@@ -63,10 +63,10 @@ echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
 cp $(which "qemu-aarch64-static") p1/usr/bin
 if [ -n "$PROXY" ] ; then
-    http_proxy="$PROXY" debootstrap --arch arm64 --foreign ${DEBIAN_VERSION} p1
+    http_proxy="$PROXY" debootstrap --arch arm64 --foreign ${DISTRO_VERSION} p1
     http_proxy="$PROXY" chroot p1 /debootstrap/debootstrap --second-stage
 else
-    debootstrap --arch arm64 --foreign ${DEBIAN_VERSION} p1
+    debootstrap --arch arm64 --foreign ${DISTRO_VERSION} p1
     chroot p1 /debootstrap/debootstrap --second-stage
 fi
 if [ -n "$PROXY" ] ; then
@@ -92,7 +92,7 @@ echo
 echo -e "${BRED}Archiving root filesystem${FIN} ..."
 cd p1
 echo -e -n ${WHT}
-XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.tar.xz)
+XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../${DISTRO}-${DISTRO_VERSION}-${IMAGE_VERSION}.tar.xz)
 echo -e -n ${FIN}
 cd ..
 
@@ -105,5 +105,5 @@ if [ $RAM -ne 0 ]; then
 fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1
-rm -f debian-${DEBIAN_VERSION}-${IMAGE_VERSION}.img
+rm -f ${DISTRO}-${DISTRO_VERSION}-${IMAGE_VERSION}.img
 clear

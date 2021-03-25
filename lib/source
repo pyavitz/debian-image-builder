@@ -45,15 +45,15 @@ IMGSIZE="2100MB"
 # stage 2
 PKGS1="tzdata keyboard-configuration sudo man-db dbus initramfs-tools \
        e2fsprogs u-boot-tools fonty-rg patch wget apt-transport-https \
-       dirmngr rsync psmisc parted hdparm aria2 dosfstools pv"
+       dirmngr rsync psmisc parted hdparm aria2 dosfstools pv fdisk"
 
 
-PKGS2="bluetooth rfkill haveged resolvconf git build-essential net-tools \
+PKGS2="bluetooth rfkill haveged git build-essential net-tools distro-info-data \
        ifplugd fuse wpasupplicant wireless-tools usbutils alsa-utils gettext wget \
        mc nano figlet toilet curl dialog openssh-client openssh-server ntfs-3g bc \
        bison flex libssl-dev zram-tools python3 python3-setuptools avahi-utils \
        libncursesw5-dev autopoint autoconf automake pkg-config libtool fake-hwclock \
-       distro-info-data lsb-release libell0"
+       lsb-release libell0"
 
 RPI="curl cmake zip unzip"
 EEPROM_VERSION="11.12"
@@ -75,6 +75,21 @@ echo -n 'America/New_York' > /etc/timezone
 }
 
 # do not edit below this line
+# banners
+debian_banner(){
+if ls /usr/bin/toilet > /dev/null 2>&1
+	then toilet -f small --filter metal 'Debian';
+	else echo -e "${RED}Debian Image Builder${FIN}";
+fi
+}
+
+ubuntu_banner(){
+if ls /usr/bin/toilet > /dev/null 2>&1
+	then toilet -f small --filter metal 'Ubuntu';
+	else echo -e "${RED}Ubuntu Image Builder${FIN}";
+fi
+}
+
 # uinitrd
 uinitrd(){
 cd ~
@@ -136,14 +151,14 @@ rm -f kernel1 kernel2 kernel3
 # add kernel version to img
 rename_image(){
 source kernel.txt
-mv -f ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
+mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
 }
 
 # compress image to img.xz
 compress_image(){
 source kernel.txt
-mv -f ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
-xz -zev --threads=${CORES} ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
+mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
+xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
 }
 
 # setup network

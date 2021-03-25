@@ -440,7 +440,9 @@ echo Enabling Services
 sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
-systemctl enable resolvconf
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then systemctl enable resolvconf;
+fi
 systemctl enable haveged
 systemctl enable zramswap
 update-rc.d firstboot defaults 2

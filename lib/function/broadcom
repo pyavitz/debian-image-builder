@@ -215,11 +215,11 @@ fi
 }
 
 aarch64_extract(){
-tar -xf debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz -C p2/
+tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p2/
 }
 
 aarch64_rootfs(){
-if ls debian-${DEBIAN_VERSION}-rootfs-aarch64.tar.xz > /dev/null 2>&1
+if ls ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz > /dev/null 2>&1
 	then echo -n "Extracting rootfs " && aarch64_extract && echo_bdone;
 	else echo -e "${YLW}Missing rootfs tarball${FIN}!" && exit;
 fi
@@ -234,6 +234,17 @@ mv -f firmware-nonfree-master.tar.gz firmware/
 }
 
 ### STAGE 2
+apt_preferences(){
+echo
+echo Blacking listing packages.
+tee /etc/apt/preferences <<EOF
+Package: rpi-eeprom linux-firmware-raspi2 pi-bluetooth raspberrypi-sys-mods
+Pin: release o=Ubuntu
+Pin-Priority: 1
+EOF
+echo Done.
+}
+
 # Initrd script
 initrd_script(){
 cd ~
@@ -315,7 +326,7 @@ bcm_sdio_4-b(){
 wget -cq --show-progress https://raw.githubusercontent.com/openwrt/cypress-nvram/master/brcmfmac43455-sdio.raspberrypi%2C4-model-b.txt
 }
 
-bluez_stable(){
+bluez_debian_stable(){
 BLUEZ_VERSION="5.55"
 echo
 echo Updating bluetooth.
@@ -334,7 +345,7 @@ apt-mark hold bluez
 echo Done.
 }
 
-bluez_unstable(){
+bluez_debian_unstable(){
 BLUEZ_UNSTABLE_VERSION="5.55"
 echo
 echo Updating bluetooth.
@@ -353,9 +364,57 @@ apt-mark hold bluez
 echo Done.
 }
 
-bluez_choose(){
-if `grep -Fx 'DEBIAN_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
-	then bluez_stable; else bluez_unstable;
+bluez_ubuntu_focal(){
+BLUEZ_VERSION="5.55"
+echo
+echo Updating bluetooth.
+sleep 1s
+wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/bluez-${BLUEZ_VERSION}-ubuntu-arm64.tar.xz
+tar xf bluez-${BLUEZ_VERSION}-ubuntu-arm64.tar.xz
+rm -f bluez-${BLUEZ_VERSION}-ubuntu-arm64.tar.xz
+cd bluez-${BLUEZ_VERSION}-ubuntu-arm64
+rm -f *dbg_${BLUEZ_VERSION}*
+rm -f *cups_${BLUEZ_VERSION}*
+rm -f *source_${BLUEZ_VERSION}*
+dpkg -i *.deb
+cd ..
+rm -fdR bluez-${BLUEZ_VERSION}-ubuntu-arm64
+apt-mark hold bluez
+echo Done.
+}
+
+bluez_ubuntu_groovy(){
+BLUEZ_VERSION="5.55"
+echo
+echo Updating bluetooth.
+sleep 1s
+wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64.tar.xz
+tar xf bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64.tar.xz
+rm -f bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64.tar.xz
+cd bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64
+rm -f *dbg_${BLUEZ_VERSION}*
+rm -f *cups_${BLUEZ_VERSION}*
+rm -f *source_${BLUEZ_VERSION}*
+dpkg -i *.deb
+cd ..
+rm -fdR bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64
+apt-mark hold bluez
+echo Done.
+}
+
+bluez_debian_choose(){
+if `grep -Fx 'DISTRO_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
+	then bluez_debian_stable;
+	else bluez_debian_unstable;
+fi
+}
+
+bluez_ubuntu_choose(){
+if `grep -Fx 'DISTRO_VERSION="focal"' "/root/userdata.txt" >/dev/null;`
+	then bluez_ubuntu_focal;
+fi
+if `grep -Fx 'DISTRO_VERSION="groovy"' "/root/userdata.txt" >/dev/null;`
+	then bluez_ubuntu_groovy;
 fi
 }
 
@@ -525,6 +584,34 @@ systemctl enable actled
 systemctl enable pwrledoff
 }
 
+pi_bluetooth_debian(){
+echo
+echo Building pi bluetooth package.
+sleep 1s
+git clone https://github.com/pyavitz/pi-bluetooth.git
+cd pi-bluetooth
+chmod +x debian/rules
+dpkg-buildpackage -us -uc
+cd ~
+dpkg -i pi-bluetooth_*.deb
+rm -fdR pi-bluetooth*
+echo Done.
+}
+
+pi_bluetooth_ubuntu(){
+echo
+echo Building pi bluetooth package.
+sleep 1s
+git clone https://github.com/pyavitz/pi-bluetooth.git -b ubuntu
+cd pi-bluetooth
+chmod +x debian/rules
+dpkg-buildpackage -us -uc
+cd ~
+dpkg -i pi-bluetooth_*.deb
+rm -fdR pi-bluetooth*
+echo Done.
+}
+
 bluez_firmware(){
 BRPT="rpt8"
 echo Building bluez firmware package.
@@ -557,7 +644,9 @@ echo Enabling Services
 sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
-systemctl enable resolvconf
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then systemctl enable resolvconf;
+fi
 systemctl enable haveged
 systemctl enable zramswap
 systemctl enable bluetooth
@@ -571,7 +660,7 @@ echo Done.
 shrink(){
 echo
 chmod +x scripts/shrink
-scripts/shrink -s ${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img;
+scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img;
 echo
 fix_extlinux
 }
@@ -579,7 +668,7 @@ fix_extlinux
 fix_extlinux(){
 echo 'LOOP1="/dev/mapper/' > kpart1
 echo 'LOOP2="/dev/mapper/' >> kpart1
-IMAGE_FILE="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img"
+IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
 echo "$kpartx"
 grep -o 'loop.p.' <<<"$kpartx" > kpart2

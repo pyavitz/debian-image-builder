@@ -24,10 +24,17 @@ set_locales
 ### Timezone
 set_timezone
 
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then apt_preferences && echo;
+fi
 apt upgrade -y
 apt dist-upgrade -y
-apt install -y ${PKGS1} ${RPI}
-
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} ${RPI} resolvconf;
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} ${RPI} openresolv ifupdown;
+fi
 #### Firstboot
 echo
 echo Creating firstboot.
@@ -155,6 +162,9 @@ echo
 toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
+if ls /etc/update-motd.d/10-help-text > /dev/null 2>&1
+	then rm -f /etc/update-motd.d/10-help-text;
+fi
 mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo
 rm -f 20-sysinfo.bl
 chmod +x /etc/update-motd.d/*
@@ -199,8 +209,12 @@ sleep 1s
 apt -y clean
 apt -y autoclean
 apt update
-apt install -y ${PKGS2} ${FIRMWARE}
-
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS2} ${FIRMWARE};
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS2};
+fi
 ### Network Setup
 network_setup
 
@@ -282,20 +296,20 @@ bluez_firmware
 echo Done.
 
 ### Pi Bluetooth
-echo
-echo Building pi bluetooth package.
-sleep 1s
-git clone https://github.com/pyavitz/pi-bluetooth.git
-cd pi-bluetooth
-chmod +x debian/rules
-dpkg-buildpackage -us -uc
-cd ~
-dpkg -i pi-bluetooth_*.deb
-rm -fdR pi-bluetooth*
-echo Done.
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then pi_bluetooth_debian;
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then pi_bluetooth_ubuntu;
+fi
 
 ### Upgrading bluez
-bluez_choose
+if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
+	then bluez_debian_choose;
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
+	then bluez_ubuntu_choose;
+fi
 
 ### Certificates
 echo
@@ -312,18 +326,11 @@ echo
 user_config
 user_eeprom
 
-####
-echo
-echo Checking for changes.
-apt update
-apt upgrade -y
-apt -y clean
-apt -y autoclean
-echo Done.
-
 #### Kernel
 echo
 echo Installing kernel.
+apt update
+apt upgrade -y
 apt -y clean
 apt -y autoclean
 sleep 1s

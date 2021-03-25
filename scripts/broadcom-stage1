@@ -1,6 +1,6 @@
 #!/bin/bash
 source lib/function/broadcom
-source lib/function/release
+source lib/function/rpi-release
 source lib/function/echoes
 source lib/source
 source userdata.txt > /dev/null 2>&1
@@ -29,16 +29,18 @@ if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 	then set -eux -o pipefail;
 	else set -eu -o pipefail;
 fi
-if ls /usr/bin/toilet > /dev/null 2>&1
-	then toilet -f small --filter metal 'Debian';
-	else echo -e "${RED}Debian Image Builder${FIN}";
+if `grep -Fx 'DISTRO="debian"' "userdata.txt" >/dev/null;`
+	then debian_banner;
+fi
+if `grep -Fx 'DISTRO="ubuntu"' "userdata.txt" >/dev/null;`
+	then ubuntu_banner;
 fi
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
 DEVICE_SOC="bcm2711"
 IMAGE_DATE="$(date +%F)"
-IMAGE_FILE_NAME="${DEVICE_SOC}-debian-${DEBIAN_VERSION}-${IMAGE_DATE}.img"
+IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 if [ $RAM -ne 0 ]; then
 	IMAGE_FOLDER="ram/"
 fi
@@ -94,8 +96,8 @@ EOF
 }
 
 if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-	then choose_release2;
-	else choose_release2 > /dev/null 2>&1;
+	then choose_release;
+	else choose_release > /dev/null 2>&1;
 fi
 if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 	then create_fstab;

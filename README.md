@@ -54,7 +54,11 @@ Username:       # Your username
 Password:       # Your password
 Branding:       # Set ASCII text banner
 Hostname:       # Set the system's host name
-Debian:         # Supported: buster, bullseye, unstable and sid
+
+Distribution
+Distro:         # Supported: debian and ubuntu
+Release:	# Debian: buster, bullseye, unstable and sid
+		# Ubuntu: focal, groozy and hirsute
 
 U-Boot and Linux
 U-Boot:         # Supported: v2021.01
