@@ -79,6 +79,34 @@ sleep 1s
 resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
 }
 
+odroidc4_partition_emmc(){
+dd if=/dev/zero of=/dev/mmcblk1 bs=512 count=1
+truncate -s 1850MB /dev/mmcblk1
+fdisk /dev/mmcblk1 <<EOF
+o
+n
+p
+1
+2248
+a
+t
+b
+3613280
+p
+w
+EOF
+
+partprobe /dev/mmcblk1
+echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk1p1
+mount /dev/mmcblk1p1 /mnt
+sync
+umount /mnt
+mount -o defaults,noatime /dev/mmcblk1p1 /mnt
+bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
+}
+
 nanopi_partition_emmc(){
 dd if=/dev/zero of=/dev/mmcblk2 bs=512 count=1
 truncate -s 1850MB /dev/mmcblk2
@@ -139,6 +167,20 @@ rm -f root1 root2 root3
 
 echo 'ROOT_PARTUUID="' > root1
 blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+odroidc4_fetch_uuid(){
+echo 'ROOT_UUID="' > root1
+blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^PARTUUID=//p' > root2
 echo '"' > root3
 paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
 rm -f root1 root2 root3
@@ -244,6 +286,10 @@ amlogic_flash_uboot(){
 dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk0 bs=512 seek=1
 }
 
+odroidc4_flash_uboot(){
+dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk1 bs=512 seek=1
+}
+
 allwinner_flash_uboot(){
 dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk2 conv=fsync bs=1024 seek=8
 }
@@ -266,19 +312,19 @@ fi
 echo
 echo Partitioning.
 if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
-    then amlogic_partition_emmc > /dev/null 2>&1 ;
+    then amlogic_partition_emmc > /dev/null 2>&1;
 fi
 if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_emmc > /dev/null 2>&1 l
+	then odroidc4_partition_emmc > /dev/null 2>&1;
 fi
 if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_emmc > /dev/null 2>&1 l
+	then amlogic_partition_emmc > /dev/null 2>&1;
 fi
 if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_emmc > /dev/null 2>&1 l
+	then amlogic_partition_emmc > /dev/null 2>&1;
 fi
 if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
-	then nanopi_partition_emmc > /dev/null 2>&1 ;
+	then nanopi_partition_emmc > /dev/null 2>&1;
 fi
 echo Done.
 
@@ -295,7 +341,7 @@ if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic_flash_uboot ;
 fi
 if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_flash_uboot ;
+	then odroidc4_flash_uboot ;
 fi
 if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic_flash_uboot ;
@@ -314,7 +360,7 @@ if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic_fetch_uuid ;
 fi
 if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_fetch_uuid ;
+	then odroidc4_fetch_uuid ;
 fi
 if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic_fetch_uuid ;
