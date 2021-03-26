@@ -35,6 +35,9 @@ fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
 	then apt install -y ${PKGS1} ${RPI} openresolv ifupdown;
 fi
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} ${RPI} resolvconf;
+fi
 #### Firstboot
 echo
 echo Creating firstboot.
@@ -215,6 +218,9 @@ fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
 	then apt install -y ${PKGS2};
 fi
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS2} ${FIRMWARE} dbus-user-session libical3;
+fi
 ### Network Setup
 network_setup
 
@@ -302,6 +308,9 @@ fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
 	then pi_bluetooth_ubuntu;
 fi
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then pi_bluetooth_debian;
+fi
 
 ### Upgrading bluez
 if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
@@ -309,6 +318,9 @@ if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
 fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
 	then bluez_ubuntu_choose;
+fi
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then bluez_debian_unstable;
 fi
 
 ### Certificates
@@ -363,6 +375,9 @@ led_switches
 #### Create first boot
 firstboot_service
 
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then kali_hack;
+fi
 ####
 echo
 echo Creating governor service.

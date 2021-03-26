@@ -90,6 +90,13 @@ if ls /usr/bin/toilet > /dev/null 2>&1
 fi
 }
 
+kali_banner(){
+if ls /usr/bin/toilet > /dev/null 2>&1
+	then toilet -f small --filter metal 'Kali';
+	else echo -e "${RED}Kali Image Builder${FIN}";
+fi
+}
+
 # uinitrd
 uinitrd(){
 cd ~
@@ -308,4 +315,34 @@ RemainAfterExit=no
 [Install]
 WantedBy=multi-user.target
 EOF
+}
+
+# kali force start service
+kali_hack(){
+tee /etc/systemd/system/kali-hack.service <<EOF
+[Unit]
+Description=Kali hack
+After=rc-local.service
+ConditionPathExists=/usr/local/sbin/kali-hack
+
+[Service]
+ExecStart=/usr/local/sbin/kali-hack > /dev/null 2>&1
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+tee /usr/local/sbin/kali-hack <<EOF
+#!/bin/bash
+
+service ssh start
+sleep 3s
+service avahi-daemon start
+sleep 2s
+service bluetooth start
+EOF
+chmod +x /usr/local/sbin/kali-hack
+systemctl enable kali-hack
 }

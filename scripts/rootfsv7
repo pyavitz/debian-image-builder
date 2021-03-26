@@ -35,6 +35,9 @@ if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 	then set -eux -o pipefail;
 	else set -eu -o pipefail;
 fi
+if `grep -Fx 'DISTRO="kali"' "userdata.txt" >/dev/null;`
+	then check_keyring;
+fi
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
@@ -44,8 +47,6 @@ if ls $FILE &>/dev/null; then echo -e "${WHT}$FILE found${FIN}." && exit;
 	else echo -e "${RED}Starting debootstrap${FIN} ...";
 fi
 echo -e -n ${GRN}
-IMAGE_LINUX_LOADADDR="0x1080000"
-IMAGE_FILE_SUFFIX="$(date +%F)"
 IMAGE_FILE_NAME="${DISTRO}-${DISTRO_VERSION}-${IMAGE_VERSION}.img"
 if [ $RAM -ne 0 ]; then
 	IMAGE_FOLDER="ram/"

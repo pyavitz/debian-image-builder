@@ -86,6 +86,13 @@ deb http://ports.ubuntu.com/ubuntu-ports/ hirsute-security multiverse
 EOF
 }
 
+kali_rolling(){
+rm -f tee p1/etc/apt/sources.list
+tee p1/etc/apt/sources.list <<EOF
+deb http://http.kali.org/kali ${DISTRO_VERSION} main contrib non-free
+EOF
+}
+
 choose_release(){
 if `grep -Fx 'DISTRO_VERSION="buster"' "userdata.txt" >/dev/null;`
 	then debian_stable;
@@ -107,5 +114,8 @@ if `grep -Fx 'DISTRO_VERSION="groovy"' "userdata.txt" >/dev/null;`
 fi
 if `grep -Fx 'DISTRO_VERSION="hirsute"' "userdata.txt" >/dev/null;`
 	then ubuntu_hirsute;
+fi
+if `grep -Fx 'DISTRO_VERSION="kali-rolling"' "userdata.txt" >/dev/null;`
+	then kali_rolling;
 fi
 }

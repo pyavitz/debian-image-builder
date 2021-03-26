@@ -33,6 +33,9 @@ fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
 	then apt install -y ${PKGS1} openresolv ifupdown;
 fi
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS1} resolvconf;
+fi
 echo
 echo -n "${HOSTNAME}" > /etc/hostname
 sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
@@ -173,6 +176,9 @@ fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
 	then apt install -y ${PKGS2};
 fi
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then apt install -y ${PKGS2} ${FIRMWARE} dbus-user-session libical3;
+fi
 echo Done.
 
 ### Network Setup
@@ -261,6 +267,9 @@ fetch_version
 #### Service
 firstboot_service
 
+if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
+	then kali_hack;
+fi
 ####
 echo
 echo Creating governor service.
