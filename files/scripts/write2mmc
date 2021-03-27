@@ -135,6 +135,34 @@ sleep 1s
 resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
 }
 
+nanopc_partition_emmc(){
+dd if=/dev/zero of=/dev/mmcblk2 bs=512 count=1
+truncate -s 2100MB /dev/mmcblk2
+fdisk /dev/mmcblk2 <<EOF
+o
+n
+p
+1
+32767
+a
+t
+b
+4101561
+p
+w
+EOF
+
+partprobe /dev/mmcblk2
+echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk2p1
+mount /dev/mmcblk2p1 /mnt
+sync
+umount /mnt
+mount -o defaults,noatime /dev/mmcblk2p1 /mnt
+bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
+}
+
 ### RSYNC
 transfer(){
 cd /
@@ -187,6 +215,20 @@ rm -f root1 root2 root3
 }
 
 nanopi_fetch_uuid(){
+echo 'ROOT_UUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+nanopc_fetch_uuid(){
 echo 'ROOT_UUID="' > root1
 blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
@@ -281,6 +323,20 @@ label kernel
 EOF
 }
 
+nanopc_create_extlinux(){
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/rockchip/
+    fdt /boot/rockchip/rk3399-nanopc-t4.dtb
+    append earlyprintk console=tty1 console=ttyS2,115200n8 rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u init=/sbin/init
+EOF
+}
+
 ### WRITE UBOOT
 amlogic_flash_uboot(){
 dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk0 bs=512 seek=1
@@ -294,6 +350,10 @@ allwinner_flash_uboot(){
 dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk2 conv=fsync bs=1024 seek=8
 }
 
+nanopc_flash_uboot(){
+dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk2 seek=64
+dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk2 seek=16384
+}
 
 ### THE MAGIC
 run_as_root
@@ -326,6 +386,9 @@ fi
 if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
 	then nanopi_partition_emmc > /dev/null 2>&1;
 fi
+if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
+	then nanopc_partition_emmc > /dev/null 2>&1;
+fi
 echo Done.
 
 echo
@@ -352,6 +415,9 @@ fi
 if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
 	then allwinner_flash_uboot ;
 fi
+if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
+	then nanopc_flash_uboot ;
+fi
 echo Done.
 
 echo
@@ -370,6 +436,9 @@ if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
 fi
 if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
 	then nanopi_fetch_uuid ;
+fi
+if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
+	then nanopc_fetch_uuid ;
 fi
 echo Done.
 
@@ -391,6 +460,9 @@ if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
 fi
 if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
 	then nanopi_create_extlinux ;
+fi
+if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
+	then nanopc_create_extlinux ;
 fi
 echo Done.
 
