@@ -3,6 +3,7 @@ source /root/source.txt
 source /root/userdata.txt
 source /root/allwinner.txt
 source /root/part-uuid.txt
+SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
 
 set -o errexit
 set -o pipefail
@@ -106,11 +107,11 @@ mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 rm -f sysinfo.bl
 mv -f smon /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/swh
+wget -cq --show-progress ${SCRIPTS_URL}swh
 mv -f swh /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/wifidrv
+wget -cq --show-progress ${SCRIPTS_URL}wifidrv
 mv -f wifidrv /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/governor
+wget -cq --show-progress ${SCRIPTS_URL}governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
 chmod +x /usr/bin/growpart
@@ -334,7 +335,10 @@ EOF
 chmod +x /etc/rc.local
 echo Done.
 ### Enable services
+echo
+echo Enabling Services.
 enable_services > /dev/null 2>&1
+echo Done.
 
 #### Own it
 chown -R ${user}:${user} /home/${user}

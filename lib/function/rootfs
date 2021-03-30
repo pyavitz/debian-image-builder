@@ -1,32 +1,13 @@
-partition(){
-truncate -s 1000MB "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2048
-a
-t
-b
-1953124
-
-p
-w
-
-EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
-partprobe "${IMAGE_LOOP_DEV}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-sync
-umount p1
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
+devuan_keyring(){
+URL="https://pkgmaster.devuan.org/devuan/pool/main/d/devuan-keyring/"
+FILE="devuan-keyring_2017.10.03_all.deb"
+if ls /usr/share/keyrings/{devuan-archive-keyring.gpg,devuan-keyring.gpg} > /dev/null 2>&1;
+	then : ;
+	else wget -cq --show-progress $URL$FILE && sudo dpkg -i $FILE && rm -f $FILE;
+fi
 }
 
-check_keyring(){
+kali_keyring(){
 URL="http://http.kali.org/pool/main/k/kali-archive-keyring/"
 FILE="kali-archive-keyring_2020.2_all.deb"
 if ls /usr/share/keyrings/kali-archive-keyring.gpg > /dev/null 2>&1;
@@ -34,4 +15,28 @@ if ls /usr/share/keyrings/kali-archive-keyring.gpg > /dev/null 2>&1;
 	else wget -cq --show-progress $URL$FILE && sudo dpkg -i $FILE && rm -f $FILE;
 fi
 echo
+}
+
+# aarch64
+arm64_debootstrap(){
+debootstrap --arch arm64 --foreign ${DISTRO_VERSION} ${ROOT}
+chroot ${ROOT} /debootstrap/debootstrap --second-stage
+}
+
+arm64_devuan(){
+KEY="/usr/share/keyrings/devuan-archive-keyring.gpg"
+debootstrap --arch arm64 --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://pkgmaster.devuan.org/merged
+chroot ${ROOT} /debootstrap/debootstrap --second-stage
+}
+
+# armv7
+armv7_debootstrap(){
+debootstrap --arch armhf --foreign ${DISTRO_VERSION} ${ROOT}
+chroot ${ROOT} /debootstrap/debootstrap --second-stage
+}
+
+armv7_devuan(){
+KEY="/usr/share/keyrings/devuan-archive-keyring.gpg"
+debootstrap --arch armhf --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://pkgmaster.devuan.org/merged
+chroot ${ROOT} /debootstrap/debootstrap --second-stage
 }

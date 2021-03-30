@@ -16,7 +16,7 @@ sudo apt install \
 	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 make \
 	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
 	debian-archive-keyring debian-keyring python-setuptools python3-setuptools \
-	python-distutils-extra
+	python-distutils-extra libelf-dev
                  
 Orange Pi R1
 sudo apt install \

@@ -3,6 +3,7 @@ source /root/source.txt
 source /root/userdata.txt
 source /root/amlogic.txt
 source /root/part-uuid.txt
+SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
 
 set -o errexit
 set -o pipefail
@@ -86,15 +87,13 @@ resize2fs mmcblk2p1 > /dev/null 2>&1
 
 ### Grow Partition
 if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
 
 ### Clean up
@@ -157,11 +156,11 @@ if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
     then mv -f sysinfo.bl /usr/local/bin/sysinfo && rm -f sysinfo
 fi
 mv -f smon /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/swh
+wget -cq --show-progress ${SCRIPTS_URL}swh
 mv -f swh /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/wifidrv
+wget -cq --show-progress ${SCRIPTS_URL}wifidrv
 mv -f wifidrv /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/governor
+wget -cq --show-progress ${SCRIPTS_URL}governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
 chmod +x /usr/bin/growpart
@@ -390,7 +389,10 @@ EOF
 chmod +x /etc/rc.local
 echo Done.
 ### Enable services
+echo
+echo Enabling Services.
 enable_services > /dev/null 2>&1
+echo Done.
 
 #### Own it
 chown -R ${user}:${user} /home/${user}

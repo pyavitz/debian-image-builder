@@ -2,18 +2,44 @@ image_size(){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 }
 
-debian_unstable(){
-tee p2/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
-EOF
-}
-
 debian_stable(){
+rm -f p2/etc/apt/sources.list
 tee p2/etc/apt/sources.list <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-updates main contrib non-free
 deb http://security.debian.org/debian-security ${DISTRO_VERSION}/updates main contrib non-free
 deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-backports main contrib non-free
+EOF
+}
+
+debian_unstable(){
+rm -f p2/etc/apt/sources.list
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
+EOF
+}
+
+devuan_stable(){
+rm -f p2/etc/apt/sources.list
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
+deb http://deb.devuan.org/merged ${DISTRO_VERSION}-updates main contrib non-free
+deb http://deb.devuan.org/merged ${DISTRO_VERSION}-security main contrib non-free
+deb http://deb.devuan.org/merged ${DISTRO_VERSION}-backports main contrib non-free
+EOF
+}
+
+devuan_unstable(){
+rm -f p2/etc/apt/sources.list
+tee p2/etc/apt/sources.list <<EOF
+deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
+EOF
+}
+
+kali_rolling(){
+rm -f p2/etc/apt/sources.list
+tee p2/etc/apt/sources.list <<EOF
+deb http://http.kali.org/kali ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
@@ -86,13 +112,6 @@ deb http://ports.ubuntu.com/ubuntu-ports/ hirsute-security multiverse
 EOF
 }
 
-kali_rolling(){
-rm -f tee p2/etc/apt/sources.list
-tee p2/etc/apt/sources.list <<EOF
-deb http://http.kali.org/kali ${DISTRO_VERSION} main contrib non-free
-EOF
-}
-
 choose_release(){
 if `grep -Fx 'DISTRO_VERSION="buster"' "userdata.txt" >/dev/null;`
 	then debian_stable;
@@ -106,6 +125,21 @@ fi
 if `grep -Fx 'DISTRO_VERSION="sid"' "userdata.txt" >/dev/null;`
 	then debian_unstable;
 fi
+if `grep -Fx 'DISTRO_VERSION="beowulf"' "userdata.txt" >/dev/null;`
+	then devuan_stable;
+fi
+if `grep -Fx 'DISTRO_VERSION="testing"' "userdata.txt" >/dev/null;`
+	then devuan_unstable;
+fi
+if `grep -Fx 'DISTRO_VERSION="unstable"' "userdata.txt" >/dev/null;`
+	then devuan_unstable;
+fi
+if `grep -Fx 'DISTRO_VERSION="ceres"' "userdata.txt" >/dev/null;`
+	then devuan_unstable;
+fi
+if `grep -Fx 'DISTRO_VERSION="kali-rolling"' "userdata.txt" >/dev/null;`
+	then kali_rolling;
+fi
 if `grep -Fx 'DISTRO_VERSION="focal"' "userdata.txt" >/dev/null;`
 	then ubuntu_focal;
 fi
@@ -114,8 +148,5 @@ if `grep -Fx 'DISTRO_VERSION="groovy"' "userdata.txt" >/dev/null;`
 fi
 if `grep -Fx 'DISTRO_VERSION="hirsute"' "userdata.txt" >/dev/null;`
 	then ubuntu_hirsute;
-fi
-if `grep -Fx 'DISTRO_VERSION="kali-rolling"' "userdata.txt" >/dev/null;`
-	then kali_rolling;
 fi
 }

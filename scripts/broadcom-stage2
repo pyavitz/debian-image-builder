@@ -2,6 +2,7 @@
 source /root/broadcom.txt
 source /root/source.txt
 source /root/userdata.txt
+SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
 
 set -o errexit
 set -o pipefail
@@ -76,30 +77,26 @@ fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
 
 ### Grow Partition
 if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/sda 2>/dev/null; then grow_sda;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
 
 ### Fix boot partition
 umount /boot
 sleep 1s
 if touch -c /dev/mmcblk0 2>/dev/null; then chk_mmcblk;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/mmcblk1 2>/dev/null; then chk_mmcblk1;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/sda 2>/dev/null; then chk_sda;
-         else echo "" &>/dev/null;
+         else : &>/dev/null;
 fi
 sleep 1s
 mount /boot
@@ -125,15 +122,15 @@ cp board.txt /etc/opt/
 mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 mv -f smon /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/write2usb
+wget -cq --show-progress ${SCRIPTS_URL}write2usb
 mv -f write2usb /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/deb-eeprom
+wget -cq --show-progress ${SCRIPTS_URL}deb-eeprom
 mv -f deb-eeprom /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/swh
+wget -cq --show-progress ${SCRIPTS_URL}swh
 mv -f swh /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/wifidrv
+wget -cq --show-progress ${SCRIPTS_URL}wifidrv
 mv -f wifidrv /usr/local/bin/
-wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/governor
+wget -cq --show-progress ${SCRIPTS_URL}governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
 rm -f write2mmc
@@ -435,7 +432,10 @@ EOF
 chmod +x /etc/rc.local
 echo Done.
 ### Enable services
+echo
+echo Enabling Services.
 enable_services > /dev/null 2>&1
+echo Done.
 
 ###### Finish
 echo

@@ -110,7 +110,6 @@ fi
 }
 
 opir1_uboot(){
-echo
 echo_duboot
 if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
 	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
@@ -414,15 +413,13 @@ resize2fs mmcblk2p1 > /dev/null 2>&1
 
 ### Grow Partition
 if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
-
 if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
-        else echo "" &>/dev/null;
+        else : &>/dev/null;
 fi
 
 ### Clean up
@@ -663,8 +660,6 @@ systemctl enable bluetooth-module
 }
 
 enable_services(){
-echo
-echo Enabling Services
 sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
@@ -679,5 +674,4 @@ systemctl enable zramswap
 update-rc.d firstboot defaults 2
 systemctl enable firstboot
 systemctl enable governor
-echo Done.
 }
