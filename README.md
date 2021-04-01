@@ -53,7 +53,7 @@ Name:		# Whats your name?
 Username:       # Your username
 Password:       # Your password
 Branding:       # Set ASCII text banner
-Hostname:       # Set the system's host name
+Hostname:       # Set system hostname
 
 Distribution
 Distro:         # Supported: debian and ubuntu
