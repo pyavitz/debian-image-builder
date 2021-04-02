@@ -1,6 +1,14 @@
 gcc_version(){
-# debian
+# debian and devuan
 case `grep -Fx 'DISTRO_VERSION="buster"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+    echo NATIVE='"'/usr/bin/gcc-8'"' > gcc.txt
+    echo ARMV7_CROSS='"'/usr/bin/arm-linux-gnueabihf-gcc-8'"' >> gcc.txt
+    echo ARM64_CROSS='"'/usr/bin/aarch64-linux-gnu-gcc-8'"' >> gcc.txt
+    source gcc.txt
+    ;;
+esac
+case `grep -Fx 'DISTRO_VERSION="beowulf"' "userdata.txt" >/dev/null; echo $?` in
   0)
     echo NATIVE='"'/usr/bin/gcc-8'"' > gcc.txt
     echo ARMV7_CROSS='"'/usr/bin/arm-linux-gnueabihf-gcc-8'"' >> gcc.txt
@@ -16,7 +24,23 @@ case `grep -Fx 'DISTRO_VERSION="bullseye"' "userdata.txt" >/dev/null; echo $?` i
     source gcc.txt
     ;;
 esac
+case `grep -Fx 'DISTRO_VERSION="testing"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+    echo NATIVE='"'/usr/bin/gcc-10'"' > gcc.txt
+    echo ARMV7_CROSS='"'/usr/bin/arm-linux-gnueabihf-gcc-10'"' >> gcc.txt
+    echo ARM64_CROSS='"'/usr/bin/aarch64-linux-gnu-gcc-10'"' >> gcc.txt
+    source gcc.txt
+    ;;
+esac
 case `grep -Fx 'DISTRO_VERSION="unstable"' "userdata.txt" >/dev/null; echo $?` in
+  0)
+    echo NATIVE='"'/usr/bin/gcc-10'"' > gcc.txt
+    echo ARMV7_CROSS='"'/usr/bin/arm-linux-gnueabihf-gcc-10'"' >> gcc.txt
+    echo ARM64_CROSS='"'/usr/bin/aarch64-linux-gnu-gcc-10'"' >> gcc.txt
+    source gcc.txt
+    ;;
+esac
+case `grep -Fx 'DISTRO_VERSION="ceres"' "userdata.txt" >/dev/null; echo $?` in
   0)
     echo NATIVE='"'/usr/bin/gcc-10'"' > gcc.txt
     echo ARMV7_CROSS='"'/usr/bin/arm-linux-gnueabihf-gcc-10'"' >> gcc.txt
@@ -32,6 +56,8 @@ case `grep -Fx 'DISTRO_VERSION="sid"' "userdata.txt" >/dev/null; echo $?` in
     source gcc.txt
     ;;
 esac
+
+# ubuntu
 case `grep -Fx 'DISTRO_VERSION="focal"' "userdata.txt" >/dev/null; echo $?` in
   0)
     echo NATIVE='"'/usr/bin/gcc-9'"' > gcc.txt
@@ -56,6 +82,8 @@ case `grep -Fx 'DISTRO_VERSION="hirsute"' "userdata.txt" >/dev/null; echo $?` in
     source gcc.txt
     ;;
 esac
+
+# kali
 case `grep -Fx 'DISTRO_VERSION="kali-rolling"' "userdata.txt" >/dev/null; echo $?` in
   0)
     echo NATIVE='"'/usr/bin/gcc-10'"' > gcc.txt
