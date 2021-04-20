@@ -9,7 +9,7 @@ Rockchip:       # NanoPC-T4, Renegade and Rock64
 
 ```sh
 sudo apt install \
-	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \ 
+	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
 	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
 	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
 	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
