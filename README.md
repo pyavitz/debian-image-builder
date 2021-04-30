@@ -61,7 +61,7 @@ Release:	# Debian: buster, bullseye, unstable and sid
 		# Ubuntu: focal and hirsute
 
 U-Boot and Linux
-U-Boot:         # Supported: v2021.01
+U-Boot:         # Supported: v2021.01, v2021.04
 Branch:         # Supported: 5.10.y (if patches fail let me know)
 Mainline:       # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
