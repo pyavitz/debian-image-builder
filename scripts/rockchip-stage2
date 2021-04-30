@@ -29,14 +29,16 @@ set_timezone
 apt upgrade -y
 apt dist-upgrade -y
 if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} resolvconf;
+	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
 fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} openresolv ifupdown;
+	then apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
 fi
 if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} resolvconf;
+	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
 fi
+apt -y clean
+apt -y autoclean
 echo
 echo -n "${HOSTNAME}" > /etc/hostname
 sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
@@ -206,22 +208,6 @@ echo Done.
 #### Extra firmware
 extra_firmware
 
-#### Software
-echo
-echo Installing firmware and needed packages.
-sleep 1s
-apt update
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS2} ${FIRMWARE};
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS2};
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS2} ${FIRMWARE} dbus-user-session libical3;
-fi
-echo Done.
-
 ### Network Setup
 network_setup
 
@@ -244,24 +230,7 @@ chown root:root /etc/new.motd
 echo Done.
 
 ### Regulatory db
-echo
-echo Adding regdb.
-sleep 1s
-apt install -y crda
-git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
-echo
-echo Moving db files.
-sleep 1s
-cd wireless-regdb
-cp -f regulatory.db /lib/firmware/regulatory.db
-cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
-cd ~
-rm -fdr wireless-regdb
-echo Done.
-
-### Certificates
-echo
-update-ca-certificates -f
+wireless_regdb
 
 ### Adding groups
 echo

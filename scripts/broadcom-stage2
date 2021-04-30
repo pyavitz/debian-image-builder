@@ -31,14 +31,17 @@ fi
 apt upgrade -y
 apt dist-upgrade -y
 if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${RPI} resolvconf;
+	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} resolvconf;
 fi
 if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${RPI} openresolv ifupdown;
+	then apt install -y ${PKGS1} ${PKGS2} ${RPI} openresolv ifupdown;
 fi
 if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${RPI} resolvconf;
+	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} dbus-user-session libical3 resolvconf;
 fi
+apt -y clean
+apt -y autoclean
+
 #### Firstboot
 echo
 echo Creating firstboot.
@@ -171,26 +174,7 @@ chown root:root /etc/update-motd.d/20-sysinfo
 echo Done.
 
 #### Adding firmware
-echo
-echo Adding pi firmware.
-sleep 1s
-brcm_firmware
-cd /lib/firmware/brcm
-bcm_sdio_4-b
-cd ~
-echo Done.
-
-#### Extra firmware
-echo
-echo Adding extra firmware.
-sleep 1s
-mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
-rm -f UPDATE.mem
-echo Done.
+rpi_firmware
 
 ####
 echo
@@ -200,22 +184,6 @@ mkdir -p /lib/udev/rules.d/
 mv -f 99-com.rules /lib/udev/rules.d/99-com.rules
 echo Done.
 
-#### Software
-echo
-echo Installing needed packages.
-sleep 1s
-apt -y clean
-apt -y autoclean
-apt update
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS2} ${FIRMWARE};
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS2};
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS2} ${FIRMWARE} dbus-user-session libical3;
-fi
 ### Network Setup
 network_setup
 
@@ -237,36 +205,14 @@ chown root:root /etc/motd
 chown root:root /etc/new.motd
 echo Done.
 
-#### Clean up packages
-echo
-echo Cleaning up.
-sleep 1s
-apt -y autoremove
-apt -y clean
-apt -y autoclean
-echo Done.
-
-###
-echo
-echo Adding regdb.
-sleep 1s
-apt update
-apt install -y crda
-git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
-echo
-echo Moving db files.
-sleep 1s
-cd wireless-regdb
-cp -f regulatory.db /lib/firmware/regulatory.db
-cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
-cd ~
-rm -fdr wireless-regdb
-echo Done.
+### Regulatory db
+wireless_regdb
 
 ### Adding sys-mods
 echo
 echo Building raspi-sys-mods package.
 sleep 1s
+apt update
 apt install -y debhelper d-shlibs rfkill
 git clone https://github.com/RPi-Distro/raspberrypi-sys-mods.git
 cd raspberrypi-sys-mods
@@ -286,16 +232,6 @@ if ls /etc/apt/preferences.d/3rd_parties.pref > /dev/null 2>&1
 fi
 echo Done.
 
-### Bluez firmware.
-echo
-echo Installing bluetooth.
-sleep 1s
-apt install -y bluetooth bluez bluez-tools
-echo Done.
-echo
-bluez_firmware
-echo Done.
-
 ### Pi Bluetooth
 if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
 	then pi_bluetooth_debian;
@@ -306,21 +242,6 @@ fi
 if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
 	then pi_bluetooth_debian;
 fi
-
-### Upgrading bluez
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then bluez_debian_choose;
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then bluez_ubuntu_choose;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then bluez_debian_unstable;
-fi
-
-### Certificates
-echo
-update-ca-certificates -f
 
 ###  Raspi userland
 armv8_userland

@@ -53,12 +53,12 @@ PKGS2="bluetooth rfkill haveged git build-essential net-tools distro-info-data \
        mc nano figlet toilet curl dialog openssh-client openssh-server ntfs-3g bc \
        bison flex libssl-dev zram-tools python3 python3-setuptools avahi-utils \
        libncursesw5-dev autopoint autoconf automake pkg-config libtool fake-hwclock \
-       lsb-release libell0"
+       lsb-release libell0 crda bluez bluez-tools"
 
 RPI="curl cmake zip unzip"
 EEPROM_VERSION="12.1"
 
-FIRMWARE="firmware-linux-nonfree firmware-linux \
+FIRMWARE="firmware-linux-nonfree firmware-linux bluez-firmware \
           firmware-misc-nonfree firmware-realtek firmware-ralink"
 
 set_locales(){
@@ -172,6 +172,22 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
+echo Done.
+}
+
+wireless_regdb(){
+echo
+echo Adding regdb.
+sleep 1s
+git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
+echo
+echo Moving db files.
+sleep 1s
+cd wireless-regdb
+cp -f regulatory.db /lib/firmware/regulatory.db
+cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
+cd ~
+rm -fdr wireless-regdb
 echo Done.
 }
 

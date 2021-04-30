@@ -221,13 +221,6 @@ fi
 echo
 }
 
-rpi-firmware(){
-aria2c -c --download-result=hide --console-log-level=error \
---disable-ipv6=true --summary-interval=0 --show-files=false \
-https://github.com/RPi-Distro/firmware-nonfree/archive/master.tar.gz
-mv -f firmware-nonfree-master.tar.gz firmware/
-}
-
 ### STAGE 2
 apt_preferences(){
 echo
@@ -313,106 +306,6 @@ echo Done.
 chown -R ${user}:${user} /home/${user}
 }
 
-bcm_sdio_3-b-plus(){
-wget -cq --show-progress https://raw.githubusercontent.com/openwrt/cypress-nvram/master/brcmfmac43455-sdio.raspberrypi%2C3-model-b-plus.txt
-}
-
-bcm_sdio_4-b(){
-wget -cq --show-progress https://raw.githubusercontent.com/openwrt/cypress-nvram/master/brcmfmac43455-sdio.raspberrypi%2C4-model-b.txt
-}
-
-bluez_debian_stable(){
-BLUEZ_VERSION="5.55"
-echo
-echo Updating bluetooth.
-sleep 1s
-wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/bluez-${BLUEZ_VERSION}-debian-arm64.tar.xz
-tar xf bluez-${BLUEZ_VERSION}-debian-arm64.tar.xz
-rm -f bluez-${BLUEZ_VERSION}-debian-arm64.tar.xz
-cd bluez-${BLUEZ_VERSION}-debian-arm64
-rm -f *dbgsym_${BLUEZ_VERSION}*
-rm -f *cups_${BLUEZ_VERSION}*
-rm -f *source_${BLUEZ_VERSION}*
-dpkg -i *.deb
-cd ..
-rm -fdR bluez-${BLUEZ_VERSION}-debian-arm64
-apt-mark hold bluez
-echo Done.
-}
-
-bluez_debian_unstable(){
-BLUEZ_UNSTABLE_VERSION="5.55"
-echo
-echo Updating bluetooth.
-sleep 1s
-wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/bluez-${BLUEZ_UNSTABLE_VERSION}-debian-unstable-arm64.tar.xz
-tar xf bluez-${BLUEZ_UNSTABLE_VERSION}-debian-unstable-arm64.tar.xz
-rm -f bluez-${BLUEZ_UNSTABLE_VERSION}-debian-unstable-arm64.tar.xz
-cd bluez-${BLUEZ_UNSTABLE_VERSION}-debian-unstable-arm64
-rm -f *dbgsym_${BLUEZ_UNSTABLE_VERSION}*
-rm -f *cups_${BLUEZ_UNSTABLE_VERSION}*
-rm -f *source_${BLUEZ_UNSTABLE_VERSION}*
-dpkg -i *.deb
-cd ..
-rm -fdR bluez-${BLUEZ_UNSTABLE_VERSION}-debian-unstable-arm64
-apt-mark hold bluez
-echo Done.
-}
-
-bluez_ubuntu_focal(){
-BLUEZ_VERSION="5.55"
-echo
-echo Updating bluetooth.
-sleep 1s
-wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/bluez-${BLUEZ_VERSION}-ubuntu-arm64.tar.xz
-tar xf bluez-${BLUEZ_VERSION}-ubuntu-arm64.tar.xz
-rm -f bluez-${BLUEZ_VERSION}-ubuntu-arm64.tar.xz
-cd bluez-${BLUEZ_VERSION}-ubuntu-arm64
-rm -f *dbg_${BLUEZ_VERSION}*
-rm -f *cups_${BLUEZ_VERSION}*
-rm -f *source_${BLUEZ_VERSION}*
-dpkg -i *.deb
-cd ..
-rm -fdR bluez-${BLUEZ_VERSION}-ubuntu-arm64
-apt-mark hold bluez
-echo Done.
-}
-
-bluez_ubuntu_groovy(){
-BLUEZ_VERSION="5.55"
-echo
-echo Updating bluetooth.
-sleep 1s
-wget -cq --show-progress https://github.com/pyavitz/binary/releases/download/060420/bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64.tar.xz
-tar xf bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64.tar.xz
-rm -f bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64.tar.xz
-cd bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64
-rm -f *dbg_${BLUEZ_VERSION}*
-rm -f *cups_${BLUEZ_VERSION}*
-rm -f *source_${BLUEZ_VERSION}*
-dpkg -i *.deb
-cd ..
-rm -fdR bluez-${BLUEZ_VERSION}-ubuntu-unstable-arm64
-apt-mark hold bluez
-echo Done.
-}
-
-bluez_debian_choose(){
-if `grep -Fx 'DISTRO_VERSION="buster"' "/root/userdata.txt" >/dev/null;`
-	then bluez_debian_stable;
-	else bluez_debian_unstable;
-fi
-}
-
-bluez_ubuntu_choose(){
-if `grep -Fx 'DISTRO_VERSION="focal"' "/root/userdata.txt" >/dev/null;`
-	then bluez_ubuntu_focal;
-fi
-if `grep -Fx 'DISTRO_VERSION="groovy"' "/root/userdata.txt" >/dev/null;`
-	then bluez_ubuntu_groovy;
-fi
-}
-
 user_eeprom(){
 echo
 echo Adding user eeprom config.
@@ -427,9 +320,6 @@ chown ${user}:${user} /home/${user}/.eeprom
 bcm2711_eeprom(){
 echo
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-echo Checking for updates.
-apt update
-echo
 echo Installing rpi-eeprom.
 sleep 1s
 apt install help2man rsync pciutils -y
@@ -579,6 +469,30 @@ systemctl enable actled
 systemctl enable pwrledoff
 }
 
+# Firmware
+rpi_firmware(){
+echo
+echo Adding extra firmware.
+sleep 1s
+mkdir -p /lib/firmware/brcm
+mkdir -p /lib/firmware/updates
+git clone https://github.com/pyavitz/firmware.git /lib/firmware/updates/brcm
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+install -Dm644 UPDATE.mem /lib/firmware/updates/renesas_usb_fw.mem
+rm -f UPDATE.mem
+ln -sr /lib/firmware /etc/firmware
+mkdir -p /lib/firmware/updates/rtl_nic
+cd /lib/firmware/updates/rtl_nic
+wget -cq --show-progress https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/master/rtl_nic.tar.gz
+tar xf rtl_nic.tar.gz
+rm -f rtl_nic.tar.gz
+cd ~
+echo Done.
+}
+
 pi_bluetooth_debian(){
 echo
 echo Building pi bluetooth package.
@@ -605,32 +519,6 @@ cd ~
 dpkg -i pi-bluetooth_*.deb
 rm -fdR pi-bluetooth*
 echo Done.
-}
-
-bluez_firmware(){
-BRPT="rpt8"
-echo Building bluez firmware package.
-sleep 1s
-mkdir -p bluez-firmware
-cd bluez-firmware
-wget -cq --show-progress https://archive.raspberrypi.org/debian/pool/main/b/bluez-firmware/bluez-firmware_1.2.orig.tar.gz
-tar xf bluez-firmware_1.2.orig.tar.gz
-cd bluez-firmware-1.2
-wget -cq --show-progress https://archive.raspberrypi.org/debian/pool/main/b/bluez-firmware/bluez-firmware_1.2-4+${BRPT}.debian.tar.xz
-tar xf bluez-firmware_1.2-4+${BRPT}.debian.tar.xz
-rm -f bluez-firmware_1.2-4+${BRPT}.debian.tar.xz
-dpkg-buildpackage -us -uc
-cd ..
-dpkg -i bluez-firmware_*.deb
-cd ~
-rm -fdR bluez-firmware
-}
-
-brcm_firmware(){
-WRPT="rpt11"
-wget -cq --show-progress https://archive.raspberrypi.org/debian/pool/main/f/firmware-nonfree/firmware-brcm80211_20190114-1+${WRPT}_all.deb
-dpkg -i firmware-brcm80211_20190114-1+${WRPT}_all.deb
-rm -f firmware-brcm80211_20190114-1+${WRPT}_all.deb
 }
 
 enable_services(){
