@@ -1,4 +1,8 @@
 # KERNEL
+DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
+STBURL="https://cdn.kernel.org/pub/linux/kernel/v5.x/"
+MLURL="https://git.kernel.org/torvalds/t/"
+
 gcc_woes(){
 sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/amlogic_defconfig
 sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/allwinner_defconfig
@@ -14,10 +18,10 @@ rm -f binaries/*
 cd binaries
 echo
 echo_bins
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}fixup4.dat
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}start4.elf
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}LICENCE.broadcom
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false ${BINURL}COPYING.linux
+${DOWNLOAD} ${BINURL}fixup4.dat
+${DOWNLOAD} ${BINURL}start4.elf
+${DOWNLOAD} ${BINURL}LICENCE.broadcom
+${DOWNLOAD} ${BINURL}COPYING.linux
 cd ..
 if ls binaries/{fixup4.dat,start4.elf} > /dev/null 2>&1
 	then echo_bdone;
@@ -30,7 +34,7 @@ echo
 echo_stable
 if ls ${KERNEL}-${VERSION}.tar.xz > /dev/null 2>&1;
 	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.xz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://cdn.kernel.org/pub/linux/kernel/v5.x/${KERNEL}-${VERSION}.tar.xz && echo_bdone;
+	else ${DOWNLOAD} ${STBURL}${KERNEL}-${VERSION}.tar.xz && echo_bdone;
 fi
 if `grep -Fx "opir1" "../board.txt" >/dev/null;`
 	then rtl8189es_download;
@@ -51,7 +55,7 @@ echo
 echo_mainline
 if ls ${KERNEL}-${VERSION}.tar.gz > /dev/null 2>&1;
 	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://git.kernel.org/torvalds/t/${KERNEL}-${VERSION}.tar.gz && echo_bdone;
+	else ${DOWNLOAD} ${MLURL}${KERNEL}-${VERSION}.tar.gz && echo_bdone;
 fi
 if `grep -Fx "opir1" "../board.txt" >/dev/null;`
 	then rtl8189es_download;
