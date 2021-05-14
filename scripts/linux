@@ -54,7 +54,7 @@ if ls ${KERNEL}-${VERSION} > /dev/null 2>&1;
 fi
 
 ### Download kernel
-case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
+case `grep -Fx "rc=1" "../userdata.txt" >/dev/null; echo $?` in
   0)
 if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
 	then mainline_download; else echo && echo -e "${WHT}It appears the kernel you selected is not available${FIN}?" && exit;
@@ -64,11 +64,11 @@ fi
 if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
 	then stable_download; else echo && echo -e "${WHT}It appears the kernel you selected is not available${FIN}?" && exit;
 fi
-    ;;esac
-
+    ;;
+esac
 
 ### Extract
-case `grep -Fx "mainline=1" "../userdata.txt" >/dev/null; echo $?` in
+case `grep -Fx "rc=1" "../userdata.txt" >/dev/null; echo $?` in
   0)
     mainline_extract
     ;;
