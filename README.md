@@ -142,7 +142,7 @@ Supported: Le Potato, Odroid C4, Odroid N2/Plus, NanoPi NEO Plus2 and NanoPC-T4
 
 ```sh
 Raspberry Pi 4B EEPROM Helper Script
-Usage: deb-eeprom -opt
+Usage: deb-eeprom -h
 
    -U       Upgrade eeprom package
    -w       Transfer to USB	# Supported: EXT4, BTRFS and F2FS
