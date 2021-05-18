@@ -24,7 +24,7 @@ sudo apt install \
 	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf
 ```
 
-### Docker (Currently broken)
+### Docker
 
 To build using [Docker](https://www.docker.com/), follow the install [instructions](https://docs.docker.com/engine/install/) and use our other [builder](https://github.com/pyavitz/arm-img-builder).
 
