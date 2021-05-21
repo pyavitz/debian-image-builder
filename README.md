@@ -24,7 +24,7 @@ sudo apt install \
 	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf
 ```
 
-### Docker ([read](https://github.com/pyavitz/debian-image-builder/commit/a850f70d9a47df3bdd464d5da0f31f9a8d2898bd))
+### Docker
 
 To build using [Docker](https://www.docker.com/), follow the install [instructions](https://docs.docker.com/engine/install/) and use our other [builder](https://github.com/pyavitz/arm-img-builder).
 
