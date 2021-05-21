@@ -1,7 +1,5 @@
-diff --git a/drivers/spi/spi-rockchip.c b/drivers/spi/spi-rockchip.c
-index 2cc6d99..19e05ad 100644
---- a/drivers/spi/spi-rockchip.c
-+++ b/drivers/spi/spi-rockchip.c
+--- a/drivers/spi/spi-rockchip.c	2021-05-19 04:13:20.000000000 -0400
++++ b/drivers/spi/spi-rockchip.c	2021-05-21 12:13:33.095986492 -0400
 @@ -6,6 +6,7 @@
  
  #include <linux/clk.h>
@@ -10,8 +8,8 @@ index 2cc6d99..19e05ad 100644
  #include <linux/interrupt.h>
  #include <linux/module.h>
  #include <linux/of.h>
-@@ -185,6 +186,10 @@ struct rockchip_spi {
- 	bool cs_asserted[ROCKCHIP_SPI_MAX_CS_NUM];
+@@ -190,11 +191,59 @@
+ 	bool slave_abort;
  };
  
 +struct rockchip_spi_data {
@@ -21,8 +19,6 @@ index 2cc6d99..19e05ad 100644
  static inline void spi_enable_chip(struct rockchip_spi *rs, bool enable)
  {
  	writel_relaxed((enable ? 1U : 0U), rs->regs + ROCKCHIP_SPI_SSIENR);
-@@ -455,6 +460,50 @@ static int rockchip_spi_prepare_dma(struct rockchip_spi *rs,
- 	return 1;
  }
  
 +static int rockchip_spi_setup(struct spi_device *spi)
@@ -69,10 +65,10 @@ index 2cc6d99..19e05ad 100644
 +	}
 +}
 +
- static void rockchip_spi_config(struct rockchip_spi *rs,
- 		struct spi_device *spi, struct spi_transfer *xfer,
- 		bool use_dma)
-@@ -683,6 +732,8 @@ static int rockchip_spi_probe(struct platform_device *pdev)
+ static inline void wait_for_idle(struct rockchip_spi *rs)
+ {
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(5);
+@@ -748,6 +797,8 @@
  	ctlr->max_speed_hz = min(rs->freq / BAUDR_SCKDV_MIN, MAX_SCLK_OUT);
  
  	ctlr->set_cs = rockchip_spi_set_cs;
