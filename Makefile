@@ -41,12 +41,12 @@ RPI-IMAGE=sudo ./scripts/broadcom-stage1
 RPI-STG2=./scripts/broadcom-stage2
 
 # fedora addon
-FEDORA=$(shell git clone https://github.com/pyavitz/fedora-addon.git fedora)
-FED-RFS=./fedora/rootfs
-FED-ROOTFS=sudo ./fedora/rootfs
-FED-IMG=./fedora/stage1
-FED-IMAGE=sudo ./fedora/stage1
-FED-STG2=./fedora/stage2
+#FEDORA=$(shell git clone https://github.com/pyavitz/fedora-addon.git fedora)
+#FED-RFS=./fedora/rootfs
+#FED-ROOTFS=sudo ./fedora/rootfs
+#FED-IMG=./fedora/stage1
+#FED-IMAGE=sudo ./fedora/stage1
+#FED-STG2=./fedora/stage2
 
 # do not edit above this line
 
@@ -724,17 +724,17 @@ purge-all:
 	@${PURGEALL}
 
 # FEDORA ADDON
-fedora:
-	# Fedora Addon
-	@${FEDORA}
-
-fedora-rootfs:
-	# Fedora Root Filesystem
-	@chmod +x ${FED-RFS}
-	@${FED-ROOTFS}
-
-fedora-image:
-	# Fedora Image
-	@chmod +x ${FED-IMG}
-	@chmod +x ${FED-STG2}
-	@${FED-IMAGE}
+#fedora:
+#	# Fedora Addon
+#	@${FEDORA}
+#
+#fedora-rootfs:
+#	# Fedora Root Filesystem
+#	@chmod +x ${FED-RFS}
+#	@${FED-ROOTFS}
+#
+#fedora-image:
+#	# Fedora Image
+#	@chmod +x ${FED-IMG}
+#	@chmod +x ${FED-STG2}
+#	@${FED-IMAGE}
