@@ -9,11 +9,12 @@ MOTD="Debian"
 HOSTNAME="computer"
 DISTRO="debian"
 DISTRO_VERSION="buster"
-VERSION="5.10.38"
+VERSION="5.10.39"
 UBOOT_VERSION="v2021.04"
 menuconfig="0"
 rc="0"
 crosscompile="1"
+ccache="0"
 rtl88XXau="0"
 rtl88X2bu="0"
 rtl88XXcu="0"
@@ -44,15 +45,16 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
         "RC:"   	13 1     "$rc"	        	13 5 2 0 \
 	"Menuconfig:"	14 1	"$menuconfig"  		14 13 2 0 \
 	"Crosscompile:" 15 1	"$crosscompile" 	15 15 2 0 \
-	""		16 1	""	 		16 14 0 0 \
-	"Wireless"	17 1	""	 		17 14 0 0 \
-	"rtl88XXau:"	18 1	"$rtl88XXau"	 	18 12 2 0 \
-	"rtl88X2bu:"	19 1	"$rtl88X2bu"	 	19 12 2 0 \
-	"rtl88XXcu:"	20 1	"$rtl88XXcu"	 	20 12 2 0 \
-	""		21 1	""	 		21 14 0 0 \
-	"Customize"	22 1	""	 		22 14 0 0 \
-	"Defconfig:"	23 1	"$custom_defconfig" 	23 12 2 0 \
-	"Name:"		24 1	"$MYCONFIG"	  	24 7 27 0 \
+	"Caching on:"	16 1	"$ccache"	 	16 13 2 0 \
+	""		17 1	""	 		17 14 0 0 \
+	"Wireless"	18 1	""	 		18 14 0 0 \
+	"rtl88XXau:"	19 1	"$rtl88XXau"	 	19 12 2 0 \
+	"rtl88X2bu:"	20 1	"$rtl88X2bu"	 	20 12 2 0 \
+	"rtl88XXcu:"	21 1	"$rtl88XXcu"	 	21 12 2 0 \
+	""		22 1	""	 		22 14 0 0 \
+	"Customize"	23 1	""	 		23 14 0 0 \
+	"Defconfig:"	24 1	"$custom_defconfig" 	24 12 2 0 \
+	"Name:"		25 1	"$MYCONFIG"	  	25 7 27 0 \
 2>&1 1>&3)
 
 # close fd
@@ -72,6 +74,7 @@ echo VERSION='"' >> tmp0
 echo rc= >> tmp0
 echo menuconfig= >> tmp0
 echo crosscompile= >> tmp0
+echo ccache= >> tmp0
 echo rtl8812au= >> tmp0
 echo rtl88x2bu= >> tmp0
 echo rtl8811cu= >> tmp0
@@ -80,7 +83,7 @@ echo MYCONFIG='"' >> tmp0
 echo emmc=0 >> tmp0
 echo verbose=0 >> tmp0
 echo auto=1 >> tmp0
-echo builder=2.1 >> tmp0
+echo builder=2.2 >> tmp0
 echo '"' > tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
@@ -90,6 +93,7 @@ echo '"' >> tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
+echo >> tmp2
 echo >> tmp2
 echo >> tmp2
 echo >> tmp2
@@ -108,9 +112,9 @@ echo GCC='"'$(gcc --version | grep gcc | awk '{print $4}')'"' >> userdata.txt
 sed -i '1i### USER INFORMATION' userdata.txt
 sed -i '7i### DISTRIBUTION AND RELEASE' userdata.txt
 sed -i '10i### UBOOT AND LINUX KERNEL' userdata.txt
-sed -i '16i### WIRELESS' userdata.txt
-sed -i '20i### CUSTOM' userdata.txt
-sed -i '26i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '17i### WIRELESS' userdata.txt
+sed -i '21i### CUSTOM' userdata.txt
+sed -i '27i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # clear screen
 clear

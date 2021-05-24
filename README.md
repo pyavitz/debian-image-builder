@@ -66,6 +66,7 @@ Branch:         # Supported: 5.10.y (if patches fail let me know)
 RC:             # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
+Caching on:     # 1 to enable ccache
 
 Extra wireless support
 rtl88XXau:      # 1 to add Realtek 8812AU/21AU wireless support
