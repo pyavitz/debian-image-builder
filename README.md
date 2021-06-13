@@ -85,6 +85,13 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 The config menu will append _defconfig to the end of the name
 in the userdata.txt file.
 ```
+#### Aircrack (rtl88XXau)
+
+```sh
+nano userdata.txt
+# change from 0 to 1
+aircrack=0
+```
 #### Compression (turn off)
 ```sh
 nano userdata.txt
