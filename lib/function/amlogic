@@ -589,7 +589,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
     fdt /boot/amlogic/meson-gxl-s905x-libretech-cc.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 elevator=noop init=/sbin/init
 EOF
 echo Done.
 }
@@ -604,7 +604,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
     fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 elevator=noop loglevel=1 init=/sbin/init
 EOF
 echo Done.
 }
@@ -619,7 +619,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
     fdt /boot/amlogic/meson-sm1-odroid-hc4.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 elevator=noop loglevel=1 init=/sbin/init
 EOF
 echo Done.
 }
@@ -634,7 +634,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
     fdt /boot/amlogic/meson-g12b-odroid-n2.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 elevator=noop loglevel=1 init=/sbin/init
 EOF
 echo Done.
 }
@@ -649,7 +649,7 @@ label kernel
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
     fdt /boot/amlogic/meson-g12b-odroid-n2-plus.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 elevator=noop max_freq_a53=1908 max_freq_a73=2208 maxcpus=6 loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init
 EOF
 echo Done.
 }
@@ -691,6 +691,47 @@ EOF
 echo Done.
 chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
+}
+
+odroid_tweak(){
+echo
+echo Creating Odroid Tweak.
+tee /usr/bin/odroid-tweak <<EOF
+#!/bin/bash
+
+USB3_IRQ=`cat /proc/interrupts | grep "xhci-hcd:usb1" | awk -F : '{print $1}' | sed s/" "//g`
+echo 4 > /proc/irq/${USB3_IRQ}/smp_affinity_list
+
+sleep 20
+ETHER=`cat /proc/interrupts | grep "eth0" | awk -F : '{print $1}' | sed s/" "//g`
+echo 5 > /proc/irq/${ETHER}/smp_affinity_list
+
+if [ -f /sys/class/net/eth0/queues/rx-0/rps_cpus ]; then
+	echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
+fi
+EOF
+chmod +x /usr/bin/odroid-tweak
+
+tee /etc/systemd/system/odroid-tweak.service <<EOF
+[Unit]
+Description=ODROID Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/odroid-tweaks
+After=network.target
+After=network-online.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/odroid-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable odroid-tweak
+echo Done.
 }
 
 enable_services(){
