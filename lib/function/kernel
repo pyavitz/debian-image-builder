@@ -2,6 +2,7 @@
 DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 STBURL="https://cdn.kernel.org/pub/linux/kernel/v5.x/"
 MLURL="https://git.kernel.org/torvalds/t/"
+ODURL="https://github.com/tobetter/linux/archive/refs/heads/"
 
 gcc_woes(){
 sed -i 's/CONFIG_CRYPTO_AEGIS128=m/# CONFIG_CRYPTO_AEGIS128 is not set/g' arch/arm64/configs/amlogic_defconfig
@@ -26,6 +27,18 @@ cd ..
 if ls binaries/{fixup4.dat,start4.elf} > /dev/null 2>&1
 	then echo_bdone;
 	else echo_fail && exit;
+fi
+}
+
+check_stable(){
+if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
+	then stable_download && stable_extract; else check_odroid;
+fi
+}
+
+check_odroid(){
+if [[ `wget -S --spider https://raw.githubusercontent.com/tobetter/linux/odroid-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
+	then odroid_download && odroid_extract; else echo && echo -e "${WHT}It appears the kernel you selected is not available${FIN}?" && exit;
 fi
 }
 
@@ -71,6 +84,24 @@ if `grep -Fx "rtl8811cu=1" "../userdata.txt" >/dev/null;`
 fi
 }
 
+odroid_download(){
+echo
+echo_odroid
+if ls ${KERNEL}-${VERSION}.tar.gz > /dev/null 2>&1;
+	then echo -e "${YLW}${KERNEL}-${VERSION}.tar.gz found${FIN}.";
+	else ${DOWNLOAD} ${ODURL}odroid-${VERSION}.tar.gz && echo_bdone;
+fi
+if `grep -Fx "rtl8812au=1" "../userdata.txt" >/dev/null;`
+	then rtl8812au_download;
+fi
+if `grep -Fx "rtl88x2bu=1" "../userdata.txt" >/dev/null;`
+	then rtl88x2bu_download;
+fi
+if `grep -Fx "rtl8811cu=1" "../userdata.txt" >/dev/null;`
+	then rtl8811cu_download;
+fi
+}
+
 stable_extract(){
 echo
 echo_extract
@@ -84,6 +115,15 @@ echo
 echo_extract
 echo -e -n "${WHT}"
 pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+echo -e -n "${FIN}"
+}
+
+odroid_extract(){
+echo
+echo_extract
+echo -e -n "${WHT}"
+pv ${ODKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+mv -f ${ODKERNEL}-${VERSION} linux-${VERSION}
 echo -e -n "${FIN}"
 }
 
