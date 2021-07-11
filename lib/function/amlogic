@@ -654,6 +654,32 @@ EOF
 echo Done.
 }
 
+odroidn2_udev_rules(){
+echo
+echo Creating Odroid N2 udev rules.
+tee /etc/udev/rules.d/10-odroid.rules <<EOF
+# Mali Rules
+KERNEL=="mali",SUBSYSTEM=="misc",MODE="0777"
+KERNEL=="ump",SUBSYSTEM=="ump",MODE="0777"
+
+# Misc video rules
+KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
+KERNEL=="CEC", MODE="0777"
+KERNEL=="am*", MODE="0666"
+
+# Automatic Disk Scheduler
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1",ATTR{queue/scheduler}="deadline"
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
+
+# GPIO Mem
+SUBSYSTEM=="aml-gpiomem", GROUP="odroid", MODE="0660"
+
+# CEC Compat
+KERNEL=="cec", SYMLINK+="aocec"
+EOF
+}
+
 lepotato_led_triggers(){
 echo
 echo Creating led trigger
@@ -695,7 +721,7 @@ chown -R root:root /usr/local/sbin/
 
 odroid_tweak(){
 echo
-echo Creating Odroid tweaks.
+echo Creating Odroid tweaks service.
 cd ~
 mv -f odroid-tweaks /usr/bin/odroid-tweaks
 chmod +x /usr/bin/odroid-tweaks
