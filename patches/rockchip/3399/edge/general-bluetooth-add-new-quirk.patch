@@ -1,0 +1,31 @@
+diff -Naur a/include/net/bluetooth/hci.h b/include/net/bluetooth/hci.h
+--- a/include/net/bluetooth/hci.h	2021-03-14 03:46:12.678629654 -0400
++++ b/include/net/bluetooth/hci.h	2021-03-14 03:43:52.626993325 -0400
+@@ -246,6 +246,13 @@
+ 	 * HCI after resume.
+ 	 */
+ 	HCI_QUIRK_NO_SUSPEND_NOTIFIER,
++
++	/* When this quirk is set, max_page for local extended features
++	 * is set to 1, even if controller reports higher number. Some
++	 * controllers (e.g. RTL8723CS) report more pages, but they
++	 * don't actually support features declared there.
++	 */
++	HCI_QUIRK_BROKEN_LOCAL_EXT_FTR_MAX_PAGE,
+ };
+ 
+ /* HCI device flags */
+diff -Naur a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
+--- a/net/bluetooth/hci_event.c	2021-03-14 03:46:03.382922952 -0400
++++ b/net/bluetooth/hci_event.c	2021-03-14 03:44:40.953501700 -0400
+@@ -700,7 +700,9 @@
+ 	if (rp->status)
+ 		return;
+ 
+-	if (hdev->max_page < rp->max_page)
++	if (!test_bit(HCI_QUIRK_BROKEN_LOCAL_EXT_FTR_MAX_PAGE,
++		      &hdev->quirks) &&
++	    hdev->max_page < rp->max_page)
+ 		hdev->max_page = rp->max_page;
+ 
+ 	if (rp->page < HCI_MAX_PAGES)
