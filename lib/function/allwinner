@@ -252,7 +252,10 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
 fi
-for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
+if `grep "5.10" "../../userdata.txt" >/dev/null;`
+	then for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done;
+	else for i in ../${NANOPI}/edge/*.patch; do patch -p1 < $i; done;
+fi
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
 fi
