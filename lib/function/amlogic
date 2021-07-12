@@ -385,7 +385,7 @@ cp -f board.txt ${AMLSRC}/
 cd ${AMLSRC}
 }
 
-amlogic_boards(){
+odroid_boards(){
 if `grep -Fx "odroidc4" "../../board.txt" >/dev/null;`
 	then for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done
 fi
@@ -405,7 +405,6 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-#for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
 fi
@@ -421,7 +420,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-amlogic_boards
+odroid_boards
 if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
@@ -438,7 +437,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
 	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
 fi
-amlogic_boards
+odroid_boards
 if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
@@ -656,7 +655,7 @@ echo Done.
 
 odroid_udev_rules(){
 echo
-echo Creating Odroid N2 udev rules.
+echo Creating Odroid udev rules.
 tee /etc/udev/rules.d/10-odroid.rules <<EOF
 # Misc video rules
 KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
