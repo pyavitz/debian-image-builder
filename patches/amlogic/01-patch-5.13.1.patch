@@ -1,0 +1,50 @@
+diff --git a/Makefile b/Makefile
+index 0565caea0362a..069607cfe2836 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 5
+ PATCHLEVEL = 13
+-SUBLEVEL = 0
++SUBLEVEL = 1
+ EXTRAVERSION =
+ NAME = Opossums on Parade
+ 
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 9c7ced0e31718..682e82956ea5a 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -320,6 +320,7 @@ union kvm_mmu_extended_role {
+ 		unsigned int cr4_pke:1;
+ 		unsigned int cr4_smap:1;
+ 		unsigned int cr4_smep:1;
++		unsigned int cr4_la57:1;
+ 		unsigned int maxphyaddr:6;
+ 	};
+ };
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 8d5876dfc6b71..a54f72c31be90 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -4476,6 +4476,7 @@ static union kvm_mmu_extended_role kvm_calc_mmu_role_ext(struct kvm_vcpu *vcpu)
+ 	ext.cr4_smap = !!kvm_read_cr4_bits(vcpu, X86_CR4_SMAP);
+ 	ext.cr4_pse = !!is_pse(vcpu);
+ 	ext.cr4_pke = !!kvm_read_cr4_bits(vcpu, X86_CR4_PKE);
++	ext.cr4_la57 = !!kvm_read_cr4_bits(vcpu, X86_CR4_LA57);
+ 	ext.maxphyaddr = cpuid_maxphyaddr(vcpu);
+ 
+ 	ext.valid = 1;
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index ef2265f86b913..04220581579cd 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -5058,7 +5058,7 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 
+ 	/* Already populated array? */
+ 	if (unlikely(page_array && nr_pages - nr_populated == 0))
+-		return 0;
++		return nr_populated;
+ 
+ 	/* Use the single page allocator for one page. */
+ 	if (nr_pages - nr_populated == 1)
