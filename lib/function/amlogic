@@ -417,8 +417,8 @@ odroidc4_patch(){
 echo
 echo_patch
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
+	then patch -p1 < ../${PACKAGING}/odroid-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch ;
 fi
 odroid_boards
 if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
@@ -434,8 +434,8 @@ odroidn2_patch(){
 echo
 echo_patch
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch ;
+	then patch -p1 < ../${PACKAGING}/odroid-packaging.patch ;
+	else patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch ;
 fi
 odroid_boards
 if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
@@ -602,7 +602,10 @@ label kernel
     kernel /boot/Image
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
+    # mainline
+    #fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
+    # legacy
+    fdt /boot/amlogic/meson64_odroidc4.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
 echo Done.
@@ -632,7 +635,10 @@ label kernel
     kernel /boot/Image
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-g12b-odroid-n2.dtb
+    # mainline
+    #fdt /boot/amlogic/meson-g12b-odroid-n2.dtb
+    # legacy
+    fdt /boot/amlogic/meson64_odroidn2.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 init=/sbin/init
 EOF
 echo Done.
@@ -647,7 +653,10 @@ label kernel
     kernel /boot/Image
     initrd /boot/uInitrd
     fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-g12b-odroid-n2-plus.dtb
+    # mainline
+    #fdt /boot/amlogic/meson-g12b-odroid-n2-plus.dtb
+    # legacy
+    fdt /boot/amlogic/meson64_odroidn2_plus.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init
 EOF
 echo Done.
