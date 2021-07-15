@@ -1,11 +1,17 @@
 #!/bin/bash
 
+cpu_freq_odroidn2(){
+echo 1800000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+echo 1896000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
+}
+
 cpu_freq_odroidn2plus(){
 echo 1908000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 2208000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
 }
 
-if dmesg | grep ODROID-N2Plus > /dev/null 2>&1; then cpu_freq_odroidn2plus; fi
+#if dmesg | grep -w "ODROID-N2" > /dev/null 2>&1; then cpu_freq_odroidn2; fi
+if dmesg | grep -w "ODROID-N2Plus" > /dev/null 2>&1; then cpu_freq_odroidn2plus; fi
 
 USB3_IRQ=`cat /proc/interrupts | grep "xhci-hcd:usb1" | awk -F : '{print $1}' | sed s/" "//g`
 echo 4 > /proc/irq/${USB3_IRQ}/smp_affinity_list
