@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
---- a/scripts/package/builddeb	2021-04-17 06:52:10.583013000 -0400
-+++ b/scripts/package/builddeb	2021-04-22 08:22:53.173485240 -0400
+--- a/scripts/package/builddeb	2021-07-13 12:43:17.967206000 -0400
++++ b/scripts/package/builddeb	2021-07-18 10:23:25.243013604 -0400
 @@ -51,8 +51,8 @@
  kernel_headers_dir="$objtree/debian/hdrtmp"
  libc_headers_dir="$objtree/debian/headertmp"
@@ -24,19 +24,22 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  fi
  cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
  
-@@ -139,6 +144,11 @@
+@@ -139,6 +144,14 @@
  	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
  fi
  
 +# install dtb and overlays
 +mkdir -p "$tmpdir/boot"
 +cp -r "$tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-4-b.dtb" "$tmpdir/boot/bcm2711-rpi-4-b.dtb"
-+#
++if ls "$tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-400.dtb" > /dev/null 2>&1;
++	then cp -r "$tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-400.dtb" "$tmpdir/boot/bcm2711-rpi-400.dtb"
++fi
++
 +
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -164,6 +174,40 @@
+@@ -164,6 +177,40 @@
  	chmod 755 "$tmpdir/DEBIAN/$script"
  done
  
@@ -77,7 +80,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Build kernel header package
  (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
  (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-@@ -184,6 +228,17 @@
+@@ -184,6 +231,17 @@
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
  
@@ -96,8 +99,8 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  	create_package "$kernel_headers_packagename" "$kernel_headers_dir"
  	create_package "$libc_headers_packagename" "$libc_headers_dir"
 diff -Naur a/scripts/package/mkdebian b/scripts/package/mkdebian
---- a/scripts/package/mkdebian	2021-04-17 06:52:10.583013000 -0400
-+++ b/scripts/package/mkdebian	2021-04-22 08:20:39.517799113 -0400
+--- a/scripts/package/mkdebian	2021-07-13 12:43:17.968206000 -0400
++++ b/scripts/package/mkdebian	2021-07-18 10:22:39.706817506 -0400
 @@ -94,8 +94,8 @@
  	packageversion=$version-$revision
  fi
