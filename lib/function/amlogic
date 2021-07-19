@@ -397,6 +397,12 @@ if `grep -Fx "odroidn2plus" "../../board.txt" >/dev/null;`
 fi
 }
 
+tobetter_kernel(){
+if `grep -Fx "5.13.y" "../../board.txt" >/dev/null;`
+	then for i in ../${AMLOGIC}/odroid/*.patch; do patch -p1 < $i; done
+fi
+}
+
 # LE POTATO
 potato_patch(){
 echo
@@ -421,6 +427,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	else patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch ;
 fi
 odroid_boards
+tobetter_kernel
 if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
@@ -438,6 +445,7 @@ if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	else patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch ;
 fi
 odroid_boards
+tobetter_kernel
 if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
 if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
 	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
