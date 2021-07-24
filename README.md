@@ -102,7 +102,7 @@ auto=1        # compresses to img.xz
 ```sh
 nano userdata.txt
 # change from 0 to 1
-emmc=1
+emmc=0
 ```
 #### Miscellaneous
 
@@ -183,4 +183,40 @@ governor -h
    
 A systemd service runs 'governor -r' during boot.
 ```
+#### Odroid N2 Fan Control
+Install script and service
+```sh
+sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin
+sudo chmod +x /usr/local/bin/fan-ctrl
+```
+```sh
+sudo tee /etc/systemd/system/odroid-fan-ctrl.service <<EOF
+[Unit]
+Description=Odroid Fan Control
+ConditionPathExists=/usr/local/bin/fan-ctrl
 
+[Service]
+ExecStart=/usr/local/bin/fan-ctrl -r &>/dev/null
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl enable odroid-fan-ctrl
+```
+Set trip point and run `fan-ctrl -r`
+```sh
+Odroid N2 Trip Point
+Usage: fan-ctrl -h
+
+   -1       65°C
+   -2       55°C
+   -3       45°C
+   -4       35°C
+
+   -r       Run
+   -u       Update
+   
+A systemd service runs 'fan-ctrl -r' during boot.
+```
