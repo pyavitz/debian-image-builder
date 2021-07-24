@@ -162,6 +162,7 @@ chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
 
 # extra firmware
 extra_firmware(){
+ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 echo
 echo Adding extra firmware.
 sleep 1s
@@ -169,7 +170,7 @@ mkdir -p /lib/firmware/brcm
 cd /lib/firmware/brcm
 wget -cq --show-progress https://raw.githubusercontent.com/buildroot/buildroot/master/board/friendlyarm/nanopi-neo-plus2/rootfs_overlay/lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm%2Cnanopi-neo-plus2.txt
 cd ~
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://github.com/armbian/firmware/archive/master.tar.gz
+${ARIA2} https://github.com/armbian/firmware/archive/master.tar.gz
 tar xf firmware-master.tar.gz
 cp -R firmware-master/* /lib/firmware
 rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
@@ -180,6 +181,34 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
+case `grep -Fx "odroidn2" "/root/board.txt" >/dev/null; echo $?` in
+  0)
+mkdir -p /lib/firmware/ene-ub6250
+cd /lib/firmware/ene-ub6250
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/ms_init.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/ms_rdwr.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/msp_rdwr.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/sd_init1.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/sd_init2.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/sd_rdwr.bin
+chown -R root:root /lib/firmware/ene-ub6250
+cd ~
+    ;;
+esac
+case `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null; echo $?` in
+  0)
+mkdir -p /lib/firmware/ene-ub6250
+cd /lib/firmware/ene-ub6250
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/ms_init.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/ms_rdwr.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/msp_rdwr.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/sd_init1.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/sd_init2.bin
+${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/master/ene-ub6250/sd_rdwr.bin
+chown -R root:root /lib/firmware/ene-ub6250
+cd ~
+    ;;
+esac
 echo Done.
 }
 
