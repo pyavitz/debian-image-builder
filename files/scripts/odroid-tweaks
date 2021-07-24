@@ -13,19 +13,6 @@ echo 2208000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
 #if dmesg | grep -w "ODROID-N2" > /dev/null 2>&1; then cpu_freq_odroidn2; fi
 if dmesg | grep -w "ODROID-N2Plus" > /dev/null 2>&1; then cpu_freq_odroidn2plus; fi
 
-USB3_IRQ=`cat /proc/interrupts | grep "xhci-hcd:usb1" | awk -F : '{print $1}' | sed s/" "//g`
-sleep 20s && echo 0-1 > /proc/irq/${USB3_IRQ}/smp_affinity_list
-
-HDMI=`cat /proc/interrupts | grep "hdmi" | awk -F : '{print $1}' | sed s/" "//g`
-echo 0-1 > /proc/irq/${HDMI}/smp_affinity_list
-
-ether_set(){
-ETHER=`cat /proc/interrupts | grep "eth0" | awk -F : '{print $1}' | sed s/" "//g`
-echo 0-5 > /proc/irq/${ETHER}/smp_affinity_list
-
 if [ -f /sys/class/net/eth0/queues/rx-0/rps_cpus ]; then
         echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
 fi
-}
-
-if grep "1" /sys/class/net/eth0/carrier > /dev/null 2>&1; then ether_set; fi
