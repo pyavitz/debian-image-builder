@@ -166,7 +166,7 @@ EOF
 
 create_extlinux(){
 extlinux > /dev/null 2>&1
-if ls p1/extlinux/extlinux.conf > /dev/null 2>&1
+if [ -e p1/extlinux/extlinux.conf ];
 	then echo && echo -n "extlinux.conf     " && sleep 1s && echo_nok;
 	else echo && echo -n "extlinux.conf     " && sleep 1s && echo_fail && exit;
 fi
@@ -197,13 +197,13 @@ bcm2711_boot(){
 mkdir -p firmware/boot
 rm -f firmware/boot/*
 echo
-if ls output/raspi4/u-boot.bin > /dev/null 2>&1
+if [ -e output/raspi4/u-boot.bin ];
 	then echo -n "u-boot.bin        " && echo_nok;
 	else echo -n "u-boot.bin        " && echo_fail && exit;
 fi
 echo
 install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1
-if ls p1/u-boot.bin > /dev/null 2>&1
+if [ -e p1/u-boot.bin ];
 	then echo -n "installing uboot  " && echo_bdone;
 	else echo -n "installing uboot  " && echo_fail && exit;
 fi
@@ -214,7 +214,7 @@ tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p2/
 }
 
 aarch64_rootfs(){
-if ls ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz > /dev/null 2>&1
+if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ];
 	then echo -n "Extracting rootfs " && aarch64_extract && echo_bdone;
 	else echo -e "${YLW}Missing rootfs tarball${FIN}!" && exit;
 fi
@@ -408,7 +408,7 @@ rpi_switch(){
 sh -c 'echo mmc1 >/sys/class/leds/ACT/trigger'
 }
 
-if ls /sys/class/leds/ACT/trigger > /dev/null 2>&1;
+if [ -e /sys/class/leds/ACT/trigger ];
 	then rpi_switch;
 fi
 
@@ -427,10 +427,10 @@ ml_switch(){
 sh -c 'echo 0 > /sys/devices/platform/leds/leds/PWR/brightness'
 }
 
-if ls /sys/devices/platform/leds/leds/led1/brightness > /dev/null 2>&1;
+if [ -e /sys/devices/platform/leds/leds/led1/brightness ];
 	then rpi_switch;
 fi
-if ls /sys/devices/platform/leds/leds/PWR/brightness > /dev/null 2>&1;
+if [ -e /sys/devices/platform/leds/leds/PWR/brightness ];
 	then ml_switch;
 fi
 
