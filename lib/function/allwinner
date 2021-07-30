@@ -509,37 +509,17 @@ echo Done.
 tritium_led_triggers(){
 echo
 echo Creating LED triggers.
-tee /usr/local/sbin/led-triggers <<EOF
-#!/bin/bash
-# led triggers
-echo 0 > /sys/class/leds/librecomputer:green:pwr/brightness
-echo 1 > /sys/class/leds/librecomputer:blue:status/brightness
-sleep 2s
-echo 0 > /sys/class/leds/librecomputer:blue:status/brightness
-EOF
-}
-
-tritium_led_service(){
-echo
-echo Creating led service.
-sleep 1s
-tee /etc/systemd/system/leds.service <<EOF
-[Unit]
-Description=Set LEDs
-ConditionPathExists=/usr/local/sbin/led-triggers
-[Service]
-Type=forking
-ExecStart=/usr/local/sbin/led-triggers &>/dev/null
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable leds
+cd ~
+mv -f tritium /usr/local/sbin/led-trigger
+chmod +x /usr/local/sbin/led-trigger
+chown -R root:root /usr/local/sbin/
+echo Done.
 }
 
 nanopi_led_triggers(){
 echo
 echo Creating LED triggers.
-tee /usr/local/sbin/led-triggers <<EOF
+tee /usr/local/sbin/led-trigger <<EOF
 #!/bin/bash
 # led triggers
 echo 1 > /sys/class/leds/nanopi:green:status/brightness
@@ -547,19 +527,22 @@ sleep 2s
 echo 0 > /sys/class/leds/nanopi:green:status/brightness
 echo 0 > /sys/class/leds/nanopi:red:pwr/brightness
 EOF
+chmod +x /usr/local/sbin/led-trigger
+chown -R root:root /usr/local/sbin/
+echo Done.
 }
 
-nanopi_led_service(){
+led_service(){
 echo
 echo Creating led service.
 sleep 1s
 tee /etc/systemd/system/leds.service <<EOF
 [Unit]
 Description=Set LEDs
-ConditionPathExists=/usr/local/sbin/led-triggers
+ConditionPathExists=/usr/local/sbin/led-trigger
 [Service]
 Type=forking
-ExecStart=/usr/local/sbin/led-triggers &>/dev/null
+ExecStart=/usr/local/sbin/led-trigger &>/dev/null
 [Install]
 WantedBy=multi-user.target
 EOF
