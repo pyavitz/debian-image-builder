@@ -364,7 +364,7 @@ EOF
 echo Done.
 }
 
-rock64_led_trigger(){
+rock64_led_triggers(){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-trigger <<EOF
@@ -379,7 +379,7 @@ fi
 EOF
 }
 
-renegade_led_trigger(){
+renegade_led_triggers(){
 echo
 echo Creating LED triggers.
 tee /usr/local/sbin/led-trigger <<EOF
@@ -389,13 +389,23 @@ echo 0 > /sys/class/leds/firefly:blue:power/brightness
 EOF
 }
 
-rockchip_led_service(){
+nanopc_led_triggers(){
+echo
+echo Creating LED triggers.
+cd ~
+mv -f nanopc /usr/local/sbin/led-trigger
+chmod +x /usr/local/sbin/led-trigger
+chown -R root:root /usr/local/sbin/
+echo Done.
+}
+
+led_service(){
 echo
 echo Creating led service.
 sleep 1s
 tee /etc/systemd/system/leds.service <<EOF
 [Unit]
-Description=Turn off Light-emitting diode
+Description=Set LEDs
 ConditionPathExists=/usr/local/sbin/led-trigger
 [Service]
 Type=forking
