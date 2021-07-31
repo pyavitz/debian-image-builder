@@ -285,13 +285,14 @@ odroidc4-uboot:
 odroidc4-kernel:
 	# Compiling kernel
 	@ echo odroidc4 > board.txt
-	@ echo amlogic >> board.txt 
+	@ echo amlogic >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 odroidc4-image:
 	# Creating image
-	@ echo odroidc4 > board.txt 
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -313,7 +314,8 @@ odroidc4-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo odroidc4 > board.txt 
+	@ echo odroidc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -329,13 +331,14 @@ odroidhc4-uboot:
 odroidhc4-kernel:
 	# Compiling kernel
 	@ echo odroidc4 > board.txt
-	@ echo amlogic >> board.txt 
+	@ echo amlogic >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
 odroidhc4-image:
 	# Creating image
-	@ echo odroidhc4 > board.txt 
+	@ echo odroidhc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -357,7 +360,8 @@ odroidhc4-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo odroidhc4 > board.txt 
+	@ echo odroidhc4 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -379,7 +383,8 @@ odroidn2-kernel:
 	
 odroidn2-image:
 	# Creating image
-	@ echo odroidn2 > board.txt 
+	@ echo odroidn2 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -401,7 +406,8 @@ odroidn2-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo odroidn2 > board.txt 
+	@ echo odroidn2 > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -423,7 +429,8 @@ odroidn2plus-kernel:
 	
 odroidn2plus-image:
 	# Creating image
-	@ echo odroidn2plus > board.txt 
+	@ echo odroidn2plus > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -445,7 +452,8 @@ odroidn2plus-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo odroidn2plus > board.txt 
+	@ echo odroidn2plus > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -467,7 +475,8 @@ lepotato-kernel:
 
 lepotato-image:
 	# Creating image
-	@ echo lepotato > board.txt 
+	@ echo lepotato > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -490,6 +499,7 @@ lepotato-all:
 	@${ROOTFS}
 	# Creating image
 	@ echo lepotato > board.txt
+	@ echo amlogic >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
