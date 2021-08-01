@@ -46,7 +46,7 @@ make config     # Create user data file
 make menu       # Open menu interface
 make dialogrc   # Set builder theme (optional)
 ```
-#### Config Menu [(Odroid Options)](https://github.com/pyavitz/debian-image-builder/commit/ae51e22b5889120aac17b2e4f0e836341d05b37d) / [(KBUILD)](https://github.com/pyavitz/debian-image-builder/commit/e90e5b8ccb5cb8549fbe0a849649002fc2b586be0)
+#### Config Menu [(Odroid Options)](https://github.com/pyavitz/debian-image-builder/commit/ae51e22b5889120aac17b2e4f0e836341d05b37d) / [(KBUILD)](https://github.com/pyavitz/debian-image-builder/commit/e90e5b8ccb5cb8549fbe0a849649002fc2b586be)
 
 ```sh
 Name:		# Whats your name?
