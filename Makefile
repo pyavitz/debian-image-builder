@@ -111,7 +111,8 @@ tritium-kernel:
 
 tritium-image:
 	# Creating image
-	@ echo tritium > board.txt 
+	@ echo tritium > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -133,7 +134,8 @@ tritium-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo tritium > board.txt 
+	@ echo tritium > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -155,7 +157,8 @@ pine64-kernel:
 
 pine64-image:
 	# Creating image
-	@ echo pine64 > board.txt 
+	@ echo pine64 > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -177,7 +180,8 @@ pine64-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo pine64 > board.txt 
+	@ echo pine64 > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -199,7 +203,8 @@ nanopi-kernel:
 
 nanopi-image:
 	# Creating image
-	@ echo nanopi > board.txt 
+	@ echo nanopi > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -221,7 +226,8 @@ nanopi-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo nanopi > board.txt 
+	@ echo nanopi > board.txt
+	@ echo allwinner >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
