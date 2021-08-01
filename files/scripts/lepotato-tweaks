@@ -1,0 +1,14 @@
+#!/bin/bash
+# Need to restart auto-negotiation on ethernet
+
+eth_reset(){
+ethtool -r eth0
+sleep 2s
+ifdown eth0
+sleep 1s
+ifup eth0
+}
+
+if grep "1" /sys/class/net/eth0/carrier > /dev/null 2>&1;
+        then eth_reset;
+fi

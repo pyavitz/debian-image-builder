@@ -753,6 +753,35 @@ systemctl enable odroid-tweak
 echo
 }
 
+lepotato_tweak(){
+echo
+echo Creating Le Potato tweaks service.
+cd ~
+mv -f lepotato-tweaks /usr/bin/lepotato-tweaks
+chmod +x /usr/bin/lepotato-tweaks
+
+tee /etc/systemd/system/lepotato-tweak.service <<EOF
+[Unit]
+Description=Le Potato Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/lepotato-tweaks
+After=network.target
+After=network-online.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/lepotato-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable lepotato-tweak
+echo
+}
+
 enable_services(){
 sleep 1s
 systemctl enable rc-local
