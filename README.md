@@ -46,7 +46,7 @@ make config     # Create user data file
 make menu       # Open menu interface
 make dialogrc   # Set builder theme (optional)
 ```
-#### Config Menu [(Odroid Options)](https://github.com/pyavitz/debian-image-builder/commit/ae51e22b5889120aac17b2e4f0e836341d05b37d)
+#### Config Menu [(Odroid Options)](https://github.com/pyavitz/debian-image-builder/commit/ae51e22b5889120aac17b2e4f0e836341d05b37d) / [(KBUILD)](https://github.com/pyavitz/debian-image-builder/commit/e90e5b8ccb5cb8549fbe0a849649002fc2b586be0)
 
 ```sh
 Name:		# Whats your name?
@@ -63,7 +63,7 @@ Release:	# Debian: buster, bullseye, unstable and sid
 U-Boot and Linux
 U-Boot:         # Supported: v2021.04, v2021.07
 Branch:         # Supported: 5.10 (Note: If building for Odroids please review options)
-Build:          # This gets appended to the end of the kernel version of said deb package 
+Build:          # Kernel build version
 RC:             # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
 Crosscompile:   # 1 to cross compile | 0 to native compile
