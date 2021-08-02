@@ -534,9 +534,12 @@ tee /etc/systemd/system/leds.service <<EOF
 [Unit]
 Description=Set LEDs
 ConditionPathExists=/usr/local/sbin/led-trigger
+
 [Service]
-Type=forking
+Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/local/sbin/led-trigger &>/dev/null
+
 [Install]
 WantedBy=multi-user.target
 EOF
