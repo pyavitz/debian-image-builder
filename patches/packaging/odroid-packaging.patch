@@ -32,13 +32,13 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2-plus.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2-plus.dtb"
 +
 +# legacy
-+if ls "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb" > /dev/null 2>&1;
++if [ -e "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb" ];
 +	then cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb" "$tmpdir/boot/amlogic/meson64_odroidc4.dtb";
 +fi
-+if ls "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb" > /dev/null 2>&1;
++if [ -e "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb" ];
 +	then cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb" "$tmpdir/boot/amlogic/meson64_odroidn2.dtb";
 +fi
-+if ls "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2_plus.dtb" > /dev/null 2>&1;
++if [ -e "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2_plus.dtb" ];
 +	then cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2_plus.dtb" "$tmpdir/boot/amlogic/meson64_odroidn2_plus.dtb";
 +fi
 +
@@ -68,7 +68,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
 +cp headers-byteshift.patch $destdir/
-+if ls $destdir/scripts/module.lds > /dev/null 2>&1;
++if [ -e $destdir/scripts/module.lds ];
 +	then install -m 0644 $srctree/scripts/module.lds $destdir/ > /dev/null 2>&1;
 +fi
 +
@@ -79,9 +79,9 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +CORES=$(grep -c 'processor' /proc/cpuinfo)
 +clean_headers(){
 +echo 'y' | make M=scripts clean
-+if ls headers-byteshift.patch; then patch -p1 < headers-byteshift.patch; fi
-+if ls module.lds; then install -m 0644 module.lds scripts/; fi
-+rm -f headers-byteshift.patch module.lds
++if [ -e headers-byteshift.patch ]; then patch -p1 < headers-byteshift.patch; fi
++if [ -e module.lds ]; then install -m 0644 module.lds scripts/; fi
++rm -f {headers-byteshift.patch,module.lds}
 +}
 +
 +set -e
