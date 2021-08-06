@@ -6,8 +6,6 @@ DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
 # functions
 RFS=./scripts/rootfs
 ROOTFS=sudo ./scripts/rootfs
-RFSV7=./scripts/rootfsv7
-ROOTFSV7=sudo ./scripts/rootfsv7
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
@@ -47,7 +45,7 @@ help:
 	@echo "\e[1;31m                  Debian Image Builder\e[0m"
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
-	@echo "  Allwinner:  nanopi opir1 pine64 tritium"
+	@echo "  Allwinner:  nanopi pine64 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2plus"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64"
@@ -63,8 +61,7 @@ help:
 	@echo ""
 	@echo "  make board-uboot             Make u-boot"
 	@echo "  make board-kernel            Make linux kernel"
-	@echo "  make rootfs                  Make arm64 rootfs tarball"
-	@echo "  make rootfsv7                Make armhf rootfs tarball"
+	@echo "  make rootfs                  Make rootfs tarball"
 	@echo "  make board-image             Make bootable Debian image"
 	@echo "  make board-all               Feeling lucky?"
 	@echo ""
@@ -228,54 +225,6 @@ nanopi-all:
 	# Creating image
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
-
-### ORANGEPI R1
-opir1-uboot:
-	# Compiling u-boot
-	@ echo opir1 > board.txt
-	@ echo armv7 >> board.txt
-	@chmod +x ${XUBOOT}
-	@${UBOOT}
-
-opir1-kernel:
-	# Compiling kernel
-	@ echo opir1 > board.txt
-	@ echo armv7 >> board.txt
-	@ echo allwinner >> board.txt
-	@chmod +x ${XKERNEL}
-	@${KERNEL}
-
-opir1-image:
-	# Creating image
-	@ echo opir1 > board.txt
-	@ echo armv7 >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
-
-opir1-all:
-	# O R A N G E  P I  R 1
-	# - - - - - - - -
-	# Compiling u-boot
-	@ echo opir1 > board.txt
-	@ echo armv7 >> board.txt
-	@chmod +x ${XUBOOT}
-	@${UBOOT}
-	# Building linux package
-	@ echo opir1 > board.txt
-	@ echo armv7 >> board.txt
-	@ echo allwinner >> board.txt
-	@chmod +x ${XKERNEL}
-	@${KERNEL}
-	# Creating ROOTFS tarball
-	@chmod +x ${RFSV7}
-	@${ROOTFSV7}
-	# Creating image
-	@ echo opir1 > board.txt
-	@ echo armv7 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -712,11 +661,6 @@ rootfs:
 	# Rootfs: arm64
 	@chmod +x ${RFS}
 	@${ROOTFS}
-
-rootfsv7:
-	# Rootfs: armhf 
-	@chmod +x ${RFSV7}
-	@${ROOTFSV7}
 
 cleanup:
 	# Cleaning up

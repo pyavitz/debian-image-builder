@@ -1,75 +1,8 @@
-# UBOOT
-bcm_source(){
-mkdir -p ${BCMSRC}
-cp -f board.txt ${BCMSRC}/
-cd ${BCMSRC}
-rm -fdr u-boot
-}
-
-bcm2711_uboot(){
-echo_duboot
-if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_bdone;
-fi
-bcmbuild_uboot
-}
-
-bcmbuild_uboot(){
-echo
-echo_extract
-pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
-mv -f u-boot-${UBOOT_VERSION} u-boot
-cp -f board.txt u-boot/
-cd u-boot
-echo
-export ARCH=arm64
-bcm2711_uboot_defconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rpi_4_defconfig;
-	else make -j${CORES} CC=${NATIVE} rpi_4_defconfig;
-fi
-case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
-  0)
-echo
-echo_menuconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
-	else make -j${CORES} CC=${NATIVE} menuconfig;
-fi
-    ;;
-esac
-echo
-echo_cuboot
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu-;
-	else make -j${CORES} CC=${NATIVE};
-fi
-}
-
-bcm2711_uboot_defconfig(){
-echo CONFIG_SD_BOOT=y >> configs/rpi_4_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/rpi_4_defconfig
-}
-
-bcm2711_binary(){
-mkdir -p ../${BINRPI4}
-cp -f u-boot.bin ../${BINRPI4}/
-echo_done
-echo
-}
-
-bcm2711_uboot_string(){
-bcm_source
-bcm2711_uboot
-bcm2711_binary
-}
-
-## KERNEL
-bcm_kernel(){
-mkdir -p ${BCMSRC}
-cp -f board.txt ${BCMSRC}/
-cd ${BCMSRC}
+# KERNEL
+kernel-source(){
+mkdir -p ${SRC}
+cp -f board.txt ${SRC}/
+cd ${SRC}
 }
 
 broadcom_patching(){

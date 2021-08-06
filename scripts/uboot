@@ -2,10 +2,7 @@
 source lib/function/gcc
 source lib/function/ccache
 source lib/function/echoes
-source lib/function/rockchip
-source lib/function/allwinner
-source lib/function/amlogic
-source lib/function/broadcom
+source lib/function/uboot
 source lib/source
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
@@ -42,18 +39,15 @@ case `grep -Fx "ccache=1" "userdata.txt" >/dev/null; echo $?` in
 	gcc_version
     ;;
 esac
-if `grep -Fx "amlogic" "board.txt" >/dev/null;`
-    then amlogic_uboot_string;
+if [[ `grep -w "amlogic" "board.txt"` ]]; then
+	amlogic-uboot-string;
 fi
-if `grep -Fx "allwinner" "board.txt" >/dev/null;`
-    then allwinner_uboot_string;
+if [[ `grep -w "allwinner" "board.txt"` ]]; then
+	allwinner-uboot-string;
 fi
-if `grep -Fx "rockchip" "board.txt" >/dev/null;`
-    then rockchip_uboot_string;
+if [[ `grep -Fx "rockchip" "board.txt"` ]]; then
+	rockchip-uboot-string;
 fi
-if `grep -Fx "broadcom" "board.txt" >/dev/null;`
-    then bcm2711_uboot_string;
-fi
-if `grep -Fx "opir1" "board.txt" >/dev/null;`
-    then orangepi-r1_uboot_string;
+if [[ `grep -Fx "broadcom" "board.txt"` ]]; then
+	bcm2711-uboot-string;
 fi

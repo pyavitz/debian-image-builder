@@ -1,0 +1,655 @@
+# UBOOT
+ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0"
+
+uboot-source(){
+mkdir -p ${SRC}
+cp -f board.txt ${SRC}/
+cd ${SRC}
+rm -fdr {amlogic-boot-fip-master,blobs/amlogic-u-boot,u-boot}
+}
+
+# ATF
+arm-trusted-firmware(){
+if [[ -e arm-trusted-firmware ]]; then
+	atf_clean
+	cd arm-trusted-firmware;
+	make realclean > /dev/null 2>&1
+else
+	atf_dl
+	git clone https://github.com/ARM-software/arm-trusted-firmware.git
+	cd arm-trusted-firmware;
+	make realclean > /dev/null 2>&1
+fi
+echo
+echo -e "${RED}Compiling ATF${FIN}."
+if [[ `grep -w "allwinner" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		export CROSS_COMPILE=aarch64-linux-gnu-
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=sun50i_a64 DEBUG=1 bl31;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		export ARCH=arm64
+		make -j${CORES} CC=${NATIVE} PLAT=sun50i_a64 DEBUG=1 bl31;
+	fi
+fi
+if [[ `grep -w "renegade" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		export CROSS_COMPILE=aarch64-linux-gnu-
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3328 bl31;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		export ARCH=arm64
+		make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
+	fi
+fi
+if [[ `grep -w "rock64" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		export CROSS_COMPILE=aarch64-linux-gnu-
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3328 bl31;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		export ARCH=arm64
+		make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
+	fi
+fi
+if [[ `grep -w "nanopc" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		export CROSS_COMPILE=aarch64-linux-gnu-
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3399 bl31;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		export ARCH=arm64
+		make -j${CORES} CC=${NATIVE} PLAT=rk3399 bl31;
+	fi
+fi
+cd ..
+echo_done
+}
+
+amlogic-boot-fips(){
+echo_bootfips
+if [[ -e amlogic-boot-fip-master.tar.gz ]]; then
+	echo -e "${YLW}amlogic-boot-fip-master.tar.gz found${FIN}.";
+else
+	${ARIA2} https://github.com/pyavitz/debian-image-builder/releases/download/amlogic-boot-fip/amlogic-boot-fip-master.tar.gz
+	echo_bdone;
+fi
+}
+
+mod_defconfigs(){
+# ALLWINNER
+echo CONFIG_SD_BOOT=y >> configs/libretech_all_h3_cc_h5_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/libretech_all_h3_cc_h5_defconfig
+echo CONFIG_SD_BOOT=y >> configs/pine64_plus_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/pine64_plus_defconfig
+echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_plus2_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_plus2_defconfig
+echo CONFIG_SD_BOOT=y >> configs/orangepi_r1_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/orangepi_r1_defconfig
+# AMLOGIC
+echo CONFIG_SD_BOOT=y >> configs/odroid-c4_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/odroid-c4_defconfig
+echo CONFIG_SD_BOOT=y >> configs/odroid-n2_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/odroid-n2_defconfig
+echo CONFIG_SD_BOOT=y >> configs/libretech-cc_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/libretech-cc_defconfig
+# BROADCOM
+echo CONFIG_SD_BOOT=y >> configs/rpi_4_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/rpi_4_defconfig
+# ROCKCHIP
+echo CONFIG_SD_BOOT=y >> configs/rock64-rk3328_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/rock64-rk3328_defconfig
+echo CONFIG_SD_BOOT=y >> configs/roc-cc-rk3328_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/roc-cc-rk3328_defconfig
+echo CONFIG_SD_BOOT=y >> configs/nanopc-t4-rk3399_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/nanopc-t4-rk3399_defconfig
+echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
+}
+
+u-boot(){
+echo
+echo_duboot
+if [[ -e u-boot-${UBOOT_VERSION}.tar.gz ]]; then
+	echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
+else
+	${ARIA2} https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo_bdone;
+fi
+
+# EXTRACT AND SETUP
+echo
+if [[ `grep -w "amlogic" "../board.txt"` ]]; then
+	echo_extracts;
+else
+	echo_extract;
+fi
+if [[ `grep -w "amlogic" "../board.txt"` ]]; then
+	if [[ -e amlogic-boot-fip-master.tar.gz ]]; then
+		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
+	fi
+fi
+pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
+mv -f u-boot-${UBOOT_VERSION} u-boot
+if [[ `grep -w "allwinner" "../board.txt"` ]]; then
+	cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin;
+fi
+if [[ `grep -w "renegade" "../board.txt"` ]]; then
+	cp arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf u-boot/bl31.elf;
+fi
+if [[ `grep -w "rock64" "../board.txt"` ]]; then
+	cp arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf u-boot/bl31.elf;
+fi
+if [[ `grep -w "nanopc" "../board.txt"` ]]; then
+	cp arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf u-boot/bl31.elf;
+fi
+cp board.txt u-boot/
+cd u-boot
+if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+	for i in ../${ON2PUBOOT}/*.patch; do patch -p1 < $i; done;
+fi
+echo
+export ARCH=arm64
+mod_defconfigs
+
+# MAKE DEFCONFIG
+### ALLWINNER
+if [[ `grep -w "tritium" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech_all_h3_cc_h5_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} libretech_all_h3_cc_h5_defconfig;
+	fi
+fi
+if [[ `grep -w "pine64" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- pine64_plus_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} pine64_plus_defconfig;
+	fi
+fi
+if [[ `grep -w "nanopi" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopi_neo_plus2_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} nanopi_neo_plus2_defconfig;
+	fi
+fi
+### AMLOGIC
+if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-c4_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} odroid-c4_defconfig;
+	fi
+fi
+if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-n2_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} odroid-n2_defconfig;
+	fi
+fi
+if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-n2_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} odroid-n2_defconfig;
+	fi
+fi
+if [[ `grep -w "lepotato" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech-cc_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} libretech-cc_defconfig;
+	fi
+fi
+### BROADCOM
+if [[ `grep -w "bcm2711" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rpi_4_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} rpi_4_defconfig;
+	fi
+fi
+### ROCKCHIP
+if [[ `grep -w "renegade" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- roc-cc-rk3328_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} roc-cc-rk3328_defconfig;
+	fi
+fi
+if [[ `grep -w "rock64" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rock64-rk3328_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} rock64-rk3328_defconfig;
+	fi
+fi
+if [[ `grep -w "nanopc" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopc-t4-rk3399_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} nanopc-t4-rk3399_defconfig;
+	fi
+fi
+
+# MENUCONFIG
+if [[ `grep -w "menuconfig=1" "../../userdata.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} menuconfig;
+	fi
+fi
+
+# COMPILE
+echo
+echo_cuboot
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	echo -e "${GRN}  CC${FIN}"
+	make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu-;
+else
+	echo -e "${GRN}  NC${FIN}"
+	make -j${CORES} CC=${NATIVE};
+fi
+}
+
+# ALLWINNER BINARY
+npineoplus2-binary(){
+mkdir -p ../${BINNPI}
+cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
+cp -f tools/mkimage ../${BINNPI}/
+echo_done
+echo
+}
+
+pine64-binary(){
+mkdir -p ../${BINPINE}
+cp -f u-boot-sunxi-with-spl.bin ../${BINPINE}/
+cp -f tools/mkimage ../${BINPINE}/
+echo_done
+}
+
+tritium-binary(){
+mkdir -p ../${BINTRI}
+cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
+cp -f tools/mkimage ../${BINTRI}/
+echo_done
+echo
+}
+
+# AMLOGIC BINARY
+lepotato-binary(){
+mkdir -p ../${BINLEP}
+cp -f fip/u-boot.bin ../${BINLEP}
+cp -f fip/u-boot.bin.sd.bin ../${BINLEP}
+cp -f tools/mkimage ../${BINLEP}
+echo_done
+}
+
+odroidc4-binary(){
+mkdir -p ../${BINODC4}
+cp -f fip/u-boot.bin ../${BINODC4}
+cp -f fip/u-boot.bin.sd.bin ../${BINODC4}
+cp -f tools/mkimage ../${BINODC4}
+echo_done
+}
+
+odroidn2-binary(){
+mkdir -p ../${BINODN2}
+cp -f fip/u-boot.bin ../${BINODN2}
+cp -f fip/u-boot.bin.sd.bin ../${BINODN2}
+cp -f tools/mkimage ../${BINODN2}
+echo_done
+}
+
+odroidn2plus-binary(){
+mkdir -p ../${BINODN2P}
+cp -f fip/u-boot.bin ../${BINODN2P}
+cp -f fip/u-boot.bin.sd.bin ../${BINODN2P}
+cp -f tools/mkimage ../${BINODN2P}
+echo_done
+}
+
+# BROADCOM BINARY
+bcm2711-binary(){
+mkdir -p ../${BINRPI4}
+cp -f u-boot.bin ../${BINRPI4}/
+echo_done
+echo
+}
+
+# ROCKCHIP BINARY
+renegade-binary(){
+mkdir -p ../${BINRNG}
+cp -f idbloader.img ../${BINRNG}/idbloader.bin
+cp -f u-boot.itb ../${BINRNG}/
+echo_done
+echo
+}
+
+rock64-binary(){
+mkdir -p ../${BINR64}
+cp -f idbloader.img ../${BINR64}/idbloader.bin
+cp -f u-boot.itb ../${BINR64}/
+echo_done
+echo
+}
+
+nanopc-binary(){
+mkdir -p ../${BINNPC}
+cp -f idbloader.img ../${BINNPC}/idbloader.bin
+cp -f u-boot.itb ../${BINNPC}/
+echo_done
+echo
+}
+
+# ALLWINNER RUN BUILD
+allwinner-uboot-string(){
+uboot-source
+arm-trusted-firmware
+u-boot
+if [[ `grep -w "tritium" "../board.txt"` ]]; then
+	tritium-binary;
+fi
+if [[ `grep -w "pine64" "../board.txt"` ]]; then
+	pine64-binary;
+fi
+if [[ `grep -w "nanopi" "../board.txt"` ]]; then
+	npineoplus2-binary;
+fi
+}
+
+# AMLOGIC RUN BUILD
+amlogic-uboot-string(){
+uboot-source
+amlogic-boot-fips
+u-boot
+if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
+	odroidc4_fip
+	odroidc4-binary;
+fi
+if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
+	odroidn2_fip
+	odroidn2-binary;
+fi
+if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+	odroidn2plus_fip
+	odroidn2plus-binary;
+fi
+if [[ `grep -w "lepotato" "../board.txt"` ]]; then
+	lepotato_fip
+	lepotato-binary;
+fi
+}
+
+# BROADCOM RUN BUILD
+bcm2711-uboot-string(){
+uboot-source
+u-boot
+bcm2711-binary
+}
+
+# ROCKCHIP RUN BUILD
+rockchip-uboot-string(){
+uboot-source
+arm-trusted-firmware
+u-boot
+if [[ `grep -Fx "renegade" "../board.txt"` ]]; then
+	renegade-binary;
+fi
+if [[ `grep -Fx "rock64" "../board.txt"` ]]; then
+	rock64-binary;
+fi
+if [[ `grep -Fx "nanopc" "../board.txt"` ]]; then
+	nanopc-binary;
+fi
+}
+
+# FIP
+lepotato_fip(){
+export FIPDIR=$PWD/fip
+mkdir -p fip
+cp -f ../amlogic-boot-fip-master/lepotato/* fip/
+cp -f u-boot.bin fip/bl33.bin
+
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+$FIPDIR/acs_tool.pyc \
+	fip/bl2.bin \
+	fip/bl2_acs.bin \
+	fip/acs.bin 0
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2_acs.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/bl21.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_gxl --bl3enc \
+	--input fip/bl30_new.bin
+
+$FIPDIR/aml_encrypt_gxl --bl3enc \
+	--input fip/bl31.img
+
+$FIPDIR/aml_encrypt_gxl --bl3enc \
+	--input fip/bl33.bin
+
+$FIPDIR/aml_encrypt_gxl --bl2sig \
+	--input fip/bl2_new.bin \
+	--output fip/bl2.n.bin.sig
+
+$FIPDIR/aml_encrypt_gxl --bootmk \
+	--output fip/u-boot.bin \
+	--bl2 fip/bl2.n.bin.sig \
+	--bl30 fip/bl30_new.bin.enc \
+	--bl31 fip/bl31.img.enc \
+	--bl33 fip/bl33.bin.enc
+}
+
+odroidc4_fip(){
+export FIPDIR=$PWD/fip
+mkdir -p fip
+cp -f ../amlogic-boot-fip-master/odroid-c4/* fip/
+cp -f u-boot.bin fip/bl33.bin
+
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/acs.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_g12a --bl30sig --input fip/bl30_new.bin \
+					--output fip/bl30_new.bin.g12a.enc \
+					--level v3
+$FIPDIR/aml_encrypt_g12a --bl3sig --input fip/bl30_new.bin.g12a.enc \
+					--output fip/bl30_new.bin.enc \
+					--level v3 --type bl30
+$FIPDIR/aml_encrypt_g12a --bl3sig --input fip/bl31.img \
+					--output fip/bl31.img.enc \
+					--level v3 --type bl31
+$FIPDIR/aml_encrypt_g12a --bl3sig --input fip/bl33.bin --compress lz4 \
+					--output fip/bl33.bin.enc \
+					--level v3 --type bl33 --compress lz4
+$FIPDIR/aml_encrypt_g12a --bl2sig --input fip/bl2_new.bin \
+					--output fip/bl2.n.bin.sig
+$FIPDIR/aml_encrypt_g12a --bootmk \
+		--output fip/u-boot.bin \
+		--bl2 fip/bl2.n.bin.sig \
+		--bl30 fip/bl30_new.bin.enc \
+		--bl31 fip/bl31.img.enc \
+		--bl33 fip/bl33.bin.enc \
+		--ddrfw1 fip/ddr4_1d.fw \
+		--ddrfw2 fip/ddr4_2d.fw \
+		--ddrfw3 fip/ddr3_1d.fw \
+		--ddrfw4 fip/piei.fw \
+		--ddrfw5 fip/lpddr4_1d.fw \
+		--ddrfw6 fip/lpddr4_2d.fw \
+		--ddrfw7 fip/diag_lpddr4.fw \
+		--ddrfw8 fip/aml_ddr.fw \
+		--ddrfw9 fip/lpddr3_1d.fw \
+		--level v3
+}
+
+odroidn2_fip(){
+export FIPDIR=$PWD/fip
+mkdir -p fip
+cp -f ../amlogic-boot-fip-master/odroid-n2/* fip/
+cp -f u-boot.bin fip/bl33.bin
+
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/acs.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_g12b --bl30sig --input fip/bl30_new.bin \
+					--output fip/bl30_new.bin.g12a.enc \
+					--level v3
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl30_new.bin.g12a.enc \
+					--output fip/bl30_new.bin.enc \
+					--level v3 --type bl30
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl31.img \
+					--output fip/bl31.img.enc \
+					--level v3 --type bl31
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl33.bin --compress lz4 \
+					--output fip/bl33.bin.enc \
+					--level v3 --type bl33 --compress lz4
+$FIPDIR/aml_encrypt_g12b --bl2sig --input fip/bl2_new.bin \
+					--output fip/bl2.n.bin.sig
+$FIPDIR/aml_encrypt_g12b --bootmk \
+		--output fip/u-boot.bin \
+		--bl2 fip/bl2.n.bin.sig \
+		--bl30 fip/bl30_new.bin.enc \
+		--bl31 fip/bl31.img.enc \
+		--bl33 fip/bl33.bin.enc \
+		--ddrfw1 fip/ddr4_1d.fw \
+		--ddrfw2 fip/ddr4_2d.fw \
+		--ddrfw3 fip/ddr3_1d.fw \
+		--ddrfw4 fip/piei.fw \
+		--ddrfw5 fip/lpddr4_1d.fw \
+		--ddrfw6 fip/lpddr4_2d.fw \
+		--ddrfw7 fip/diag_lpddr4.fw \
+		--ddrfw8 fip/aml_ddr.fw \
+		--ddrfw9 fip/lpddr3_1d.fw \
+		--level v3
+}
+
+odroidn2plus_fip(){
+export FIPDIR=$PWD/fip
+mkdir -p fip
+cp -f ../amlogic-boot-fip-master/odroid-n2-plus/* fip/
+cp -f u-boot.bin fip/bl33.bin
+
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/acs.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_g12b --bl30sig --input fip/bl30_new.bin \
+					--output fip/bl30_new.bin.g12a.enc \
+					--level v3
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl30_new.bin.g12a.enc \
+					--output fip/bl30_new.bin.enc \
+					--level v3 --type bl30
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl31.img \
+					--output fip/bl31.img.enc \
+					--level v3 --type bl31
+$FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl33.bin --compress lz4 \
+					--output fip/bl33.bin.enc \
+					--level v3 --type bl33 --compress lz4
+$FIPDIR/aml_encrypt_g12b --bl2sig --input fip/bl2_new.bin \
+					--output fip/bl2.n.bin.sig
+$FIPDIR/aml_encrypt_g12b --bootmk \
+		--output fip/u-boot.bin \
+		--bl2 fip/bl2.n.bin.sig \
+		--bl30 fip/bl30_new.bin.enc \
+		--bl31 fip/bl31.img.enc \
+		--bl33 fip/bl33.bin.enc \
+		--ddrfw1 fip/ddr4_1d.fw \
+		--ddrfw2 fip/ddr4_2d.fw \
+		--ddrfw3 fip/ddr3_1d.fw \
+		--ddrfw4 fip/piei.fw \
+		--ddrfw5 fip/lpddr4_1d.fw \
+		--ddrfw6 fip/lpddr4_2d.fw \
+		--ddrfw7 fip/diag_lpddr4.fw \
+		--ddrfw8 fip/aml_ddr.fw \
+		--ddrfw9 fip/lpddr3_1d.fw \
+		--level v3
+}

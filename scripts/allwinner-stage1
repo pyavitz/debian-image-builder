@@ -57,9 +57,6 @@ fi
 if `grep -Fx "pine64" "board.txt" >/dev/null;`
 	then DEVICE_SOC="a64-pine64-plus"
 fi
-if `grep -Fx "opir1" "board.txt" >/dev/null;`
-	then DEVICE_SOC="h2-plus-orangepi-r1"
-fi
 
 IMAGE_DATE="$(date +%F)"
 IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
@@ -80,33 +77,16 @@ if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 	else partition_uuid > /dev/null 2>&1;
 fi
 
-case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
-  0)
-    if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-armhf.tar.xz ];
-	then tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-armhf.tar.xz -C p1/
-	else echo -e "${YLW}Missing rootfs tarball!${FIN}." && make cleanup && exit;
-    fi
-    ;;
-  1)
-    if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ];
+if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ];
 	then tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p1/
 	else echo -e "${YLW}Missing rootfs tarball!${FIN}" && make cleanup && exit;
-    fi
-    ;;
-esac
+fi
 
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 
 mkdir -p p1/usr/bin
-case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
-  0)
-    cp $(which "qemu-arm-static") p1/usr/bin
-    ;;
-  1)
-    cp $(which "qemu-aarch64-static") p1/usr/bin
-    ;;
-esac
+cp $(which "qemu-aarch64-static") p1/usr/bin
 
 if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
 	then choose_release;
@@ -143,9 +123,6 @@ fi
 if `grep -Fx "pine64" "board.txt" >/dev/null;`
     then cp output/pine64/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
 fi
-if `grep -Fx "opir1" "board.txt" >/dev/null;`
-    then cp output/opir1/{u-boot-sunxi-with-spl.bin,*.deb,mkimage} p1/root && cp files/boot/opir1-firstboot p1/root;
-fi
 echo -e "${WHT}Starting chroot${FIN} ..."
 # mount and chroot
 mount -o bind /dev p1/dev
@@ -154,14 +131,7 @@ chroot p1 /root/allwinner-stage2
 # unmount
 umount p1/dev/pts
 umount p1/dev
-case `grep -Fx "armv7" "board.txt" >/dev/null; echo $?` in
-  0)
-    rm p1/usr/bin/qemu-arm-static
-    ;;
-  1)
-    rm p1/usr/bin/qemu-aarch64-static
-    ;;
-esac
+rm p1/usr/bin/qemu-aarch64-static
 cp -f p1/root/kernel.txt .
 rm p1/root/allwinner-stage2
 rm -f p1/root/*.txt

@@ -1,7 +1,7 @@
 ## Supported boards
 ```sh
-Allwinner:      # NanoPi NEO Plus2, Orange Pi R1, Pine A64+ and Tritium
-Amlogic:        # Le Potato, Odroid C4 and Odroid N2/Plus
+Allwinner:      # NanoPi NEO Plus2, Pine A64+ and Tritium
+Amlogic:        # Le Potato and Odroid C4/N2/N2+
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
@@ -17,11 +17,6 @@ sudo apt install \
 	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
 	debian-archive-keyring debian-keyring python-setuptools python3-setuptools \
 	python-distutils-extra libelf-dev
-                 
-Orange Pi R1
-sudo apt install \
-	crossbuild-essential-armhf gcc-8-arm-linux-gnueabihf \
-	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf
 ```
 
 ### Docker

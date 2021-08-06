@@ -1,0 +1,359 @@
+# KERNEL
+DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
+STBURL="https://cdn.kernel.org/pub/linux/kernel/v5.x/"
+MLURL="https://git.kernel.org/torvalds/t/"
+ODURL="https://github.com/tobetter/linux/archive/refs/heads/"
+
+rpi4_binaries(){
+BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
+mkdir -p binaries
+rm -f binaries/*
+cd binaries
+echo
+echo_bins
+${DOWNLOAD} ${BINURL}fixup4.dat
+${DOWNLOAD} ${BINURL}start4.elf
+${DOWNLOAD} ${BINURL}LICENCE.broadcom
+${DOWNLOAD} ${BINURL}COPYING.linux
+cd ..
+if ls binaries/{fixup4.dat,start4.elf} > /dev/null 2>&1
+	then echo_bdone;
+	else echo_fail && exit;
+fi
+}
+
+check_stable(){
+if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
+	then stable_download && stable_extract; else check_odroid;
+fi
+}
+
+check_odroid(){
+if [[ `wget -S --spider https://raw.githubusercontent.com/tobetter/linux/odroid-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
+	then odroid_download && odroid_extract; else echo && echo -e "${WHT}It appears the kernel you selected is not available${FIN}?" && exit;
+fi
+}
+
+stable_download(){
+echo
+echo_stable
+if [ -e ${KERNEL}-${VERSION}.tar.xz ]; then
+	echo -e "${YLW}${KERNEL}-${VERSION}.tar.xz found${FIN}.";
+else
+	${DOWNLOAD} ${STBURL}${KERNEL}-${VERSION}.tar.xz
+	echo_bdone;
+fi
+if [[ `grep -w "rtl8812au=1" "../userdata.txt"` ]]; then
+	rtl8812au_download;
+fi
+if [[ `grep -w "rtl88x2bu=1" "../userdata.txt"` ]]; then
+	rtl88x2bu_download;
+fi
+if [[ `grep -w "rtl8811cu=1" "../userdata.txt"` ]]; then
+	rtl8811cu_download;
+fi
+}
+
+mainline_download(){
+echo
+echo_mainline
+if  [ -e ${KERNEL}-${VERSION}.tar.gz ]; then
+	echo -e "${YLW}${KERNEL}-${VERSION}.tar.gz found${FIN}.";
+else
+	${DOWNLOAD} ${MLURL}${KERNEL}-${VERSION}.tar.gz
+	echo_bdone;
+fi
+if [[ `grep -w "rtl8812au=1" "../userdata.txt"` ]]; then
+	rtl8812au_download;
+fi
+if [[ `grep -w "rtl88x2bu=1" "../userdata.txt"` ]]; then
+	rtl88x2bu_download;
+fi
+if [[ `grep -w "rtl8811cu=1" "../userdata.txt"` ]]; then
+	rtl8811cu_download;
+fi
+}
+
+odroid_download(){
+echo
+echo_odroid
+if [ -e ${ODKERNEL}-${VERSION}.tar.gz ]; then
+	echo -e "${YLW}${ODKERNEL}-${VERSION}.tar.gz found${FIN}.";
+else
+	${DOWNLOAD} ${ODURL}odroid-${VERSION}.tar.gz
+	echo_bdone;
+fi
+if [[ `grep -w "rtl8812au=1" "../userdata.txt"` ]]; then
+	rtl8812au_download;
+fi
+if [[ `grep -w "rtl88x2bu=1" "../userdata.txt"` ]]; then
+	rtl88x2bu_download;
+fi
+if [[ `grep -w "rtl8811cu=1" "../userdata.txt"` ]]; then
+	rtl8811cu_download;
+fi
+}
+
+stable_extract(){
+echo
+echo_extract
+echo -e -n "${WHT}"
+pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+echo -e -n "${FIN}"
+}
+
+mainline_extract(){
+echo
+echo_extract
+echo -e -n "${WHT}"
+pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+echo -e -n "${FIN}"
+}
+
+odroid_extract(){
+echo
+echo_extract
+echo -e -n "${WHT}"
+pv ${ODKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+mv -f ${ODKERNEL}-${VERSION} linux-${VERSION}
+echo -e -n "${FIN}"
+}
+
+setup(){
+sleep 1s
+if [[ `grep -w "rtl8812au=1" "../userdata.txt"` ]]; then
+	rtl8812au;
+fi
+if [[ `grep -w "rtl88x2bu=1" "../userdata.txt"` ]]; then
+	rtl88x2bu;
+fi
+if [[ `grep -w "rtl8811cu=1" "../userdata.txt"` ]]; then
+	rtl8811cu;
+fi
+cd ${KERNEL}-${VERSION}
+if [[ `grep -w "bcm2711" "../board.txt"` ]]; then
+	rpi4_binaries;
+fi
+export ARCH=arm64
+rm -f scripts/package/builddeb
+rm -f scripts/package/mkdebian
+cp -R ../${PACKAGING}/builddeb scripts/package/
+cp -R ../${PACKAGING}/mkdebian scripts/package/
+chmod +x scripts/package/builddeb
+chmod +x scripts/package/mkdebian
+}
+
+cconfig(){
+echo_cconfig
+cp -f ../${DEF}/${MYCONFIG} arch/arm64/configs/
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- ${MYCONFIG};
+else
+	make ARCH=arm64 CC=${NATIVE} ${MYCONFIG};
+fi
+echo_done
+}
+
+menuconfig(){
+echo
+echo_menuconfig
+sleep 1s
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
+else
+	make ARCH=arm64 CC=${NATIVE} menuconfig;
+fi
+}
+
+ccompile(){
+echo -e "-- ${GRN}CC${FIN}"
+echo_build
+echo ${BUILD_VERSION} > .version
+echo 'y' | make -j${CORES} ARCH=arm64 KBUILD_BUILD_HOST=${KBHOST} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- bindeb-pkg
+}
+
+ncompile(){
+echo -e "-- ${GRN}NC${FIN}"
+echo_build
+echo ${BUILD_VERSION} > .version
+echo 'y' | make -j${CORES} KBUILD_BUILD_HOST=${KBHOST} ARCH=arm64 CC=${NATIVE} bindeb-pkg
+}
+
+# AMLOGIC
+amlogic_defconfig(){
+echo_defconfig
+cp -f ../${DEF}/amlogic_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- amlogic_defconfig;
+else
+	make ARCH=arm64 CC=${NATIVE} amlogic_defconfig;
+fi
+echo_done
+}
+
+# ODROID
+odroid_defconfig(){
+echo_defconfig
+cp -f ../${DEF}/odroid_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid_defconfig;
+else
+	make ARCH=arm64 CC=${NATIVE} odroid_defconfig;
+fi
+echo_done
+}
+
+### LE POTATO
+le_potato(){
+potato_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	amlogic_defconfig;
+fi
+}
+
+### ODROID C4
+odroid_c4(){
+odroidc4_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	odroid_defconfig;
+fi
+}
+
+### ODROID N2
+odroid_n2(){
+odroidn2_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	odroid_defconfig;
+fi
+}
+
+# ALLWINNER
+allwinner_defconfig(){
+echo_defconfig
+cp -f ../${DEF}/allwinner_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- allwinner_defconfig;
+else
+	make ARCH=arm64 CC=${NATIVE} allwinner_defconfig;
+fi
+echo_done
+}
+
+### TRITIUM
+tritium_h5(){
+tritium_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	allwinner_defconfig;
+fi
+}
+
+### PINEA64 PLUS
+pine_a64(){
+pine64_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	allwinner_defconfig;
+fi
+}
+
+### NANOPI NEO PLUS2
+nanopi_neo_plus2(){
+nanopi_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	allwinner_defconfig;
+fi
+}
+
+### ROCKCHIP
+rockchip_defconfig(){
+echo_defconfig
+cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rockchip64_defconfig;
+else
+	make ARCH=arm64 CC=${NATIVE} rockchip64_defconfig;
+fi
+echo_done
+}
+
+rk3328_roc_cc(){
+rk3328_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	rockchip_defconfig;
+fi
+}
+
+rk3328_rock64(){
+rk3328_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	rockchip_defconfig;
+fi
+}
+
+rk3399_nanopc(){
+rk3399_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	rockchip_defconfig;
+fi
+}
+
+### BROADCOM
+bcm2711_defconfig(){
+echo_defconfig
+cp -f ../${DEF}/bcm2711_defconfig arch/arm64/configs/
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	make ARCH=arm64 CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig;
+else
+	make ARCH=arm64 CC=${NATIVE} bcm2711_defconfig;
+fi
+echo_done
+}
+
+bcm_2711(){
+raspberrypi_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	bcm2711_defconfig;
+fi
+}
+
+builddeb(){
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	ccompile;
+else
+	ncompile;
+fi
+}

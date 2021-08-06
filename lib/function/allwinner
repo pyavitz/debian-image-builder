@@ -1,214 +1,8 @@
-# UBOOT
-all_source(){
-mkdir -p ${ALLSRC}
-cp -f board.txt ${ALLSRC}/
-cd ${ALLSRC}
-rm -fdr u-boot
-}
-
-# ATF
-armtrusted_firmware(){
-if ls arm-trusted-firmware > /dev/null 2>&1
-	then atf_clean && cd arm-trusted-firmware;
-	else atf_dl && git clone https://github.com/ARM-software/arm-trusted-firmware.git && cd arm-trusted-firmware;
-fi
-echo
-echo -e "${RED}Compiling ATF${FIN}."
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then export CROSS_COMPILE=aarch64-linux-gnu-;
-	else export ARCH=arm64;
-fi
-make realclean > /dev/null 2>&1
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} PLAT=sun50i_a64 DEBUG=1 bl31;
-	else make -j${CORES} CC=${NATIVE} PLAT=sun50i_a64 DEBUG=1 bl31;
-fi
-cd ..
-echo_done
-}
-
-tritium_defconfig(){
-echo CONFIG_SD_BOOT=y >> configs/libretech_all_h3_cc_h5_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/libretech_all_h3_cc_h5_defconfig
-}
-
-pine64_defconfig(){
-echo CONFIG_SD_BOOT=y >> configs/pine64_plus_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/pine64_plus_defconfig
-}
-
-nanopi_defconfig(){
-echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_plus2_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_plus2_defconfig
-}
-
-opir1_defconfig(){
-echo CONFIG_SD_BOOT=y >> configs/orangepi_r1_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/orangepi_r1_defconfig
-}
-
-# UBOOT
-allwinner_uboot(){
-echo
-echo_duboot
-if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_bdone;
-fi
-echo
-echo_extract
-pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
-mv -f u-boot-${UBOOT_VERSION} u-boot
-cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin
-cp board.txt u-boot/
-cd u-boot
-echo
-export ARCH=arm64
-case `grep -Fx "tritium" "../board.txt" >/dev/null; echo $?` in
-  0)
-tritium_defconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech_all_h3_cc_h5_defconfig;
-	else make -j${CORES} CC=${NATIVE} libretech_all_h3_cc_h5_defconfig;
-fi
-    ;;
-esac
-case `grep -Fx "pine64" "../board.txt" >/dev/null; echo $?` in
-  0)
-pine64_defconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- pine64_plus_defconfig;
-	else make -j${CORES} CC=${NATIVE} pine64_plus_defconfig;
-fi
-    ;;
-esac
-case `grep -Fx "nanopi" "../board.txt" >/dev/null; echo $?` in
-  0)
-nanopi_defconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopi_neo_plus2_defconfig;
-	else make -j${CORES} CC=${NATIVE} nanopi_neo_plus2_defconfig;
-fi
-    ;;
-esac
-case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
-  0)
-echo
-echo_menuconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- menuconfig;
-	else make -j${CORES} CC=${NATIVE} menuconfig;
-fi
-    ;;
-esac
-echo
-echo_cuboot
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu-;
-	else make -j${CORES} CC=${NATIVE};
-fi
-}
-
-opir1_uboot(){
-echo_duboot
-if ls u-boot-${UBOOT_VERSION}.tar.gz > /dev/null 2>&1
-	then echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
-	else aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz && echo_ok;
-fi
-echo
-echo_extract
-pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
-echo_done
-mv -f u-boot-${UBOOT_VERSION} u-boot
-cp board.txt u-boot/
-cd u-boot
-echo
-export ARCH=arm
-case `grep -Fx "opir1" "../board.txt" >/dev/null; echo $?` in
-  0)
-opir1_defconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- orangepi_r1_defconfig;
-	else make -j${CORES} CC=${NATIVE} orangepi_r1_defconfig;
-fi
-    ;;
-esac
-case `grep -Fx "menuconfig=1" "../../userdata.txt" >/dev/null; echo $?` in
-  0)
-echo
-echo_menuconfig
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf- menuconfig;
-	else make -j${CORES} CC=${NATIVE} menuconfig;
-fi
-    ;;
-esac
-echo
-echo_cuboot
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then make -j${CORES} CC=${ARMV7_CROSS} CROSS_COMPILE=arm-linux-gnueabihf-;
-	else make -j${CORES} CC=${NATIVE};
-fi
-}
-
-# BINARY
-npineoplus2_binary(){
-mkdir -p ../${BINNPI}
-cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
-cp -f tools/mkimage ../${BINNPI}/
-echo_done
-echo
-}
-
-pine64_binary(){
-mkdir -p ../${BINPINE}
-cp -f u-boot-sunxi-with-spl.bin ../${BINPINE}/
-cp -f tools/mkimage ../${BINPINE}/
-echo_done
-}
-
-tritium_binary(){
-mkdir -p ../${BINTRI}
-cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
-cp -f tools/mkimage ../${BINTRI}/
-echo_done
-echo
-}
-
-opir1_binary(){
-mkdir -p ../${BINR1}
-cp -f u-boot-sunxi-with-spl.bin ../${BINR1}/
-cp -f tools/mkimage ../${BINR1}/
-echo_done
-echo
-}
-
-allwinner_uboot_string(){
-all_source
-armtrusted_firmware
-allwinner_uboot
-if `grep -Fx "tritium" "../board.txt" >/dev/null;`
-	then tritium_binary;
-fi
-if `grep -Fx "pine64" "../board.txt" >/dev/null;`
-	then pine64_binary;
-fi
-if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
-	then npineoplus2_binary;
-fi
-}
-
-orangepi-r1_uboot_string(){
-all_source
-opir1_uboot
-opir1_binary
-}
-
-## KERNEL
-all_kernel(){
-mkdir -p ${ALLSRC}
-cp -f board.txt ${ALLSRC}/
-cd ${ALLSRC}
+# KERNEL
+kernel-source(){
+mkdir -p ${SRC}
+cp -f board.txt ${SRC}/
+cd ${SRC}
 }
 
 # TRITIUM
@@ -263,22 +57,6 @@ echo_done
 echo
 }
 
-# ORANGEPI R1
-opir1_patch(){
-echo
-echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/allwinner-v7-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/allwinner-v7-nc-packaging.patch ;
-fi
-for i in ../${SUN8I}/*.patch; do patch -p1 < $i; done
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
-fi
-echo_done
-echo
-}
-
 tritium_check(){
 if ls ${BINTRI}/*.deb > /dev/null 2>&1
 	then mkdir -p ${BINTRI}/tmp && mv -f ${BINTRI}/*.deb ${BINTRI}/tmp;
@@ -297,12 +75,6 @@ if ls ${BINNPI}/*.deb > /dev/null 2>&1
 fi
 }
 
-opir1_check(){
-if ls ${BINR1}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINR1}/tmp && mv -f ${BINR1}/*.deb ${BINR1}/tmp;
-fi
-}
-
 allwinner_output(){
 if `grep -Fx "tritium" "../board.txt" >/dev/null;`
 	then tritium_check && mkdir -p ../output/tritium && mv -f *.deb ../output/tritium/;
@@ -312,9 +84,6 @@ if `grep -Fx "pine64" "../board.txt" >/dev/null;`
 fi
 if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
 	then nanopi_check && mkdir -p ../output/nanopi && mv -f *.deb ../output/nanopi/;
-fi
-if `grep -Fx "opir1" "../board.txt" >/dev/null;`
-	then opir1_check && mkdir -p ../output/opir1 && mv -f *.deb ../output/opir1/;
 fi
 }
 
@@ -353,9 +122,6 @@ fi
 if `grep -Fx "pine64" "board.txt" >/dev/null;`
    then pine64_flashbin
 fi
-if `grep -Fx "opir1" "board.txt" >/dev/null;`
-   then opir1_flashbin
-fi
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
@@ -369,10 +135,6 @@ dd if=output/nanopi/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync 
 
 pine64_flashbin(){
 dd if=output/pine64/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
-}
-
-opir1_flashbin(){
-dd if=output/opir1/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
 partition_uuid(){
@@ -396,19 +158,19 @@ echo Creating firstboot.
 tee /usr/local/sbin/firstboot <<EOF
 #!/bin/bash
 ### Functions
-grow_mmcblk () {
+grow_mmcblk(){
 bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
 sleep 1s
 resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
 }
 
-grow_mmcblk1 () {
+grow_mmcblk1(){
 bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
 sleep 1s
 resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
 }
 
-grow_mmcblk2 () {
+grow_mmcblk2(){
 bash growpart mmcblk2 1 > /dev/null 2>&1
 sleep 1s
 resize2fs mmcblk2p1 > /dev/null 2>&1
@@ -432,16 +194,6 @@ rm -f /var/cache/debconf/*
 rm -f /usr/local/sbin/firstboot
 exit 0
 EOF
-}
-
-orangepir1_firstboot(){
-echo
-echo Adding firstboot script.
-mkdir -p /usr/local/sbin
-mv -f opir1-firstboot /usr/local/sbin/firstboot
-chmod +x /usr/local/sbin/firstboot
-chown root:root /usr/local/sbin/firstboot
-echo Done.
 }
 
 tritium_extlinux(){
@@ -486,22 +238,6 @@ label kernel
     fdtdir /boot/allwinner/
     fdt /boot/allwinner/sun50i-a64-pine64-plus.dtb
     append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-echo Done.
-}
-
-opir1_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label kernel
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/allwinner/
-    fdt /boot/allwinner/sun8i-h2-plus-orangepi-r1.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
 echo Done.
 }
