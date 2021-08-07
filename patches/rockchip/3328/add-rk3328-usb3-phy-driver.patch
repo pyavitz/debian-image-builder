@@ -1384,44 +1384,6 @@ index 31cc1541f1f5..072e988ad655 100644
  	sdmmc: mmc@ff500000 {
  		compatible = "rockchip,rk3328-dw-mshc", "rockchip,rk3288-dw-mshc";
  		reg = <0x0 0xff500000 0x0 0x4000>;
-@@ -936,6 +977,37 @@
- 		status = "disabled";
- 	};
- 
-+	usbdrd3: usb@ff600000 {
-+		compatible = "rockchip,rk3328-dwc3", "rockchip,rk3399-dwc3";
-+		clocks = <&cru SCLK_USB3OTG_REF>, <&cru ACLK_USB3OTG>,
-+			 <&cru SCLK_USB3OTG_SUSPEND>;
-+		clock-names = "ref", "bus_early",
-+			      "suspend";
-+		#address-cells = <2>;
-+		#size-cells = <2>;
-+		ranges;
-+		clock-ranges;
-+		status = "disabled";
-+
-+		usbdrd_dwc3: dwc3@ff600000 {
-+			compatible = "snps,dwc3";
-+			reg = <0x0 0xff600000 0x0 0x100000>;
-+			interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;
-+			dr_mode = "otg";
-+			phys = <&u3phy_utmi>, <&u3phy_pipe>;
-+			phy-names = "usb2-phy", "usb3-phy";
-+			phy_type = "utmi_wide";
-+			snps,dis_enblslpm_quirk;
-+			snps,dis-u2-freeclk-exists-quirk;
-+			snps,dis_u2_susphy_quirk;
-+			snps,dis_u3_susphy_quirk;
-+			snps,dis-del-phy-power-chg-quirk;
-+			snps,dis-tx-ipgap-linecheck-quirk;
-+			snps,xhci-trb-ent-quirk;
-+			status = "disabled";
-+		};
-+	};
-+
- 	gic: interrupt-controller@ff811000 {
- 		compatible = "arm,gic-400";
- 		#interrupt-cells = <3>;
 
 diff --git a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
 index bb40c163b05d..f300f3d0f02e 100644
