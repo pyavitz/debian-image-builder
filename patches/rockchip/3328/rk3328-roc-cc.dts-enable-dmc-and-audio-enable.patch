@@ -1,8 +1,94 @@
-diff --git a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
-index f4b6799a8..a1041ec3e 100644
---- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
-+++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
-@@ -21,33 +21,24 @@
+--- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2021-08-04 06:46:45.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2021-08-06 21:16:35.738557078 -0400
+@@ -4,6 +4,7 @@
+  */
+ 
+ /dts-v1/;
++#include "rk3328-dram-renegade-timing.dtsi"
+ #include "rk3328.dtsi"
+ 
+ / {
+@@ -14,6 +15,79 @@
+ 		stdout-path = "serial2:1500000n8";
+ 	};
+ 
++	dfi: dfi@ff790000 {
++		reg = <0x00 0xff790000 0x00 0x400>;
++		compatible = "rockchip,rk3328-dfi";
++		rockchip,grf = <&grf>;
++		status = "okay";
++	};
++
++	dmc: dmc {
++		compatible = "rockchip,rk3328-dmc";
++		center-supply = <&vdd_logic>;
++		devfreq-events = <&dfi>;
++		clocks = <&cru SCLK_DDRCLK>;
++		clock-names = "dmc_clk";
++		operating-points-v2 = <&dmc_opp_table>;
++		ddr_timing = <&ddr_timing>;
++		upthreshold = <40>;
++		downdifferential = <20>;
++		auto-min-freq = <840000>;
++		auto-freq-en = <0>;
++		#cooling-cells = <2>;
++		status = "okay";
++
++		ddr_power_model: ddr_power_model {
++			compatible = "ddr_power_model";
++			dynamic-power-coefficient = <120>;
++			static-power-coefficient = <200>;
++			ts = <32000 4700 (-80) 2>;
++			thermal-zone = "soc-thermal";
++		};
++	};
++
++	dmc_opp_table: dmc-opp-table {
++		compatible = "operating-points-v2";
++
++		rockchip,leakage-voltage-sel = <
++			1   10    0
++			11  254   1
++		>;
++		nvmem-cells = <&logic_leakage>;
++		nvmem-cell-names = "ddr_leakage";
++
++		opp-786000000 {
++			opp-hz = /bits/ 64 <786000000>;
++			opp-microvolt = <1075000>;
++			opp-microvolt-L0 = <1075000>;
++			opp-microvolt-L1 = <1050000>;
++		};
++		opp-798000000 {
++			opp-hz = /bits/ 64 <798000000>;
++			opp-microvolt = <1075000>;
++			opp-microvolt-L0 = <1075000>;
++			opp-microvolt-L1 = <1050000>;
++		};
++		opp-840000000 {
++			opp-hz = /bits/ 64 <840000000>;
++			opp-microvolt = <1075000>;
++			opp-microvolt-L0 = <1075000>;
++			opp-microvolt-L1 = <1050000>;
++		};
++		opp-924000000 {
++			opp-hz = /bits/ 64 <924000000>;
++			opp-microvolt = <1100000>;
++			opp-microvolt-L0 = <1100000>;
++			opp-microvolt-L1 = <1075000>;
++		};
++		opp-1068000000 {
++			opp-hz = /bits/ 64 <1068000000>;
++			opp-microvolt = <1175000>;
++			opp-microvolt-L0 = <1175000>;
++			opp-microvolt-L1 = <1150000>;
++		};
++	};
++
+ 	gmac_clkin: external-gmac-clock {
+ 		compatible = "fixed-clock";
+ 		clock-frequency = <125000000>;
+@@ -21,18 +95,9 @@
  		#clock-cells = <0>;
  	};
  
@@ -22,9 +108,7 @@ index f4b6799a8..a1041ec3e 100644
  		pinctrl-names = "default";
  		pinctrl-0 = <&sdmmc0m1_pin>;
  		regulator-boot-on;
- 		regulator-name = "vcc_sd";
- 		regulator-min-microvolt = <3300000>;
- 		regulator-max-microvolt = <3300000>;
+@@ -42,12 +107,12 @@
  		vin-supply = <&vcc_io>;
  	};
  
@@ -32,14 +116,14 @@ index f4b6799a8..a1041ec3e 100644
 +	vccio_sd: sdmmcio-regulator {
  		compatible = "regulator-gpio";
  		gpios = <&grf_gpio 0 GPIO_ACTIVE_HIGH>;
- 		states = <1800000 0x1
- 			  3300000 0x0>;
+ 		states = <1800000 0x1>,
+ 			 <3300000 0x0>;
 -		regulator-name = "vcc_sdio";
 +		regulator-name = "vccio_sd";
  		regulator-type = "voltage";
  		regulator-min-microvolt = <1800000>;
  		regulator-max-microvolt = <3300000>;
-@@ -68,11 +60,8 @@
+@@ -69,11 +134,8 @@
  	vcc_sys: vcc-sys {
  		compatible = "regulator-fixed";
  		regulator-name = "vcc_sys";
@@ -51,20 +135,31 @@ index f4b6799a8..a1041ec3e 100644
  	};
  
  	vcc_phy: vcc-phy-regulator {
-@@ -82,7 +71,24 @@
+@@ -82,7 +144,14 @@
  		regulator-always-on;
  		regulator-boot-on;
  	};
--};
-+
+-
++		
 +	ir-receiver {
 +		compatible = "gpio-ir-receiver";
 +		gpios = <&gpio2 RK_PA2 GPIO_ACTIVE_LOW>;
 +		pinctrl-0 = <&ir_int>;
 +		pinctrl-names = "default";
 +	};
-+};
-+
++	
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+@@ -100,10 +169,21 @@
+ 			gpios = <&rk805 0 GPIO_ACTIVE_LOW>;
+ 			default-state = "off";
+ 			mode = <0x05>;
++		
+ 		};
+ 	};
+ };
+ 
 +&analog_sound {
 +	simple-audio-card,name = "TRS Jack";
 +	status = "okay";
@@ -74,10 +169,11 @@ index f4b6799a8..a1041ec3e 100644
 +	status = "okay";
 +};
 +
-
++
  &cpu0 {
  	cpu-supply = <&vdd_arm>;
-@@ -122,7 +127,6 @@
+ };
+@@ -123,7 +203,6 @@
  &emmc {
  	bus-width = <8>;
  	cap-mmc-highspeed;
@@ -85,7 +181,7 @@ index f4b6799a8..a1041ec3e 100644
  	mmc-ddr-1_8v;
  	mmc-hs200-1_8v;
  	non-removable;
-@@ -152,6 +156,10 @@
+@@ -153,6 +232,10 @@
  	status = "okay";
  };
  
@@ -96,7 +192,7 @@ index f4b6799a8..a1041ec3e 100644
  &hdmi {
  	status = "okay";
  };
-@@ -160,6 +168,10 @@
+@@ -161,6 +244,10 @@
  	status = "okay";
  };
  
@@ -107,7 +203,7 @@ index f4b6799a8..a1041ec3e 100644
  &i2c1 {
  	status = "okay";
  
-@@ -187,8 +199,9 @@
+@@ -188,8 +275,9 @@
  		regulators {
  			vdd_logic: DCDC_REG1 {
  				regulator-name = "vdd_logic";
@@ -119,19 +215,18 @@ index f4b6799a8..a1041ec3e 100644
  				regulator-always-on;
  				regulator-boot-on;
  				regulator-state-mem {
-@@ -199,8 +212,9 @@
+@@ -200,8 +288,9 @@
  
  			vdd_arm: DCDC_REG2 {
  				regulator-name = "vdd_arm";
 -				regulator-min-microvolt = <712500>;
--				regulator-max-microvolt = <1450000>;
 +				regulator-min-microvolt = <950000>;
-+				regulator-max-microvolt = <1450000>;
+ 				regulator-max-microvolt = <1450000>;
 +				regulator-ramp-delay = <12500>;
  				regulator-always-on;
  				regulator-boot-on;
  				regulator-state-mem {
-@@ -269,12 +283,20 @@
+@@ -270,12 +359,20 @@
  	};
  };
  
@@ -153,7 +248,7 @@ index f4b6799a8..a1041ec3e 100644
  	vccio4-supply = <&vcc_18>;
  	vccio5-supply = <&vcc_io>;
  	vccio6-supply = <&vcc_io>;
-@@ -282,6 +304,12 @@
+@@ -283,6 +380,12 @@
  };
  
  &pinctrl {
@@ -166,15 +261,15 @@ index f4b6799a8..a1041ec3e 100644
  	pmic {
  		pmic_int_l: pmic-int-l {
  			rockchip,pins = <1 RK_PD0 RK_FUNC_GPIO &pcfg_pull_up>;
-@@ -308,11 +336,26 @@
+@@ -309,11 +412,26 @@
  	sd-uhs-sdr50;
  	sd-uhs-sdr104;
  	vmmc-supply = <&vcc_sd>;
 -	vqmmc-supply = <&vcc_sdio>;
 +	vqmmc-supply = <&vccio_sd>;
-+	status = "okay";
-+};
-+
+ 	status = "okay";
+ };
+ 
 +&spdif {
 +	pinctrl-0 = <&spdifm0_tx>;
 +	status = "okay";
@@ -185,78 +280,12 @@ index f4b6799a8..a1041ec3e 100644
 +};
 +
 +&spdif_sound {
- 	status = "okay";
- };
- 
++ 	status = "okay";
++};
++
  &tsadc {
 +	rockchip,hw-tshut-mode = <0>;
 +	rockchip,hw-tshut-polarity = <0>;
  	status = "okay";
  };
- 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-index eedc25132..5c62f0116 100644
---- a/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-@@ -210,6 +210,26 @@
- 		method = "smc";
- 	};
- 
-+	spdif_out: spdif-out {
-+		compatible = "linux,spdif-dit";
-+		#sound-dai-cells = <0>;
-+		status = "disabled";
-+	};
-+
-+	spdif_sound: spdif-sound {
-+		compatible = "simple-audio-card";
-+		simple-audio-card,name = "SPDIF";
-+		status = "disabled";
-+
-+		simple-audio-card,cpu {
-+			sound-dai = <&spdif>;
-+		};
-+
-+		simple-audio-card,codec {
-+			sound-dai = <&spdif_out>;
-+		};
-+	};
-+
- 	timer {
- 		compatible = "arm,armv8-timer";
- 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-@@ -319,6 +339,10 @@
- 			#address-cells = <1>;
- 			#size-cells = <0>;
- 
-+			pd_gpu@RK3328_PD_GPU {
-+				reg = <RK3328_PD_GPU>;
-+				clocks = <&cru ACLK_GPU>;
-+			};		
- 			pd_hevc@RK3328_PD_HEVC {
- 				reg = <RK3328_PD_HEVC>;
- 			};
-@@ -621,6 +645,7 @@
- 				  "ppmmu1";
- 		clocks = <&cru ACLK_GPU>, <&cru ACLK_GPU>;
- 		clock-names = "bus", "core";
-+		power-domains = <&power RK3328_PD_GPU>;
- 		resets = <&cru SRST_GPU_A>;
- 	};
- 
-@@ -793,6 +818,7 @@
- 			<&cru ACLK_BUS_PRE>, <&cru HCLK_BUS_PRE>,
- 			<&cru PCLK_BUS_PRE>, <&cru ACLK_PERI_PRE>,
- 			<&cru HCLK_PERI>, <&cru PCLK_PERI>,
-+			<&cru ACLK_GPU>,
- 			<&cru SCLK_RTC32K>;
- 		assigned-clock-parents =
- 			<&cru HDMIPHY>, <&cru PLL_APLL>,
-@@ -814,6 +840,7 @@
- 			<150000000>, <75000000>,
- 			<75000000>, <150000000>,
- 			<75000000>, <75000000>,
-+			<500000000>,
- 			<32768>;
- 	};
  

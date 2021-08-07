@@ -1,0 +1,131 @@
+--- a/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2021-08-04 06:46:45.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2021-08-06 21:33:32.727509280 -0400
+@@ -211,6 +211,26 @@
+ 		method = "smc";
+ 	};
+ 
++	spdif_out: spdif-out {
++		compatible = "linux,spdif-dit";
++		#sound-dai-cells = <0>;
++		status = "disabled";
++	};
++
++	spdif_sound: spdif-sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,name = "SPDIF";
++		status = "disabled";
++
++		simple-audio-card,cpu {
++			sound-dai = <&spdif>;
++		};
++
++		simple-audio-card,codec {
++			sound-dai = <&spdif_out>;
++		};
++	};
++
+ 	timer {
+ 		compatible = "arm,armv8-timer";
+ 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+@@ -317,12 +337,21 @@
+ 			#power-domain-cells = <1>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
++			
++			pd_gpu@RK3328_PD_GPU {
++				reg = <RK3328_PD_GPU>;
++				clocks = <&cru ACLK_GPU>;
++			};
+ 
+ 			power-domain@RK3328_PD_HEVC {
+ 				reg = <RK3328_PD_HEVC>;
+ 			};
+ 			power-domain@RK3328_PD_VIDEO {
+ 				reg = <RK3328_PD_VIDEO>;
++				clocks = <&cru ACLK_RKVDEC>,
++					 <&cru HCLK_RKVDEC>,
++					 <&cru SCLK_VDEC_CABAC>,
++					 <&cru SCLK_VDEC_CORE>;
+ 			};
+ 			power-domain@RK3328_PD_VPU {
+ 				reg = <RK3328_PD_VPU>;
+@@ -620,6 +649,7 @@
+ 				  "ppmmu1";
+ 		clocks = <&cru ACLK_GPU>, <&cru ACLK_GPU>;
+ 		clock-names = "bus", "core";
++		power-domains = <&power RK3328_PD_GPU>;
+ 		resets = <&cru SRST_GPU_A>;
+ 	};
+ 
+@@ -675,6 +705,7 @@
+ 		clocks = <&cru ACLK_RKVDEC>, <&cru HCLK_RKVDEC>;
+ 		clock-names = "aclk", "iface";
+ 		#iommu-cells = <0>;
++		power-domains = <&power RK3328_PD_VIDEO>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -792,6 +823,7 @@
+ 			<&cru ACLK_BUS_PRE>, <&cru HCLK_BUS_PRE>,
+ 			<&cru PCLK_BUS_PRE>, <&cru ACLK_PERI_PRE>,
+ 			<&cru HCLK_PERI>, <&cru PCLK_PERI>,
++			<&cru ACLK_GPU>,
+ 			<&cru SCLK_RTC32K>;
+ 		assigned-clock-parents =
+ 			<&cru HDMIPHY>, <&cru PLL_APLL>,
+@@ -813,6 +845,7 @@
+ 			<150000000>, <75000000>,
+ 			<75000000>, <150000000>,
+ 			<75000000>, <75000000>,
++			<500000000>,
+ 			<32768>;
+ 	};
+ 
+@@ -862,6 +895,8 @@
+ 		clock-names = "biu", "ciu", "ciu-drive", "ciu-sample";
+ 		fifo-depth = <0x100>;
+ 		max-frequency = <150000000>;
++		resets = <&cru SRST_MMC0>;
++		reset-names = "reset";
+ 		status = "disabled";
+ 	};
+ 
+@@ -874,6 +909,8 @@
+ 		clock-names = "biu", "ciu", "ciu-drive", "ciu-sample";
+ 		fifo-depth = <0x100>;
+ 		max-frequency = <150000000>;
++		resets = <&cru SRST_SDIO>;
++		reset-names = "reset";
+ 		status = "disabled";
+ 	};
+ 
+@@ -886,6 +923,8 @@
+ 		clock-names = "biu", "ciu", "ciu-drive", "ciu-sample";
+ 		fifo-depth = <0x100>;
+ 		max-frequency = <150000000>;
++		resets = <&cru SRST_EMMC>;
++		reset-names = "reset";
+ 		status = "disabled";
+ 	};
+ 
+@@ -983,6 +1022,20 @@
+ 		phy-names = "usb";
+ 		status = "disabled";
+ 	};
++	
++	sdmmc_ext: dwmmc@ff5f0000 {
++		compatible = "rockchip,rk3328-dw-mshc", "rockchip,rk3288-dw-mshc";
++		reg = <0x0 0xff5f0000 0x0 0x4000>;
++		interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&cru HCLK_SDMMC_EXT>, <&cru SCLK_SDMMC_EXT>,
++			 <&cru SCLK_SDMMC_EXT_DRV>, <&cru SCLK_SDMMC_EXT_SAMPLE>;
++		clock-names = "biu", "ciu", "ciu-drive", "ciu-sample";
++		fifo-depth = <0x100>;
++		max-frequency = <150000000>;
++		resets = <&cru SRST_SDMMCEXT>;
++		reset-names = "reset";
++		status = "disabled";
++	};
+ 
+ 	usbdrd3: usb@ff600000 {
+ 		compatible = "rockchip,rk3328-dwc3", "snps,dwc3";
