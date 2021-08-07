@@ -27,35 +27,36 @@ else
     userdata
 fi
 validation
-if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-	then set -eux -o pipefail;
-	else set -eu -o pipefail;
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	set -eux -o pipefail;
+else
+	set -eu -o pipefail;
 fi
 echo
-if `grep -Fx 'DISTRO="debian"' "userdata.txt" >/dev/null;`
-	then debian_banner;
+if [[ `grep -w 'DISTRO="debian"' "userdata.txt"` ]]; then
+	debian_banner;
 fi
-if `grep -Fx 'DISTRO="devuan"' "userdata.txt" >/dev/null;`
-	then devuan_banner;
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	devuan_banner;
 fi
-if `grep -Fx 'DISTRO="kali"' "userdata.txt" >/dev/null;`
-	then kali_banner;
+if [[ `grep -w 'DISTRO="kali"' "userdata.txt"` ]]; then
+	kali_banner;
 fi
-if `grep -Fx 'DISTRO="ubuntu"' "userdata.txt" >/dev/null;`
-	then ubuntu_banner;
+if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; then
+	ubuntu_banner;
 fi
 echo
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
-if `grep -Fx "tritium" "board.txt" >/dev/null;`
-	then DEVICE_SOC="h5-libretech-all-h3-cc"
+if [[ `grep -w "tritium" "board.txt"` ]]; then
+	DEVICE_SOC="h5-libretech-all-h3-cc";
 fi
-if `grep -Fx "nanopi" "board.txt" >/dev/null;`
-	then DEVICE_SOC="h5-nanopi-neo-plus2"
+if [[ `grep -w "nanopi" "board.txt"` ]]; then
+	DEVICE_SOC="h5-nanopi-neo-plus2";
 fi
-if `grep -Fx "pine64" "board.txt" >/dev/null;`
-	then DEVICE_SOC="a64-pine64-plus"
+if [[ `grep -w "pine64" "board.txt"` ]]; then
+	DEVICE_SOC="a64-pine64-plus";
 fi
 
 IMAGE_DATE="$(date +%F)"
@@ -68,18 +69,23 @@ if [ $RAM -ne 0 ]; then
 	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
 fi
 
-if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-	then partition;
-	else partition > /dev/null 2>&1;
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	partition;
+else
+	partition > /dev/null 2>&1;
 fi
-if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-	then partition_uuid;
-	else partition_uuid > /dev/null 2>&1;
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	partition_uuid;
+else
+	partition_uuid > /dev/null 2>&1;
 fi
 
-if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ];
-	then tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p1/
-	else echo -e "${YLW}Missing rootfs tarball!${FIN}" && make cleanup && exit;
+if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ]; then
+	tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p1/;
+else
+	echo -e "${YLW}Missing rootfs tarball!${FIN}"
+	make cleanup
+	exit;
 fi
 
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
@@ -88,16 +94,18 @@ echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
 cp $(which "qemu-aarch64-static") p1/usr/bin
 
-if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-	then choose_release;
-	else choose_release > /dev/null 2>&1;
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	choose_release;
+else
+	choose_release > /dev/null 2>&1;
 fi
-if `grep -Fx "verbose=1" "userdata.txt" >/dev/null;`
-	then create_fstab;
-	else create_fstab > /dev/null 2>&1;
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	create_fstab;
+else
+	create_fstab > /dev/null 2>&1;
 fi
 
-if [ -n "$PROXY" ] ; then
+if [ -n "$PROXY" ]; then
 	tee "p1/etc/apt/apt.conf.d/30proxy" <<EOF
 Acquire::http::proxy "http://127.0.0.1:3142";
 EOF
@@ -114,14 +122,16 @@ cp files/misc/* p1/root
 cp files/scripts/* p1/root
 cp files/users/* p1/root
 cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p1/root
-if `grep -Fx "tritium" "board.txt" >/dev/null;`
-    then cp output/tritium/{u-boot-sunxi-with-spl.bin,*.deb} p1/root && cp files/led-trigger/tritium p1/root;
+if [[ `grep -w "tritium" "board.txt"` ]]; then
+	cp output/tritium/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
+	cp files/led-trigger/tritium p1/root;
 fi
-if `grep -Fx "nanopi" "board.txt" >/dev/null;`
-    then cp output/nanopi/{u-boot-sunxi-with-spl.bin,*.deb} p1/root && cp files/led-trigger/nanopi p1/root;
+if [[ `grep -w "nanopi" "board.txt"` ]]; then
+	cp output/nanopi/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
+	cp files/led-trigger/nanopi p1/root;
 fi
-if `grep -Fx "pine64" "board.txt" >/dev/null;`
-    then cp output/pine64/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
+if [[ `grep -w "pine64" "board.txt"` ]]; then
+	cp output/pine64/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
 fi
 echo -e "${WHT}Starting chroot${FIN} ..."
 # mount and chroot
@@ -137,7 +147,7 @@ rm p1/root/allwinner-stage2
 rm -f p1/root/*.txt
 rm -f p1/var/cache/debconf/*
 
-if [ -n "$PROXY" ] ; then
+if [ -n "$PROXY" ]; then
 	rm p1/etc/apt/apt.conf.d/30proxy
 fi
 rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
@@ -154,16 +164,15 @@ fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1
 shrink
-if `grep -Fx "auto=1" "userdata.txt" >/dev/null;`
-	then echo && echo_compress && compress_image && echo_done;
-	else rename_image;
+if [[ `grep -w "auto=1" "userdata.txt"` ]]; then
+	echo_compress
+	compress_image
+	echo_done;
+else
+	rename_image;
 fi
 rm -f part-uuid.txt board.txt kernel.txt
 echo
-if ls *.img > /dev/null 2>&1;
-	then ls -l *.img;
-fi
-if ls *.img.xz > /dev/null 2>&1;
-	then ls -l *.img.xz;
-fi
+if [ -e *.img ]; then ls -l *.img; fi
+if [ -e *.img.xz ]; then ls -l *.img.xz; fi
 echo
