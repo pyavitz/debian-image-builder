@@ -8,8 +8,8 @@ Rockchip:       # NanoPC-T4, Renegade and Rock64
 
 ### Dependencies for Ubuntu Focal / Hirsute Hippo
 
-Install options:
-* Run the `./install` script **(recommended)**
+**Install options:**
+* Run the `./install` script ***(recommended)***
 * Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies) (dependency: make)
 * Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
