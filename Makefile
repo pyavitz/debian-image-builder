@@ -38,6 +38,10 @@ RPI-IMG=./scripts/broadcom-stage1
 RPI-IMAGE=sudo ./scripts/broadcom-stage1
 RPI-STG2=./scripts/broadcom-stage2
 
+# dependencies
+CCOMPILE=./scripts/.ccompile
+NCOMPILE=./scripts/.ncompile
+
 # do not edit above this line
 
 help:
@@ -70,26 +74,14 @@ help:
 
 
 ccompile:
-	# Install all dependencies
-	sudo apt install build-essential bison bc git dialog patch make \
-	dosfstools zip unzip qemu debootstrap qemu-user-static rsync libelf-dev \
-	kmod cpio flex libssl-dev libncurses5-dev parted device-tree-compiler \
-	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
-	aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
-	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 \
-	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
-	debian-archive-keyring debian-keyring python-setuptools python3-setuptools \
-	python-distutils-extra
+	# Installing cross dependencies:
+	@chmod +x ${CCOMPILE}
+	@${CCOMPILE}
 
 ncompile:
-	# Install all dependencies
-	sudo apt install build-essential bison bc git dialog patch make \
-	dosfstools zip unzip qemu debootstrap qemu-user-static rsync libelf-dev \
-	kmod cpio flex libssl-dev libncurses5-dev parted device-tree-compiler \
-	libfdt-dev python3-distutils python3-dev swig fakeroot lzop lz4 \
-	aria2 pv toilet figlet gcc-arm-none-eabi distro-info-data lsb-release \
-	python python-dev kpartx gcc-8 gcc-9 gcc-10 debian-archive-keyring \
-	debian-keyring python-setuptools python3-setuptools python-distutils-extra
+	# Installing native dependencies:
+	@chmod +x ${NCOMPILE}
+	@${NCOMPILE}
 
 ### TRITIUM
 tritium-uboot:

@@ -5,32 +5,13 @@ Amlogic:        # Le Potato and Odroid C4/N2/N2+
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
-### Dependencies for Ubuntu Focal AMD64/x86_64 (Default)
 
-```sh
-sudo apt install \
-	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
-	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
-	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
-	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
-	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 make \
-	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
-	debian-archive-keyring debian-keyring python-setuptools python3-setuptools \
-	python-distutils-extra libelf-dev
-```
-### Dependencies for Ubuntu Hirsute AMD64/x86_64
+### Dependencies for Ubuntu Focal / Hirsute Hippo
 
-```sh
-sudo apt install \
-	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
-	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
-	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
-	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
-	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 make \
-	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
-	debian-archive-keyring debian-keyring python-setuptools python3-setuptools \
-	python3-distutils-extra libelf-dev
-```
+Install options:
+* Run the script `./install`
+* Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies)
+* Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
 ### Docker
 
