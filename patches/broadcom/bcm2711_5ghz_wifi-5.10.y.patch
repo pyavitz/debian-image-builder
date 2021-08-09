@@ -1,0 +1,347 @@
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-08-08 15:09:46.000000000 -0400
+@@ -78,7 +78,7 @@
+ 	size_t (*get_ramsize)(struct device *dev);
+ 	int (*get_memdump)(struct device *dev, void *data, size_t len);
+ 	int (*get_fwname)(struct device *dev, const char *ext,
+-			  unsigned char *fw_name);
++			  unsigned char *fw_name, bool board_specific);
+ 	void (*debugfs_create)(struct device *dev);
+ 	int (*reset)(struct device *dev);
+ };
+@@ -223,7 +223,14 @@
+ int brcmf_bus_get_fwname(struct brcmf_bus *bus, const char *ext,
+ 			 unsigned char *fw_name)
+ {
+-	return bus->ops->get_fwname(bus->dev, ext, fw_name);
++	return bus->ops->get_fwname(bus->dev, ext, fw_name, false);
++}
++
++static inline
++int brcmf_bus_get_board_fwname(struct brcmf_bus *bus, const char *ext,
++			       unsigned char *fw_name)
++{
++	return bus->ops->get_fwname(bus->dev, ext, fw_name, true);
+ }
+ 
+ static inline
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-08-08 15:09:46.000000000 -0400
+@@ -9,6 +9,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/module.h>
+ #include <linux/vmalloc.h>
++#include <linux/ctype.h>
+ #include <net/cfg80211.h>
+ #include <net/netlink.h>
+ #include <uapi/linux/if_arp.h>
+@@ -2940,7 +2941,7 @@
+ 		brcmf_dbg(INFO, "Do not enable power save for P2P clients\n");
+ 		pm = PM_OFF;
+ 	}
+-	brcmf_dbg(INFO, "power save %s\n", (pm ? "enabled" : "disabled"));
++	brcmf_info("power save %s\n", (pm ? "enabled" : "disabled"));
+ 
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, pm);
+ 	if (err) {
+@@ -2950,6 +2951,7 @@
+ 			bphy_err(drvr, "error (%d)\n", err);
+ 	}
+ 
++	timeout = 2000; /* 2000ms - the maximum */
+ 	err = brcmf_fil_iovar_int_set(ifp, "pm2_sleep_ret",
+ 				min_t(u32, timeout, BRCMF_PS_MAX_TIMEOUT_MS));
+ 	if (err)
+@@ -7356,12 +7358,18 @@
+ 	struct brcmfmac_pd_cc *country_codes;
+ 	struct brcmfmac_pd_cc_entry *cc;
+ 	s32 found_index;
++	char ccode[BRCMF_COUNTRY_BUF_SZ];
++	int rev;
+ 	int i;
+ 
++	memcpy(ccode, alpha2, sizeof(ccode));
++	rev = -1;
++
+ 	country_codes = drvr->settings->country_codes;
+ 	if (!country_codes) {
+-		brcmf_dbg(TRACE, "No country codes configured for device\n");
+-		return -EINVAL;
++		brcmf_dbg(TRACE, "No country codes configured for device"
++				 " - use requested value\n");
++		goto use_input_value;
+ 	}
+ 
+ 	if ((alpha2[0] == ccreq->country_abbrev[0]) &&
+@@ -7385,10 +7393,14 @@
+ 		brcmf_dbg(TRACE, "No country code match found\n");
+ 		return -EINVAL;
+ 	}
+-	memset(ccreq, 0, sizeof(*ccreq));
+-	ccreq->rev = cpu_to_le32(country_codes->table[found_index].rev);
+-	memcpy(ccreq->ccode, country_codes->table[found_index].cc,
++	rev = country_codes->table[found_index].rev;
++	memcpy(ccode, country_codes->table[found_index].cc,
+ 	       BRCMF_COUNTRY_BUF_SZ);
++
++use_input_value:
++	memset(ccreq, 0, sizeof(*ccreq));
++	ccreq->rev = cpu_to_le32(rev);
++	memcpy(ccreq->ccode, ccode, sizeof(ccode));
+ 	ccreq->country_abbrev[0] = alpha2[0];
+ 	ccreq->country_abbrev[1] = alpha2[1];
+ 	ccreq->country_abbrev[2] = 0;
+@@ -7403,31 +7415,45 @@
+ 	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
+ 	struct brcmf_pub *drvr = cfg->pub;
+ 	struct brcmf_fil_country_le ccreq;
++	char *alpha2;
+ 	s32 err;
+ 	int i;
+ 
+-	/* The country code gets set to "00" by default at boot, ignore */
+-	if (req->alpha2[0] == '0' && req->alpha2[1] == '0')
++	err = brcmf_fil_iovar_data_get(ifp, "country", &ccreq, sizeof(ccreq));
++	if (err) {
++		bphy_err(drvr, "Country code iovar returned err = %d\n", err);
+ 		return;
++	}
++
++	/* The country code gets set to "00" by default at boot - substitute
++	 * any saved ccode from the nvram file unless there is a valid code
++	 * already set.
++	 */
++	alpha2 = req->alpha2;
++	if (alpha2[0] == '0' && alpha2[1] == '0') {
++		extern char saved_ccode[2];
++
++		if ((isupper(ccreq.country_abbrev[0]) &&
++		     isupper(ccreq.country_abbrev[1])) ||
++		    !saved_ccode[0])
++			return;
++		alpha2 = saved_ccode;
++		pr_debug("brcmfmac: substituting saved ccode %c%c\n",
++			 alpha2[0], alpha2[1]);
++	}
+ 
+ 	/* ignore non-ISO3166 country codes */
+ 	for (i = 0; i < 2; i++)
+-		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
++		if (alpha2[i] < 'A' || alpha2[i] > 'Z') {
+ 			bphy_err(drvr, "not an ISO3166 code (0x%02x 0x%02x)\n",
+-				 req->alpha2[0], req->alpha2[1]);
++				 alpha2[0], alpha2[1]);
+ 			return;
+ 		}
+ 
+ 	brcmf_dbg(TRACE, "Enter: initiator=%d, alpha=%c%c\n", req->initiator,
+-		  req->alpha2[0], req->alpha2[1]);
+-
+-	err = brcmf_fil_iovar_data_get(ifp, "country", &ccreq, sizeof(ccreq));
+-	if (err) {
+-		bphy_err(drvr, "Country code iovar returned err = %d\n", err);
+-		return;
+-	}
++		  alpha2[0], alpha2[1]);
+ 
+-	err = brcmf_translate_country_code(ifp->drvr, req->alpha2, &ccreq);
++	err = brcmf_translate_country_code(ifp->drvr, alpha2, &ccreq);
+ 	if (err)
+ 		return;
+ 
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-08-08 15:09:46.000000000 -0400
+@@ -134,13 +134,23 @@
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	memset(clm_name, 0, sizeof(clm_name));
+-	err = brcmf_bus_get_fwname(bus, ".clm_blob", clm_name);
++	err = brcmf_bus_get_board_fwname(bus, ".clm_blob", clm_name);
+ 	if (err) {
+ 		bphy_err(drvr, "get CLM blob file name failed (%d)\n", err);
+ 		return err;
+ 	}
+ 
+-	err = firmware_request_nowarn(&clm, clm_name, bus->dev);
++	if (clm_name[0])
++		err = firmware_request_nowarn(&clm, clm_name, bus->dev);
++	if (err || !clm_name[0]) {
++		err = brcmf_bus_get_fwname(bus, ".clm_blob", clm_name);
++		if (err) {
++			bphy_err(drvr, "get CLM blob file name failed (%d)\n", err);
++			return err;
++		}
++
++		err = firmware_request_nowarn(&clm, clm_name, bus->dev);
++	}
+ 	if (err) {
+ 		brcmf_info("no clm_blob available (err=%d), device may have limited channels available\n",
+ 			   err);
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-08-08 15:09:46.000000000 -0400
+@@ -10,6 +10,7 @@
+ #include <linux/firmware.h>
+ #include <linux/module.h>
+ #include <linux/bcm47xx_nvram.h>
++#include <linux/ctype.h>
+ 
+ #include "debug.h"
+ #include "firmware.h"
+@@ -30,6 +31,8 @@
+ 	END
+ };
+ 
++char saved_ccode[2] = {};
++
+ /**
+  * struct nvram_parser - internal info for parser.
+  *
+@@ -545,10 +548,26 @@
+ 			goto fail;
+ 	}
+ 
+-	if (data)
++	if (data) {
++		char *ccode = strnstr((char *)data, "ccode=", data_len);
++		/* Ensure this is a whole token */
++		if (ccode && ((void *)ccode == (void *)data || isspace(ccode[-1]))) {
++			/* Comment out the line */
++			ccode[0] = '#';
++			ccode += 6;
++			if (isupper(ccode[0]) && isupper(ccode[1]) &&
++			    isspace(ccode[2])) {
++				pr_debug("brcmfmac: intercepting ccode=%c%c\n",
++					 ccode[0], ccode[1]);
++				saved_ccode[0] = ccode[0];
++				saved_ccode[1] = ccode[1];
++			}
++		};
++
+ 		nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
+ 					     fwctx->req->domain_nr,
+ 					     fwctx->req->bus_nr);
++	}
+ 
+ 	if (free_bcm47xx_nvram)
+ 		bcm47xx_nvram_release_contents(data);
+@@ -613,7 +632,7 @@
+ 		strlcat(alt_path, fwctx->req->board_type, BRCMF_FW_NAME_LEN);
+ 		strlcat(alt_path, ".txt", BRCMF_FW_NAME_LEN);
+ 
+-		ret = request_firmware(fw, alt_path, fwctx->dev);
++		ret = firmware_request_nowarn(fw, alt_path, fwctx->dev);
+ 		if (ret == 0)
+ 			return ret;
+ 	}
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-08-08 15:09:46.000000000 -0400
+@@ -1400,7 +1400,8 @@
+ }
+ 
+ static
+-int brcmf_pcie_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
++int brcmf_pcie_get_fwname(struct device *dev, const char *ext, u8 *fw_name,
++			  bool board_specific)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_fw_request *fwreq;
+@@ -1408,6 +1409,10 @@
+ 		{ ext, fw_name },
+ 	};
+ 
++	if (board_specific) {
++		fw_name[0] = 0;
++		return 0;
++	}
+ 	fwreq = brcmf_fw_alloc_request(bus_if->chip, bus_if->chiprev,
+ 				       brcmf_pcie_fwnames,
+ 				       ARRAY_SIZE(brcmf_pcie_fwnames),
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-08-08 15:09:46.000000000 -0400
+@@ -611,12 +611,14 @@
+ BRCMF_FW_DEF(4330, "brcmfmac4330-sdio");
+ BRCMF_FW_DEF(4334, "brcmfmac4334-sdio");
+ BRCMF_FW_DEF(43340, "brcmfmac43340-sdio");
++BRCMF_FW_DEF(43341, "brcmfmac43341-sdio");
+ BRCMF_FW_DEF(4335, "brcmfmac4335-sdio");
+ BRCMF_FW_DEF(43362, "brcmfmac43362-sdio");
+ BRCMF_FW_DEF(4339, "brcmfmac4339-sdio");
+ BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
+ /* Note the names are not postfixed with a1 for backward compatibility */
+ BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
++BRCMF_FW_DEF(43436, "brcmfmac43436-sdio");
+ BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
+ BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
+ BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
+@@ -634,12 +636,13 @@
+ 	BRCMF_FW_ENTRY(BRCM_CC_4330_CHIP_ID, 0xFFFFFFFF, 4330),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4334_CHIP_ID, 0xFFFFFFFF, 4334),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43340_CHIP_ID, 0xFFFFFFFF, 43340),
+-	BRCMF_FW_ENTRY(BRCM_CC_43341_CHIP_ID, 0xFFFFFFFF, 43340),
++	BRCMF_FW_ENTRY(BRCM_CC_43341_CHIP_ID, 0xFFFFFFFF, 43341),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+-	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
++	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFA, 43430A1),
++	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000004, 43436),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+@@ -4114,14 +4117,24 @@
+ }
+ 
+ static
+-int brcmf_sdio_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
++int brcmf_sdio_get_fwname(struct device *dev, const char *ext, u8 *fw_name,
++			  bool board_specific)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_fw_request *fwreq;
++	u8 board_ext[BRCMF_FW_NAME_LEN];
+ 	struct brcmf_fw_name fwnames[] = {
+ 		{ ext, fw_name },
+ 	};
+ 
++	if (board_specific) {
++		strlcpy(board_ext, ".", BRCMF_FW_NAME_LEN);
++		strlcat(board_ext, sdiodev->settings->board_type,
++			BRCMF_FW_NAME_LEN);
++		strlcat(board_ext, ext, BRCMF_FW_NAME_LEN);
++		fwnames[0].extension = board_ext;
++	}
+ 	fwreq = brcmf_fw_alloc_request(bus_if->chip, bus_if->chiprev,
+ 				       brcmf_sdio_fwnames,
+ 				       ARRAY_SIZE(brcmf_sdio_fwnames),
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-08-08 03:05:24.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-08-08 15:09:46.000000000 -0400
+@@ -1155,7 +1155,8 @@
+ }
+ 
+ static
+-int brcmf_usb_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
++int brcmf_usb_get_fwname(struct device *dev, const char *ext, u8 *fw_name,
++			 bool board_specific)
+ {
+ 	struct brcmf_bus *bus = dev_get_drvdata(dev);
+ 	struct brcmf_fw_request *fwreq;
+@@ -1163,6 +1164,10 @@
+ 		{ ext, fw_name },
+ 	};
+ 
++	if (board_specific) {
++		fw_name[0] = 0;
++		return 0;
++	}
+ 	fwreq = brcmf_fw_alloc_request(bus->chip, bus->chiprev,
+ 				       brcmf_usb_fwnames,
+ 				       ARRAY_SIZE(brcmf_usb_fwnames),

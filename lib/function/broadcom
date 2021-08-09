@@ -6,7 +6,15 @@ cd ${SRC}
 }
 
 broadcom_patching(){
-for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done
+if [[ `grep -Fx "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -Fx "5.13" "../../userdata.txt"` ]]; then
+	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -Fx "5.14" "../../userdata.txt"` ]]; then
+	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
+fi
 }
 
 
@@ -14,13 +22,14 @@ for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done
 raspberrypi_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/raspberrypi-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/raspberrypi-nc-packaging.patch ;
+if [[ `grep -Fx "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/raspberrypi-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/raspberrypi-nc-packaging.patch;
 fi
 broadcom_patching
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+if [[ `grep -Fx "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
@@ -33,8 +42,10 @@ fi
 }
 
 broadcom_output(){
-if `grep -Fx "bcm2711" "../board.txt" >/dev/null;`
-	then raspi4_check && mkdir -p ../output/raspi4 && mv -f *.deb ../output/raspi4/;
+if [[ `grep -Fx "bcm2711" "../board.txt"` ]]; then
+	raspi4_check
+	mkdir -p ../output/raspi4
+	mv -f *.deb ../output/raspi4/;
 fi
 }
 
