@@ -9,12 +9,13 @@ cd ${SRC}
 tritium_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
 fi
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
@@ -24,15 +25,16 @@ echo
 pine64_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
 fi
 for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
@@ -42,48 +44,59 @@ echo
 nanopi_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/allwinner-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
 fi
-if `grep "5.10" "../../userdata.txt" >/dev/null;`
-	then for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done;
-	else for i in ../${NANOPI}/edge/*.patch; do patch -p1 < $i; done;
+if [[ `grep "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${NANOPI}/edge/*.patch; do patch -p1 < $i; done;
 fi
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
 }
 
 tritium_check(){
-if ls ${BINTRI}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINTRI}/tmp && mv -f ${BINTRI}/*.deb ${BINTRI}/tmp;
+if [[ `ls ${BINTRI}/*.deb` ]]; then
+	mkdir -p ${BINTRI}/tmp
+	mv -f ${BINTRI}/*.deb ${BINTRI}/tmp;
 fi
 }
 
 pine64_check(){
-if ls ${BINPINE}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINPINE}/tmp && mv -f ${BINPINE}/*.deb ${BINPINE}/tmp;
+if [[ `ls ${BINPINE}/*.deb` ]]; then
+	mkdir -p ${BINPINE}/tmp
+	mv -f ${BINPINE}/*.deb ${BINPINE}/tmp;
 fi
 }
 
 nanopi_check(){
-if ls ${BINNPI}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINNPI}/tmp && mv -f ${BINNPI}/*.deb ${BINNPI}/tmp;
+if [[ `ls ${BINNPI}/*.deb` ]]; then
+	mkdir -p ${BINNPI}/tmp
+	mv -f ${BINNPI}/*.deb ${BINNPI}/tmp;
 fi
 }
 
 allwinner_output(){
-if `grep -Fx "tritium" "../board.txt" >/dev/null;`
-	then tritium_check && mkdir -p ../output/tritium && mv -f *.deb ../output/tritium/;
+if [[ `grep -Fx "tritium" "../board.txt"` ]]; then
+	tritium_check
+	mkdir -p ../output/tritium
+	mv -f *.deb ../output/tritium/;
 fi
-if `grep -Fx "pine64" "../board.txt" >/dev/null;`
-	then pine64_check && mkdir -p ../output/pine64 && mv -f *.deb ../output/pine64/;
+if [[ `grep -Fx "pine64" "../board.txt"` ]]; then
+	pine64_check
+	mkdir -p ../output/pine64
+	mv -f *.deb ../output/pine64/;
 fi
-if `grep -Fx "nanopi" "../board.txt" >/dev/null;`
-	then nanopi_check && mkdir -p ../output/nanopi && mv -f *.deb ../output/nanopi/;
+if [[ `grep -Fx "nanopi" "../board.txt"` ]]; then
+	nanopi_check
+	mkdir -p ../output/nanopi
+	mv -f *.deb ../output/nanopi/;
 fi
 }
 

@@ -6,20 +6,20 @@ cd ${SRC}
 }
 
 odroid_boards(){
-if `grep -Fx "odroidc4" "../../board.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
+if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
 fi
-if `grep -Fx "odroidn2" "../../board.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
 fi
-if `grep -Fx "odroidn2plus" "../../board.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
 fi
 }
 
 tobetter_kernel(){
-if `grep -Fx 'VERSION="5.13.y"' "../../userdata.txt" >/dev/null;`
-	then for i in ../${AMLOGIC}/odroid/5.13.y/*.patch; do patch -p1 < $i; done;
+if [[ `grep -w 'VERSION="5.13.y"' "../../userdata.txt"` ]]; then
+	for i in ../${AMLOGIC}/odroid/5.13.y/*.patch; do patch -p1 < $i; done;
 fi
 }
 
@@ -27,14 +27,17 @@ fi
 potato_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
-	else patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch;
 fi
 for i in ../${AMLOGIC}/lepotato/*.patch; do patch -p1 < $i; done
-if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+if [[ `ls ../${AMLOGIC}/*.patch` ]]; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
@@ -44,17 +47,20 @@ echo
 odroidc4_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
-	else patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
 fi
-if ls ../${AMLOGIC}/odroid/5.13.y/*.patch > /dev/null 2>&1;
-	then tobetter_kernel;
+if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]]; then
+	tobetter_kernel;
 fi
 odroid_boards
-if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+if [[ `ls ../${AMLOGIC}/*.patch` ]]; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
@@ -64,58 +70,73 @@ echo
 odroidn2_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
-	else patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
 fi
-if ls ../${AMLOGIC}/odroid/5.13.y/*.patch > /dev/null 2>&1;
-	then tobetter_kernel;
+if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]]; then
+	tobetter_kernel;
 fi
 odroid_boards
-if ls ../${AMLOGIC}/*.patch > /dev/null 2>&1; then for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done; fi
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+if [[ `ls ../${AMLOGIC}/*.patch` ]]; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
 }
 
 lepotato_check(){
-if ls ${BINLEP}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINLEP}/tmp && mv -f ${BINLEP}/*.deb ${BINLEP}/tmp;
+if [[ `ls ${BINLEP}/*.deb` ]]; then
+	mkdir -p ${BINLEP}/tmp
+	mv -f ${BINLEP}/*.deb ${BINLEP}/tmp;
 fi
 }
 
 odroidn2_check(){
-if ls ${BINODN2}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINODN2}/tmp && mv -f ${BINODN2}/*.deb ${BINODN2}/tmp;
+if [[ `ls ${BINODN2}/*.deb` ]]; then
+	mkdir -p ${BINODN2}/tmp
+	mv -f ${BINODN2}/*.deb ${BINODN2}/tmp;
 fi
 }
 
 odroidn2plus_check(){
-if ls ${BINODN2P}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINODN2P}/tmp && mv -f ${BINODN2P}/*.deb ${BINODN2P}/tmp;
+if [[ `ls ${BINODN2P}/*.deb` ]]; then
+	mkdir -p ${BINODN2P}/tmp
+	mv -f ${BINODN2P}/*.deb ${BINODN2P}/tmp;
 fi
 }
 
 odroidc4_check(){
-if ls ${BINODC4}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINODC4}/tmp && mv -f ${BINODC4}/*.deb ${BINODC4}/tmp;
+if [[ `ls ${BINODC4}/*.deb` ]]; then
+	mkdir -p ${BINODC4}/tmp
+	mv -f ${BINODC4}/*.deb ${BINODC4}/tmp;
 fi
 }
 
 amlogic_output(){
-if `grep -Fx "lepotato" "../board.txt" >/dev/null;`
-	then lepotato_check && mkdir -p ../output/lepotato && mv -f *.deb ../output/lepotato/;
+if [[ `grep -w "lepotato" "../board.txt"` ]]; then
+	lepotato_check
+	mkdir -p ../output/lepotato
+	mv -f *.deb ../output/lepotato/;
 fi
-if `grep -Fx "odroidn2" "../board.txt" >/dev/null;`
-	then odroidn2_check && mkdir -p ../output/odroidn2 && mv -f *.deb ../output/odroidn2/;
+if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
+	odroidn2_check
+	mkdir -p ../output/odroidn2
+	mv -f *.deb ../output/odroidn2/;
 fi
-if `grep -Fx "odroidn2plus" "../board.txt" >/dev/null;`
-	then odroidn2plus_check && mkdir -p ../output/odroidn2plus && mv -f *.deb ../output/odroidn2plus/;
+if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+	odroidn2plus_check
+	mkdir -p ../output/odroidn2plus
+	mv -f *.deb ../output/odroidn2plus/;
 fi
-if `grep -Fx "odroidc4" "../board.txt" >/dev/null;`
-	then odroidc4_check && mkdir -p ../output/odroidc4 && mv -f *.deb ../output/odroidc4/;
+if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
+	odroidc4_check
+	mkdir -p ../output/odroidc4
+	mv -f *.deb ../output/odroidc4/;
 fi
 }
 

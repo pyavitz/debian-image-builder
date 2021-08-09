@@ -8,13 +8,14 @@ cd ${SRC}
 rk3328_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/rockchip-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/rockchip-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch;
 fi
 for i in ../${RK3328}/*.patch; do patch -p1 < $i; done
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
@@ -23,48 +24,59 @@ echo
 rk3399_patch(){
 echo
 echo_patch
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then patch -p1 < ../${PACKAGING}/rockchip-packaging.patch ;
-	else patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/rockchip-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch;
 fi
-if `grep "5.10" "../../userdata.txt" >/dev/null;`
-	then for i in ../${RK3399}/*.patch; do patch -p1 < $i; done;
-	else for i in ../${RK3399}/edge/*.patch; do patch -p1 < $i; done;
+if [[ `grep "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${RK3399}/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${RK3399}/edge/*.patch; do patch -p1 < $i; done;
 fi
-if `grep -Fx "crosscompile=1" "../../userdata.txt" >/dev/null;`
-	then cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch ;
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
 echo_done
 echo
 }
 
 renegade_check(){
-if ls ${BINRNG}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINRNG}/tmp && mv -f ${BINRNG}/*.deb ${BINRNG}/tmp;
+if [[ `ls ${BINRNG}/*.deb` ]]; then
+	mkdir -p ${BINRNG}/tmp
+	mv -f ${BINRNG}/*.deb ${BINRNG}/tmp;
 fi
 }
 
 rock64_check(){
-if ls ${BINR64}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINR64}/tmp && mv -f ${BINR64}/*.deb ${BINR64}/tmp;
+if [[ `ls ${BINR64}/*.deb` ]]; then
+	mkdir -p ${BINR64}/tmp
+	mv -f ${BINR64}/*.deb ${BINR64}/tmp;
 fi
 }
 
 nanopc_check(){
-if ls ${BINNPC}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINNPC}/tmp && mv -f ${BINNPC}/*.deb ${BINNPC}/tmp;
+if [[ `ls ${BINNPC}/*.deb` ]]; then
+	mkdir -p ${BINNPC}/tmp
+	mv -f ${BINNPC}/*.deb ${BINNPC}/tmp;
 fi
 }
 
 rockchip_output(){
-if `grep -Fx "renegade" "../board.txt" >/dev/null;`
-	then renegade_check && mkdir -p ../output/renegade && mv -f *.deb ../output/renegade/;
+if [[ `grep -w "renegade" "../board.txt"` ]]; then
+	renegade_check
+	mkdir -p ../output/renegade
+	mv -f *.deb ../output/renegade/;
 fi
-if `grep -Fx "rock64" "../board.txt" >/dev/null;`
-	then rock64_check && mkdir -p ../output/rock64 && mv -f *.deb ../output/rock64/;
+if [[ `grep -w "rock64" "../board.txt"` ]]; then
+	rock64_check
+	mkdir -p ../output/rock64
+	mv -f *.deb ../output/rock64/;
 fi
-if `grep -Fx "nanopc" "../board.txt" >/dev/null;`
-	then nanopc_check && mkdir -p ../output/nanopc && mv -f *.deb ../output/nanopc/;
+if [[ `grep -w "nanopc" "../board.txt"` ]]; then
+	nanopc_check
+	mkdir -p ../output/nanopc
+	mv -f *.deb ../output/nanopc/;
 fi
 }
 

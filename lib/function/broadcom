@@ -8,11 +8,7 @@ cd ${SRC}
 broadcom_patching(){
 if [[ `grep "5.10" "../../userdata.txt"` ]]; then
 	for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep "5.13" "../../userdata.txt"` ]]; then
-	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep "5.14" "../../userdata.txt"` ]]; then
+else
 	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
 fi
 }
@@ -36,8 +32,9 @@ echo
 }
 
 raspi4_check(){
-if ls ${BINRPI4}/*.deb > /dev/null 2>&1
-	then mkdir -p ${BINRPI4}/tmp && mv -f ${BINRPI4}/*.deb ${BINRPI4}/tmp;
+if [[ `ls ${BINRPI4}/*.deb` ]]; then
+	mkdir -p ${BINRPI4}/tmp
+	mv -f ${BINRPI4}/*.deb ${BINRPI4}/tmp;
 fi
 }
 
