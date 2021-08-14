@@ -2,12 +2,23 @@ image_size(){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 }
 
-debian_stable(){
+debian_buster(){
 rm -f p1/etc/apt/sources.list
 tee p1/etc/apt/sources.list <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-updates main contrib non-free
 deb http://security.debian.org/debian-security ${DISTRO_VERSION}/updates main contrib non-free
+deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-backports main contrib non-free
+EOF
+}
+
+debian_bullseye(){
+rm -f p1/etc/apt/sources.list
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian/ ${DISTRO_VERSION} main contrib non-free
+deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-updates main contrib non-free
+deb http://deb.debian.org/debian ${DISTRO_VERSION}-proposed-updates main contrib non-free
+deb http://deb.debian.org/debian-security/ ${DISTRO_VERSION}-security main contrib non-free
 deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-backports main contrib non-free
 EOF
 }
@@ -139,10 +150,10 @@ choose_release(){
 case `grep -Fx 'DISTRO="debian"' "userdata.txt" >/dev/null; echo $?` in
   0)
 if `grep -Fx 'DISTRO_VERSION="buster"' "userdata.txt" >/dev/null;`
-	then debian_stable;
+	then debian_buster;
 fi
 if `grep -Fx 'DISTRO_VERSION="bullseye"' "userdata.txt" >/dev/null;`
-	then debian_unstable;
+	then debian_bullseye;
 fi
 if `grep -Fx 'DISTRO_VERSION="unstable"' "userdata.txt" >/dev/null;`
 	then debian_unstable;
