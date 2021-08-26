@@ -195,7 +195,7 @@ WantedBy=multi-user.target
 EOF
 sudo systemctl enable odroid-fan-ctrl
 ```
-Set trip point and run `fan-ctrl -r`
+Set trip point
 ```sh
 Odroid N2 Trip Point
 Usage: fan-ctrl -h
