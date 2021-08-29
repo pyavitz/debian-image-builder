@@ -25,92 +25,25 @@ set_locales
 ### Timezone
 set_timezone
 
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt_preferences && echo;
+if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+	apt_preferences
+	echo;
 fi
 apt upgrade -y
 apt dist-upgrade -y
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} resolvconf;
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${RPI} openresolv ifupdown;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} dbus-user-session libical3 resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} resolvconf;
+else
+	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+		apt install -y ${PKGS1} ${PKGS2} ${RPI} openresolv ifupdown;
+	else
+		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+			apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} dbus-user-session libical3 resolvconf;
+		fi
+	fi
 fi
 apt -y clean
 apt -y autoclean
-
-#### Firstboot
-echo
-echo Creating firstboot.
-tee /usr/local/sbin/firstboot <<EOF
-#!/bin/bash
-### Functions
-grow_mmcblk () {
-bash growpart /dev/mmcblk0 2 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk0p2 > /dev/null 2>&1
-}
-
-grow_mmcblk1 () {
-bash growpart /dev/mmcblk1 2 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk1p2 > /dev/null 2>&1
-}
-
-grow_sda () {
-bash growpart /dev/sda 2 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/sda2 > /dev/null 2>&1
-}
-
-chk_mmcblk () {
-fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
-}
-
-chk_mmcblk1 () {
-fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
-}
-
-chk_sda () {
-fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
-}
-
-### Grow Partition
-if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else : &>/dev/null;
-fi
-if touch -c /dev/sda 2>/dev/null; then grow_sda;
-        else : &>/dev/null;
-fi
-
-### Fix boot partition
-umount /boot
-sleep 1s
-if touch -c /dev/mmcblk0 2>/dev/null; then chk_mmcblk;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk1 2>/dev/null; then chk_mmcblk1;
-        else : &>/dev/null;
-fi
-if touch -c /dev/sda 2>/dev/null; then chk_sda;
-         else : &>/dev/null;
-fi
-sleep 1s
-mount /boot
-### Clean up
-systemctl disable firstboot > /dev/null 2>&1
-update-rc.d firstboot remove > /dev/null 2>&1
-rm -f /var/cache/debconf/*
-rm -f /usr/local/sbin/firstboot
-exit 0
-EOF
-echo Done.
 
 ### LED service
 led_service
@@ -140,14 +73,12 @@ mv -f governor /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}update-fw
 mv -f update-fw /usr/local/bin/
 mv -f growpart /usr/bin/
+mv -f firstboot /usr/local/sbin/
 initrd_script
 # Service
 uinitrd
-mv -f firstboot.init /etc/init.d/firstboot
+chmod +x /usr/local/sbin/firstboot
 chmod +x /usr/bin/growpart
-chown root:root /usr/bin/growpart
-chmod +x /etc/init.d/firstboot
-chown root:root /etc/init.d/firstboot
 chmod +x /etc/initramfs/post-update.d/99-uboot
 chown root:root /etc/initramfs/post-update.d/99-uboot
 chmod +x /usr/local/bin/*
@@ -239,14 +170,16 @@ fi
 echo Done.
 
 ### Pi Bluetooth
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then pi_bluetooth_debian;
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then pi_bluetooth_ubuntu;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then pi_bluetooth_debian;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	pi_bluetooth_debian;
+else
+	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+		pi_bluetooth_ubuntu;
+	else
+		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+			pi_bluetooth_debian;
+		fi
+	fi
 fi
 
 ###  Raspi userland
@@ -275,8 +208,8 @@ sleep 1s
 fetch_version
 
 ### Modules
-if `grep -Fx "bcm2711" "/root/board.txt" >/dev/null;`
-	then bcm_modules
+if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+	bcm_modules;
 fi
 
 ### Clean misc files
@@ -292,8 +225,8 @@ echo 'SUBSYSTEM=="vc-mem",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vch
 #### Create first boot
 firstboot_service
 
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then kali_hack;
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	kali_hack;
 fi
 ####
 echo

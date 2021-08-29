@@ -28,14 +28,16 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
+else
+	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+		apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
+	else
+		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+			apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+		fi
+	fi
 fi
 apt -y clean
 apt -y autoclean
@@ -63,49 +65,6 @@ tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-#### Firstboot
-echo
-echo Creating firstboot.
-tee /usr/local/sbin/firstboot <<EOF
-#!/bin/bash
-### Functions
-grow_mmcblk () {
-bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
-}
-
-grow_mmcblk1 () {
-bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
-}
-
-grow_mmcblk2 () {
-bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
-}
-
-### Grow Partition
-if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
-        else : &>/dev/null;
-fi
-
-### Clean up
-systemctl disable firstboot > /dev/null 2>&1
-update-rc.d firstboot remove > /dev/null 2>&1
-rm -f /var/cache/debconf/*
-rm -f /usr/local/sbin/firstboot
-exit 0
-EOF
-
 #### eMMC flash tools
 echo
 echo Setting up eMMC tools
@@ -125,16 +84,18 @@ echo Moving scripts.
 sleep 1s
 cd ~
 mkdir -p /usr/local/bin
-mv -f firstboot.init /etc/init.d/firstboot
+mkdir -p /usr/local/sbin
 mv -f run-setup /usr/local/bin/
-if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo /usr/local/bin/;
-fi
-if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo /usr/local/bin/;
-fi
-if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo.bl /usr/local/bin/sysinfo;
+if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
+	mv -f sysinfo /usr/local/bin/;
+else
+	if `grep -w "rock64" "/root/board.txt"` ]]; then
+		mv -f sysinfo /usr/local/bin/;
+	else
+		if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+			mv -f sysinfo.bl /usr/local/bin/sysinfo;
+		fi
+	fi
 fi
 mv -f smon /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}swh
@@ -142,22 +103,25 @@ mv -f swh /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
+mv -f firstboot /usr/local/sbin/
+chmod +x /usr/local/sbin/firstboot
 chmod +x /usr/bin/growpart
-chmod +x /etc/init.d/firstboot
-chown root:root /etc/init.d/firstboot
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
+chown -R root:root /usr/local/sbin/
 echo Done.
 
 # Leds
-if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
-    then rock64_led_triggers;
+if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
+	rock64_led_triggers;
 fi
-if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
-    then renegade_led_triggers;
-fi
-if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
-    then nanopc_led_triggers;
+	if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
+		renegade_led_triggers;
+	else
+		if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+			nanopc_led_triggers;
+		fi
+	fi
 fi
 
 #### MOTD
@@ -174,14 +138,16 @@ EOF
 if [ -e /etc/update-motd.d/10-help-text ]
 	then rm -f /etc/update-motd.d/10-help-text;
 fi
-if `grep -Fx "renegade" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo /etc/update-motd.d/;
-fi
-if `grep -Fx "rock64" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo /etc/update-motd.d/;
-fi
-if `grep -Fx "nanopc" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
+if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
+	mv -f 20-sysinfo /etc/update-motd.d/;
+else
+	if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
+		mv -f 20-sysinfo /etc/update-motd.d/;
+	else
+		if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+			mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
+		fi
+	fi
 fi
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand
@@ -268,8 +234,8 @@ fetch_version
 #### Service
 firstboot_service
 
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then kali_hack;
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	kali_hack;
 fi
 ####
 echo

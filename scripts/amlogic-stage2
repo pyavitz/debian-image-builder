@@ -28,14 +28,16 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
+else
+	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+		apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
+	else
+		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+			apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+		fi
+	fi
 fi
 apt -y clean
 apt -y autoclean
@@ -63,64 +65,25 @@ tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-#### Firstboot
-echo
-echo Creating firstboot.
-tee /usr/local/sbin/firstboot <<EOF
-#!/bin/bash
-### Functions
-grow_mmcblk () {
-bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
-}
-
-grow_mmcblk1 () {
-bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
-}
-
-grow_mmcblk2 () {
-bash growpart mmcblk2 1 > /dev/null 2>&1
-sleep 1s
-resize2fs mmcblk2p1 > /dev/null 2>&1
-}
-
-### Grow Partition
-if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
-        else : &>/dev/null;
-fi
-
-### Clean up
-systemctl disable firstboot > /dev/null 2>&1
-update-rc.d firstboot remove > /dev/null 2>&1
-rm -f /var/cache/debconf/*
-rm -f /usr/local/sbin/firstboot
-exit 0
-EOF
-
 #### LED triggers
-if `grep -Fx "lepotato" "/root/board.txt" >/dev/null;`
-    then lepotato_led_triggers;
-fi
-if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
-    then odroidc4_led_triggers;
-fi
-if `grep -Fx "odroidhc4" "/root/board.txt" >/dev/null;`
-    then odroidc4_led_triggers;
-fi
-if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
-    then odroidn2_led_triggers;
-fi
-if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
-    then odroidn2_led_triggers;
+if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
+	lepotato_led_triggers;
+else
+	if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+		odroidc4_led_triggers;
+	else
+		if [[ `grep -w "odroidhc4" "/root/board.txt"` ]]; then
+			odroidc4_led_triggers;
+		else
+			if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+				odroidn2_led_triggers;
+			else
+				if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+					odroidn2_led_triggers;
+				fi
+			fi
+		fi
+	fi
 fi
 #### eMMC flash tools
 echo
@@ -141,22 +104,29 @@ echo Moving scripts.
 sleep 1s
 cd ~
 mkdir -p /usr/local/bin
-mv -f firstboot.init /etc/init.d/firstboot
+mkdir -p /usr/local/sbin
 mv -f run-setup /usr/local/bin/
-if `grep -Fx "lepotato" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo /usr/local/bin/ && lepotato_tweak;
-fi
-if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo /usr/local/bin/;
-fi
-if `grep -Fx "odroidhc4" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo /usr/local/bin/;
-fi
-if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo.bl /usr/local/bin/sysinfo && odroid_tweak;
-fi
-if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
-    then mv -f sysinfo.bl /usr/local/bin/sysinfo && odroid_tweak;
+if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
+	mv -f sysinfo /usr/local/bin/
+	lepotato_tweak;
+else
+	if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+		mv -f sysinfo /usr/local/bin/;
+	else
+		if [[ `grep -w "odroidhc4" "/root/board.txt"` ]]; then
+			mv -f sysinfo /usr/local/bin/;
+		else
+			if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+				mv -f sysinfo.bl /usr/local/bin/sysinfo
+				odroid_tweak;
+			else
+				if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+					mv -f sysinfo.bl /usr/local/bin/sysinfo
+					odroid_tweak;
+				fi
+			fi
+		fi
+	fi
 fi
 mv -f smon /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}swh
@@ -164,11 +134,12 @@ mv -f swh /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
+mv -f firstboot /usr/local/sbin/
+chmod +x /usr/local/sbin/firstboot
 chmod +x /usr/bin/growpart
-chmod +x /etc/init.d/firstboot
-chown root:root /etc/init.d/firstboot
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
+chown -R root:root /usr/local/sbin/
 echo Done.
 
 #### MOTD
@@ -182,23 +153,27 @@ echo
 toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
-if [ -e /etc/update-motd.d/10-help-text ];
-	then rm -f /etc/update-motd.d/10-help-text;
+if [ -e /etc/update-motd.d/10-help-text ]; then
+	rm -f /etc/update-motd.d/10-help-text;
 fi
-if `grep -Fx "lepotato" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo /etc/update-motd.d/;
-fi
-if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo /etc/update-motd.d/;
-fi
-if `grep -Fx "odroidhc4" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo /etc/update-motd.d/;
-fi
-if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
-fi
-if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
-    then mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
+if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
+	mv -f 20-sysinfo /etc/update-motd.d/;
+else
+	if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+		mv -f 20-sysinfo /etc/update-motd.d/;
+	else
+		if [[ `grep -w "odroidhc4" "/root/board.txt"` ]]; then
+			mv -f 20-sysinfo /etc/update-motd.d/;
+		else
+			if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+				mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
+			else
+				if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+					mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
+				fi
+			fi
+		fi
+	fi
 fi
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand
@@ -283,21 +258,23 @@ sleep 1s
 fetch_version
 
 ### Odroid N2 Udev Rules
- if `grep -Fx "odroidn2" "/root/board.txt" >/dev/null;`
-    then odroid_udev_rules;
-fi
-if `grep -Fx "odroidn2plus" "/root/board.txt" >/dev/null;`
-    then odroid_udev_rules;
-fi
-if `grep -Fx "odroidc4" "/root/board.txt" >/dev/null;`
-    then odroid_udev_rules;
+if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+	odroid_udev_rules;
+else
+	if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+		odroid_udev_rules;
+	else
+		if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+			odroid_udev_rules;
+		fi
+	fi
 fi
 
 ### Service
 firstboot_service
 
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then kali_hack;
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	kali_hack;
 fi
 ####
 echo
@@ -318,22 +295,7 @@ WantedBy=multi-user.target
 EOF
 
 ####
-echo
-echo Creating led service.
-sleep 1s
-tee /etc/systemd/system/leds.service <<EOF
-[Unit]
-Description=Set LEDs
-ConditionPathExists=/usr/local/sbin/led-trigger
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/sbin/led-trigger &>/dev/null
-
-[Install]
-WantedBy=multi-user.target
-EOF
+led_service
 
 ####
 echo

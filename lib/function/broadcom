@@ -1,53 +1,4 @@
-# KERNEL
-kernel-source(){
-mkdir -p ${SRC}
-cp -f board.txt ${SRC}/
-cd ${SRC}
-}
-
-broadcom_patching(){
-if [[ `grep "5.10" "../../userdata.txt"` ]]; then
-	for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
-fi
-}
-
-
-# RASPBERRY PI 4B
-raspberrypi_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/raspberrypi-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/raspberrypi-nc-packaging.patch;
-fi
-broadcom_patching
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
-}
-
-raspi4_check(){
-if [[ `ls ${BINRPI4}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINRPI4}/tmp
-	mv -f ${BINRPI4}/*.deb ${BINRPI4}/tmp;
-fi
-}
-
-broadcom_output(){
-if [[ `grep -Fx "bcm2711" "../board.txt"` ]]; then
-	raspi4_check
-	mkdir -p ../output/raspi4
-	mv -f *.deb ../output/raspi4/;
-fi
-}
-
 # STAGE1
-### STAGE 1
 partitions(){
 image_size
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
@@ -162,7 +113,7 @@ fi
 echo
 }
 
-### STAGE 2
+# STAGE 2
 apt_preferences(){
 echo
 echo Blacking listing packages.
@@ -424,20 +375,20 @@ enable_services(){
 sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then systemctl enable resolvconf;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then systemctl enable resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	systemctl enable resolvconf;
+else
+	if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+		systemctl enable resolvconf;
+	fi
 fi
 systemctl enable haveged
 systemctl enable zramswap
 systemctl enable bluetooth
-update-rc.d firstboot defaults 2
 systemctl enable firstboot
 systemctl enable governor
-if ls /etc/systemd/system/multi-user.target.wants/ondemand.service
-	then systemctl disable ondemand;
+if [ -e /etc/systemd/system/multi-user.target.wants/ondemand.service ]; then
+	systemctl disable ondemand;
 fi
 #systemctl enable serial-getty@ttyUSB0.service
 }
