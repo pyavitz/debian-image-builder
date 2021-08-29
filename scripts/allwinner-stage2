@@ -28,14 +28,16 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
-fi
-if `grep -Fx 'DISTRO="ubuntu"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
+else
+	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+		apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
+	else
+		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+			apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+		fi
+	fi
 fi
 apt -y clean
 apt -y autoclean
@@ -53,9 +55,10 @@ echo Done.
 
 #### uInitrd
 cd ~
-if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
-    then rm -f 99-uboot;
-    else uinitrd;
+if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+	rm -f 99-uboot;
+else
+	uinitrd;
 fi
 
 #### Sudoers file 
@@ -66,20 +69,18 @@ tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-#### Firstboot
-allwinner_firstboot
-
 #### LED triggers
-if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
-    then tritium_led_triggers;
-fi
-if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
-    then nanopi_led_triggers;
+if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
+	tritium_led_triggers;
+else
+	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+		nanopi_led_triggers;
+	fi
 fi
 
 ### Bluetooth helper
-if `grep -Fx "pine64" "/root/board.txt" >/dev/null;`
-    then pine64_bt_helper;
+if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+	pine64_bt_helper;
 fi
 
 #### eMMC flash tools
@@ -101,7 +102,7 @@ echo Moving scripts.
 sleep 1s
 cd ~
 mkdir -p /usr/local/bin
-mv -f firstboot.init /etc/init.d/firstboot
+mkdir -p /usr/local/sbin
 mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 mv -f smon /usr/local/bin/
@@ -110,11 +111,12 @@ mv -f swh /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}governor
 mv -f governor /usr/local/bin/
 mv -f growpart /usr/bin/
+mv -f firstboot /usr/local/sbin/
+chmod +x /usr/local/sbin/firstboot
 chmod +x /usr/bin/growpart
-chmod +x /etc/init.d/firstboot
-chown root:root /etc/init.d/firstboot
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
+chown -R root:root /usr/local/sbin/
 echo Done.
 
 #### MOTD
@@ -128,8 +130,8 @@ echo
 toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
-if [ -e /etc/update-motd.d/10-help-text ];
-	then rm -f /etc/update-motd.d/10-help-text;
+if [ -e /etc/update-motd.d/10-help-text ]; then
+	rm -f /etc/update-motd.d/10-help-text;
 fi
 mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo
 chmod +x /etc/update-motd.d/*
@@ -189,11 +191,9 @@ echo Done.
 wireless_regdb
 
 ### Cypress wifi firmware
-case `grep -Fx "nanopi" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    cypress_firmware
-    ;;
-esac
+if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+	cypress_firmware;
+fi
 
 ### Adding groups
 echo
@@ -207,13 +207,11 @@ adduser ${user} tty
 echo Done.
 
 ### Bluetooth and wifi helper install
-case `grep -Fx "pine64" "/root/board.txt" >/dev/null; echo $?` in
-  0)
-    pine64_bt_install
-    pine64_wifi_bt
-    pine64_bt_service
-    ;;
-esac
+if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+	pine64_bt_install
+	pine64_wifi_bt
+	pine64_bt_service;
+fi
 
 #### Kernel
 echo
@@ -233,9 +231,10 @@ fetch_version
 #### Service
 firstboot_service
 
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then kali_hack;
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	kali_hack;
 fi
+
 ####
 echo
 echo Creating governor service.
@@ -255,11 +254,12 @@ WantedBy=multi-user.target
 EOF
 
 ####
-if `grep -Fx "tritium" "/root/board.txt" >/dev/null;`
-    then led_service;
-fi
-if `grep -Fx "nanopi" "/root/board.txt" >/dev/null;`
-    then led_service;
+if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
+	led_service;
+else
+	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+		led_service;
+	fi
 fi
 ####
 echo

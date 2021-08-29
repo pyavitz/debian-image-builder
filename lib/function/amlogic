@@ -1,146 +1,51 @@
-# KERNEL
-kernel-source(){
-mkdir -p ${SRC}
-cp -f board.txt ${SRC}/
-cd ${SRC}
-}
+# STAGE1
+partition(){
+image_size
+fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
+o
+n
+p
+1
+2248
+a
+t
+b
+4101561
 
-odroid_boards(){
-if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
-fi
-}
+p
+w
 
-tobetter_kernel(){
-if [[ `grep -w 'VERSION="5.13.y"' "../../userdata.txt"` ]]; then
-	for i in ../${AMLOGIC}/odroid/5.13.y/*.patch; do patch -p1 < $i; done;
-fi
-}
-
-# LE POTATO
-potato_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
+EOF
+IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+partprobe "${IMAGE_LOOP_DEV}"
+mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
+mkdir -p p1
+mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
+sync
+umount p1
+if [[ `grep -w "lepotato" "board.txt"` ]]; then
+	lepotato_flashbin;
 else
-	patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch;
+	if [[ `grep -w "odroidc4" "board.txt"` ]]; then
+		odroidc4_flashbin;
+	else
+		if [[ `grep -w "odroidhc4" "board.txt"` ]]; then
+			odroidc4_flashbin;
+		else
+			if [[ `grep -w "odroidn2" "board.txt"` ]]; then
+				odroidn2_flashbin;
+			else
+				if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
+					odroidn2plus_flashbin;
+				fi
+			fi
+		fi
+	fi
 fi
-for i in ../${AMLOGIC}/lepotato/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
+mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
-# ODROIDC4
-odroidc4_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
-fi
-if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
-	tobetter_kernel;
-fi
-odroid_boards
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
-}
-
-# ODROIDN2
-odroidn2_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
-fi
-if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
-	tobetter_kernel;
-fi
-odroid_boards
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
-}
-
-lepotato_check(){
-if [[ `ls ${BINLEP}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINLEP}/tmp
-	mv -f ${BINLEP}/*.deb ${BINLEP}/tmp;
-fi
-}
-
-odroidn2_check(){
-if [[ `ls ${BINODN2}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINODN2}/tmp
-	mv -f ${BINODN2}/*.deb ${BINODN2}/tmp;
-fi
-}
-
-odroidn2plus_check(){
-if [[ `ls ${BINODN2P}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINODN2P}/tmp
-	mv -f ${BINODN2P}/*.deb ${BINODN2P}/tmp;
-fi
-}
-
-odroidc4_check(){
-if [[ `ls ${BINODC4}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINODC4}/tmp
-	mv -f ${BINODC4}/*.deb ${BINODC4}/tmp;
-fi
-}
-
-amlogic_output(){
-if [[ `grep -w "lepotato" "../board.txt"` ]]; then
-	lepotato_check
-	mkdir -p ../output/lepotato
-	mv -f *.deb ../output/lepotato/;
-fi
-if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
-	odroidn2_check
-	mkdir -p ../output/odroidn2
-	mv -f *.deb ../output/odroidn2/;
-fi
-if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
-	odroidn2plus_check
-	mkdir -p ../output/odroidn2plus
-	mv -f *.deb ../output/odroidn2plus/;
-fi
-if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
-	odroidc4_check
-	mkdir -p ../output/odroidc4
-	mv -f *.deb ../output/odroidc4/;
-fi
-}
-
-### STAGE1
 lepotato_flashbin(){
 dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
 dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
@@ -175,49 +80,6 @@ case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
 esac
 }
 
-partition(){
-image_size
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2248
-a
-t
-b
-4101561
-
-p
-w
-
-EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
-partprobe "${IMAGE_LOOP_DEV}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-sync
-umount p1
-if `grep -Fx "lepotato" "board.txt" >/dev/null;`
-    then lepotato_flashbin
-fi
-if `grep -Fx "odroidc4" "board.txt" >/dev/null;`
-    then odroidc4_flashbin
-fi
-if `grep -Fx "odroidhc4" "board.txt" >/dev/null;`
-    then odroidc4_flashbin
-fi
-if `grep -Fx "odroidn2" "board.txt" >/dev/null;`
-    then odroidn2_flashbin
-fi
-if `grep -Fx "odroidn2plus" "board.txt" >/dev/null;`
-    then odroidn2plus_flashbin
-fi
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
-}
-
 partition_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
@@ -232,7 +94,7 @@ tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
 EOF
 }
 
-### STAGE2
+# STAGE2
 lepotato_extlinux(){
 echo
 echo Creating extlinux file.
@@ -361,6 +223,26 @@ chown -R root:root /usr/local/sbin/
 echo Done.
 }
 
+led_service(){
+echo
+echo Creating led service.
+sleep 1s
+tee /etc/systemd/system/leds.service <<EOF
+[Unit]
+Description=Set LEDs
+ConditionPathExists=/usr/local/sbin/led-trigger
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/led-trigger &>/dev/null
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable leds
+}
+
 odroid_tweak(){
 echo
 echo Creating Odroid tweaks service.
@@ -422,19 +304,18 @@ enable_services(){
 sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then systemctl enable resolvconf;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then systemctl enable resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	systemctl enable resolvconf;
+else
+	if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+		systemctl enable resolvconf;
+	fi
 fi
 systemctl enable haveged
 systemctl enable zramswap
-update-rc.d firstboot defaults 2
 systemctl enable firstboot
 systemctl enable governor
-systemctl enable leds
-if ls /etc/systemd/system/multi-user.target.wants/ondemand.service
-	then systemctl disable ondemand;
+if [ -e /etc/systemd/system/multi-user.target.wants/ondemand.service ]; then
+	systemctl disable ondemand;
 fi
 }

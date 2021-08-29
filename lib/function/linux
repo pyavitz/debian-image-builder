@@ -4,6 +4,224 @@ STBURL="https://cdn.kernel.org/pub/linux/kernel/v5.x/"
 MLURL="https://git.kernel.org/torvalds/t/"
 ODURL="https://github.com/tobetter/linux/archive/refs/heads/"
 
+kernel-source(){
+mkdir -p ${SRC}
+cp -f board.txt ${SRC}/
+cd ${SRC}
+}
+
+# PATCHING
+## TRITIUM
+tritium_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## PINE64
+pine64_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
+fi
+for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
+for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
+for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## NANOPI
+nanopi_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
+fi
+if [[ `grep "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${NANOPI}/edge/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## ODROID
+odroid_boards(){
+if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+fi
+}
+
+tobetter_kernel(){
+if [[ `grep -w 'VERSION="5.13.y"' "../../userdata.txt"` ]]; then
+	for i in ../${AMLOGIC}/odroid/5.13.y/*.patch; do patch -p1 < $i; done;
+fi
+}
+
+## LE POTATO
+potato_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch;
+fi
+for i in ../${AMLOGIC}/lepotato/*.patch; do patch -p1 < $i; done
+if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## ODROIDC4
+odroidc4_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
+fi
+if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
+	tobetter_kernel;
+fi
+odroid_boards
+if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## ODROIDN2
+odroidn2_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
+fi
+if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
+	tobetter_kernel;
+fi
+odroid_boards
+if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## BROADCOM
+broadcom_patching(){
+if [[ `grep "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
+fi
+}
+
+## RASPBERRY PI 4B
+raspberrypi_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/raspberrypi-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/raspberrypi-nc-packaging.patch;
+fi
+broadcom_patching
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+## ROCKCHIP
+rk3328_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/rockchip-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch;
+fi
+for i in ../${RK3328}/*.patch; do patch -p1 < $i; done
+if [[ `ls ../${ROCKCHIP}/*.patch` ]]; then
+	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+rk3399_patch(){
+echo
+echo_patch
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	patch -p1 < ../${PACKAGING}/rockchip-packaging.patch;
+else
+	patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch;
+fi
+if [[ `grep "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${RK3399}/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${RK3399}/edge/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `ls ../${ROCKCHIP}/*.patch` ]]; then
+	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+fi
+echo_done
+echo
+}
+
+##
 rpi4_binaries(){
 BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
 mkdir -p binaries
@@ -355,5 +573,154 @@ if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 	ccompile;
 else
 	ncompile;
+fi
+}
+
+# OUTPUT
+## ALLWINNER
+tritium_check(){
+if [[ `ls ${BINTRI}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINTRI}/tmp
+	mv -f ${BINTRI}/*.deb ${BINTRI}/tmp;
+fi
+}
+
+pine64_check(){
+if [[ `ls ${BINPINE}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINPINE}/tmp
+	mv -f ${BINPINE}/*.deb ${BINPINE}/tmp;
+fi
+}
+
+nanopi_check(){
+if [[ `ls ${BINNPI}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINNPI}/tmp
+	mv -f ${BINNPI}/*.deb ${BINNPI}/tmp;
+fi
+}
+
+allwinner_output(){
+if [[ `grep -Fx "tritium" "../board.txt"` ]]; then
+	tritium_check
+	mkdir -p ../output/tritium
+	mv -f *.deb ../output/tritium/;
+fi
+if [[ `grep -Fx "pine64" "../board.txt"` ]]; then
+	pine64_check
+	mkdir -p ../output/pine64
+	mv -f *.deb ../output/pine64/;
+fi
+if [[ `grep -Fx "nanopi" "../board.txt"` ]]; then
+	nanopi_check
+	mkdir -p ../output/nanopi
+	mv -f *.deb ../output/nanopi/;
+fi
+}
+
+## AMLOGIC
+lepotato_check(){
+if [[ `ls ${BINLEP}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINLEP}/tmp
+	mv -f ${BINLEP}/*.deb ${BINLEP}/tmp;
+fi
+}
+
+odroidn2_check(){
+if [[ `ls ${BINODN2}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINODN2}/tmp
+	mv -f ${BINODN2}/*.deb ${BINODN2}/tmp;
+fi
+}
+
+odroidn2plus_check(){
+if [[ `ls ${BINODN2P}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINODN2P}/tmp
+	mv -f ${BINODN2P}/*.deb ${BINODN2P}/tmp;
+fi
+}
+
+odroidc4_check(){
+if [[ `ls ${BINODC4}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINODC4}/tmp
+	mv -f ${BINODC4}/*.deb ${BINODC4}/tmp;
+fi
+}
+
+amlogic_output(){
+if [[ `grep -w "lepotato" "../board.txt"` ]]; then
+	lepotato_check
+	mkdir -p ../output/lepotato
+	mv -f *.deb ../output/lepotato/;
+fi
+if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
+	odroidn2_check
+	mkdir -p ../output/odroidn2
+	mv -f *.deb ../output/odroidn2/;
+fi
+if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+	odroidn2plus_check
+	mkdir -p ../output/odroidn2plus
+	mv -f *.deb ../output/odroidn2plus/;
+fi
+if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
+	odroidc4_check
+	mkdir -p ../output/odroidc4
+	mv -f *.deb ../output/odroidc4/;
+fi
+}
+
+## BROADCOM
+raspi4_check(){
+if [[ `ls ${BINRPI4}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINRPI4}/tmp
+	mv -f ${BINRPI4}/*.deb ${BINRPI4}/tmp;
+fi
+}
+
+broadcom_output(){
+if [[ `grep -Fx "bcm2711" "../board.txt"` ]]; then
+	raspi4_check
+	mkdir -p ../output/raspi4
+	mv -f *.deb ../output/raspi4/;
+fi
+}
+
+## ROCKCHIP
+renegade_check(){
+if [[ `ls ${BINRNG}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINRNG}/tmp
+	mv -f ${BINRNG}/*.deb ${BINRNG}/tmp;
+fi
+}
+
+rock64_check(){
+if [[ `ls ${BINR64}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINR64}/tmp
+	mv -f ${BINR64}/*.deb ${BINR64}/tmp;
+fi
+}
+
+nanopc_check(){
+if [[ `ls ${BINNPC}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINNPC}/tmp
+	mv -f ${BINNPC}/*.deb ${BINNPC}/tmp;
+fi
+}
+
+rockchip_output(){
+if [[ `grep -w "renegade" "../board.txt"` ]]; then
+	renegade_check
+	mkdir -p ../output/renegade
+	mv -f *.deb ../output/renegade/;
+fi
+if [[ `grep -w "rock64" "../board.txt"` ]]; then
+	rock64_check
+	mkdir -p ../output/rock64
+	mv -f *.deb ../output/rock64/;
+fi
+if [[ `grep -w "nanopc" "../board.txt"` ]]; then
+	nanopc_check
+	mkdir -p ../output/nanopc
+	mv -f *.deb ../output/nanopc/;
 fi
 }

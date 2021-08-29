@@ -1,106 +1,4 @@
-# KERNEL
-kernel-source(){
-mkdir -p ${SRC}
-cp -f board.txt ${SRC}/
-cd ${SRC}
-}
-
-# TRITIUM
-tritium_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
-fi
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
-}
-
-# PINE64
-pine64_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
-fi
-for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
-for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
-for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
-}
-
-# NANOPI
-nanopi_patch(){
-echo
-echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
-fi
-if [[ `grep "5.10" "../../userdata.txt"` ]]; then
-	for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${NANOPI}/edge/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-fi
-echo_done
-echo
-}
-
-tritium_check(){
-if [[ `ls ${BINTRI}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINTRI}/tmp
-	mv -f ${BINTRI}/*.deb ${BINTRI}/tmp;
-fi
-}
-
-pine64_check(){
-if [[ `ls ${BINPINE}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINPINE}/tmp
-	mv -f ${BINPINE}/*.deb ${BINPINE}/tmp;
-fi
-}
-
-nanopi_check(){
-if [[ `ls ${BINNPI}/*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ${BINNPI}/tmp
-	mv -f ${BINNPI}/*.deb ${BINNPI}/tmp;
-fi
-}
-
-allwinner_output(){
-if [[ `grep -Fx "tritium" "../board.txt"` ]]; then
-	tritium_check
-	mkdir -p ../output/tritium
-	mv -f *.deb ../output/tritium/;
-fi
-if [[ `grep -Fx "pine64" "../board.txt"` ]]; then
-	pine64_check
-	mkdir -p ../output/pine64
-	mv -f *.deb ../output/pine64/;
-fi
-if [[ `grep -Fx "nanopi" "../board.txt"` ]]; then
-	nanopi_check
-	mkdir -p ../output/nanopi
-	mv -f *.deb ../output/nanopi/;
-fi
-}
-
-## STAGE1
+# STAGE1
 partition(){
 image_size
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
@@ -126,14 +24,16 @@ mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 sync
 umount p1
-if `grep -Fx "tritium" "board.txt" >/dev/null;`
-   then tritium_flashbin
-fi
-if `grep -Fx "nanopi" "board.txt" >/dev/null;`
-   then nanopi_flashbin
-fi
-if `grep -Fx "pine64" "board.txt" >/dev/null;`
-   then pine64_flashbin
+if [[ `grep -w "tritium" "board.txt"` ]]; then
+	tritium_flashbin;
+else
+	if [[ `grep -w "nanopi" "board.txt"` ]]; then
+		nanopi_flashbin;
+	else
+		if [[ `grep -w "pine64" "board.txt"` ]]; then
+			pine64_flashbin;
+		fi
+	fi
 fi
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
@@ -164,51 +64,7 @@ tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
 EOF
 }
 
-## STAGE2
-allwinner_firstboot(){
-echo
-echo Creating firstboot.
-tee /usr/local/sbin/firstboot <<EOF
-#!/bin/bash
-### Functions
-grow_mmcblk(){
-bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
-}
-
-grow_mmcblk1(){
-bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
-}
-
-grow_mmcblk2(){
-bash growpart mmcblk2 1 > /dev/null 2>&1
-sleep 1s
-resize2fs mmcblk2p1 > /dev/null 2>&1
-}
-
-### Grow Partition
-if touch -c /dev/mmcblk0 2>/dev/null; then grow_mmcblk;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk1 2>/dev/null; then grow_mmcblk1;
-        else : &>/dev/null;
-fi
-if touch -c /dev/mmcblk2 2>/dev/null; then grow_mmcblk2;
-        else : &>/dev/null;
-fi
-
-### Clean up
-systemctl disable firstboot > /dev/null 2>&1
-update-rc.d firstboot remove > /dev/null 2>&1
-rm -f /var/cache/debconf/*
-rm -f /usr/local/sbin/firstboot
-exit 0
-EOF
-}
-
+# STAGE2
 tritium_extlinux(){
 echo
 echo Adding extlinux file.
@@ -375,18 +231,18 @@ enable_services(){
 sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
-if `grep -Fx 'DISTRO="debian"' "/root/userdata.txt" >/dev/null;`
-	then systemctl enable resolvconf;
-fi
-if `grep -Fx 'DISTRO="kali"' "/root/userdata.txt" >/dev/null;`
-	then systemctl enable resolvconf;
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	systemctl enable resolvconf;
+else
+	if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+		systemctl enable resolvconf;
+	fi
 fi
 systemctl enable haveged
 systemctl enable zramswap
-update-rc.d firstboot defaults 2
 systemctl enable firstboot
 systemctl enable governor
-if ls /etc/systemd/system/multi-user.target.wants/ondemand.service
-	then systemctl disable ondemand;
+if [ -e /etc/systemd/system/multi-user.target.wants/ondemand.service ]; then
+	systemctl disable ondemand;
 fi
 }
