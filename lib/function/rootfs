@@ -1,18 +1,24 @@
 devuan_keyring(){
 URL="https://pkgmaster.devuan.org/devuan/pool/main/d/devuan-keyring/"
 FILE="devuan-keyring_2017.10.03_all.deb"
-if ls /usr/share/keyrings/{devuan-archive-keyring.gpg,devuan-keyring.gpg} > /dev/null 2>&1;
-	then : ;
-	else wget -cq --show-progress $URL$FILE && sudo dpkg -i $FILE && rm -f $FILE;
+if ls /usr/share/keyrings/{devuan-archive-keyring.gpg,devuan-keyring.gpg} > /dev/null 2>&1; then
+	:;
+else
+	wget -cq --show-progress $URL$FILE
+	sudo dpkg -i $FILE
+	rm -f $FILE;
 fi
 }
 
 kali_keyring(){
 URL="http://http.kali.org/pool/main/k/kali-archive-keyring/"
 FILE="kali-archive-keyring_2020.2_all.deb"
-if ls /usr/share/keyrings/kali-archive-keyring.gpg > /dev/null 2>&1;
-	then : ;
-	else wget -cq --show-progress $URL$FILE && sudo dpkg -i $FILE && rm -f $FILE;
+if [ -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
+	:;
+else
+	wget -cq --show-progress $URL$FILE
+	sudo dpkg -i $FILE
+	rm -f $FILE;
 fi
 echo
 }
