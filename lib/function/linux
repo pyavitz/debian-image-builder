@@ -67,25 +67,6 @@ echo_done
 echo
 }
 
-## ODROID
-odroid_boards(){
-if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
-fi
-}
-
-tobetter_kernel(){
-if [[ `grep -w 'VERSION="5.13.y"' "../../userdata.txt"` ]]; then
-	for i in ../${AMLOGIC}/odroid/5.13.y/*.patch; do patch -p1 < $i; done;
-fi
-}
-
 ## LE POTATO
 potato_patch(){
 echo
@@ -106,6 +87,32 @@ echo_done
 echo
 }
 
+## ODROID
+odroid_boards(){
+if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
+	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+fi
+}
+
+tobetter_kernel(){
+if [[ `grep -w 'VERSION="5.13.y"' "../../userdata.txt"` ]]; then
+	if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../${AMLOGIC}/odroid/5.13.y/*.patch; do patch -p1 < $i; done;
+	fi
+fi
+if [[ `grep -w 'VERSION="5.14.y"' "../../userdata.txt"` ]]; then
+	if [[ `ls ../${AMLOGIC}/odroid/5.14.y/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../${AMLOGIC}/odroid/5.14.y/*.patch; do patch -p1 < $i; done;
+	fi
+fi
+}
+
 ## ODROIDC4
 odroidc4_patch(){
 echo
@@ -115,9 +122,7 @@ if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 else
 	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
 fi
-if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
-	tobetter_kernel;
-fi
+tobetter_kernel
 odroid_boards
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
@@ -138,9 +143,7 @@ if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 else
 	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
 fi
-if [[ `ls ../${AMLOGIC}/odroid/5.13.y/*.patch` ]] > /dev/null 2>&1; then
-	tobetter_kernel;
-fi
+tobetter_kernel
 odroid_boards
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
