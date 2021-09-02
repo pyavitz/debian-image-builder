@@ -152,26 +152,6 @@ chown -R root:root /usr/local/sbin/
 echo Done.
 }
 
-led_service(){
-echo
-echo Creating led service.
-sleep 1s
-tee /etc/systemd/system/leds.service <<EOF
-[Unit]
-Description=Set LEDs
-ConditionPathExists=/usr/local/sbin/led-trigger
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/sbin/led-trigger &>/dev/null
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable leds
-}
-
 enable_services(){
 sleep 1s
 systemctl enable rc-local

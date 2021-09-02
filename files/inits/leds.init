@@ -1,0 +1,27 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: leds
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2
+# Default-Stop:
+# Short-Description: Set LED
+# Description:
+### END INIT INFO
+
+# chmod +x /etc/init.d/leds
+# update-rc.d leds defaults 2
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Set LED"
+    /usr/local/sbin/led-trigger 2>/dev/null
+    log_end_msg $?
+    ;;
+  *)
+    echo "Usage: $0 start" >&2
+    exit 3
+    ;;
+esac

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 source /root/broadcom.txt
+source /root/services.txt
 source /root/source.txt
 source /root/userdata.txt
 SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
@@ -32,21 +33,23 @@ fi
 apt upgrade -y
 apt dist-upgrade -y
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
-	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} resolvconf;
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
 else
-	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
-		apt install -y ${PKGS1} ${PKGS2} ${RPI} openresolv ifupdown;
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		apt install -y openssh-client openssh-server --no-install-recommends
+		apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} openresolv ifupdown ifupdown-extra ntp;
 	else
-		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-			apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} ${RPI} dbus-user-session libical3 resolvconf;
+		if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+			apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
+		else
+			if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+				apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+			fi
 		fi
 	fi
 fi
 apt -y clean
 apt -y autoclean
-
-### LED service
-led_service
 
 #### Scripts
 echo
@@ -74,10 +77,10 @@ wget -cq --show-progress ${SCRIPTS_URL}update-fw
 mv -f update-fw /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
-initrd_script
+mv -f raspi4 /usr/local/sbin/led-trigger
 # Service
-uinitrd
-chmod +x /usr/local/sbin/firstboot
+initrd_script > /dev/null 2>&1
+uinitrd > /dev/null 2>&1
 chmod +x /usr/bin/growpart
 chmod +x /etc/initramfs/post-update.d/99-uboot
 chown root:root /etc/initramfs/post-update.d/99-uboot
@@ -86,6 +89,16 @@ chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
 echo Done.
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	mkdir -p /etc/init.d
+	mv -f firstboot.init /etc/init.d/firstboot
+	mv -f leds.init /etc/init.d/leds
+	mv -f credentials.init /etc/init.d/credentials
+	mv -f governor.init /etc/init.d/governor
+	mv -f network.init /etc/init.d/network
+	mv -f zramswap.init /etc/init.d/zramswap
+	mv -f bthelper.init /etc/init.d/bthelper
+fi
 
 #### MOTD
 echo
@@ -108,7 +121,7 @@ chown root:root /etc/update-motd.d/20-sysinfo
 echo Done.
 
 ### Clean
-rm -f {lepotato-tweaks,odroid-tweaks,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc}
+rm -f {lepotato-tweaks,odroid-tweaks,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
 #### Adding firmware
 rpi_firmware
@@ -122,7 +135,12 @@ mv -f 99-com.rules /lib/udev/rules.d/99-com.rules
 echo Done.
 
 ### Network Setup
-network_setup
+network_setup > /dev/null 2>&1
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	credentials_service > /dev/null 2>&1;
+fi
 
 ### ZSWAP
 echo
@@ -152,7 +170,15 @@ sleep 1s
 apt update
 apt install -y debhelper d-shlibs rfkill
 git clone https://github.com/RPi-Distro/raspberrypi-sys-mods.git
-cd raspberrypi-sys-mods
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	mv raspberrypi-sys-mods.patch raspberrypi-sys-mods/
+	cd raspberrypi-sys-mods
+	patch -p1 < raspberrypi-sys-mods.patch
+	rm -f raspberrypi-sys-mods.patch;
+else
+	rm -f raspberrypi-sys-mods.patch
+	cd raspberrypi-sys-mods;
+fi
 dpkg-buildpackage -us -uc
 cd ~
 dpkg -i raspberrypi-sys-mods*.deb
@@ -173,11 +199,15 @@ echo Done.
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
 	pi_bluetooth_debian;
 else
-	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
-		pi_bluetooth_ubuntu;
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		pi_bluetooth_debian;
 	else
-		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-			pi_bluetooth_debian;
+		if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+			pi_bluetooth_ubuntu;
+		else
+			if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+				pi_bluetooth_debian;
+			fi
 		fi
 	fi
 fi
@@ -223,72 +253,51 @@ echo 'SUBSYSTEM=="vcio",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vchiq
 echo 'SUBSYSTEM=="vc-mem",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vchiq-permissions.rules
 
 #### Create first boot
-firstboot_service
-
-if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-	kali_hack;
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	firstboot_service > /dev/null 2>&1;
 fi
 ####
-echo
-echo Creating governor service.
-sleep 1s
-tee /etc/systemd/system/governor.service <<EOF
-[Unit]
-Description=Set Governor
-ConditionPathExists=/usr/local/bin/governor
-
-[Service]
-ExecStart=/usr/local/bin/governor -r &>/dev/null
-Type=oneshot
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-#### Create RC.LOCAL
-echo
-echo Creating rc.local file.
-sleep 1s
-tee /etc/systemd/system/rc-local.service <<EOF
-[Unit]
-Description=/etc/rc.local
-ConditionPathExists=/etc/rc.local
-
-[Service]
-Type=forking
-ExecStart=/etc/rc.local start
-TimeoutSec=0
-StandardOutput=tty
-RemainAfterExit=yes
-SysVStartPriority=99
-
-[Install]
-WantedBy=multi-user.target
-EOF
-tee /etc/rc.local <<EOF
-#!/bin/sh -e
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
-
-exit 0
-EOF
-chmod +x /etc/rc.local
-echo Done.
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	kali_hack > /dev/null 2>&1;
+fi
+####
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	governor_service > /dev/null 2>&1;
+fi
+####
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	led_service > /dev/null 2>&1;
+fi
+####
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	rc-local_service > /dev/null 2>&1;
+fi
 ### Enable services
 echo
 echo Enabling Services.
-enable_services > /dev/null 2>&1
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	echo "== Sysvinit"
+	enable_sysvinit > /dev/null 2>&1;
+else
+	echo "== Systemd"
+	enable_services > /dev/null 2>&1;
+fi
 echo Done.
+
+#### Own it
+chown -R ${user}:${user} /home/${user}
+chmod +x /usr/local/bin/*
+chown -R root:root /usr/local/bin/
+chmod +x /usr/local/sbin/*
+chown -R root:root /usr/local/sbin/
 
 ###### Finish
 echo

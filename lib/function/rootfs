@@ -8,6 +8,11 @@ else
 	sudo dpkg -i $FILE
 	rm -f $FILE;
 fi
+if [ -e /usr/share/debootstrap/scripts/chimaera ]; then
+	:;
+else
+	ln -sr /usr/share/debootstrap/scripts/sid /usr/share/debootstrap/scripts/chimaera;
+fi
 }
 
 kali_keyring(){
@@ -31,6 +36,6 @@ chroot ${ROOT} /debootstrap/debootstrap --second-stage
 
 arm64_devuan(){
 KEY="/usr/share/keyrings/devuan-archive-keyring.gpg"
-debootstrap --arch arm64 --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://pkgmaster.devuan.org/merged
+debootstrap --arch arm64 --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://deb.devuan.org/merged
 chroot ${ROOT} /debootstrap/debootstrap --second-stage
 }

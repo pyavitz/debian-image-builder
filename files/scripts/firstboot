@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 ### Functions
 grow_mmcblk(){
 if [[ `blkid | grep -w vfat` ]]; then
@@ -50,15 +52,15 @@ fi
 }
 
 chk_mmcblk(){
-fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
+bash fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
 }
 
 chk_mmcblk1(){
-fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
+bash fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
 }
 
 chk_sda(){
-fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
+bash fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
 }
 
 fsck_boot(){
@@ -80,6 +82,10 @@ mount /boot
 }
 
 ### Grow Partition
+if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
+	echo
+	echo -e " \e[0;31mExpanding root filesystem\e[0m ...";
+fi
 if [ -e /dev/mmcblk0 ]; then
 	grow_mmcblk;
 else
@@ -102,7 +108,12 @@ if [[ `blkid | grep -w vfat` ]]; then
 fi
 
 ### Clean up
-systemctl disable firstboot
+if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
+	update-rc.d firstboot remove
+	rm -f /etc/init.d/firstboot;
+else
+	systemctl disable firstboot;
+fi
 rm -f /var/cache/debconf/*
 rm -f /usr/local/sbin/firstboot
 

@@ -1,0 +1,33 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: tweaks
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2
+# Default-Stop:
+# Short-Description: Tweaks system
+# Description:
+### END INIT INFO
+
+# chmod +x /etc/init.d/tweaks
+# update-rc.d tweaks defaults 2
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Tweaks"
+    if [ -e /usr/bin/lepotato-tweaks ]; then
+    	/usr/bin/lepotato-tweaks 2>/dev/null;
+    else
+    	if [ -e /usr/bin/odroid-tweaks ]; then
+    		/usr/bin/odroid-tweaks 2>/dev/null;
+    	fi
+    fi
+    log_end_msg $?
+    ;;
+  *)
+    echo "Usage: $0 start" >&2
+    exit 3
+    ;;
+esac

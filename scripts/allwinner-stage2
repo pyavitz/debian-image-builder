@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source /root/source.txt
 source /root/userdata.txt
+source /root/services.txt
 source /root/allwinner.txt
 source /root/part-uuid.txt
 SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
@@ -31,11 +32,16 @@ apt dist-upgrade -y
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
 else
-	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
-		apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		apt install -y openssh-client openssh-server --no-install-recommends
+		apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} openresolv ifupdown ifupdown-extra ntp;
 	else
-		if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-			apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+		if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+			apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
+		else
+			if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+				apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf;
+			fi
 		fi
 	fi
 fi
@@ -51,6 +57,11 @@ adduser ${user} audio
 adduser ${user} dialout
 adduser ${user} video
 adduser ${user} disk
+adduser ${user} plugdev
+adduser ${user} netdev
+adduser ${user} bluetooth
+adduser ${user} input
+adduser ${user} tty
 echo Done.
 
 #### uInitrd
@@ -58,7 +69,7 @@ cd ~
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	rm -f 99-uboot;
 else
-	uinitrd;
+	uinitrd > /dev/null 2>&1;
 fi
 
 #### Sudoers file 
@@ -71,16 +82,22 @@ EOF
 
 #### LED triggers
 if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
-	tritium_led_triggers;
+	tritium_led_triggers > /dev/null 2>&1;
 else
 	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
-		nanopi_led_triggers;
+		nanopi_led_triggers > /dev/null 2>&1;
 	fi
 fi
 
 ### Bluetooth helper
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
-	pine64_bt_helper;
+	pine64_bthelper > /dev/null 2>&1;
+else
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		:;
+	else
+		pine64_bt_service > /dev/null 2>&1;
+	fi
 fi
 
 #### eMMC flash tools
@@ -118,6 +135,19 @@ chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
 echo Done.
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	mkdir -p /etc/init.d
+	mv -f firstboot.init /etc/init.d/firstboot
+	mv -f leds.init /etc/init.d/leds
+	mv -f credentials.init /etc/init.d/credentials
+	mv -f governor.init /etc/init.d/governor
+	mv -f network.init /etc/init.d/network
+	mv -f zramswap.init /etc/init.d/zramswap
+	if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+		mv -f bthelper.init /etc/init.d/bthelper
+		rm -f /etc/init.d/leds;
+	fi
+fi
 
 #### MOTD
 echo
@@ -140,7 +170,7 @@ chown root:root /etc/update-motd.d/20-sysinfo
 echo Done.
 
 ### Clean
-rm -f {lepotato-tweaks,odroid-tweaks,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc}
+rm -f {lepotato-tweaks,odroid-tweaks,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
 ### Move mc skins
 echo
@@ -167,7 +197,12 @@ echo Done.
 extra_firmware
 
 ### Network Setup
-network_setup
+network_setup > /dev/null 2>&1
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	credentials_service > /dev/null 2>&1;
+fi
 
 ### ZSWAP
 echo
@@ -195,22 +230,9 @@ if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 	cypress_firmware;
 fi
 
-### Adding groups
-echo
-echo Adding user to more groups.
-sleep 1s
-adduser ${user} plugdev
-adduser ${user} netdev
-adduser ${user} bluetooth
-adduser ${user} input
-adduser ${user} tty
-echo Done.
-
-### Bluetooth and wifi helper install
+### Bluetooth helper install
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
-	pine64_bt_install
-	pine64_wifi_bt
-	pine64_bt_service;
+	pine64_bthelper2;
 fi
 
 #### Kernel
@@ -229,80 +251,52 @@ sleep 1s
 fetch_version
 
 #### Service
-firstboot_service
-
-if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-	kali_hack;
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	firstboot_service > /dev/null 2>&1;
 fi
-
 ####
-echo
-echo Creating governor service.
-sleep 1s
-tee /etc/systemd/system/governor.service <<EOF
-[Unit]
-Description=Set Governor
-ConditionPathExists=/usr/local/bin/governor
-
-[Service]
-ExecStart=/usr/local/bin/governor -r &>/dev/null
-Type=oneshot
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	kali_hack > /dev/null 2>&1;
+fi
+####
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	governor_service > /dev/null 2>&1;
+fi
 ####
 if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
-	led_service;
-else
-	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
-		led_service;
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		:;
+	else
+		led_service > /dev/null 2>&1;
+	fi
+fi
+if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		:;
+	else
+		led_service > /dev/null 2>&1;
 	fi
 fi
 ####
-echo
-echo Creating rc-local.
-sleep 1s
-tee /etc/systemd/system/rc-local.service <<EOF
-[Unit]
-Description=/etc/rc.local
-ConditionPathExists=/etc/rc.local
-
-[Service]
-Type=forking
-ExecStart=/etc/rc.local start
-TimeoutSec=0
-StandardOutput=tty
-RemainAfterExit=yes
-SysVStartPriority=99
-
-[Install]
-WantedBy=multi-user.target
-EOF
-tee /etc/rc.local <<EOF
-#!/bin/sh -e
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
-
-exit 0
-EOF
-chmod +x /etc/rc.local
-echo Done.
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	:;
+else
+	rc-local_service > /dev/null 2>&1;
+fi
 ### Enable services
 echo
 echo Enabling Services.
-enable_services > /dev/null 2>&1
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	echo "== Sysvinit"
+	enable_sysvinit > /dev/null 2>&1;
+else
+	echo "== Systemd"
+	enable_services > /dev/null 2>&1;
+fi
 echo Done.
 
 #### Own it

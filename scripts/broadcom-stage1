@@ -132,6 +132,7 @@ fi
 # setup stage2
 cp scripts/broadcom-stage2 p2/root
 cp lib/function/broadcom p2/root/broadcom.txt
+cp lib/function/services p2/root/services.txt
 cp lib/source p2/root/source.txt
 cp userdata.txt p2/root
 cp board.txt p2/root
@@ -144,6 +145,9 @@ cp files/scripts/* p2/root
 cp files/users/* p2/root
 cp files/raspi4/* p2/root
 cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	cp files/inits/*.init p2/root;
+fi
 echo -e "${RED}Starting chroot${FIN} ..."
 # Mount and chroot
 mount -o bind p1 p2/boot

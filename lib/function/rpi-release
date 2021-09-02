@@ -149,56 +149,73 @@ EOF
 choose_release(){
 case `grep -Fx 'DISTRO="debian"' "userdata.txt" >/dev/null; echo $?` in
   0)
-if `grep -Fx 'DISTRO_VERSION="buster"' "userdata.txt" >/dev/null;`
-	then debian_buster;
-fi
-if `grep -Fx 'DISTRO_VERSION="bullseye"' "userdata.txt" >/dev/null;`
-	then debian_bullseye;
-fi
-if `grep -Fx 'DISTRO_VERSION="unstable"' "userdata.txt" >/dev/null;`
-	then debian_unstable;
-fi
-if `grep -Fx 'DISTRO_VERSION="sid"' "userdata.txt" >/dev/null;`
-	then debian_unstable;
+if [[ `grep -w 'DISTRO_VERSION="buster"' "userdata.txt"` ]]; then
+	debian_buster;
+else
+	if [[ `grep -w 'DISTRO_VERSION="bullseye"' "userdata.txt"` ]]; then
+		debian_bullseye;
+	else
+		if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
+			debian_unstable;
+		else
+			if [[ `grep -w 'DISTRO_VERSION="unstable"' "userdata.txt"` ]]; then
+				debian_unstable;
+			else
+				if [[ `grep -w 'DISTRO_VERSION="sid"' "userdata.txt"` ]]; then
+					debian_unstable;
+				fi
+			fi
+		fi
+	fi
 fi
     ;;
 esac
 case `grep -Fx 'DISTRO="devuan"' "userdata.txt" >/dev/null; echo $?` in
   0)
-if `grep -Fx 'DISTRO_VERSION="beowulf"' "userdata.txt" >/dev/null;`
-	then devuan_stable;
-fi
-if `grep -Fx 'DISTRO_VERSION="testing"' "userdata.txt" >/dev/null;`
-	then devuan_unstable;
-fi
-if `grep -Fx 'DISTRO_VERSION="unstable"' "userdata.txt" >/dev/null;`
-	then devuan_unstable;
-fi
-if `grep -Fx 'DISTRO_VERSION="ceres"' "userdata.txt" >/dev/null;`
-	then devuan_unstable;
+if [[ `grep -w 'DISTRO_VERSION="beowulf"' "userdata.txt"` ]]; then
+	devuan_stable;
+else
+	if [[ `grep -w 'DISTRO_VERSION="chimaera"' "userdata.txt"` ]]; then
+		devuan_unstable;
+	else
+		if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
+			devuan_unstable;
+		else
+			if [[ `grep -w 'DISTRO_VERSION="unstable"' "userdata.txt"` ]]; then
+				devuan_unstable;
+			else
+				if [[ `grep -w 'DISTRO_VERSION="ceres"' "userdata.txt"` ]]; then
+					devuan_unstable;
+				fi
+			fi
+		fi
+	fi
 fi
     ;;
 esac
 case `grep -Fx 'DISTRO="kali"' "userdata.txt" >/dev/null; echo $?` in
   0)
-if `grep -Fx 'DISTRO_VERSION="kali-rolling"' "userdata.txt" >/dev/null;`
-	then kali_rolling;
+if [[ `grep -w 'DISTRO_VERSION="kali-rolling"' "userdata.txt"` ]]; then
+	kali_rolling;
 fi
     ;;
 esac
 case `grep -Fx 'DISTRO="ubuntu"' "userdata.txt" >/dev/null; echo $?` in
   0)
-if `grep -Fx 'DISTRO_VERSION="focal"' "userdata.txt" >/dev/null;`
-	then ubuntu_focal;
-fi
-if `grep -Fx 'DISTRO_VERSION="groovy"' "userdata.txt" >/dev/null;`
-	then ubuntu_groovy;
-fi
-if `grep -Fx 'DISTRO_VERSION="hirsute"' "userdata.txt" >/dev/null;`
-	then ubuntu_hirsute;
-fi
-if `grep -Fx 'DISTRO_VERSION="impish"' "userdata.txt" >/dev/null;`
-	then ubuntu_impish;
+if [[ `grep -w 'DISTRO_VERSION="focal"' "userdata.txt"` ]]; then
+	ubuntu_focal;
+else
+	if [[ `grep -w 'DISTRO_VERSION="groovy"' "userdata.txt"` ]]; then
+		ubuntu_groovy;
+	else
+		if [[ `grep -w 'DISTRO_VERSION="hirsute"' "userdata.txt"` ]]; then
+			ubuntu_hirsute;
+		else
+			if [[ `grep -w 'DISTRO_VERSION="impish"' "userdata.txt"` ]]; then
+				ubuntu_impish;
+			fi
+		fi
+	fi
 fi
     ;;
 esac

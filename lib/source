@@ -32,7 +32,7 @@ BROADCOM="../patches/broadcom"
 MISC="../patches/misc"
 
 validation(){
-if grep -q "builder=2.6" userdata.txt; then
+if grep -q "builder=2.7" userdata.txt; then
     :;
 else
     echo -e "${YLW}Userdata file is old${FIN}! ${YLW}Please create a new one${FIN}." && exit;
@@ -252,7 +252,17 @@ echo Adding network configs and rules.
 sleep 1s
 rm -f /etc/network/interfaces
 mv -f credentials.txt /boot/rename_to_credentials.txt
-mv -f credentials /usr/local/bin/
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	mv -f credentials.devuan /usr/local/bin/credentials
+	rm -f credentials.debian
+	ln -sr /etc/network/if-up.d/00check-network-cable /etc/network/if-pre-up.d/00check-network-cable
+	sed -i 's/#CONFIGURE_INTERFACES=yes/CONFIGURE_INTERFACES=yes/g' /etc/default/networking
+	sed -i 's/#WAIT_ONLINE_METHOD=ifup/WAIT_ONLINE_METHOD=ifup/g' /etc/default/networking
+	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking;
+else
+	mv -f credentials.debian /usr/local/bin/credentials
+	rm -f credentials.devuan;
+fi
 chmod +x /usr/local/bin/credentials
 chown root:root /usr/local/bin/credentials
 mkdir -p /etc/modprobe.d
@@ -350,76 +360,5 @@ network={
 	password=
 }
 EOF
-
-echo
-echo Creating wifi credentials.
-sleep 1s
-tee /etc/systemd/system/credentials.service <<EOF
-[Unit]
-Description=Credentials
-After=firstboot.service network.target
-Before=rc-local.service
-ConditionPathExists=/usr/local/bin/credentials
-[Service]
-ExecStart=/usr/local/bin/credentials > /dev/null 2>&1
-Type=oneshot
-RemainAfterExit=yes
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl enable credentials
 echo Done.
-}
-
-# first boot service
-firstboot_service(){
-echo
-echo Creating first boot.
-sleep 1s
-tee /etc/systemd/system/firstboot.service <<EOF
-[Unit]
-Description=First Boot
-After=systemd-remount-fs.service
-Before=credentials.service
-ConditionPathExists=/usr/local/sbin/firstboot
-
-[Service]
-ExecStart=/usr/local/sbin/firstboot
-Type=oneshot
-RemainAfterExit=no
-
-[Install]
-WantedBy=multi-user.target
-EOF
-}
-
-# kali force start service
-kali_hack(){
-tee /etc/systemd/system/kali-hack.service <<EOF
-[Unit]
-Description=Kali hack
-After=rc-local.service
-ConditionPathExists=/usr/local/sbin/kali-hack
-
-[Service]
-ExecStart=/usr/local/sbin/kali-hack > /dev/null 2>&1
-Type=oneshot
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-tee /usr/local/sbin/kali-hack <<EOF
-#!/bin/bash
-
-service ssh start
-sleep 3s
-service avahi-daemon start
-sleep 2s
-service bluetooth start
-EOF
-chmod +x /usr/local/sbin/kali-hack
-systemctl enable kali-hack
 }

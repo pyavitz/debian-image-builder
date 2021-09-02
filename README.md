@@ -45,8 +45,9 @@ Branding:       # Set ASCII text banner
 Hostname:       # Set system hostname
 
 Distribution
-Distro:         # Supported: debian and ubuntu
-Release:	# Debian: buster, bullseye, unstable and sid
+Distro:         # Supported: debian, devuan and ubuntu
+Release:	# Debian: buster, bullseye, testing, unstable and sid
+		# Devuan: beowulf, chimaera, testing, unstable and ceres
 		# Ubuntu: focal and hirsute
 
 U-Boot and Linux

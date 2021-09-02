@@ -1,0 +1,33 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: bthelper
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2
+# Default-Stop:
+# Short-Description: Bluetooth helper
+# Description:
+### END INIT INFO
+
+# chmod +x /etc/init.d/bthelper
+# update-rc.d bthelper defaults 2
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Bluetooth helper"
+    if [ -e /usr/bin/btuart]; then
+    	/usr/bin/btuart 2>/dev/null;
+    else
+    	if [ -e /usr/local/sbin/pine64-bt ]; then
+    		/usr/local/sbin/pine64-bt 2>/dev/null;
+    		fi
+    	fi
+    log_end_msg $?
+    ;;
+  *)
+    echo "Usage: $0 start" >&2
+    exit 3
+    ;;
+esac

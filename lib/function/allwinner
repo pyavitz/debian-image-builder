@@ -131,26 +131,6 @@ chown -R root:root /usr/local/sbin/
 echo Done.
 }
 
-led_service(){
-echo
-echo Creating led service.
-sleep 1s
-tee /etc/systemd/system/leds.service <<EOF
-[Unit]
-Description=Set LEDs
-ConditionPathExists=/usr/local/sbin/led-trigger
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/sbin/led-trigger &>/dev/null
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable leds
-}
-
 cypress_firmware(){
 echo
 echo Adding brcm firmware from cypress.
@@ -167,10 +147,10 @@ rm -fdr cypress
 echo Done.
 }
 
-pine64_bt_helper(){
+pine64_bthelper(){
 echo
 echo Creating bluetooth helper.
-tee /usr/local/sbin/start-bluetooth <<EOF
+tee /usr/local/sbin/pine64-bt <<EOF
 #!/bin/bash
 echo 1 > /sys/class/rfkill/rfkill0/state
 sleep 1s
@@ -180,7 +160,7 @@ hciconfig hci0 up
 EOF
 }
 
-pine64_bt_install(){
+pine64_bthelper2(){
 echo
 echo Installing bluetooth helper.
 sleep 1s
@@ -191,40 +171,12 @@ make install
 mv rtk_hciattach /usr/local/bin/
 cd ~
 rm -fdr rtl8723bs_bt
+mkdir -p /etc/modules-load.d/
+echo "r8723bs" > /etc/modules-load.d/pine64.conf
+echo "hci_uart" >> /etc/modules-load.d/pine64.conf
+mkdir -p /etc/modprobe.d/
+echo "options r8723bs rtw_power_mgnt=0" > /etc/modprobe.d/wifi-pwrmgnt.conf
 echo Done.
-}
-
-pine64_wifi_bt(){
-echo
-echo Bluetooth and wifi help.
-sleep 1s
-tee /etc/modules-load.d/pine64.conf <<EOF
-r8723bs
-hci_uart
-
-EOF
-
-tee /etc/modprobe.d/wifi-pwrmgnt.conf <<EOF
-options r8723bs rtw_power_mgnt=0
-
-EOF
-}
-
-pine64_bt_service(){
-echo
-echo Creating bluetooth service.
-sleep 1s
-tee /etc/systemd/system/bluetooth-module.service <<EOF
-[Unit]
-Description=Enable Bluetooth
-ConditionPathExists=/usr/local/sbin/start-bluetooth
-[Service]
-Type=forking
-ExecStart=/usr/local/sbin/start-bluetooth &>/dev/null
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable bluetooth-module
 }
 
 enable_services(){

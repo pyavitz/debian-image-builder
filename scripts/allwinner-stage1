@@ -114,6 +114,7 @@ fi
 # setup stage2
 cp scripts/allwinner-stage2 p1/root
 cp lib/function/allwinner p1/root/allwinner.txt
+cp lib/function/services p1/root/services.txt
 cp lib/source p1/root/source.txt
 cp userdata.txt p1/root
 cp part-uuid.txt p1/root
@@ -121,6 +122,9 @@ cp board.txt p1/root
 cp files/misc/* p1/root
 cp files/scripts/* p1/root
 cp files/users/* p1/root
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	cp files/inits/*.init p1/root;
+fi
 cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p1/root
 if [[ `grep -w "tritium" "board.txt"` ]]; then
 	cp output/tritium/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
