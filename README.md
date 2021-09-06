@@ -1,4 +1,4 @@
-## Supported boards
+## Boards
 ```sh
 Allwinner:      # NanoPi NEO Plus2, Pine A64+ and Tritium
 Amlogic:        # Le Potato and Odroid C4/N2/N2+
