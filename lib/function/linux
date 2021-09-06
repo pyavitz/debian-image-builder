@@ -11,15 +11,40 @@ cd ${SRC}
 }
 
 # PATCHING
+allwinner-packaging(){
+sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
+}
+
+amlogic-packaging(){
+sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/mkdebian
+}
+
+raspberrypi-packaging(){
+sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/mkdebian
+}
+
+rockchip-packaging(){
+sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/mkdebian
+}
+
 ## TRITIUM
 tritium_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+allwinner-packaging
 if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 fi
@@ -31,11 +56,8 @@ echo
 pine64_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+allwinner-packaging
 for i in ../${PINE}/cpufreq/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/wifibt/*.patch; do patch -p1 < $i; done
 for i in ../${PINE}/misc/*.patch; do patch -p1 < $i; done
@@ -50,11 +72,8 @@ echo
 nanopi_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/allwinner-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/allwinner-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+allwinner-packaging
 if [[ `grep "5.10" "../../userdata.txt"` ]]; then
 	for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done;
 else
@@ -71,11 +90,8 @@ echo
 potato_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/amlogic-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/amlogic-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+amlogic-packaging
 for i in ../${AMLOGIC}/lepotato/*.patch; do patch -p1 < $i; done
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
@@ -117,11 +133,8 @@ fi
 odroidc4_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+amlogic-packaging
 tobetter_kernel
 odroid_boards
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
@@ -138,11 +151,8 @@ echo
 odroidn2_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/odroid-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/odroid-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+amlogic-packaging
 tobetter_kernel
 odroid_boards
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
@@ -168,11 +178,8 @@ fi
 raspberrypi_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/raspberrypi-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/raspberrypi-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+raspberrypi-packaging
 broadcom_patching
 if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 	cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
@@ -185,11 +192,8 @@ echo
 rk3328_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/rockchip-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+rockchip-packaging
 for i in ../${RK3328}/*.patch; do patch -p1 < $i; done
 if [[ `ls ../${ROCKCHIP}/*.patch` ]]; then
 	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
@@ -204,11 +208,8 @@ echo
 rk3399_patch(){
 echo
 echo_patch
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-	patch -p1 < ../${PACKAGING}/rockchip-packaging.patch;
-else
-	patch -p1 < ../${PACKAGING}/rockchip-nc-packaging.patch;
-fi
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+rockchip-packaging
 if [[ `grep "5.10" "../../userdata.txt"` ]]; then
 	for i in ../${RK3399}/*.patch; do patch -p1 < $i; done;
 else
