@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # uInitrd generator for U-Boot
 # place this file to /etc/initramfs/post-update.d/ directory,
@@ -7,16 +7,20 @@
 
 uInitrd="/boot/uInitrd"
 
-die () {
+die(){
 	echo >&2 "Error: $@"
 	echo >&2 "uInitrd generation failed - exiting."
 	exit 1
 }
 
+if [ -e ${uInitrd} ]; then
+	rm -f ${uInitrd}
+fi
+
 echo "Generating uInitrd for U-Boot:"
 
 if [ "$#" -eq 2 ]; then
-  if [ ! -z "$1" ] && [ -f "$2" ];then
+  if [ ! -z "$1" ] && [ -f "$2" ]; then
 	  name="initramfs-$1"
 	  file="$2"
 	  mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${uInitrd}
