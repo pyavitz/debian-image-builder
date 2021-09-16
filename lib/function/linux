@@ -194,7 +194,11 @@ echo
 echo_patch
 patch -p1 < ../${PACKAGING}/general-packaging.patch
 rockchip-packaging
-for i in ../${RK3328}/*.patch; do patch -p1 < $i; done
+if [[ `grep "5.10" "../../userdata.txt"` ]]; then
+	for i in ../${RK3328}/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${RK3328}/edge/*.patch; do patch -p1 < $i; done;
+fi
 if [[ `ls ../${ROCKCHIP}/*.patch` ]]; then
 	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
 fi
