@@ -52,7 +52,7 @@ Release:	# Debian: buster, bullseye, testing, unstable and sid
 
 U-Boot and Linux
 U-Boot:         # Supported: v2021.04, v2021.07
-Branch:         # Supported: 5.10 (Note: If building for Odroids please review options)
+Branch:         # Supported: 5.14 (Note: If building for Odroids please review options)
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
