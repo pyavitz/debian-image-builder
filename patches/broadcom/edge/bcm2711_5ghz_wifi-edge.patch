@@ -1,6 +1,6 @@
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-08-03 12:49:48.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-09-17 10:34:51.000000000 -0400
 @@ -78,7 +78,7 @@
  	size_t (*get_ramsize)(struct device *dev);
  	int (*get_memdump)(struct device *dev, void *data, size_t len);
@@ -27,8 +27,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/ne
  
  static inline
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-08-03 12:49:48.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-09-17 10:34:51.000000000 -0400
 @@ -9,6 +9,7 @@
  #include <linux/etherdevice.h>
  #include <linux/module.h>
@@ -37,7 +37,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  #include <net/cfg80211.h>
  #include <net/netlink.h>
  #include <uapi/linux/if_arp.h>
-@@ -2940,7 +2941,7 @@
+@@ -2945,7 +2946,7 @@
  		brcmf_dbg(INFO, "Do not enable power save for P2P clients\n");
  		pm = PM_OFF;
  	}
@@ -46,7 +46,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  
  	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, pm);
  	if (err) {
-@@ -2950,6 +2951,7 @@
+@@ -2955,6 +2956,7 @@
  			bphy_err(drvr, "error (%d)\n", err);
  	}
  
@@ -54,46 +54,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  	err = brcmf_fil_iovar_int_set(ifp, "pm2_sleep_ret",
  				min_t(u32, timeout, BRCMF_PS_MAX_TIMEOUT_MS));
  	if (err)
-@@ -7443,12 +7445,18 @@
- 	struct brcmfmac_pd_cc *country_codes;
- 	struct brcmfmac_pd_cc_entry *cc;
- 	s32 found_index;
-+	char ccode[BRCMF_COUNTRY_BUF_SZ];
-+	int rev;
- 	int i;
- 
-+	memcpy(ccode, alpha2, sizeof(ccode));
-+	rev = -1;
-+
- 	country_codes = drvr->settings->country_codes;
- 	if (!country_codes) {
--		brcmf_dbg(TRACE, "No country codes configured for device\n");
--		return -EINVAL;
-+		brcmf_dbg(TRACE, "No country codes configured for device"
-+				 " - use requested value\n");
-+		goto use_input_value;
- 	}
- 
- 	if ((alpha2[0] == ccreq->country_abbrev[0]) &&
-@@ -7472,10 +7480,14 @@
- 		brcmf_dbg(TRACE, "No country code match found\n");
- 		return -EINVAL;
- 	}
--	memset(ccreq, 0, sizeof(*ccreq));
--	ccreq->rev = cpu_to_le32(country_codes->table[found_index].rev);
--	memcpy(ccreq->ccode, country_codes->table[found_index].cc,
-+	rev = country_codes->table[found_index].rev;
-+	memcpy(ccode, country_codes->table[found_index].cc,
- 	       BRCMF_COUNTRY_BUF_SZ);
-+
-+use_input_value:
-+	memset(ccreq, 0, sizeof(*ccreq));
-+	ccreq->rev = cpu_to_le32(rev);
-+	memcpy(ccreq->ccode, ccode, sizeof(ccode));
- 	ccreq->country_abbrev[0] = alpha2[0];
- 	ccreq->country_abbrev[1] = alpha2[1];
- 	ccreq->country_abbrev[2] = 0;
-@@ -7490,31 +7502,45 @@
+@@ -7505,31 +7507,45 @@
  	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
  	struct brcmf_pub *drvr = cfg->pub;
  	struct brcmf_fil_country_le ccreq;
@@ -152,8 +113,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  		return;
  
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-08-03 12:49:48.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-09-17 10:34:51.000000000 -0400
 @@ -134,13 +134,23 @@
  	brcmf_dbg(TRACE, "Enter\n");
  
@@ -181,8 +142,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers
  		brcmf_info("no clm_blob available (err=%d), device may have limited channels available\n",
  			   err);
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-08-03 12:49:48.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-09-17 10:34:51.000000000 -0400
 @@ -10,6 +10,7 @@
  #include <linux/firmware.h>
  #include <linux/module.h>
@@ -238,8 +199,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drive
  			return ret;
  	}
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-08-03 12:49:48.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-09-17 10:34:51.000000000 -0400
 @@ -1402,7 +1402,8 @@
  }
  
@@ -262,9 +223,9 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/n
  				       brcmf_pcie_fwnames,
  				       ARRAY_SIZE(brcmf_pcie_fwnames),
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-08-03 12:49:48.000000000 -0400
-@@ -611,12 +611,14 @@
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-09-17 10:34:51.000000000 -0400
+@@ -611,10 +611,12 @@
  BRCMF_FW_DEF(4330, "brcmfmac4330-sdio");
  BRCMF_FW_DEF(4334, "brcmfmac4334-sdio");
  BRCMF_FW_DEF(43340, "brcmfmac43340-sdio");
@@ -273,12 +234,10 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/n
  BRCMF_FW_DEF(43362, "brcmfmac43362-sdio");
  BRCMF_FW_DEF(4339, "brcmfmac4339-sdio");
  BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
- /* Note the names are not postfixed with a1 for backward compatibility */
- BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
 +BRCMF_FW_DEF(43436, "brcmfmac43436-sdio");
- BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
- BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
- BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
+ /* Note the names are not postfixed with a1 for backward compatibility */
+ BRCMF_FW_CLM_DEF(43430A1, "brcmfmac43430-sdio");
+ BRCMF_FW_CLM_DEF(43455, "brcmfmac43455-sdio");
 @@ -638,12 +640,13 @@
  	BRCMF_FW_ENTRY(BRCM_CC_4330_CHIP_ID, 0xFFFFFFFF, 4330),
  	BRCMF_FW_ENTRY(BRCM_CC_4334_CHIP_ID, 0xFFFFFFFF, 4334),
@@ -322,8 +281,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/n
  				       brcmf_sdio_fwnames,
  				       ARRAY_SIZE(brcmf_sdio_fwnames),
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-08-08 03:06:57.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-08-03 12:49:48.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-09-18 07:44:05.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-09-17 10:34:51.000000000 -0400
 @@ -1155,7 +1155,8 @@
  }
  
