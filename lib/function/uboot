@@ -110,14 +110,23 @@ echo CONFIG_EXT4_WRITE=y >> configs/nanopc-t4-rk3399_defconfig
 echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
 }
 
+uboot_search(){
+if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	${ARIA2} https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo_bdone;
+else
+	${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo_bdone;
+fi
+}
+
 u-boot(){
 echo
 echo_duboot
 if [[ -e u-boot-${UBOOT_VERSION}.tar.gz ]]; then
 	echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
 else
-	${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-	echo_bdone;
+	uboot_search;
 fi
 
 # EXTRACT AND SETUP

@@ -242,21 +242,31 @@ ${DOWNLOAD} ${BINURL}start4.elf
 ${DOWNLOAD} ${BINURL}LICENCE.broadcom
 ${DOWNLOAD} ${BINURL}COPYING.linux
 cd ..
-if ls binaries/{fixup4.dat,start4.elf} > /dev/null 2>&1
-	then echo_bdone;
-	else echo_fail && exit;
+if ls binaries/{fixup4.dat,start4.elf} > /dev/null 2>&1; then
+	echo_bdone;
+else
+	echo_fail
+	exit;
 fi
 }
 
 check_stable(){
-if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
-	then stable_download && stable_extract; else check_odroid;
+if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	stable_download
+	stable_extract;
+else
+	check_odroid;
 fi
 }
 
 check_odroid(){
-if [[ `wget -S --spider https://raw.githubusercontent.com/tobetter/linux/odroid-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
-	then odroid_download && odroid_extract; else echo && echo -e "${WHT}It appears the kernel you selected is not available${FIN}?" && exit;
+if [[ `wget -S --spider https://raw.githubusercontent.com/tobetter/linux/odroid-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	odroid_download
+	odroid_extract;
+else
+	echo
+	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?"
+	exit;
 fi
 }
 
