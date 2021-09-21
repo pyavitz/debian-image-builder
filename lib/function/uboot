@@ -115,14 +115,18 @@ if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases
 	${ARIA2} https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
 	echo_bdone;
 else
-	if [[ `wget -S --spider ${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-		${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-		echo_bdone;
-	else
-		echo
-		echo -e "${WHT}It appears the version you selected is not available${FIN}?"
-		exit;
-	fi
+	uboot_searching;
+fi
+}
+
+uboot_searching(){
+if [[ `wget -S --spider ${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo_bdone;
+else
+	echo
+	echo -e "${WHT}It appears the version you selected is not available${FIN}?"
+	exit;
 fi
 }
 
