@@ -64,7 +64,7 @@ adduser ${user} input
 adduser ${user} tty
 echo Done.
 
-#### uInitrd
+### uInitrd
 cd ~
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	rm -f 99-uboot;
@@ -72,7 +72,7 @@ else
 	uinitrd > /dev/null 2>&1;
 fi
 
-#### Sudoers file 
+### Sudoers file 
 echo
 echo Create sudoers file.
 sleep 1s
@@ -80,7 +80,7 @@ tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-#### LED triggers
+### LED triggers
 if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
 	tritium_led_triggers > /dev/null 2>&1;
 else
@@ -100,7 +100,7 @@ else
 	fi
 fi
 
-#### eMMC flash tools
+### eMMC flash tools
 echo
 echo Setting up eMMC tools
 sleep 1s
@@ -113,7 +113,7 @@ chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
 echo Done.
 
-#### Scripts
+### Scripts
 echo
 echo Moving scripts.
 sleep 1s
@@ -149,7 +149,7 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	fi
 fi
 
-#### MOTD
+### MOTD
 echo
 echo Adding motd.
 sleep 1s
@@ -193,7 +193,7 @@ chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
 echo Done.
 
-#### Extra firmware
+### Extra firmware
 extra_firmware
 
 ### Network Setup
@@ -235,7 +235,7 @@ if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	pine64_bthelper2;
 fi
 
-#### Kernel
+### Kernel
 echo
 echo Installing kernel.
 apt update
@@ -250,23 +250,12 @@ echo Done.
 sleep 1s
 fetch_version
 
-#### Service
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	firstboot_service > /dev/null 2>&1;
-fi
-####
+### Services
+echo
+echo Enabling Services.
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	governor_service > /dev/null 2>&1;
-fi
-####
 if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 		:;
@@ -281,32 +270,26 @@ if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 		led_service > /dev/null 2>&1;
 	fi
 fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	rc-local_service > /dev/null 2>&1;
-fi
-### Enable services
-echo
-echo Enabling Services.
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	echo "== Sysvinit"
 	enable_sysvinit > /dev/null 2>&1;
 else
+	firstboot_service > /dev/null 2>&1;
+	governor_service > /dev/null 2>&1;
+	rc-local_service > /dev/null 2>&1;
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
 fi
 echo Done.
 
-#### Own it
+### Own it
 chown -R ${user}:${user} /home/${user}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 
-#### Finish
+### Finish
 echo
 echo Moving out of stage2 and creating image.
 echo

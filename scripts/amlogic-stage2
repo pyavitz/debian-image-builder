@@ -64,11 +64,11 @@ adduser ${user} input
 adduser ${user} tty
 echo Done.
 
-#### uInitrd
+### uInitrd
 cd ~
 uinitrd > /dev/null 2>&1
 
-#### Sudoers file 
+### Sudoers file 
 echo
 echo Create sudoers file.
 sleep 1s
@@ -76,7 +76,7 @@ tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-#### LED triggers
+### LED triggers
 if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
 	lepotato_led_triggers;
 else
@@ -96,7 +96,7 @@ else
 		fi
 	fi
 fi
-#### eMMC flash tools
+### eMMC flash tools
 echo
 echo Setting up eMMC tools
 sleep 1s
@@ -109,7 +109,7 @@ chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
 echo Done.
 
-#### Scripts
+### Scripts
 echo
 echo Moving scripts.
 sleep 1s
@@ -162,7 +162,7 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 fi
 echo Done.
 
-#### MOTD
+### MOTD
 echo
 echo Adding motd.
 sleep 1s
@@ -224,7 +224,7 @@ chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
 echo Done.
 
-#### Extra firmware
+### Extra firmware
 extra_firmware
 
 ### Network Setup
@@ -256,7 +256,7 @@ echo Done.
 ### Regulatory db
 wireless_regdb
 
-#### Kernel
+### Kernel
 echo
 echo Installing kernel.
 apt update
@@ -284,54 +284,33 @@ else
 	fi
 fi
 
-### Service
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	firstboot_service > /dev/null 2>&1;
-fi
-####
+### Services
+echo
+echo Enabling Services.
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack;
 fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	governor_service > /dev/null 2>&1;
-fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	led_service > /dev/null 2>&1;
-fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	rc-local_service > /dev/null 2>&1;
-fi
-### Enable services
-echo
-echo Enabling Services.
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	echo "== Sysvinit"
 	enable_sysvinit > /dev/null 2>&1;
 else
+	firstboot_service > /dev/null 2>&1;
+	governor_service > /dev/null 2>&1;
+	led_service > /dev/null 2>&1;
+	rc-local_service > /dev/null 2>&1;
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
 fi
 echo Done.
 
-#### Own it
+### Own it
 chown -R ${user}:${user} /home/${user}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 
-#### Finish
+### Finish
 echo
 echo Moving out of stage2 and creating image.
 echo

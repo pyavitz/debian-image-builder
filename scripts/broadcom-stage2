@@ -51,7 +51,7 @@ fi
 apt -y clean
 apt -y autoclean
 
-#### Scripts
+### Scripts
 echo
 echo Moving scripts.
 sleep 1s
@@ -61,7 +61,6 @@ mkdir -p /usr/local/sbin
 mkdir -p /usr/lib/u-boot
 mv -f u-boot.bin /usr/lib/u-boot/
 cp board.txt /etc/opt/
-# Scripts
 mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 mv -f smon /usr/local/bin/
@@ -78,7 +77,7 @@ mv -f update-fw /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
 mv -f raspi4 /usr/local/sbin/led-trigger
-# Service
+### Service
 initrd_script > /dev/null 2>&1
 uinitrd > /dev/null 2>&1
 chmod +x /usr/bin/growpart
@@ -99,7 +98,7 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mv -f zramswap.init /etc/init.d/zramswap
 fi
 
-#### MOTD
+### MOTD
 echo
 echo Adding motd.
 sleep 1s
@@ -122,10 +121,10 @@ echo Done.
 ### Clean
 rm -f {lepotato-tweaks,odroid-tweaks,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
-#### Adding firmware
+### Adding firmware
 rpi_firmware
 
-####
+###
 echo
 echo Bluetooth udev rule.
 sleep 1s
@@ -221,7 +220,7 @@ bcm2711_eeprom
 echo
 user_config
 
-#### Kernel
+### Kernel
 echo
 echo Installing kernel.
 apt update
@@ -251,54 +250,33 @@ echo 'SUBSYSTEM=="vchiq",GROUP="video",MODE="0660"' > /etc/udev/rules.d/10-vchiq
 echo 'SUBSYSTEM=="vcio",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vchiq-permissions.rules
 echo 'SUBSYSTEM=="vc-mem",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vchiq-permissions.rules
 
-#### Create first boot
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	firstboot_service > /dev/null 2>&1;
-fi
-####
+### Services
+echo
+echo Enabling Services.
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	governor_service > /dev/null 2>&1;
-fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	led_service > /dev/null 2>&1;
-fi
-####
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	:;
-else
-	rc-local_service > /dev/null 2>&1;
-fi
-### Enable services
-echo
-echo Enabling Services.
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	echo "== Sysvinit"
 	enable_sysvinit > /dev/null 2>&1;
 else
+	firstboot_service > /dev/null 2>&1;
+	governor_service > /dev/null 2>&1
+	led_service > /dev/null 2>&1;
+	rc-local_service > /dev/null 2>&1;
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
 fi
 echo Done.
 
-#### Own it
+### Own it
 chown -R ${user}:${user} /home/${user}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 
-###### Finish
+### Finish
 echo
 echo Moving out of stage2 and creating image.
 echo
