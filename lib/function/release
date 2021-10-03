@@ -8,18 +8,18 @@ tee p1/etc/apt/sources.list <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-updates main contrib non-free
 deb http://security.debian.org/debian-security ${DISTRO_VERSION}/updates main contrib non-free
-deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-backports main contrib non-free
+deb http://deb.debian.org/debian ${DISTRO_VERSION}-backports main contrib non-free
 EOF
 }
 
 debian_bullseye(){
 rm -f p1/etc/apt/sources.list
 tee p1/etc/apt/sources.list <<EOF
-deb http://deb.debian.org/debian/ ${DISTRO_VERSION} main contrib non-free
-deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-updates main contrib non-free
+deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
+deb http://deb.debian.org/debian ${DISTRO_VERSION}-updates main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-proposed-updates main contrib non-free
-deb http://deb.debian.org/debian-security/ ${DISTRO_VERSION}-security main contrib non-free
-deb http://deb.debian.org/debian/ ${DISTRO_VERSION}-backports main contrib non-free
+deb http://deb.debian.org/debian-security ${DISTRO_VERSION}-security main contrib non-free
+deb http://deb.debian.org/debian ${DISTRO_VERSION}-backports main contrib non-free
 EOF
 }
 
@@ -30,11 +30,22 @@ deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
-devuan_stable(){
+devuan_beowulf(){
 rm -f p1/etc/apt/sources.list
 tee p1/etc/apt/sources.list <<EOF
 deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-updates main contrib non-free
+deb http://deb.devuan.org/merged ${DISTRO_VERSION}-security main contrib non-free
+deb http://deb.devuan.org/merged ${DISTRO_VERSION}-backports main contrib non-free
+EOF
+}
+
+devuan_chimaera(){
+rm -f p1/etc/apt/sources.list
+tee p1/etc/apt/sources.list <<EOF
+deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
+deb http://deb.devuan.org/merged ${DISTRO_VERSION}-updates main contrib non-free
+deb http://deb.devuan.org/devuan ${DISTRO_VERSION}-proposed-updates main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-security main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-backports main contrib non-free
 EOF
@@ -173,10 +184,10 @@ esac
 case `grep -Fx 'DISTRO="devuan"' "userdata.txt" >/dev/null; echo $?` in
   0)
 if [[ `grep -w 'DISTRO_VERSION="beowulf"' "userdata.txt"` ]]; then
-	devuan_stable;
+	devuan_beowulf;
 else
 	if [[ `grep -w 'DISTRO_VERSION="chimaera"' "userdata.txt"` ]]; then
-		devuan_unstable;
+		devuan_chimaera;
 	else
 		if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
 			devuan_unstable;
