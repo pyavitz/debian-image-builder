@@ -1,21 +1,6 @@
-From e8a404daea8d869304fdf810ac502cda8fbb4999 Mon Sep 17 00:00:00 2001
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-Date: Wed, 31 Oct 2018 19:48:25 -0700
-Subject: [PATCH 140/146] Bluetooth: hci_h5: Add support for reset GPIO
-
-Some boards (e.g. Pine64 and Pinebook) wire a GPIO to reset pin of
-RTL8723BS
-
-Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
----
- drivers/bluetooth/hci_h5.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/bluetooth/hci_h5.c b/drivers/bluetooth/hci_h5.c
-index 8eede1197cd2..6e047df4f475 100644
---- a/drivers/bluetooth/hci_h5.c
-+++ b/drivers/bluetooth/hci_h5.c
-@@ -107,6 +107,7 @@ struct h5 {
+--- a/drivers/bluetooth/hci_h5.c	2021-09-30 04:13:08.000000000 -0400
++++ b/drivers/bluetooth/hci_h5.c	2021-10-03 07:56:15.830943936 -0400
+@@ -93,6 +93,7 @@
  	const struct h5_vnd *vnd;
  	const char *id;
  
@@ -23,7 +8,7 @@ index 8eede1197cd2..6e047df4f475 100644
  	struct gpio_desc *enable_gpio;
  	struct gpio_desc *device_wake_gpio;
  };
-@@ -831,6 +832,10 @@ static int h5_serdev_probe(struct serdev_device *serdev)
+@@ -833,6 +834,10 @@
  	if (IS_ERR(h5->device_wake_gpio))
  		return PTR_ERR(h5->device_wake_gpio);
  
@@ -34,7 +19,7 @@ index 8eede1197cd2..6e047df4f475 100644
  	return hci_uart_register_device(&h5->serdev_hu, &h5p);
  }
  
-@@ -897,6 +902,9 @@ static void h5_btrtl_open(struct h5 *h5)
+@@ -923,6 +928,9 @@
  
  	/* The controller needs up to 500ms to wakeup */
  	gpiod_set_value_cansleep(h5->enable_gpio, 1);
@@ -44,7 +29,7 @@ index 8eede1197cd2..6e047df4f475 100644
  	gpiod_set_value_cansleep(h5->device_wake_gpio, 1);
  	msleep(500);
  }
-@@ -904,6 +912,7 @@ static void h5_btrtl_open(struct h5 *h5)
+@@ -930,6 +938,7 @@
  static void h5_btrtl_close(struct h5 *h5)
  {
  	gpiod_set_value_cansleep(h5->device_wake_gpio, 0);
@@ -52,6 +37,3 @@ index 8eede1197cd2..6e047df4f475 100644
  	gpiod_set_value_cansleep(h5->enable_gpio, 0);
  }
  
--- 
-2.17.1
-
