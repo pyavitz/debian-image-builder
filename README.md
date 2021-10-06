@@ -51,7 +51,7 @@ Release:	# Debian: buster, bullseye, testing, unstable and sid
 		# Ubuntu: focal and hirsute
 
 U-Boot and Linux
-U-Boot:         # Supported: v2021.04, v2021.07
+U-Boot:         # Supported: v2021.10
 Branch:         # Supported: 5.14 (Note: If building for Odroids please review options)
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
