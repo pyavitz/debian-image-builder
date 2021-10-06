@@ -1,6 +1,6 @@
 diff -Naur a/drivers/gpu/drm/meson/Makefile b/drivers/gpu/drm/meson/Makefile
---- a/drivers/gpu/drm/meson/Makefile	2021-09-30 03:50:26.000000000 -0400
-+++ b/drivers/gpu/drm/meson/Makefile	2021-09-27 22:48:45.000000000 -0400
+--- a/drivers/gpu/drm/meson/Makefile	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/Makefile	2021-09-30 04:13:08.000000000 -0400
 @@ -1,5 +1,5 @@
  # SPDX-License-Identifier: GPL-2.0-only
 -meson-drm-y := meson_drv.o meson_plane.o meson_cursor.o meson_crtc.o meson_venc_cvbs.o
@@ -9,8 +9,8 @@ diff -Naur a/drivers/gpu/drm/meson/Makefile b/drivers/gpu/drm/meson/Makefile
  meson-drm-y += meson_rdma.o meson_osd_afbcd.o
  
 diff -Naur a/drivers/gpu/drm/meson/meson_crtc.c b/drivers/gpu/drm/meson/meson_crtc.c
---- a/drivers/gpu/drm/meson/meson_crtc.c	2021-09-30 03:50:26.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_crtc.c	2021-09-27 22:48:45.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_crtc.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_crtc.c	2021-09-30 04:13:08.000000000 -0400
 @@ -36,7 +36,6 @@
  	struct drm_pending_vblank_event *event;
  	struct meson_drm *priv;
@@ -184,9 +184,9 @@ diff -Naur a/drivers/gpu/drm/meson/meson_crtc.c b/drivers/gpu/drm/meson/meson_cr
  		if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXM)) {
  			meson_crtc->enable_osd1_afbc =
 diff -Naur a/drivers/gpu/drm/meson/meson_cursor.c b/drivers/gpu/drm/meson/meson_cursor.c
---- a/drivers/gpu/drm/meson/meson_cursor.c	2021-09-30 03:50:26.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_cursor.c	2021-10-06 05:31:54.000000000 -0400
 +++ b/drivers/gpu/drm/meson/meson_cursor.c	1969-12-31 19:00:00.000000000 -0500
-@@ -1,239 +0,0 @@
+@@ -1,244 +0,0 @@
 -// SPDX-License-Identifier: GPL-2.0-or-later
 -/*
 - * Copyright (C) 2021 BayLibre, SAS
@@ -397,6 +397,11 @@ diff -Naur a/drivers/gpu/drm/meson/meson_cursor.c b/drivers/gpu/drm/meson/meson_
 -	DRM_FORMAT_RGB565,
 -};
 -
+-static const uint64_t format_modifiers_default[] = {
+-	DRM_FORMAT_MOD_LINEAR,
+-	DRM_FORMAT_MOD_INVALID,
+-};
+-
 -int meson_cursor_create(struct meson_drm *priv)
 -{
 -	struct meson_cursor *meson_cursor;
@@ -414,7 +419,7 @@ diff -Naur a/drivers/gpu/drm/meson/meson_cursor.c b/drivers/gpu/drm/meson/meson_
 -				 &meson_cursor_funcs,
 -				 supported_drm_formats,
 -				 ARRAY_SIZE(supported_drm_formats),
--				 NULL,
+-				 format_modifiers_default,
 -				 DRM_PLANE_TYPE_CURSOR, "meson_cursor_plane");
 -
 -	drm_plane_helper_add(cursor, &meson_cursor_helper_funcs);
@@ -427,7 +432,7 @@ diff -Naur a/drivers/gpu/drm/meson/meson_cursor.c b/drivers/gpu/drm/meson/meson_
 -	return 0;
 -}
 diff -Naur a/drivers/gpu/drm/meson/meson_cursor.h b/drivers/gpu/drm/meson/meson_cursor.h
---- a/drivers/gpu/drm/meson/meson_cursor.h	2021-09-30 03:50:26.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_cursor.h	2021-10-06 05:31:54.000000000 -0400
 +++ b/drivers/gpu/drm/meson/meson_cursor.h	1969-12-31 19:00:00.000000000 -0500
 @@ -1,14 +0,0 @@
 -/* SPDX-License-Identifier: GPL-2.0-or-later */
@@ -445,8 +450,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_cursor.h b/drivers/gpu/drm/meson/meson_
 -
 -#endif /* __MESON_CURSOR_H */
 diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv.c
---- a/drivers/gpu/drm/meson/meson_drv.c	2021-09-30 03:50:26.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_drv.c	2021-09-27 22:48:45.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_drv.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_drv.c	2021-09-30 04:13:08.000000000 -0400
 @@ -30,7 +30,6 @@
  #include "meson_drv.h"
  #include "meson_overlay.h"
@@ -476,9 +481,35 @@ diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv
  	ret = meson_plane_create(priv);
  	if (ret)
  		goto free_drm;
+@@ -479,6 +471,17 @@
+ 	return count;
+ }
+ 
++static void meson_drv_shutdown(struct platform_device *pdev)
++{
++	struct meson_drm *priv = dev_get_drvdata(&pdev->dev);
++
++	if (!priv)
++		return;
++
++	drm_kms_helper_poll_fini(priv->drm);
++	drm_atomic_helper_shutdown(priv->drm);
++}
++
+ static int meson_drv_probe(struct platform_device *pdev)
+ {
+ 	struct component_match *match = NULL;
+@@ -550,6 +553,7 @@
+ 
+ static struct platform_driver meson_drm_platform_driver = {
+ 	.probe      = meson_drv_probe,
++	.shutdown   = meson_drv_shutdown,
+ 	.driver     = {
+ 		.name	= "meson-drm",
+ 		.of_match_table = dt_match,
 diff -Naur a/drivers/gpu/drm/meson/meson_drv.h b/drivers/gpu/drm/meson/meson_drv.h
---- a/drivers/gpu/drm/meson/meson_drv.h	2021-09-30 03:50:26.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_drv.h	2021-09-27 22:48:45.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_drv.h	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_drv.h	2021-09-30 04:13:08.000000000 -0400
 @@ -43,14 +43,12 @@
  
  	struct meson_canvas *canvas;
@@ -516,9 +547,41 @@ diff -Naur a/drivers/gpu/drm/meson/meson_drv.h b/drivers/gpu/drm/meson/meson_drv
  		uint32_t osb_blend1_size;
  
  		bool vd1_enabled;
+diff -Naur a/drivers/gpu/drm/meson/meson_dw_hdmi.c b/drivers/gpu/drm/meson/meson_dw_hdmi.c
+--- a/drivers/gpu/drm/meson/meson_dw_hdmi.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_dw_hdmi.c	2021-09-30 04:13:08.000000000 -0400
+@@ -703,7 +703,6 @@
+ 
+ static const u32 meson_dw_hdmi_out_bus_fmts[] = {
+ 	MEDIA_BUS_FMT_YUV8_1X24,
+-	MEDIA_BUS_FMT_UYVY8_1X16,
+ 	MEDIA_BUS_FMT_UYYVYY8_0_5X24,
+ };
+ 
+@@ -803,8 +802,7 @@
+ 	if (dw_hdmi->output_bus_fmt == MEDIA_BUS_FMT_UYYVYY8_0_5X24) {
+ 		ycrcb_map = VPU_HDMI_OUTPUT_CRYCB;
+ 		yuv420_mode = true;
+-	} else if (dw_hdmi->output_bus_fmt == MEDIA_BUS_FMT_UYVY8_1X16)
+-		ycrcb_map = VPU_HDMI_OUTPUT_CRYCB;
++	}
+ 
+ 	/* VENC + VENC-DVI Mode setup */
+ 	meson_venc_hdmi_mode_set(priv, vic, ycrcb_map, yuv420_mode, mode);
+@@ -816,10 +814,6 @@
+ 		/* Setup YUV420 to HDMI-TX, no 10bit diphering */
+ 		writel_relaxed(2 | (2 << 2),
+ 			       priv->io_base + _REG(VPU_HDMI_FMT_CTRL));
+-	else if (dw_hdmi->output_bus_fmt == MEDIA_BUS_FMT_UYVY8_1X16)
+-		/* Setup YUV422 to HDMI-TX, no 10bit diphering */
+-		writel_relaxed(1 | (2 << 2),
+-				priv->io_base + _REG(VPU_HDMI_FMT_CTRL));
+ 	else
+ 		/* Setup YUV444 to HDMI-TX, no 10bit diphering */
+ 		writel_relaxed(0, priv->io_base + _REG(VPU_HDMI_FMT_CTRL));
 diff -Naur a/drivers/gpu/drm/meson/meson_plane.c b/drivers/gpu/drm/meson/meson_plane.c
---- a/drivers/gpu/drm/meson/meson_plane.c	2021-09-30 03:50:26.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_plane.c	2021-09-27 22:48:45.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_plane.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_plane.c	2021-09-30 04:13:08.000000000 -0400
 @@ -360,6 +360,7 @@
  		priv->viu.osd_blend_din0_scope_h = ((dest.x2 - 1) << 16) | dest.x1;
  		priv->viu.osd_blend_din0_scope_v = ((dest.y2 - 1) << 16) | dest.y1;
@@ -527,9 +590,83 @@ diff -Naur a/drivers/gpu/drm/meson/meson_plane.c b/drivers/gpu/drm/meson/meson_p
  	}
  
  	/* Update Canvas with buffer address */
+diff -Naur a/drivers/gpu/drm/meson/meson_registers.h b/drivers/gpu/drm/meson/meson_registers.h
+--- a/drivers/gpu/drm/meson/meson_registers.h	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_registers.h	2021-09-30 04:13:08.000000000 -0400
+@@ -634,6 +634,11 @@
+ #define VPP_WRAP_OSD3_MATRIX_PRE_OFFSET2 0x3dbc
+ #define VPP_WRAP_OSD3_MATRIX_EN_CTRL 0x3dbd
+ 
++/* osd1 HDR */
++#define OSD1_HDR2_CTRL 0x38a0
++#define OSD1_HDR2_CTRL_VDIN0_HDR2_TOP_EN       BIT(13)
++#define OSD1_HDR2_CTRL_REG_ONLY_MAT            BIT(16)
++
+ /* osd2 scaler */
+ #define OSD2_VSC_PHASE_STEP 0x3d00
+ #define OSD2_VSC_INI_PHASE 0x3d01
+diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
+--- a/drivers/gpu/drm/meson/meson_vclk.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_vclk.c	2021-09-30 04:13:08.000000000 -0400
+@@ -357,8 +357,6 @@
+ 	MESON_VCLK_HDMI_594000,
+ /* 2970 /1 /1 /1 /5 /1  => /1 /2 */
+ 	MESON_VCLK_HDMI_594000_YUV420,
+-/* 4830 /2 /1 /2 /5 /1  => /1 /1 */
+-	MESON_VCLK_HDMI_241500,
+ };
+ 
+ struct meson_vclk_params {
+@@ -469,18 +467,6 @@
+ 		.vid_pll_div = VID_PLL_DIV_5,
+ 		.vclk_div = 1,
+ 	},
+-	[MESON_VCLK_HDMI_241500] = {
+-		.pll_freq = 4830000,
+-		.phy_freq = 2415000,
+-		.venc_freq = 241500,
+-		.vclk_freq = 241500,
+-		.pixel_freq = 241500,
+-		.pll_od1 = 2,
+-		.pll_od2 = 1,
+-		.pll_od3 = 2,
+-		.vid_pll_div = VID_PLL_DIV_5,
+-		.vclk_div = 1,
+-	},
+ 	{ /* sentinel */ },
+ };
+ 
+@@ -887,10 +873,6 @@
+ 			m = 0xf7;
+ 			frac = vic_alternate_clock ? 0x8148 : 0x10000;
+ 			break;
+-		case 4830000:
+-			m = 0xc9;
+-			frac = 0xd560;
+-			break;
+ 		}
+ 
+ 		meson_hdmi_pll_set_params(priv, m, frac, od1, od2, od3);
+diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
+--- a/drivers/gpu/drm/meson/meson_venc.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_venc.c	2021-09-30 04:13:08.000000000 -0400
+@@ -866,11 +866,10 @@
+ 			    DRM_MODE_FLAG_PVSYNC | DRM_MODE_FLAG_NVSYNC))
+ 		return MODE_BAD;
+ 
+-	/* support higher resolution than 1920x1080 */
+-	if (mode->hdisplay < 640 || mode->hdisplay > 2560)
++	if (mode->hdisplay < 640 || mode->hdisplay > 1920)
+ 		return MODE_BAD_HVALUE;
+ 
+-	if (mode->vdisplay < 480 || mode->vdisplay > 1600)
++	if (mode->vdisplay < 480 || mode->vdisplay > 1200)
+ 		return MODE_BAD_VVALUE;
+ 
+ 	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu.c
---- a/drivers/gpu/drm/meson/meson_viu.c	2021-09-30 03:50:26.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_viu.c	2021-09-27 22:48:45.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_viu.c	2021-10-06 05:31:54.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_viu.c	2021-09-30 04:13:08.000000000 -0400
 @@ -78,52 +78,32 @@
  	EOTF_COEFF_RIGHTSHIFT /* right shift */
  };
@@ -658,16 +795,27 @@ diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu
  	} else if (m_select == VIU_MATRIX_OSD_EOTF) {
  		int i;
  
-@@ -474,7 +428,7 @@
- #if 0
- 	/* FIXME: */
- 	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A))
+@@ -471,12 +425,14 @@
+ 	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXM) ||
+ 	    meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXL))
+ 		meson_viu_load_matrix(priv);
+-#if 0
+-	/* FIXME: */
+-	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A))
 -		meson_viu_set_g12a_osd_matrix(priv, RGB709_to_YUV709l_coeff,
++	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
 +		meson_viu_set_g12a_osd1_matrix(priv, RGB709_to_YUV709l_coeff,
  					       true);
- #endif
+-#endif
++		/* fix green/pink color distortion from vendor u-boot */
++		writel_bits_relaxed(OSD1_HDR2_CTRL_REG_ONLY_MAT |
++				OSD1_HDR2_CTRL_VDIN0_HDR2_TOP_EN, 0,
++				priv->io_base + _REG(OSD1_HDR2_CTRL));
++	}
  
-@@ -513,13 +467,14 @@
+ 	/* Initialize OSD1 fifo control register */
+ 	reg = VIU_OSD_DDR_PRIORITY_URGENT |
+@@ -513,13 +469,14 @@
  			priv->io_base + _REG(VD2_IF0_LUMA_FIFO_SIZE));
  
  	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
