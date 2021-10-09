@@ -1,18 +1,51 @@
 #!/bin/bash
 
-cpu_freq_odroidn2(){
+# Odroid N2
+cpu_freq_n2_safe(){
 echo 1800000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 1896000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
 }
 
-cpu_freq_odroidn2plus(){
+cpu_freq_n2_stock(){
+echo 1992000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+echo 2004000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
+}
+
+# Odroid N2+
+cpu_freq_n2plus_safe(){
 echo 1908000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 2208000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
 }
 
-#if dmesg | grep -w "ODROID-N2" > /dev/null 2>&1; then cpu_freq_odroidn2; fi
-if dmesg | grep -w "ODROID-N2Plus" > /dev/null 2>&1; then cpu_freq_odroidn2plus; fi
+cpu_freq_n2plus_stock(){
+echo 2016000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+echo 2400000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
+}
 
+ethernet(){
 if [ -f /sys/class/net/eth0/queues/rx-0/rps_cpus ]; then
 	echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
+fi
+}
+
+if dmesg | grep -w "ODROID-N2" > /dev/null 2>&1; then
+	if [[ `grep -w "overclock=1" "/etc/opt/overclock.txt"` ]]; then
+ 		cpu_freq_n2_stock;
+	else
+		cpu_freq_n2_safe;
+	fi
+fi
+
+if dmesg | grep -w "ODROID-N2Plus" > /dev/null 2>&1; then
+	if [[ `grep -w "overclock=1" "/etc/opt/overclock.txt"` ]]; then
+ 		cpu_freq_n2plus_stock;
+	else
+		cpu_freq_n2plus_safe;
+	fi
+fi
+
+if [[ `grep -w "0f" "/sys/class/net/eth0/queues/rx-0/rps_cpus"` ]]; then
+	:;
+else
+	ethernet;
 fi
