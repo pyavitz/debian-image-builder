@@ -1,0 +1,17 @@
+#!/bin/bash
+
+cpu_freq_default(){
+echo 1416000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+echo 1800000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq
+}
+
+cpu_freq_overclock(){
+echo 1512000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+echo 2016000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq
+}
+
+if [[ `grep -w "overclock=1" "/etc/opt/overclock.txt"` ]]; then
+		cpu_freq_overclock;
+	else
+		cpu_freq_default;
+fi

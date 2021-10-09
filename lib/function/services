@@ -100,6 +100,13 @@ else
 		mv -f odroid-tweaks /usr/bin/odroid-tweaks
 		chmod +x /usr/bin/odroid-tweaks
 		chown root:root /usr/bin/odroid-tweaks;
+	else
+		if [[ `grep "nanopc" "/root/board.txt"` ]]; then
+			echo "overclock=0" > /etc/opt/overclock.txt
+			mv -f nanopc-tweaks /usr/bin/nanopc-tweaks
+			chmod +x /usr/bin/nanopc-tweaks
+			chown root:root /usr/bin/nanopc-tweaks;
+		fi
 	fi
 fi
 
@@ -146,6 +153,27 @@ EOF
 systemctl enable odroid-tweak
 }
 
+nanopc_systemd(){
+tee /etc/systemd/system/nanopc-tweak.service <<EOF
+[Unit]
+Description=NanoPC-T4 Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/nanopc-tweaks
+After=sysinit.target local-fs.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/nanopc-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable nanopc-tweak
+}
+
 if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
@@ -156,6 +184,10 @@ else
 	else
 		if [[ `grep "odroid" "/root/board.txt"` ]]; then
 			odroid_systemd;
+		else
+			if [[ `grep "nanopc" "/root/board.txt"` ]]; then
+				then nanopc_systemd;
+			fi
 		fi
 	fi
 fi
