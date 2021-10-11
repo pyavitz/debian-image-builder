@@ -1,8 +1,6 @@
-diff --git a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
-index f4b6799a8..a1041ec3e 100644
---- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
-+++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
-@@ -21,33 +21,24 @@
+--- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2021-10-09 09:02:42.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2021-10-11 16:59:01.620729340 -0400
+@@ -26,18 +26,9 @@
  		#clock-cells = <0>;
  	};
  
@@ -22,9 +20,7 @@ index f4b6799a8..a1041ec3e 100644
  		pinctrl-names = "default";
  		pinctrl-0 = <&sdmmc0m1_pin>;
  		regulator-boot-on;
- 		regulator-name = "vcc_sd";
- 		regulator-min-microvolt = <3300000>;
- 		regulator-max-microvolt = <3300000>;
+@@ -47,12 +38,12 @@
  		vin-supply = <&vcc_io>;
  	};
  
@@ -39,7 +35,7 @@ index f4b6799a8..a1041ec3e 100644
  		regulator-type = "voltage";
  		regulator-min-microvolt = <1800000>;
  		regulator-max-microvolt = <3300000>;
-@@ -68,11 +60,8 @@
+@@ -74,11 +65,8 @@
  	vcc_sys: vcc-sys {
  		compatible = "regulator-fixed";
  		regulator-name = "vcc_sys";
@@ -51,11 +47,10 @@ index f4b6799a8..a1041ec3e 100644
  	};
  
  	vcc_phy: vcc-phy-regulator {
-@@ -82,7 +71,24 @@
- 		regulator-always-on;
- 		regulator-boot-on;
+@@ -107,8 +95,25 @@
+ 			mode = <0x05>;
+ 		};
  	};
--};
 +
 +	ir-receiver {
 +		compatible = "gpio-ir-receiver";
@@ -72,12 +67,13 @@ index f4b6799a8..a1041ec3e 100644
 +
 +&codec {
 +	status = "okay";
-+};
+ };
+ 
 +
-
- &cpu0 {
- 	cpu-supply = <&vdd_arm>;
-@@ -122,7 +127,6 @@
+ &analog_sound {
+ 	status = "okay";
+ };
+@@ -136,7 +141,6 @@
  &emmc {
  	bus-width = <8>;
  	cap-mmc-highspeed;
@@ -85,7 +81,7 @@ index f4b6799a8..a1041ec3e 100644
  	mmc-ddr-1_8v;
  	mmc-hs200-1_8v;
  	non-removable;
-@@ -152,6 +156,10 @@
+@@ -166,6 +170,10 @@
  	status = "okay";
  };
  
@@ -96,7 +92,7 @@ index f4b6799a8..a1041ec3e 100644
  &hdmi {
  	status = "okay";
  };
-@@ -160,6 +168,10 @@
+@@ -178,6 +186,10 @@
  	status = "okay";
  };
  
@@ -107,7 +103,7 @@ index f4b6799a8..a1041ec3e 100644
  &i2c1 {
  	status = "okay";
  
-@@ -187,8 +199,9 @@
+@@ -205,8 +217,9 @@
  		regulators {
  			vdd_logic: DCDC_REG1 {
  				regulator-name = "vdd_logic";
@@ -119,20 +115,19 @@ index f4b6799a8..a1041ec3e 100644
  				regulator-always-on;
  				regulator-boot-on;
  				regulator-state-mem {
-@@ -199,8 +212,9 @@
+@@ -217,8 +230,9 @@
  
  			vdd_arm: DCDC_REG2 {
  				regulator-name = "vdd_arm";
 -				regulator-min-microvolt = <712500>;
--				regulator-max-microvolt = <1450000>;
 +				regulator-min-microvolt = <950000>;
-+				regulator-max-microvolt = <1450000>;
+ 				regulator-max-microvolt = <1450000>;
 +				regulator-ramp-delay = <12500>;
  				regulator-always-on;
  				regulator-boot-on;
  				regulator-state-mem {
-@@ -269,12 +283,20 @@
- 	};
+@@ -295,12 +309,20 @@
+ 	status = "okay";
  };
  
 +&i2s0 {
@@ -153,7 +148,7 @@ index f4b6799a8..a1041ec3e 100644
  	vccio4-supply = <&vcc_18>;
  	vccio5-supply = <&vcc_io>;
  	vccio6-supply = <&vcc_io>;
-@@ -282,6 +304,12 @@
+@@ -308,6 +330,12 @@
  };
  
  &pinctrl {
@@ -166,7 +161,7 @@ index f4b6799a8..a1041ec3e 100644
  	pmic {
  		pmic_int_l: pmic-int-l {
  			rockchip,pins = <1 RK_PD0 RK_FUNC_GPIO &pcfg_pull_up>;
-@@ -308,11 +336,26 @@
+@@ -334,11 +362,26 @@
  	sd-uhs-sdr50;
  	sd-uhs-sdr104;
  	vmmc-supply = <&vcc_sd>;
@@ -193,70 +188,4 @@ index f4b6799a8..a1041ec3e 100644
 +	rockchip,hw-tshut-polarity = <0>;
  	status = "okay";
  };
- 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-index eedc25132..5c62f0116 100644
---- a/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-@@ -210,6 +210,26 @@
- 		method = "smc";
- 	};
- 
-+	spdif_out: spdif-out {
-+		compatible = "linux,spdif-dit";
-+		#sound-dai-cells = <0>;
-+		status = "disabled";
-+	};
-+
-+	spdif_sound: spdif-sound {
-+		compatible = "simple-audio-card";
-+		simple-audio-card,name = "SPDIF";
-+		status = "disabled";
-+
-+		simple-audio-card,cpu {
-+			sound-dai = <&spdif>;
-+		};
-+
-+		simple-audio-card,codec {
-+			sound-dai = <&spdif_out>;
-+		};
-+	};
-+
- 	timer {
- 		compatible = "arm,armv8-timer";
- 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-@@ -319,6 +339,10 @@
- 			#address-cells = <1>;
- 			#size-cells = <0>;
- 
-+			power-domain@RK3328_PD_GPU {
-+				reg = <RK3328_PD_GPU>;
-+				clocks = <&cru ACLK_GPU>;
-+			};		
- 			power-domain@RK3328_PD_HEVC {
- 				reg = <RK3328_PD_HEVC>;
- 			};
-@@ -621,6 +645,7 @@
- 				  "ppmmu1";
- 		clocks = <&cru ACLK_GPU>, <&cru ACLK_GPU>;
- 		clock-names = "bus", "core";
-+		power-domains = <&power RK3328_PD_GPU>;
- 		resets = <&cru SRST_GPU_A>;
- 	};
- 
-@@ -793,6 +818,7 @@
- 			<&cru ACLK_BUS_PRE>, <&cru HCLK_BUS_PRE>,
- 			<&cru PCLK_BUS_PRE>, <&cru ACLK_PERI_PRE>,
- 			<&cru HCLK_PERI>, <&cru PCLK_PERI>,
-+			<&cru ACLK_GPU>,
- 			<&cru SCLK_RTC32K>;
- 		assigned-clock-parents =
- 			<&cru HDMIPHY>, <&cru PLL_APLL>,
-@@ -814,6 +840,7 @@
- 			<150000000>, <75000000>,
- 			<75000000>, <150000000>,
- 			<75000000>, <75000000>,
-+			<500000000>,
- 			<32768>;
- 	};
  

@@ -1,57 +1,6 @@
-diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
-index 1abf76be2..7ad8b090c 100644
---- a/drivers/staging/Kconfig
-+++ b/drivers/staging/Kconfig
-@@ -92,6 +92,8 @@ source "drivers/staging/fbtft/Kconfig"
- 
- source "drivers/staging/fsl-dpaa2/Kconfig"
- 
-+source "drivers/staging/fusb30x/Kconfig"
-+
- source "drivers/staging/most/Kconfig"
-
- source "drivers/staging/ks7010/Kconfig"
-diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-index ab0cbe881..2e308d901 100644
---- a/drivers/staging/Makefile
-+++ b/drivers/staging/Makefile
-@@ -36,6 +36,7 @@ obj-$(CONFIG_UNISYSSPAR)	+= unisys/
- obj-$(CONFIG_UNISYSSPAR)        += unisys/
- obj-$(CONFIG_COMMON_CLK_XLNX_CLKWZRD)	+= clocking-wizard/
- obj-$(CONFIG_FB_TFT)		+= fbtft/
-+obj-$(CONFIG_FUSB_30X)		+= fusb30x/
- obj-$(CONFIG_MOST)		+= most/
- obj-$(CONFIG_KS7010)		+= ks7010/
- obj-$(CONFIG_GREYBUS)		+= greybus/
-diff --git a/drivers/staging/fusb30x/Kconfig b/drivers/staging/fusb30x/Kconfig
-new file mode 100644
-index 000000000..5bb75270f
---- /dev/null
-+++ b/drivers/staging/fusb30x/Kconfig
-@@ -0,0 +1,10 @@
-+config FUSB_30X
-+	tristate "Fairchild FUSB30X Type-C chip driver"
-+	depends on I2C
-+	help
-+	  This is a driver for the Fairchild FUSB302 Type-C chip.  It supports
-+	  USB Type-C PD functionality controlled using I2C.
-+
-+	  This driver supports extcon reporting not yet implemented in the
-+	  mainline FUSB302 driver.
-+
-diff --git a/drivers/staging/fusb30x/Makefile b/drivers/staging/fusb30x/Makefile
-new file mode 100644
-index 000000000..1c8e35df3
---- /dev/null
-+++ b/drivers/staging/fusb30x/Makefile
-@@ -0,0 +1,2 @@
-+# SPDX-License-Identifier: GPL-2.0
-+obj-$(CONFIG_FUSB_30X)	+= fusb30x.o
-diff --git a/drivers/staging/fusb30x/fusb30x.c b/drivers/staging/fusb30x/fusb30x.c
-new file mode 100644
-index 000000000..56d22648c
---- /dev/null
-+++ b/drivers/staging/fusb30x/fusb30x.c
+diff -Naur a/drivers/staging/fusb30x/fusb30x.c b/drivers/staging/fusb30x/fusb30x.c
+--- a/drivers/staging/fusb30x/fusb30x.c	1969-12-31 19:00:00.000000000 -0500
++++ b/drivers/staging/fusb30x/fusb30x.c	2021-10-11 16:15:31.140508861 -0400
 @@ -0,0 +1,3434 @@
 +/*
 + * Copyright (c) 2016, Fuzhou Rockchip Electronics Co., Ltd
@@ -3487,11 +3436,9 @@ index 000000000..56d22648c
 +MODULE_LICENSE("GPL");
 +MODULE_AUTHOR("zain wang <zain.wang@rock-chips.com>");
 +MODULE_DESCRIPTION("fusb302 typec pd driver");
-diff --git a/drivers/staging/fusb30x/fusb30x.h b/drivers/staging/fusb30x/fusb30x.h
-new file mode 100644
-index 000000000..4f5ca64f7
---- /dev/null
-+++ b/drivers/staging/fusb30x/fusb30x.h
+diff -Naur a/drivers/staging/fusb30x/fusb30x.h b/drivers/staging/fusb30x/fusb30x.h
+--- a/drivers/staging/fusb30x/fusb30x.h	1969-12-31 19:00:00.000000000 -0500
++++ b/drivers/staging/fusb30x/fusb30x.h	2021-10-11 16:15:31.140508861 -0400
 @@ -0,0 +1,552 @@
 +/*
 + * Copyright (c) 2016, Fuzhou Rockchip Electronics Co., Ltd
@@ -4045,3 +3992,46 @@ index 000000000..4f5ca64f7
 +
 +#endif /* FUSB302_H */
 +
+diff -Naur a/drivers/staging/fusb30x/Kconfig b/drivers/staging/fusb30x/Kconfig
+--- a/drivers/staging/fusb30x/Kconfig	1969-12-31 19:00:00.000000000 -0500
++++ b/drivers/staging/fusb30x/Kconfig	2021-10-11 16:15:31.138508802 -0400
+@@ -0,0 +1,10 @@
++config FUSB_30X
++	tristate "Fairchild FUSB30X Type-C chip driver"
++	depends on I2C
++	help
++	  This is a driver for the Fairchild FUSB302 Type-C chip.  It supports
++	  USB Type-C PD functionality controlled using I2C.
++
++	  This driver supports extcon reporting not yet implemented in the
++	  mainline FUSB302 driver.
++
+diff -Naur a/drivers/staging/fusb30x/Makefile b/drivers/staging/fusb30x/Makefile
+--- a/drivers/staging/fusb30x/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ b/drivers/staging/fusb30x/Makefile	2021-10-11 16:15:31.139508832 -0400
+@@ -0,0 +1,2 @@
++# SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_FUSB_30X)	+= fusb30x.o
+diff -Naur a/drivers/staging/Kconfig b/drivers/staging/Kconfig
+--- a/drivers/staging/Kconfig	2021-10-09 09:02:42.000000000 -0400
++++ b/drivers/staging/Kconfig	2021-10-11 16:15:31.138508802 -0400
+@@ -76,6 +76,8 @@
+ 
+ source "drivers/staging/fbtft/Kconfig"
+ 
++source "drivers/staging/fusb30x/Kconfig"
++
+ source "drivers/staging/most/Kconfig"
+ 
+ source "drivers/staging/ks7010/Kconfig"
+diff -Naur a/drivers/staging/Makefile b/drivers/staging/Makefile
+--- a/drivers/staging/Makefile	2021-10-09 09:02:42.000000000 -0400
++++ b/drivers/staging/Makefile	2021-10-11 16:15:31.138508802 -0400
+@@ -28,6 +28,7 @@
+ obj-$(CONFIG_UNISYSSPAR)	+= unisys/
+ obj-$(CONFIG_COMMON_CLK_XLNX_CLKWZRD)	+= clocking-wizard/
+ obj-$(CONFIG_FB_TFT)		+= fbtft/
++obj-$(CONFIG_FUSB_30X)		+= fusb30x/
+ obj-$(CONFIG_MOST)		+= most/
+ obj-$(CONFIG_KS7010)		+= ks7010/
+ obj-$(CONFIG_GREYBUS)		+= greybus/
