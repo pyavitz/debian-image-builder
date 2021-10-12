@@ -177,14 +177,7 @@ A systemd service runs 'governor -r' during boot.
 #### Overclocking (NanoPC-T4 & Odroid N2/+)
 ```sh
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
-```
-NanoPC-T4
-```sh
-sudo service nanopc-tweak restart
-```
-Odroid N2/+
-```sh
-sudo service odroid-tweak restart
+sudo service tweaks restart
 ```
 #### Odroid N2 Fan Control
 Install script and service
