@@ -168,6 +168,7 @@ governor -h
    -c       Conservative
    -o       Ondemand
    -p       Performance
+   -s       Schedutil
 
    -r       Run
    -u       Update
