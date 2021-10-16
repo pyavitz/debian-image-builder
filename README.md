@@ -89,7 +89,7 @@ nano userdata.txt
 # change from 1 to 0
 auto=1        # compresses to img.xz
 ```
-#### Odroid N2/Plus eMMC
+#### Odroid N2/+ eMMC
 ```sh
 nano userdata.txt
 # change from 0 to 1
@@ -132,7 +132,7 @@ files, whilst leaving rename_to_credentials.txt untouched.
 
 #### Write to eMMC
 ```sh
-Supported: Le Potato, Odroid C4, Odroid N2/Plus, NanoPi NEO Plus2 and NanoPC-T4
+Supported: Le Potato, Odroid C4/N2/N2+, NanoPi NEO Plus2 and NanoPC-T4
 1. Attach eMMC module       # In some cases the module may need to be attached after boot
 2. Boot from sdcard
 3. Execute: sudo write2mmc
