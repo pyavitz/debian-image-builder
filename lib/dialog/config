@@ -90,7 +90,18 @@ echo aircrack=0 >> tmp0
 echo CFLAGS='"''"' >> tmp0
 echo KBUSER='"'marvin'"' >> tmp0
 echo KBHOST='"'martian'"' >> tmp0
-echo builder=2.8 >> tmp0
+echo "set_locales(){" >> tmp0
+echo "apt install -y locales" >> tmp0
+echo "export LANGUAGE=en_US.UTF-8" >> tmp0
+echo "export LANG=en_US.UTF-8" >> tmp0
+echo "export LC_ALL=C.UTF-8" >> tmp0
+echo "locale-gen en_US.UTF-8" >> tmp0
+echo "}" >> tmp0
+echo "set_timezone(){" >> tmp0
+echo "ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime" >> tmp0
+echo "echo -n 'America/New_York' > /etc/timezone" >> tmp0
+echo "}" >> tmp0
+echo builder=2.9 >> tmp0
 echo '"' > tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
@@ -113,9 +124,6 @@ echo _defconfig'"' >> tmp2
 paste -d '\0' tmp0 tmp1 tmp2  > userdata.txt
 rm -f tmp0 tmp1 tmp2
 
-# gcc version
-echo GCC='"'$(gcc --version | grep gcc | awk '{print $4}')'"' >> userdata.txt
-
 # categories
 sed -i '1i### USER INFORMATION' userdata.txt
 sed -i '7i### DISTRIBUTION AND RELEASE' userdata.txt
@@ -124,7 +132,9 @@ sed -i '18i### WIRELESS' userdata.txt
 sed -i '22i### CUSTOM' userdata.txt
 sed -i '29i### COMPILER TUNING' userdata.txt
 sed -i '31i### WHOAMI AND HOST' userdata.txt
-sed -i '34i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '34i### LOCALES' userdata.txt
+sed -i '42i### TIMEZONE' userdata.txt
+sed -i '47i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # clear screen
 clear

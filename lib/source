@@ -32,10 +32,11 @@ BROADCOM="../patches/broadcom"
 MISC="../patches/misc"
 
 validation(){
-if grep -q "builder=2.8" userdata.txt; then
-    :;
+if [[ `grep -q "builder=2.9" "userdata.txt"` ]]; then
+	:;
 else
-    echo -e "${YLW}Userdata file is old${FIN}! ${YLW}Please create a new one${FIN}." && exit;
+	echo -e "${YLW}Userdata file is old! Please create a new one.${FIN}"
+	exit 1;
 fi
 }
 # do not edit above this line
@@ -65,50 +66,53 @@ RPI="curl cmake zip unzip"
 FIRMWARE="firmware-linux-nonfree firmware-linux bluez-firmware \
           firmware-misc-nonfree firmware-realtek firmware-ralink"
 
-set_locales(){
-apt install -y locales
-export LANGUAGE=en_US.UTF-8
-export LANG=en_US.UTF-8
-export LC_ALL=C.UTF-8
-locale-gen en_US.UTF-8
-}
-
-set_timezone(){
-ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime
-echo -n 'America/New_York' > /etc/timezone
-}
-
 # do not edit below this line
 # banners
 debian_banner(){
-if [ -e /usr/bin/toilet ]; then
+if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
 	toilet -f small --filter metal 'Debian';
 else
-	echo -e "${RED}Debian Image Builder${FIN}";
+	echo "${WHT}You are missing depends?${FIN}"
+	sleep 1s
+	sudo apt install -y toilet figlet
+	echo ""
+	toilet -f small --filter metal 'Debian';
 fi
 }
 
 devuan_banner(){
-if [ -e /usr/bin/toilet ]; then
+if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
 	toilet -f small --filter metal 'Devuan';
 else
-	echo -e "${RED}Devuan Image Builder${FIN}";
+	echo "${WHT}You are missing depends?${FIN}"
+	sleep 1s
+	sudo apt install -y toilet figlet
+	echo ""
+	toilet -f small --filter metal 'Devuan';
 fi
 }
 
 kali_banner(){
-if [ -e /usr/bin/toilet ]; then
+if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
 	toilet -f small --filter metal 'Kali';
 else
-	echo -e "${RED}Kali Image Builder${FIN}";
+	echo "${WHT}You are missing depends?${FIN}"
+	sleep 1s
+	sudo apt install -y toilet figlet
+	echo ""
+	toilet -f small --filter metal 'Kali';
 fi
 }
 
 ubuntu_banner(){
-if [ -e /usr/bin/toilet ]; then
+if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
 	toilet -f small --filter metal 'Ubuntu';
 else
-	echo -e "${RED}Ubuntu Image Builder${FIN}";
+	echo "${WHT}You are missing depends?${FIN}"
+	sleep 1s
+	sudo apt install -y toilet figlet
+	echo ""
+	toilet -f small --filter metal 'Ubuntu';
 fi
 }
 
