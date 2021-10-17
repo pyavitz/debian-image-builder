@@ -265,10 +265,16 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	ln -sr /etc/network/if-up.d/00check-network-cable /etc/network/if-pre-up.d/00check-network-cable
 	sed -i 's/#CONFIGURE_INTERFACES=yes/CONFIGURE_INTERFACES=yes/g' /etc/default/networking
 	sed -i 's/#WAIT_ONLINE_METHOD=ifup/WAIT_ONLINE_METHOD=ifup/g' /etc/default/networking
-	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking;
+	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking
 else
 	mv -f credentials.debian /usr/local/bin/credentials
 	rm -f credentials.devuan;
+fi
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	if [ -e /etc/default/network-test ]; then
+		sed -i 's/DO_ARPING=${DO_ARPING:-yes}/DO_ARPING=${DO_ARPING:-no}/g' /etc/default/network-test
+		sed -i 's/DO_SYSLOG=${DO_SYSLOG:-yes}/DO_SYSLOG=${DO_SYSLOG:-no}/g' /etc/default/network-test
+	fi
 fi
 chmod +x /usr/local/bin/credentials
 chown root:root /usr/local/bin/credentials
