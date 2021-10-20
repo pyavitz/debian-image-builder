@@ -8,6 +8,7 @@ kernel-source(){
 mkdir -p ${SRC}
 cp -f board.txt ${SRC}/
 cd ${SRC}
+if [ -e tobetter.txt ]; then rm -f tobetter.txt; fi
 }
 
 # PATCHING
@@ -127,6 +128,11 @@ if [[ `grep -w 'VERSION="5.14.y"' "../../userdata.txt"` ]]; then
 		for i in ../${AMLOGIC}/odroid/5.14.y/*.patch; do patch -p1 < $i; done;
 	fi
 fi
+if [[ `grep -w 'VERSION="5.15.y"' "../../userdata.txt"` ]]; then
+	if [[ `ls ../${AMLOGIC}/odroid/5.15.y/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../${AMLOGIC}/odroid/5.15.y/*.patch; do patch -p1 < $i; done;
+	fi
+fi
 }
 
 ## ODROIDC4
@@ -135,7 +141,11 @@ echo
 echo_patch
 patch -p1 < ../${PACKAGING}/general-packaging.patch
 amlogic-packaging
-tobetter_kernel
+if [ -e ../tobetter.txt ]; then
+	tobetter_kernel
+else
+	for i in ../${AMLOGIC}/odroid/*.patch; do patch -p1 < $i; done;
+fi
 odroid_boards
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
@@ -153,7 +163,11 @@ echo
 echo_patch
 patch -p1 < ../${PACKAGING}/general-packaging.patch
 amlogic-packaging
-tobetter_kernel
+if [ -e ../tobetter.txt ]; then
+	tobetter_kernel
+else
+	for i in ../${AMLOGIC}/odroid/*.patch; do patch -p1 < $i; done;
+fi
 odroid_boards
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
@@ -261,6 +275,7 @@ fi
 
 check_odroid(){
 if [[ `wget -S --spider https://raw.githubusercontent.com/tobetter/linux/odroid-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	echo "" >> tobetter.txt
 	odroid_download
 	odroid_extract;
 else
