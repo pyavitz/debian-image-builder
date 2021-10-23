@@ -76,6 +76,11 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 The config menu will append _defconfig to the end of the name
 in the userdata.txt file.
 ```
+#### User patches
+
+```sh
+Patches "-p1" placed in patches/userpatches are applied during compilation.
+```
 #### Aircrack (rtl88XXau)
 
 ```sh
