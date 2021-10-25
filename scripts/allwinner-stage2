@@ -62,6 +62,7 @@ adduser ${user} netdev
 adduser ${user} bluetooth
 adduser ${user} input
 adduser ${user} tty
+adduser ${user} i2c
 echo Done.
 
 ### uInitrd
@@ -92,7 +93,8 @@ fi
 ### Bluetooth helper
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	pine64_bthelper > /dev/null 2>&1;
-else
+fi
+if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 		:;
 	else
@@ -112,6 +114,25 @@ mv -f *.bin /usr/lib/u-boot/
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
 echo Done.
+
+### Brcm patchram
+if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+	echo
+	echo Installing brcm patchram plus
+	cd ~
+	git clone https://github.com/pyavitz/brcm_patchram_plus.git patchram
+	cd patchram
+	make
+	cp -f brcm_patchram_plus /usr/bin
+	cd ~
+	rm -fdr patchram
+	echo "bluetooth" >> /etc/modules
+	echo "hidp" >> /etc/modules
+	echo "rfcomm" >> /etc/modules
+	echo "bnep" >> /etc/modules
+	echo "hci_uart" >> /etc/modules
+	echo Done.;
+fi
 
 ### Scripts
 echo
@@ -135,6 +156,18 @@ chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
 echo Done.
+if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+		cp -f brcm_patchram_plus.init /etc/init.d/brcm_patchram_plus
+		chmod +x /etc/init.d/brcm_patchram_plus
+		update-rc.d brcm_patchram_plus defaults 2;
+	else
+		nanopi_bt_service > /dev/null 2>&1;
+		mv -f brcm_patchram_plus.init /etc/init.d/brcm_patchram_plus
+		chmod +x /etc/init.d/brcm_patchram_plus
+		update-rc.d brcm_patchram_plus defaults 2;
+	fi
+fi
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mkdir -p /etc/init.d
 	mv -f firstboot.init /etc/init.d/firstboot
@@ -225,9 +258,9 @@ echo Done.
 ### Regulatory db
 wireless_regdb
 
-### Cypress wifi firmware
+### Nanopi firmware
 if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
-	cypress_firmware;
+	nanopi_firmware;
 fi
 
 ### Bluetooth helper install

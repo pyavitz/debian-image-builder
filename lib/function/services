@@ -70,6 +70,27 @@ EOF
 systemctl enable bluetooth-module
 }
 
+# nanopi bluetooth
+nanopi_bt_service(){
+tee /etc/systemd/system/brcm-patchram-plus.service <<EOF
+[Unit]
+Description=Broadcom Patchram Plus
+After=firstboot.service credentials.service network.target
+Before=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/init.d/brcm_patchram_plus start
+ExecStop=/etc/init.d/brcm_patchram_plus stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable brcm-patchram-plus
+}
+
 # leds
 led_service(){
 tee /etc/systemd/system/leds.service <<EOF
