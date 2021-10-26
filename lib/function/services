@@ -72,22 +72,22 @@ systemctl enable bluetooth-module
 
 # nanopi bluetooth
 nanopi_bt_service(){
-tee /etc/systemd/system/brcm-patchram-plus.service <<EOF
+tee /etc/systemd/system/nanopi-bthelper.service <<EOF
 [Unit]
-Description=Broadcom Patchram Plus
+Description=Bluetooth Helper
 Before=bluetooth.service
 
 [Service]
 Type=oneshot
-ExecStart=/etc/init.d/brcm_patchram_plus start
-ExecStop=/etc/init.d/brcm_patchram_plus stop
+ExecStart=/usr/local/sbin/nanopi-bthelper -s
+ExecStop=/usr/local/sbin/nanopi-bthelper -k
 RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-systemctl enable brcm-patchram-plus
+systemctl enable nanopi-bthelper
 }
 
 # leds
@@ -296,6 +296,10 @@ else
 	update-rc.d leds defaults 2;
 fi
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+	chmod +x /etc/init.d/bthelper
+	update-rc.d bthelper defaults 2;
+fi
+if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 	chmod +x /etc/init.d/bthelper
 	update-rc.d bthelper defaults 2;
 fi

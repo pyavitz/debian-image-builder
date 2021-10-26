@@ -157,15 +157,8 @@ chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
 echo Done.
 if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-		cp -f brcm_patchram_plus.init /etc/init.d/brcm_patchram_plus
-		chmod +x /etc/init.d/brcm_patchram_plus
-		update-rc.d brcm_patchram_plus defaults 2;
-	else
-		nanopi_bt_service > /dev/null 2>&1;
-		mv -f brcm_patchram_plus.init /etc/init.d/brcm_patchram_plus
-		chmod +x /etc/init.d/brcm_patchram_plus;
-	fi
+	mv -f nanopi-bthelper /usr/local/sbin/
+	chmod +x /usr/local/sbin/nanopi-bthelper;
 fi
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mkdir -p /etc/init.d
@@ -178,6 +171,9 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper
 		rm -f /etc/init.d/leds;
+	fi
+	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+		mv -f bthelper.init /etc/init.d/bthelper;
 	fi
 fi
 
@@ -202,7 +198,7 @@ chown root:root /etc/update-motd.d/20-sysinfo
 echo Done.
 
 ### Clean
-rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
+rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,nanopi-bthelper,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
 ### Move mc skins
 echo
