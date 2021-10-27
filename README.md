@@ -211,8 +211,7 @@ sudo systemctl enable odroid-fan-ctrl
 ```
 **Devuan**
 ```sh
-sudo wget -cq \
-https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl
+sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl
 sudo chmod +x /etc/init.d/fan-ctrl
 sudo update-rc.d fan-ctrl defaults 2
 ```
