@@ -192,6 +192,7 @@ Install script and service
 sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin
 sudo chmod +x /usr/local/bin/fan-ctrl
 ```
+**Debian / Ubuntu**
 ```sh
 sudo tee /etc/systemd/system/odroid-fan-ctrl.service <<EOF
 [Unit]
@@ -207,6 +208,13 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 sudo systemctl enable odroid-fan-ctrl
+```
+**Devuan**
+```sh
+sudo wget -cq \
+https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl
+sudo chmod +x /etc/init.d/fan-ctrl
+sudo update-rc.d fan-ctrl defaults 2
 ```
 Set trip point
 ```sh
