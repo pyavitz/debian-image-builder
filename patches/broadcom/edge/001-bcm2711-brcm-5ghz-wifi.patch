@@ -1,6 +1,6 @@
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-10-13 11:28:14.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h	2021-11-02 12:54:32.000000000 -0400
 @@ -78,7 +78,7 @@
  	size_t (*get_ramsize)(struct device *dev);
  	int (*get_memdump)(struct device *dev, void *data, size_t len);
@@ -27,8 +27,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/ne
  
  static inline
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-10-13 11:28:14.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c	2021-11-02 12:54:32.000000000 -0400
 @@ -9,6 +9,7 @@
  #include <linux/etherdevice.h>
  #include <linux/module.h>
@@ -37,7 +37,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  #include <net/cfg80211.h>
  #include <net/netlink.h>
  #include <uapi/linux/if_arp.h>
-@@ -2945,7 +2946,7 @@
+@@ -2953,7 +2954,7 @@
  		brcmf_dbg(INFO, "Do not enable power save for P2P clients\n");
  		pm = PM_OFF;
  	}
@@ -46,7 +46,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  
  	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, pm);
  	if (err) {
-@@ -2955,6 +2956,7 @@
+@@ -2963,6 +2964,7 @@
  			bphy_err(drvr, "error (%d)\n", err);
  	}
  
@@ -54,7 +54,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  	err = brcmf_fil_iovar_int_set(ifp, "pm2_sleep_ret",
  				min_t(u32, timeout, BRCMF_PS_MAX_TIMEOUT_MS));
  	if (err)
-@@ -7500,31 +7502,45 @@
+@@ -7508,31 +7510,45 @@
  	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
  	struct brcmf_pub *drvr = cfg->pub;
  	struct brcmf_fil_country_le ccreq;
@@ -113,8 +113,8 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drive
  		return;
  
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-10-13 11:28:14.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c	2021-11-02 12:54:32.000000000 -0400
 @@ -134,13 +134,23 @@
  	brcmf_dbg(TRACE, "Enter\n");
  
@@ -141,9 +141,26 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers
  	if (err) {
  		brcmf_info("no clm_blob available (err=%d), device may have limited channels available\n",
  			   err);
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h	2021-11-02 12:54:32.000000000 -0400
+@@ -67,7 +67,12 @@
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+ 
+ /* For debug/tracing purposes treat info messages as errors */
+-#define brcmf_info brcmf_err
++// #define brcmf_info brcmf_err
++
++#define brcmf_info(fmt, ...)						\
++	do {								\
++		pr_info("%s: " fmt, __func__, ##__VA_ARGS__);		\
++	} while (0)
+ 
+ __printf(3, 4)
+ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...);
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-10-13 11:28:14.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2021-11-02 12:54:32.000000000 -0400
 @@ -10,6 +10,7 @@
  #include <linux/firmware.h>
  #include <linux/module.h>
@@ -161,7 +178,7 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drive
  /**
   * struct nvram_parser - internal info for parser.
   *
-@@ -543,10 +546,26 @@
+@@ -541,10 +544,26 @@
  			goto fail;
  	}
  
@@ -189,18 +206,88 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drive
  
  	if (free_bcm47xx_nvram)
  		bcm47xx_nvram_release_contents(data);
-@@ -611,7 +630,7 @@
- 		strlcat(alt_path, fwctx->req->board_type, BRCMF_FW_NAME_LEN);
- 		strlcat(alt_path, ".txt", BRCMF_FW_NAME_LEN);
+@@ -626,7 +645,7 @@
+ 		if (!alt_path)
+ 			goto fallback;
  
 -		ret = request_firmware(fw, alt_path, fwctx->dev);
 +		ret = firmware_request_nowarn(fw, alt_path, fwctx->dev);
+ 		kfree(alt_path);
  		if (ret == 0)
  			return ret;
- 	}
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c	2021-11-02 12:54:32.000000000 -0400
+@@ -10,6 +10,7 @@
+ #include "debug.h"
+ #include "core.h"
+ #include "common.h"
++#include "firmware.h"
+ #include "of.h"
+ 
+ static int brcmf_of_get_country_codes(struct device *dev,
+@@ -118,3 +119,38 @@
+ 	sdio->oob_irq_nr = irq;
+ 	sdio->oob_irq_flags = irqf;
+ }
++
++struct brcmf_firmware_mapping *
++brcmf_of_fwnames(struct device *dev, u32 *fwname_count)
++{
++	struct device_node *np = dev->of_node;
++	struct brcmf_firmware_mapping *fwnames;
++	struct device_node *map_np, *fw_np;
++	int of_count;
++	int count = 0;
++
++	map_np = of_get_child_by_name(np, "firmwares");
++	of_count = of_get_child_count(map_np);
++	if (!of_count)
++		return NULL;
++
++	fwnames = devm_kcalloc(dev, of_count,
++			       sizeof(struct brcmf_firmware_mapping),
++			       GFP_KERNEL);
++
++	for_each_child_of_node(map_np, fw_np)
++	{
++		struct brcmf_firmware_mapping *cur = &fwnames[count];
++
++		if (of_property_read_u32(fw_np, "chipid", &cur->chipid) ||
++		    of_property_read_u32(fw_np, "revmask", &cur->revmask))
++			continue;
++		cur->fw_base = of_get_property(fw_np, "fw_base", NULL);
++		if (cur->fw_base)
++			count++;
++	}
++
++	*fwname_count = count;
++
++	return count ? fwnames : NULL;
++}
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h	2021-11-02 12:54:32.000000000 -0400
+@@ -5,9 +5,16 @@
+ #ifdef CONFIG_OF
+ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+ 		    struct brcmf_mp_device *settings);
++struct brcmf_firmware_mapping *
++brcmf_of_fwnames(struct device *dev, u32 *map_count);
+ #else
+ static void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+ 			   struct brcmf_mp_device *settings)
+ {
+ }
++static struct brcmf_firmware_mapping *
++brcmf_of_fwnames(struct device *dev, u32 *map_count)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF */
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-10-13 11:28:14.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c	2021-11-02 12:54:32.000000000 -0400
 @@ -1402,7 +1402,8 @@
  }
  
@@ -223,9 +310,17 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/n
  				       brcmf_pcie_fwnames,
  				       ARRAY_SIZE(brcmf_pcie_fwnames),
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-10-13 11:28:14.000000000 -0400
-@@ -611,10 +611,12 @@
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c	2021-11-02 12:54:32.000000000 -0400
+@@ -35,6 +35,7 @@
+ #include "core.h"
+ #include "common.h"
+ #include "bcdc.h"
++#include "of.h"
+ 
+ #define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
+ #define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
+@@ -611,6 +612,7 @@
  BRCMF_FW_DEF(4330, "brcmfmac4330-sdio");
  BRCMF_FW_DEF(4334, "brcmfmac4334-sdio");
  BRCMF_FW_DEF(43340, "brcmfmac43340-sdio");
@@ -233,12 +328,16 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/n
  BRCMF_FW_DEF(4335, "brcmfmac4335-sdio");
  BRCMF_FW_DEF(43362, "brcmfmac43362-sdio");
  BRCMF_FW_DEF(4339, "brcmfmac4339-sdio");
- BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
-+BRCMF_FW_DEF(43436, "brcmfmac43436-sdio");
- /* Note the names are not postfixed with a1 for backward compatibility */
- BRCMF_FW_CLM_DEF(43430A1, "brcmfmac43430-sdio");
- BRCMF_FW_CLM_DEF(43455, "brcmfmac43455-sdio");
-@@ -638,12 +640,13 @@
+@@ -634,7 +636,7 @@
+ /* per-board firmware binaries */
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.bin");
+ 
+-static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
++static const struct brcmf_firmware_mapping sdio_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0x0000001F, 43241B0),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0x00000020, 43241B4),
+@@ -643,7 +645,7 @@
  	BRCMF_FW_ENTRY(BRCM_CC_4330_CHIP_ID, 0xFFFFFFFF, 4330),
  	BRCMF_FW_ENTRY(BRCM_CC_4334_CHIP_ID, 0xFFFFFFFF, 4334),
  	BRCMF_FW_ENTRY(BRCM_CC_43340_CHIP_ID, 0xFFFFFFFF, 43340),
@@ -247,14 +346,17 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/n
  	BRCMF_FW_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
  	BRCMF_FW_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
  	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
- 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
--	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
-+	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFA, 43430A1),
-+	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000004, 43436),
- 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
- 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
- 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
-@@ -4119,14 +4122,24 @@
+@@ -660,6 +662,9 @@
+ 	BRCMF_FW_ENTRY(CY_CC_43752_CHIP_ID, 0xFFFFFFFF, 43752)
+ };
+ 
++static const struct brcmf_firmware_mapping *brcmf_sdio_fwnames = sdio_fwnames;
++static u32 brcmf_sdio_fwnames_count = ARRAY_SIZE(sdio_fwnames);
++
+ #define TXCTL_CREDITS	2
+ 
+ static void pkt_align(struct sk_buff *p, int len, int align)
+@@ -4131,17 +4136,27 @@
  }
  
  static
@@ -279,10 +381,88 @@ diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/n
 +	}
  	fwreq = brcmf_fw_alloc_request(bus_if->chip, bus_if->chiprev,
  				       brcmf_sdio_fwnames,
- 				       ARRAY_SIZE(brcmf_sdio_fwnames),
+-				       ARRAY_SIZE(brcmf_sdio_fwnames),
++				       brcmf_sdio_fwnames_count,
+ 				       fwnames, ARRAY_SIZE(fwnames));
+ 	if (!fwreq)
+ 		return -ENOMEM;
+@@ -4197,6 +4212,9 @@
+ #define BRCMF_SDIO_FW_CODE	0
+ #define BRCMF_SDIO_FW_NVRAM	1
+ 
++static struct brcmf_fw_request *
++brcmf_sdio_prepare_fw_request(struct brcmf_sdio *bus);
++
+ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 					 struct brcmf_fw_request *fwreq)
+ {
+@@ -4212,6 +4230,22 @@
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
+ 
++	if (err && brcmf_sdio_fwnames != sdio_fwnames) {
++		/* Try again with the standard firmware names */
++		brcmf_sdio_fwnames = sdio_fwnames;
++		brcmf_sdio_fwnames_count = ARRAY_SIZE(sdio_fwnames);
++		kfree(fwreq);
++		fwreq = brcmf_sdio_prepare_fw_request(bus);
++		if (!fwreq) {
++			err = -ENOMEM;
++			goto fail;
++		}
++		err = brcmf_fw_get_firmwares(dev, fwreq,
++					     brcmf_sdio_firmware_callback);
++		if (!err)
++			return;
++	}
++
+ 	if (err)
+ 		goto fail;
+ 
+@@ -4420,7 +4454,7 @@
+ 
+ 	fwreq = brcmf_fw_alloc_request(bus->ci->chip, bus->ci->chiprev,
+ 				       brcmf_sdio_fwnames,
+-				       ARRAY_SIZE(brcmf_sdio_fwnames),
++				       brcmf_sdio_fwnames_count,
+ 				       fwnames, ARRAY_SIZE(fwnames));
+ 	if (!fwreq)
+ 		return NULL;
+@@ -4438,6 +4472,9 @@
+ 	struct brcmf_sdio *bus;
+ 	struct workqueue_struct *wq;
+ 	struct brcmf_fw_request *fwreq;
++	struct brcmf_firmware_mapping *of_fwnames, *fwnames = NULL;
++	const int fwname_size = sizeof(struct brcmf_firmware_mapping);
++	u32 of_fw_count;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -4520,6 +4557,21 @@
+ 
+ 	brcmf_dbg(INFO, "completed!!\n");
+ 
++	of_fwnames = brcmf_of_fwnames(sdiodev->dev, &of_fw_count);
++	if (of_fwnames)
++		fwnames = devm_kcalloc(sdiodev->dev,
++				       of_fw_count + brcmf_sdio_fwnames_count,
++				       fwname_size, GFP_KERNEL);
++
++	if (fwnames) {
++		/* The array is scanned in order, so overrides come first */
++		memcpy(fwnames, of_fwnames, of_fw_count * fwname_size);
++		memcpy(fwnames + of_fw_count, sdio_fwnames,
++		       brcmf_sdio_fwnames_count * fwname_size);
++		brcmf_sdio_fwnames = fwnames;
++		brcmf_sdio_fwnames_count += of_fw_count;
++	}
++
+ 	fwreq = brcmf_sdio_prepare_fw_request(bus);
+ 	if (!fwreq) {
+ 		ret = -ENOMEM;
 diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-10-13 03:42:04.000000000 -0400
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-10-13 11:28:14.000000000 -0400
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-10-31 16:53:10.000000000 -0400
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c	2021-11-02 12:54:32.000000000 -0400
 @@ -1155,7 +1155,8 @@
  }
  
