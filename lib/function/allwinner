@@ -154,6 +154,16 @@ cd ~
 git clone -b nanopi https://github.com/pyavitz/firmware.git
 rm -f firmware/README.md
 cp -fr firmware/* /lib/firmware
+if [ -e fw-0a5c_21e8.hcd ]; then 
+	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+	chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+	chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
+fi
+if [ -e UPDATE.mem ]; then
+	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
+	rm -f UPDATE.mem;
+fi
 rm -fdr firmware
 echo Done.
 }

@@ -222,7 +222,11 @@ chown -R ${user}:${user} /home/${user}
 echo Done.
 
 ### Extra firmware
-extra_firmware
+if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+	nanopi_firmware;
+else
+	extra_firmware;
+fi
 
 ### Network Setup
 network_setup > /dev/null 2>&1
@@ -252,11 +256,6 @@ echo Done.
 
 ### Regulatory db
 wireless_regdb
-
-### Nanopi firmware
-if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
-	nanopi_firmware;
-fi
 
 ### Bluetooth helper install
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
@@ -296,6 +295,7 @@ if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 		:;
 	else
 		led_service > /dev/null 2>&1;
+		nanopi_bt_service > /dev/null 2>&1;
 	fi
 fi
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
