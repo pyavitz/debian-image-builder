@@ -6,7 +6,7 @@ Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
 
-### Dependencies for Ubuntu Jammy Jellfish
+### Dependencies for Ubuntu Jammy Jellyfish (Development Branch)
 
 **Install options:**
 * Run the `./install` script ***(recommended)***
