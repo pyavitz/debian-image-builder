@@ -6,7 +6,7 @@ Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
 
-### Dependencies for Ubuntu Focal / Hirsute Hippo
+### Dependencies for Ubuntu Jammy Jellfish
 
 **Install options:**
 * Run the `./install` script ***(recommended)***
@@ -46,9 +46,9 @@ Hostname:       # Set system hostname
 
 Distribution
 Distro:         # Supported: debian, devuan and ubuntu
-Release:	# Debian: buster, bullseye, testing, unstable and sid
-		# Devuan: beowulf, chimaera, testing, unstable and ceres
-		# Ubuntu: focal and hirsute
+Release:	# Debian: bullseye, testing, unstable and sid
+		# Devuan: chimaera, testing, unstable and ceres
+		# Ubuntu: focal, impish and jammy
 
 U-Boot and Linux
 U-Boot:         # Supported: v2021.10
