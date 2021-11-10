@@ -27,17 +27,24 @@ else
 fi
 validation
 ### Boards
-case `grep -Fx "ccache=1" "userdata.txt" >/dev/null; echo $?` in
-  0)
-	if ls /usr/bin/ccache > /dev/null 2>&1; then :; else sudo apt update && sudo apt install -y ccache && sleep 2s; fi
+if [[ `grep -w "ccache=1" "userdata.txt"` ]]; then
+	if [ -e /usr/bin/ccache ]; then
+		rm -f ccache.txt gcc.txt
+		ccache_version
+	else
+		sudo apt update
+		sudo apt install -y ccache
+		sleep 2s
+		rm -f ccache.txt gcc.txt
+		ccache_version;
+	fi
+fi
+
+if [[ `grep -w "ccache=0" "userdata.txt"` ]]; then
 	rm -f ccache.txt gcc.txt
-	ccache_version
-    ;;
-  1)
-	rm -f ccache.txt gcc.txt
-	gcc_version
-    ;;
-esac
+	gcc_version;
+fi
+
 if [[ `grep -w "amlogic" "board.txt"` ]]; then
 	amlogic-uboot-string;
 fi

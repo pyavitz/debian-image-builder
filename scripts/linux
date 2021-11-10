@@ -27,19 +27,21 @@ else
 fi
 validation
 if [[ `grep -w "ccache=1" "userdata.txt"` ]]; then
-	if [ -e /usr/bin/ccache ]; then :;
-else	
-	sudo apt update
-	sudo apt install -y ccache
-	sleep 2s
-	rm -f ccache.txt gcc.txt
-	ccache_version
+	if [ -e /usr/bin/ccache ]; then
+		rm -f ccache.txt gcc.txt
+		ccache_version
+	else
+		sudo apt update
+		sudo apt install -y ccache
+		sleep 2s
+		rm -f ccache.txt gcc.txt
+		ccache_version;
 	fi
 fi
 
 if [[ `grep -w "ccache=0" "userdata.txt"` ]]; then
 	rm -f ccache.txt gcc.txt
-	gcc_version
+	gcc_version;
 fi
 
 kernel-source
