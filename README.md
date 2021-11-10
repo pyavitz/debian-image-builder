@@ -6,14 +6,14 @@ Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
 
-### Dependencies for Ubuntu Focal / Hirsute Hippo
+### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish
 
 **Install options:**
 * Run the `./install` script ***(recommended)***
 * Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies) (dependency: make)
 * Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
-### Docker
+### Docker (obsolete)
 
 To build using [Docker](https://www.docker.com/), follow the install [instructions](https://docs.docker.com/engine/install/) and use our other [builder](https://github.com/pyavitz/arm-img-builder).
 
@@ -46,16 +46,17 @@ Hostname:       # Set system hostname
 
 Distribution
 Distro:         # Supported: debian, devuan and ubuntu
-Release:	# Debian: buster, bullseye, testing, unstable and sid
-		# Devuan: beowulf, chimaera, testing, unstable and ceres
-		# Ubuntu: focal and hirsute
+Release:	# Debian: bullseye, testing, unstable and sid
+		# Devuan: chimaera, testing, unstable and ceres
+		# Ubuntu: focal, impish and jammy
 
 U-Boot and Linux
-U-Boot:         # Supported: v2021.10
+U-Boot:         # Supported: v2021.10 (Note: Use v2021.07 for Rockchip)
 Branch:         # Supported: 5.15 (Note: If building for Odroids please review options)
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
+Compiler:       # Defaults at gcc-10
 Crosscompile:   # 1 to cross compile | 0 to native compile
 Caching on:     # 1 to enable ccache
 

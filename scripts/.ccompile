@@ -15,16 +15,27 @@ sudo apt install -y \
 	python-distutils-extra libelf-dev fdisk
 }
 
-hirsute-ccompile(){
+jammy-ccompile(){
 sudo apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
 	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
 	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
 	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
-	distro-info-data lsb-release python python-dev kpartx gcc-8 gcc-9 gcc-10 make \
-	gcc-8-aarch64-linux-gnu gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu \
+	distro-info-data lsb-release python2-dev python2 kpartx gcc-9 gcc-10 gcc-11 make \
+	gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu gcc-11-aarch64-linux-gnu \
 	debian-archive-keyring debian-keyring python-setuptools python3-setuptools \
-	python3-distutils-extra libelf-dev fdisk
+	python3-distutils-extra libelf-dev fdisk python-dev-is-python3 python2-minimal \
+	dh-python 2to3 python-is-python3
+}
+
+bullseye-ccompile(){
+sudo apt install -y \
+	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
+	lzop lz4 aria2 pv toilet figlet crossbuild-essential-arm64 gcc-arm-none-eabi \
+	distro-info-data lsb-release libelf-dev fdisk kpartx ccache xz-utils \
+	python-is-python2 python-dev-is-python2
 }
 
 if [[ `sudo dmesg | grep -w arm64` ]]; then
@@ -37,12 +48,20 @@ fi
 
 if [[ `grep -w "focal" "/etc/os-release"` ]]; then
 	echo ""
-	echo -e "${WHT}Ubuntu Focal${FIN}"	
 	focal-ccompile;
-fi
-
-if [[ `grep -w "hirsute" "/etc/os-release"` ]]; then
-	echo ""
-	echo -e "${WHT}Ubuntu Hirsute Hippo${FIN}"	
-	hirsute-ccompile;
+else
+	if [[ `grep -w "jammy" "/etc/os-release"` ]]; then
+		echo ""
+		jammy-ccompile;
+	else
+		if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
+			echo ""
+			bullseye-ccompile;
+		else
+			echo ""
+			echo -e "${WHT}What OS are you running?${FIN}"
+			echo ""
+			exit;
+		fi
+	fi
 fi

@@ -14,15 +14,25 @@ sudo apt install -y \
 	python3-setuptools python-distutils-extra fdisk
 }
 
-hirsute-ncompile(){
+jammy-ncompile(){
 sudo apt install -y \
 	build-essential bison bc git dialog patch make dosfstools zip unzip \
 	qemu debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
 	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
 	python3-distutils python3-dev swig fakeroot lzop lz4 aria2 pv toilet \
-	figlet gcc-arm-none-eabi distro-info-data lsb-release python python-dev \
-	kpartx gcc-8 gcc-9 gcc-10 debian-archive-keyring debian-keyring python-setuptools \
-	python3-setuptools python3-distutils-extra fdisk
+	figlet gcc-arm-none-eabi distro-info-data lsb-release python2-dev python2 \
+	python-dev-is-python3 kpartx gcc-9 gcc-10 gcc-11 debian-archive-keyring debian-keyring \
+	python-setuptools python3-setuptools python3-distutils-extra fdisk python2-minimal \
+	dh-python 2to3 python-is-python3
+}
+
+bullseye-ncompile(){
+sudo apt install -y \
+	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
+	lzop lz4 aria2 pv toilet figlet gcc-arm-none-eabi distro-info-data lsb-release \
+	python-is-python2 python-dev-is-python2 libelf-dev fdisk kpartx ccache xz-utils
 }
 
 if [[ `sudo dmesg | grep -w x86-64` ]]; then
@@ -35,12 +45,20 @@ fi
 
 if [[ `grep -w "focal" "/etc/os-release"` ]]; then
 	echo ""
-	echo -e "${WHT}Ubuntu Focal${FIN}"	
 	focal-ncompile;
-fi
-
-if [[ `grep -w "hirsute" "/etc/os-release"` ]]; then
-	echo ""
-	echo -e "${WHT}Ubuntu Hirsute Hippo${FIN}"	
-	hirsute-ncompile;
+else
+	if [[ `grep -w "jammy" "/etc/os-release"` ]]; then
+		echo ""
+		jammy-ncompile;
+	else
+		if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
+			echo ""
+			bullseye-ncompile;
+		else
+			echo ""
+			echo -e "${WHT}What OS are you running?${FIN}"
+			echo ""
+			exit;
+		fi
+	fi
 fi
