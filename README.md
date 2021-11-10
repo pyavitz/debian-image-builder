@@ -56,7 +56,7 @@ Branch:         # Supported: 5.15 (Note: If building for Odroids please review o
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
-Compilers:      # Defaults at gcc-10
+Compiler:       # Defaults at gcc-10
 Crosscompile:   # 1 to cross compile | 0 to native compile
 Caching on:     # 1 to enable ccache
 
