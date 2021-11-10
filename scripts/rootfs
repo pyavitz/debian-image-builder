@@ -14,13 +14,13 @@ UD=userdata.txt > /dev/null 2>&1
 
 userdata(){
 echo ""
-echo "Please create a ${RED}userdata.txt${FIN} file"
+echo -e "Please create a ${RED}userdata.txt${FIN} file"
 while [ true ] ; do
 read -t 10 -n 1
 if [ $? = 0 ] ; then
 exit ;
 else
-echo "run make config"
+echo -e "run make config"
 fi
 done
 }
@@ -32,15 +32,23 @@ else
     userdata
 fi
 validation
-if `grep -Fx 'DISTRO="devuan"' "userdata.txt" >/dev/null;`
-	then devuan_keyring;
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	devuan_keyring;
 fi
-if `grep -Fx 'DISTRO="kali"' "userdata.txt" >/dev/null;`
-	then kali_keyring;
+if [[ `grep -w 'DISTRO="kali"' "userdata.txt"` ]]; then
+	kali_keyring;
 fi
-if `grep -Fx "verbose=1" "userdata.txt" > /dev/null 2>&1;`
-	then set -eux -o pipefail;
-	else set -eu -o pipefail;
+if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; then
+	:;
+else
+	if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; then
+		ubuntu_keyring;
+	fi
+fi
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	set -eux -o pipefail;
+else
+	set -eu -o pipefail;
 fi
 ROOT="sysroot"
 ROOTFS_ARCH="rootfs-aarch64"
@@ -54,9 +62,10 @@ echo -e -n ${GRN}
 # start debootstrap
 mkdir -p ${ROOT}/usr/bin
 cp $(command -v "qemu-aarch64-static") ${ROOT}/usr/bin
-if `grep -Fx 'DISTRO="devuan"' "userdata.txt" >/dev/null;`
-	then arm64_devuan;
-	else arm64_debootstrap;
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	arm64_devuan;
+else
+	arm64_debootstrap;
 fi
 rm -f ${ROOT}/usr/bin/qemu-aarch64-static
 rm -f ${ROOT}/var/cache/debconf/*
