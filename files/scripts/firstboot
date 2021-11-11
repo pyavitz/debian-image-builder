@@ -68,14 +68,12 @@ umount /boot
 sleep 1s
 if [ -e /dev/mmcblk0 ]; then
 	chk_mmcblk;
-else
-	if [ -e /dev/mmcblk1 ]; then
-		chk_mmcblk1;
-	else
-		if [ -e /dev/sda ]; then
-			chk_sda;
-		fi
-	fi
+fi
+if [ -e /dev/mmcblk1 ]; then
+	chk_mmcblk1;
+fi
+if [ -e /dev/sda ]; then
+	chk_sda;
 fi
 sleep 1s
 mount /boot
@@ -88,18 +86,15 @@ if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 fi
 if [ -e /dev/mmcblk0 ]; then
 	grow_mmcblk;
-else
-	if [ -e /dev/mmcblk1 ]; then
-		grow_mmcblk1;
-	else
-		if [ -e /dev/mmcblk2 ]; then
-			grow_mmcblk2;
-		else
-			if [ -e /dev/sda ]; then
-				grow_sda;
-			fi
-		fi
-	fi
+fi
+if [ -e /dev/mmcblk1 ]; then
+	grow_mmcblk1;
+fi
+if [ -e /dev/mmcblk2 ]; then
+	grow_mmcblk2;
+fi
+if [ -e /dev/sda ]; then
+	grow_sda;
 fi
 
 ### Fix boot partition
