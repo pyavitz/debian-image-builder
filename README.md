@@ -7,6 +7,7 @@ Rockchip:       # NanoPC-T4, Renegade and Rock64
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish
+* **Recommended host:** Debian Bullseye
 
 **Install options:**
 * Run the `./install` script ***(recommended)***
