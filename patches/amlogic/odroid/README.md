@@ -4,12 +4,12 @@
 
 tobetter
 ```sh
-Branch: 5.14.y
+Branch: 5.15.y
 ```
 
 mainline
 ```sh
-Branch: 5.14.14
+Branch: 5.15.2
 ```
 
 The current patch set used for mainline is not exactly the same one used in the tobetter repo and may or may not be behind on updates.
