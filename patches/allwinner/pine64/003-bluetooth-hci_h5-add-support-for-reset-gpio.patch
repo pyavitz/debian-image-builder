@@ -1,6 +1,6 @@
---- a/drivers/bluetooth/hci_h5.c	2021-09-30 04:13:08.000000000 -0400
-+++ b/drivers/bluetooth/hci_h5.c	2021-10-03 07:56:15.830943936 -0400
-@@ -93,6 +93,7 @@
+--- a/drivers/bluetooth/hci_h5.c	2021-11-18 13:17:21.000000000 -0500
++++ b/drivers/bluetooth/hci_h5.c	2021-11-18 21:40:14.391366695 -0500
+@@ -98,6 +98,7 @@
  	const struct h5_vnd *vnd;
  	const char *id;
  
@@ -8,7 +8,7 @@
  	struct gpio_desc *enable_gpio;
  	struct gpio_desc *device_wake_gpio;
  };
-@@ -833,6 +834,10 @@
+@@ -860,6 +861,10 @@
  	if (IS_ERR(h5->device_wake_gpio))
  		return PTR_ERR(h5->device_wake_gpio);
  
@@ -16,10 +16,10 @@
 +	if (IS_ERR(h5->reset_gpio))
 +		return PTR_ERR(h5->reset_gpio);
 +
- 	return hci_uart_register_device(&h5->serdev_hu, &h5p);
- }
- 
-@@ -923,6 +928,9 @@
+ 	err = hci_uart_register_device(&h5->serdev_hu, &h5p);
+ 	if (err)
+ 		return err;
+@@ -973,6 +978,9 @@
  
  	/* The controller needs up to 500ms to wakeup */
  	gpiod_set_value_cansleep(h5->enable_gpio, 1);
@@ -29,9 +29,9 @@
  	gpiod_set_value_cansleep(h5->device_wake_gpio, 1);
  	msleep(500);
  }
-@@ -930,6 +938,7 @@
- static void h5_btrtl_close(struct h5 *h5)
- {
+@@ -983,6 +991,7 @@
+ 		pm_runtime_disable(&h5->hu->serdev->dev);
+ 
  	gpiod_set_value_cansleep(h5->device_wake_gpio, 0);
 +	gpiod_set_value_cansleep(h5->reset_gpio, 1);
  	gpiod_set_value_cansleep(h5->enable_gpio, 0);
