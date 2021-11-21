@@ -37,7 +37,7 @@ make menu       # Open menu interface
 make dialogrc   # Set builder theme (optional)
 ```
 #### Config Menu [(Odroid Options)](https://github.com/pyavitz/debian-image-builder/blob/feature/patches/amlogic/odroid/README.md)
-
+* Review the userdata.txt file for further options: locales, timezone, and nameserver(s)
 ```sh
 Name:		# Whats your name?
 Username:       # Your username
