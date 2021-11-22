@@ -241,11 +241,11 @@ echo
 }
 
 ##
-rpi4_binaries(){
+rpi4_firmware(){
 BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
-mkdir -p binaries
-rm -f binaries/*
-cd binaries
+mkdir -p firmware
+rm -f firmware/*
+cd firmware
 echo
 echo_bins
 ${DOWNLOAD} ${BINURL}fixup4.dat
@@ -253,7 +253,7 @@ ${DOWNLOAD} ${BINURL}start4.elf
 ${DOWNLOAD} ${BINURL}LICENCE.broadcom
 ${DOWNLOAD} ${BINURL}COPYING.linux
 cd ..
-if ls binaries/{fixup4.dat,start4.elf,LICENCE.broadcom,COPYING.linux} > /dev/null 2>&1; then
+if ls firmware/{fixup4.dat,start4.elf,LICENCE.broadcom,COPYING.linux} > /dev/null 2>&1; then
 	echo_bdone;
 else
 	echo_fail
@@ -380,7 +380,7 @@ if [[ `grep -w "rtl8811cu=1" "../userdata.txt"` ]]; then
 fi
 cd ${KERNEL}-${VERSION}
 if [[ `grep -w "bcm2711" "../board.txt"` ]]; then
-	rpi4_binaries;
+	rpi4_firmware;
 fi
 export ARCH=arm64
 rm -f scripts/package/builddeb
