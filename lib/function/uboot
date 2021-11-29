@@ -97,6 +97,8 @@ echo CONFIG_SD_BOOT=y >> configs/odroid-n2_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/odroid-n2_defconfig
 echo CONFIG_SD_BOOT=y >> configs/libretech-cc_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/libretech-cc_defconfig
+echo CONFIG_SD_BOOT=y >> configs/radxa-zero_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/radx-zero_defconfig
 # BROADCOM
 echo CONFIG_SD_BOOT=y >> configs/rpi_4_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/rpi_4_defconfig
@@ -173,6 +175,9 @@ fi
 if [[ `grep -w "rockchip" "../board.txt"` ]]; then
 	for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 fi
+if [[ `grep -w "radxazero" "../board.txt"` ]]; then
+	for i in ../${RRUBOOT}/*.patch; do patch -p1 < $i; done;
+fi
 echo
 export ARCH=arm64
 mod_defconfigs
@@ -241,6 +246,15 @@ if [[ `grep -w "lepotato" "../board.txt"` ]]; then
 	else
 		echo -e "${GRN}  NC${FIN}"
 		make -j${CORES} CC=${NATIVE} libretech-cc_defconfig;
+	fi
+fi
+if [[ `grep -w "radxazero" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- radxa-zero_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} radxa-zero_defconfig;
 	fi
 fi
 ### BROADCOM
@@ -362,6 +376,14 @@ cp -f tools/mkimage ../${BINODN2P}
 echo_done
 }
 
+radxazero-binary(){
+mkdir -p ../${BINRR}
+cp -f fip/u-boot.bin ../${BINRR}
+cp -f fip/u-boot.bin.sd.bin ../${BINRR}
+cp -f tools/mkimage ../${BINRR}
+echo_done
+}
+
 # BROADCOM BINARY
 bcm2711-binary(){
 mkdir -p ../${BINRPI4}
@@ -416,6 +438,10 @@ amlogic-uboot-string(){
 uboot-source
 amlogic-boot-fips
 u-boot
+if [[ `grep -w "lepotato" "../board.txt"` ]]; then
+	lepotato_fip
+	lepotato-binary;
+fi
 if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
 	odroidc4_fip
 	odroidc4-binary;
@@ -428,9 +454,9 @@ if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
 	odroidn2plus_fip
 	odroidn2plus-binary;
 fi
-if [[ `grep -w "lepotato" "../board.txt"` ]]; then
-	lepotato_fip
-	lepotato-binary;
+if [[ `grep -w "radxazero" "../board.txt"` ]]; then
+	radxazero_fip
+	radxazero-binary;
 fi
 }
 
@@ -659,6 +685,62 @@ $FIPDIR/aml_encrypt_g12b --bl3sig --input fip/bl33.bin --compress lz4 \
 $FIPDIR/aml_encrypt_g12b --bl2sig --input fip/bl2_new.bin \
 					--output fip/bl2.n.bin.sig
 $FIPDIR/aml_encrypt_g12b --bootmk \
+		--output fip/u-boot.bin \
+		--bl2 fip/bl2.n.bin.sig \
+		--bl30 fip/bl30_new.bin.enc \
+		--bl31 fip/bl31.img.enc \
+		--bl33 fip/bl33.bin.enc \
+		--ddrfw1 fip/ddr4_1d.fw \
+		--ddrfw2 fip/ddr4_2d.fw \
+		--ddrfw3 fip/ddr3_1d.fw \
+		--ddrfw4 fip/piei.fw \
+		--ddrfw5 fip/lpddr4_1d.fw \
+		--ddrfw6 fip/lpddr4_2d.fw \
+		--ddrfw7 fip/diag_lpddr4.fw \
+		--ddrfw8 fip/aml_ddr.fw \
+		--ddrfw9 fip/lpddr3_1d.fw \
+		--level v3
+}
+
+radxazero_fip(){
+export FIPDIR=$PWD/fip
+mkdir -p fip
+cp -f ../amlogic-boot-fip-master/radxa-zero/* fip/
+cp -f u-boot.bin fip/bl33.bin
+
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/acs.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_g12a --bl30sig --input fip/bl30_new.bin \
+					--output fip/bl30_new.bin.g12a.enc \
+					--level v3
+$FIPDIR/aml_encrypt_g12a --bl3sig --input fip/bl30_new.bin.g12a.enc \
+					--output fip/bl30_new.bin.enc \
+					--level v3 --type bl30
+$FIPDIR/aml_encrypt_g12a --bl3sig --input fip/bl31.img \
+					--output fip/bl31.img.enc \
+					--level v3 --type bl31
+$FIPDIR/aml_encrypt_g12a --bl3sig --input fip/bl33.bin --compress lz4 \
+					--output fip/bl33.bin.enc \
+					--level v3 --type bl33 --compress lz4
+$FIPDIR/aml_encrypt_g12a --bl2sig --input fip/bl2_new.bin \
+					--output fip/bl2.n.bin.sig
+$FIPDIR/aml_encrypt_g12a --bootmk \
 		--output fip/u-boot.bin \
 		--bl2 fip/bl2.n.bin.sig \
 		--bl30 fip/bl30_new.bin.enc \

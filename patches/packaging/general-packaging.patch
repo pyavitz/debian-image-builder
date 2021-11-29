@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
---- a/scripts/package/builddeb	2021-09-15 22:15:31.496405000 -0400
-+++ b/scripts/package/builddeb	2021-09-19 13:25:13.203843415 -0400
+--- a/scripts/package/builddeb	2021-11-22 11:29:06.961950000 -0500
++++ b/scripts/package/builddeb	2021-11-29 17:06:43.323614064 -0500
 @@ -92,6 +92,19 @@
  else
  	cp System.map "$tmpdir/boot/System.map-$version"
@@ -21,7 +21,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  fi
  cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
  
-@@ -139,6 +152,46 @@
+@@ -139,6 +152,49 @@
  	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
  fi
  
@@ -39,6 +39,9 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-c4.dtb" "$tmpdir/boot/amlogic/meson-sm1-odroid-c4.dtb"
 +	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2.dtb"
 +	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2-plus.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2-plus.dtb"
++fi
++if [ -e $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12a-radxa-zero.dtb ]; then
++	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12a-radxa-zero.dtb" "$tmpdir/boot/amlogic/meson-g12a-radxa-zero.dtb"
 +fi
 +if [ -e $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb ]; then
 +	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb" "$tmpdir/boot/amlogic/meson64_odroidc4.dtb"
@@ -68,7 +71,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -164,6 +217,34 @@
+@@ -164,6 +220,34 @@
  	chmod 755 "$tmpdir/DEBIAN/$script"
  done
  
@@ -103,7 +106,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Build kernel header package
  (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
  (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-@@ -183,6 +264,43 @@
+@@ -183,6 +267,43 @@
  (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"

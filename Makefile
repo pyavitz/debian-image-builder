@@ -450,6 +450,52 @@ lepotato-all:
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
+	
+### Radxa Zero
+radxazero-uboot:
+	# Compiling u-boot
+	@ echo radxazero > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+radxazero-kernel:
+	# Compiling kernel
+	@ echo radxazero > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+radxazero-image:
+	# Creating image
+	@ echo radxazero > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${AML-IMG}
+	@chmod +x ${AML-STG2}
+	@${AML-IMAGE}
+
+radxazero-all:
+	# R A D X A  Z E R O
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo radxazero > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo radxazero > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Creating image
+	@ echo radxazero > board.txt
+	@ echo amlogic >> board.txt
+	@chmod +x ${AML-IMG}
+	@chmod +x ${AML-STG2}
+	@${AML-IMAGE}
 
 # RENEGADE
 renegade-uboot:

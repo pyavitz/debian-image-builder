@@ -38,6 +38,10 @@ else
 			else
 				if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
 					odroidn2plus_flashbin;
+				else
+					if [[ `grep -w "radxazero" "board.txt"` ]]; then
+						radxazero_flashbin;
+					fi
 				fi
 			fi
 		fi
@@ -80,6 +84,11 @@ case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
 esac
 }
 
+radxazero_flashbin(){
+dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
+dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
+}
+
 partition_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
@@ -94,7 +103,7 @@ tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
 EOF
 }
 
-# STAGE2
+# EXTLINUX
 lepotato_extlinux(){
 echo
 echo Creating extlinux file.
@@ -179,6 +188,22 @@ EOF
 echo Done.
 }
 
+radxazero_extlinux(){
+echo
+echo Creating extlinux file.
+mkdir -p p1/boot/extlinux
+tee p1/boot/extlinux/extlinux.conf <<EOF
+label kernel
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/amlogic/
+    fdt /boot/amlogic/meson-g12a-radxa-zero.dtb
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
+EOF
+echo Done.
+}
+
+# STAGE2
 odroid_udev_rules(){
 echo
 echo Creating Odroid udev rules.

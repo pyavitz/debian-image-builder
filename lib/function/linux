@@ -173,6 +173,24 @@ echo_done
 echo
 }
 
+## RADXA ZERO
+radxazero_patch(){
+echo
+echo_patch
+patch -p1 < ../${PACKAGING}/general-packaging.patch
+amlogic-packaging
+for i in ../${AMLOGIC}/radxazero/*.patch; do patch -p1 < $i; done
+if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
+	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
+fi
+if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
+	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
+fi
+cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+echo_done
+echo
+}
+
 ## BROADCOM
 broadcom_patching(){
 if [[ `grep "5.10" "../../userdata.txt"` ]]; then
@@ -487,6 +505,16 @@ else
 fi
 }
 
+## RADXA ZERO
+radxa_zero(){
+radxazero_patch
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	amlogic_defconfig;
+fi
+}
+
 # ALLWINNER
 allwinner_defconfig(){
 echo_defconfig
@@ -676,6 +704,13 @@ if [[ `ls ${BINODC4}/*.deb` ]] > /dev/null 2>&1; then
 fi
 }
 
+radxazero_check(){
+if [[ `ls ${BINRR}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINRR}/tmp
+	mv -f ${BINRR}/*.deb ${BINRR}/tmp;
+fi
+}
+
 amlogic_output(){
 if [[ `grep -w "lepotato" "../board.txt"` ]]; then
 	lepotato_check
@@ -696,6 +731,11 @@ if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
 	odroidc4_check
 	mkdir -p ../output/odroidc4
 	mv -f *.deb ../output/odroidc4/;
+fi
+if [[ `grep -w "radxazero" "../board.txt"` ]]; then
+	radxazero_check
+	mkdir -p ../output/radxazero
+	mv -f *.deb ../output/radxazero/;
 fi
 }
 
