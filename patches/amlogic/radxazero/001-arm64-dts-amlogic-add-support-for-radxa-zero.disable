@@ -1,6 +1,34 @@
-diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
---- a/arch/arm64/boot/dts/amlogic/Makefile	2021-12-01 03:04:57.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/Makefile	2021-12-01 11:30:21.805179440 -0500
+From 5221fc430d7b1ee3b81ca2f7c2f20cc2202cfd30 Mon Sep 17 00:00:00 2001
+From: Christian Hewitt <christianshewitt@gmail.com>
+Date: Fri, 6 Aug 2021 12:16:10 +0000
+Subject: [PATCH] FROMLIST(v2): arm64: dts: amlogic: add support for Radxa Zero
+
+Radxa Zero is a small form factor SBC based on the Amlogic S905Y2
+chipset that ships in a number of RAM/eMMC configurations:
+
+Boards with 512MB/1GB LPDDR4 RAM have no eMMC storage and BCM43436
+wireless (2.4GHz b/g/n) while 2GB/4GB boards have 8/16/32/64/128GB
+eMMC storage and BCM4345 wireless (2.4/5GHz a/b/g/n/ac).
+
+- Amlogic S905Y2 quad-core Cortex-A53
+- Mali G31-MP2 GPU
+- HDMI 2.1 output (micro)
+- 1x USB 2.0 port - Type C (OTG)
+- 1x USB 3.0 port - Type C (Host)
+- 1x micro SD Card slot
+- 40 Pin GPIO header
+
+Signed-off-by: Christian Hewitt <christianshewitt@gmail.com>
+---
+ arch/arm64/boot/dts/amlogic/Makefile          |   1 +
+ .../dts/amlogic/meson-g12a-radxa-zero.dts     | 407 ++++++++++++++++++
+ 2 files changed, 408 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+
+diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+index faa0a79a34f549..be308361e2f1b3 100644
+--- a/arch/arm64/boot/dts/amlogic/Makefile
++++ b/arch/arm64/boot/dts/amlogic/Makefile
 @@ -1,5 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-s400.dtb
@@ -8,10 +36,12 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
  dtb-$(CONFIG_ARCH_MESON) += meson-g12a-sei510.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12a-u200.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12a-x96-max.dtb
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
---- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2021-12-01 11:40:37.479336557 -0500
-@@ -0,0 +1,477 @@
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+new file mode 100644
+index 00000000000000..c7bf2ee4113464
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+@@ -0,0 +1,407 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2018 BayLibre SAS. All rights reserved.
@@ -29,18 +59,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +
 +	aliases {
 +		serial0 = &uart_AO;
-+		serial1 = &uart_AO_B;
-+		serial2 = &uart_A;
-+		serial3 = &uart_B;
-+		serial4 = &uart_C;
-+		i2c0 = &i2c0;
-+		i2c1 = &i2c1;
-+		i2c2 = &i2c2;
-+		i2c3 = &i2c3;
-+		i2c4 = &i2c_AO;
-+		spi0 = &spicc0;
-+		spi1 = &spicc1;
-+		spi2 = &spifc;
 +	};
 +
 +	chosen {
@@ -84,17 +102,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
 +		clocks = <&wifi32k>;
 +		clock-names = "ext_clock";
-+	};
-+
-+	typec2_vbus: regulator-typec2_vbus {
-+		compatible = "regulator-fixed";
-+		regulator-name = "TYPEC2_VBUS";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&ao_5v>;
-+
-+		gpio = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
 +	};
 +
 +	ao_5v: regulator-ao_5v {
@@ -226,29 +233,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +		clock-frequency = <32768>;
 +		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
 +	};
-+
-+	leds {
-+		compatible = "gpio-leds";
-+
-+		led-green {
-+			label = "radxa-zero:green";
-+			gpios = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
-+			linux,default-trigger = "heartbeat";
-+			default-state = "on";
-+		};
-+	};
-+};
-+
-+&ao_pinctrl {
-+	/* Ensure the TYPE C controller irq pin is not driven by the SoC */
-+	fusb302_irq_pins: fusb302_irq {
-+		mux {
-+			groups = "GPIOAO_5";
-+			function = "gpio_aobus";
-+			bias-pull-up;
-+			output-disable;
-+		};
-+	};
 +};
 +
 +&arb {
@@ -336,22 +320,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +	status = "disabled";
 +	pinctrl-0 = <&remote_input_ao_pins>;
 +	pinctrl-names = "default";
-+};
-+
-+&i2c_AO {
-+	fusb302@22 {
-+		compatible = "fcs,fusb302";
-+		reg = <0x22>;
-+
-+		pinctrl-0 = <&fusb302_irq_pins>;
-+		pinctrl-names = "default";
-+		interrupt-parent = <&gpio_intc>;
-+		interrupts = <59 IRQ_TYPE_LEVEL_LOW>;
-+
-+		vbus-supply = <&typec2_vbus>;
-+
-+		status = "okay";
-+	};
 +};
 +
 +&pwm_AO_cd {
@@ -480,12 +448,4 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +&usb {
 +	status = "okay";
 +	dr_mode = "host";
-+};
-+
-+&usb2_phy0 {
-+	phy-supply = <&typec2_vbus>;
-+};
-+
-+&usb3_pcie_phy {
-+	phy-supply = <&typec2_vbus>;
 +};
