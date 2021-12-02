@@ -4,7 +4,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ### Functions
 grow_mmcblk0(){
-if [[ `lsblk /dev/mmcblk0p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+if [[ `lsblk /dev/mmcblk0p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
 	bash growpart /dev/mmcblk0 2 > /dev/null 2>&1
 	sleep 1s
 	resize2fs /dev/mmcblk0p2 > /dev/null 2>&1;
@@ -16,7 +16,7 @@ fi
 }
 
 grow_mmcblk1(){
-if [[ `lsblk /dev/mmcblk1p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+if [[ `lsblk /dev/mmcblk1p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
 	bash growpart /dev/mmcblk1 2 > /dev/null 2>&1
 	sleep 1s
 	resize2fs /dev/mmcblk1p2 > /dev/null 2>&1;
@@ -34,7 +34,7 @@ resize2fs mmcblk2p1 > /dev/null 2>&1;
 }
 
 grow_sda1(){
-if [[ `lsblk /dev/sda1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+if [[ `lsblk /dev/sda1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
 	bash growpart /dev/sda 2 > /dev/null 2>&1
 	sleep 1s
 	resize2fs /dev/sda2 > /dev/null 2>&1;
@@ -64,21 +64,21 @@ if [ -e /dev/sda ]; then
 fi
 
 ### Fix boot partition
-if [[ `lsblk /dev/mmcblk0p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+if [[ `lsblk /dev/mmcblk0p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
 	umount /boot
 	sleep 1s
 	bash fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
 	sleep 1s
 	mount /boot;
 fi
-if [[ `lsblk /dev/mmcblk1p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+if [[ `lsblk /dev/mmcblk1p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
 	umount /boot
 	sleep 1s
 	bash fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
 	sleep 1s
 	mount /boot;
 fi
-if [[ `lsblk /dev/sda1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+if [[ `lsblk /dev/sda1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
 	umount /boot
 	sleep 1s
 	bash fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
