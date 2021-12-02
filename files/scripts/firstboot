@@ -28,9 +28,14 @@ fi
 }
 
 grow_mmcblk2(){
-bash growpart mmcblk2 1 > /dev/null 2>&1
-sleep 1s
-resize2fs mmcblk2p1 > /dev/null 2>&1;
+if [[ `lsblk /dev/mmcblk2p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
+	echo ""
+	echo -e " \e[0;31mFAT Partition Detected on /dev/mmcblk2p1\e[0m ..?"
+	echo -e " \e[0;31mThis image does not support vendor u-boot\e[0m ...";
+else
+	bash growpart mmcblk2 1 > /dev/null 2>&1
+	sleep 1s
+	resize2fs mmcblk2p1 > /dev/null 2>&1;
 }
 
 grow_sda1(){
