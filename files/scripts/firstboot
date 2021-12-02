@@ -3,8 +3,8 @@
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ### Functions
-grow_mmcblk(){
-if [[ `blkid | grep -w vfat` ]]; then
+grow_mmcblk0(){
+if [[ `lsblk /dev/mmcblk0p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
 	bash growpart /dev/mmcblk0 2 > /dev/null 2>&1
 	sleep 1s
 	resize2fs /dev/mmcblk0p2 > /dev/null 2>&1;
@@ -16,7 +16,7 @@ fi
 }
 
 grow_mmcblk1(){
-if [[ `blkid | grep -w vfat` ]]; then
+if [[ `lsblk /dev/mmcblk1p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
 	bash growpart /dev/mmcblk1 2 > /dev/null 2>&1
 	sleep 1s
 	resize2fs /dev/mmcblk1p2 > /dev/null 2>&1;
@@ -33,8 +33,8 @@ sleep 1s
 resize2fs mmcblk2p1 > /dev/null 2>&1;
 }
 
-grow_sda(){
-if [[ `blkid | grep -w vfat` ]]; then
+grow_sda1(){
+if [[ `lsblk /dev/sda1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
 	bash growpart /dev/sda 2 > /dev/null 2>&1
 	sleep 1s
 	resize2fs /dev/sda2 > /dev/null 2>&1;
@@ -45,41 +45,13 @@ else
 fi
 }
 
-chk_mmcblk(){
-bash fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
-}
-
-chk_mmcblk1(){
-bash fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
-}
-
-chk_sda(){
-bash fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
-}
-
-fsck_boot(){
-umount /boot
-sleep 1s
-if [ -e /dev/mmcblk0 ]; then
-	chk_mmcblk;
-fi
-if [ -e /dev/mmcblk1 ]; then
-	chk_mmcblk1;
-fi
-if [ -e /dev/sda ]; then
-	chk_sda;
-fi
-sleep 1s
-mount /boot
-}
-
 ### Grow Partition
 if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 	echo
 	echo -e " \e[0;31mExpanding root filesystem\e[0m ...";
 fi
 if [ -e /dev/mmcblk0 ]; then
-	grow_mmcblk;
+	grow_mmcblk0;
 fi
 if [ -e /dev/mmcblk1 ]; then
 	grow_mmcblk1;
@@ -88,12 +60,30 @@ if [ -e /dev/mmcblk2 ]; then
 	grow_mmcblk2;
 fi
 if [ -e /dev/sda ]; then
-	grow_sda;
+	grow_sda1;
 fi
 
 ### Fix boot partition
-if [[ `blkid | grep -w vfat` ]]; then
-	fsck_boot;
+if [[ `lsblk /dev/mmcblk0p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+	umount /boot
+	sleep 1s
+	bash fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
+	sleep 1s
+	mount /boot;
+fi
+if [[ `lsblk /dev/mmcblk1p1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+	umount /boot
+	sleep 1s
+	bash fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
+	sleep 1s
+	mount /boot;
+fi
+if [[ `lsblk /dev/sda1 -f | grep "vfat"` ]] > /dev/null 2>&1; then
+	umount /boot
+	sleep 1s
+	bash fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
+	sleep 1s
+	mount /boot;
 fi
 
 ### Clean up
@@ -106,4 +96,5 @@ fi
 rm -f /var/cache/debconf/*
 rm -f /usr/local/sbin/firstboot
 
-exit
+exit 0
+
