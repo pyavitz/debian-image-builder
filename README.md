@@ -182,7 +182,7 @@ governor -h
    
 A systemd service runs 'governor -r' during boot.
 ```
-#### Overclocking (NanoPC-T4, Odroid N2/+ Radxa Zero)
+#### Overclocking (NanoPC-T4, Odroid N2/+ and Radxa Zero)
 By default the NanoPC-T4, Odroid N2/+ and Radxa Zero run slightly under clocked as a safety precaution. If you decide to overclock the board, make sure you are using passive or active cooling.
 ```sh
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
