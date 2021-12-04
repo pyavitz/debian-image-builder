@@ -127,6 +127,13 @@ else
 			mv -f nanopc-tweaks /usr/bin/nanopc-tweaks
 			chmod +x /usr/bin/nanopc-tweaks
 			chown root:root /usr/bin/nanopc-tweaks;
+		else
+			if [[ `grep "radxazero" "/root/board.txt"` ]]; then
+				echo "overclock=0" > /etc/opt/overclock.txt
+				mv -f rzero-tweaks /usr/bin/rzero-tweaks
+				chmod +x /usr/bin/rzero-tweaks
+				chown root:root /usr/bin/rzero-tweaks;
+			fi
 		fi
 	fi
 fi
@@ -195,6 +202,27 @@ EOF
 systemctl enable tweaks
 }
 
+rzero_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=Radxa Zero Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/rzero-tweaks
+After=sysinit.target local-fs.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/rzero-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
@@ -207,7 +235,11 @@ else
 			odroid_systemd;
 		else
 			if [[ `grep "nanopc" "/root/board.txt"` ]]; then
-				nanopc_systemd;
+				nanopc_systemd;			
+			else
+				if [[ `grep "radxazero" "/root/board.txt"` ]]; then
+					rzero_systemd;
+				fi
 			fi
 		fi
 	fi
