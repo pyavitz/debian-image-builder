@@ -143,54 +143,6 @@ diff -Naur a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
  			  aiu_codec_ctrl_mux_put_enum);
  
  static const struct snd_soc_dapm_widget aiu_hdmi_ctrl_widgets[] = {
-diff -Naur a/sound/soc/meson/aiu-encoder-i2s.c b/sound/soc/meson/aiu-encoder-i2s.c
---- a/sound/soc/meson/aiu-encoder-i2s.c	2021-12-04 20:30:56.553595732 -0500
-+++ b/sound/soc/meson/aiu-encoder-i2s.c	2021-12-04 20:31:17.839185510 -0500
-@@ -19,12 +19,12 @@
- 
- #define AIU_I2S_DAC_CFG_MSB_FIRST	BIT(2)
- #define AIU_I2S_MISC_HOLD_EN		BIT(2)
-+#define AIU_I2S_MISC_FORCE_LEFT_RIGHT	BIT(4)
- #define AIU_CLK_CTRL_I2S_DIV_EN		BIT(0)
- #define AIU_CLK_CTRL_I2S_DIV		GENMASK(3, 2)
- #define AIU_CLK_CTRL_AOCLK_INVERT	BIT(6)
- #define AIU_CLK_CTRL_LRCLK_INVERT	BIT(7)
- #define AIU_CLK_CTRL_LRCLK_SKEW		GENMASK(9, 8)
--#define AIU_CLK_CTRL_MORE_HDMI_AMCLK	BIT(6)
- #define AIU_CLK_CTRL_MORE_I2S_DIV	GENMASK(5, 0)
- #define AIU_CODEC_DAC_LRCLK_CTRL_DIV	GENMASK(11, 0)
- 
-@@ -39,9 +39,16 @@
- static void aiu_encoder_i2s_hold(struct snd_soc_component *component,
- 				 bool enable)
- {
-+	unsigned int value;
-+
-+	if (enable)
-+		value = AIU_I2S_MISC_HOLD_EN;
-+	else
-+		value = AIU_I2S_MISC_FORCE_LEFT_RIGHT;
-+
- 	snd_soc_component_update_bits(component, AIU_I2S_MISC,
--				      AIU_I2S_MISC_HOLD_EN,
--				      enable ? AIU_I2S_MISC_HOLD_EN : 0);
-+				      AIU_I2S_MISC_HOLD_EN |
-+				      AIU_I2S_MISC_FORCE_LEFT_RIGHT, value);
- }
- 
- static int aiu_encoder_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
-@@ -208,11 +215,6 @@
- 	if (ret)
- 		return ret;
- 
--	/* Make sure amclk is used for HDMI i2s as well */
--	snd_soc_component_update_bits(component, AIU_CLK_CTRL_MORE,
--				      AIU_CLK_CTRL_MORE_HDMI_AMCLK,
--				      AIU_CLK_CTRL_MORE_HDMI_AMCLK);
--
- 	return 0;
- }
- 
 diff -Naur a/sound/soc/meson/axg-tdm-interface.c b/sound/soc/meson/axg-tdm-interface.c
 --- a/sound/soc/meson/axg-tdm-interface.c	2021-12-04 20:30:56.554595713 -0500
 +++ b/sound/soc/meson/axg-tdm-interface.c	2021-12-04 20:31:17.835185587 -0500
