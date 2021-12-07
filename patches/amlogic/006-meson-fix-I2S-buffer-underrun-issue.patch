@@ -1,0 +1,116 @@
+diff -Naur a/sound/soc/meson/aiu-encoder-i2s.c b/sound/soc/meson/aiu-encoder-i2s.c
+--- a/sound/soc/meson/aiu-encoder-i2s.c	2021-12-01 03:04:57.000000000 -0500
++++ b/sound/soc/meson/aiu-encoder-i2s.c	2021-12-07 08:17:27.447521089 -0500
+@@ -18,7 +18,6 @@
+ #define AIU_RST_SOFT_I2S_FAST		BIT(0)
+ 
+ #define AIU_I2S_DAC_CFG_MSB_FIRST	BIT(2)
+-#define AIU_I2S_MISC_HOLD_EN		BIT(2)
+ #define AIU_CLK_CTRL_I2S_DIV_EN		BIT(0)
+ #define AIU_CLK_CTRL_I2S_DIV		GENMASK(3, 2)
+ #define AIU_CLK_CTRL_AOCLK_INVERT	BIT(6)
+@@ -36,37 +35,6 @@
+ 				      enable ? AIU_CLK_CTRL_I2S_DIV_EN : 0);
+ }
+ 
+-static void aiu_encoder_i2s_hold(struct snd_soc_component *component,
+-				 bool enable)
+-{
+-	snd_soc_component_update_bits(component, AIU_I2S_MISC,
+-				      AIU_I2S_MISC_HOLD_EN,
+-				      enable ? AIU_I2S_MISC_HOLD_EN : 0);
+-}
+-
+-static int aiu_encoder_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
+-				   struct snd_soc_dai *dai)
+-{
+-	struct snd_soc_component *component = dai->component;
+-
+-	switch (cmd) {
+-	case SNDRV_PCM_TRIGGER_START:
+-	case SNDRV_PCM_TRIGGER_RESUME:
+-	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
+-		aiu_encoder_i2s_hold(component, false);
+-		return 0;
+-
+-	case SNDRV_PCM_TRIGGER_STOP:
+-	case SNDRV_PCM_TRIGGER_SUSPEND:
+-	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+-		aiu_encoder_i2s_hold(component, true);
+-		return 0;
+-
+-	default:
+-		return -EINVAL;
+-	}
+-}
+-
+ static int aiu_encoder_i2s_setup_desc(struct snd_soc_component *component,
+ 				      struct snd_pcm_hw_params *params)
+ {
+@@ -353,7 +321,6 @@
+ }
+ 
+ const struct snd_soc_dai_ops aiu_encoder_i2s_dai_ops = {
+-	.trigger	= aiu_encoder_i2s_trigger,
+ 	.hw_params	= aiu_encoder_i2s_hw_params,
+ 	.hw_free	= aiu_encoder_i2s_hw_free,
+ 	.set_fmt	= aiu_encoder_i2s_set_fmt,
+diff -Naur a/sound/soc/meson/aiu-fifo-i2s.c b/sound/soc/meson/aiu-fifo-i2s.c
+--- a/sound/soc/meson/aiu-fifo-i2s.c	2021-12-01 03:04:57.000000000 -0500
++++ b/sound/soc/meson/aiu-fifo-i2s.c	2021-12-07 08:17:27.447521089 -0500
+@@ -20,6 +20,8 @@
+ #define AIU_MEM_I2S_CONTROL_MODE_16BIT	BIT(6)
+ #define AIU_MEM_I2S_BUF_CNTL_INIT	BIT(0)
+ #define AIU_RST_SOFT_I2S_FAST		BIT(0)
++#define AIU_I2S_MISC_HOLD_EN		BIT(2)
++#define AIU_I2S_MISC_FORCE_LEFT_RIGHT	BIT(4)
+ 
+ #define AIU_FIFO_I2S_BLOCK		256
+ 
+@@ -90,6 +92,10 @@
+ 	unsigned int val;
+ 	int ret;
+ 
++	snd_soc_component_update_bits(component, AIU_I2S_MISC,
++				      AIU_I2S_MISC_HOLD_EN,
++				      AIU_I2S_MISC_HOLD_EN);
++
+ 	ret = aiu_fifo_hw_params(substream, params, dai);
+ 	if (ret)
+ 		return ret;
+@@ -117,6 +123,12 @@
+ 	snd_soc_component_update_bits(component, AIU_MEM_I2S_MASKS,
+ 				      AIU_MEM_I2S_MASKS_IRQ_BLOCK, val);
+ 
++	snd_soc_component_update_bits(component, AIU_I2S_MISC,
++				      AIU_I2S_MISC_FORCE_LEFT_RIGHT,
++				      AIU_I2S_MISC_FORCE_LEFT_RIGHT);
++	snd_soc_component_update_bits(component, AIU_I2S_MISC,
++				      AIU_I2S_MISC_HOLD_EN, 0);
++
+ 	return 0;
+ }
+ 
+diff -Naur a/sound/soc/meson/aiu-fifo.c b/sound/soc/meson/aiu-fifo.c
+--- a/sound/soc/meson/aiu-fifo.c	2021-12-01 03:04:57.000000000 -0500
++++ b/sound/soc/meson/aiu-fifo.c	2021-12-07 08:17:27.447521089 -0500
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/bitfield.h>
+ #include <linux/clk.h>
++#include <linux/dma-mapping.h>
+ #include <sound/pcm_params.h>
+ #include <sound/soc.h>
+ #include <sound/soc-dai.h>
+@@ -179,6 +180,11 @@
+ 	struct snd_card *card = rtd->card->snd_card;
+ 	struct aiu_fifo *fifo = dai->playback_dma_data;
+ 	size_t size = fifo->pcm->buffer_bytes_max;
++	int ret;
++
++	ret = dma_coerce_mask_and_coherent(card->dev, DMA_BIT_MASK(32));
++	if (ret)
++		return ret;
+ 
+ 	snd_pcm_set_managed_buffer_all(rtd->pcm, SNDRV_DMA_TYPE_DEV,
+ 				       card->dev, size, size);
