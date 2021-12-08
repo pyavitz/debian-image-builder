@@ -54,8 +54,13 @@ fi
 ### Download kernel and extract
 case `grep -Fx "rc=1" "../userdata.txt" >/dev/null; echo $?` in
   0)
-if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]];
-	then mainline_download && mainline_extract; else echo && echo -e "${WHT}It appears the kernel you selected is not available${FIN}?" && exit;
+if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	mainline_download;
+	mainline_extract;
+else
+	echo "";
+	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?";
+	exit;
 fi
     ;;
   1)
