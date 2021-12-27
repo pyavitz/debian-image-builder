@@ -188,7 +188,11 @@ echo
 echo_patch
 patch -p1 < ../${PACKAGING}/general-packaging.patch
 amlogic-packaging
-for i in ../${AMLOGIC}/radxazero/*.patch; do patch -p1 < $i; done
+if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
+	for i in ../${AMLOGIC}/radxazero/*.patch; do patch -p1 < $i; done;
+else
+	for i in ../${AMLOGIC}/radxazero/edge/*.patch; do patch -p1 < $i; done;
+fi
 if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
 fi

@@ -1,0 +1,89 @@
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+--- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2021-12-27 09:08:17.624598133 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2021-12-27 09:50:17.363885852 -0500
+@@ -15,6 +15,18 @@
+ 
+ 	aliases {
+ 		serial0 = &uart_AO;
++		serial1 = &uart_AO_B;
++		serial2 = &uart_A;
++		serial3 = &uart_B;
++		serial4 = &uart_C;
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c_AO;
++		spi0 = &spicc0;
++		spi1 = &spicc1;
++		spi2 = &spifc;
+ 	};
+ 
+ 	chosen {
+@@ -189,6 +201,29 @@
+ 		clock-frequency = <32768>;
+ 		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
+ 	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-green {
++			label = "radxa-zero:green";
++			gpios = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
++			default-state = "on";
++		};
++	};
++};
++
++&ao_pinctrl {
++	/* Ensure the TYPE C controller irq pin is not driven by the SoC */
++	fusb302_irq_pins: fusb302_irq {
++		mux {
++			groups = "GPIOAO_5";
++			function = "gpio_aobus";
++			bias-pull-up;
++			output-disable;
++		};
++	};
+ };
+ 
+ &arb {
+@@ -278,6 +313,22 @@
+ 	pinctrl-names = "default";
+ };
+ 
++&i2c_AO {
++	fusb302@22 {
++		compatible = "fcs,fusb302";
++		reg = <0x22>;
++
++		pinctrl-0 = <&fusb302_irq_pins>;
++		pinctrl-names = "default";
++		interrupt-parent = <&gpio_intc>;
++		interrupts = <59 IRQ_TYPE_LEVEL_LOW>;
++
++		vbus-supply = <&typec2_vbus>;
++
++		status = "okay";
++	};
++};
++
+ &pwm_AO_cd {
+ 	pinctrl-0 = <&pwm_ao_d_e_pins>;
+ 	pinctrl-names = "default";
+@@ -401,5 +452,12 @@
+ 
+ &usb {
+ 	status = "okay";
+-	dr_mode = "host";
++};
++
++&usb2_phy0 {
++	phy-supply = <&typec2_vbus>;
++};
++
++&usb3_pcie_phy {
++	phy-supply = <&typec2_vbus>;
+ };
