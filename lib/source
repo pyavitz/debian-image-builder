@@ -376,3 +376,13 @@ network={
 EOF
 echo Done.
 }
+
+# Flush runtime journal
+systemd_journald(){
+# system.journal corrupted or uncleanly shut down, renaming and replacing
+if [ -e /etc/systemd/journald.conf ]; then
+	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
+	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
+	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
+fi
+}
