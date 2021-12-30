@@ -11,266 +11,7 @@ cd ${SRC}
 if [ -e tobetter.txt ]; then rm -f tobetter.txt; fi
 }
 
-# PATCHING
-allwinner-packaging(){
-sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
-}
-
-amlogic-packaging(){
-sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/mkdebian
-}
-
-raspberrypi-packaging(){
-sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/mkdebian
-}
-
-rockchip-packaging(){
-sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/mkdebian
-}
-
-## TRITIUM
-tritium_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-packaging
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## PINE64
-pine64_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-packaging
-for i in ../${PINE}/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## NANOPI
-nanopi_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-packaging
-for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## LE POTATO
-potato_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${AMLOGIC}/lepotato/*.patch; do patch -p1 < $i; done;
-	for i in ../${AMLOGIC}/misc/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${AMLOGIC}/lepotato/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## ODROID
-odroid_boards(){
-if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
-fi
-}
-
-tobetter_kernel(){
-if [[ `grep -w 'VERSION="5.15.y"' "../../userdata.txt"` ]]; then
-	if [[ `ls ../${AMLOGIC}/odroid/5.15.y/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../${AMLOGIC}/odroid/5.15.y/*.patch; do patch -p1 < $i; done;
-	fi
-fi
-if [[ `grep -w 'VERSION="5.16.y"' "../../userdata.txt"` ]]; then
-	if [[ `ls ../${AMLOGIC}/odroid/5.16.y/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../${AMLOGIC}/odroid/5.16.y/*.patch; do patch -p1 < $i; done;
-	fi
-fi
-}
-
-## ODROIDC4
-odroidc4_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-if [ -e ../tobetter.txt ]; then
-	tobetter_kernel;
-else
-	if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-		for i in ../${AMLOGIC}/odroid/*.patch; do patch -p1 < $i; done;
-		for i in ../${AMLOGIC}/misc/*.patch; do patch -p1 < $i; done;
-	else
-		for i in ../${AMLOGIC}/odroid/edge/*.patch; do patch -p1 < $i; done;
-	fi
-fi
-odroid_boards
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## ODROIDN2
-odroidn2_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-if [ -e ../tobetter.txt ]; then
-	tobetter_kernel;
-else
-	if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-		for i in ../${AMLOGIC}/odroid/*.patch; do patch -p1 < $i; done;
-		for i in ../${AMLOGIC}/misc/*.patch; do patch -p1 < $i; done;
-	else
-		for i in ../${AMLOGIC}/odroid/edge/*.patch; do patch -p1 < $i; done;
-	fi
-fi
-odroid_boards
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## RADXA ZERO
-radxazero_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${AMLOGIC}/radxazero/*.patch; do patch -p1 < $i; done;
-	for i in ../${AMLOGIC}/misc/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${AMLOGIC}/radxazero/edge/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## RASPBERRY PI 4B
-raspberrypi_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-raspberrypi-packaging
-for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## ROCKCHIP
-rk3328_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-rockchip-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 10" "Makefile"` ]]; then
-	for i in ../${RK3328}/5.10/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${RK3328}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${ROCKCHIP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-rk3399_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-rockchip-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${RK3399}/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${RK3399}/edge/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${ROCKCHIP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-##
+# Firmware
 rpi4_firmware(){
 BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
 mkdir -p firmware
@@ -487,7 +228,7 @@ fi
 echo_done
 }
 
-### LE POTATO
+# LE POTATO
 le_potato(){
 potato_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -497,7 +238,7 @@ else
 fi
 }
 
-### ODROID C4
+# ODROID C4
 odroid_c4(){
 odroidc4_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -507,7 +248,7 @@ else
 fi
 }
 
-### ODROID N2
+# ODROID N2
 odroid_n2(){
 odroidn2_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -517,7 +258,7 @@ else
 fi
 }
 
-## RADXA ZERO
+# RADXA ZERO
 radxa_zero(){
 radxazero_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -542,7 +283,7 @@ fi
 echo_done
 }
 
-### TRITIUM
+# TRITIUM
 tritium_h5(){
 tritium_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -552,7 +293,7 @@ else
 fi
 }
 
-### PINEA64 PLUS
+# PINEA64 PLUS
 pine_a64(){
 pine64_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -562,7 +303,7 @@ else
 fi
 }
 
-### NANOPI NEO PLUS2
+# NANOPI NEO PLUS2
 nanopi_neo_plus2(){
 nanopi_patch
 if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
@@ -572,7 +313,7 @@ else
 fi
 }
 
-### ROCKCHIP
+# ROCKCHIP
 rockchip_defconfig(){
 echo_defconfig
 cp -f ../${DEF}/rockchip64_defconfig arch/arm64/configs/
@@ -614,7 +355,7 @@ else
 fi
 }
 
-### BROADCOM
+# BROADCOM
 bcm2711_defconfig(){
 echo_defconfig
 cp -f ../${DEF}/bcm2711_defconfig arch/arm64/configs/

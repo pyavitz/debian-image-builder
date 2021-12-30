@@ -2,6 +2,7 @@
 source lib/source
 source lib/function/echoes
 source lib/function/linux
+source lib/function/patches
 source lib/function/compiler
 source lib/function/wireless
 source userdata.txt > /dev/null 2>&1
@@ -32,8 +33,9 @@ if [[ `grep -w "ccache=1" "userdata.txt"` ]]; then
 		ccache_version
 	else
 		sudo apt update
+		sudo apt upgrade -y
 		sudo apt install -y ccache
-		sleep 2s
+		sleep 1s
 		rm -f ccache.txt gcc.txt
 		ccache_version;
 	fi
@@ -51,7 +53,7 @@ if [ -e ${KERNEL}-${VERSION} ]; then
 	rm -fdr ${KERNEL}-${VERSION};
 fi
 
-### Download kernel and extract
+# Download kernel and extract
 case `grep -Fx "rc=1" "../userdata.txt" >/dev/null; echo $?` in
   0)
 if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
@@ -68,11 +70,11 @@ check_stable
     ;;
 esac
 
-### Setup
+# Setup
 setup
 
-### Patches and Defconfigs
-# AMLOGIC
+# Patches and Defconfigs
+### AMLOGIC
 if [[ `grep -w "lepotato" "../../board.txt"` ]]; then
 	le_potato;
 fi
@@ -89,7 +91,7 @@ if [[ `grep -w "radxazero" "../../board.txt"` ]]; then
 	radxa_zero;
 fi
 
-# ALLWINNER
+### ALLWINNER
 if [[ `grep -w "tritium" "../../board.txt"` ]]; then
 	tritium_h5;
 fi
@@ -100,7 +102,7 @@ if [[ `grep -w "nanopi" "../../board.txt"` ]]; then
 	nanopi_neo_plus2;
 fi
 
-# ROCKCHIP
+### ROCKCHIP
 if [[ `grep -w "renegade" "../../board.txt"` ]]; then
 	rk3328_roc_cc;
 fi
@@ -111,21 +113,21 @@ if [[ `grep -w "nanopc" "../../board.txt"` ]]; then
 	rk3399_nanopc;
 fi
 
-# BROADCOM
+### BROADCOM
 if [[ `grep -w "bcm2711" "../../board.txt"` ]]; then
 	bcm_2711;
 fi
 
-### Menuconfig
+# Menuconfig
 if [[ `grep -w "menuconfig=1" "../../userdata.txt"` ]]; then
 	menuconfig;
 fi
 
-### Build deb
+# Build deb
 builddeb
 echo
 
-### 
+# Finish
 cd ..
 rm -f linux-libc-dev*.deb
 rm -f *.buildinfo
