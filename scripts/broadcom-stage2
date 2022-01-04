@@ -76,7 +76,6 @@ wget -cq --show-progress ${SCRIPTS_URL}update-fw
 mv -f update-fw /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
-mv -f raspi4 /usr/local/sbin/led-trigger
 ### Service
 initrd_script > /dev/null 2>&1
 uinitrd > /dev/null 2>&1
@@ -91,7 +90,6 @@ echo Done.
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mkdir -p /etc/init.d
 	mv -f firstboot.init /etc/init.d/firstboot
-	mv -f leds.init /etc/init.d/leds
 	mv -f credentials.init /etc/init.d/credentials
 	mv -f governor.init /etc/init.d/governor
 	mv -f network.init /etc/init.d/network
@@ -193,23 +191,6 @@ if [ -e /etc/apt/preferences.d/3rd_parties.pref ];
 fi
 echo Done.
 
-### Pi Bluetooth
-if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
-	pi_bluetooth_debian;
-else
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-		pi_bluetooth_debian;
-	else
-		if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
-			pi_bluetooth_ubuntu;
-		else
-			if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-				pi_bluetooth_debian;
-			fi
-		fi
-	fi
-fi
-
 ###  Raspi userland
 armv8_userland
 
@@ -266,7 +247,6 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 else
 	firstboot_service > /dev/null 2>&1;
 	governor_service > /dev/null 2>&1
-	led_service > /dev/null 2>&1;
 	rc-local_service > /dev/null 2>&1;
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
