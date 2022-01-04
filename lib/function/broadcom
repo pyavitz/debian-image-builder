@@ -52,7 +52,7 @@ mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF
 label kernel
     kernel /Image
-    append earlyprintk initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 cma=320M firmware_class.path=/lib/firmware/updates/brcm rootwait
+    append initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 cma=320M firmware_class.path=/lib/firmware/updates/brcm rootwait
 EOF
 }
 
@@ -353,10 +353,12 @@ mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1
 rm -f p1/extlinux/extlinux.conf
+rm -f p1/config.txt
 new_partuuid
 echo
-echo "Correcting extlinux file."
+echo "Adjusting extlinux file."
 extlinux
+bcm2711_config > /dev/null 2>&1
 echo "Done."
 sleep 1s
 umount p1
