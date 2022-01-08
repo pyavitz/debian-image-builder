@@ -178,7 +178,11 @@ if [[ `grep -w "rockchip" "../board.txt"` ]]; then
 	for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 fi
 if [[ `grep -w "radxazero" "../board.txt"` ]]; then
-	for i in ../${RZUBOOT}/*.patch; do patch -p1 < $i; done;
+	if [[ `grep -w 'UBOOT_VERSION="v2021.10"' "../../userdata.txt"` ]]; then
+		for i in ../${RZUBOOT}/*.patch; do patch -p1 < $i; done;
+	else
+		:;
+	fi
 fi
 echo
 export ARCH=arm64
