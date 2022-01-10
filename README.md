@@ -47,8 +47,8 @@ Hostname:       # Set system hostname
 
 Distribution
 Distro:         # Supported: debian, devuan and ubuntu
-Release:	# Debian: bullseye, testing, unstable and sid
-		# Devuan: chimaera, testing, unstable and ceres
+Release:	# Debian: bullseye, bookwork, testing, unstable and sid
+		# Devuan: chimaera, daedalus, testing, unstable and ceres
 		# Ubuntu: focal, impish and jammy
 
 U-Boot and Linux
