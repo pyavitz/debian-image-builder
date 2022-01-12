@@ -15,21 +15,21 @@ UD=userdata.txt > /dev/null 2>&1
 userdata(){
 echo ""
 echo -e "Please create a ${RED}userdata.txt${FIN} file"
-while [ true ] ; do
+while [ true ]; do
 read -t 10 -n 1
-if [ $? = 0 ] ; then
-exit ;
+if [ $? = 0 ]; then
+	exit;
 else
-echo -e "run make config"
+	echo -e "run make config";
 fi
 done
 }
 
 if [ -f "$UD" ]; then
-    echo ""
-    echo "$UD file found." > /dev/null 2>&1
+	echo ""
+	echo "$UD file found." > /dev/null 2>&1;
 else 
-    userdata
+	userdata;
 fi
 validation
 if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
@@ -53,8 +53,9 @@ fi
 ROOT="sysroot"
 ROOTFS_ARCH="rootfs-aarch64"
 RELEASE=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
-if ls $RELEASE > /dev/null 2>&1;
-	then ls $RELEASE && exit;
+if [ -e $RELEASE ]; then
+	ls $RELEASE
+	exit;
 fi
 echo -e "${RED}Starting debootstrap${FIN} ..."
 echo -e -n ${GRN}
@@ -86,4 +87,4 @@ fi
 if [ -e /usr/share/debootstrap/scripts/daedalus ]; then
 	rm -f /usr/share/debootstrap/scripts/daedalus;
 fi
-clear
+clear -x
