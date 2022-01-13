@@ -76,6 +76,7 @@ wget -cq --show-progress ${SCRIPTS_URL}update-fw
 mv -f update-fw /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
+mv -f raspi4 /usr/local/sbin/led-trigger
 ### Service
 initrd_script > /dev/null 2>&1
 uinitrd > /dev/null 2>&1
@@ -94,6 +95,7 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mv -f governor.init /etc/init.d/governor
 	mv -f network.init /etc/init.d/network
 	mv -f zramswap.init /etc/init.d/zramswap
+	mv -f leds.init /etc/init.d/leds
 fi
 
 ### MOTD
@@ -245,7 +247,8 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	enable_sysvinit > /dev/null 2>&1;
 else
 	firstboot_service > /dev/null 2>&1;
-	governor_service > /dev/null 2>&1
+	governor_service > /dev/null 2>&1;
+	led_service > /dev/null 2>&1;
 	rc-local_service > /dev/null 2>&1;
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
