@@ -52,7 +52,7 @@ Release:	# Debian: bullseye, bookwork, testing, unstable and sid
 		# Ubuntu: focal, impish and jammy
 
 U-Boot and Linux
-U-Boot:         # Supported: v2021.10 (Note: Use v2021.07 for Rockchip)
+U-Boot:         # Supported: v2022.01, v2021.10 (Note: Use v2021.07 for Rockchip)
 Branch:         # Supported: 5.15 (Note: If building for Odroids please review options)
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
