@@ -50,7 +50,7 @@ help:
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
 	@echo "  Allwinner:  nanopi pine64 tritium"
-	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2plus"
+	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64"
 	@echo ""
@@ -360,21 +360,21 @@ odroidn2-all:
 	@${AML-IMAGE}
 
 ### ODROID N2 Plus
-odroidn2plus-uboot:
+odroidn2+-uboot:
 	# Compiling u-boot
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
-odroidn2plus-kernel:
+odroidn2+-kernel:
 	# Compiling kernel
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	
-odroidn2plus-image:
+odroidn+-image:
 	# Creating image
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
@@ -382,7 +382,7 @@ odroidn2plus-image:
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
 
-odroidn2plus-all:
+odroidn2+-all:
 	# O D R O I D  N 2  P L U S
 	# - - - - - - - -
 	# Compiling u-boot
