@@ -50,7 +50,7 @@ source part-uuid.txt
 extlinux(){
 mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF
-label kernel
+label default
     kernel /Image
     append initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 cma=320M firmware_class.path=/lib/firmware/updates/brcm rootwait
 EOF
@@ -58,9 +58,17 @@ EOF
 
 create_extlinux(){
 extlinux > /dev/null 2>&1
-if [ -e p1/extlinux/extlinux.conf ];
-	then echo && echo -n "extlinux.conf     " && sleep 1s && echo_nok;
-	else echo && echo -n "extlinux.conf     " && sleep 1s && echo_fail && exit;
+if [ -e p1/extlinux/extlinux.conf ]; then
+	echo ""
+	echo -n "extlinux.conf     "
+	sleep 1s
+	echo_nok;
+else
+	echo ""
+	echo -n "extlinux.conf     "
+	sleep 1s
+	echo_fail
+	exit;
 fi
 }
 
@@ -75,10 +83,11 @@ gpu_mem=128
 enable_uart=1
 disable_splash=1
 max_framebuffers=1
+
 # overclock
-arm_freq=2000
-gpu_freq=750
-over_voltage=6
+arm_freq=1800
+#gpu_freq=750
+over_voltage=2
 EOF
 }
 
@@ -86,15 +95,23 @@ bcm2711_boot(){
 mkdir -p firmware/boot
 rm -f firmware/boot/*
 echo
-if [ -e output/raspi4/u-boot.bin ];
-	then echo -n "u-boot.bin        " && echo_nok;
-	else echo -n "u-boot.bin        " && echo_fail && exit;
+if [ -e output/raspi4/u-boot.bin ]; then
+	echo -n "u-boot.bin        "
+	echo_nok;
+else
+	echo -n "u-boot.bin        "
+	echo_fail
+	exit;
 fi
-echo
+echo ""
 install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1
-if [ -e p1/u-boot.bin ];
-	then echo -n "installing uboot  " && echo_bdone;
-	else echo -n "installing uboot  " && echo_fail && exit;
+if [ -e p1/u-boot.bin ]; then
+	echo -n "installing uboot  "
+	echo_bdone;
+else
+	echo -n "installing uboot  "
+	echo_fail
+	exit;
 fi
 }
 
@@ -103,9 +120,13 @@ tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p2/
 }
 
 aarch64_rootfs(){
-if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ];
-	then echo -n "Extracting rootfs " && aarch64_extract && echo_bdone;
-	else echo -e "${YLW}Missing rootfs tarball${FIN}!" && exit;
+if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ]; then
+	echo -n "Extracting rootfs "
+	aarch64_extract
+	echo_bdone;
+else
+	echo -e "${YLW}Missing rootfs tarball${FIN}!"
+	exit;
 fi
 echo
 }
@@ -139,8 +160,8 @@ adduser ${user} --gecos ${NAME} --disabled-password
 }
 
 user_config(){
-if `grep -Fx "bcm2711" "/root/board.txt" >/dev/null;`
-	then bcm2711_user
+if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+	bcm2711_user;
 fi
 
 echo "${user}:${passwd}" | chpasswd
@@ -261,7 +282,7 @@ patch -p1 < userland-remove-hi-pi.patch
 rm -f userland-remove-hi-pi.patch
 ./buildme --aarch64
 cd ~
-rm -f -d -R userland
+rm -fdr userland
 ldconfig
 echo Done.
 }
@@ -297,7 +318,11 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/updates/renesas_usb_fw.mem
 rm -f UPDATE.mem
-ln -sr /lib/firmware /etc/firmware
+if [ -e /etc/firmware]; then
+	:;
+else
+	ln -sr /lib/firmware /etc/firmware
+fi
 mkdir -p /lib/firmware/updates/rtl_nic
 cd /lib/firmware/updates/rtl_nic
 wget -cq --show-progress https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz
@@ -330,10 +355,10 @@ fi
 }
 
 shrink(){
-echo
+echo ""
 chmod +x scripts/shrink
 scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img;
-echo
+echo ""
 fix_extlinux
 }
 
@@ -356,7 +381,7 @@ mount "${BOOT}" p1
 rm -f p1/extlinux/extlinux.conf
 rm -f p1/config.txt
 new_partuuid
-echo
+echo ""
 echo "Adjusting extlinux file."
 extlinux
 bcm2711_config > /dev/null 2>&1
@@ -364,7 +389,7 @@ echo "Done."
 sleep 1s
 umount p1
 rm -fdr p1
-echo
+echo ""
 kpartx -d ${IMAGE_FILE}
 rm -f kpart.txt
 }
