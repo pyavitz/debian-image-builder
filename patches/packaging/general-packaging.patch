@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
---- a/scripts/package/builddeb	2021-12-04 01:27:14.728857000 -0500
-+++ b/scripts/package/builddeb	2021-12-04 01:48:02.172461209 -0500
+--- a/scripts/package/builddeb	2022-01-12 12:27:23.818042000 -0500
++++ b/scripts/package/builddeb	2022-01-18 13:31:59.915897504 -0500
 @@ -92,6 +92,19 @@
  else
  	cp System.map "$tmpdir/boot/System.map-$version"
@@ -110,7 +110,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Build kernel header package
  (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
  (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-@@ -183,6 +271,43 @@
+@@ -183,6 +271,44 @@
  (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
@@ -132,6 +132,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +rm -f {headers-byteshift.patch,module.lds}
 +echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts
 +echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/
++if [ -e .config.old ]; then rm -f .config.old; fi
 +}
 +
 +cd /usr/src/linux-headers-$version
