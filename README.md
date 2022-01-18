@@ -14,10 +14,6 @@ Rockchip:       # NanoPC-T4, Renegade and Rock64
 * Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies) (dependency: make)
 * Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
-### Docker (obsolete)
-
-To build using [Docker](https://www.docker.com/), follow the install [instructions](https://docs.docker.com/engine/install/) and use our other [builder](https://github.com/pyavitz/arm-img-builder).
-
 ---
 
 ## Instructions
