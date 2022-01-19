@@ -358,7 +358,11 @@ fi
 # BROADCOM
 bcm2711_defconfig(){
 echo_defconfig
-cp -f ../${DEF}/bcm2711_defconfig arch/arm64/configs/
+if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
+	cp -f ../${DEF}/bcm2711_defconfig arch/arm64/configs/;
+else
+	cp -f ../${DEF}/bcm2711-edge_defconfig arch/arm64/configs/;
+fi
 rtl8812au_module
 rtl88x2bu_module
 rtl8811cu_module
