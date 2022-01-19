@@ -374,7 +374,7 @@ odroidn2+-kernel:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	
-odroidn+-image:
+odroidn2+-image:
 	# Creating image
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
