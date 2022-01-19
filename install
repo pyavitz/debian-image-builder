@@ -50,7 +50,7 @@ else
 		echo_fail
 		echo ""
 		ierror
-		exit 1;
+		exit > /dev/null 2>&1;
 	fi
 fi
 }
@@ -64,7 +64,7 @@ else
 	echo_fail
 	echo ""
 	ierror
-	exit 1;
+	exit > /dev/null 2>&1;
 fi
 }
 
@@ -86,7 +86,7 @@ else
 			echo_fail
 			echo ""
 			derror
-			exit;
+			exit > /dev/null 2>&1;
 		fi
 	fi
 fi
@@ -100,7 +100,7 @@ echo ""
 echo -e "${WHT}Starting install ...${FIN}"
 sleep 2s
 
-if [[ `sudo dmesg | grep x86-64` ]]; then
+if [[ `uname -m | grep x86_64` ]]; then
 	if [[ `command -v make` ]]; then
 		sudo apt update
 		make ccompile;
@@ -111,7 +111,7 @@ if [[ `sudo dmesg | grep x86-64` ]]; then
 	fi
 fi
 
-if [[ `sudo dmesg | grep arm64` ]]; then
+if [[ `uname -m | grep aarch64` ]]; then
 	if [[ `command -v make` ]]; then
 		sudo apt update
 		make ncompile;
