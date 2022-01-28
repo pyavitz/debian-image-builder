@@ -50,7 +50,7 @@ help:
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
 	@echo "  Allwinner:  nanopi pine64 tritium"
-	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+"
+	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+ rzero"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64"
 	@echo ""
@@ -452,21 +452,21 @@ lepotato-all:
 	@${AML-IMAGE}
 	
 ### Radxa Zero
-radxazero-uboot:
+rzero-uboot:
 	# Compiling u-boot
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
-radxazero-kernel:
+rzero-kernel:
 	# Compiling kernel
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
-radxazero-image:
+rzero-image:
 	# Creating image
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
@@ -474,7 +474,7 @@ radxazero-image:
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
 
-radxazero-all:
+rzero-all:
 	# R A D X A  Z E R O
 	# - - - - - - - -
 	# Compiling u-boot
