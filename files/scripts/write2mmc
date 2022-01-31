@@ -318,6 +318,20 @@ label default
 EOF
 }
 
+radxazero_create_extlinux(){
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label default
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/amlogic/
+    fdt /boot/amlogic/meson-g12a-radxa-zero.dtb
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
+EOF
+}
+
 nanopi_create_extlinux(){
 source /etc/opt/root-pid.txt
 mkdir -p /mnt/boot/extlinux
@@ -392,6 +406,9 @@ fi
 if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic_partition_mmcblk1 > /dev/null 2>&1;
 fi
+if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
+	then amlogic_partition_mmcblk1 > /dev/null 2>&1;
+fi
 if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic_partition_mmcblk0 > /dev/null 2>&1;
 fi
@@ -421,6 +438,9 @@ fi
 if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic1_flash_uboot;
 fi
+if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
+	then amlogic1_flash_uboot;
+fi
 if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic0_flash_uboot;
 fi
@@ -441,6 +461,9 @@ if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic1_fetch_uuid;
 fi
 if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
+	then amlogic1_fetch_uuid;
+fi
+if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
 	then amlogic1_fetch_uuid;
 fi
 if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
@@ -472,6 +495,9 @@ if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
 fi
 if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
 	then odroidn2plus_create_extlinux;
+fi
+if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
+	then radxazero_create_extlinux;
 fi
 if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
 	then nanopi_create_extlinux;

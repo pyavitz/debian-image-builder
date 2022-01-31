@@ -135,7 +135,7 @@ files, whilst leaving rename_to_credentials.txt untouched.
 
 #### Write to eMMC
 ```sh
-Supported: Le Potato, Odroid C4/N2/N2+, NanoPi NEO Plus2 and NanoPC-T4
+Supported: Le Potato, NanoPi NEO Plus2, NanoPC-T4, Odroid C4/N2/N2+ and Radxa Zero
 1. Attach eMMC module       # In some cases the module may need to be attached after boot
 2. Boot from sdcard
 3. Execute: sudo write2mmc
