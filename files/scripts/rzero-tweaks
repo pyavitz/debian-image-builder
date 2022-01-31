@@ -8,6 +8,23 @@ else
 fi
 }
 
+hdmi-audio(){
+amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
+amixer sset 'FRDDR_A SRC 1 EN' 'on'
+amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
+amixer sset 'TOHDMITX I2S SRC' 'I2S B'
+amixer sset 'TOHDMITX' 'on'
+amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
+amixer sset 'FRDDR_B SRC 1 EN' 'on'
+amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
+amixer sset 'FRDDR_C SRC 1 EN' 'on'
+}
+
 if [ -e /sys/devices/system/cpu/cpufreq/boost ]; then
 	turbo-mode;
+fi
+
+if [ -e /usr/bin/amixer ]; then
+	sleep 20s;
+	hdmi-audio > /dev/null 2>&1;
 fi
