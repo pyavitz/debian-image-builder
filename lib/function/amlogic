@@ -61,32 +61,30 @@ dd if=output/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 see
 }
 
 odroidn2_flashbin(){
-case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
-  0)
-    dd if=output/odroidn2/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
-    ;;
-  1)
-    dd if=output/odroidn2/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
-    dd if=output/odroidn2/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
-    ;;
-esac
+if [[ `grep -w "emmc=1" "userdata.txt"` ]]; then
+	dd if=output/odroidn2/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
+else
+	dd if=output/odroidn2/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync;
+	dd if=output/odroidn2/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync;
+fi
 }
 
 odroidn2plus_flashbin(){
-case `grep -Fx "emmc=1" "userdata.txt" >/dev/null; echo $?` in
-  0)
-    dd if=output/odroidn2plus/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
-    ;;
-  1)
-    dd if=output/odroidn2plus/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
-    dd if=output/odroidn2plus/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
-    ;;
-esac
+if [[ `grep -w "emmc=1" "userdata.txt"` ]]; then
+	dd if=output/odroidn2plus/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
+else
+	dd if=output/odroidn2plus/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync;
+	dd if=output/odroidn2plus/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync;
+fi
 }
 
 radxazero_flashbin(){
-dd if=output/radxazero/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
-dd if=output/radxazero/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
+if [[ `grep -w "emmc=1" "userdata.txt"` ]]; then
+	dd if=output/radxazero/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
+else
+	dd if=output/radxazero/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442;
+	dd if=output/radxazero/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1;
+fi
 }
 
 partition_uuid(){

@@ -92,7 +92,7 @@ nano userdata.txt
 # change from 1 to 0
 auto=1        # compresses to img.xz
 ```
-#### Odroid N2/+ eMMC
+#### eMMC (Odroid N2/+ and Radxa Zero)
 ```sh
 nano userdata.txt
 # change from 0 to 1
