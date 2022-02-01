@@ -105,7 +105,12 @@ make cleanup    # Clean up image errors
 make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
+#### Notes
+* Radxa Zero ([Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom))
 
+```sh
+You need to erase Android from the eMMC before flashing an IMG created here.
+```
 ## Usage
 
 #### /boot/rename_to_credentials.txt
