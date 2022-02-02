@@ -1,5 +1,5 @@
 #!/bin/bash
-RED="\e[1;31m"
+GRN="\e[1;32m"
 YLW="\e[1;33m"
 FIN="\e[0m"
 
@@ -13,11 +13,11 @@ fi
 
 confirm(){
 echo -e "${YLW}This script requires a internet connection."
-echo -e "If not connected to the webs, than say no...${FIN}."
+echo -e "If not connected to the webs, than say no${FIN} ..."
 echo -e ""
 read -p "Continue (y/n)?" choice
 case "$choice" in 
-  y|Y ) echo && echo -e "${RED}Confirmed${FIN}!";;
+  y|Y ) echo && echo -e "${GRN}Confirmed${FIN}!";;
   n|N ) echo && echo -e "${YLW}You have chosen${FIN}... ${YLW}wisely${FIN}." && exit 0;;
   * ) echo && echo -e "${YLW}Invalid choice${FIN}." && exit 0;;
 esac
@@ -382,137 +382,148 @@ dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk2 seek=16384
 run_as_root
 echo
 confirm
-echo
 check_progressbar
 
-if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
-	then echo Binding eMMC. && libre_bind_emmc && echo Done.;
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	echo ""
+	echo "Binding eMMC.";
+	libre_bind_emmc;
+	echo "Done.";
 fi
-if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then echo Binding eMMC. && odroid_bind_emmc && echo Done.;
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	echo ""
+	echo "Binding eMMC.";
+	odroid_bind_emmc;
+	echo "Done.";
 fi
-if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
-	then echo Binding eMMC. && odroid_bind_emmc && echo Done.;
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	echo ""
+	echo "Binding eMMC.";
+	odroid_bind_emmc;
+	echo "Done.";
 fi
-if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
-	then echo Binding eMMC. && odroid_bind_emmc && echo Done.;
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	echo ""
+	echo "Binding eMMC.";
+	odroid_bind_emmc;
+	echo "Done.";
 fi
 
-echo
-echo Partitioning.
-if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_mmcblk1 > /dev/null 2>&1;
+echo ""
+echo "Partitioning."
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	amlogic_partition_mmcblk1 > /dev/null 2>&1;
 fi
-if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_mmcblk1 > /dev/null 2>&1;
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	amlogic_partition_mmcblk1 > /dev/null 2>&1;
 fi
-if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_mmcblk1 > /dev/null 2>&1;
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	amlogic_partition_mmcblk1 > /dev/null 2>&1;
 fi
-if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_mmcblk0 > /dev/null 2>&1;
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	amlogic_partition_mmcblk0 > /dev/null 2>&1;
 fi
-if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic_partition_mmcblk0 > /dev/null 2>&1;
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	amlogic_partition_mmcblk0 > /dev/null 2>&1;
 fi
-if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
-	then nanopi_partition_emmc > /dev/null 2>&1;
+if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+	nanopi_partition_emmc > /dev/null 2>&1;
 fi
-if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
-	then nanopc_partition_emmc > /dev/null 2>&1;
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	nanopc_partition_emmc > /dev/null 2>&1;
 fi
-echo Done.
+echo "Done."
 
-echo
+echo ""
 echo -e "Please be patient as the root filesystem"
 echo -e "is transferred over to the eMMC module."
 transfer_to_emmc
 sleep 1s
 clear
 
-echo
-echo Writing u-boot.
-if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic1_flash_uboot;
+echo ""
+echo "Writing u-boot."
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	amlogic1_flash_uboot;
 fi
-if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic1_flash_uboot;
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	amlogic1_flash_uboot;
 fi
-if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic1_flash_uboot;
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	amlogic1_flash_uboot;
 fi
-if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic0_flash_uboot;
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	amlogic0_flash_uboot;
 fi
-if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic0_flash_uboot;
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	amlogic0_flash_uboot;
 fi
-if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
-	then allwinner_flash_uboot;
+if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+	allwinner_flash_uboot;
 fi
-if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
-	then nanopc_flash_uboot;
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	nanopc_flash_uboot;
 fi
-echo Done.
+echo "Done."
 
-echo
-echo Fetching UUID.
-if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic1_fetch_uuid;
+echo ""
+echo "Fetching UUID."
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	amlogic1_fetch_uuid;
 fi
-if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic1_fetch_uuid;
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	amlogic1_fetch_uuid;
 fi
-if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic1_fetch_uuid;
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	amlogic1_fetch_uuid;
 fi
-if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic0_fetch_uuid;
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	amlogic0_fetch_uuid;
 fi
-if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
-	then amlogic0_fetch_uuid;
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	amlogic0_fetch_uuid;
 fi
-if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
-	then nanopi_fetch_uuid;
+if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+	nanopi_fetch_uuid;
 fi
-if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
-	then nanopc_fetch_uuid;
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	nanopc_fetch_uuid;
 fi
-echo Done.
+echo "Done."
 
-echo
-echo Setting up boot.
+echo ""
+echo "Setting up boot."
 source /etc/opt/root-id.txt
 create_fstab
-if `grep -Fx "lepotato" "/etc/opt/board.txt" >/dev/null;`
-	then libre_create_extlinux;
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	libre_create_extlinux;
 fi
-if `grep -Fx "odroidc4" "/etc/opt/board.txt" >/dev/null;`
-	then odroidc4_create_extlinux;
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	odroidc4_create_extlinux;
 fi
-if `grep -Fx "odroidn2" "/etc/opt/board.txt" >/dev/null;`
-	then odroidn2_create_extlinux;
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	odroidn2_create_extlinux;
 fi
-if `grep -Fx "odroidn2plus" "/etc/opt/board.txt" >/dev/null;`
-	then odroidn2plus_create_extlinux;
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	odroidn2plus_create_extlinux;
 fi
-if `grep -Fx "radxazero" "/etc/opt/board.txt" >/dev/null;`
-	then radxazero_create_extlinux;
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	radxazero_create_extlinux;
 fi
-if `grep -Fx "nanopi" "/etc/opt/board.txt" >/dev/null;`
-	then nanopi_create_extlinux;
+if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+	nanopi_create_extlinux;
 fi
-if `grep -Fx "nanopc" "/etc/opt/board.txt" >/dev/null;`
-	then nanopc_create_extlinux;
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	nanopc_create_extlinux;
 fi
-echo Done.
+echo "Done."
 
-echo 
-echo Unmounting eMMC.
+echo ""
+echo "Unmounting eMMC."
 rm -fdr /etc/opt/root-pid.txt /etc/opt/root-id.txt
 rm -fdr /mnt/mnt/*
 umount /mnt
 rm -fdr /mnt/*
-echo Done.
-echo
-echo You may now power down and remove the sdcard.
+echo "Done."
+echo ""
+echo "You may now power down and remove the sdcard."
