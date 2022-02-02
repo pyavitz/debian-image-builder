@@ -58,8 +58,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_ve
  
  	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/panfrost_job.c
---- a/drivers/gpu/drm/panfrost/panfrost_job.c	2021-12-04 20:30:53.662651348 -0500
-+++ b/drivers/gpu/drm/panfrost/panfrost_job.c	2021-12-04 20:31:17.830185684 -0500
+--- a/drivers/gpu/drm/panfrost/panfrost_job.c	2022-02-01 11:29:20.000000000 -0500
++++ b/drivers/gpu/drm/panfrost/panfrost_job.c	2022-02-02 15:18:38.069338041 -0500
 @@ -234,7 +234,7 @@
  	if (!atomic_read(&pfdev->reset.pending)) {
  		job_write(pfdev, JS_COMMAND_NEXT(js), JS_COMMAND_START);
@@ -69,7 +69,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  			job, js, subslot, jc_head, cfg & 0xf);
  	}
  	spin_unlock(&pfdev->js->job_lock);
-@@ -425,12 +425,12 @@
+@@ -400,12 +400,12 @@
  	bool signal_fence = true;
  
  	if (!panfrost_exception_is_fault(js_status)) {
@@ -84,7 +84,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  			js, exception_name,
  			job_read(pfdev, JS_HEAD_LO(js)),
  			job_read(pfdev, JS_TAIL_LO(js)));
-@@ -671,7 +671,7 @@
+@@ -646,7 +646,7 @@
  				 10, 10000);
  
  	if (ret)
@@ -93,7 +93,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  
  	/* Handle the remaining interrupts before we reset. */
  	panfrost_job_handle_irqs(pfdev);
-@@ -740,7 +740,7 @@
+@@ -715,7 +715,7 @@
  	if (dma_fence_is_signaled(job->done_fence))
  		return DRM_GPU_SCHED_STAT_NOMINAL;
  
@@ -102,7 +102,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		js,
  		job_read(pfdev, JS_CONFIG(js)),
  		job_read(pfdev, JS_STATUS(js)),
-@@ -822,7 +822,7 @@
+@@ -796,7 +796,7 @@
  					IRQF_SHARED, KBUILD_MODNAME "-job",
  					pfdev);
  	if (ret) {
@@ -111,7 +111,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		return ret;
  	}
  
-@@ -840,7 +840,7 @@
+@@ -814,7 +814,7 @@
  				     pfdev->reset.wq,
  				     NULL, "pan_js");
  		if (ret) {
@@ -121,9 +121,9 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		}
  	}
 diff -Naur a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/sched_main.c
---- a/drivers/gpu/drm/scheduler/sched_main.c	2021-12-04 20:30:53.691650791 -0500
-+++ b/drivers/gpu/drm/scheduler/sched_main.c	2021-12-04 20:31:17.831185664 -0500
-@@ -489,8 +489,7 @@
+--- a/drivers/gpu/drm/scheduler/sched_main.c	2022-02-01 11:29:20.000000000 -0500
++++ b/drivers/gpu/drm/scheduler/sched_main.c	2022-02-02 15:18:38.069338041 -0500
+@@ -491,8 +491,7 @@
  			if (r == -ENOENT)
  				drm_sched_job_done(s_job);
  			else if (r)
@@ -133,7 +133,7 @@ diff -Naur a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/
  		} else
  			drm_sched_job_done(s_job);
  	}
-@@ -776,7 +775,7 @@
+@@ -912,7 +911,7 @@
  	struct drm_gpu_scheduler *sched = (struct drm_gpu_scheduler *)param;
  	int r;
  
@@ -142,7 +142,7 @@ diff -Naur a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/
  
  	while (!kthread_should_stop()) {
  		struct drm_sched_entity *entity = NULL;
-@@ -824,13 +823,11 @@
+@@ -957,13 +956,11 @@
  			if (r == -ENOENT)
  				drm_sched_job_done(sched_job);
  			else if (r)
@@ -157,7 +157,7 @@ diff -Naur a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/
  			drm_sched_job_done(sched_job);
  		}
  
-@@ -885,7 +882,7 @@
+@@ -1018,7 +1015,7 @@
  	if (IS_ERR(sched->thread)) {
  		ret = PTR_ERR(sched->thread);
  		sched->thread = NULL;
