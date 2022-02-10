@@ -1,11 +1,44 @@
 #!/bin/bash
-COL="\033[1m"
+WHT="\033[1m"
 FIN="\033[0m"
 
-echo -e "${COL}Running System Setup${FIN} ..."
+hdmi-audio(){
+echo "Running Setup ..."
+sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
+sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
+sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
+sudo amixer sset 'TOHDMITX' 'on'
+sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
+sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
+sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
+sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
+sudo alsactl store
+echo "Done."
+echo ""
+}
+
+confirm(){
+echo -e "${WHT}Setup HDMI Audio ..?${FIN}"
+echo -e ""
+read -p "Continue (y/n)?" choice
+case "$choice" in 
+  y|Y ) echo ""; hdmi-audio;;
+  n|N ) echo && echo -e "Skipping setup ..."; echo "";;
+  * ) echo && echo -e "Invalid choice."; echo ""; confirm;;
+esac
+}
+
+echo ""
+echo -e "${WHT}Running System Setup${FIN} ..."
 sleep 1s
 sudo dpkg-reconfigure locales tzdata keyboard-configuration
 sleep 1s
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	confirm;
+else
+	:;
+fi
 if [ -e /etc/new.motd ]; then
 	sudo rm -f /etc/motd
 	sudo mv -f /etc/new.motd /etc/motd;
@@ -15,5 +48,7 @@ fi
 sleep 1s
 sudo update-ca-certificates -f
 echo ""
-echo -e "${COL}System is ready to go${FIN}."
-sudo rm -f /usr/local/bin/run-setup
+echo -e "${WHT}System is ready to go${FIN}."
+if [ -e /usr/local/bin/run-setup ]; then
+	sudo rm -f /usr/local/bin/run-setup;
+fi

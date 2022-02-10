@@ -106,10 +106,24 @@ make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
 #### Notes
-* Radxa Zero ([Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom))
+* Radxa Zero ([Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom)) \ HDMI Audio
 
 ```sh
-You need to erase Android from the eMMC before flashing an IMG created here.
+You need to erase Android from the eMMC before flashing the IMG.
+```
+. 
+```sh
+# HDMI Audio
+sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
+sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
+sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
+sudo amixer sset 'TOHDMITX' 'on'
+sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
+sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
+sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
+sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
+sudo alsactl store
 ```
 ## Usage
 
