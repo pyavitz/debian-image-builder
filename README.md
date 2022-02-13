@@ -207,7 +207,7 @@ sudo service tweaks restart
 Install script and service
 ```sh
 sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin
-sudo chmod +x /usr/local/bin/fan-ctrl
+sudo chmod +x $(command -v fan-ctrl)
 ```
 **Debian / Ubuntu**
 ```sh
@@ -245,7 +245,7 @@ Usage: fan-ctrl -h
    -r       Run
    -u       Update
    
-A systemd service runs 'fan-ctrl -r' during boot.
+A service runs 'fan-ctrl -r' during boot.
 ```
 
 ---
