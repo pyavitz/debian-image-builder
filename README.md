@@ -159,7 +159,7 @@ Supported: Le Potato, NanoPi NEO Plus2, NanoPC-T4, Odroid C4/N2/N2+ and Radxa Ze
 2. Boot from sdcard
 3. Execute: sudo write2mmc
 ```
-#### Deb EEPROM ([usb_storage.quirks](https://github.com/pyavitz/rpi-img-builder/issues/17))
+#### EEPROM
 
 ```sh
 Raspberry Pi 4B EEPROM Helper Script
@@ -197,7 +197,9 @@ governor -h
    
 A systemd service runs 'governor -r' during boot.
 ```
-#### Overclocking (NanoPC-T4, Odroid N2/+ and Radxa Zero)
+#### Overclocking
+* **NanoPC-T4, Odroid N2/+ and Radxa Zero**
+
 By default the NanoPC-T4, Odroid N2/+ and Radxa Zero run slightly under clocked as a safety precaution. If you decide to overclock the board, make sure you are using passive or active cooling.
 ```sh
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
