@@ -50,6 +50,14 @@ sleep 1
 lsblk -dno NAME,SIZE
 }
 
+renegade_bind_emmc(){
+echo -n ff520000.mmc > /sys/bus/platform/drivers/dwmmc_rockchip/unbind
+sleep 1
+echo -n ff520000.mmc > /sys/bus/platform/drivers/dwmmc_rockchip/bind
+sleep 1
+lsblk -dno NAME,SIZE
+}
+
 ### PARTITION DRIVE
 amlogic_partition_mmcblk0(){
 dd if=/dev/zero of=/dev/mmcblk0 bs=512 count=1
@@ -163,6 +171,34 @@ sleep 1s
 resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
 }
 
+renegade_partition_emmc(){
+dd if=/dev/zero of=/dev/mmcblk1 bs=512 count=1
+truncate -s 2100MB /dev/mmcblk1
+fdisk /dev/mmcblk1 <<EOF
+o
+n
+p
+1
+32767
+a
+t
+b
+4101561
+p
+w
+EOF
+
+partprobe /dev/mmcblk1
+echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk1p1
+mount /dev/mmcblk1p1 /mnt
+sync
+umount /mnt
+mount -o defaults,noatime /dev/mmcblk1p1 /mnt
+bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
+sleep 1s
+resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
+}
+
 ### RSYNC
 transfer(){
 cd /
@@ -237,6 +273,20 @@ rm -f root1 root2 root3
 
 echo 'ROOT_PARTUUID="' > root1
 blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+renegade_fetch_uuid(){
+echo 'ROOT_UUID="' > root1
+blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^UUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
+rm -f root1 root2 root3
+
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^PARTUUID=//p' > root2
 echo '"' > root3
 paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
 rm -f root1 root2 root3
@@ -332,6 +382,20 @@ label default
 EOF
 }
 
+renegade_create_extlinux(){
+source /etc/opt/root-pid.txt
+mkdir -p /mnt/boot/extlinux
+rm -f /mnt/boot/extlinux/extlinux.conf
+tee /mnt/boot/extlinux/extlinux.conf <<EOF
+label default
+    kernel /boot/Image
+    initrd /boot/uInitrd
+    fdtdir /boot/rockchip/
+    fdt /boot/rockchip/rk3328-roc-cc.dtb
+    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
+EOF
+}
+
 nanopi_create_extlinux(){
 source /etc/opt/root-pid.txt
 mkdir -p /mnt/boot/extlinux
@@ -373,9 +437,15 @@ allwinner_flash_uboot(){
 dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk2 conv=fsync bs=1024 seek=8
 }
 
-nanopc_flash_uboot(){
-dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk2 seek=64
-dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk2 seek=16384
+rockchip_flash_uboot(){
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk2 seek=64;
+	dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk2 seek=16384;
+fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk1 seek=64;
+	dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk1 seek=16384;
+fi
 }
 
 ### THE MAGIC
@@ -408,6 +478,12 @@ if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
 	odroid_bind_emmc;
 	echo "Done.";
 fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	echo ""
+	echo "Binding eMMC.";
+	renegade_bind_emmc;
+	echo "Done.";
+fi
 
 echo ""
 echo "Partitioning."
@@ -431,6 +507,9 @@ if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
 	nanopc_partition_emmc > /dev/null 2>&1;
+fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	renegade_partition_emmc > /dev/null 2>&1;
 fi
 echo "Done."
 
@@ -462,7 +541,10 @@ if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
 	allwinner_flash_uboot;
 fi
 if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	nanopc_flash_uboot;
+	rockchip_flash_uboot;
+fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	rockchip_flash_uboot;
 fi
 echo "Done."
 
@@ -488,6 +570,9 @@ if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
 	nanopc_fetch_uuid;
+fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	renegade_fetch_uuid;
 fi
 echo "Done."
 
@@ -515,6 +600,9 @@ if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
 	nanopc_create_extlinux;
+fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	renegade_create_extlinux;
 fi
 echo "Done."
 
