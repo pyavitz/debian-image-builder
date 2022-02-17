@@ -28,8 +28,12 @@ else
 	if [[ `grep -w "rock64" "board.txt"` ]]; then
 		rock64_flashbin;
 	else
-		if [[ `grep -Fx "nanopc" "board.txt"` ]]; then
-			nanopc_flashbin;
+		if [[ `grep -w "rock64pro" "board.txt"` ]]; then
+			rock64pro_flashbin;
+		else
+			if [[ `grep -Fx "nanopc" "board.txt"` ]]; then
+				nanopc_flashbin;
+			fi
 		fi
 	fi
 fi
@@ -46,6 +50,11 @@ dd if=output/renegade/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 rock64_flashbin(){
 dd if=output/rock64/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=output/rock64/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
+}
+
+rock64pro_flashbin(){
+dd if=output/rock64pro/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
+dd if=output/rock64pro/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
 nanopc_flashbin(){
