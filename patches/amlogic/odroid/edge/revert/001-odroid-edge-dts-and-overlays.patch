@@ -833,9 +833,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts b/arch/arm64/
 +	};
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2022-01-27 06:03:05.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2022-01-28 02:14:02.000000000 -0500
-@@ -12,12 +12,17 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2021-12-05 17:08:22.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2021-12-08 10:00:43.000000000 -0500
+@@ -12,9 +12,14 @@
  / {
  	aliases {
  		serial0 = &uart_AO;
@@ -849,30 +849,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
 +		spi0 = &spicc0;
  	};
  
--	dioo2133: audio-amplifier-0 {
-+	dio2133: audio-amplifier-0 {
- 		compatible = "simple-audio-amplifier";
- 		enable-gpios = <&gpio_ao GPIOAO_2 GPIO_ACTIVE_HIGH>;
- 		VCC-supply = <&vcc_5v>;
-@@ -99,8 +104,6 @@
- 		regulator-max-microvolt = <5000000>;
- 		regulator-always-on;
- 		vin-supply = <&main_12v>;
--		gpio = <&gpio GPIOH_8 GPIO_OPEN_DRAIN>;
--		enable-active-high;
- 	};
- 
- 	vcc_1v8: regulator-vcc_1v8 {
-@@ -219,7 +222,7 @@
- 		audio-widgets = "Line", "Lineout";
- 		audio-aux-devs = <&tdmout_b>, <&tdmout_c>, <&tdmin_a>,
- 				 <&tdmin_b>, <&tdmin_c>, <&tdmin_lb>,
--				 <&dioo2133>;
-+				 <&dio2133>;
- 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
- 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
- 				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
-@@ -527,6 +530,27 @@
+ 	dioo2133: audio-amplifier-0 {
+@@ -527,6 +532,27 @@
  	linux,rc-map-name = "rc-odroid";
  };
  
@@ -900,7 +878,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  &i2c3 {
  	status = "okay";
  	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
-@@ -539,6 +563,20 @@
+@@ -539,6 +565,20 @@
  	};
  };
  
@@ -921,7 +899,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  &pwm_ab {
  	pinctrl-0 = <&pwm_a_e_pins>;
  	pinctrl-names = "default";
-@@ -670,6 +708,33 @@
+@@ -670,6 +710,33 @@
  	status = "okay";
  };
  
@@ -955,18 +933,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  &uart_AO {
  	status = "okay";
  	pinctrl-0 = <&uart_ao_a_pins>;
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts	2022-01-27 06:03:05.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts	2022-01-28 02:14:02.000000000 -0500
-@@ -123,7 +123,7 @@
- 		regulator-min-microvolt = <1800000>;
- 		regulator-max-microvolt = <3300000>;
- 
--		enable-gpio = <&gpio GPIOE_2 GPIO_ACTIVE_HIGH>;
-+		enable-gpio = <&gpio_ao GPIOE_2 GPIO_ACTIVE_HIGH>;
- 		enable-active-high;
- 		regulator-always-on;
- 
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2022-01-27 06:03:05.000000000 -0500
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2022-01-28 02:14:02.000000000 -0500
@@ -1084,8 +1050,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/bo
 +	status = "disabled";
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2022-01-27 06:03:05.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2022-01-28 02:14:02.000000000 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2022-02-16 19:38:17.862629514 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2022-02-16 19:48:56.653267360 -0500
 @@ -11,6 +11,10 @@
  / {
  	aliases {
@@ -1096,15 +1062,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot
 +		serial4 = &uart_AO_B;
  		ethernet0 = &ethmac;
  	};
- 
-@@ -48,7 +52,7 @@
- 		regulator-max-microvolt = <3300000>;
- 		vin-supply = <&vcc_5v>;
- 
--		enable-gpio = <&gpio GPIOE_2 GPIO_ACTIVE_HIGH>;
-+		enable-gpio = <&gpio_ao GPIOE_2 GPIO_ACTIVE_HIGH>;
- 		enable-active-high;
- 		regulator-always-on;
  
 @@ -442,6 +446,24 @@
  	pinctrl-names = "default";
