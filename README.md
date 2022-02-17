@@ -106,11 +106,14 @@ make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
 #### Notes
-* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ HDMI Audio
+* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot) \ HDMI Audio
 
 ```sh
-# Maskrom
-You need to erase Android from the eMMC before flashing the IMG.
+# Maskrom / Fastboot
+You need to erase Android from; or flash mainline u-boot to; the eMMC before flashing the IMG.
+I found using fastboot to be the quickest and easiest method when using Linux.
+
+Mainline U-Boot: output/radxazero/u-boot.bin
 ```
 ```sh
 # HDMI Audio
