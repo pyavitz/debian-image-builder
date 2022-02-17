@@ -589,6 +589,52 @@ rock64-all:
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
 
+# ROCK64PRO
+rock64pro-uboot:
+	# Compiling u-boot
+	@ echo rock64pro > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+rock64pro-kernel:
+	# Compiling kernel
+	@ echo rock64pro > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+rock64pro-image:
+	# Creating image
+	@ echo rock64pro > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${ROC-IMG}
+	@chmod +x ${ROC-STG2}
+	@${ROC-IMAGE}
+
+rock64pro-all:
+	# R O C K 6 4 P R O
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo rock64pro > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo rock64pro > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Creating image
+	@ echo rock64pro > board.txt
+	@ echo rockchip >> board.txt
+	@chmod +x ${ROC-IMG}
+	@chmod +x ${ROC-STG2}
+	@${ROC-IMAGE}
+
 # NANOPC-T4
 nanopc-uboot:
 	# Compiling u-boot

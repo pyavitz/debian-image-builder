@@ -57,6 +57,17 @@ if [[ `grep -w "rock64" "../board.txt"` ]]; then
 		make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
 	fi
 fi
+if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		export CROSS_COMPILE=aarch64-linux-gnu-
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3399 bl31;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		export ARCH=arm64
+		make -j${CORES} CC=${NATIVE} PLAT=rk3399 bl31;
+	fi
+fi
 if [[ `grep -w "nanopc" "../board.txt"` ]]; then
 	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 		echo -e "${GRN}  CC${FIN}"
@@ -109,6 +120,8 @@ echo CONFIG_SD_BOOT=y >> configs/rock64-rk3328_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/rock64-rk3328_defconfig
 echo CONFIG_SD_BOOT=y >> configs/roc-cc-rk3328_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/roc-cc-rk3328_defconfig
+echo CONFIG_SD_BOOT=y >> configs/rockpro64-rk3399_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/rockpro64-rk3399_defconfig
 echo CONFIG_SD_BOOT=y >> configs/nanopc-t4-rk3399_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/nanopc-t4-rk3399_defconfig
 echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
@@ -165,6 +178,9 @@ if [[ `grep -w "renegade" "../board.txt"` ]]; then
 fi
 if [[ `grep -w "rock64" "../board.txt"` ]]; then
 	cp arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf u-boot/bl31.elf;
+fi
+if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+	cp arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
 if [[ `grep -w "nanopc" "../board.txt"` ]]; then
 	cp arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf u-boot/bl31.elf;
@@ -299,6 +315,15 @@ if [[ `grep -w "rock64" "../board.txt"` ]]; then
 		make -j${CORES} CC=${NATIVE} rock64-rk3328_defconfig;
 	fi
 fi
+if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rockpro64-rk3399_defconfig;
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} CC=${NATIVE} rockpro64-rk3399_defconfig;
+	fi
+fi
 if [[ `grep -w "nanopc" "../board.txt"` ]]; then
 	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 		echo -e "${GRN}  CC${FIN}"
@@ -422,6 +447,14 @@ echo_done
 echo
 }
 
+rock64pro-binary(){
+mkdir -p ../${BINR64P}
+cp -f idbloader.img ../${BINR64P}/idbloader.bin
+cp -f u-boot.itb ../${BINR64P}/
+echo_done
+echo
+}
+
 nanopc-binary(){
 mkdir -p ../${BINNPC}
 cp -f idbloader.img ../${BINNPC}/idbloader.bin
@@ -490,6 +523,9 @@ if [[ `grep -Fx "renegade" "../board.txt"` ]]; then
 fi
 if [[ `grep -Fx "rock64" "../board.txt"` ]]; then
 	rock64-binary;
+fi
+if [[ `grep -Fx "rock64pro" "../board.txt"` ]]; then
+	rock64pro-binary;
 fi
 if [[ `grep -Fx "nanopc" "../board.txt"` ]]; then
 	nanopc-binary;
