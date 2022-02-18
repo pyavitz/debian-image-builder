@@ -36,13 +36,14 @@ RADXAZERO="../patches/radxazero"
 UP="../patches/userpatches"
 
 validation(){
-if [[ `grep -w "builder=3.1" "userdata.txt"` ]]; then
+if [[ `grep -w "builder=3.2" "userdata.txt"` ]]; then
 	:;
 else
 	echo -e "${YLW}Userdata file is old! Please create a new one.${FIN}"
 	exit;
 fi
 }
+
 # do not edit above this line
 
 # kernel
@@ -71,6 +72,7 @@ FIRMWARE="firmware-linux-nonfree firmware-linux bluez-firmware \
           firmware-misc-nonfree firmware-realtek firmware-ralink"
 
 # do not edit below this line
+
 # banners
 debian_banner(){
 if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
@@ -127,13 +129,10 @@ fi
 # uinitrd
 uinitrd(){
 cd ~
-echo
-echo Adding uInitrd script.
 mkdir -p /etc/initramfs/post-update.d/
 mv -f 99-uboot /etc/initramfs/post-update.d/
 chmod +x /etc/initramfs/post-update.d/99-uboot
 chown root:root /etc/initramfs/post-update.d/99-uboot
-echo Done.
 }
 
 # wireless
@@ -171,8 +170,8 @@ chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
 # extra firmware
 extra_firmware(){
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
-echo
-echo Adding extra firmware.
+echo ""
+echo "Adding extra firmware ..."
 sleep 1s
 mkdir -p /lib/firmware/brcm
 cd ~
@@ -203,26 +202,23 @@ if [[ `grep -w "amlogic" "/root/board.txt"` ]]; then
 	chown -R root:root /lib/firmware/ene-ub6250
 	cd ~;
 fi
-echo Done.
+echo "Done."
 }
 
 wireless_regdb(){
-echo
-echo Adding regdb.
-sleep 1s
+echo ""
+echo "Adding regulatory db ..."
 if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; then
 	echo 'KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"' > /etc/udev/rules.d/60-regdb.rules;
 fi
 git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
-echo
-echo Moving db files.
 sleep 1s
 cd wireless-regdb
 cp -f regulatory.db /lib/firmware/regulatory.db
 cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
 cd ~
 rm -fdr wireless-regdb
-echo Done.
+echo "Done."
 }
 
 # zramswap
@@ -256,9 +252,6 @@ xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED
 
 # setup network
 network_setup(){
-echo
-echo Adding network configs and rules.
-sleep 1s
 rm -f /etc/network/interfaces
 mv -f credentials.txt /boot/rename_to_credentials.txt
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
@@ -375,7 +368,6 @@ network={
 	password=
 }
 EOF
-echo Done.
 }
 
 # Flush runtime journal

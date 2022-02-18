@@ -20,10 +20,10 @@ export DEBIAN_FRONTEND="noninteractive"
 apt-get update
 apt-get install -y apt-utils
 
-### Locales
+# Locales
 set_locales
 
-### Timezone
+# Timezone
 set_timezone
 
 if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
@@ -51,10 +51,9 @@ fi
 apt -y clean
 apt -y autoclean
 
-### Scripts
-echo
-echo Moving scripts.
-sleep 1s
+# Scripts
+echo ""
+echo "Moving scripts ..."
 cd ~
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
@@ -77,7 +76,7 @@ mv -f update-fw /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
 mv -f raspi4 /usr/local/sbin/led-trigger
-### Service
+# Service
 initrd_script > /dev/null 2>&1
 uinitrd > /dev/null 2>&1
 chmod +x /usr/bin/growpart
@@ -87,7 +86,6 @@ chmod +x /usr/local/bin/*
 chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-echo Done.
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mkdir -p /etc/init.d
 	mv -f firstboot.init /etc/init.d/firstboot
@@ -97,11 +95,10 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mv -f zramswap.init /etc/init.d/zramswap
 	mv -f leds.init /etc/init.d/leds
 fi
+echo "Done."
 
-### MOTD
-echo
-echo Adding motd.
-sleep 1s
+# MOTD
+echo ""
 mkdir -p /etc/update-motd.d
 tee /etc/update-motd.d/15-brand <<EOF
 #!/bin/bash
@@ -116,23 +113,18 @@ mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand
 chown root:root /etc/update-motd.d/20-sysinfo
-echo Done.
 
-### Clean
+# Clean
 rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
-### Adding firmware
+# Adding firmware
 rpi_firmware
 
-###
-echo
-echo Bluetooth udev rule.
-sleep 1s
+# Udev Rules
 mkdir -p /lib/udev/rules.d/
 mv -f 99-com.rules /lib/udev/rules.d/99-com.rules
-echo Done.
 
-### Network Setup
+# Network Setup
 network_setup > /dev/null 2>&1
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	:;
@@ -140,30 +132,22 @@ else
 	credentials_service > /dev/null 2>&1;
 fi
 
-### ZSWAP
-echo
-echo Adjusting zramswap config.
-sleep 1s
+# ZSWAP
 zramswap_config
-echo Done.
 
-### MOTD instructions
-echo
-echo Adding motd first boot.
-sleep 1s
+# MOTD instructions
 rm -f /etc/motd
 mv -f motd /etc/motd
 mv -f new.motd /etc/new.motd
 chown root:root /etc/motd
 chown root:root /etc/new.motd
-echo Done.
 
-### Regulatory db
+# Regulatory db
 wireless_regdb
 
-### Adding sys-mods
-echo
-echo Building raspi-sys-mods package.
+# Adding sys-mods
+echo ""
+echo "Installing raspi-sys-mods ..."
 sleep 1s
 apt update
 apt install -y debhelper d-shlibs rfkill
@@ -190,21 +174,21 @@ fi
 if [ -e /etc/apt/preferences.d/3rd_parties.pref ];
 	then rm -f /etc/apt/preferences.d/3rd_parties.pref;
 fi
-echo Done.
+echo "Done."
 
-###  Raspi userland
+#  Raspi userland
 armv8_userland
 
-### Adding eeprom
+# Adding eeprom
 bcm2711_eeprom
 
-### User
-echo
+# User
+echo ""
 user_config
 
-### Kernel
-echo
-echo Installing kernel.
+# Kernel
+echo ""
+echo "Installing kernel ..."
 apt update
 apt upgrade -y
 apt -y clean
@@ -213,21 +197,21 @@ sleep 1s
 cd ~
 dpkg -i *.deb
 rm -f *.deb
-echo Done.
+echo "Done."
 sleep 1s
 fetch_version
 
-### Modules
+# Modules
 if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
-	bcm_modules;
+	bcm_modules > /dev/null 2>&1;
 fi
 
-### Clean misc files
+# Clean misc files
 rm -f *.patch
 rm -f *led*
 rm -f *eeprom*
 
-### Vchiq permissions
+# Vchiq permissions
 echo 'SUBSYSTEM=="vchiq",GROUP="video",MODE="0660"' > /etc/udev/rules.d/10-vchiq-permissions.rules
 echo 'SUBSYSTEM=="vcio",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vchiq-permissions.rules
 echo 'SUBSYSTEM=="vc-mem",GROUP="video",MODE="0660"' >> /etc/udev/rules.d/10-vchiq-permissions.rules
@@ -236,9 +220,9 @@ if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
 	systemd_journald;
 fi
 
-### Services
-echo
-echo Enabling Services.
+# Services
+echo ""
+echo "Enabling Services ..."
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
@@ -253,9 +237,9 @@ else
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
 fi
-echo Done.
+echo "Done."
 
-### Own it
+# Own it
 chown -R ${user}:${user} /home/${user}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/

@@ -24,18 +24,15 @@ mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 if [[ `grep -w "renegade" "board.txt"` ]]; then
 	renegade_flashbin;
-else
-	if [[ `grep -w "rock64" "board.txt"` ]]; then
-		rock64_flashbin;
-	else
-		if [[ `grep -w "rock64pro" "board.txt"` ]]; then
-			rock64pro_flashbin;
-		else
-			if [[ `grep -Fx "nanopc" "board.txt"` ]]; then
-				nanopc_flashbin;
-			fi
-		fi
-	fi
+fi
+if [[ `grep -w "rock64" "board.txt"` ]]; then
+	rock64_flashbin;
+fi
+if [[ `grep -w "rock64pro" "board.txt"` ]]; then
+	rock64pro_flashbin;
+fi
+if [[ `grep -Fx "nanopc" "board.txt"` ]]; then
+	nanopc_flashbin;
 fi
 sync
 umount p1
@@ -78,9 +75,6 @@ EOF
 
 # STAGE2
 rock64_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -90,13 +84,9 @@ label default
     fdt /boot/rockchip/rk3328-rock64.dtb
     append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 rock64pro_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -107,13 +97,9 @@ label default
     fdt /boot/rockchip/rk3399-rockpro64-v2.dtb
     append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 nanopc_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -123,13 +109,9 @@ label default
     fdt /boot/rockchip/rk3399-nanopc-t4.dtb
     append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 renegade_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -139,12 +121,9 @@ label default
     fdt /boot/rockchip/rk3328-roc-cc.dtb
     append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 video=HDMI-A-1:1920x1080@60 init=/sbin/init
 EOF
-echo Done.
 }
 
 rock64_led_triggers(){
-echo
-echo Creating LED triggers.
 tee /usr/local/sbin/led-trigger <<EOF
 #!/bin/bash
 # led trigger
@@ -159,27 +138,20 @@ EOF
 }
 
 renegade_led_triggers(){
-echo
-echo Creating LED triggers.
 cd ~
 mv -f renegade /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 nanopc_led_triggers(){
-echo
-echo Creating LED triggers.
 cd ~
 mv -f nanopc /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 enable_services(){
-sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then

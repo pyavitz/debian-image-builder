@@ -26,14 +26,12 @@ sync
 umount p1
 if [[ `grep -w "tritium" "board.txt"` ]]; then
 	tritium_flashbin;
-else
-	if [[ `grep -w "nanopi" "board.txt"` ]]; then
-		nanopi_flashbin;
-	else
-		if [[ `grep -w "pine64" "board.txt"` ]]; then
-			pine64_flashbin;
-		fi
-	fi
+fi
+if [[ `grep -w "nanopi" "board.txt"` ]]; then
+	nanopi_flashbin;
+fi
+if [[ `grep -w "pine64" "board.txt"` ]]; then
+	pine64_flashbin;
 fi
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
@@ -66,9 +64,6 @@ EOF
 
 # STAGE2
 tritium_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -78,12 +73,9 @@ label default
     fdt /boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb
     append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 nanopi_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -93,13 +85,9 @@ label default
     fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
     append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 pine64_extlinux(){
-echo
-echo Adding extlinux file.
-sleep 1s
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -108,32 +96,25 @@ label default
     fdt /boot/allwinner/sun50i-a64-pine64-plus.dtb
     append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 tritium_led_triggers(){
-echo
-echo Creating LED triggers.
 cd ~
 mv -f tritium /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 nanopi_led_triggers(){
-echo
-echo Creating LED triggers.
 cd ~
 mv -f nanopi /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 cypress_firmware(){
-echo
-echo Adding brcm firmware from cypress.
+echo ""
+echo "Adding brcm/cypress firmware ..."
 sleep 1s
 mkdir cypress
 cd cypress
@@ -144,12 +125,12 @@ rm -f firmware/*pcie*
 cp -f firmware/* /lib/firmware/brcm/
 cd ~
 rm -fdr cypress
-echo Done.
+echo "Done."
 }
 
 nanopi_firmware(){
-echo
-echo Adding NanoPi NEO Plus2 firmware.
+echo ""
+echo "Adding NanoPi NEO Plus2 firmware ..."
 cd ~
 git clone -b nanopi https://github.com/pyavitz/firmware.git
 rm -f firmware/README.md
@@ -165,12 +146,10 @@ if [ -e UPDATE.mem ]; then
 	rm -f UPDATE.mem;
 fi
 rm -fdr firmware
-echo Done.
+echo "Done."
 }
 
 pine64_bthelper(){
-echo
-echo Creating bluetooth helper.
 tee /usr/local/sbin/pine64-bt <<EOF
 #!/bin/bash
 echo 1 > /sys/class/rfkill/rfkill0/state
@@ -201,7 +180,6 @@ echo Done.
 }
 
 enable_services(){
-sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then

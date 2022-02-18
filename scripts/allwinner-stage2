@@ -21,10 +21,10 @@ export DEBIAN_FRONTEND="noninteractive"
 apt-get update
 apt-get install -y apt-utils
 
-### Locales
+# Locales
 set_locales
 
-### Timezone
+# Timezone
 set_timezone
 
 apt upgrade -y
@@ -63,9 +63,8 @@ adduser ${user} bluetooth
 adduser ${user} input
 adduser ${user} tty
 adduser ${user} i2c
-echo Done.
 
-### uInitrd
+# uInitrd
 cd ~
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	rm -f 99-uboot;
@@ -73,15 +72,13 @@ else
 	uinitrd > /dev/null 2>&1;
 fi
 
-### Sudoers file 
-echo
-echo Create sudoers file.
-sleep 1s
+# Sudoers file
+echo ""
 tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-### LED triggers
+# LED triggers
 if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
 	tritium_led_triggers > /dev/null 2>&1;
 else
@@ -90,7 +87,7 @@ else
 	fi
 fi
 
-### Bluetooth helper
+# Bluetooth helper
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	pine64_bthelper > /dev/null 2>&1;
 fi
@@ -102,10 +99,7 @@ if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	fi
 fi
 
-### eMMC flash tools
-echo
-echo Setting up eMMC tools
-sleep 1s
+# eMMC flash tools
 mkdir -p /etc/opt
 mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
@@ -113,12 +107,11 @@ mv -f write2mmc /usr/local/bin/
 mv -f *.bin /usr/lib/u-boot/
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
-echo Done.
 
-### Brcm patchram
+# Brcm patchram
 if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
-	echo
-	echo Installing brcm patchram plus
+	echo ""
+	echo "Installing brcm patchram plus ..."
 	cd ~
 	git clone https://github.com/pyavitz/brcm_patchram_plus.git patchram
 	cd patchram
@@ -131,12 +124,12 @@ if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 	echo "rfcomm" >> /etc/modules
 	echo "bnep" >> /etc/modules
 	echo "hci_uart" >> /etc/modules
-	echo Done.;
+	echo "Done.";
 fi
 
-### Scripts
-echo
-echo Moving scripts.
+# Scripts
+echo ""
+echo "Moving scripts ..."
 sleep 1s
 cd ~
 mkdir -p /usr/local/bin
@@ -155,7 +148,6 @@ chmod +x /usr/bin/growpart
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-echo Done.
 if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 	mv -f nanopi-bthelper /usr/local/sbin/
 	chmod +x /usr/local/sbin/nanopi-bthelper;
@@ -176,11 +168,10 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper;
 	fi
 fi
+echo "Done."
 
-### MOTD
-echo
-echo Adding motd.
-sleep 1s
+# MOTD
+echo ""
 mkdir -p /etc/update-motd.d
 tee /etc/update-motd.d/15-brand <<EOF
 #!/bin/bash
@@ -195,22 +186,14 @@ mv -f 20-sysinfo /etc/update-motd.d/20-sysinfo
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand
 chown root:root /etc/update-motd.d/20-sysinfo
-echo Done.
 
-### Clean
+# Clean
 rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
-### Move mc skins
-echo
-echo Adding mc skins.
-sleep 1s
+# Move mc skins
 mkdir -p /usr/share/mc/skins
 mv -f darkgreen.ini /usr/share/mc/skins/darkgreen.ini
 mv -f darkred.ini /usr/share/mc/skins/darkred.ini
-echo Done.
-echo
-echo Adding mc ini and nanorc.
-sleep 1s
 mkdir -p /root/.config/mc
 mv -f root-ini /root/.config/mc/ini
 mv -f nanorc-root /root/.nanorc
@@ -219,16 +202,15 @@ mv -f user-ini /home/${user}/.config/mc/ini
 mv -f nanorc-user /home/${user}/.nanorc
 chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
-echo Done.
 
-### Extra firmware
+# Extra firmware
 if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
 	nanopi_firmware;
 else
 	extra_firmware;
 fi
 
-### Network Setup
+# Network Setup
 network_setup > /dev/null 2>&1
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	:;
@@ -236,35 +218,27 @@ else
 	credentials_service > /dev/null 2>&1;
 fi
 
-### ZSWAP
-echo
-echo Adjusting zramswap config.
-sleep 1s
+# ZSWAP
 zramswap_config
-echo Done.
 
-### MOTD instructions
-echo
-echo Adding motd first boot.
-sleep 1s
+# MOTD instructions
 rm -f /etc/motd
 mv -f motd /etc/motd
 mv -f new.motd /etc/new.motd
 chown root:root /etc/motd
 chown root:root /etc/new.motd
-echo Done.
 
-### Regulatory db
+# Regulatory db
 wireless_regdb
 
-### Bluetooth helper install
+# Bluetooth helper install
 if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 	pine64_bthelper2;
 fi
 
-### Kernel
-echo
-echo Installing kernel.
+# Kernel
+echo ""
+echo "Installing kernel ..."
 apt update
 apt upgrade -y
 apt -y clean
@@ -273,13 +247,13 @@ sleep 1s
 cd ~
 dpkg -i *.deb
 rm -f *.deb
-echo Done.
+echo "Done."
 sleep 1s
 fetch_version
 
-### Services
-echo
-echo Enabling Services.
+# Services
+echo ""
+echo "Enabling Services ..."
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
@@ -308,9 +282,9 @@ else
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
 fi
-echo Done.
+echo "Done."
 
-### Own it
+# Own it
 chown -R ${user}:${user} /home/${user}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/

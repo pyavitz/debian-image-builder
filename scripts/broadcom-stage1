@@ -9,21 +9,21 @@ UD=userdata.txt > /dev/null 2>&1
 userdata(){
 echo ""
 echo "Please create a userdata.txt file"
-while [ true ] ; do
+while [ true ]; do
 read -t 10 -n 1
-if [ $? = 0 ] ; then
-exit ;
+if [ $? = 0 ]; then
+	exit;
 else
-echo "run make config"
+	echo "run make config";
 fi
 done
 }
 
 if [ -f "$UD" ]; then
-    echo ""
-    echo "$UD file found." > /dev/null 2>&1
+	echo ""
+	echo "$UD file found." > /dev/null 2>&1;
 else 
-    userdata
+	userdata;
 fi
 validation
 if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
@@ -68,8 +68,7 @@ else
 	partition_uuid > /dev/null 2>&1;
 fi
 ### cmdline
-echo
-echo -e -n "${RED}Setting up boot directory${FIN}."
+echo ""
 if [[ `grep -w "bcm2711" "board.txt"` ]]; then
 	create_extlinux;
 fi
@@ -78,11 +77,12 @@ if [[ `grep -w "bcm2711" "board.txt"` ]]; then
 	bcm2711_config > /dev/null 2>&1;
 fi
 if [ -e p1/config.txt ]; then
-	echo && echo -n "config.txt        "
+	echo ""
+	echo -n "config.txt        "
 	sleep 1s
 	echo_nok;
 else
-	echo
+	echo ""
 	echo -n "config.txt        "
 	sleep 1s
 	echo_fail
@@ -148,7 +148,7 @@ cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
 if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
 	cp files/inits/*.init p2/root;
 fi
-echo -e "${RED}Starting chroot${FIN} ..."
+echo -e "${WHT}Starting chroot${FIN} ..."
 # Mount and chroot
 mount -o bind p1 p2/boot
 mount -o bind /dev p2/dev
@@ -191,5 +191,5 @@ if [[ `grep -w "auto=1" "userdata.txt"` ]]; then
 else
 	rename_image;
 fi
-rm -f part-uuid.txt board.txt kernel.txt
-echo
+rm -f {part-uuid.txt,board.txt,kernel.txt}
+echo ""

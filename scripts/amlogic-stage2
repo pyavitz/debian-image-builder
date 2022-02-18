@@ -21,10 +21,10 @@ export DEBIAN_FRONTEND="noninteractive"
 apt-get update
 apt-get install -y apt-utils
 
-### Locales
+# Locales
 set_locales
 
-### Timezone
+# Timezone
 set_timezone
 
 apt upgrade -y
@@ -63,21 +63,18 @@ adduser ${user} bluetooth
 adduser ${user} input
 adduser ${user} tty
 adduser ${user} i2c
-echo Done.
 
-### uInitrd
+# uInitrd
 cd ~
 uinitrd > /dev/null 2>&1
 
-### Sudoers file 
-echo
-echo Create sudoers file.
-sleep 1s
+# Sudoers file
+echo ""
 tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
 
-### LED triggers
+# LED triggers
 if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
 	lepotato_led_triggers;
 else
@@ -101,10 +98,7 @@ else
 		fi
 	fi
 fi
-### eMMC flash tools
-echo
-echo Setting up eMMC tools
-sleep 1s
+# eMMC flash tools
 mkdir -p /etc/opt
 mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
@@ -112,12 +106,10 @@ mv -f write2mmc /usr/local/bin/
 mv -f *.bin /usr/lib/u-boot/
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
-echo Done.
 
-### Scripts
-echo
-echo Moving scripts.
-sleep 1s
+# Scripts
+echo ""
+echo "Moving scripts ..."
 cd ~
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
@@ -170,12 +162,10 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mv -f network.init /etc/init.d/network
 	mv -f zramswap.init /etc/init.d/zramswap;
 fi
-echo Done.
+echo "Done."
 
-### MOTD
-echo
-echo Adding motd.
-sleep 1s
+# MOTD
+echo ""
 mkdir -p /etc/update-motd.d
 tee /etc/update-motd.d/15-brand <<EOF
 #!/bin/bash
@@ -212,22 +202,14 @@ fi
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand
 chown root:root /etc/update-motd.d/20-sysinfo
-echo Done.
 
-### Clean
+# Clean
 rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,sysinfo.bl,20-sysinfo,20-sysinfo.bl,write2mmc,*.init}
 
-### Move mc skins
-echo
-echo Adding mc skins.
-sleep 1s
+# Move mc skins
 mkdir -p /usr/share/mc/skins
 mv -f darkgreen.ini /usr/share/mc/skins/darkgreen.ini
 mv -f darkred.ini /usr/share/mc/skins/darkred.ini
-echo Done.
-echo
-echo Adding mc ini and nanorc.
-sleep 1s
 mkdir -p /root/.config/mc
 mv -f root-ini /root/.config/mc/ini
 mv -f nanorc-root /root/.nanorc
@@ -236,16 +218,15 @@ mv -f user-ini /home/${user}/.config/mc/ini
 mv -f nanorc-user /home/${user}/.nanorc
 chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
-echo Done.
 
-### Extra firmware
+# Extra firmware
 if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
 	radxazero_firmware;
 else
 	extra_firmware;
 fi
 
-### Network Setup
+# Network Setup
 network_setup > /dev/null 2>&1
 if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	:;
@@ -253,30 +234,22 @@ else
 	credentials_service > /dev/null 2>&1;
 fi
 
-### ZSWAP
-echo
-echo Adjusting zramswap config.
-sleep 1s
+# ZSWAP
 zramswap_config
-echo Done.
 
-### MOTD instructions
-echo
-echo Adding motd first boot.
-sleep 1s
+# MOTD instructions
 rm -f /etc/motd
 mv -f motd /etc/motd
 mv -f new.motd /etc/new.motd
 chown root:root /etc/motd
 chown root:root /etc/new.motd
-echo Done.
 
-### Regulatory db
+# Regulatory db
 wireless_regdb
 
-### Kernel
-echo
-echo Installing kernel.
+# Kernel
+echo ""
+echo "Installing kernel ..."
 apt update
 apt upgrade -y
 apt -y clean
@@ -285,36 +258,32 @@ sleep 1s
 cd ~
 dpkg -i *.deb
 rm -f *.deb
-echo Done.
+echo "Done."
 sleep 1s
 fetch_version
 
 if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
-	odroid_udev_rules;
+	odroid_udev_rules > /dev/null 2>&1;
 	systemd_journald;
-else
-	if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
-		odroid_udev_rules;
-		systemd_journald;
-	else
-		if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
-			odroid_udev_rules;
-			systemd_journald;
-		fi
-	fi
 fi
-
+if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+	odroid_udev_rules > /dev/null 2>&1;
+	systemd_journald;
+fi
+if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+	odroid_udev_rules > /dev/null 2>&1;
+	systemd_journald;
+fi
 if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
 	systemd_journald;
-else
-	if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
-		systemd_journald;
-	fi
+fi
+if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
+	systemd_journald;
 fi
 
-### Services
-echo
-echo Enabling Services.
+# Services
+echo ""
+echo "Enabling Services ..."
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack;
 fi
@@ -329,9 +298,9 @@ else
 	echo "== Systemd"
 	enable_services > /dev/null 2>&1;
 fi
-echo Done.
+echo "Done."
 
-### Own it
+# Own it
 chown -R ${user}:${user} /home/${user}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/

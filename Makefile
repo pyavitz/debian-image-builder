@@ -52,7 +52,7 @@ help:
 	@echo "  Allwinner:  nanopi pine64 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+ rzero"
 	@echo "  Broadcom:   raspi4"
-	@echo "  Rockchip:   nanopc renegade rock64"
+	@echo "  Rockchip:   nanopc renegade rock64 rock64pro"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install all dependencies"

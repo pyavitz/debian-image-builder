@@ -128,19 +128,17 @@ else
 	echo -e "${YLW}Missing rootfs tarball${FIN}!"
 	exit;
 fi
-echo
+echo ""
 }
 
 # STAGE 2
 apt_preferences(){
-echo
-echo Blacking listing packages.
+echo ""
 tee /etc/apt/preferences <<EOF
 Package: rpi-eeprom linux-firmware linux-firmware-raspi2 pi-bluetooth raspberrypi-sys-mods
 Pin: release o=Ubuntu
 Pin-Priority: 1
 EOF
-echo Done.
 }
 
 # Initrd script
@@ -181,16 +179,9 @@ adduser ${user} bluetooth
 adduser ${user} input
 adduser ${user} tty
 
-echo
-echo Adding mc skins.
-sleep 1s
 mkdir -p /usr/share/mc/skins
 mv -f darkgreen.ini /usr/share/mc/skins/darkgreen.ini
 mv -f darkred.ini /usr/share/mc/skins/darkred.ini
-echo Done.
-echo
-echo Adding mc ini and nanorc
-sleep 1s
 mkdir -p /root/.config/mc
 mv -f root-ini /root/.config/mc/ini
 mv -f nanorc-root /root/.nanorc
@@ -199,16 +190,12 @@ mv -f user-ini /home/${user}/.config/mc/ini
 mv -f nanorc-user /home/${user}/.nanorc
 chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
-echo Done.
 
-echo
-echo Creating sudoers file.
-sleep 1s
 rm -f /etc/sudoers.d/010_pi-nopasswd
+echo ""
 tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
 ${user} ALL=(ALL) NOPASSWD: ALL
 EOF
-echo Done.
 chown -R ${user}:${user} /home/${user}
 }
 
@@ -240,9 +227,9 @@ wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
 bcm2711_eeprom(){
 ERURL="https://archive.raspberrypi.org/debian/pool/main/r/rpi-eeprom/"
 CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/debian/bullseye/debian/changelog"
-echo
+echo ""
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-echo Installing rpi-eeprom.
+echo "Installing rpi-eeprom ..."
 sleep 1s
 apt install help2man rsync pciutils -y
 ###
@@ -267,12 +254,12 @@ cd ..
 dpkg -i *.deb
 cd ..
 rm -fdr eeprom
-echo Done.
+echo "Done."
 }
 
 armv8_userland(){
-echo
-echo Adding raspi userland.
+echo ""
+echo "Installing userland ..."
 rm -f /etc/profile
 mv -f profile /etc/profile
 mv rpi-vc.conf /etc/ld.so.conf.d/rpi-vc.conf
@@ -289,12 +276,10 @@ rm -f userland-remove-hi-pi.patch
 cd ~
 rm -fdr userland
 ldconfig
-echo Done.
+echo "Done."
 }
 
 bcm_modules(){
-echo
-echo Updating etc modules.
 rm -f /etc/modules
 tee /etc/modules <<EOF
 # /etc/modules: kernel modules to load at boot time.
@@ -306,14 +291,12 @@ tee /etc/modules <<EOF
 
 EOF
 chown root:root /etc/modules
-echo Done.
 }
 
 # Firmware
 rpi_firmware(){
-echo
-echo Adding extra firmware.
-sleep 1s
+echo ""
+echo "Adding extra firmware ..."
 mkdir -p /lib/firmware/brcm
 mkdir -p /lib/firmware/updates
 git clone https://github.com/pyavitz/firmware.git /lib/firmware/updates/brcm
@@ -338,7 +321,6 @@ echo Done.
 }
 
 enable_services(){
-sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
@@ -387,16 +369,15 @@ rm -f p1/extlinux/extlinux.conf
 rm -f p1/config.txt
 new_partuuid
 echo ""
-echo "Adjusting extlinux file."
 extlinux
 bcm2711_config > /dev/null 2>&1
-echo "Done."
+echo ""
 sleep 1s
 umount p1
 rm -fdr p1
-echo ""
 kpartx -d ${IMAGE_FILE}
 rm -f kpart.txt
+echo ""
 }
 
 new_partuuid(){

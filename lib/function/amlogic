@@ -26,26 +26,21 @@ sync
 umount p1
 if [[ `grep -w "lepotato" "board.txt"` ]]; then
 	lepotato_flashbin;
-else
-	if [[ `grep -w "odroidc4" "board.txt"` ]]; then
-		odroidc4_flashbin;
-	else
-		if [[ `grep -w "odroidhc4" "board.txt"` ]]; then
-			odroidc4_flashbin;
-		else
-			if [[ `grep -w "odroidn2" "board.txt"` ]]; then
-				odroidn2_flashbin;
-			else
-				if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
-					odroidn2plus_flashbin;
-				else
-					if [[ `grep -w "radxazero" "board.txt"` ]]; then
-						radxazero_flashbin;
-					fi
-				fi
-			fi
-		fi
-	fi
+fi
+if [[ `grep -w "odroidc4" "board.txt"` ]]; then
+	odroidc4_flashbin;
+fi
+if [[ `grep -w "odroidhc4" "board.txt"` ]]; then
+	odroidc4_flashbin;
+fi
+if [[ `grep -w "odroidn2" "board.txt"` ]]; then
+	odroidn2_flashbin;
+fi
+if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
+	odroidn2plus_flashbin;
+fi
+if [[ `grep -w "radxazero" "board.txt"` ]]; then
+	radxazero_flashbin;
 fi
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
@@ -103,8 +98,6 @@ EOF
 
 # EXTLINUX
 lepotato_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -114,12 +107,9 @@ label default
     fdt /boot/amlogic/meson-gxl-s905x-libretech-cc.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 odroidc4_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -132,12 +122,9 @@ label default
     fdt /boot/amlogic/meson64_odroidc4.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 odroidhc4_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -147,12 +134,9 @@ label default
     fdt /boot/amlogic/meson-sm1-odroid-hc4.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 odroidn2_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -165,12 +149,9 @@ label default
     fdt /boot/amlogic/meson64_odroidn2.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 odroidn2plus_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -183,12 +164,9 @@ label default
     fdt /boot/amlogic/meson64_odroidn2_plus.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 radxazero_extlinux(){
-echo
-echo Creating extlinux file.
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -198,14 +176,13 @@ label default
     fdt /boot/amlogic/meson-g12a-radxa-zero.dtb
     append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
 EOF
-echo Done.
 }
 
 # STAGE2
 radxazero_firmware(){
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
-echo
-echo Adding Radxa Zero firmware.
+echo ""
+echo "Adding Radxa Zero firmware ..."
 cd ~
 git clone -b radxa https://github.com/pyavitz/firmware.git
 rm -f firmware/README.md
@@ -238,12 +215,10 @@ if [[ `grep -w "amlogic" "/root/board.txt"` ]]; then
 	chown -R root:root /lib/firmware/ene-ub6250
 	cd ~;
 fi
-echo Done.
+echo "Done."
 }
 
 odroid_udev_rules(){
-echo
-echo Creating Odroid udev rules.
 tee /etc/udev/rules.d/10-odroid.rules <<EOF
 # Misc video rules
 KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
@@ -256,47 +231,34 @@ EOF
 }
 
 lepotato_led_triggers(){
-echo
-echo Creating led trigger.
 cd ~
 mv -f lepotato /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 odroidc4_led_triggers(){
-echo
-echo Creating led trigger.
 cd ~
 mv -f odroidc4 /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 odroidn2_led_triggers(){
-echo
-echo Creating led trigger.
 cd ~
 mv -f odroidn2 /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 radxazero_led_triggers(){
-echo
-echo Creating led trigger.
 cd ~
 mv -f radxazero /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
-echo Done.
 }
 
 enable_services(){
-sleep 1s
 systemctl enable rc-local
 systemctl enable ifplugd
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
