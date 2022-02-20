@@ -57,7 +57,7 @@ if [[ `grep -w "rock64" "../board.txt"` ]]; then
 		make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
 	fi
 fi
-if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
 	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 		echo -e "${GRN}  CC${FIN}"
 		export CROSS_COMPILE=aarch64-linux-gnu-
@@ -122,7 +122,7 @@ echo CONFIG_EXT4_WRITE=y >> configs/rock64-rk3328_defconfig
 # renegade
 echo CONFIG_SD_BOOT=y >> configs/roc-cc-rk3328_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/roc-cc-rk3328_defconfig
-# rock64pro
+# rockpro64
 sed -i 's/CONFIG_USE_PREBOOT=y/# CONFIG_USE_PREBOOT= not set/g' configs/rockpro64-rk3399_defconfig
 # usb boot
 echo CONFIG_LED=y >> configs/rockpro64-rk3399_defconfig
@@ -201,7 +201,7 @@ fi
 if [[ `grep -w "rock64" "../board.txt"` ]]; then
 	cp arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
-if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
 	cp arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
 if [[ `grep -w "nanopc" "../board.txt"` ]]; then
@@ -218,7 +218,7 @@ fi
 if [[ `grep -w "nanopc" "../board.txt"` ]]; then
 	for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 else
-	if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+	if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
 		for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 	fi
 fi
@@ -337,7 +337,7 @@ if [[ `grep -w "rock64" "../board.txt"` ]]; then
 		make -j${CORES} CC=${NATIVE} rock64-rk3328_defconfig;
 	fi
 fi
-if [[ `grep -w "rock64pro" "../board.txt"` ]]; then
+if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
 	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 		echo -e "${GRN}  CC${FIN}"
 		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rockpro64-rk3399_defconfig;
@@ -469,7 +469,7 @@ echo_done
 echo
 }
 
-rock64pro-binary(){
+rockpro64-binary(){
 mkdir -p ../${BINR64P}
 cp -f idbloader.img ../${BINR64P}/idbloader.bin
 cp -f u-boot.itb ../${BINR64P}/
@@ -546,8 +546,8 @@ fi
 if [[ `grep -Fx "rock64" "../board.txt"` ]]; then
 	rock64-binary;
 fi
-if [[ `grep -Fx "rock64pro" "../board.txt"` ]]; then
-	rock64pro-binary;
+if [[ `grep -Fx "rockpro64" "../board.txt"` ]]; then
+	rockpro64-binary;
 fi
 if [[ `grep -Fx "nanopc" "../board.txt"` ]]; then
 	nanopc-binary;

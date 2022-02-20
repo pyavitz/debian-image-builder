@@ -52,7 +52,7 @@ help:
 	@echo "  Allwinner:  nanopi pine64 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+ rzero"
 	@echo "  Broadcom:   raspi4"
-	@echo "  Rockchip:   nanopc renegade rock64 rock64pro"
+	@echo "  Rockchip:   nanopc renegade rock64 rockpro64"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install all dependencies"
@@ -590,38 +590,38 @@ rock64-all:
 	@${ROC-IMAGE}
 
 # ROCK64PRO
-rock64pro-uboot:
+rockpro64-uboot:
 	# Compiling u-boot
-	@ echo rock64pro > board.txt
+	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
-rock64pro-kernel:
+rockpro64-kernel:
 	# Compiling kernel
-	@ echo rock64pro > board.txt
+	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
-rock64pro-image:
+rockpro64-image:
 	# Creating image
-	@ echo rock64pro > board.txt
+	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
 
-rock64pro-all:
+rockpro64-all:
 	# R O C K 6 4 P R O
 	# - - - - - - - -
 	# Compiling u-boot
-	@ echo rock64pro > board.txt
+	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
-	@ echo rock64pro > board.txt
+	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
@@ -629,7 +629,7 @@ rock64pro-all:
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
-	@ echo rock64pro > board.txt
+	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
