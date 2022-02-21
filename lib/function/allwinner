@@ -22,8 +22,6 @@ partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-sync
-umount p1
 if [[ `grep -w "tritium" "board.txt"` ]]; then
 	tritium_flashbin;
 fi
@@ -33,6 +31,8 @@ fi
 if [[ `grep -w "pine64" "board.txt"` ]]; then
 	pine64_flashbin;
 fi
+sync
+umount p1
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
