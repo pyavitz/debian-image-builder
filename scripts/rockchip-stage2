@@ -92,19 +92,17 @@ mkdir -p /usr/local/sbin
 mv -f run-setup /usr/local/bin/
 if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
 	mv -f sysinfo /usr/local/bin/;
-else
-	if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
-		mv -f sysinfo /usr/local/bin/;
-	else
-		if [[ `grep -w "rockpro64" "/root/board.txt"` ]]; then
-			mv -f sysinfo.bl /usr/local/bin/sysinfo
-		else
-			if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
-				mv -f sysinfo.bl /usr/local/bin/sysinfo
-				tweaks_service > /dev/null 2>&1;
-			fi
-		fi
-	fi
+fi
+if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
+	mv -f sysinfo /usr/local/bin/;
+fi
+if [[ `grep -w "rockpro64" "/root/board.txt"` ]]; then
+	mv -f sysinfo.bl /usr/local/bin/sysinfo;
+	tweaks_service > /dev/null 2>&1;
+fi
+if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+	mv -f sysinfo.bl /usr/local/bin/sysinfo
+	tweaks_service > /dev/null 2>&1;
 fi
 mv -f smon /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}swh
@@ -132,14 +130,12 @@ echo "Done."
 # Leds
 if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
 	rock64_led_triggers > /dev/null 2>&1;
-else
-	if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
-		renegade_led_triggers > /dev/null 2>&1;
-	else
-		if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
-			nanopc_led_triggers > /dev/null 2>&1;
-		fi
-	fi
+fi
+if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
+	renegade_led_triggers > /dev/null 2>&1;
+fi
+if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+	nanopc_led_triggers > /dev/null 2>&1;
 fi
 
 # MOTD
@@ -156,18 +152,15 @@ if [ -e /etc/update-motd.d/10-help-text ]
 fi
 if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
 	mv -f 20-sysinfo /etc/update-motd.d/;
-else
-	if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
-		mv -f 20-sysinfo /etc/update-motd.d/;
-	else
-		if [[ `grep -w "rockpro64" "/root/board.txt"` ]]; then
-			mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
-		else
-			if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
-				mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
-			fi
-		fi
-	fi
+fi
+if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
+	mv -f 20-sysinfo /etc/update-motd.d/;
+fi
+if [[ `grep -w "rockpro64" "/root/board.txt"` ]]; then
+	mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
+fi
+if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+	mv -f 20-sysinfo.bl /etc/update-motd.d/20-sysinfo;
 fi
 chmod +x /etc/update-motd.d/*
 chown root:root /etc/update-motd.d/15-brand

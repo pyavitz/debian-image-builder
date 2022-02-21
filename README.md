@@ -3,7 +3,7 @@
 Allwinner:      # NanoPi NEO Plus2, Pine A64+ and Tritium
 Amlogic:        # Le Potato, Odroid C4/N2/N2+ and Radxa Zero 2GB/4GB
 Broadcom:       # Raspberry Pi 4B
-Rockchip:       # NanoPC-T4, Renegade, Rock64 and RockPro64
+Rockchip:       # NanoPC-T4, Renegade, ROCK64 and ROCKPro64
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish
@@ -201,9 +201,9 @@ governor -h
 A systemd service runs 'governor -r' during boot.
 ```
 #### Overclocking
-* **NanoPC-T4, Odroid N2/+ and Radxa Zero**
+* **NanoPC-T4, Odroid N2/+, Radxa Zero ROCKPro64**
 
-By default the NanoPC-T4, Odroid N2/+ and Radxa Zero run slightly under clocked as a safety precaution. If you decide to overclock the board, make sure you are using passive or active cooling.
+By default the NanoPC-T4, Odroid N2/+, Radxa Zero and ROCKPro64 run slightly under clocked as a safety precaution. If you decide to overclock the board, make sure you are using passive or active cooling.
 ```sh
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
 sudo service tweaks restart
