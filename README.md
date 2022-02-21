@@ -3,7 +3,7 @@
 Allwinner:      # NanoPi NEO Plus2, Pine A64+ and Tritium
 Amlogic:        # Le Potato, Odroid C4/N2/N2+ and Radxa Zero 2GB/4GB
 Broadcom:       # Raspberry Pi 4B
-Rockchip:       # NanoPC-T4, Renegade, Rock64 and RockPro64 (RP64 at current broke)
+Rockchip:       # NanoPC-T4, Renegade, Rock64 and RockPro64
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish

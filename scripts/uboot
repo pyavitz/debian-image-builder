@@ -50,9 +50,20 @@ fi
 if [[ `grep -w "allwinner" "board.txt"` ]]; then
 	allwinner-uboot-string;
 fi
-if [[ `grep -Fx "rockchip" "board.txt"` ]]; then
-	rockchip-uboot-string;
+if [[ `grep -w "rockchip" "board.txt"` ]]; then
+	if [[ `grep -w "rockpro64" "board.txt"` ]]; then
+		if [ -e files/boot/rockpro64-u-boot.itb ]; then
+			echo -en "${WHT}Fetching pre-compiled boot binaries${FIN} ..."
+			mkdir -p output/rockpro64;
+			cp -f files/boot/rockpro64-idbloader.bin output/rockpro64/idbloader.bin;
+			cp -f files/boot/rockpro64-u-boot.itb output/rockpro64/u-boot.itb;
+			sleep 1s
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		fi
+	else
+		rockchip-uboot-string;
+	fi
 fi
-if [[ `grep -Fx "broadcom" "board.txt"` ]]; then
+if [[ `grep -w "broadcom" "board.txt"` ]]; then
 	bcm2711-uboot-string;
 fi
