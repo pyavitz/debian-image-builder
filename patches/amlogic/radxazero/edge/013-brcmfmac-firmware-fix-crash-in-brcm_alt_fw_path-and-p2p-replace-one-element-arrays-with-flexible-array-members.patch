@@ -1,0 +1,80 @@
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2022-02-16 06:58:51.000000000 -0500
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c	2022-02-22 08:37:50.000435587 -0500
+@@ -693,7 +693,7 @@
+ {
+ 	struct brcmf_fw_item *first = &req->items[0];
+ 	struct brcmf_fw *fwctx;
+-	char *alt_path;
++	char *alt_path = NULL;
+ 	int ret;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
+@@ -712,7 +712,9 @@
+ 	fwctx->done = fw_cb;
+ 
+ 	/* First try alternative board-specific path if any */
+-	alt_path = brcm_alt_fw_path(first->path, fwctx->req->board_type);
++	if (fwctx->req->board_type)
++		alt_path = brcm_alt_fw_path(first->path,
++					    fwctx->req->board_type);
+ 	if (alt_path) {
+ 		ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
+ 					      fwctx->dev, GFP_KERNEL, fwctx,
+diff -Naur a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c	2022-02-16 06:58:51.000000000 -0500
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c	2022-02-22 08:00:39.587222748 -0500
+@@ -158,7 +158,7 @@
+ 	u8	oui_type;
+ 	u8	subtype;
+ 	u8	dialog_token;
+-	u8	elts[1];
++	u8	elts[];
+ };
+ 
+ /**
+@@ -177,7 +177,7 @@
+ 	u8	type;
+ 	u8	subtype;
+ 	u8	dialog_token;
+-	u8	elts[1];
++	u8	elts[0];
+ };
+ 
+ /**
+@@ -192,7 +192,7 @@
+ 	u8	category;
+ 	u8	action;
+ 	u8	dialog_token;
+-	u8	query_data[1];
++	u8	query_data[0];
+ };
+ 
+ /**
+@@ -225,7 +225,7 @@
+ 		return false;
+ 
+ 	pact_frm = (struct brcmf_p2p_pub_act_frame *)frame;
+-	if (frame_len < sizeof(struct brcmf_p2p_pub_act_frame) - 1)
++	if (frame_len < sizeof(*pact_frm))
+ 		return false;
+ 
+ 	if (pact_frm->category == P2P_PUB_AF_CATEGORY &&
+@@ -253,7 +253,7 @@
+ 		return false;
+ 
+ 	act_frm = (struct brcmf_p2p_action_frame *)frame;
+-	if (frame_len < sizeof(struct brcmf_p2p_action_frame) - 1)
++	if (frame_len < sizeof(*act_frm))
+ 		return false;
+ 
+ 	if (act_frm->category == P2P_AF_CATEGORY &&
+@@ -280,7 +280,7 @@
+ 		return false;
+ 
+ 	sd_act_frm = (struct brcmf_p2psd_gas_pub_act_frame *)frame;
+-	if (frame_len < sizeof(struct brcmf_p2psd_gas_pub_act_frame) - 1)
++	if (frame_len < sizeof(*sd_act_frm))
+ 		return false;
+ 
+ 	if (sd_act_frm->category != P2PSD_ACTION_CATEGORY)
