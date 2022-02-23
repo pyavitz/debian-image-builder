@@ -113,7 +113,14 @@ make purge-all  # Remove sources and output directory
 You need to erase Android from; or flash mainline u-boot to; the eMMC before booting from SD.
 I found using fastboot to be the quickest and easiest method when using Linux.
 
-Mainline U-Boot: output/radxazero/u-boot.bin
+# Once in maskrom, run the following
+sudo apt update; sudo apt install -y python3-pip fastboot
+sudo pip3 install pyamlboot --upgrade
+wget -cq https://github.com/pyavitz/debian-image-builder/raw/feature/files/boot/rz-fastboot-loader.bin
+wget -cq https://github.com/pyavitz/debian-image-builder/raw/feature/files/boot/rz-u-boot.bin
+boot-g12.py rz-fastboot-loader.bin
+sudo fastboot flash 0x200 rz-u-boot.bin
+sudo fastboot reboot
 ```
 ```sh
 # HDMI Audio
