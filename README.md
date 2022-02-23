@@ -106,14 +106,19 @@ make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
 #### Notes
-* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot) \ HDMI Audio
+* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot)
 
 ```sh
-# Maskrom / Fastboot
 You need to erase Android from; or flash mainline u-boot to; the eMMC before booting from SD.
 I found using fastboot to be the quickest and easiest method when using Linux.
+```
 
-# Once in maskrom, run the following
+*Put the device in maskrom mode and run `lsusb` to verify.*
+```sh
+Bus 001 Device 048: ID 1b8e:c003 Amlogic, Inc. GX-CHIP
+```
+*Run the following to flash mainline u-boot. When done. power down board, insert SD and power on.*
+```sh
 sudo apt update; sudo apt install -y python3-pip fastboot
 sudo pip3 install pyamlboot --upgrade
 wget -cq https://github.com/pyavitz/debian-image-builder/raw/feature/files/boot/rz-fastboot-loader.bin
@@ -122,8 +127,8 @@ boot-g12.py rz-fastboot-loader.bin
 sudo fastboot flash 0x200 rz-u-boot.bin
 sudo fastboot reboot
 ```
+* **Radxa Zero:** HDMI Audio
 ```sh
-# HDMI Audio
 sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
 sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
 sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
