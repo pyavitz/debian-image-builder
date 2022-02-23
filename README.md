@@ -1,9 +1,9 @@
 ## Boards
 ```sh
-Allwinner:      # NanoPi NEO Plus2, Pine A64+ and Tritium
-Amlogic:        # Le Potato, Odroid C4/N2/N2+ and Radxa Zero 2GB/4GB
+Allwinner:      # NanoPi NEO Plus2, Pine A64+ & Tritium
+Amlogic:        # Le Potato, Odroid C4/N2/N2+ & Radxa Zero 2GB/4GB
 Broadcom:       # Raspberry Pi 4B
-Rockchip:       # NanoPC-T4, Renegade, ROCK64 and ROCKPro64
+Rockchip:       # NanoPC-T4, Renegade, ROCK64 & ROCKPro64
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish
@@ -110,7 +110,7 @@ make purge-all  # Remove sources and output directory
 
 ```sh
 # Maskrom / Fastboot
-You need to erase Android from; or flash mainline u-boot to; the eMMC before flashing the IMG.
+You need to erase Android from; or flash mainline u-boot to; the eMMC before booting from SD.
 I found using fastboot to be the quickest and easiest method when using Linux.
 
 Mainline U-Boot: output/radxazero/u-boot.bin
@@ -157,7 +157,7 @@ files, whilst leaving rename_to_credentials.txt untouched.
 
 #### Write to eMMC
 ```sh
-Supported: Le Potato, NanoPi NEO Plus2, NanoPC-T4, Odroid C4/N2/N2+, Radxa Zero and Renegade
+Supported: Le Potato, NanoPi NEO Plus2, NanoPC-T4, Odroid C4/N2/N2+, Radxa Zero & Renegade
 1. Attach eMMC module       # In some cases the module may need to be attached after boot
 2. Boot from sdcard
 3. Execute: sudo write2mmc
@@ -201,9 +201,9 @@ governor -h
 A systemd service runs 'governor -r' during boot.
 ```
 #### Overclocking
-* **NanoPC-T4, Odroid N2/+, Radxa Zero and ROCKPro64**
+* **NanoPC-T4, Odroid N2/+, Radxa Zero & ROCKPro64**
 
-By default the boards run slightly under clocked as a safety precaution. If you decide to overclock the board, make sure you are using passive or active cooling.
+The boards run slightly under clocked by default. If you decide to overclock the board, make sure you are using passive or active cooling.
 ```sh
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
 sudo service tweaks restart
