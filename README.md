@@ -61,6 +61,7 @@ Extra wireless support
 rtl88XXau:      # 1 to add Realtek 8812AU/21AU wireless support
 rtl88XXbu:      # 1 to add Realtek 88X2BU wireless support
 rtl88XXcu:      # 1 to add Realtek 8811CU/21CU wireless support
+rtl8188eu:      # 1 to add Realtek 8188EU wireless support
 
 Customize (user defconfig)
 Defconfig:	# 1 to enable

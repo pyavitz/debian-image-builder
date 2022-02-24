@@ -201,3 +201,57 @@ if [[ `grep -w "rtl88x2bu=1" "../../userdata.txt"` ]]; then
 	rtl88x2bu_select;
 fi
 }
+
+# RTL8188EU
+rtl8188eu_download(){
+echo
+echo -e "${WHT}Downloading rtl8188eu wifi module${FIN} ..."
+if [ -e rtl8188eu ]; then
+	echo -e "${YLW}rtl8188eu found${FIN}."
+	cd rtl8188eu
+	git config pull.rebase false
+	git pull
+	cd ..;
+else
+	git clone https://github.com/lwfinger/rtl8188eu.git rtl8188eu;
+fi
+echo_done
+}
+
+rtl8188eu(){
+rm -fdr drivers/net/wireless/rtl8188eu
+mkdir -p drivers/net/wireless/rtl8188eu
+cp -R ../rtl8188eu/{core,hal,include,os_dep} drivers/net/wireless/rtl8188eu
+cp -R ../rtl8188eu/Makefile drivers/net/wireless/rtl8188eu/Makefile
+echo "obj-\$(CONFIG_RTL8188EU) += rtl8188eu/" >> "drivers/net/wireless/Makefile"
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8188eu\/Kconfig"' drivers/net/wireless/Kconfig
+echo "config RTL8188EU" > drivers/net/wireless/rtl8188eu/Kconfig
+echo "	tristate "'"RTL8188EU USB WiFi"'"" >> drivers/net/wireless/rtl8188eu/Kconfig
+echo "	depends on USB" >> drivers/net/wireless/rtl8188eu/Kconfig
+echo "	help" >> drivers/net/wireless/rtl8188eu/Kconfig
+echo "	  Help message of RTL8188EU" >> drivers/net/wireless/rtl8188eu/Kconfig
+}
+
+rtl8188eu_select(){
+if [ -e arch/arm64/configs/allwinner_defconfig ]; then
+	echo CONFIG_RTL8188EU=m >> arch/arm64/configs/allwinner_defconfig;
+fi
+if [ -e arch/arm64/configs/amlogic_defconfig ]; then
+	echo CONFIG_RTL8188EU=m >> arch/arm64/configs/amlogic_defconfig;
+fi
+if [ -e arch/arm64/configs/rockchip64_defconfig ]; then
+	echo CONFIG_RTL8188EU=m >> arch/arm64/configs/rockchip64_defconfig;
+fi
+if [ -e arch/arm64/configs/bcm2711_defconfig ]; then
+	echo CONFIG_RTL8188EU=m >> arch/arm64/configs/bcm2711_defconfig;
+fi
+if [ -e arch/arm64/configs/odroid_defconfig ]; then
+	echo CONFIG_RTL8188EU=m >> arch/arm64/configs/odroid_defconfig;
+fi
+}
+
+rtl8188eu_module(){
+if [[ `grep -w "rtl8188eu=1" "../../userdata.txt"` ]]; then
+	rtl8188eu_select;
+fi
+}
