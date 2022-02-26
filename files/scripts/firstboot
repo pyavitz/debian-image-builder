@@ -2,99 +2,37 @@
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-### Functions
-grow_mmcblk0(){
-if [[ `lsblk /dev/mmcblk0p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	bash growpart /dev/mmcblk0 2 > /dev/null 2>&1
-	sleep 1s
-	resize2fs /dev/mmcblk0p2 > /dev/null 2>&1;
-else
-	bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
-	sleep 1s
-	resize2fs /dev/mmcblk0p1 > /dev/null 2>&1;
-fi
-}
+BOOT=`findmnt -v -n -o SOURCE /boot`
+ROOTFS=`findmnt -v -n -o SOURCE /`
+GROW_SD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
+GROW_MMC=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 
-grow_mmcblk1(){
-if [[ `lsblk /dev/mmcblk1p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	bash growpart /dev/mmcblk1 2 > /dev/null 2>&1
-	sleep 1s
-	resize2fs /dev/mmcblk1p2 > /dev/null 2>&1;
-else
-	bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
-	sleep 1s
-	resize2fs /dev/mmcblk1p1 > /dev/null 2>&1;
-fi
-}
-
-grow_mmcblk2(){
-if [[ `lsblk /dev/mmcblk2p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	echo ""
-	echo -e " \e[0;31mFAT Partition Detected on /dev/mmcblk2p1\e[0m ..?"
-	echo -e " \e[0;31mThis image does not support vendor u-boot\e[0m ...";
-else
-	bash growpart mmcblk2 1 > /dev/null 2>&1
-	sleep 1s
-	resize2fs mmcblk2p1 > /dev/null 2>&1;
-fi
-}
-
-grow_sda1(){
-if [[ `lsblk /dev/sda1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	bash growpart /dev/sda 2 > /dev/null 2>&1
-	sleep 1s
-	resize2fs /dev/sda2 > /dev/null 2>&1;
-else
-	bash growpart /dev/sda 1 > /dev/null 2>&1
-	sleep 1s
-	resize2fs /dev/sda1 > /dev/null 2>&1;
-fi
-}
-
-### Grow Partition
+# Expand root filesystem
 if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-	echo
+	echo "";
 	echo -e " \e[0;31mExpanding root filesystem\e[0m ...";
 fi
-if [ -e /dev/mmcblk0 ]; then
-	grow_mmcblk0;
+if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]]; then
+	bash growpart $GROW_MMC > /dev/null 2>&1;
 fi
-if [ -e /dev/mmcblk1 ]; then
-	grow_mmcblk1;
+if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
+	bash growpart $GROW_SD > /dev/null 2>&1;
 fi
-if [ -e /dev/mmcblk2 ]; then
-	grow_mmcblk2;
-fi
-if [ -e /dev/sda ]; then
-	grow_sda1;
-fi
+sleep 1s
+resize2fs $ROOTFS > /dev/null 2>&1
 
-### Fix boot partition
-if [[ `lsblk /dev/mmcblk0p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	umount /boot
-	sleep 1s
-	bash fsck.fat -trawl /dev/mmcblk0p1 > /dev/null 2>&1
-	sleep 1s
-	mount /boot;
-fi
-if [[ `lsblk /dev/mmcblk1p1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	umount /boot
-	sleep 1s
-	bash fsck.fat -trawl /dev/mmcblk1p1 > /dev/null 2>&1
-	sleep 1s
-	mount /boot;
-fi
-if [[ `lsblk /dev/sda1 -f | grep -w "vfat"` ]] > /dev/null 2>&1; then
-	umount /boot
-	sleep 1s
-	bash fsck.fat -trawl /dev/sda1 > /dev/null 2>&1
-	sleep 1s
+# Fsck boot partition
+if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
+	umount /boot;
+	sleep 1s;
+	bash fsck.fat -trawl $BOOT > /dev/null 2>&1;
+	sleep 1s;
 	mount /boot;
 fi
 
 ### Clean up
 if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-	update-rc.d firstboot remove
+	update-rc.d firstboot remove;
 	rm -f /etc/init.d/firstboot;
 else
 	systemctl disable firstboot;
