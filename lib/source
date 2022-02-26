@@ -274,6 +274,16 @@ fi
 chmod +x /usr/local/bin/credentials
 chown root:root /usr/local/bin/credentials
 mkdir -p /etc/modprobe.d
+if [[ `grep -w "rtl8188eu=1" "/root/userdata.txt"` ]]; then
+	echo "blacklist r8188eu" > /etc/modprobe.d/50-8188eu.conf;
+	chown root:root /etc/modprobe.d/50-8188eu.conf;
+	if [ -e /lib/firmware/rtlwifi/rtl8188eufw.bin ]; then
+		:;
+	else
+		mkdir -p /lib/firmware/rtlwifi;
+		wget -cq https://github.com/armbian/firmware/raw/master/rtlwifi/rtl8188eufw.bin -P /lib/firmware/rtlwifi/;
+	fi
+fi
 echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
 chown root:root /etc/modprobe.d/8821cu.conf
 rtl88x2bu_conf
