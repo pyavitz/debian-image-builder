@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
---- a/arch/arm64/boot/dts/amlogic/Makefile	2022-02-23 06:03:22.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/Makefile	2022-02-28 17:11:10.767711478 -0500
+--- a/arch/arm64/boot/dts/amlogic/Makefile	2021-12-01 03:04:57.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/Makefile	2021-12-01 11:30:21.805179440 -0500
 @@ -1,5 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-s400.dtb
@@ -10,8 +10,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
  dtb-$(CONFIG_ARCH_MESON) += meson-g12a-x96-max.dtb
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
 --- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2022-02-28 17:12:14.991769904 -0500
-@@ -0,0 +1,460 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2021-12-01 11:40:37.479336557 -0500
+@@ -0,0 +1,477 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2018 BayLibre SAS. All rights reserved.
@@ -29,6 +29,18 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +
 +	aliases {
 +		serial0 = &uart_AO;
++		serial1 = &uart_AO_B;
++		serial2 = &uart_A;
++		serial3 = &uart_B;
++		serial4 = &uart_C;
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c_AO;
++		spi0 = &spicc0;
++		spi1 = &spicc1;
++		spi2 = &spifc;
 +	};
 +
 +	chosen {
@@ -80,6 +92,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		vin-supply = <&ao_5v>;
++
++		gpio = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
 +	};
 +
 +	ao_5v: regulator-ao_5v {
@@ -388,6 +403,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +	brcmf: wifi@1 {
 +		reg = <1>;
 +		compatible = "brcm,bcm4329-fmac";
++		interrupts = <&gpio GPIOX_7 GPIO_ACTIVE_HIGH>;
++		interrupt-names = "host-wake";
 +	};
 +};
 +
