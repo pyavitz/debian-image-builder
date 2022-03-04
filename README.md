@@ -49,7 +49,7 @@ Release:	# Debian: bullseye, bookwork, testing, unstable and sid
 
 U-Boot and Linux
 U-Boot:         # Supported: v2022.01
-Branch:         # Supported: 5.15 (Note: If building for Odroids please review options)
+Branch:         # Supported: 5.15
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
 Menuconfig:     # 1 to run uboot and kernel menuconfig
