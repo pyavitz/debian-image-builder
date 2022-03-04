@@ -1,0 +1,17 @@
+diff -Naur c/drivers/spi/spidev.c d/drivers/spi/spidev.c
+--- c/drivers/spi/spidev.c	2022-02-23 06:03:22.000000000 -0500
++++ d/drivers/spi/spidev.c	2022-03-04 03:19:34.293670012 -0500
+@@ -751,9 +751,10 @@
+ 	 * compatible string, it is a Linux implementation thing
+ 	 * rather than a description of the hardware.
+ 	 */
+-	WARN(spi->dev.of_node &&
+-	     of_device_is_compatible(spi->dev.of_node, "spidev"),
+-	     "%pOF: buggy DT: spidev listed directly in DT\n", spi->dev.of_node);
++	if (spi->dev.of_node && of_device_is_compatible(spi->dev.of_node, "spidev")) {
++		dev_err(&spi->dev, "spidev listed directly in DT is not supported\n");
++		return -EINVAL;
++	}
+ 
+ 	spidev_probe_acpi(spi);
+ 
