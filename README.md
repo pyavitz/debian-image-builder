@@ -1,9 +1,9 @@
 ## Boards
 ```sh
-Allwinner:      # NanoPi NEO Plus2, Pine A64+ & Tritium
-Amlogic:        # Le Potato, Odroid C4/N2/N2+ & Radxa Zero 2GB/4GB
+Allwinner:      # NanoPi NEO Plus2 & Tritium
+Amlogic:        # Le Potato, Odroid C4/N2/N2+ & Radxa Zero
 Broadcom:       # Raspberry Pi 4B
-Rockchip:       # NanoPC-T4, Renegade, ROCK64 & ROCKPro64
+Rockchip:       # NanoPC-T4, Renegade & ROCKPro64
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish
