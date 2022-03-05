@@ -141,6 +141,14 @@ sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
 sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
 sudo alsactl store
 ```
+* **Radxa Zero:** Rev. 1.5 LED Support
+```sh
+sudo mkdir -p /etc/initramfs/post-update.d/
+sudo wget -cq https://github.com/pyavitz/debian-image-builder/raw/feature/files/boot/99-xled -P /etc/initramfs/post-update.d/
+chmod +x /etc/initramfs/post-update.d/99-xled
+chown root:root /etc/initramfs/post-update.d/99-xled
+```
+
 ## Usage
 
 #### /boot/rename_to_credentials.txt
