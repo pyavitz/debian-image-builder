@@ -147,6 +147,7 @@ sudo mkdir -p /etc/initramfs/post-update.d/
 sudo wget -cq https://github.com/pyavitz/debian-image-builder/raw/feature/files/boot/99-xled -P /etc/initramfs/post-update.d/
 sudo chmod +x /etc/initramfs/post-update.d/99-xled
 sudo chown root:root /etc/initramfs/post-update.d/99-xled
+sudo /etc/initramfs/post-update.d/99-xled
 ```
 
 ## Usage
