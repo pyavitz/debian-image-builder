@@ -33,7 +33,7 @@ make menu       # Open menu interface
 make dialogrc   # Set builder theme (optional)
 ```
 #### Config Menu
-* Review the userdata.txt file for further options: locales, timezone, and nameserver(s)
+* Review the userdata.txt file for further options: locales, timezone and nameserver(s)
 ```sh
 Name:		# Whats your name?
 Username:       # Your username
@@ -72,8 +72,8 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 
 ```sh
 # config placement: defconfig/$NAME_defconfig
-The config menu will append _defconfig to the end of the name
-in the userdata.txt file.
+The config menu will append _defconfig to the end of the name in the
+userdata.txt file.
 ```
 #### User patches
 
@@ -83,19 +83,16 @@ Patches "-p1" placed in patches/userpatches are applied during compilation.
 #### Aircrack (rtl88XXau)
 
 ```sh
-nano userdata.txt
 # change from 0 to 1
 aircrack=0
 ```
 #### Compression (turn off)
 ```sh
-nano userdata.txt
 # change from 1 to 0
 auto=1        # compresses to img.xz
 ```
 #### eMMC (Odroid N2/+ and Radxa Zero)
 ```sh
-nano userdata.txt
 # change from 0 to 1
 emmc=0
 ```
