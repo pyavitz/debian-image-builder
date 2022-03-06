@@ -502,6 +502,7 @@ renegade-uboot:
 	# Compiling u-boot
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -526,6 +527,7 @@ renegade-all:
 	# Compiling u-boot
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -548,6 +550,7 @@ rock64-uboot:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -572,6 +575,7 @@ rock64-all:
 	# Compiling u-boot
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3328 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -594,6 +598,7 @@ rockpro64-uboot:
 	# Compiling u-boot
 	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3399 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -618,6 +623,7 @@ rockpro64-all:
 	# Compiling u-boot
 	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3399 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -640,6 +646,7 @@ nanopc-uboot:
 	# Compiling u-boot
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3399 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -664,6 +671,7 @@ nanopc-all:
 	# Compiling u-boot
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
+	@ echo rk3399 >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package

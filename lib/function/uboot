@@ -25,58 +25,34 @@ fi
 echo
 echo -e "${WHT}Compiling ATF${FIN} ..."
 if [[ `grep -w "allwinner" "../board.txt"` ]]; then
+	PLAT="sun50i_a64";
+fi
+if [[ `grep -w "rk3328" "../board.txt"` ]]; then
+	PLAT="rk3328";
+fi
+if [[ `grep -w "rk3399" "../board.txt"` ]]; then
+	PLAT="rk3399";
+fi
+if [[ `grep -w "allwinner" "../board.txt"` ]]; then
 	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 		echo -e "${GRN}  CC${FIN}"
 		export CROSS_COMPILE=aarch64-linux-gnu-
-		make -j${CORES} CC=${ARM64_CROSS} PLAT=sun50i_a64 DEBUG=1 bl31;
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=${PLAT} DEBUG=1 bl31;
 	else
 		echo -e "${GRN}  NC${FIN}"
 		export ARCH=arm64
-		make -j${CORES} CC=${NATIVE} PLAT=sun50i_a64 DEBUG=1 bl31;
+		make -j${CORES} CC=${NATIVE} PLAT=${PLAT} DEBUG=1 bl31;
 	fi
 fi
-if [[ `grep -w "renegade" "../board.txt"` ]]; then
+if [[ `grep -w "rockchip" "../board.txt"` ]]; then
 	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 		echo -e "${GRN}  CC${FIN}"
 		export CROSS_COMPILE=aarch64-linux-gnu-
-		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3328 bl31;
+		make -j${CORES} CC=${ARM64_CROSS} PLAT=${PLAT} bl31;
 	else
 		echo -e "${GRN}  NC${FIN}"
 		export ARCH=arm64
-		make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
-	fi
-fi
-if [[ `grep -w "rock64" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		export CROSS_COMPILE=aarch64-linux-gnu-
-		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3328 bl31;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		export ARCH=arm64
-		make -j${CORES} CC=${NATIVE} PLAT=rk3328 bl31;
-	fi
-fi
-if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		export CROSS_COMPILE=aarch64-linux-gnu-
-		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3399 bl31;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		export ARCH=arm64
-		make -j${CORES} CC=${NATIVE} PLAT=rk3399 bl31;
-	fi
-fi
-if [[ `grep -w "nanopc" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		export CROSS_COMPILE=aarch64-linux-gnu-
-		make -j${CORES} CC=${ARM64_CROSS} PLAT=rk3399 bl31;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		export ARCH=arm64
-		make -j${CORES} CC=${NATIVE} PLAT=rk3399 bl31;
+		make -j${CORES} CC=${NATIVE} PLAT=${PLAT} bl31;
 	fi
 fi
 cd ..
@@ -199,19 +175,10 @@ fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
 if [[ `grep -w "allwinner" "../board.txt"` ]]; then
-	cp arm-trusted-firmware/build/sun50i_a64/debug/bl31.bin u-boot/bl31.bin;
+	cp arm-trusted-firmware/build/${PLAT}/debug/bl31.bin u-boot/bl31.bin;
 fi
-if [[ `grep -w "renegade" "../board.txt"` ]]; then
-	cp arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf u-boot/bl31.elf;
-fi
-if [[ `grep -w "rock64" "../board.txt"` ]]; then
-	cp arm-trusted-firmware/build/rk3328/release/bl31/bl31.elf u-boot/bl31.elf;
-fi
-if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
-	cp arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf u-boot/bl31.elf;
-fi
-if [[ `grep -w "nanopc" "../board.txt"` ]]; then
-	cp arm-trusted-firmware/build/rk3399/release/bl31/bl31.elf u-boot/bl31.elf;
+if [[ `grep -w "rockchip" "../board.txt"` ]]; then
+	cp arm-trusted-firmware/build/${PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
 cp board.txt u-boot/
 cd u-boot
@@ -239,127 +206,58 @@ echo
 export ARCH=arm64
 mod_defconfigs
 
-# MAKE DEFCONFIG
+# SET DEFCONFIG
 ### ALLWINNER
 if [[ `grep -w "tritium" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech_all_h3_cc_h5_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} libretech_all_h3_cc_h5_defconfig;
-	fi
+	DEFCONFIG="libretech_all_h3_cc_h5_defconfig";
 fi
 if [[ `grep -w "pine64" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- pine64_plus_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} pine64_plus_defconfig;
-	fi
+	DEFCONFIG="pine64_plus_defconfig";
 fi
 if [[ `grep -w "nanopi" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopi_neo_plus2_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} nanopi_neo_plus2_defconfig;
-	fi
+	DEFCONFIG="nanopi_neo_plus2_defconfig";
 fi
 ### AMLOGIC
 if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-c4_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} odroid-c4_defconfig;
-	fi
+	DEFCONFIG="odroid-c4_defconfig";
 fi
 if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-n2_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} odroid-n2_defconfig;
-	fi
+	DEFCONFIG="odroid-n2_defconfig";
 fi
 if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- odroid-n2_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} odroid-n2_defconfig;
-	fi
+	DEFCONFIG="odroid-n2_defconfig";
 fi
 if [[ `grep -w "lepotato" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- libretech-cc_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} libretech-cc_defconfig;
-	fi
+	DEFCONFIG="libretech-cc_defconfig";
 fi
 if [[ `grep -w "radxazero" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- radxa-zero_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} radxa-zero_defconfig;
-	fi
+	DEFCONFIG="radxa-zero_defconfig";
 fi
 ### BROADCOM
 if [[ `grep -w "bcm2711" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rpi_4_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} rpi_4_defconfig;
-	fi
+	DEFCONFIG="rpi_4_defconfig";
 fi
 ### ROCKCHIP
 if [[ `grep -w "renegade" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- roc-cc-rk3328_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} roc-cc-rk3328_defconfig;
-	fi
+	DEFCONFIG="roc-cc-rk3328_defconfig";
 fi
 if [[ `grep -w "rock64" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rock64-rk3328_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} rock64-rk3328_defconfig;
-	fi
+	DEFCONFIG="rock64-rk3328_defconfig";
 fi
 if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- rockpro64-rk3399_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} rockpro64-rk3399_defconfig;
-	fi
+	DEFCONFIG="rockpro64-rk3399_defconfig";
 fi
 if [[ `grep -w "nanopc" "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- nanopc-t4-rk3399_defconfig;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} nanopc-t4-rk3399_defconfig;
-	fi
+	DEFCONFIG="nanopc-t4-rk3399_defconfig;";
+fi
+
+# MAKE DEFCONFIG
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	echo -e "${GRN}  CC${FIN}"
+	make -j${CORES} CC=${ARM64_CROSS} CROSS_COMPILE=aarch64-linux-gnu- ${DEFCONFIG};
+else
+	echo -e "${GRN}  NC${FIN}"
+	make -j${CORES} CC=${NATIVE} ${DEFCONFIG};
 fi
 
 # MENUCONFIG
