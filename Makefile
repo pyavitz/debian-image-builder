@@ -548,7 +548,7 @@ renegade-kernel:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -576,7 +576,7 @@ renegade-all:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -606,7 +606,7 @@ rock64-kernel:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -634,7 +634,7 @@ rock64-all:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -664,7 +664,7 @@ rockpro64-kernel:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -692,7 +692,7 @@ rockpro64-all:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -722,7 +722,7 @@ nanopc-kernel:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -750,7 +750,7 @@ nanopc-all:
 	@ echo rockchip >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
-	@ echo DEFCONFIG='"'rockchip_defconfig'"' >> board.txt
+	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
