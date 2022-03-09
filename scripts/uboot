@@ -3,6 +3,7 @@ source lib/function/echoes
 source lib/function/uboot
 source lib/source
 source lib/function/compiler
+source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -45,12 +46,15 @@ if [[ `grep -w "ccache=0" "userdata.txt"` ]]; then
 fi
 
 if [[ `grep -w "amlogic" "board.txt"` ]]; then
+	source lib/function/fip;
 	amlogic-uboot-string;
 fi
 if [[ `grep -w "allwinner" "board.txt"` ]]; then
+	source lib/function/atf;
 	allwinner-uboot-string;
 fi
 if [[ `grep -w "rockchip" "board.txt"` ]]; then
+	source lib/function/atf;
 	rockchip-uboot-string;
 fi
 if [[ `grep -w "broadcom" "board.txt"` ]]; then

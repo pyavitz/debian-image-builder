@@ -5,6 +5,7 @@ source lib/function/linux
 source lib/function/patches
 source lib/function/compiler
 source lib/function/wireless
+source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -71,52 +72,59 @@ esac
 # Setup
 setup
 
-# Patches and Defconfigs
+# Patching
 ### AMLOGIC
 if [[ `grep -w "lepotato" "../../board.txt"` ]]; then
-	le_potato;
+	potato_patch;
 fi
 if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
-	odroid_n2;
+	odroidn2_patch;
 fi
 if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
-	odroid_n2;
+	odroidn2_patch;
 fi
 if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
-	odroid_c4;
+	odroidc4_patch;
 fi
 if [[ `grep -w "radxazero" "../../board.txt"` ]]; then
-	radxa_zero;
+	radxazero_patch;
 fi
 
 ### ALLWINNER
 if [[ `grep -w "tritium" "../../board.txt"` ]]; then
-	tritium_h5;
+	tritium_patch;
 fi
 if [[ `grep -w "pine64" "../../board.txt"` ]]; then
-	pine_a64;
+	pine64_patch;
 fi
 if [[ `grep -w "nanopi" "../../board.txt"` ]]; then
-	nanopi_neo_plus2;
+	nanopi_patch;
 fi
 
 ### ROCKCHIP
 if [[ `grep -w "renegade" "../../board.txt"` ]]; then
-	rk3328_roc_cc;
+	rk3328_patch;
 fi
 if [[ `grep -w "rock64" "../../board.txt"` ]]; then
-	rk3328_rock64;
+	rk3328_patch;
 fi
 if [[ `grep -w "rockpro64" "../../board.txt"` ]]; then
-	rk3399_rockpro64;
+	rk3399_patch;
 fi
 if [[ `grep -w "nanopc" "../../board.txt"` ]]; then
-	rk3399_nanopc;
+	rk3399_patch;
 fi
 
 ### BROADCOM
 if [[ `grep -w "bcm2711" "../../board.txt"` ]]; then
-	bcm_2711;
+	raspberrypi_patch;
+fi
+
+# DEFCONFIG
+if [[ `grep -w "custom_defconfig=1" "../../userdata.txt"` ]]; then
+	cconfig;
+else
+	bconfig;
 fi
 
 # Menuconfig
@@ -124,8 +132,12 @@ if [[ `grep -w "menuconfig=1" "../../userdata.txt"` ]]; then
 	menuconfig;
 fi
 
-# Build deb
-builddeb
+# Builddeb
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	ccompile;
+else
+	ncompile;
+fi
 echo
 
 # Finish
