@@ -14,11 +14,14 @@ if [ -e $FDTDIR/meson-g12a-radxa-zero.dtb ]; then
 	echo -en "LED support";
 	mv -f $FDTDIR/meson-g12a-radxa-zero.dtb $FDTDIR/meson-g12a-radxa-zero.dtb.orig;
 	dtc -I dtb -O dts $FDTDIR/meson-g12a-radxa-zero.dtb.orig -o $FDTDIR/meson-g12a-radxa-zero.dts > /dev/null 2>&1;
-	if [[ `grep -w "gpios = <0x4f 0x08 0x00>" "$FDTDIR/meson-g12a-radxa-zero.dts"` ]]; then
-		sed -i 's/gpios = <0x4f 0x08 0x00>/gpios = <0x4f 0x0a 0x00>/g' $FDTDIR/meson-g12a-radxa-zero.dts;
-	fi
-	if [[ `grep -w "gpios = <0x4f 0x08 0x00 0x4f 0x0a 0x00>" "$FDTDIR/meson-g12a-radxa-zero.dts"` ]]; then
-		sed -i 's/gpios = <0x4f 0x08 0x00 0x4f 0x0a 0x00>/gpios = <0x4f 0x0a 0x00 0x4f 0x0a 0x00>/g' $FDTDIR/meson-g12a-radxa-zero.dts;
+	sleep 1s
+	if [[ `grep -w "leds" "$FDTDIR/meson-g12a-radxa-zero.dts"` ]]; then
+		if [[ `grep -w "gpios = <0x4f 0x08 0x00>" "$FDTDIR/meson-g12a-radxa-zero.dts"` ]]; then
+			sed -i 's/gpios = <0x4f 0x08 0x00>/gpios = <0x4f 0x0a 0x00>/g' $FDTDIR/meson-g12a-radxa-zero.dts;
+		fi
+		if [[ `grep -w "gpios = <0x4f 0x08 0x00 0x4f 0x0a 0x00>" "$FDTDIR/meson-g12a-radxa-zero.dts"` ]]; then
+			sed -i 's/gpios = <0x4f 0x08 0x00 0x4f 0x0a 0x00>/gpios = <0x4f 0x0a 0x00 0x4f 0x0a 0x00>/g' $FDTDIR/meson-g12a-radxa-zero.dts;
+		fi
 	fi
 	dtc -I dts -O dtb $FDTDIR/meson-g12a-radxa-zero.dts -o $FDTDIR/meson-g12a-radxa-zero.dtb > /dev/null 2>&1;
 	if [ -e $FDTDIR/meson-g12a-radxa-zero.dtb ]; then
