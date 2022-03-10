@@ -89,7 +89,7 @@ aircrack=0
 #### Compression (turn off)
 ```sh
 # change from 1 to 0
-auto=1        # compresses to img.xz
+compress_img.xz=1        # compresses to img.xz
 ```
 #### eMMC (Odroid N2/+ and Radxa Zero)
 ```sh
