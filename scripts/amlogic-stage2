@@ -30,20 +30,17 @@ set_timezone
 apt upgrade -y
 apt dist-upgrade -y
 if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
-	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf;
-else
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-		apt install -y openssh-client openssh-server --no-install-recommends
-		apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} openresolv ifupdown ifupdown-extra ntp;
-	else
-		if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
-			apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown;
-		else
-			if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-				apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf ntp;
-			fi
-		fi
-	fi
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf haveged;
+
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	apt install -y openssh-client openssh-server --no-install-recommends;
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} openresolv ifupdown ifupdown-extra ntp haveged;
+fi
+if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown rng-tools;
+fi
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf ntp haveged;
 fi
 apt -y clean
 apt -y autoclean

@@ -6,7 +6,7 @@ Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade & ROCKPro64
 ```
 
-### Dependencies for Debian Bullseye and Ubuntu Focal / Jammy Jellyfish
+### Dependencies for Debian Bullseye and Ubuntu Jammy Jellyfish
 * **Recommended host:** Debian Bullseye
 
 **Install options:**

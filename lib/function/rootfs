@@ -67,27 +67,34 @@ else
 fi
 }
 
-ubuntu_check(){
-DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
-TBURL="https://github.com/pyavitz/rootfs-tarballs/releases/download/rootfs/"
+dpkg_check(){
+DPKGURL="http://ftp.us.debian.org/debian/pool/main/d/dpkg/"
+if [[ `uname -m | grep "x86_64"` ]]; then
+	MACHINE="amd64";
+fi
+if [[ `uname -m | grep "aarch64"` ]]; then
+	MACHINE="arm64";
+fi
 if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; [[ `grep -w "VERSION_CODENAME=impish" "/etc/os-release"` ]]; then
 	:;
 else
-	if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; [[ `grep -w 'DISTRO_VERSION="impish"' "userdata.txt"` ]]; then
-		echo -en "${WHT}Downloading${FIN} ..."
-		${DOWNLOAD} ${TBURL}ubuntu-impish-rootfs-aarch64.tar.xz
-		echo -e "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-		exit;
+	if [[ `apt show dpkg | grep "Version: 1.21"` ]] > /dev/null 2>&1; then
+		:;
+	else
+		wget -cq $DPKGURLdpkg_1.21.1_$MACHINE.deb;
+		sudo apt install -y ./dpkg_1.21.1_$MACHINE.deb;
+		rm -f dpkg_1.21.1_$MACHINE.deb;
 	fi
 fi
 if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
 	:;
 else
-	if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; [[ `grep -w 'DISTRO_VERSION="jammy"' "userdata.txt"` ]]; then
-		echo -en "${WHT}Downloading${FIN} ..."
-		${DOWNLOAD} ${TBURL}ubuntu-jammy-rootfs-aarch64.tar.xz
-		echo -e "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-		exit;
+	if [[ `apt show dpkg | grep "Version: 1.21"` ]] > /dev/null 2>&1; then
+		:;
+	else
+		wget -cq $DPKGURLdpkg_1.21.1_$MACHINE.deb;
+		sudo apt install -y ./dpkg_1.21.1_$MACHINE.deb;
+		rm -f dpkg_1.21.1_$MACHINE.deb;
 	fi
 fi
 }
