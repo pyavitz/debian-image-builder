@@ -150,22 +150,3 @@ mv -f nanopc /usr/local/sbin/led-trigger
 chmod +x /usr/local/sbin/led-trigger
 chown -R root:root /usr/local/sbin/
 }
-
-enable_services(){
-systemctl enable rc-local
-systemctl enable ifplugd
-if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
-	systemctl enable resolvconf;
-else
-	if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-		systemctl enable resolvconf;
-	fi
-fi
-systemctl enable haveged
-systemctl enable zramswap
-systemctl enable firstboot
-systemctl enable governor
-if [ -e /etc/systemd/system/multi-user.target.wants/ondemand.service ]; then
-	systemctl disable ondemand;
-fi
-}

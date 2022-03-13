@@ -320,27 +320,6 @@ cd ~
 echo Done.
 }
 
-enable_services(){
-systemctl enable rc-local
-systemctl enable ifplugd
-if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
-	systemctl enable resolvconf;
-else
-	if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
-		systemctl enable resolvconf;
-	fi
-fi
-systemctl enable haveged
-systemctl enable zramswap
-systemctl enable bluetooth
-systemctl enable firstboot
-systemctl enable governor
-if [ -e /etc/systemd/system/multi-user.target.wants/ondemand.service ]; then
-	systemctl disable ondemand;
-fi
-#systemctl enable serial-getty@ttyUSB0.service
-}
-
 shrink(){
 echo ""
 chmod +x scripts/shrink
