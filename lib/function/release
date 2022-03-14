@@ -1,10 +1,6 @@
-image_size(){
-truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-}
-
 debian_bullseye(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-updates main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-proposed-updates main contrib non-free
@@ -14,15 +10,15 @@ EOF
 }
 
 debian_unstable(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
 devuan_chimaera(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-updates main contrib non-free
 deb http://deb.devuan.org/devuan ${DISTRO_VERSION}-proposed-updates main contrib non-free
@@ -32,22 +28,22 @@ EOF
 }
 
 devuan_unstable(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
 kali_rolling(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://http.kali.org/kali ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
 ubuntu_focal(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://ports.ubuntu.com/ubuntu-ports/ focal main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ focal-updates main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ focal universe
@@ -69,8 +65,8 @@ EOF
 }
 
 ubuntu_impish(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://ports.ubuntu.com/ubuntu-ports/ impish main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ impish-updates main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ impish universe
@@ -92,8 +88,8 @@ EOF
 }
 
 ubuntu_jammy(){
-rm -f p1/etc/apt/sources.list
-tee p1/etc/apt/sources.list <<EOF
+rm -f ${RELEASE}
+tee ${RELEASE} <<EOF
 deb http://ports.ubuntu.com/ubuntu-ports/ jammy main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ jammy-updates main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ jammy universe
@@ -115,72 +111,62 @@ EOF
 }
 
 choose_release(){
-case `grep -Fx 'DISTRO="debian"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-if [[ `grep -w 'DISTRO_VERSION="bullseye"' "userdata.txt"` ]]; then
-	debian_bullseye;
-else
+case `grep -w 'DISTRO="debian"' "userdata.txt" >/dev/null; echo $?` in
+	0)
+	if [[ `grep -w 'DISTRO_VERSION="bullseye"' "userdata.txt"` ]]; then
+		debian_bullseye;
+	fi
 	if [[ `grep -w 'DISTRO_VERSION="bookworm"' "userdata.txt"` ]]; then
 		debian_unstable;
-	else
-		if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
-			debian_unstable;
-		else
-			if [[ `grep -w 'DISTRO_VERSION="unstable"' "userdata.txt"` ]]; then
-				debian_unstable;
-			else
-				if [[ `grep -w 'DISTRO_VERSION="sid"' "userdata.txt"` ]]; then
-					debian_unstable;
-				fi
-			fi
-		fi
 	fi
-fi
-    ;;
+	if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
+		debian_unstable;
+	fi
+	if [[ `grep -w 'DISTRO_VERSION="unstable"' "userdata.txt"` ]]; then
+		debian_unstable;
+	fi
+	if [[ `grep -w 'DISTRO_VERSION="sid"' "userdata.txt"` ]]; then
+		debian_unstable;
+	fi
+	;;
 esac
-case `grep -Fx 'DISTRO="devuan"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-if [[ `grep -w 'DISTRO_VERSION="chimaera"' "userdata.txt"` ]]; then
-	devuan_chimaera;
-else
+case `grep -w 'DISTRO="devuan"' "userdata.txt" >/dev/null; echo $?` in
+	0)
+	if [[ `grep -w 'DISTRO_VERSION="chimaera"' "userdata.txt"` ]]; then
+		devuan_chimaera;
+	fi
 	if [[ `grep -w 'DISTRO_VERSION="daedalus"' "userdata.txt"` ]]; then
 		devuan_unstable;
-	else
-		if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
-			devuan_unstable;
-		else
-			if [[ `grep -w 'DISTRO_VERSION="unstable"' "userdata.txt"` ]]; then
-				devuan_unstable;
-			else
-				if [[ `grep -w 'DISTRO_VERSION="ceres"' "userdata.txt"` ]]; then
-					devuan_unstable;
-				fi
-			fi
-		fi
 	fi
-fi
-    ;;
+	if [[ `grep -w 'DISTRO_VERSION="testing"' "userdata.txt"` ]]; then
+	devuan_unstable;
+	fi
+	if [[ `grep -w 'DISTRO_VERSION="unstable"' "userdata.txt"` ]]; then
+		devuan_unstable;
+	fi
+	if [[ `grep -w 'DISTRO_VERSION="ceres"' "userdata.txt"` ]]; then
+		devuan_unstable;
+	fi
+	;;
 esac
-case `grep -Fx 'DISTRO="kali"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-if [[ `grep -w 'DISTRO_VERSION="kali-rolling"' "userdata.txt"` ]]; then
-	kali_rolling;
-fi
-    ;;
+case `grep -w 'DISTRO="kali"' "userdata.txt" >/dev/null; echo $?` in
+	0)
+	if [[ `grep -w 'DISTRO_VERSION="kali-rolling"' "userdata.txt"` ]]; then
+		kali_rolling;
+	fi
+	;;
 esac
-case `grep -Fx 'DISTRO="ubuntu"' "userdata.txt" >/dev/null; echo $?` in
-  0)
-if [[ `grep -w 'DISTRO_VERSION="focal"' "userdata.txt"` ]]; then
-	ubuntu_focal;
-else
+case `grep -w 'DISTRO="ubuntu"' "userdata.txt" >/dev/null; echo $?` in
+	0)
+	if [[ `grep -w 'DISTRO_VERSION="focal"' "userdata.txt"` ]]; then
+		ubuntu_focal;
+	fi
 	if [[ `grep -w 'DISTRO_VERSION="impish"' "userdata.txt"` ]]; then
 		ubuntu_impish;
-	else
-		if [[ `grep -w 'DISTRO_VERSION="jammy"' "userdata.txt"` ]]; then
-			ubuntu_jammy;
-		fi
 	fi
-fi
-    ;;
+	if [[ `grep -w 'DISTRO_VERSION="jammy"' "userdata.txt"` ]]; then
+		ubuntu_jammy;
+	fi
+	;;
 esac
 }

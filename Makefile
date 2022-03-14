@@ -107,6 +107,7 @@ tritium-image:
 	# Creating image
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -135,6 +136,7 @@ tritium-all:
 	# Creating image
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -163,6 +165,7 @@ pine64-image:
 	# Creating image
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -191,6 +194,7 @@ pine64-all:
 	# Creating image
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -219,6 +223,7 @@ nanopi-image:
 	# Creating image
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -247,6 +252,7 @@ nanopi-all:
 	# Creating image
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ALL-IMG}
 	@chmod +x ${ALL-STG2}
 	@${ALL-IMAGE}
@@ -275,6 +281,7 @@ odroidc4-image:
 	# Creating image
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -303,6 +310,7 @@ odroidc4-all:
 	# Creating image
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -331,6 +339,7 @@ odroidn2-image:
 	# Creating image
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -359,6 +368,7 @@ odroidn2-all:
 	# Creating image
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -387,6 +397,7 @@ odroidn2+-image:
 	# Creating image
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -415,6 +426,7 @@ odroidn2+-all:
 	# Creating image
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -443,6 +455,7 @@ lepotato-image:
 	# Creating image
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -471,6 +484,7 @@ lepotato-all:
 	# Creating image
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -499,6 +513,7 @@ rzero-image:
 	# Creating image
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -527,6 +542,7 @@ rzero-all:
 	# Creating image
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${AML-IMG}
 	@chmod +x ${AML-STG2}
 	@${AML-IMAGE}
@@ -556,6 +572,7 @@ renegade-image:
 	# Creating image
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -585,6 +602,7 @@ renegade-all:
 	# Creating image
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -614,6 +632,7 @@ rock64-image:
 	# Creating image
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -643,6 +662,7 @@ rock64-all:
 	# Creating image
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -672,6 +692,7 @@ rockpro64-image:
 	# Creating image
 	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -701,6 +722,7 @@ rockpro64-all:
 	# Creating image
 	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -730,6 +752,7 @@ nanopc-image:
 	# Creating image
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -759,6 +782,7 @@ nanopc-all:
 	# Creating image
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
+	@ echo p1 >> board.txt
 	@chmod +x ${ROC-IMG}
 	@chmod +x ${ROC-STG2}
 	@${ROC-IMAGE}
@@ -787,6 +811,7 @@ raspi4-image:
 	# Creating image
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
+	@ echo p2 >> board.txt
 	@chmod +x ${RPI-IMG}
 	@chmod +x ${RPI-STG2}
 	@${RPI-IMAGE}
@@ -815,6 +840,7 @@ raspi4-all:
 	# Creating image
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
+	@ echo p2 >> board.txt
 	@chmod +x ${RPI-IMG}
 	@chmod +x ${RPI-STG2}
 	@${RPI-IMAGE}

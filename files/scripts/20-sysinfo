@@ -6,6 +6,11 @@ df -h | egrep '(Filesystem)|(/dev/mmc)|(/dev/sd)'
 echo ""
 echo -e "${COL}== SYSTEM STATUS${FIN}"
 echo -e "${COL}CPU Temp:${FIN} " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C
+if [ -e /sys/class/thermal/thermal_zone1/temp ]; then
+	echo -e "${COL}CPU Temp:${FIN} " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C $(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2)°C
+else
+	echo -e "${COL}CPU Temp:${FIN} " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C
+fi
 echo -e "${COL}Cores:${FIN}    " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq)
 echo -e "${COL}Governor:${FIN} " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "${COL}Uptime:${FIN}   " $(uptime)

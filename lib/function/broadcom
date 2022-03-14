@@ -1,77 +1,4 @@
 # STAGE1
-partitions(){
-image_size
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2048
-524287
-a
-c
-t
-b
-n
-p
-2
-524288
-
-p
-w
-
-EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}p1"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
-partprobe "${IMAGE_LOOP_DEV}"
-mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1 p2
-mount "${IMAGE_LOOP_DEV_BOOT}" p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
-sync
-umount p2
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
-}
-
-partition_uuid(){
-BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
-ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
-
-echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
-echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-
-source part-uuid.txt
-}
-
-extlinux(){
-mkdir -p p1/extlinux
-tee p1/extlinux/extlinux.conf <<EOF
-label default
-    kernel /Image
-    append initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 cma=320M firmware_class.path=/lib/firmware/updates/brcm rootwait
-EOF
-}
-
-create_extlinux(){
-extlinux > /dev/null 2>&1
-if [ -e p1/extlinux/extlinux.conf ]; then
-	echo ""
-	echo -n "extlinux.conf     "
-	sleep 1s
-	echo_nok;
-else
-	echo ""
-	echo -n "extlinux.conf     "
-	sleep 1s
-	echo_fail
-	exit;
-fi
-}
-
 bcm2711_config(){
 tee p1/config.txt <<EOF
 arm_64bit=1
@@ -91,46 +18,6 @@ over_voltage=2
 EOF
 }
 
-bcm2711_boot(){
-mkdir -p firmware/boot
-rm -f firmware/boot/*
-echo
-if [ -e output/raspi4/u-boot.bin ]; then
-	echo -n "u-boot.bin        "
-	echo_nok;
-else
-	echo -n "u-boot.bin        "
-	echo_fail
-	exit;
-fi
-echo ""
-install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1
-if [ -e p1/u-boot.bin ]; then
-	echo -n "installing uboot  "
-	echo_bdone;
-else
-	echo -n "installing uboot  "
-	echo_fail
-	exit;
-fi
-}
-
-aarch64_extract(){
-tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p2/
-}
-
-aarch64_rootfs(){
-if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ]; then
-	echo -n "Extracting rootfs "
-	aarch64_extract
-	echo_bdone;
-else
-	echo -e "${YLW}Missing rootfs tarball${FIN}!"
-	exit;
-fi
-echo ""
-}
-
 # STAGE 2
 apt_preferences(){
 echo ""
@@ -142,61 +29,12 @@ EOF
 }
 
 # Initrd script
-initrd_script(){
+initrd(){
 cd ~
 mkdir -p /etc/initramfs/post-update.d/
 mv -f 99-initrd /etc/initramfs/post-update.d/
 chmod +x /etc/initramfs/post-update.d/99-initrd
 chown root:root /etc/initramfs/post-update.d/99-initrd
-}
-
-# USER CONFIG
-bcm2711_user(){
-echo -n "${HOSTNAME}" > /etc/hostname
-sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
-adduser ${user} --gecos ${NAME} --disabled-password
-}
-
-user_config(){
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
-	bcm2711_user;
-fi
-
-echo "${user}:${passwd}" | chpasswd
-adduser ${user} sudo
-adduser ${user} audio
-adduser ${user} dialout
-adduser ${user} video
-adduser ${user} disk
-groupadd spi
-groupadd gpio
-adduser ${user} spi
-adduser ${user} i2c
-adduser ${user} gpio
-adduser ${user} plugdev
-adduser ${user} netdev
-adduser ${user} bluetooth
-adduser ${user} input
-adduser ${user} tty
-
-mkdir -p /usr/share/mc/skins
-mv -f darkgreen.ini /usr/share/mc/skins/darkgreen.ini
-mv -f darkred.ini /usr/share/mc/skins/darkred.ini
-mkdir -p /root/.config/mc
-mv -f root-ini /root/.config/mc/ini
-mv -f nanorc-root /root/.nanorc
-mkdir -p /home/${user}/.config/mc
-mv -f user-ini /home/${user}/.config/mc/ini
-mv -f nanorc-user /home/${user}/.nanorc
-chown -R root:root /root
-chown -R ${user}:${user} /home/${user}
-
-rm -f /etc/sudoers.d/010_pi-nopasswd
-echo ""
-tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
-${user} ALL=(ALL) NOPASSWD: ALL
-EOF
-chown -R ${user}:${user} /home/${user}
 }
 
 # EEPROM
@@ -318,52 +156,4 @@ tar xf rtl_nic.tar.gz
 rm -f rtl_nic.tar.gz
 cd ~
 echo Done.
-}
-
-shrink(){
-echo ""
-chmod +x scripts/shrink
-scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img;
-echo ""
-fix_extlinux
-}
-
-fix_extlinux(){
-echo 'LOOP1="/dev/mapper/' > kpart1
-echo 'LOOP2="/dev/mapper/' >> kpart1
-IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
-kpartx="$(kpartx -av $IMAGE_FILE)"
-echo "$kpartx"
-grep -o 'loop.p.' <<<"$kpartx" > kpart2
-echo '"' > kpart3
-echo '"' >> kpart3
-paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
-rm -f {kpart1,kpart2,kpart3}
-source kpart.txt
-BOOT="${LOOP1}"
-mkdir -p p1
-sleep 1s
-mount "${BOOT}" p1
-rm -f p1/extlinux/extlinux.conf
-rm -f p1/config.txt
-new_partuuid
-echo ""
-extlinux
-bcm2711_config > /dev/null 2>&1
-echo ""
-sleep 1s
-umount p1
-rm -fdr p1
-kpartx -d ${IMAGE_FILE}
-rm -f kpart.txt
-echo ""
-}
-
-new_partuuid(){
-rm -f part-uuid.txt
-ROOTFS="${LOOP2}"
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
-
-source part-uuid.txt
 }
