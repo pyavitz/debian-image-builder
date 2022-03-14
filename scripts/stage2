@@ -58,6 +58,9 @@ fi
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf ntp haveged;
 fi
+if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+	apt install -y ${RPI}
+fi
 apt -y clean
 apt -y autoclean
 echo ""
@@ -253,7 +256,7 @@ chown root:root /etc/update-motd.d/15-brand
 chown root:root /etc/update-motd.d/20-sysinfo
 
 # Clean
-rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init}
+rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins
@@ -283,10 +286,10 @@ if [[ `grep -w "amlogic" "/root/board.txt"` ]]; then
 		extra_firmware;
 	fi
 fi
-[[ `grep -w "bcm211" "/root/board.txt"` ]]; then
+if [[ `grep -w "bcm211" "/root/board.txt"` ]]; then
 	rpi_firmware;
 fi
-[[ `grep -w "rockchip" "/root/board.txt"` ]]; then
+if [[ `grep -w "rockchip" "/root/board.txt"` ]]; then
 	extra_firmware;
 fi
 
