@@ -91,7 +91,7 @@ aircrack=0
 # change from 1 to 0
 compress_img.xz=1        # compresses to img.xz
 ```
-#### eMMC (Odroid N2/+ and Radxa Zero)
+#### Amlogic eMMC boot
 ```sh
 # change from 0 to 1
 emmc=0

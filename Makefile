@@ -18,25 +18,10 @@ UBOOT=sudo ./scripts/uboot
 XKERNEL=./scripts/linux
 KERNEL=sudo ./scripts/linux
 
-# allwinner
-ALL-IMG=./scripts/allwinner-stage1
-ALL-IMAGE=sudo ./scripts/allwinner-stage1
-ALL-STG2=./scripts/allwinner-stage2
-
-# amlogic
-AML-IMG=./scripts/amlogic-stage1
-AML-IMAGE=sudo ./scripts/amlogic-stage1
-AML-STG2=./scripts/amlogic-stage2
-
-# rockchip
-ROC-IMG=./scripts/rockchip-stage1
-ROC-IMAGE=sudo ./scripts/rockchip-stage1
-ROC-STG2=./scripts/rockchip-stage2
-
-# broadcom
-RPI-IMG=./scripts/broadcom-stage1
-RPI-IMAGE=sudo ./scripts/broadcom-stage1
-RPI-STG2=./scripts/broadcom-stage2
+# image
+IMG=./scripts/stage1
+IMAGE=sudo ./scripts/stage1
+STG2=./scripts/stage2
 
 # dependencies
 CCOMPILE=./scripts/.ccompile
@@ -107,9 +92,10 @@ tritium-image:
 	# Creating image
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 tritium-all:
 	# T R I T I U M
@@ -135,9 +121,10 @@ tritium-all:
 	# Creating image
 	@ echo tritium > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### PINEA64
 pine64-uboot:
@@ -163,9 +150,10 @@ pine64-image:
 	# Creating image
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 pine64-all:
 	# P I N E 6 4
@@ -191,9 +179,10 @@ pine64-all:
 	# Creating image
 	@ echo pine64 > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### NANOPI NEO PLUS2
 nanopi-uboot:
@@ -219,9 +208,10 @@ nanopi-image:
 	# Creating image
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 nanopi-all:
 	# N A N O  P I  N E O + 2
@@ -247,9 +237,10 @@ nanopi-all:
 	# Creating image
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
-	@chmod +x ${ALL-IMG}
-	@chmod +x ${ALL-STG2}
-	@${ALL-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### ODROID C4
 odroidc4-uboot:
@@ -275,9 +266,10 @@ odroidc4-image:
 	# Creating image
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 odroidc4-all:
 	# O D R O I D  C 4
@@ -303,9 +295,10 @@ odroidc4-all:
 	# Creating image
 	@ echo odroidc4 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### ODROID N2
 odroidn2-uboot:
@@ -331,9 +324,10 @@ odroidn2-image:
 	# Creating image
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 odroidn2-all:
 	# O D R O I D  N 2
@@ -359,9 +353,10 @@ odroidn2-all:
 	# Creating image
 	@ echo odroidn2 > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### ODROID N2 Plus
 odroidn2+-uboot:
@@ -387,9 +382,10 @@ odroidn2+-image:
 	# Creating image
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 odroidn2+-all:
 	# O D R O I D  N 2  P L U S
@@ -415,9 +411,10 @@ odroidn2+-all:
 	# Creating image
 	@ echo odroidn2plus > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### LE POTATO
 lepotato-uboot:
@@ -443,9 +440,10 @@ lepotato-image:
 	# Creating image
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 lepotato-all:
 	# L E P O T A T O
@@ -471,9 +469,10 @@ lepotato-all:
 	# Creating image
 	@ echo lepotato > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 	
 ### Radxa Zero
 rzero-uboot:
@@ -499,9 +498,10 @@ rzero-image:
 	# Creating image
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 rzero-all:
 	# R A D X A  Z E R O
@@ -527,9 +527,10 @@ rzero-all:
 	# Creating image
 	@ echo radxazero > board.txt
 	@ echo amlogic >> board.txt
-	@chmod +x ${AML-IMG}
-	@chmod +x ${AML-STG2}
-	@${AML-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 # RENEGADE
 renegade-uboot:
@@ -556,9 +557,10 @@ renegade-image:
 	# Creating image
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 renegade-all:
 	# R E N E G A D E
@@ -585,9 +587,10 @@ renegade-all:
 	# Creating image
 	@ echo renegade > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 # ROCK64
 rock64-uboot:
@@ -614,9 +617,10 @@ rock64-image:
 	# Creating image
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 rock64-all:
 	# R O C K 6 4
@@ -643,9 +647,10 @@ rock64-all:
 	# Creating image
 	@ echo rock64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 # ROCK64PRO
 rockpro64-uboot:
@@ -672,9 +677,10 @@ rockpro64-image:
 	# Creating image
 	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 rockpro64-all:
 	# R O C K 6 4 P R O
@@ -701,9 +707,10 @@ rockpro64-all:
 	# Creating image
 	@ echo rockpro64 > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 # NANOPC-T4
 nanopc-uboot:
@@ -730,9 +737,10 @@ nanopc-image:
 	# Creating image
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 nanopc-all:
 	# N A N O P C - T 4
@@ -759,9 +767,10 @@ nanopc-all:
 	# Creating image
 	@ echo nanopc > board.txt
 	@ echo rockchip >> board.txt
-	@chmod +x ${ROC-IMG}
-	@chmod +x ${ROC-STG2}
-	@${ROC-IMAGE}
+	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 # RASPBERRY PI 4B
 raspi4-uboot:
@@ -787,9 +796,10 @@ raspi4-image:
 	# Creating image
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
-	@chmod +x ${RPI-IMG}
-	@chmod +x ${RPI-STG2}
-	@${RPI-IMAGE}
+	@ echo p2 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 raspi4-all:
 	# R A S P B E R R Y  P I  4 B
@@ -815,9 +825,10 @@ raspi4-all:
 	# Creating image
 	@ echo bcm2711 > board.txt
 	@ echo broadcom >> board.txt
-	@chmod +x ${RPI-IMG}
-	@chmod +x ${RPI-STG2}
-	@${RPI-IMAGE}
+	@ echo p2 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
 
 ### MISCELLANEOUS
 menu:

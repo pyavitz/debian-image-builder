@@ -1,41 +1,4 @@
 # STAGE1
-partition(){
-image_size
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2048
-a
-t
-b
-5859374
-
-p
-w
-
-EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
-partprobe "${IMAGE_LOOP_DEV}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-if [[ `grep -w "tritium" "board.txt"` ]]; then
-	tritium_flashbin;
-fi
-if [[ `grep -w "nanopi" "board.txt"` ]]; then
-	nanopi_flashbin;
-fi
-if [[ `grep -w "pine64" "board.txt"` ]]; then
-	pine64_flashbin;
-fi
-sync
-umount p1
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
-}
-
 tritium_flashbin(){
 dd if=output/tritium/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
@@ -48,56 +11,7 @@ pine64_flashbin(){
 dd if=output/pine64/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
-partition_uuid(){
-ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-
-source part-uuid.txt
-}
-
-create_fstab(){
-tee p1/etc/fstab <<EOF
-UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
-tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
-EOF
-}
-
 # STAGE2
-tritium_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/allwinner/
-    fdt /boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-nanopi_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/allwinner/
-    fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-pine64_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    fdtdir /boot/allwinner/
-    fdt /boot/allwinner/sun50i-a64-pine64-plus.dtb
-    append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
 tritium_led_triggers(){
 cd ~
 mv -f tritium /usr/local/sbin/led-trigger

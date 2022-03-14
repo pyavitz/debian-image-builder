@@ -1,55 +1,20 @@
 # STAGE1
-partition(){
-image_size
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2248
-a
-t
-b
-5859374
-
-p
-w
-
-EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
-partprobe "${IMAGE_LOOP_DEV}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-if [[ `grep -w "lepotato" "board.txt"` ]]; then
-	lepotato_flashbin;
-fi
-if [[ `grep -w "odroidc4" "board.txt"` ]]; then
-	odroidc4_flashbin;
-fi
-if [[ `grep -w "odroidn2" "board.txt"` ]]; then
-	odroidn2_flashbin;
-fi
-if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
-	odroidn2plus_flashbin;
-fi
-if [[ `grep -w "radxazero" "board.txt"` ]]; then
-	radxazero_flashbin;
-fi
-sync
-umount p1
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
-}
-
 lepotato_flashbin(){
-dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
-dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
+if [[ `grep -w "emmc=1" "userdata.txt"` ]]; then
+	dd if=output/lepotato/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
+else
+	dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442;
+	dd if=output/lepotato/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1;
+fi
 }
 
 odroidc4_flashbin(){
-dd if=output/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
-dd if=output/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
+if [[ `grep -w "emmc=1" "userdata.txt"` ]]; then
+	dd if=output/odroidc4/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
+else
+	dd if=output/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync;
+	dd if=output/odroidc4/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync;
+fi
 }
 
 odroidn2_flashbin(){
@@ -77,102 +42,6 @@ else
 	dd if=output/radxazero/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442;
 	dd if=output/radxazero/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1;
 fi
-}
-
-partition_uuid(){
-ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-
-source part-uuid.txt
-}
-
-create_fstab(){
-tee p1/etc/fstab <<EOF
-UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
-tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
-EOF
-}
-
-# EXTLINUX
-lepotato_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-gxl-s905x-libretech-cc.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-odroidc4_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    # mainline
-    #fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
-    # legacy
-    fdt /boot/amlogic/meson64_odroidc4.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-odroidhc4_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-sm1-odroid-hc4.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-odroidn2_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    # mainline
-    #fdt /boot/amlogic/meson-g12b-odroid-n2.dtb
-    # legacy
-    fdt /boot/amlogic/meson64_odroidn2.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 init=/sbin/init
-EOF
-}
-
-odroidn2plus_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    # mainline
-    #fdt /boot/amlogic/meson-g12b-odroid-n2-plus.dtb
-    # legacy
-    fdt /boot/amlogic/meson64_odroidn2_plus.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init
-EOF
-}
-
-radxazero_extlinux(){
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-g12a-radxa-zero.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
 }
 
 # STAGE2

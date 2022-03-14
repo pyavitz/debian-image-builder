@@ -1,0 +1,282 @@
+#!/bin/bash
+if [[ `grep -w "allwinner" "board.txt"` ]]; then
+	source lib/function/allwinner;
+fi
+if [[ `grep -w "amlogic" "board.txt"` ]]; then
+	source lib/function/amlogic;
+fi
+if [[ `grep -w "broadcom" "board.txt"` ]]; then
+	source lib/function/broadcom;
+fi
+if [[ `grep -w "rockchip" "board.txt"` ]]; then
+	source lib/function/rockchip;
+fi
+source lib/function/staging
+source lib/function/release
+source lib/function/shrink
+source lib/function/echoes
+source lib/source
+source userdata.txt > /dev/null 2>&1
+UD=userdata.txt > /dev/null 2>&1
+
+userdata(){
+echo ""
+echo "Please create a userdata.txt file"
+while [ true ]; do
+read -t 10 -n 1
+if [ $? = 0 ]; then
+	exit;
+else
+	echo "run make config";
+fi
+done
+}
+
+if [ -f "$UD" ]; then
+	echo ""
+else 
+	userdata;
+fi
+validation
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	set -eux -o pipefail;
+else
+	set -eu -o pipefail;
+fi
+echo ""
+if [[ `grep -w 'DISTRO="debian"' "userdata.txt"` ]]; then
+	debian_banner;
+fi
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	devuan_banner;
+fi
+if [[ `grep -w 'DISTRO="kali"' "userdata.txt"` ]]; then
+	kali_banner;
+fi
+if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; then
+	ubuntu_banner;
+fi
+echo
+RAM=0
+PROXY=""
+IMAGE_FOLDER="img/"
+# allwinner
+if [[ `grep -w "tritium" "board.txt"` ]]; then
+	DEVICE_SOC="h5-libretech-all-h3-cc";
+fi
+if [[ `grep -w "nanopi" "board.txt"` ]]; then
+	DEVICE_SOC="h5-nanopi-neo-plus2";
+fi
+if [[ `grep -w "pine64" "board.txt"` ]]; then
+	DEVICE_SOC="a64-pine64-plus";
+fi
+# amlogic
+if [[ `grep -w "lepotato" "board.txt"` ]]; then
+	DEVICE_SOC="s905x-libretech-cc";
+fi
+if [[ `grep -w "odroidc4" "board.txt"` ]]; then
+	DEVICE_SOC="sm1-odroid-c4";
+fi
+if [[ `grep -w "odroidn2" "board.txt"` ]]; then
+	DEVICE_SOC="g12b-odroid-n2";
+fi
+if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
+	DEVICE_SOC="g12b-odroid-n2-plus";
+fi
+if [[ `grep -w "radxazero" "board.txt"` ]]; then
+	DEVICE_SOC="g12a-radxa-zero";
+fi
+# broadcom
+if [[ `grep -w "bcm2711" "board.txt"` ]]; then
+	DEVICE_SOC="bcm2711-rpi-4-b";
+fi
+# rockchip
+if [[ `grep -w "renegade" "board.txt"` ]]; then
+	DEVICE_SOC="rk3328-roc-cc";
+fi
+if [[ `grep -w "rock64" "board.txt"` ]]; then
+	DEVICE_SOC="rk3328-rock64";
+fi
+if [[ `grep -w "rockpro64" "board.txt"` ]]; then
+	DEVICE_SOC="rk3399-rockpro64";
+fi
+if [[ `grep -w "nanopc" "board.txt"` ]]; then
+	DEVICE_SOC="rk3399-nanopct4";
+fi
+IMAGE_DATE="$(date +%F)"
+IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
+if [ $RAM -ne 0 ]; then
+	IMAGE_FOLDER="ram/"
+fi
+mkdir -p "$IMAGE_FOLDER"
+if [ $RAM -ne 0 ]; then
+	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
+fi
+if [[ `grep -w "p1" "board.txt"` ]]; then
+	RELEASE="p1/etc/apt/sources.list"
+	p1_setup;
+fi
+if [[ `grep -w "p2" "board.txt"` ]]; then
+	RELEASE="p2/etc/apt/sources.list"
+	p2_setup;
+fi
+# setup stage2
+if [[ `grep -w "allwinner" "board.txt"` ]]; then
+	cp scripts/stage2 p1/root;
+	cp lib/function/allwinner p1/root/allwinner.txt;
+	p1_files;
+fi
+if [[ `grep -w "amlogic" "board.txt"` ]]; then
+	cp scripts/stage2 p1/root;
+	cp lib/function/amlogic p1/root/amlogic.txt;
+	p1_files;
+fi
+if [[ `grep -w "broadcom" "board.txt"` ]]; then
+	cp scripts/stage2 p2/root;
+	cp lib/function/broadcom p2/root/broadcom.txt;
+	p2_files;
+fi
+if [[ `grep -w "rockchip" "board.txt"` ]]; then
+	cp scripts/stage2 p1/root;
+	cp lib/function/rockchip p1/root/rockchip.txt;
+	p1_files;
+fi
+# allwinner
+if [[ `grep -w "tritium" "board.txt"` ]]; then
+	cp output/tritium/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
+	cp files/led-trigger/tritium p1/root;
+fi
+if [[ `grep -w "nanopi" "board.txt"` ]]; then
+	cp output/nanopi/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
+	cp files/led-trigger/nanopi p1/root;
+fi
+if [[ `grep -w "pine64" "board.txt"` ]]; then
+	cp output/pine64/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
+fi
+# amlogic
+if [[ `grep -w "lepotato" "board.txt"` ]]; then
+	cp output/lepotato/{u-boot.bin,*.deb} p1/root;
+	cp files/led-trigger/lepotato p1/root;
+fi
+if [[ `grep -w "odroidc4" "board.txt"` ]]; then
+	cp output/odroidc4/{u-boot.bin,*.deb} p1/root;
+	cp files/led-trigger/odroidc4 p1/root;
+fi
+if [[ `grep -w "odroidhc4" "board.txt"` ]]; then
+	cp output/odroidc4/{u-boot.bin,*.deb} p1/root;
+fi
+if [[ `grep -w "odroidn2" "board.txt"` ]]; then
+	cp output/odroidn2/{u-boot.bin,*.deb} p1/root;
+	cp files/led-trigger/odroidn2 p1/root;
+fi
+if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
+	cp output/odroidn2plus/{u-boot.bin,*.deb} p1/root;
+	cp files/led-trigger/odroidn2 p1/root;
+fi
+if [[ `grep -w "radxazero" "board.txt"` ]]; then
+	cp output/radxazero/{u-boot.bin,*.deb} p1/root;
+	cp files/led-trigger/radxazero p1/root;
+fi
+# broadcom
+if [[ `grep -w "bcm2711" "board.txt"` ]]; then
+	cp output/raspi4/{*.deb,u-boot.bin} p2/root;
+	cp files/led-trigger/raspi4 p2/root;
+fi
+# rockchip
+if [[ `grep -w "renegade" "board.txt"` ]]; then
+	cp output/renegade/{*.itb,*.bin,*.deb} p1/root;
+	cp files/led-trigger/renegade p1/root;
+fi
+if [[ `grep -w "rock64" "board.txt"` ]]; then
+	cp output/rock64/{*.itb,*.bin,*.deb} p1/root;
+fi
+if [[ `grep -w "rockpro64" "board.txt"` ]]; then
+	cp output/rockpro64/{*.itb,*.bin,*.deb} p1/root;
+fi
+if [[ `grep -w "nanopc" "board.txt"` ]]; then
+	cp output/nanopc/{*.itb,*.bin,*.deb} p1/root;
+	cp files/led-trigger/nanopc p1/root;
+fi
+
+echo -e "${WHT}Starting chroot${FIN} ..."
+# mount and chroot p1
+if [[ `grep -w "p1" "board.txt"` ]]; then
+	mount -o bind /dev p1/dev;
+	mount -o bind /dev/pts p1/dev/pts;
+	chroot p1 /root/stage2;
+	# unmount
+	umount p1/dev/pts;
+	umount p1/dev;
+	rm p1/usr/bin/qemu-aarch64-static;
+	cp -f p1/root/kernel.txt .;
+	rm p1/root/stage2;
+	rm -f p1/root/*.txt;
+	rm -f p1/var/cache/debconf/*;
+	if [ -n "$PROXY" ]; then
+		rm p1/etc/apt/apt.conf.d/30proxy;
+	fi
+	rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
+	umount p1;
+	# finish
+	losetup -d "${IMAGE_LOOP_DEV}";
+	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";
+	if [ $RAM -ne 0 ]; then
+		umount "${IMAGE_FOLDER}";
+	fi
+	rmdir "${IMAGE_FOLDER}";
+	rmdir p1;
+	shrink;
+	if [[ `grep -w "compress_img.xz=1" "userdata.txt"` ]]; then
+		echo_compress;
+		compress_image;
+		echo_done;
+	else
+		rename_image;
+	fi
+	rm -f {part-uuid.txt,board.txt,kernel.txt};
+	echo "";
+	exit 0;
+fi
+
+# mount and chroot p2
+if [[ `grep -w "p2" "board.txt"` ]]; then
+	mount -o bind p1 p2/boot;
+	mount -o bind /dev p2/dev;
+	mount -o bind /dev/pts p2/dev/pts;
+	chroot p2 /root/stage2;
+	# unmount
+	umount p2/dev/pts;
+	umount p2/dev;
+	umount p2/boot;
+	rm p2/usr/bin/qemu-aarch64-static;
+	cp -f p2/root/kernel.txt .;
+	rm p2/root/stage2;
+	rm -f p2/root/*.txt;
+	rm -f p2/var/cache/debconf/*;
+	if [ -n "$PROXY" ]; then
+		rm p2/etc/apt/apt.conf.d/30proxy;
+	fi
+	rm p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
+	e4defrag -c p2;
+	umount p2;
+	umount p1;
+	# finish
+	losetup -d "${IMAGE_LOOP_DEV}";
+	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";
+	if [ $RAM -ne 0 ]; then
+		umount "${IMAGE_FOLDER}";
+	fi
+	rmdir "${IMAGE_FOLDER}";
+	rmdir p1 p2;
+	shrink;
+	if [[ `grep -w "compress_img.xz=1" "userdata.txt"` ]]; then
+		echo_compress;
+		compress_image;
+		echo_done;
+	else
+		rename_image;
+	fi
+	rm -f {part-uuid.txt,board.txt,kernel.txt};
+	echo "";
+	exit 0;
+fi
