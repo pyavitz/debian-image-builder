@@ -1,0 +1,64 @@
+diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts/amlogic/overlays/Makefile
+--- a/arch/arm64/boot/dts/amlogic/overlays/Makefile	2022-03-15 08:11:04.608665106 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile	2022-03-16 08:54:40.336361938 -0400
+@@ -1,9 +1,11 @@
+ # SPDX-License-Identifier: GPL-2.0
+ dtbo-y += \
++	meson-g12a-gpio-10-led.dtbo \
+ 	meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dtbo \
+ 	meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dtbo \
+ 	meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dtbo \
+ 	meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dtbo \
++	meson-g12a-opp-2ghz.dtbo \
+ 	meson-g12a-pwmao-a-on-gpioao-11.dtbo \
+ 	meson-g12a-pwm-c-on-gpiox-8.dtbo \
+ 	meson-g12a-spi-spidev.dtbo \
+diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts
+--- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts	2022-03-16 08:46:18.655763000 -0400
+@@ -0,0 +1,24 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	/delete-node/ leds;
++};
++
++
++/ {
++
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target-path = "/leds";
++		__overlay__ {
++			led-green {
++				label = "radxa-zero:green";
++				gpios = <0x4f 0x0a 0x00>;
++				linux,default-trigger = "heartbeat";
++				default-state = "on";
++			};
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts
+--- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts	2022-03-15 07:42:26.267155000 -0400
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target-path = "/opp-table";
++		__overlay__ {
++			opp-2000000000 {
++				opp-hz = /bits/ 64 <2000000000>;
++				opp-microvolt = <1022000>;
++				turbo-mode;
++			};
++		};
++	};
++};
