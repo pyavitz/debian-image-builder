@@ -125,8 +125,7 @@ boot-g12.py rz-fastboot-loader.bin
 sudo fastboot flash 0x200 rz-u-boot.bin
 sudo fastboot reboot
 ```
-* **Radxa Zero:** Rev. 1.5 LED Support
-Add to /boot/extlinux/extlinux.conf
+* **Radxa Zero:** Rev. 1.5 LED Overlay
 ```sh
 fdtoverlays /boot/amlogic/overlays/meson-g12a-gpio-10-led.dtbo
 ```
