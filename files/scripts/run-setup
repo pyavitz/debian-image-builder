@@ -19,7 +19,7 @@ echo ""
 }
 
 confirm(){
-echo -e "${WHT}Setup HDMI Audio ..?${FIN}"
+echo -e "${WHT}Setup Audio ..?${FIN}"
 echo -e ""
 read -p "Continue (y/n)?" choice
 case "$choice" in 
@@ -37,7 +37,11 @@ sleep 1s
 if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
 	confirm;
 else
-	:;
+	if [[ `grep "odroid" "/etc/opt/board.txt"` ]]; then
+		confirm;
+	else
+		:;
+	fi
 fi
 if [ -e /etc/new.motd ]; then
 	sudo rm -f /etc/motd
