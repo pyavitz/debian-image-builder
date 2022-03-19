@@ -16,6 +16,12 @@ echo CONFIG_EXT4_WRITE=y >> configs/libretech_all_h3_cc_h5_defconfig
 # pine64+
 echo CONFIG_SD_BOOT=y >> configs/pine64_plus_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/pine64_plus_defconfig
+# nanopi neo
+echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_defconfig
+# nanopi neo
+echo CONFIG_SD_BOOT=y >> configs/nanopi_m1_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/nanopi_m1_defconfig
 # nanopi neo plus2
 echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_plus2_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_plus2_defconfig
@@ -114,7 +120,11 @@ fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
 if [[ `grep -w "allwinner" "../board.txt"` ]]; then
-	cp arm-trusted-firmware/build/${PLAT}/debug/bl31.bin u-boot/bl31.bin;
+	if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
+		:;
+	else
+		cp arm-trusted-firmware/build/${PLAT}/debug/bl31.bin u-boot/bl31.bin;
+	fi
 fi
 if [[ `grep -w "rockchip" "../board.txt"` ]]; then
 	cp arm-trusted-firmware/build/${PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
@@ -155,6 +165,12 @@ if [[ `grep -w "pine64" "../board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopi" "../board.txt"` ]]; then
 	DEFCONFIG="nanopi_neo_plus2_defconfig";
+fi
+if [[ `grep -w "nanopineo" "../board.txt"` ]]; then
+	DEFCONFIG="nanopi_neo_defconfig";
+fi
+if [[ `grep -w "nanopim1" "../board.txt"` ]]; then
+	DEFCONFIG="nanopi_m1_defconfig";
 fi
 ### AMLOGIC
 if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
@@ -227,6 +243,22 @@ npineoplus2-binary(){
 mkdir -p ../${BINNPI}
 cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
 cp -f tools/mkimage ../${BINNPI}/
+echo_done
+echo ""
+}
+
+npineo-binary(){
+mkdir -p ../${BINNPINEO}
+cp -f u-boot-sunxi-with-spl.bin ../${BINNPINEO}/
+cp -f tools/mkimage ../${BINNPINEO}/
+echo_done
+echo ""
+}
+
+npim1-binary(){
+mkdir -p ../${BINNPIM1}
+cp -f u-boot-sunxi-with-spl.bin ../${BINNPIM1}/
+cp -f tools/mkimage ../${BINNPIM1}/
 echo_done
 echo ""
 }
@@ -337,7 +369,11 @@ echo ""
 # ALLWINNER RUN BUILD
 allwinner-uboot-string(){
 uboot-source
-arm-trusted-firmware
+if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
+	:;
+else
+	arm-trusted-firmware;
+fi
 u-boot
 if [[ `grep -w "tritium" "../board.txt"` ]]; then
 	tritium-binary;
@@ -347,6 +383,12 @@ if [[ `grep -w "pine64" "../board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopi" "../board.txt"` ]]; then
 	npineoplus2-binary;
+fi
+if [[ `grep -w "nanopineo" "../board.txt"` ]]; then
+	npineo-binary;
+fi
+if [[ `grep -w "nanopim1" "../board.txt"` ]]; then
+	npim1-binary;
 fi
 }
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Bind root device activity to Linux kernel LED trigger
-# Stop blue LED from blinking
+# Stop status LED from blinking
 
 GREEN_LED="/sys/class/leds/nanopi:green:pwr/trigger"
 if [ -e $GREEN_LED ]; then
@@ -11,7 +11,12 @@ if [ -e $GREEN_LED ]; then
 	echo -n "$ROOT_DEVICE" > $GREEN_LED
 fi
 
-BLUE_LED="/sys/class/leds/nanopi:red:status/brightness"
+RED_LED="/sys/class/leds/nanopi:red:status/brightness"
+if [ -e $RED_LED ]; then
+	echo "0" > $RED_LED
+fi
+
+BLUE_LED="/sys/class/leds/nanopi:blue:status/brightness"
 if [ -e $BLUE_LED ]; then
 	echo "0" > $BLUE_LED
 fi

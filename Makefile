@@ -3,9 +3,11 @@ MENU=./lib/dialog/menu
 CONF=./lib/dialog/config
 DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
 
-# functions
+# misc
 RFS=./scripts/rootfs
 ROOTFS=sudo ./scripts/rootfs
+RFSV7=./scripts/rootfs
+ROOTFSV7=sudo ./scripts/rootfs
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
@@ -34,7 +36,7 @@ help:
 	@echo "\e[1;31m                  Debian Image Builder\e[0m"
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
-	@echo "  Allwinner:  nanopi tritium"
+	@echo "  Allwinner:  nanopi nanopineo nanopim1 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+ rzero"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rockpro64"
@@ -50,7 +52,8 @@ help:
 	@echo ""
 	@echo "  make board-uboot             Make u-boot"
 	@echo "  make board-kernel            Make linux kernel"
-	@echo "  make rootfs                  Make rootfs tarball"
+	@echo "  make rootfs                  Make arm64 rootfs tarball"
+	@echo "  make rootfsv7                Make armhf rootfs tarball"
 	@echo "  make board-image             Make bootable Debian image"
 	@echo "  make board-all               Feeling lucky?"
 	@echo ""
@@ -116,6 +119,7 @@ tritium-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -174,6 +178,7 @@ pine64-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -232,12 +237,135 @@ nanopi-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
 	@ echo nanopi > board.txt
 	@ echo allwinner >> board.txt
 	@ echo p1 >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+### NANOPI NEO H3
+nanopineo-uboot:
+	# Compiling u-boot
+	@ echo nanopineo > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+nanopineo-kernel:
+	# Compiling kernel
+	@ echo nanopineo > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+nanopineo-image:
+	# Creating image
+	@ echo nanopineo > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+nanopineo-all:
+	# N A N O  P I  N E O
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo nanopineo > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo nanopineo > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-armhf'"' > board.txt
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Creating image
+	@ echo nanopineo > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+### NANOPI M1 H3
+nanopim1-uboot:
+	# Compiling u-boot
+	@ echo nanopim1 > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+nanopim1-kernel:
+	# Compiling kernel
+	@ echo nanopim1 > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+nanopim1-image:
+	# Creating image
+	@ echo nanopim1 > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+nanopim1-all:
+	# N A N O  P I  M 1
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo nanopim1 > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo nanopim1 > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-armhf'"' > board.txt
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Creating image
+	@ echo nanopim1 > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
 	@chmod +x ${IMG}
 	@chmod +x ${STG2}
 	@${IMAGE}
@@ -290,6 +418,7 @@ odroidc4-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -348,6 +477,7 @@ odroidn2-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -406,6 +536,7 @@ odroidn2+-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -464,6 +595,7 @@ lepotato-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -522,6 +654,7 @@ rzero-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -582,6 +715,7 @@ renegade-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -642,6 +776,7 @@ rock64-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -702,6 +837,7 @@ rockpro64-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -762,6 +898,7 @@ nanopc-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -820,6 +957,7 @@ raspi4-all:
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
 	# Creating image
@@ -845,9 +983,16 @@ dialogrc:
 	@${DIALOGRC}
 
 rootfs:
-	# Rootfs: arm64
+	# ROOTFS
+	@ echo ROOTFS_ARCH='"'rootfs-aarch64'"' > board.txt
 	@chmod +x ${RFS}
 	@${ROOTFS}
+	
+rootfsv7:
+	# ROOTFS
+	@ echo ROOTFS_ARCH='"'rootfs-armhf'"' > board.txt
+	@chmod +x ${RFSV7}
+	@${ROOTFSV7}
 
 cleanup:
 	# Cleaning up

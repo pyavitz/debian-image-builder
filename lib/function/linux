@@ -244,21 +244,45 @@ if [[ `ls ${BINNPI}/*.deb` ]] > /dev/null 2>&1; then
 fi
 }
 
+nanopineo_check(){
+if [[ `ls ${BINNPINEO}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINNPINEO}/tmp
+	mv -f ${BINNPINEO}/*.deb ${BINNPINEO}/tmp;
+fi
+}
+
+nanopim1_check(){
+if [[ `ls ${BINNPIM1}/*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p ${BINNPIM1}/tmp
+	mv -f ${BINNPIM1}/*.deb ${BINNPIM1}/tmp;
+fi
+}
+
 allwinner_output(){
-if [[ `grep -Fx "tritium" "../board.txt"` ]]; then
+if [[ `grep -w "tritium" "../board.txt"` ]]; then
 	tritium_check
 	mkdir -p ../output/tritium
 	mv -f *.deb ../output/tritium/;
 fi
-if [[ `grep -Fx "pine64" "../board.txt"` ]]; then
+if [[ `grep -w "pine64" "../board.txt"` ]]; then
 	pine64_check
 	mkdir -p ../output/pine64
 	mv -f *.deb ../output/pine64/;
 fi
-if [[ `grep -Fx "nanopi" "../board.txt"` ]]; then
+if [[ `grep -w "nanopi" "../board.txt"` ]]; then
 	nanopi_check
 	mkdir -p ../output/nanopi
 	mv -f *.deb ../output/nanopi/;
+fi
+if [[ `grep -w "nanopineo" "../board.txt"` ]]; then
+	nanopineo_check
+	mkdir -p ../output/nanopineo
+	mv -f *.deb ../output/nanopineo/;
+fi
+if [[ `grep -w "nanopim1" "../board.txt"` ]]; then
+	nanopim1_check
+	mkdir -p ../output/nanopim1
+	mv -f *.deb ../output/nanopim1/;
 fi
 }
 
