@@ -125,7 +125,11 @@ boot-g12.py rz-fastboot-loader.bin
 sudo fastboot flash 0x200 rz-u-boot.bin
 sudo fastboot reboot
 ```
-* **Radxa Zero:** HDMI Audio
+* **Radxa Zero:** Rev. 1.5 LED Overlay
+```sh
+fdtoverlays /boot/amlogic/overlays/meson-g12a-gpio-10-led.dtbo
+```
+* **Amlogic:** G12A/B SM1 Audio
 ```sh
 sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
 sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
@@ -137,14 +141,6 @@ sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
 sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
 sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
 sudo alsactl store
-```
-* **Radxa Zero:** Rev. 1.5 LED Support
-```sh
-sudo mkdir -p /etc/initramfs/post-update.d/
-sudo wget -cq https://github.com/pyavitz/debian-image-builder/raw/feature/files/boot/99-xled -P /etc/initramfs/post-update.d/
-sudo chmod +x /etc/initramfs/post-update.d/99-xled
-sudo chown root:root /etc/initramfs/post-update.d/99-xled
-sudo /etc/initramfs/post-update.d/99-xled
 ```
 
 ## Usage
@@ -222,7 +218,7 @@ A systemd service runs 'governor -r' during boot.
 #### Overclocking
 * **NanoPC-T4, Odroid N2/+, Radxa Zero & ROCKPro64**
 
-The boards run slightly under clocked by default. If you decide to overclock the board, make sure you are using passive or active cooling.
+If you decide to overclock the board, make sure you are using passive or active cooling.
 ```sh
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
 sudo service tweaks restart

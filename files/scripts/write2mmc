@@ -303,126 +303,66 @@ EOF
 }
 
 ### EXTLINUX
-libre_create_extlinux(){
-source /etc/opt/root-pid.txt
+create_extlinux(){
+# allwinner
+if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+# amlogic
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb";
+	FDTDIR="/boot/amlogic/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/amlogic/meson64_odroidc4.dtb";
+	FDTDIR="/boot/amlogic/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/amlogic/meson64_odroidn2.dtb";
+	FDTDIR="/boot/amlogic/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init";
+fi
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/amlogic/meson64_odroidn2_plus.dtb";
+	FDTDIR="/boot/amlogic/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init";
+fi
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/amlogic/meson-g12a-radxa-zero.dtb";
+	FDTDIR="/boot/amlogic/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+# rockchip
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/rockchip/rk3328-roc-cc.dtb";
+	FDTDIR="/boot/rockchip/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 video=HDMI-A-1:1920x1080@60 init=/sbin/init";
+fi
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/rockchip/rk3399-nanopc-t4.dtb";
+	FDTDIR="/boot/rockchip/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u loglevel=1 init=/sbin/init";
+fi
 mkdir -p /mnt/boot/extlinux
 rm -f /mnt/boot/extlinux/extlinux.conf
 tee /mnt/boot/extlinux/extlinux.conf <<EOF
 label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-gxl-s905x-libretech-cc.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
+	kernel /boot/Image
+	initrd /boot/uInitrd
+	fdtdir ${FDTDIR}
+	fdt ${FDT}
+	#fdtoverlays
+	${CMDLINE}
 EOF
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	sed -i 's/#fdtoverlays/fdtoverlays \/boot\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
+fi
 }
 
-odroidc4_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    # mainline
-    #fdt /boot/amlogic/meson-sm1-odroid-c4.dtb
-    # legacy
-    fdt /boot/amlogic/meson64_odroidc4.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-odroidn2_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    # mainline
-    #fdt /boot/amlogic/meson-g12b-odroid-n2.dtb
-    # legacy
-    fdt /boot/amlogic/meson64_odroidn2.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 init=/sbin/init
-EOF
-}
-
-odroidn2plus_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    # mainline
-    #fdt /boot/amlogic/meson-g12b-odroid-n2-plus.dtb
-    # legacy
-    fdt /boot/amlogic/meson64_odroidn2_plus.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init
-EOF
-}
-
-radxazero_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/amlogic/
-    fdt /boot/amlogic/meson-g12a-radxa-zero.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-renegade_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/rockchip/
-    fdt /boot/rockchip/rk3328-roc-cc.dtb
-    append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-nanopi_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/allwinner/
-    fdt /boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb
-    append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init
-EOF
-}
-
-nanopc_create_extlinux(){
-source /etc/opt/root-pid.txt
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
-label default
-    kernel /boot/Image
-    initrd /boot/uInitrd
-    fdtdir /boot/rockchip/
-    fdt /boot/rockchip/rk3399-nanopc-t4.dtb
-    append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u loglevel=1 init=/sbin/init
-EOF
-}
 
 ### WRITE UBOOT
 amlogic0_flash_uboot(){
@@ -583,31 +523,9 @@ echo "Done."
 echo ""
 echo "Setting up boot."
 source /etc/opt/root-id.txt
+source /etc/opt/root-pid.txt
 create_fstab
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
-	libre_create_extlinux;
-fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
-	odroidc4_create_extlinux;
-fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
-	odroidn2_create_extlinux;
-fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
-	odroidn2plus_create_extlinux;
-fi
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
-	radxazero_create_extlinux;
-fi
-if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
-	nanopi_create_extlinux;
-fi
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	nanopc_create_extlinux;
-fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
-	renegade_create_extlinux;
-fi
+create_extlinux
 echo "Done."
 
 echo ""
