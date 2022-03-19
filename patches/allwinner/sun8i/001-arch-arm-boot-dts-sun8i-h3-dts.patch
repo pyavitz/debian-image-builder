@@ -1,81 +1,91 @@
 diff -Naur a/arch/arm/boot/dts/sun8i-h3.dtsi b/arch/arm/boot/dts/sun8i-h3.dtsi
---- a/arch/arm/boot/dts/sun8i-h3.dtsi	2022-02-23 06:03:22.000000000 -0500
-+++ b/arch/arm/boot/dts/sun8i-h3.dtsi	2022-03-18 19:37:32.976287231 -0400
-@@ -64,6 +64,49 @@
+--- a/arch/arm/boot/dts/sun8i-h3.dtsi	2022-03-13 16:23:37.000000000 -0400
++++ b/arch/arm/boot/dts/sun8i-h3.dtsi	2022-03-13 16:54:13.000000000 -0400
+@@ -44,10 +44,22 @@
+ #include <dt-bindings/thermal/thermal.h>
+ 
+ / {
++	aliases {
++		mmc0 = &mmc0;
++		mmc1 = &mmc1;
++		mmc2 = &mmc2;
++	};
++
+ 	cpu0_opp_table: opp-table-cpu {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
++		opp-480000000 {
++			opp-hz = /bits/ 64 <480000000>;
++			opp-microvolt = <1040000 1040000 1300000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
+ 		opp-648000000 {
+ 			opp-hz = /bits/ 64 <648000000>;
+ 			opp-microvolt = <1040000 1040000 1300000>;
+@@ -60,11 +72,41 @@
+ 			clock-latency-ns = <244144>; /* 8 32k periods */
+ 		};
+ 
++		opp-960000000 {
++			opp-hz = /bits/ 64 <960000000>;
++			opp-microvolt = <1200000 1200000 1300000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
+ 		opp-1008000000 {
  			opp-hz = /bits/ 64 <1008000000>;
  			opp-microvolt = <1200000 1200000 1300000>;
  			clock-latency-ns = <244144>; /* 8 32k periods */
-+		
-+		};
-+
-+		opp-1056000000 {
-+			opp-hz = /bits/ 64 <1056000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+		};
+ 		};
 +
 +		opp-1104000000 {
 +			opp-hz = /bits/ 64 <1104000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+		};
-+
-+		opp-1152000000 {
-+			opp-hz = /bits/ 64 <1152000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
++			opp-microvolt = <1320000 1320000 1320000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
 +		};
 +
 +		opp-1200000000 {
 +			opp-hz = /bits/ 64 <1200000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+		};
-+
-+		opp-1224000000 {
-+			opp-hz = /bits/ 64 <1224000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+		};
-+
-+		opp-1248000000 {
-+			opp-hz = /bits/ 64 <1248000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
++			opp-microvolt = <1320000 1320000 1320000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
 +		};
 +
 +		opp-1296000000 {
 +			opp-hz = /bits/ 64 <1296000000>;
-+			opp-microvolt = <1300000 1300000 1300000>;
++			opp-microvolt = <1340000 1340000 1340000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
- 		};
- 	};
- 
-@@ -141,6 +184,15 @@
- 		interrupt-affinity = <&cpu0>, <&cpu1>, <&cpu2>, <&cpu3>;
- 	};
- 
-+	thermal-zones {
-+		cpu-thermal {
-+			/* milliseconds */
-+			polling-delay-passive = <250>;
-+			polling-delay = <1000>;
-+			thermal-sensors = <&ths 0>;
 +		};
-+	};
 +
- 	timer {
- 		compatible = "arm,armv7-timer";
- 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-@@ -329,3 +381,8 @@
- &sid {
- 	compatible = "allwinner,sun8i-h3-sid";
- };
++		opp-1368000000 {
++			opp-hz = /bits/ 64 <1368000000>;
++			opp-microvolt = <1400000 1400000 1400000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
+ 	};
+ 
+ 	cpus {
+@@ -170,6 +212,19 @@
+ 			#size-cells = <1>;
+ 			ranges;
+ 
++			sram_a2: sram@40000 {
++				compatible = "mmio-sram";
++				reg = <0x00040000 0xc000>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0 0x00040000 0xc000>;
 +
-+&ths {
-+	compatible = "allwinner,sun8i-h3-ths";
-+	#thermal-sensor-cells = <0>;
-+};
++				scpi_sram: scp-shmem@bc00 {
++					compatible = "arm,scp-shmem";
++					reg = <0xbc00 0x200>;
++				};
++			};
++
+ 			sram_c: sram@1d00000 {
+ 				compatible = "mmio-sram";
+ 				reg = <0x01d00000 0x80000>;
 diff -Naur a/arch/arm/boot/dts/sun8i-h3-nanopi.dtsi b/arch/arm/boot/dts/sun8i-h3-nanopi.dtsi
 --- a/arch/arm/boot/dts/sun8i-h3-nanopi.dtsi	2022-02-23 06:03:22.000000000 -0500
 +++ b/arch/arm/boot/dts/sun8i-h3-nanopi.dtsi	2022-03-18 19:30:19.498250926 -0400
@@ -123,3 +133,4 @@ diff -Naur a/arch/arm/boot/dts/sun8i-h3-nanopi.dtsi b/arch/arm/boot/dts/sun8i-h3
  &uart0 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&uart0_pa_pins>;
+
