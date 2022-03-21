@@ -33,11 +33,17 @@ mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 if [[ `grep -w "tritium" "board.txt"` ]]; then
 	tritium_flashbin;
 fi
+if [[ `grep -w "pine64" "board.txt"` ]]; then
+	pine64_flashbin;
+fi
 if [[ `grep -w "nanopi" "board.txt"` ]]; then
 	nanopi_flashbin;
 fi
-if [[ `grep -w "pine64" "board.txt"` ]]; then
-	pine64_flashbin;
+if [[ `grep -w "nanopineo" "board.txt"` ]]; then
+	nanopineo_flashbin;
+fi
+if [[ `grep -w "nanopim1" "board.txt"` ]]; then
+	nanopim1_flashbin;
 fi
 if [[ `grep -w "lepotato" "board.txt"` ]]; then
 	lepotato_flashbin;
@@ -152,17 +158,27 @@ if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 else
 	p1_uuid > /dev/null 2>&1;
 fi
-if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ]; then
-	tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p1/;
+if [[ `grep -w "arm" "board.txt"` ]]; then
+	ROOTFS_ARCH="rootfs-armhf";
+else
+	ROOTFS_ARCH="rootfs-aarch64";
+fi
+if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
+	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p1/;
 else
 	echo -e "${YLW}Missing rootfs tarball!${FIN}"
 	make cleanup
 	exit;
 fi
+
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
-cp $(command -v "qemu-aarch64-static") p1/usr/bin
+if [[ `grep -w "arm" "board.txt"` ]]; then
+	cp $(command -v "qemu-arm-static") p1/usr/bin;
+else
+	cp $(command -v "qemu-aarch64-static") p1/usr/bin;
+fi
 if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 	choose_release;
 else
@@ -261,6 +277,7 @@ fi
 
 p1_extlinux(){
 # allwinner
+# arm64
 if [[ `grep -w "tritium" "board.txt"` ]]; then
 	FDT="/boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb";
 	FDTDIR="/boot/allwinner/";
@@ -275,6 +292,17 @@ if [[ `grep -w "pine64" "board.txt"` ]]; then
 	FDT="/boot/allwinner/sun50i-a64-pine64-plus.dtb";
 	FDTDIR="/boot/allwinner/";
 	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+# armhf
+if [[ `grep -w "nanopineo" "board.txt"` ]]; then
+	FDT="/boot/allwinner/sun8i-h3-nanopi-neo.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+if [[ `grep -w "nanopim1" "board.txt"` ]]; then
+	FDT="/boot/allwinner/sun8i-h3-nanopi-m1.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
 fi
 # amlogic
 if [[ `grep -w "lepotato" "board.txt"` ]]; then

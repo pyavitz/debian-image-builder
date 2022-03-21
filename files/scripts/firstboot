@@ -7,6 +7,40 @@ ROOTFS=`findmnt -v -n -o SOURCE /`
 GROW_SD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
 GROW_MMC=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 
+# Functions
+partition_uuid(){
+echo 'ROOT_PARTUUID="' > root1
+blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p' > root2
+echo '"' > root3
+paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
+rm -f root1 root2 root3
+}
+
+extlinux(){
+source /etc/opt/root-pid.txt
+if [[ `grep -w "nanopineo" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/allwinner/sun8i-h3-nanopi-neo.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+if [[ `grep -w "nanopim1" "/etc/opt/board.txt"` ]]; then
+	FDT="/boot/allwinner/sun8i-h3-nanopi-m1.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+rm -f /boot/extlinux/extlinux.conf
+tee /boot/extlinux/extlinux.conf <<EOF
+label default
+	kernel /boot/Image
+	initrd /boot/uInitrd
+	fdtdir ${FDTDIR}
+	fdt ${FDT}
+	#fdtoverlays
+	${CMDLINE}
+EOF
+rm -f /etc/opt/root-pid.txt
+}
+
 # Expand root filesystem
 if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 	echo "";
@@ -20,6 +54,12 @@ if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
 fi
 sleep 1s
 resize2fs $ROOTFS > /dev/null 2>&1
+
+# Fix PARTUUID
+if [[ `grep -w "arm" "/etc/opt/board.txt"` ]]; then
+	partition_uuid > /dev/null 2>&1;
+	extlinux > /dev/null 2>&1;
+fi
 
 # Fsck boot partition
 if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then

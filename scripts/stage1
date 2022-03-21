@@ -61,14 +61,22 @@ RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
 # allwinner
+# arm64
 if [[ `grep -w "tritium" "board.txt"` ]]; then
-	DEVICE_SOC="h5-libretech-all-h3-cc";
+	DEVICE_SOC="h5-libretech-all-cc";
 fi
 if [[ `grep -w "nanopi" "board.txt"` ]]; then
 	DEVICE_SOC="h5-nanopi-neo-plus2";
 fi
 if [[ `grep -w "pine64" "board.txt"` ]]; then
 	DEVICE_SOC="a64-pine64-plus";
+fi
+# armhf
+if [[ `grep -w "nanopineo" "board.txt"` ]]; then
+	DEVICE_SOC="h3-nanopi-neo";
+fi
+if [[ `grep -w "nanopim1" "board.txt"` ]]; then
+	DEVICE_SOC="h3-nanopi-m1";
 fi
 # amlogic
 if [[ `grep -w "lepotato" "board.txt"` ]]; then
@@ -142,6 +150,7 @@ if [[ `grep -w "rockchip" "board.txt"` ]]; then
 	p1_files;
 fi
 # allwinner
+# arm64
 if [[ `grep -w "tritium" "board.txt"` ]]; then
 	cp output/tritium/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
 	cp files/led-trigger/tritium p1/root;
@@ -152,6 +161,15 @@ if [[ `grep -w "nanopi" "board.txt"` ]]; then
 fi
 if [[ `grep -w "pine64" "board.txt"` ]]; then
 	cp output/pine64/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
+fi
+# armhf
+if [[ `grep -w "nanopineo" "board.txt"` ]]; then
+	cp output/nanopineo/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
+	cp files/led-trigger/nanopi p1/root;
+fi
+if [[ `grep -w "nanopim1" "board.txt"` ]]; then
+	cp output/nanopim1/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
+	cp files/led-trigger/nanopi p1/root;
 fi
 # amlogic
 if [[ `grep -w "lepotato" "board.txt"` ]]; then
@@ -207,7 +225,11 @@ if [[ `grep -w "p1" "board.txt"` ]]; then
 	# unmount
 	umount p1/dev/pts;
 	umount p1/dev;
-	rm p1/usr/bin/qemu-aarch64-static;
+	if [[ `grep -w "arm" "board.txt"` ]]; then
+		rm p1/usr/bin/qemu-arm-static;
+	else
+		rm p1/usr/bin/qemu-aarch64-static;
+	fi
 	cp -f p1/root/kernel.txt .;
 	rm p1/root/stage2;
 	rm -f p1/root/*.txt;

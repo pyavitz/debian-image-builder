@@ -10,6 +10,7 @@ WHT="\e[1;37m"
 FIN="\e[0m"
 source lib/source
 source lib/function/rootfs
+source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -51,7 +52,6 @@ else
 	set -eu -o pipefail;
 fi
 ROOT="sysroot"
-ROOTFS_ARCH="rootfs-aarch64"
 RELEASE=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
 if [ -e $RELEASE ]; then
 	ls $RELEASE
@@ -62,13 +62,28 @@ echo -e "${WHT}Starting debootstrap${FIN} ..."
 
 # start debootstrap
 mkdir -p ${ROOT}/usr/bin
-cp $(command -v "qemu-aarch64-static") ${ROOT}/usr/bin
-if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
-	arm64_devuan;
-else
-	arm64_debootstrap;
+if [[ `grep -w 'ROOTFS_ARCH="rootfs-aarch64"' "board.txt"` ]]; then
+	cp $(command -v "qemu-aarch64-static") ${ROOT}/usr/bin;
+	if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+		arm64_devuan;
+	else
+		arm64_debootstrap;
+	fi
 fi
-rm -f ${ROOT}/usr/bin/qemu-aarch64-static
+if [[ `grep -w 'ROOTFS_ARCH="rootfs-armhf"' "board.txt"` ]]; then
+	cp $(command -v "qemu-arm-static") ${ROOT}/usr/bin;
+	if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+		armhf_devuan;
+	else
+		armhf_debootstrap;
+	fi
+fi
+if [ -e ${ROOT}/usr/bin/qemu-aarch64-static ]; then
+	rm -f ${ROOT}/usr/bin/qemu-aarch64-static
+fi
+if [ -e ${ROOT}/usr/bin/qemu-arm-static ]; then
+	rm -f ${ROOT}/usr/bin/qemu-arm-static
+fi
 rm -f ${ROOT}/var/cache/debconf/*
 
 # finish
