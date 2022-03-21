@@ -93,6 +93,13 @@ echo_done
 echo
 }
 
+# Amlogic LTS
+lts_patching(){
+if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
+	for i in ../${AMLOGIC}/lts/*.patch; do patch -N -p1 < $i; done;
+fi
+}
+
 ## LE POTATO
 potato_patch(){
 echo
@@ -106,6 +113,7 @@ fi
 if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
 fi
+lts_patching
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
 echo
@@ -114,13 +122,13 @@ echo
 ## ODROID
 odroid_boards(){
 if [[ `grep -w "odroidc4" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/c4/*.patch; do patch -p1 < $i; done;
+	for i in ../${AMLOGIC}/odroid/c4/*.patch; do patch -p1 < $i; done;
 fi
 if [[ `grep -w "odroidn2" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+	for i in ../${AMLOGIC}/odroid/n2/*.patch; do patch -p1 < $i; done;
 fi
 if [[ `grep -w "odroidn2plus" "../../board.txt"` ]]; then
-	for i in ../${AMLOGIC}/n2/*.patch; do patch -p1 < $i; done;
+	for i in ../${AMLOGIC}/odroid/n2/*.patch; do patch -p1 < $i; done;
 fi
 }
 
@@ -154,6 +162,7 @@ fi
 if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
 fi
+lts_patching
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
 echo
@@ -177,6 +186,7 @@ fi
 if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
 fi
+lts_patching
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
 echo
@@ -199,6 +209,7 @@ fi
 if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
 fi
+lts_patching
 cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
 echo
