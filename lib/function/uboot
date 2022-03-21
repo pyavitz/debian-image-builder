@@ -97,7 +97,11 @@ fi
 }
 
 u-boot(){
-echo
+if [[ `grep -w "arm" "../board.txt"` ]]; then
+	:;
+else
+	echo ""
+fi
 echo_duboot
 if [[ -e u-boot-${UBOOT_VERSION}.tar.gz ]]; then
 	echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
@@ -106,7 +110,7 @@ else
 fi
 
 # EXTRACT AND SETUP
-echo
+echo ""
 if [[ `grep -w "amlogic" "../board.txt"` ]]; then
 	echo_extracts;
 else
@@ -151,12 +155,13 @@ if [[ `grep -w "radxazero" "../board.txt"` ]]; then
 		:;
 	fi
 fi
-echo
+echo ""
 export ARCH=${ARCH}
 mod_defconfigs
 
 # SET DEFCONFIG
 ### ALLWINNER
+# arm64
 if [[ `grep -w "tritium" "../board.txt"` ]]; then
 	DEFCONFIG="libretech_all_h3_cc_h5_defconfig";
 fi
@@ -166,6 +171,7 @@ fi
 if [[ `grep -w "nanopi" "../board.txt"` ]]; then
 	DEFCONFIG="nanopi_neo_plus2_defconfig";
 fi
+# arm
 if [[ `grep -w "nanopineo" "../board.txt"` ]]; then
 	DEFCONFIG="nanopi_neo_defconfig";
 fi

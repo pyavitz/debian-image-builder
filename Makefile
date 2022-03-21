@@ -36,7 +36,7 @@ help:
 	@echo "\e[1;31m                  Debian Image Builder\e[0m"
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
-	@echo "  Allwinner:  nanopi nanopineo nanopim1 tritium"
+	@echo "  Allwinner:  nanopi tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2+ rzero"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rockpro64"
