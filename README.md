@@ -104,7 +104,7 @@ make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
 #### Notes
-* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot)
+* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot) \ [Wifi Hack](https://github.com/pyavitz/debian-image-builder/tree/feature/patches/amlogic/rzero/hacks)
 
 ```sh
 You need to erase Android from; or flash mainline u-boot to; the eMMC before booting from SD.
