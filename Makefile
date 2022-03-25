@@ -370,6 +370,128 @@ nanopim1-all:
 	@chmod +x ${STG2}
 	@${IMAGE}
 
+### ORANGEPI ONE H3
+opione-uboot:
+	# Compiling u-boot
+	@ echo opione > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+opione-kernel:
+	# Compiling kernel
+	@ echo opione > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+opione-image:
+	# Creating image
+	@ echo opione > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+opione-all:
+	# O R A N G E  P I  O N E
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo opione > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo opione > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-armhf'"' > board.txt
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Creating image
+	@ echo opione > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+### ORANGEPI PC H3
+opipc-uboot:
+	# Compiling u-boot
+	@ echo opipc > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+
+opipc-kernel:
+	# Compiling kernel
+	@ echo opipc > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+
+opipc-image:
+	# Creating image
+	@ echo opipc > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
+opipc-all:
+	# O R A N G E  P I  P C
+	# - - - - - - - -
+	# Compiling u-boot
+	@ echo opipc > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@chmod +x ${XUBOOT}
+	@${UBOOT}
+	# Building linux package
+	@ echo opipc > board.txt
+	@ echo allwinner >> board.txt
+	@ echo ARCH='"'arm'"' >> board.txt
+	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@chmod +x ${XKERNEL}
+	@${KERNEL}
+	# Creating ROOTFS tarball
+	@ echo ROOTFS_ARCH='"'rootfs-armhf'"' > board.txt
+	@chmod +x ${RFS}
+	@${ROOTFS}
+	# Creating image
+	@ echo opipc > board.txt
+	@ echo allwinner >> board.txt
+	@ echo p1 >> board.txt
+	@ echo arm >> board.txt
+	@chmod +x ${IMG}
+	@chmod +x ${STG2}
+	@${IMAGE}
+
 ### ODROID C4
 odroidc4-uboot:
 	# Compiling u-boot

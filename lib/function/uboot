@@ -28,6 +28,12 @@ echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_plus2_defconfig
 # orangepi r1
 echo CONFIG_SD_BOOT=y >> configs/orangepi_r1_defconfig
 echo CONFIG_EXT4_WRITE=y >> configs/orangepi_r1_defconfig
+# orangepi one
+echo CONFIG_SD_BOOT=y >> configs/orangepi_one_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/orangepi_one_defconfig
+# orangepi pc
+echo CONFIG_SD_BOOT=y >> configs/orangepi_pc_defconfig
+echo CONFIG_EXT4_WRITE=y >> configs/orangepi_pc_defconfig
 # AMLOGIC
 # odroid c4
 echo CONFIG_SD_BOOT=y >> configs/odroid-c4_defconfig
@@ -178,6 +184,12 @@ fi
 if [[ `grep -w "nanopim1" "../board.txt"` ]]; then
 	DEFCONFIG="nanopi_m1_defconfig";
 fi
+if [[ `grep -w "opione" "../board.txt"` ]]; then
+	DEFCONFIG="orangepi_one_defconfig";
+fi
+if [[ `grep -w "opipc" "../board.txt"` ]]; then
+	DEFCONFIG="orangepi_pc_defconfig";
+fi
 ### AMLOGIC
 if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
 	DEFCONFIG="odroid-c4_defconfig";
@@ -245,26 +257,11 @@ fi
 }
 
 # ALLWINNER BINARY
+# arm64
 npineoplus2-binary(){
 mkdir -p ../${BINNPI}
 cp -f u-boot-sunxi-with-spl.bin ../${BINNPI}/
 cp -f tools/mkimage ../${BINNPI}/
-echo_done
-echo ""
-}
-
-npineo-binary(){
-mkdir -p ../${BINNPINEO}
-cp -f u-boot-sunxi-with-spl.bin ../${BINNPINEO}/
-cp -f tools/mkimage ../${BINNPINEO}/
-echo_done
-echo ""
-}
-
-npim1-binary(){
-mkdir -p ../${BINNPIM1}
-cp -f u-boot-sunxi-with-spl.bin ../${BINNPIM1}/
-cp -f tools/mkimage ../${BINNPIM1}/
 echo_done
 echo ""
 }
@@ -281,6 +278,39 @@ tritium-binary(){
 mkdir -p ../${BINTRI}
 cp -f u-boot-sunxi-with-spl.bin ../${BINTRI}/
 cp -f tools/mkimage ../${BINTRI}/
+echo_done
+echo ""
+}
+
+# arm
+npineo-binary(){
+mkdir -p ../${BINNPINEO}
+cp -f u-boot-sunxi-with-spl.bin ../${BINNPINEO}/
+cp -f tools/mkimage ../${BINNPINEO}/
+echo_done
+echo ""
+}
+
+npim1-binary(){
+mkdir -p ../${BINNPIM1}
+cp -f u-boot-sunxi-with-spl.bin ../${BINNPIM1}/
+cp -f tools/mkimage ../${BINNPIM1}/
+echo_done
+echo ""
+}
+
+opione-binary(){
+mkdir -p ../${BINOPIONE}
+cp -f u-boot-sunxi-with-spl.bin ../${BINOPIONE}/
+cp -f tools/mkimage ../${BINOPIONE}/
+echo_done
+echo ""
+}
+
+opipc-binary(){
+mkdir -p ../${BINOPIPC}
+cp -f u-boot-sunxi-with-spl.bin ../${BINOPIPC}/
+cp -f tools/mkimage ../${BINOPIPC}/
 echo_done
 echo ""
 }
@@ -395,6 +425,12 @@ if [[ `grep -w "nanopineo" "../board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopim1" "../board.txt"` ]]; then
 	npim1-binary;
+fi
+if [[ `grep -w "opione" "../board.txt"` ]]; then
+	opione-binary;
+fi
+if [[ `grep -w "opipc" "../board.txt"` ]]; then
+	opipc-binary;
 fi
 }
 
