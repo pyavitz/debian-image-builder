@@ -393,6 +393,7 @@ opione-kernel:
 opione-image:
 	# Creating image
 	@ echo opione > board.txt
+	@ echo orangepi >> board.txt
 	@ echo allwinner >> board.txt
 	@ echo p1 >> board.txt
 	@ echo arm >> board.txt
@@ -424,6 +425,7 @@ opione-all:
 	@${ROOTFS}
 	# Creating image
 	@ echo opione > board.txt
+	@ echo orangepi >> board.txt
 	@ echo allwinner >> board.txt
 	@ echo p1 >> board.txt
 	@ echo arm >> board.txt
@@ -454,6 +456,7 @@ opipc-kernel:
 opipc-image:
 	# Creating image
 	@ echo opipc > board.txt
+	@ echo orangepi >> board.txt
 	@ echo allwinner >> board.txt
 	@ echo p1 >> board.txt
 	@ echo arm >> board.txt
@@ -485,6 +488,7 @@ opipc-all:
 	@${ROOTFS}
 	# Creating image
 	@ echo opipc > board.txt
+	@ echo orangepi >> board.txt
 	@ echo allwinner >> board.txt
 	@ echo p1 >> board.txt
 	@ echo arm >> board.txt
