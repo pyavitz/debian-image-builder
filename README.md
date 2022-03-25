@@ -1,6 +1,6 @@
 ## Boards
 ```sh
-Allwinner:      # NanoPi NEO/NEO Plus2/M1, OrangePi One/PC & Tritium
+Allwinner:      # NanoPi M1/NEO/NEO Plus2, OrangePi One/PC & Tritium
 Amlogic:        # Le Potato, Odroid C4/N2/N2+ & Radxa Zero
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade & ROCKPro64
@@ -21,8 +21,8 @@ Rockchip:       # NanoPC-T4, Renegade & ROCKPro64
 #### Install dependencies
 
 ```sh
-make ccompile   # Cross compile
-make ncompile   # Native compile
+make ccompile   # x86_64
+make ncompile   # aarch64
 ```
 
 #### Menu interface
