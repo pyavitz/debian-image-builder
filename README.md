@@ -127,7 +127,7 @@ sudo fastboot reboot
 ```
 * **Radxa Zero:** Rev. 1.5 LED Overlay
 ```sh
-fdtoverlays /boot/amlogic/overlays/meson-g12a-gpio-10-led.dtbo
+fdtoverlays ../amlogic/overlays/meson-g12a-gpio-10-led.dtbo
 ```
 * **Amlogic:** G12A/B SM1 Audio
 ```sh
