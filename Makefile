@@ -78,6 +78,7 @@ tritium-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/tritium'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -88,6 +89,7 @@ tritium-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/tritium'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -108,6 +110,7 @@ tritium-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/tritium'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -116,6 +119,7 @@ tritium-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/tritium'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -137,6 +141,7 @@ pine64-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/pine64'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -147,6 +152,7 @@ pine64-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/pine64'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -167,6 +173,7 @@ pine64-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/pine64'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -175,6 +182,7 @@ pine64-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/pine64'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -196,6 +204,7 @@ nanopi-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopi'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -206,6 +215,7 @@ nanopi-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopi'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -226,6 +236,7 @@ nanopi-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopi'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -234,6 +245,7 @@ nanopi-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopi'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -255,6 +267,7 @@ nanopineo-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopineo'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -265,6 +278,7 @@ nanopineo-kernel:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopineo'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -286,6 +300,7 @@ nanopineo-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopineo'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -294,6 +309,7 @@ nanopineo-all:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopineo'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -316,6 +332,7 @@ nanopim1-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopim1'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -326,6 +343,7 @@ nanopim1-kernel:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopim1'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -347,6 +365,7 @@ nanopim1-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopim1'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -355,6 +374,7 @@ nanopim1-all:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopim1'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -377,6 +397,7 @@ opione-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/opione'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -387,6 +408,7 @@ opione-kernel:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/opione'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -409,6 +431,7 @@ opione-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/opione'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -417,6 +440,7 @@ opione-all:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/opione'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -440,6 +464,7 @@ opipc-uboot:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/opipc'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -450,6 +475,7 @@ opipc-kernel:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/opipc'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -472,6 +498,7 @@ opipc-all:
 	@ echo allwinner >> board.txt
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
+	@ echo OUTPUT='"'../output/opipc'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -480,6 +507,7 @@ opipc-all:
 	@ echo ARCH='"'arm'"' >> board.txt
 	@ echo CROSS_COMPILE='"'arm-linux-gnueabihf-'"' >> board.txt
 	@ echo DEFCONFIG='"'allwinner-sun8i_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/opipc'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -503,6 +531,7 @@ odroidc4-uboot:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidc4'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -513,6 +542,7 @@ odroidc4-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'odroid_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidc4'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -533,6 +563,7 @@ odroidc4-all:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidc4'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -541,6 +572,7 @@ odroidc4-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'odroid_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidc4'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -562,6 +594,7 @@ odroidn2-uboot:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -572,6 +605,7 @@ odroidn2-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'odroid_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	
@@ -592,6 +626,7 @@ odroidn2-all:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -600,6 +635,7 @@ odroidn2-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'odroid_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -621,6 +657,7 @@ odroidn2+-uboot:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2plus'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -631,6 +668,7 @@ odroidn2+-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'odroid_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2plus'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	
@@ -651,6 +689,7 @@ odroidn2+-all:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2plus'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -659,6 +698,7 @@ odroidn2+-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'odroid_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/odroidn2plus'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -680,6 +720,7 @@ lepotato-uboot:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/lepotato'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -690,6 +731,7 @@ lepotato-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'amlogic_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/lepotato'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -710,6 +752,7 @@ lepotato-all:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/lepotato'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -718,6 +761,7 @@ lepotato-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'amlogic_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/lepotato'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -739,6 +783,7 @@ rzero-uboot:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/radxazero'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -749,6 +794,7 @@ rzero-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'amlogic_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/radxazero'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -769,6 +815,7 @@ rzero-all:
 	@ echo amlogic >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/radxazero'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -777,6 +824,7 @@ rzero-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'amlogic_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/radxazero'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -799,6 +847,7 @@ renegade-uboot:
 	@ echo rk3328 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/renegade'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -809,6 +858,7 @@ renegade-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/renegade'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -830,6 +880,7 @@ renegade-all:
 	@ echo rk3328 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/renegade'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -838,6 +889,7 @@ renegade-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/renegade'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -860,6 +912,7 @@ rock64-uboot:
 	@ echo rk3328 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/rock64'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -870,6 +923,7 @@ rock64-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/rock64'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -891,6 +945,7 @@ rock64-all:
 	@ echo rk3328 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/rock64'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -899,6 +954,7 @@ rock64-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/rock64'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -921,6 +977,7 @@ rockpro64-uboot:
 	@ echo rk3399 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/rockpro64'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -931,6 +988,7 @@ rockpro64-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/rockpro64'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -952,6 +1010,7 @@ rockpro64-all:
 	@ echo rk3399 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/rockpro64'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -960,6 +1019,7 @@ rockpro64-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/rockpro64'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -982,6 +1042,7 @@ nanopc-uboot:
 	@ echo rk3399 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopc'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -992,6 +1053,7 @@ nanopc-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopc'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -1013,6 +1075,7 @@ nanopc-all:
 	@ echo rk3399 >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopc'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -1021,6 +1084,7 @@ nanopc-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'rockchip64_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/nanopc'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
@@ -1042,6 +1106,7 @@ raspi4-uboot:
 	@ echo broadcom >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/raspi4'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 
@@ -1052,6 +1117,7 @@ raspi4-kernel:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'bcm2711_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/raspi4'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 
@@ -1072,6 +1138,7 @@ raspi4-all:
 	@ echo broadcom >> board.txt
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
+	@ echo OUTPUT='"'../output/raspi4'"' >> board.txt
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 	# Building linux package
@@ -1080,6 +1147,7 @@ raspi4-all:
 	@ echo ARCH='"'arm64'"' >> board.txt
 	@ echo CROSS_COMPILE='"'aarch64-linux-gnu-'"' >> board.txt
 	@ echo DEFCONFIG='"'bcm2711_defconfig'"' >> board.txt
+	@ echo OUTPUT='"'../output/raspi4'"' >> board.txt
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 	# Creating ROOTFS tarball
