@@ -1,0 +1,15 @@
+diff -Naur a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
+--- a/net/bluetooth/hci_event.c	2022-01-16 03:12:45.000000000 -0500
++++ b/net/bluetooth/hci_event.c	2022-01-16 08:44:36.448186196 -0500
+@@ -725,7 +725,9 @@
+ 	if (rp->status)
+ 		return;
+ 
+-	if (hdev->max_page < rp->max_page)
++	if (!test_bit(HCI_QUIRK_BROKEN_LOCAL_EXT_FTR_MAX_PAGE,
++		      &hdev->quirks) &&
++	    hdev->max_page < rp->max_page)
+ 		hdev->max_page = rp->max_page;
+ 
+ 	if (rp->page < HCI_MAX_PAGES)
+
