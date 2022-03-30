@@ -3,9 +3,9 @@ FREE_DATA=`free -m | grep Mem`
 CURRENT=`echo $FREE_DATA | cut -f3 -d' '`
 TOTAL=`echo $FREE_DATA | cut -f2 -d' '`
 
-echo
+echo ""
 figlet -f small "System Monitor" -c
-echo
+echo ""
 echo -e "CPU:      " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'` 
 if [ -e /sys/class/thermal/thermal_zone1/temp ]; then
 	echo -e "CPU Temp: " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C $(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2)°C
@@ -15,5 +15,6 @@ fi
 echo -e "Cores:    " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq)
 echo -e "RAM:      " $(echo "scale = 2; $CURRENT/$TOTAL*100" | bc)
 echo -e "Governor: " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+echo -e "Entropy:  " $(cat /proc/sys/kernel/random/entropy_avail)
 echo -e "Uptime:   " $(uptime)
-echo
+echo ""
