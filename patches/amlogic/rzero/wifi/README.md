@@ -1,6 +1,6 @@
-### Wifi Hacks
+### Wifi Cap SDIO Speed
 
-If having wifi problems, copy the following patches into patches/userpatches before building the kernel.
+If having wifi problems, copy the following patch into patches/userpatches before building the kernel.
 
 ---
 
