@@ -24,7 +24,7 @@ p
 w
 
 EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
 partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
@@ -44,6 +44,12 @@ if [[ `grep -w "nanopineo" "board.txt"` ]]; then
 fi
 if [[ `grep -w "nanopim1" "board.txt"` ]]; then
 	nanopim1_flashbin;
+fi
+if [[ `grep -w "opione" "board.txt"` ]]; then
+	opione_flashbin;
+fi
+if [[ `grep -w "opipc" "board.txt"` ]]; then
+	opipc_flashbin;
 fi
 if [[ `grep -w "lepotato" "board.txt"` ]]; then
 	lepotato_flashbin;
@@ -304,6 +310,16 @@ if [[ `grep -w "nanopim1" "board.txt"` ]]; then
 	FDTDIR="/boot/allwinner/";
 	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
 fi
+if [[ `grep -w "opione" "board.txt"` ]]; then
+	FDT="/boot/allwinner/sun8i-h3-orangepi-one.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
+if [[ `grep -w "opipc" "board.txt"` ]]; then
+	FDT="/boot/allwinner/sun8i-h3-orangepi-pc.dtb";
+	FDTDIR="/boot/allwinner/";
+	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
+fi
 # amlogic
 if [[ `grep -w "lepotato" "board.txt"` ]]; then
 	FDT="/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb";
@@ -366,7 +382,7 @@ if [[ `grep -w "pine64" "board.txt"` ]]; then
 	sed -i '/initrd \/boot\/uInitrd/d' p1/boot/extlinux/extlinux.conf;
 fi
 if [[ `grep -w "radxazero" "board.txt"` ]]; then
-	sed -i 's/#fdtoverlays/fdtoverlays \/boot\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
+	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
 fi
 }
 

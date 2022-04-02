@@ -27,9 +27,11 @@ esac
 check_progressbar(){
 DPB="sudo wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/"
 MPB="sudo mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt"
-if [ -e /etc/opt/progressbar.txt ];
-	then :;
-	else $DPB && $MPB;
+if [ -e /etc/opt/progressbar.txt ]; then
+	:;
+else
+	$DPB;
+	$MPB;
 fi
 }
 
@@ -59,99 +61,49 @@ lsblk -dno NAME,SIZE
 }
 
 ### PARTITION DRIVE
-amlogic_partition_mmcblk0(){
-dd if=/dev/zero of=/dev/mmcblk0 bs=512 count=1
-truncate -s 1850MB /dev/mmcblk0
-fdisk /dev/mmcblk0 <<EOF
+partition(){
+# allwinner
+if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk2";
+	OFFSET="2048";
+fi
+# amlogic
+if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="2248";
+fi
+if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="2248";
+fi
+if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk0";
+	OFFSET="2248";
+fi
+if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk0";
+	OFFSET="2248";
+fi
+if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="2248";
+fi
+# rockchip
+if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk2";
+	OFFSET="32767";
+fi
+if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="32767";
+fi
+dd if=/dev/zero of=${MMC} bs=512 count=1
+fdisk ${MMC} <<EOF
 o
 n
 p
 1
-2248
-a
-t
-b
-3613280
-p
-w
-EOF
-
-partprobe /dev/mmcblk0
-echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk0p1
-mount /dev/mmcblk0p1 /mnt
-sync
-umount /mnt
-mount -o defaults,noatime /dev/mmcblk0p1 /mnt
-bash growpart /dev/mmcblk0 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk0p1 > /dev/null 2>&1
-}
-
-amlogic_partition_mmcblk1(){
-dd if=/dev/zero of=/dev/mmcblk1 bs=512 count=1
-truncate -s 1850MB /dev/mmcblk1
-fdisk /dev/mmcblk1 <<EOF
-o
-n
-p
-1
-2248
-a
-t
-b
-3613280
-p
-w
-EOF
-
-partprobe /dev/mmcblk1
-echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk1p1
-mount /dev/mmcblk1p1 /mnt
-sync
-umount /mnt
-mount -o defaults,noatime /dev/mmcblk1p1 /mnt
-bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
-}
-
-nanopi_partition_emmc(){
-dd if=/dev/zero of=/dev/mmcblk2 bs=512 count=1
-truncate -s 1850MB /dev/mmcblk2
-fdisk /dev/mmcblk2 <<EOF
-o
-n
-p
-1
-2048
-a
-t
-b
-3613280
-p
-w
-EOF
-
-partprobe /dev/mmcblk2
-echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk2p1
-mount /dev/mmcblk2p1 /mnt
-sync
-umount /mnt
-mount -o defaults,noatime /dev/mmcblk2p1 /mnt
-bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
-}
-
-nanopc_partition_emmc(){
-dd if=/dev/zero of=/dev/mmcblk2 bs=512 count=1
-truncate -s 2100MB /dev/mmcblk2
-fdisk /dev/mmcblk2 <<EOF
-o
-n
-p
-1
-32767
+${OFFSET}
 a
 t
 b
@@ -160,43 +112,15 @@ p
 w
 EOF
 
-partprobe /dev/mmcblk2
-echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk2p1
-mount /dev/mmcblk2p1 /mnt
+partprobe ${MMC}
+echo 'y' | mkfs.ext4 -L ROOTFS ${MMC}p1
+mount ${MMC}p1 /mnt
 sync
 umount /mnt
-mount -o defaults,noatime /dev/mmcblk2p1 /mnt
-bash growpart /dev/mmcblk2 1 > /dev/null 2>&1
+mount -o defaults,noatime ${MMC}p1 /mnt
+bash growpart ${MMC} 1
 sleep 1s
-resize2fs /dev/mmcblk2p1 > /dev/null 2>&1
-}
-
-renegade_partition_emmc(){
-dd if=/dev/zero of=/dev/mmcblk1 bs=512 count=1
-truncate -s 2100MB /dev/mmcblk1
-fdisk /dev/mmcblk1 <<EOF
-o
-n
-p
-1
-32767
-a
-t
-b
-4101561
-p
-w
-EOF
-
-partprobe /dev/mmcblk1
-echo 'y' | mkfs.ext4 -L ROOTFS /dev/mmcblk1p1
-mount /dev/mmcblk1p1 /mnt
-sync
-umount /mnt
-mount -o defaults,noatime /dev/mmcblk1p1 /mnt
-bash growpart /dev/mmcblk1 1 > /dev/null 2>&1
-sleep 1s
-resize2fs /dev/mmcblk1p1 > /dev/null 2>&1
+resize2fs ${MMC}p1
 }
 
 ### RSYNC
@@ -207,86 +131,30 @@ rsync -apvx --progress --stats --human-readable . /mnt > /dev/null
 
 transfer_to_emmc(){
 source /etc/opt/progressbar.txt
-    enable_trapping
-    setup_scroll_area
-    for i in {0..100}
-    do
-        if [ $i = 0 ]; then
-            block_progress_bar $i
-        else
-            transfer
-            draw_progress_bar $i
-        fi
-    done
-    destroy_scroll_area
+enable_trapping
+setup_scroll_area
+for i in {0..100}
+do
+	if [ $i = 0 ]; then
+		block_progress_bar $i
+	else
+		transfer
+		draw_progress_bar $i
+	fi
+done
+destroy_scroll_area
 }
 
 ### FETCH UUID
-amlogic0_fetch_uuid(){
+fetch_uuid(){
 echo 'ROOT_UUID="' > root1
-blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^UUID=//p' > root2
+blkid -o export -- ${MMC}p1 | sed -ne 's/^UUID=//p' > root2
 echo '"' > root3
 paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
 rm -f root1 root2 root3
 
 echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- /dev/mmcblk0p1 | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
-rm -f root1 root2 root3
-}
-
-amlogic1_fetch_uuid(){
-echo 'ROOT_UUID="' > root1
-blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
-rm -f root1 root2 root3
-
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
-rm -f root1 root2 root3
-}
-
-nanopi_fetch_uuid(){
-echo 'ROOT_UUID="' > root1
-blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
-rm -f root1 root2 root3
-
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
-rm -f root1 root2 root3
-}
-
-nanopc_fetch_uuid(){
-echo 'ROOT_UUID="' > root1
-blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
-rm -f root1 root2 root3
-
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- /dev/mmcblk2p1 | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
-rm -f root1 root2 root3
-}
-
-renegade_fetch_uuid(){
-echo 'ROOT_UUID="' > root1
-blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
-rm -f root1 root2 root3
-
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- /dev/mmcblk1p1 | sed -ne 's/^PARTUUID=//p' > root2
+blkid -o export -- ${MMC}p1 | sed -ne 's/^PARTUUID=//p' > root2
 echo '"' > root3
 paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
 rm -f root1 root2 root3
@@ -294,7 +162,6 @@ rm -f root1 root2 root3
 
 ### FSTAB
 create_fstab(){
-source /etc/opt/root-id.txt
 rm -f /mnt/etc/fstab
 tee /mnt/etc/fstab <<EOF
 UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
@@ -359,102 +226,59 @@ label default
 	${CMDLINE}
 EOF
 if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
-	sed -i 's/#fdtoverlays/fdtoverlays \/boot\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
+	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
 fi
 }
 
 
 ### WRITE UBOOT
-amlogic0_flash_uboot(){
-dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk0 bs=512 seek=1
-sync
-}
-
-amlogic1_flash_uboot(){
-dd if=/usr/lib/u-boot/u-boot.bin of=/dev/mmcblk1 bs=512 seek=1
-sync
-}
-
+# allwinner
 allwinner_flash_uboot(){
-dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=/dev/mmcblk2 conv=fsync bs=1024 seek=8
+dd if=/usr/lib/u-boot/u-boot-sunxi-with-spl.bin of=${MMC} conv=fsync bs=1024 seek=8
 sync
 }
 
+# amlogic
+amlogic_flash_uboot(){
+dd if=/usr/lib/u-boot/u-boot.bin of=${MMC} bs=512 seek=1
+sync
+}
+
+# rockchip
 rockchip_flash_uboot(){
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk2 seek=64;
-	dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk2 seek=16384;
-fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
-	dd if=/usr/lib/u-boot/idbloader.bin of=/dev/mmcblk1 seek=64;
-	dd if=/usr/lib/u-boot/u-boot.itb of=/dev/mmcblk1 seek=16384;
-fi
+dd if=/usr/lib/u-boot/idbloader.bin of=${MMC} seek=64
+dd if=/usr/lib/u-boot/u-boot.itb of=${MMC} seek=16384
 sync
 }
 
 ### THE MAGIC
 run_as_root
-echo
+echo ""
 confirm
 check_progressbar
 
 if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
 	echo ""
-	echo "Binding eMMC.";
+	echo "Binding eMMC ...";
 	libre_bind_emmc;
 	echo "Done.";
 fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+if [[ `grep "odroid" "/etc/opt/board.txt"` ]]; then
 	echo ""
-	echo "Binding eMMC.";
-	odroid_bind_emmc;
-	echo "Done.";
-fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
-	echo ""
-	echo "Binding eMMC.";
-	odroid_bind_emmc;
-	echo "Done.";
-fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
-	echo ""
-	echo "Binding eMMC.";
+	echo "Binding eMMC ...";
 	odroid_bind_emmc;
 	echo "Done.";
 fi
 if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
 	echo ""
-	echo "Binding eMMC.";
+	echo "Binding eMMC ...";
 	renegade_bind_emmc;
 	echo "Done.";
 fi
 
 echo ""
-echo "Partitioning."
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
-	amlogic_partition_mmcblk1 > /dev/null 2>&1;
-fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
-	amlogic_partition_mmcblk1 > /dev/null 2>&1;
-fi
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
-	amlogic_partition_mmcblk1 > /dev/null 2>&1;
-fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
-	amlogic_partition_mmcblk0 > /dev/null 2>&1;
-fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
-	amlogic_partition_mmcblk0 > /dev/null 2>&1;
-fi
-if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
-	nanopi_partition_emmc > /dev/null 2>&1;
-fi
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	nanopc_partition_emmc > /dev/null 2>&1;
-fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
-	renegade_partition_emmc > /dev/null 2>&1;
-fi
+echo "Partitioning ..."
+partition > /dev/null 2>&1;
 echo "Done."
 
 echo ""
@@ -462,66 +286,28 @@ echo -e "Please be patient as the root filesystem"
 echo -e "is transferred over to the eMMC module."
 transfer_to_emmc
 sleep 1s
-clear
+clear -x
 
 echo ""
-echo "Writing u-boot."
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
-	amlogic1_flash_uboot;
-fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
-	amlogic1_flash_uboot;
-fi
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
-	amlogic1_flash_uboot;
-fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
-	amlogic0_flash_uboot;
-fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
-	amlogic0_flash_uboot;
-fi
-if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+echo "Writing u-boot ..."
+if [[ `grep -w "allwinner" "/etc/opt/board.txt"` ]]; then
 	allwinner_flash_uboot;
 fi
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	rockchip_flash_uboot;
+if [[ `grep -w "amlogic" "/etc/opt/board.txt"` ]]; then
+	amlogic_flash_uboot;
 fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w "rockchip" "/etc/opt/board.txt"` ]]; then
 	rockchip_flash_uboot;
 fi
 echo "Done."
 
 echo ""
-echo "Fetching UUID."
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
-	amlogic1_fetch_uuid;
-fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
-	amlogic1_fetch_uuid;
-fi
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
-	amlogic1_fetch_uuid;
-fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
-	amlogic0_fetch_uuid;
-fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
-	amlogic0_fetch_uuid;
-fi
-if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
-	nanopi_fetch_uuid;
-fi
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	nanopc_fetch_uuid;
-fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
-	renegade_fetch_uuid;
-fi
+echo "Fetching UUID ..."
+fetch_uuid
 echo "Done."
 
 echo ""
-echo "Setting up boot."
+echo "Setting up boot ..."
 source /etc/opt/root-id.txt
 source /etc/opt/root-pid.txt
 create_fstab
@@ -529,8 +315,8 @@ create_extlinux
 echo "Done."
 
 echo ""
-echo "Unmounting eMMC."
-rm -fdr /etc/opt/root-pid.txt /etc/opt/root-id.txt
+echo "Unmounting eMMC ..."
+rm -f {/etc/opt/root-pid.txt,/etc/opt/root-id.txt}
 rm -fdr /mnt/mnt/*
 umount /mnt
 rm -fdr /mnt/*

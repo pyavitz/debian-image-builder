@@ -18,16 +18,24 @@ rm -f root1 root2 root3
 
 extlinux(){
 source /etc/opt/root-pid.txt
-if [[ `grep -w "nanopineo" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/allwinner/sun8i-h3-nanopi-neo.dtb";
-	FDTDIR="/boot/allwinner/";
+if [[ `grep -w "allwinner" "/etc/opt/board.txt"` ]]; then
+	if [[ `grep -w "nanopineo" "/etc/opt/board.txt"` ]]; then
+		BOARD="sun8i-h3-nanopi-neo.dtb";
+	fi
+	if [[ `grep -w "nanopim1" "/etc/opt/board.txt"` ]]; then
+		BOARD="/boot/sun8i-h3-nanopi-m1.dtb";
+	fi
+	if [[ `grep -w "opione" "/etc/opt/board.txt"` ]]; then
+		BOARD="sun8i-h3-orangepi-one.dtb";
+	fi
+	if [[ `grep -w "opipc" "/etc/opt/board.txt"` ]]; then
+		BOARD="sun8i-h3-orangepi-pc.dtb";
+	fi
+	FAMILY="allwinner"
 	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
 fi
-if [[ `grep -w "nanopim1" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/allwinner/sun8i-h3-nanopi-m1.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
+FDT="/boot/${FAMILY}/${BOARD}";
+FDTDIR="/boot/${FAMILY}/";
 rm -f /boot/extlinux/extlinux.conf
 tee /boot/extlinux/extlinux.conf <<EOF
 label default

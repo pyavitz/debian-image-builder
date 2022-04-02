@@ -1,11 +1,13 @@
 #!/bin/bash
+
+run(){
 FREE_DATA=`free -m | grep Mem` 
 CURRENT=`echo $FREE_DATA | cut -f3 -d' '`
 TOTAL=`echo $FREE_DATA | cut -f2 -d' '`
 
-echo
+echo ""
 figlet -f small "System Monitor" -c
-echo
+echo ""
 echo -e "CPU:      " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'` 
 if [ -e /sys/class/thermal/thermal_zone1/temp ]; then
 	echo -e "CPU Temp: " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C $(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2)°C
@@ -15,5 +17,68 @@ fi
 echo -e "Cores:    " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq)
 echo -e "RAM:      " $(echo "scale = 2; $CURRENT/$TOTAL*100" | bc)
 echo -e "Governor: " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+echo -e "Entropy:  " $(cat /proc/sys/kernel/random/entropy_avail)
 echo -e "Uptime:   " $(uptime)
-echo
+echo ""
+}
+
+update(){
+if [ -e /usr/local/bin/sysinfo ]; then
+	sudo mv /usr/local/bin/sysinfo /usr/local/bin/sysinfo.orig;
+	sudo mv /usr/local/bin/smon /usr/local/bin/smon.orig;
+	URL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/"
+	sudo wget -cq ${URL}/sysinfo -P /usr/local/bin/;
+	sudo wget -cq ${URL}/smon -P /usr/local/bin/;
+	if [ -e /usr/local/bin/sysinfo ]; then
+		sudo chmod +x /usr/local/bin/sysinfo;
+		sudo rm -f /usr/local/bin/sysinfo.orig;
+		ls -ls /usr/local/bin/sysinfo;
+	else
+		sudo mv /usr/local/bin/sysinfo.orig /usr/local/bin/sysinfo;
+		echo -e "sysinfo [fail]" ;
+	fi
+	if [ -e /usr/local/bin/smon ]; then
+		sudo chmod +x /usr/local/bin/smon;
+		sudo rm -f /usr/local/bin/smon.orig;
+		ls -ls /usr/local/bin/smon;
+	else
+		sudo mv /usr/local/bin/smon.orig /usr/local/bin/smon;
+		echo -e "smon [fail]";
+	fi
+fi
+}
+
+if [ $# -eq 0 ]; then
+	echo -e "\e[0;31mMissing options!${FIN}"
+	echo "(run $0 -h for help)"
+	echo ""
+	exit 0
+fi
+
+ECHO="false"
+
+while getopts "rhu" OPTION; do
+	case $OPTION in
+
+		r)
+			ECHO="RUN"
+			;;
+		u)
+			ECHO="UP"
+			;;
+		h)                       
+			echo ""
+			echo -e "   -r        Run"
+			echo -e "   -u        Update"
+			echo ""
+			exit 0
+			;;
+	esac
+done
+
+if [ $ECHO = "RUN" ]; then
+	run;
+fi
+if [ $ECHO = "UP" ]; then
+	update;
+fi

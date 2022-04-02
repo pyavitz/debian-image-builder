@@ -1,6 +1,6 @@
 ## Boards
 ```sh
-Allwinner:      # NanoPi NEO Plus2 & Tritium
+Allwinner:      # NanoPi M1/NEO/NEO Plus2, OrangePi One/PC & Tritium
 Amlogic:        # Le Potato, Odroid C4/N2/N2+ & Radxa Zero
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade & ROCKPro64
@@ -21,8 +21,8 @@ Rockchip:       # NanoPC-T4, Renegade & ROCKPro64
 #### Install dependencies
 
 ```sh
-make ccompile   # Cross compile
-make ncompile   # Native compile
+make ccompile   # x86_64
+make ncompile   # aarch64
 ```
 
 #### Menu interface
@@ -104,7 +104,7 @@ make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
 #### Notes
-* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot)
+* **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot) \ [Wifi](https://github.com/pyavitz/debian-image-builder/tree/feature/patches/amlogic/rzero/wifi)
 
 ```sh
 You need to erase Android from; or flash mainline u-boot to; the eMMC before booting from SD.
@@ -127,7 +127,7 @@ sudo fastboot reboot
 ```
 * **Radxa Zero:** Rev. 1.5 LED Overlay
 ```sh
-fdtoverlays /boot/amlogic/overlays/meson-g12a-gpio-10-led.dtbo
+fdtoverlays ../amlogic/overlays/meson-g12a-gpio-10-led.dtbo
 ```
 * **Amlogic:** G12A/B SM1 Audio
 ```sh
