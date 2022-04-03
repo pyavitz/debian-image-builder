@@ -29,17 +29,6 @@ STG2=./scripts/stage2
 CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
-#define build_uboot
-#	# Compiling u-boot
-#	@ echo $(1) > board.txt
-#	@ echo $(2) >> board.txt
-#	@ echo ARCH='"'$(3)'"' >> board.txt
-#	@ echo CROSS_COMPILE='"'$(4)'"' >> board.txt
-#	@ echo OUTPUT='"'../output/$(5)'"' >> board.txt
-#	@chmod +x ${XUBOOT}
-#	@${UBOOT}
-#endef
-
 define build_uboot
 	# Compiling u-boot
 	@ echo $(1) > board.txt
