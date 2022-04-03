@@ -1,6 +1,7 @@
 #!/bin/bash
 ### DO NOT EDIT
-OUTPUT="output/lepotato"
+source lib/boards/$1
+OUTPUT="output/$1"
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 HEIGHT=0
@@ -16,7 +17,7 @@ while true; do
   exec 3>&1
   selection=$(dialog \
     --backtitle "Debian Image Builder" \
-    --title "Le Potato" \
+    --title "$1" \
     --clear \
     --cancel-label "Exit" \
     --menu "Select:" $HEIGHT $WIDTH 5 \
@@ -46,25 +47,26 @@ while true; do
       echo "Program terminated."
       ;;
     1 )
-      make lepotato-all
-      dialog --prgbox "Results:" "ls s905x-libretech-cc-*.img* *aarch64* $OUTPUT/" 30 60
+      make "$1-all"
+      dialog --prgbox "Results:" "ls $IMG *$ARCH* $OUTPUT/" 30 60
       exit 0
       ;;
     2 )
-      make lepotato-uboot
+      echo "$1-uboot" > ~/out.txt
+      make "$1-uboot"
       dialog --prgbox "Results:" "ls $OUTPUT/*.bin" 30 60
       ;;
     3 )
-      make lepotato-kernel
+      make $1-kernel
       dialog --prgbox "Results:" "ls $OUTPUT/*.deb" 30 60
       ;;
     4 )
-      make rootfs
-      dialog --prgbox "Results:" "ls *aarch64*" 30 60
+      if [ "$ARCH" == "aarch64" ]; then make rootfs; else make rootfsv7; fi
+      dialog --prgbox "Results:" "ls *$ARCH*" 30 60
       ;;
     5 )
-      make lepotato-image
-      dialog --prgbox "Results:" "ls s905x-libretech-cc-*.img*" 30 60
+      make $1-image
+      dialog --prgbox "Results:" "ls $IMG" 30 60
       ;;
   esac
 done
