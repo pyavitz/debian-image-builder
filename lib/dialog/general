@@ -1,7 +1,7 @@
 #!/bin/bash
 ### DO NOT EDIT
 source lib/boards/$1
-OUTPUT="output/$1"
+MAKE_OUTPUT="output/$1"
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 HEIGHT=0
@@ -47,26 +47,26 @@ while true; do
       echo "Program terminated."
       ;;
     1 )
-      make "$1-all"
-      dialog --prgbox "Results:" "ls $IMG *$ARCH* $OUTPUT/" 30 60
+      make "all" "board=$1"
+      dialog --prgbox "Results:" "ls $IMG_EXP *$ARCH_EXT* $MAKE_OUTPUT/" 30 60
       exit 0
       ;;
     2 )
       echo "$1-uboot" > ~/out.txt
-      make "$1-uboot"
-      dialog --prgbox "Results:" "ls $OUTPUT/*.bin" 30 60
+      make uboot "board=$1"
+      dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 60
       ;;
     3 )
-      make $1-kernel
-      dialog --prgbox "Results:" "ls $OUTPUT/*.deb" 30 60
+      make kernel "board=$1"
+      dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.deb" 30 60
       ;;
     4 )
-      if [ "$ARCH" == "aarch64" ]; then make rootfs; else make rootfsv7; fi
-      dialog --prgbox "Results:" "ls *$ARCH*" 30 60
+      if [ "$ARCH" == "arch64" ]; then make rootfs; else make rootfsv7; fi
+      dialog --prgbox "Results:" "ls *$ARCH_EXT*" 30 60
       ;;
     5 )
-      make $1-image
-      dialog --prgbox "Results:" "ls $IMG" 30 60
+      make image "board=$1"
+      dialog --prgbox "Results:" "ls $IMG_EXP" 30 60
       ;;
   esac
 done
