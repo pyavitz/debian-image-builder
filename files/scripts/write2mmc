@@ -63,37 +63,37 @@ lsblk -dno NAME,SIZE
 ### PARTITION DRIVE
 partition(){
 # allwinner
-if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopi"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk2";
 	OFFSET="2048";
 fi
 # amlogic
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="lepotato"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk1";
 	OFFSET="2248";
 fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidc4"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk1";
 	OFFSET="2248";
 fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk0";
 	OFFSET="2248";
 fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2plus"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk0";
 	OFFSET="2248";
 fi
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk1";
 	OFFSET="2248";
 fi
 # rockchip
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopc"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk2";
 	OFFSET="32767";
 fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="renegade"' "/etc/opt/board.txt"` ]]; then
 	MMC="/dev/mmcblk1";
 	OFFSET="32767";
 fi
@@ -171,49 +171,10 @@ EOF
 
 ### EXTLINUX
 create_extlinux(){
-# allwinner
-if [[ `grep -w "nanopi" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-# amlogic
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "odroidc4" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/amlogic/meson64_odroidc4.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "odroidn2" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/amlogic/meson64_odroidn2.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init";
-fi
-if [[ `grep -w "odroidn2plus" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/amlogic/meson64_odroidn2_plus.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init";
-fi
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/amlogic/meson-g12a-radxa-zero.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-# rockchip
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/rockchip/rk3328-roc-cc.dtb";
-	FDTDIR="/boot/rockchip/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 video=HDMI-A-1:1920x1080@60 init=/sbin/init";
-fi
-if [[ `grep -w "nanopc" "/etc/opt/board.txt"` ]]; then
-	FDT="/boot/rockchip/rk3399-nanopc-t4.dtb";
-	FDTDIR="/boot/rockchip/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u loglevel=1 init=/sbin/init";
-fi
+source /etc/opt/board.txt > /dev/null 2>&1
+FDT="/boot/${FAMILY}/${DTB}.dtb"
+FDTDIR="/boot/${FAMILY}/"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
 mkdir -p /mnt/boot/extlinux
 rm -f /mnt/boot/extlinux/extlinux.conf
 tee /mnt/boot/extlinux/extlinux.conf <<EOF
@@ -225,7 +186,7 @@ label default
 	#fdtoverlays
 	${CMDLINE}
 EOF
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "/etc/opt/board.txt"` ]]; then
 	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
 fi
 }
@@ -257,19 +218,19 @@ echo ""
 confirm
 check_progressbar
 
-if [[ `grep -w "lepotato" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="lepotato"' "/etc/opt/board.txt"` ]]; then
 	echo ""
 	echo "Binding eMMC ...";
 	libre_bind_emmc;
 	echo "Done.";
 fi
-if [[ `grep "odroid" "/etc/opt/board.txt"` ]]; then
+if [[ `grep 'BOARD="odroid"' "/etc/opt/board.txt"` ]]; then
 	echo ""
 	echo "Binding eMMC ...";
 	odroid_bind_emmc;
 	echo "Done.";
 fi
-if [[ `grep -w "renegade" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="renegade"' "/etc/opt/board.txt"` ]]; then
 	echo ""
 	echo "Binding eMMC ...";
 	renegade_bind_emmc;
@@ -278,7 +239,7 @@ fi
 
 echo ""
 echo "Partitioning ..."
-partition > /dev/null 2>&1;
+partition > /dev/null 2>&1
 echo "Done."
 
 echo ""
@@ -290,13 +251,13 @@ clear -x
 
 echo ""
 echo "Writing u-boot ..."
-if [[ `grep -w "allwinner" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="allwinner"' "/etc/opt/board.txt"` ]]; then
 	allwinner_flash_uboot;
 fi
-if [[ `grep -w "amlogic" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "/etc/opt/board.txt"` ]]; then
 	amlogic_flash_uboot;
 fi
-if [[ `grep -w "rockchip" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "/etc/opt/board.txt"` ]]; then
 	rockchip_flash_uboot;
 fi
 echo "Done."

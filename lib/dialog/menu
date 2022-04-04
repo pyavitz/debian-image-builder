@@ -28,9 +28,7 @@ else
 	userdata;
 fi
 validation
-#menu_items=`ls lib/boards | while read name; do ((count+=1)); echo -n $count $name " " ; done`
-menu_items=`ls lib/boards | while read name; do ((count+=1)); echo $count $name; done`
-#menu_items=`ls lib/boards | while read name; do echo $name; done`
+menu_items=`ls lib/boards | while read name; do ((count+=1)); echo $count $name | sed -e 's/\(.*\)/\U\1/'; done`
 
 	#--menu "Select:" $HEIGHT $WIDTH 15 \
 while true; do
@@ -63,8 +61,6 @@ if [ $selection .eq 0 ];then
 	echo -e "${RED}Program terminated${FIN}."
 else
 	boardName=`ls lib/boards | head -n $selection | tail -n 1` 
-	#chmod +x lib/dialog/$boardName
-	#./lib/dialog/$boardName
 	chmod +x lib/dialog/general
 	./lib/dialog/general $boardName
 fi

@@ -103,7 +103,7 @@ fi
 }
 
 u-boot(){
-if [[ `grep -w "arm" "../board.txt"` ]]; then
+if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
 	:;
 else
 	echo ""
@@ -117,44 +117,44 @@ fi
 
 # EXTRACT AND SETUP
 echo ""
-if [[ `grep -w "amlogic" "../board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "../board.txt"` ]]; then
 	echo_extracts;
 else
 	echo_extract;
 fi
-if [[ `grep -w "amlogic" "../board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "../board.txt"` ]]; then
 	if [[ -e amlogic-boot-fip-master.tar.gz ]]; then
 		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
 	fi
 fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
-if [[ `grep -w "allwinner" "../board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="allwinner"' "../board.txt"` ]]; then
 	if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
 		:;
 	else
 		cp arm-trusted-firmware/build/${PLAT}/debug/bl31.bin u-boot/bl31.bin;
 	fi
 fi
-if [[ `grep -w "rockchip" "../board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "../board.txt"` ]]; then
 	cp arm-trusted-firmware/build/${PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
 cp board.txt u-boot/
 cd u-boot
-if [[ `grep -w "amlogic" "../board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "../board.txt"` ]]; then
 	for i in ../${AMLOGIC}/uboot/*.patch; do patch -p1 < $i; done;
 fi
-if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2plus"' "../board.txt"` ]]; then
 	for i in ../${ON2PUBOOT}/*.patch; do patch -p1 < $i; done;
 fi
-if [[ `grep -w "nanopc" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopc"' "../board.txt"` ]]; then
 	for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 else
-	if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
+	if [[ `grep -w 'BOARD="rockpro64"' "../board.txt"` ]]; then
 		for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 	fi
 fi
-if [[ `grep -w "radxazero" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "../board.txt"` ]]; then
 	if [[ `grep -w "VERSION = 2021" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 10" "Makefile"` ]]; then
 		for i in ../${RZUBOOT}/*.patch; do patch -p1 < $i; done;
 	else
@@ -164,73 +164,13 @@ fi
 echo ""
 export ARCH=${ARCH}
 mod_defconfigs
-
-# SET DEFCONFIG
-### ALLWINNER
-# arm64
-if [[ `grep -w "tritium" "../board.txt"` ]]; then
-	DEFCONFIG="libretech_all_h3_cc_h5_defconfig";
-fi
-if [[ `grep -w "pine64" "../board.txt"` ]]; then
-	DEFCONFIG="pine64_plus_defconfig";
-fi
-if [[ `grep -w "nanopi" "../board.txt"` ]]; then
-	DEFCONFIG="nanopi_neo_plus2_defconfig";
-fi
-# arm
-if [[ `grep -w "nanopineo" "../board.txt"` ]]; then
-	DEFCONFIG="nanopi_neo_defconfig";
-fi
-if [[ `grep -w "nanopim1" "../board.txt"` ]]; then
-	DEFCONFIG="nanopi_m1_defconfig";
-fi
-if [[ `grep -w "opione" "../board.txt"` ]]; then
-	DEFCONFIG="orangepi_one_defconfig";
-fi
-if [[ `grep -w "opipc" "../board.txt"` ]]; then
-	DEFCONFIG="orangepi_pc_defconfig";
-fi
-### AMLOGIC
-if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
-	DEFCONFIG="odroid-c4_defconfig";
-fi
-if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
-	DEFCONFIG="odroid-n2_defconfig";
-fi
-if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
-	DEFCONFIG="odroid-n2_defconfig";
-fi
-if [[ `grep -w "lepotato" "../board.txt"` ]]; then
-	DEFCONFIG="libretech-cc_defconfig";
-fi
-if [[ `grep -w "radxazero" "../board.txt"` ]]; then
-	DEFCONFIG="radxa-zero_defconfig";
-fi
-### BROADCOM
-if [[ `grep -w "bcm2711" "../board.txt"` ]]; then
-	DEFCONFIG="rpi_4_defconfig";
-fi
-### ROCKCHIP
-if [[ `grep -w "renegade" "../board.txt"` ]]; then
-	DEFCONFIG="roc-cc-rk3328_defconfig";
-fi
-if [[ `grep -w "rock64" "../board.txt"` ]]; then
-	DEFCONFIG="rock64-rk3328_defconfig";
-fi
-if [[ `grep -w "rockpro64" "../board.txt"` ]]; then
-	DEFCONFIG="rockpro64-rk3399_defconfig";
-fi
-if [[ `grep -w "nanopc" "../board.txt"` ]]; then
-	DEFCONFIG="nanopc-t4-rk3399_defconfig";
-fi
-
 # MAKE DEFCONFIG
 if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
 	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${DEFCONFIG};
+	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG};
 else
 	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC=${NATIVE} ${DEFCONFIG};
+	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG};
 fi
 
 # MENUCONFIG
@@ -266,9 +206,9 @@ else
 fi
 u-boot
 if [ -e u-boot-sunxi-with-spl.bin ]; then
-	mkdir -p ../${OUTPUT}
-	cp -f u-boot-sunxi-with-spl.bin ../${OUTPUT}/
-	cp -f tools/mkimage ../${OUTPUT}/
+	mkdir -p ../../${OUTPUT}
+	cp -f u-boot-sunxi-with-spl.bin ../../${OUTPUT}/
+	cp -f tools/mkimage ../../${OUTPUT}/
 	echo_done
 	echo "";
 else
@@ -283,26 +223,26 @@ amlogic-uboot-string(){
 uboot-source
 amlogic-boot-fips
 u-boot
-if [[ `grep -w "lepotato" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="lepotato"' "../board.txt"` ]]; then
 	lepotato_fip
 fi
-if [[ `grep -w "odroidc4" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidc4"' "../board.txt"` ]]; then
 	odroidc4_fip
 fi
-if [[ `grep -w "odroidn2" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2"' "../board.txt"` ]]; then
 	odroidn2_fip
 fi
-if [[ `grep -w "odroidn2plus" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2plus"' "../board.txt"` ]]; then
 	odroidn2plus_fip
 fi
-if [[ `grep -w "radxazero" "../board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "../board.txt"` ]]; then
 	radxazero_fip
 fi
 if [ -e fip/u-boot.bin ]; then
-	mkdir -p ../${OUTPUT}
-	cp -f fip/u-boot.bin ../${OUTPUT}
-	cp -f fip/u-boot.bin.sd.bin ../${OUTPUT}
-	cp -f tools/mkimage ../${OUTPUT}
+	mkdir -p ../../${OUTPUT}
+	cp -f fip/u-boot.bin ../../${OUTPUT}
+	cp -f fip/u-boot.bin.sd.bin ../../${OUTPUT}
+	cp -f tools/mkimage ../../${OUTPUT}
 	echo_done
 	echo "";
 else
@@ -317,8 +257,8 @@ bcm2711-uboot-string(){
 uboot-source
 u-boot
 if [ -e u-boot.bin ]; then
-	mkdir -p ../${OUTPUT}
-	cp -f u-boot.bin ../${OUTPUT}/
+	mkdir -p ../../${OUTPUT}
+	cp -f u-boot.bin ../../${OUTPUT}/
 	echo_done
 	echo "";
 else
@@ -334,9 +274,9 @@ uboot-source
 arm-trusted-firmware
 u-boot
 if [ -e idbloader.img ]; then
-	mkdir -p ../${OUTPUT}
-	cp -f idbloader.img ../${OUTPUT}/idbloader.bin
-	cp -f u-boot.itb ../${OUTPUT}/
+	mkdir -p ../../${OUTPUT}
+	cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
+	cp -f u-boot.itb ../../${OUTPUT}/
 	echo_done
 	echo "";
 else

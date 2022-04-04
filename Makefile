@@ -6,8 +6,6 @@ DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
 # misc
 RFS=./scripts/rootfs
 ROOTFS=sudo ./scripts/rootfs
-RFSV7=./scripts/rootfs
-ROOTFSV7=sudo ./scripts/rootfs
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
@@ -29,47 +27,35 @@ STG2=./scripts/stage2
 CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
+# boards
+BOARDS=$(shell cp lib/boards/${board} board.txt)
+
 ifdef board
 include lib/boards/${board}
 endif
 
 define build_uboot
 	# Compiling u-boot
-	@ echo $1, $2, $3, $4, $5, $6
-	@ echo $(1) > board.txt
-	@ echo $(2) >> board.txt
-	@ if [ "$(3)" != "" ]; then echo "$(3)";fi >> board.txt 
-	@ echo ARCH='"'$(4)'"' >> board.txt
-	@ echo CROSS_COMPILE='"'$(5)'"' >> board.txt
-	@ echo OUTPUT='"'$(6)'"' >> board.txt
+	@${BOARDS}
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
 endef
 
 define build_kernel
-	@ echo $(1) > board.txt
-	@ echo $(2) >> board.txt
-	@ echo ARCH='"'$(3)'"' >> board.txt
-	@ echo CROSS_COMPILE='"'$(4)'"' >> board.txt
-	@ echo DEFCONFIG='"'$(5)'"' >> board.txt
-	@ echo OUTPUT='"'$(6)'"' >> board.txt
+	@${BOARDS}
 	@chmod +x ${XKERNEL}
 	@${KERNEL}
 endef
 
 define build_image
-	@ echo $(1) > board.txt
-	@ if [ "$(1)" = "opione" ] || [ "$(1)" = "opipc" ]; then echo orangepi;fi >> board.txt
-	@ echo $(2) >> board.txt
-	@ echo $(3) >> board.txt
-	@ if [ "$(4)" != "arm64" ]; then echo "$(4)";fi >> board.txt 
+	@${BOARDS}
 	@chmod +x ${IMG}
 	@chmod +x ${STG2}
 	@${IMAGE}
 endef
 
 define create_rootfs
-	@ echo ROOTFS_ARCH='"'$(1)'"' > board.txt
+	@${BOARDS}
 	@chmod +x ${RFS}
 	@${ROOTFS}
 endef
@@ -117,28 +103,26 @@ ncompile:
 	@${NCOMPILE}
 
 uboot:
-	@ echo ${board}
-	@ echo ${IMG_EXP}
-	$(call build_uboot,${BOARD_OVERRIDE},${FAMILY},${SUB_CHIP},${ARCH},${CROSS_COMPILE},${OUTPUT})
+	$(call build_uboot)
 
 kernel:
 	# Compiling kernel
-	$(call build_kernel,${BOARD_OVERRIDE},${FAMILY},${ARCH},${CROSS_COMPILE},${DEFAULT_CONFIG},${OUTPUT})
+	$(call build_kernel)
 
 image:
 	# Creating image
-	$(call build_image,${BOARD_OVERRIDE},${FAMILY},${P_VALUE},${ARCH})
+	$(call build_image)
 
 all:
 	# - - - - - - - -
 	# Compiling u-boot
-	$(call build_uboot,${BOARD_OVERRIDE},${FAMILY},${SUB_CHIP},${ARCH},${CROSS_COMPILE},${OUTPUT})
+	$(call build_uboot)
 	# Building linux package
-	$(call build_kernel,${BOARD_OVERRIDE},${FAMILY},${ARCH},${CROSS_COMPILE},${DEFAULT_CONFIG},${OUTPUT})
+	$(call build_kernel)
 	# Creating ROOTFS tarball
-	$(call create_rootfs,${ROOTFS_ARCH})
+	$(call create_rootfs)
 	# Creating image
-	$(call build_image,${BOARD_OVERRIDE},${FAMILY},${P_VALUE},)
+	$(call build_image)
 
 ### MISCELLANEOUS
 menu:
@@ -156,14 +140,8 @@ dialogrc:
 
 rootfs:
 	# ROOTFS
-	$(call create_rootfs,rootfs-aarch64)
+	$(call create_rootfs)
 	
-rootfsv7:
-	# ROOTFS
-	@ echo ROOTFS_ARCH='"'rootfs-armhf'"' > board.txt
-	@chmod +x ${RFSV7}
-	@${ROOTFSV7}
-
 cleanup:
 	# Cleaning up
 	@chmod +x ${CLN}

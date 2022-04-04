@@ -7,12 +7,6 @@ DIALOG_ESC=255
 HEIGHT=0
 WIDTH=0
 
-display_result() {
-  dialog --title "$1" \
-    --no-collapse \
-    --msgbox "$result" 0 0
-}
-
 while true; do
   exec 3>&1
   selection=$(dialog \
@@ -52,7 +46,6 @@ while true; do
       exit 0
       ;;
     2 )
-      echo "$1-uboot" > ~/out.txt
       make uboot "board=$1"
       dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 60
       ;;
@@ -61,7 +54,7 @@ while true; do
       dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.deb" 30 60
       ;;
     4 )
-      if [ "$ARCH" == "arch64" ]; then make rootfs; else make rootfsv7; fi
+      make rootfs "board=$1"
       dialog --prgbox "Results:" "ls *$ARCH_EXT*" 30 60
       ;;
     5 )
