@@ -35,7 +35,6 @@ include lib/boards/${board}
 endif
 
 define build_uboot
-	# Compiling u-boot
 	@${BOARDS}
 	@chmod +x ${XUBOOT}
 	@${UBOOT}
@@ -103,6 +102,7 @@ ncompile:
 	@${NCOMPILE}
 
 uboot:
+	# Compiling u-boot
 	$(call build_uboot)
 
 kernel:
