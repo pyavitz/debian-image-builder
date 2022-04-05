@@ -1,11 +1,11 @@
 p1_partition(){
-if [[ `grep -w "allwinner" "board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="allwinner"' "board.txt"` ]]; then
 	OFFSET="2048";
 fi
-if [[ `grep -w "amlogic" "board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "board.txt"` ]]; then
 	OFFSET="2248";
 fi
-if [[ `grep -w "rockchip" "board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
 	OFFSET="32767";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
@@ -30,54 +30,7 @@ partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-if [[ `grep -w "tritium" "board.txt"` ]]; then
-	tritium_flashbin;
-fi
-if [[ `grep -w "pine64" "board.txt"` ]]; then
-	pine64_flashbin;
-fi
-if [[ `grep -w "nanopi" "board.txt"` ]]; then
-	nanopi_flashbin;
-fi
-if [[ `grep -w "nanopineo" "board.txt"` ]]; then
-	nanopineo_flashbin;
-fi
-if [[ `grep -w "nanopim1" "board.txt"` ]]; then
-	nanopim1_flashbin;
-fi
-if [[ `grep -w "opione" "board.txt"` ]]; then
-	opione_flashbin;
-fi
-if [[ `grep -w "opipc" "board.txt"` ]]; then
-	opipc_flashbin;
-fi
-if [[ `grep -w "lepotato" "board.txt"` ]]; then
-	lepotato_flashbin;
-fi
-if [[ `grep -w "odroidc4" "board.txt"` ]]; then
-	odroidc4_flashbin;
-fi
-if [[ `grep -w "odroidn2" "board.txt"` ]]; then
-	odroidn2_flashbin;
-fi
-if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
-	odroidn2plus_flashbin;
-fi
-if [[ `grep -w "radxazero" "board.txt"` ]]; then
-	radxazero_flashbin;
-fi
-if [[ `grep -w "renegade" "board.txt"` ]]; then
-	renegade_flashbin;
-fi
-if [[ `grep -w "rock64" "board.txt"` ]]; then
-	rock64_flashbin;
-fi
-if [[ `grep -w "rockpro64" "board.txt"` ]]; then
-	rockpro64_flashbin;
-fi
-if [[ `grep -Fx "nanopc" "board.txt"` ]]; then
-	nanopc_flashbin;
-fi
+flash_uboot
 sync
 umount p1
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
@@ -105,7 +58,7 @@ p
 w
 
 EOF
-IMAGE_LOOP_DEV="$(losetup --show -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}p1"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
 partprobe "${IMAGE_LOOP_DEV}"
@@ -164,11 +117,6 @@ if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 else
 	p1_uuid > /dev/null 2>&1;
 fi
-if [[ `grep -w "arm" "board.txt"` ]]; then
-	ROOTFS_ARCH="rootfs-armhf";
-else
-	ROOTFS_ARCH="rootfs-aarch64";
-fi
 if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
 	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p1/;
 else
@@ -180,11 +128,7 @@ fi
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
-if [[ `grep -w "arm" "board.txt"` ]]; then
-	cp $(command -v "qemu-arm-static") p1/usr/bin;
-else
-	cp $(command -v "qemu-aarch64-static") p1/usr/bin;
-fi
+cp $(command -v "${STATIC}") p1/usr/bin;
 if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 	choose_release;
 else
@@ -213,7 +157,7 @@ if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 else
 	p2_uuid > /dev/null 2>&1;
 fi
-if [[ `grep -w "bcm2711" "board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
 	bcm2711_config > /dev/null 2>&1;
 	if [ -e output/raspi4/u-boot.bin ]; then
 		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
@@ -222,8 +166,8 @@ if [[ `grep -w "bcm2711" "board.txt"` ]]; then
 		exit;
 	fi
 fi
-if [ -e ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz ]; then
-	tar -xf ${DISTRO}-${DISTRO_VERSION}-rootfs-aarch64.tar.xz -C p2/;
+if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
+	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p2/;
 else
 	echo -e "${YLW}Missing rootfs tarball${FIN}."
 	make cleanup
@@ -232,7 +176,7 @@ fi
 mkdir -p p2/etc/apt/apt.conf.d p2/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p2/usr/bin
-cp $(command -v "qemu-aarch64-static") p2/usr/bin
+cp $(command -v "${STATIC}") p2/usr/bin
 if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 	choose_release;
 else
@@ -272,7 +216,7 @@ cp board.txt p2/root
 cp files/misc/* p2/root
 cp files/scripts/* p2/root
 cp files/users/* p2/root
-if [[ `grep -w "bcm2711" "board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
 	cp files/raspi4/* p2/root;
 fi
 cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
@@ -282,92 +226,9 @@ fi
 }
 
 p1_extlinux(){
-# allwinner
-# arm64
-if [[ `grep -w "tritium" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "nanopi" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "pine64" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun50i-a64-pine64-plus.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-# armhf
-if [[ `grep -w "nanopineo" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun8i-h3-nanopi-neo.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "nanopim1" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun8i-h3-nanopi-m1.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "opione" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun8i-h3-orangepi-one.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "opipc" "board.txt"` ]]; then
-	FDT="/boot/allwinner/sun8i-h3-orangepi-pc.dtb";
-	FDTDIR="/boot/allwinner/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-# amlogic
-if [[ `grep -w "lepotato" "board.txt"` ]]; then
-	FDT="/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "odroidc4" "board.txt"` ]]; then
-	FDT="/boot/amlogic/meson64_odroidc4.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "odroidn2" "board.txt"` ]]; then
-	FDT="/boot/amlogic/meson64_odroidn2.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init";
-fi
-if [[ `grep -w "odroidn2plus" "board.txt"` ]]; then
-	FDT="/boot/amlogic/meson64_odroidn2_plus.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 mitigations=off loglevel=1 usbhid.quirks=0x0eef:0x0005:0x0004 usb-storage.quirks=0x1058:0x259b:u,0x152d:0x0576:u parkmode_disable_ss_quirk=1 init=/sbin/init";
-fi
-if [[ `grep -w "radxazero" "board.txt"` ]]; then
-	FDT="/boot/amlogic/meson-g12a-radxa-zero.dtb";
-	FDTDIR="/boot/amlogic/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyAML0,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 no_console_suspend fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-# rockchip
-if [[ `grep -w "renegade" "board.txt"` ]]; then
-	FDT="/boot/rockchip/rk3328-roc-cc.dtb";
-	FDTDIR="/boot/rockchip/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 video=HDMI-A-1:1920x1080@60 init=/sbin/init";
-fi
-if [[ `grep -w "rock64" "board.txt"` ]]; then
-	FDT="/boot/rockchip/rk3328-rock64.dtb";
-	FDTDIR="/boot/rockchip/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "rockpro64" "board.txt"` ]]; then
-	FDT="/boot/rockchip/rk3399-rockpro64-v2.dtb";
-	FDTDIR="/boot/rockchip/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 loglevel=1 init=/sbin/init";
-fi
-if [[ `grep -w "nanopc" "board.txt"` ]]; then
-	FDT="/boot/rockchip/rk3399-nanopc-t4.dtb";
-	FDTDIR="/boot/rockchip/";
-	CMDLINE="append earlyprintk console=tty1 console=ttyS2,115200n8 console=both rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes net.ifnames=0 usb-storage.quirks=0x1d6b:0x0003:u,0x1f75:0x0621:u,0x1058:0x259b:u loglevel=1 init=/sbin/init";
-fi
-
+FDT="/boot/${FAMILY}/${DTB}.dtb"
+FDTDIR="/boot/${FAMILY}/"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -378,18 +239,18 @@ label default
 	#fdtoverlays
 	${CMDLINE}
 EOF
-if [[ `grep -w "pine64" "board.txt"` ]]; then
+if [[ `grep -w 'BOARD="pine64"' "board.txt"` ]]; then
 	sed -i '/initrd \/boot\/uInitrd/d' p1/boot/extlinux/extlinux.conf;
 fi
-if [[ `grep -w "radxazero" "board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "board.txt"` ]]; then
 	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
 fi
 }
 
 p2_extlinux(){
 # broadcom
-if [[ `grep -w "bcm2711" "board.txt"` ]]; then
-	CMDLINE="append initrd=/uInitrd console=serial0,115200 console=tty1 rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes logo.nologo net.ifnames=0 cma=320M firmware_class.path=/lib/firmware/updates/brcm rootwait";
+if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
+	CMDLINE="append initrd=/uInitrd ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes ${EXTRA} rootwait";
 fi
 mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF

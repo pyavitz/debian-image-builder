@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-if [[ `grep -w "allwinner" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="allwinner"' "/root/board.txt"` ]]; then
 	source /root/allwinner.txt;
 fi
-if [[ `grep -w "amlogic" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "/root/board.txt"` ]]; then
 	source /root/amlogic.txt;
 fi
-if [[ `grep -w "broadcom" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="broadcom"' "/root/board.txt"` ]]; then
 	source /root/broadcom.txt;
 fi
-if [[ `grep -w "rockchip" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
 	source /root/rockchip.txt;
 fi
 source /root/source.txt
@@ -28,7 +28,7 @@ mount -t sysfs sys sys/
 
 export DEBIAN_FRONTEND="noninteractive"
 
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
 		apt_preferences;
 		echo;
@@ -86,7 +86,7 @@ adduser ${user} spi
 
 # Initrd / uInitrd
 cd ~
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	initrd > /dev/null 2>&1;
 else
 	uinitrd > /dev/null 2>&1;
@@ -94,53 +94,62 @@ fi
 
 # LED triggers
 # allwinner
-if [[ `grep -w "tritium" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="tritium"' "/root/board.txt"` ]]; then
 	tritium_led_triggers > /dev/null 2>&1;
 fi
-if [[ `grep "nanopi" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
 	nanopi_led_triggers > /dev/null 2>&1;
 fi
-if [[ `grep -w "orangepi" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopineo"' "/root/board.txt"` ]]; then
+	nanopi_led_triggers > /dev/null 2>&1;
+fi
+if [[ `grep -w 'BOARD="nanopim1"' "/root/board.txt"` ]]; then
+	nanopi_led_triggers > /dev/null 2>&1;
+fi
+if [[ `grep -w 'BOARD="opione"' "/root/board.txt"` ]]; then
+	orangepi_led_triggers > /dev/null 2>&1;
+fi
+if [[ `grep -w 'BOARD="opipc"' "/root/board.txt"` ]]; then
 	orangepi_led_triggers > /dev/null 2>&1;
 fi
 #amlogic
-if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="lepotato"' "/root/board.txt"` ]]; then
 	lepotato_led_triggers;
 fi
-if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidc4"' "/root/board.txt"` ]]; then
 	odroidc4_led_triggers;
 fi
-if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2"' "/root/board.txt"` ]]; then
 	odroidn2_led_triggers;
 fi
-if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2plus"' "/root/board.txt"` ]]; then
 	odroidn2_led_triggers;
 fi
-if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
 	radxazero_led_triggers;
 fi
 # broadcom
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	mv -f raspi4 /usr/local/sbin/led-trigger;
 	chmod +x /usr/local/sbin/led-trigger;
 	chown -R root:root /usr/local/sbin/;
 fi
 # rockchip
-if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="rock64"' "/root/board.txt"` ]]; then
 	rock64_led_triggers > /dev/null 2>&1;
 fi
-if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="renegade"' "/root/board.txt"` ]]; then
 	renegade_led_triggers > /dev/null 2>&1;
 fi
-if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopc"' "/root/board.txt"` ]]; then
 	nanopc_led_triggers > /dev/null 2>&1;
 fi
 
 # Bluetooth helper
-if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
 	pine64_bthelper > /dev/null 2>&1;
 fi
-if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 		:;
 	else
@@ -149,7 +158,7 @@ if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
 fi
 
 # Brcm patchram
-if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
 	echo ""
 	echo "Installing brcm patchram plus ..."
 	cd ~
@@ -173,7 +182,7 @@ mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
 # u-boot
-if [[ `grep -w "rockchip" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
 	mv -f *.bin /usr/lib/u-boot/;
 	mv -f *.itb /usr/lib/u-boot/;
 else
@@ -192,23 +201,23 @@ mkdir -p /usr/local/sbin
 mv -f run-setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 # amlogic
-if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="lepotato"' "/root/board.txt"` ]]; then
 	tweaks_service > /dev/null 2>&1;
 fi
-if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2"' "/root/board.txt"` ]]; then
 	tweaks_service > /dev/null 2>&1;
 fi
-if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2plus"' "/root/board.txt"` ]]; then
 	tweaks_service > /dev/null 2>&1;
 fi
-if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
 	tweaks_service > /dev/null 2>&1;
 fi
 # rockchip
-if [[ `grep -w "rockpro64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="rockpro64"' "/root/board.txt"` ]]; then
 	tweaks_service > /dev/null 2>&1;
 fi
-if [[ `grep -w "nanopc" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopc"' "/root/board.txt"` ]]; then
 	tweaks_service > /dev/null 2>&1;
 fi
 mv -f smon /usr/local/bin/
@@ -225,7 +234,7 @@ chmod +x /usr/bin/growpart
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
 	mv -f nanopi-bthelper /usr/local/sbin/
 	chmod +x /usr/local/sbin/nanopi-bthelper;
 fi
@@ -237,11 +246,11 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mv -f governor.init /etc/init.d/governor
 	mv -f network.init /etc/init.d/network
 	mv -f zramswap.init /etc/init.d/zramswap
-	if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+	if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper
 		rm -f /etc/init.d/leds;
 	fi
-	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+	if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper;
 	fi
 fi
@@ -281,24 +290,24 @@ chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
 
 # Firmware
-if [[ `grep -w "allwinner" "/root/board.txt"` ]]; then
-	if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="allwinner"' "/root/board.txt"` ]]; then
+	if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
 		nanopi_firmware;
 	else
 		extra_firmware;
 	fi
 fi
-if [[ `grep -w "amlogic" "/root/board.txt"` ]]; then
-	if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="amlogic"' "/root/board.txt"` ]]; then
+	if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
 		radxazero_firmware;
 	else
 		extra_firmware;
 	fi
 fi
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	rpi_firmware;
 fi
-if [[ `grep -w "rockchip" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
 	extra_firmware;
 fi
 
@@ -324,12 +333,12 @@ chown root:root /etc/new.motd
 wireless_regdb
 
 # Bluetooth helper install
-if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
 	pine64_bthelper2;
 fi
 
 # Raspberry Pi
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	mkdir -p /lib/udev/rules.d/;
 	mv -f 99-com.rules /lib/udev/rules.d/99-com.rules;
 	# Sys-mods
@@ -402,36 +411,36 @@ sleep 1s
 fetch_version
 
 # Miscellaneous
-if [[ `grep -w "odroidn2" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2"' "/root/board.txt"` ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
 	systemd_journald;
 fi
-if [[ `grep -w "odroidn2plus" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidn2plus"' "/root/board.txt"` ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
 	systemd_journald;
 fi
-if [[ `grep -w "odroidc4" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="odroidc4"' "/root/board.txt"` ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
 	systemd_journald;
 fi
-if [[ `grep -w "lepotato" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="lepotato"' "/root/board.txt"` ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w "radxazero" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w "arm" "/root/board.txt"` ]]; then
+if [[ `grep -w 'ARCH="arm"' "/root/board.txt"` ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w "renegade" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="renegade"' "/root/board.txt"` ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w "rock64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="rock64"' "/root/board.txt"` ]]; then
 	systemd_journald;
 fi
 
 # Services
-if [[ `grep -w "rockchip" "/root/board.txt"` ]]; then
+if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
 	if [ -e /etc/default/haveged ]; then
 		sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged;
 	fi
@@ -441,7 +450,7 @@ echo "Enabling Services ..."
 if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
-if [[ `grep -w "nanopi" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 		:;
 	else
@@ -459,7 +468,7 @@ else
 	echo "== Systemd"
 	enable_systemd > /dev/null 2>&1;
 fi
-if [[ `grep -w "pine64" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 		:;
 	else

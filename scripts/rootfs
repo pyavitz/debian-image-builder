@@ -60,21 +60,11 @@ fi
 echo -e "${WHT}Starting debootstrap${FIN} ..."
 # start debootstrap
 mkdir -p ${ROOT}/usr/bin
-if [[ `grep -w 'ROOTFS_ARCH="rootfs-aarch64"' "board.txt"` ]]; then
-	cp $(command -v "qemu-aarch64-static") ${ROOT}/usr/bin;
-	if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
-		arm64_devuan;
-	else
-		arm64_debootstrap;
-	fi
-fi
-if [[ `grep -w 'ROOTFS_ARCH="rootfs-armhf"' "board.txt"` ]]; then
-	cp $(command -v "qemu-arm-static") ${ROOT}/usr/bin;
-	if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
-		armhf_devuan;
-	else
-		armhf_debootstrap;
-	fi
+cp $(command -v "${STATIC}") ${ROOT}/usr/bin;
+if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+	run_devuan-debootstrap;
+else
+	run_debootstrap;
 fi
 if [ -e ${ROOT}/usr/bin/qemu-aarch64-static ]; then
 	rm -f ${ROOT}/usr/bin/qemu-aarch64-static
