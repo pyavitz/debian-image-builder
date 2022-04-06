@@ -2,6 +2,7 @@
 ### DO NOT EDIT
 source lib/boards/$1
 MAKE_OUTPUT="output/$1"
+TITLE=`echo "$1" | sed -e 's/\(.*\)/\U\1/'`
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 HEIGHT=0
@@ -11,10 +12,10 @@ while true; do
 	exec 3>&1
 	selection=$(dialog \
 	--backtitle "Debian Image Builder" \
-	--title "$1" \
+	--title "$TITLE" \
 	--clear \
 	--cancel-label "Exit" \
-	--menu "Select:" $HEIGHT $WIDTH 5 \
+	--menu "Select:" $HEIGHT $WIDTH 4 \
 	"1" "Make All" \
 	"2" "Make U-Boot" \
 	"3" "Make Kernel" \
@@ -49,7 +50,7 @@ case $selection in
 		make "uboot" "board=$1"
 		# check rockchip u-boot binaries
 		if [ -e $MAKE_OUTPUT/*.itb ]; then
-			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.itb; ls $MAKE_OUTPUT/*.bin" 30 75;
+			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/*.itb" 30 75;
 		else
 			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
 		fi
