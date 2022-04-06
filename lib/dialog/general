@@ -47,7 +47,12 @@ case $selection in
 	;;
 	2 )
 		make "uboot" "board=$1"
-		dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75
+		# check rockchip u-boot binaries
+		if [ -e $MAKE_OUTPUT/*.itb ]; then
+			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/{*.itb,*.bin}" 30 75;
+		else
+			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
+		fi
 	;;
 	3 )
 		make "kernel" "board=$1"
