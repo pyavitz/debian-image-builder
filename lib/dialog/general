@@ -42,12 +42,12 @@ case $selection in
 		echo "Program terminated."
 	;;
 	1 )
-		make "all" "board=$1"
+		make "all" "board=$1"  2>&1  | tee ./output/make.log
 		dialog --prgbox "Results:" "ls $IMG_EXP *$ARCH_EXT* $MAKE_OUTPUT/" 30 75
 		exit 0
 	;;
 	2 )
-		make "uboot" "board=$1"
+		make "uboot" "board=$1"  2>&1  | tee ./output/make.log
 		# check rockchip u-boot binaries
 		if [ -e $MAKE_OUTPUT/*.itb ]; then
 			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/*.itb" 30 75;
@@ -56,15 +56,15 @@ case $selection in
 		fi
 	;;
 	3 )
-		make "kernel" "board=$1"
+		make "kernel" "board=$1"  2>&1 | tee ./output/make.log
 		dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.deb" 30 75
 	;;
 	4 )
-		make "rootfs" "board=$1"
+		make "rootfs" "board=$1"  2>&1 | tee ./output/make.log
 		dialog --prgbox "Results:" "ls *$ARCH_EXT*" 30 75
 	;;
 	5 )
-		make "image" "board=$1"
+		make "image" "board=$1"  2>&1 | tee ./output/make.log
 		dialog --prgbox "Results:" "ls $IMG_EXP" 30 75
 	;;
 esac
