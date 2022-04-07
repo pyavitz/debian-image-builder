@@ -126,6 +126,8 @@ all:
 ### MISCELLANEOUS
 menu:
 	# Menu
+	@ if [ -e ./output ]; then :; else mkdir -p ./output;fi;
+	@ sudo rm -f ./output/make.log
 	@chmod +x ${MENU}
 	@${MENU}
 config:
