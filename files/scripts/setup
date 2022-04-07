@@ -29,15 +29,16 @@ case "$choice" in
 esac
 }
 
+run(){
 echo ""
 echo -e "${WHT}Running System Setup${FIN} ..."
 sleep 1s
 sudo dpkg-reconfigure locales tzdata keyboard-configuration
 sleep 1s
-if [[ `grep -w "radxazero" "/etc/opt/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="radxazero"' "/etc/opt/board.txt"` ]]; then
 	confirm;
 else
-	if [[ `grep "odroid" "/etc/opt/board.txt"` ]]; then
+	if [[ `grep 'FAMILY="odroid"' "/etc/opt/board.txt"` ]]; then
 		confirm;
 	else
 		:;
@@ -53,6 +54,35 @@ sleep 1s
 sudo update-ca-certificates -f
 echo ""
 echo -e "${WHT}System is ready to go${FIN}."
-if [ -e /usr/local/bin/run-setup ]; then
-	sudo rm -f /usr/local/bin/run-setup;
+if [ -e /usr/local/bin/setup ]; then
+	sudo rm -f /usr/local/bin/setup;
+fi
+}
+
+if [ $# -eq 0 ]; then
+	echo -e "\e[0;31mMissing options!${FIN}"
+	echo "(run $0 -h for help)"
+	echo ""
+	exit 0
+fi
+
+ECHO="false"
+
+while getopts "rh" OPTION; do
+	case $OPTION in
+
+		r)
+			ECHO="RUN"
+			;;
+		h)                       
+			echo ""
+			echo -e "   -r        Run"
+			echo ""
+			exit 0
+			;;
+	esac
+done
+
+if [ $ECHO = "RUN" ]; then
+	run;
 fi
