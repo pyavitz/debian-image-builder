@@ -378,3 +378,30 @@ if [ -e /etc/systemd/journald.conf ]; then
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
 fi
 }
+
+# Clean
+bclean(){
+if [ -e p1 ]; then
+	echo ""
+	echo -en "${WHT}Cleaning${FIN}"
+	umount p1/proc p1/sys p1/dev p1/run > /dev/null 2>&1;
+	umount p2/proc p2/sys p2/dev p2/run > /dev/null 2>&1;
+	umount -l p1 p2 > /dev/null 2>&1;
+	rm -fdr {p1,p2,img,sysroot,root-id.txt,root-pid.txt,part-uuid.txt,kernel.txt,kpart*,ccache.txt,gcc.txt} > /dev/null 2>&1;
+	losetup -d /dev/loop* > /dev/null 2>&1;
+	sleep 1s
+	losetup -d /dev/loop* > /dev/null 2>&1;
+	echo_bdone;
+	sleep 1s;
+	clear -x;
+fi
+if [ -e sysroot ]; then
+	echo ""
+	echo -en "${WHT}Cleaning${FIN}"
+	rm -fdr sysroot;
+	sleep 1s;
+	echo_bdone;
+	sleep 1s;
+	clear -x;
+fi
+}
