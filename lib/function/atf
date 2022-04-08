@@ -14,27 +14,14 @@ else
 fi
 echo
 echo -e "${WHT}Compiling ATF${FIN} ..."
-if [[ `grep -w 'FAMILY="allwinner"' "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		export CROSS_COMPILE=${CROSS_COMPILE}
-		make -j${CORES} CC=${CROSS} PLAT=${ATF_PLAT} DEBUG=1 bl31;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		export ARCH=${ARCH}
-		make -j${CORES} CC=${NATIVE} PLAT=${ATF_PLAT} DEBUG=1 bl31;
-	fi
-fi
-if [[ `grep -w 'FAMILY="rockchip"' "../board.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
-		echo -e "${GRN}  CC${FIN}"
-		export CROSS_COMPILE=${CROSS_COMPILE}
-		make -j${CORES} CC=${CROSS} PLAT=${ATF_PLAT} bl31;
-	else
-		echo -e "${GRN}  NC${FIN}"
-		export ARCH=${ARCH}
-		make -j${CORES} CC=${NATIVE} PLAT=${ATF_PLAT} bl31;
-	fi
+if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+	echo -e "${GRN}  CC${FIN}";
+	export CROSS_COMPILE=${CROSS_COMPILE};
+	make -j${CORES} CC=${CROSS} ${ATF_EXT};
+else
+	echo -e "${GRN}  NC${FIN}";
+	export ARCH=${ARCH};
+	make -j${CORES} CC=${NATIVE} ${ATF_EXT};
 fi
 cd ..
 echo_done
