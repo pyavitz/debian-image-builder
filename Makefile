@@ -28,7 +28,7 @@ CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
 # boards
-BOARDS=$(shell cp lib/boards/${board} board.txt)
+BOARDS=$(shell sudo cp lib/boards/${board} board.txt)
 
 ifdef board
 include lib/boards/${board}
@@ -126,8 +126,6 @@ all:
 ### MISCELLANEOUS
 menu:
 	# Menu
-	@ if [ -e ./output ]; then :; else mkdir -p ./output;fi;
-	@ sudo rm -f ./output/make.log
 	@chmod +x ${MENU}
 	@${MENU}
 config:
