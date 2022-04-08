@@ -75,6 +75,12 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 The config menu will append _defconfig to the end of the name in the
 userdata.txt file.
 ```
+#### Logging support for "make menu"
+
+```sh
+# change from 0 to 1
+logging=0
+```
 #### User patches
 
 ```sh

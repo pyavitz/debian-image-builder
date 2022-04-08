@@ -1,6 +1,7 @@
 #!/bin/bash
 ### DO NOT EDIT
 source lib/boards/$1
+source userdata.txt
 MAKE_OUTPUT="output/$1"
 TITLE=`echo "$1" | sed -e 's/\(.*\)/\U\1/'`
 DIALOG_CANCEL=1
@@ -42,12 +43,21 @@ case $selection in
 		echo "Program terminated."
 	;;
 	1 )
-		make "all" "board=$1"
+		if [ $logging -eq 1 ]; then
+			./scripts/loggit make "all" "board=$1"
+		else
+			make "all" "board=$1"
+		fi
 		dialog --prgbox "Results:" "ls $IMG_EXP *$ARCH_EXT* $MAKE_OUTPUT/" 30 75
 		exit 0
 	;;
 	2 )
-		make "uboot" "board=$1"
+		if [ $logging -eq 1 ]; then
+			./scripts/loggit make "uboot" "board=$1"
+		else
+			make "uboot" "board=$1"
+		fi
+
 		# check rockchip u-boot binaries
 		if [ -e $MAKE_OUTPUT/*.itb ]; then
 			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/*.itb" 30 75;
@@ -56,15 +66,27 @@ case $selection in
 		fi
 	;;
 	3 )
-		make "kernel" "board=$1"
+		if [ $logging -eq 1 ]; then
+			./scripts/loggit make "kernel" "board=$1"
+		else
+			make "kernel" "board=$1"
+		fi
 		dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.deb" 30 75
 	;;
 	4 )
-		make "rootfs" "board=$1"
+		if [ $logging -eq 1 ]; then
+			./scripts/loggit make "rootfs" "board=$1"
+		else
+			make "rootfs" "board=$1"
+		fi
 		dialog --prgbox "Results:" "ls *$ARCH_EXT*" 30 75
 	;;
 	5 )
-		make "image" "board=$1"
+		if [ $logging -eq 1 ]; then
+			./scripts/loggit make "image" "board=$1"
+		else
+			make "image" "board=$1"
+		fi
 		dialog --prgbox "Results:" "ls $IMG_EXP" 30 75
 	;;
 esac
