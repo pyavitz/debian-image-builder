@@ -78,7 +78,7 @@ userdata.txt file.
 #### Logging support for "make menu"
 
 ```sh
-# change from 0 to 1
+# change from 0 to 1, log stored as /tmp/make.log
 logging=0
 ```
 #### User patches
