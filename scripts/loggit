@@ -1,0 +1,8 @@
+#!/bin/bash
+if [ -e /tmp/make.log ]; then
+  sudo mv -f /tmp/make.log /tmp/make.log.1;
+fi
+sudo rm -f {screen.out,screen.in}
+script -O screen.out -I screen.in -f -c /bin/bash -c "./scripts/runit $1 $2 $3 $4 $5"
+ansi2txt < screen.out | col -b | awk '{gsub(/[[:cntrl:]]/,x)}1' |strings > /tmp/make.log
+sudo rm -f {screen.out,screen.in}
