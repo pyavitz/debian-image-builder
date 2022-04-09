@@ -66,6 +66,11 @@ rtl8188eu:      # 1 to add Realtek 8188EU wireless support
 Customize (user defconfig)
 Defconfig:	# 1 to enable
 Name:		# Name of _defconfig (Must be placed in defconfig dir.)
+
+User options
+Logging:	# 1 to enable logging > /tmp/make.log
+Verbosity:	# 1 to enable verbose
+Compress img:	# 1 to auto compress img > img.xz
 ```
 
 #### User defconfig
@@ -75,12 +80,7 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 The config menu will append _defconfig to the end of the name in the
 userdata.txt file.
 ```
-#### Logging support for "make menu"
 
-```sh
-# change from 0 to 1, log stored as /tmp/make.log
-logging=0
-```
 #### User patches
 
 ```sh
@@ -92,11 +92,7 @@ Patches "-p1" placed in patches/userpatches are applied during compilation.
 # change from 0 to 1
 aircrack=0
 ```
-#### Compression (turn off)
-```sh
-# change from 1 to 0
-compress_img.xz=1        # compresses to img.xz
-```
+
 #### Amlogic eMMC boot
 ```sh
 # change from 0 to 1
