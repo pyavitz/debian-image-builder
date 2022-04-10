@@ -1,3 +1,53 @@
+sysroot_partition(){
+RAM=0
+ROOTFS_FOLDER="img/"
+RELEASE_NAME=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}
+mkdir -p "$ROOTFS_FOLDER"
+if [ $RAM -ne 0 ]; then
+	ROOTFS_FOLDER="ram/"
+fi
+mkdir -p "$ROOTFS_FOLDER"
+if [ $RAM -ne 0 ]; then
+	mount -t tmpfs -o size=3G tmpfs $ROOTFS_FOLDER
+fi
+truncate -s 2000MB "${ROOTFS_FOLDER}${RELEASE_NAME}"
+fdisk "${ROOTFS_FOLDER}${RELEASE_NAME}" <<EOF
+o
+n
+p
+1
+2048
+a
+t
+b
+3906249
+
+p
+w
+
+EOF
+IMAGE_LOOP_DEV="$(losetup --show -P -f ${ROOTFS_FOLDER}${RELEASE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+partprobe "${IMAGE_LOOP_DEV}"
+mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
+mkdir -p sysroot
+mount "${IMAGE_LOOP_DEV_ROOTFS}" ${ROOT}
+sync
+umount sysroot
+mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" ${ROOT}
+}
+
+sysroot_setup(){
+RELEASE="sysroot/etc/apt/sources.list"
+mkdir -p sysroot/etc/apt/apt.conf.d sysroot/etc/dpkg/dpkg.cfg.d
+echo "force-unsafe-io" > "sysroot/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
+if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	choose_release;
+else
+	choose_release > /dev/null 2>&1;
+fi
+}
+
 devuan_keyring(){
 URL="https://pkgmaster.devuan.org/devuan/pool/main/d/devuan-keyring/"
 FILE="devuan-keyring_2017.10.03_all.deb"
@@ -82,12 +132,12 @@ fi
 
 # arm64 / armhf
 run_debootstrap(){
-debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} ${ROOT}
-chroot ${ROOT} /debootstrap/debootstrap --second-stage
+debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} sysroot
+chroot sysroot /debootstrap/debootstrap --second-stage
 }
 
 run_devuan-debootstrap(){
 KEY="/usr/share/keyrings/devuan-archive-keyring.gpg"
-debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://deb.devuan.org/merged
-chroot ${ROOT} /debootstrap/debootstrap --second-stage
+debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} sysroot http://deb.devuan.org/merged
+chroot sysroot /debootstrap/debootstrap --second-stage
 }

@@ -46,13 +46,21 @@ else
 	fi
 fi
 ROOT="sysroot"
-RELEASE=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
-if [ -e $RELEASE ]; then
-	ls $RELEASE
+RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
+if [ -e $RELEASE_TARBALL ]; then
+	ls $RELEASE_TARBALL
 	exit;
 fi
 echo -e "${WHT}Starting debootstrap${FIN} ..."
 # start debootstrap
+if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
+	source lib/function/release
+	if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+		sysroot_partition;
+	else
+		sysroot_partition > /dev/null 2>&1;
+	fi
+fi
 mkdir -p ${ROOT}/usr/bin
 cp $(command -v "${STATIC}") ${ROOT}/usr/bin;
 if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
@@ -61,8 +69,9 @@ else
 	run_debootstrap;
 fi
 
-# add in packages beyond debootstrap that make a real system
+# creating developer tarball
 if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
+	sysroot_setup;
 	mount -o bind /dev ${ROOT}/dev;
 	mount -o bind /dev/pts ${ROOT}/dev/pts;
 	cp -f lib/source ${ROOT}/root/source.txt;
@@ -72,8 +81,10 @@ if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
 	umount ${ROOT}/dev;
 	rm -f ${ROOT}/root/rootfs-extra;
 	rm -f ${ROOT}/root/*.txt;
+	rm -f ${ROOT}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
+	rm -f ${ROOT}/etc/apt/sources.list
 fi
-
+# clean up
 if [ -e ${ROOT}/usr/bin/qemu-aarch64-static ]; then
 	rm -f ${ROOT}/usr/bin/qemu-aarch64-static
 fi
@@ -86,10 +97,23 @@ rm -f ${ROOT}/var/cache/debconf/*
 echo
 echo -e "${WHT}Archiving root filesystem${FIN} ..."
 cd ${ROOT}
-XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../$RELEASE)
+XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../$RELEASE_TARBALL)
 cd ..
 
-rm -fdr ${ROOT}
+if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
+	losetup -d "${IMAGE_LOOP_DEV}";
+	rm -f "${ROOTFS_FOLDER}${RELEASE_NAME}";
+	if [ $RAM -ne 0 ]; then
+		umount "${ROOTFSFOLDER}";
+	fi
+	rmdir "${ROOTFS_FOLDER}";
+	# Missing something? Hit with the cleaner for the time being.
+	make cleanup > /dev/null 2>&1;
+fi
+
+if [ -e ${ROOT} ]; then
+	rm -fdr ${ROOT}
+fi
 
 if [ -e /usr/share/debootstrap/scripts/chimaera ]; then
 	rm -f /usr/share/debootstrap/scripts/chimaera;
