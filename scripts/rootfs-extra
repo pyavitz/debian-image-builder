@@ -5,7 +5,11 @@ source /root/board.txt
 source /root/userdata.txt > /dev/null 2>&1
 export DEBIAN_FRONTEND="noninteractive"
 
-echo "Adding additional packages beyond basic debian to rootfs"
+CAP_DISTRO=`echo "$DISTRO" | sed -e "s/\b\(.\)/\u\1/g"`
+CAP_RELEASE=`echo "$DISTRO_VERSION" | sed -e "s/\b\(.\)/\u\1/g"`
+
+echo "Adding additional packages to $CAP_DISTRO $CAP_RELEASE rootfs"
+
 mount -t proc proc proc/
 mount -t sysfs sys sys/
 

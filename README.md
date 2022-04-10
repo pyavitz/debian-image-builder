@@ -70,6 +70,7 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 User options
 Logging:	# 1 to enable logging > output/logs/$board-*.log (Menu interface only)
 Verbosity:	# 1 to enable verbose
+Rootfs XL:	# 1 to enabe developer rootfs tarball
 Compress img:	# 1 to auto compress img > img.xz
 ```
 
@@ -87,12 +88,11 @@ userdata.txt file.
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
 
-#### Expanded rootfs
+#### Rootfs XL (testing)
 
 ```sh
-# change from 0 to 1 moves extra package loading from image to rootfs step
-# This can result in faster builds if you're building images for multiple boards
-rootfsxl=0
+Results in faster builds and saves time when building images for multiple boards
+or involved in development.
 ```
 #### Aircrack (rtl88XXau)
 

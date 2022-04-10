@@ -1,16 +1,22 @@
 # menu
 MENU=./lib/dialog/menu
+GMENU=./lib/dialog/general
 CONF=./lib/dialog/config
 DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
 
 # misc
 RFS=./scripts/rootfs
+RFSX=./scripts/rootfs-extra
 ROOTFS=sudo ./scripts/rootfs
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
 PURGE=$(shell sudo rm -fdr sources)
 PURGEALL=$(shell sudo rm -fdr sources output)
+
+# logger
+RIT=./scripts/runit
+LIT=./scripts/loggit
 
 # uboot and linux
 XUBOOT=./scripts/uboot
@@ -56,6 +62,7 @@ endef
 define create_rootfs
 	@${BOARDS}
 	@chmod +x ${RFS}
+	@chmod +x ${RFSX}
 	@${ROOTFS}
 endef
 
@@ -127,6 +134,9 @@ all:
 menu:
 	# Menu
 	@chmod +x ${MENU}
+	@chmod +x ${GMENU}
+	@chmod +x ${RIT}
+	@chmod +x ${LIT}
 	@${MENU}
 
 config:
