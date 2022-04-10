@@ -30,29 +30,33 @@ case $exit_status in
 		clear
 		echo "Program terminated."
 		exit
-	;;
+		;;
 	$DIALOG_ESC)
 		clear
 		echo "Program aborted." >&2
 		exit 1
-	;;
+		;;
 esac
 case $selection in
 	0 )
 		clear
 		echo "Program terminated."
-	;;
+		;;
 	1 )
 		if [ $logging -eq 1 ]; then
+			echo LOGNAME=$1 > logger.txt
+			echo 'LOGFILE="$LOGNAME-all"' >> logger.txt
 			./scripts/loggit make "all" "board=$1"
 		else
 			make "all" "board=$1"
 		fi
 		dialog --prgbox "Results:" "ls $IMG_EXP *$ARCH_EXT* $MAKE_OUTPUT/" 30 75
 		exit 0
-	;;
+		;;
 	2 )
 		if [ $logging -eq 1 ]; then
+			echo LOGNAME=$1 > logger.txt
+			echo 'LOGFILE="$LOGNAME-u-boot"' >> logger.txt
 			./scripts/loggit make "uboot" "board=$1"
 		else
 			make "uboot" "board=$1"
@@ -64,30 +68,36 @@ case $selection in
 		else
 			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
 		fi
-	;;
+		;;
 	3 )
 		if [ $logging -eq 1 ]; then
+			echo LOGNAME=$1 > logger.txt
+			echo 'LOGFILE="$LOGNAME-linux"' >> logger.txt
 			./scripts/loggit make "kernel" "board=$1"
 		else
 			make "kernel" "board=$1"
 		fi
 		dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.deb" 30 75
-	;;
+		;;
 	4 )
 		if [ $logging -eq 1 ]; then
+			echo LOGNAME=$1 > logger.txt
+			echo 'LOGFILE="$LOGNAME-rootfs"' >> logger.txt
 			./scripts/loggit make "rootfs" "board=$1"
 		else
 			make "rootfs" "board=$1"
 		fi
 		dialog --prgbox "Results:" "ls *$ARCH_EXT*" 30 75
-	;;
+		;;
 	5 )
 		if [ $logging -eq 1 ]; then
+			echo LOGNAME=$1 > logger.txt
+			echo 'LOGFILE="$LOGNAME-image"' >> logger.txt
 			./scripts/loggit make "image" "board=$1"
 		else
 			make "image" "board=$1"
 		fi
 		dialog --prgbox "Results:" "ls $IMG_EXP" 30 75
-	;;
+		;;
 esac
 done

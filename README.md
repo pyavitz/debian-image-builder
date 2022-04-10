@@ -68,7 +68,7 @@ Defconfig:	# 1 to enable
 Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 
 User options
-Logging:	# 1 to enable logging > /tmp/make.log (Menu interface only)
+Logging:	# 1 to enable logging > output/logs/$board-*.log (Menu interface only)
 Verbosity:	# 1 to enable verbose
 Compress img:	# 1 to auto compress img > img.xz
 ```
