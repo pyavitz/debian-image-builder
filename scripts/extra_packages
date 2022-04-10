@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+source /root/source.txt
+source /root/board.txt
+source /root/userdata.txt > /dev/null 2>&1
+export DEBIAN_FRONTEND="noninteractive"
+
+echo "Adding additional packages beyond basic debian to rootfs"
+mount -t proc proc proc/
+mount -t sysfs sys sys/
+
+apt-get update
+apt-get install -y apt-utils
+
+# Locales
+set_locales
+
+# Timezone
+set_timezone
+
+apt upgrade -y
+apt dist-upgrade -y
+if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} resolvconf haveged;
+fi
+if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	apt install -y openssh-client openssh-server --no-install-recommends;
+	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown ifupdown-extra ntp haveged;
+fi
+if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown rng-tools5;
+fi
+if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+	apt install -y ${PKGS1} ${PKGS2} dbus-user-session libical3 resolvconf ntp haveged;
+fi
+apt -y clean
+apt -y autoclean
+
+umount /proc
+umount /sys
