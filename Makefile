@@ -123,11 +123,12 @@ all:
 	# Creating image
 	$(call build_image)
 
-### MISCELLANEOUS
+# MISCELLANEOUS
 menu:
 	# Menu
 	@chmod +x ${MENU}
 	@${MENU}
+
 config:
 	# Config Menu
 	@chmod +x ${CONF}
