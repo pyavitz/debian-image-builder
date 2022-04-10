@@ -86,6 +86,14 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
+
+#### Expanded rootfs
+
+```sh
+# change from 0 to 1 moves extra package loading from image to rootfs step
+# This can result in faster builds if you're building images for multiple boards
+rootfsxl=0
+```
 #### Aircrack (rtl88XXau)
 
 ```sh
