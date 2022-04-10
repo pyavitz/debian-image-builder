@@ -60,6 +60,21 @@ if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
 else
 	run_debootstrap;
 fi
+
+# add in packages beyond debootstrap that make a real system
+mount -o bind /dev ${ROOT}/dev;
+mount -o bind /dev/pts ${ROOT}/dev/pts;
+cp scripts/extra_packages ${ROOT}/root/;
+cp userdata.txt ${ROOT}/root/;
+cp board.txt ${ROOT}/root/;
+chroot ${ROOT} /root/extra_packages;
+umount ${ROOT}/dev/pts;
+umount ${ROOT}/dev;
+rm ${ROOT}/root/extra_packages
+rm ${ROOT}/root/userdata.txt
+rm ${ROOT}/root/board.txt
+
+
 if [ -e ${ROOT}/usr/bin/qemu-aarch64-static ]; then
 	rm -f ${ROOT}/usr/bin/qemu-aarch64-static
 fi
@@ -76,6 +91,7 @@ XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > .
 cd ..
 
 rm -fdr ${ROOT}
+
 if [ -e /usr/share/debootstrap/scripts/chimaera ]; then
 	rm -f /usr/share/debootstrap/scripts/chimaera;
 fi
