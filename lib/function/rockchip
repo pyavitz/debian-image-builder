@@ -4,31 +4,4 @@ dd if=${OUTPUT}/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
 
-# STAGE2
-rock64_led_triggers(){
-tee /usr/local/sbin/led-trigger <<EOF
-#!/bin/bash
-# led trigger
-if [ -e /sys/class/leds/standby/brightness ]; then
-	echo 0 > /sys/class/leds/standby/brightness;
-else
-	if [ -e /sys/class/leds/led-1/brightness ]; then
-		echo 0 > /sys/class/leds/led-1/brightness;
-	fi
-fi
-EOF
-}
 
-renegade_led_triggers(){
-cd ~
-mv -f renegade /usr/local/sbin/led-trigger
-chmod +x /usr/local/sbin/led-trigger
-chown -R root:root /usr/local/sbin/
-}
-
-nanopc_led_triggers(){
-cd ~
-mv -f nanopc /usr/local/sbin/led-trigger
-chmod +x /usr/local/sbin/led-trigger
-chown -R root:root /usr/local/sbin/
-}
