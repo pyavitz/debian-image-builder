@@ -38,7 +38,7 @@ make dialogrc   # Set builder theme (optional)
 Name:		# Whats your name?
 Username:       # Your username
 Password:       # Your password
-Branding:       # Set ASCII text banner
+Branding:       # Set custom ASCII text banner
 Hostname:       # Set system hostname
 
 Distribution

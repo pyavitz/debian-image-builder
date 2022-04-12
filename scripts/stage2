@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 if [[ `grep -w "verbose=1" "/root/userdata.txt"` ]]; then
-	set -x
+	set -x;
 fi
 if [[ `grep -w 'FAMILY="allwinner"' "/root/board.txt"` ]]; then
 	source /root/allwinner.txt;
@@ -34,7 +34,7 @@ export DEBIAN_FRONTEND="noninteractive"
 if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
 		apt_preferences;
-		echo;
+		echo "";
 	fi
 fi
 apt-get update
@@ -217,12 +217,24 @@ echo "Done."
 # MOTD
 echo ""
 mkdir -p /etc/update-motd.d
-tee /etc/update-motd.d/15-brand <<EOF
+if [[ `grep -w 'MOTD="default"' "/root/userdata.txt"` ]]; then
+	# use default motd
+	BOARD_MOTD=`cat "/root/board.txt" | grep "DEFAULT_MOTD" | sed 's/DEFAULT_MOTD=//g' | tr -d '"'`
+	tee /etc/update-motd.d/15-brand <<EOF
+#!/bin/bash
+echo
+toilet -f small --filter metal '${BOARD_MOTD}'
+echo 
+EOF
+else
+	# use custom motd
+	tee /etc/update-motd.d/15-brand <<EOF
 #!/bin/bash
 echo
 toilet -f small --filter metal '${MOTD}'
 echo 
 EOF
+fi
 if [ -e /etc/update-motd.d/10-help-text ]; then
 	rm -f /etc/update-motd.d/10-help-text;
 fi
