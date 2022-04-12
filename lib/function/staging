@@ -226,21 +226,21 @@ fi
 }
 
 p1_extlinux(){
-FDT="/boot/${FAMILY}/${DTB}.dtb"
-FDTDIR="/boot/${FAMILY}/"
+FDT="../${FAMILY}/${DTB}.dtb"
+FDTDIR="../${FAMILY}/"
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
-	kernel /boot/Image
-	initrd /boot/uInitrd
+	kernel ../Image
+	initrd ../uInitrd
 	fdtdir ${FDTDIR}
 	fdt ${FDT}
 	#fdtoverlays
 	${CMDLINE}
 EOF
 if [[ `grep -w 'BOARD="pine64"' "board.txt"` ]]; then
-	sed -i '/initrd \/boot\/uInitrd/d' p1/boot/extlinux/extlinux.conf;
+	sed -i '/initrd ..\/uInitrd/d' p1/boot/extlinux/extlinux.conf;
 fi
 if [[ `grep -w 'BOARD="radxazero"' "board.txt"` ]]; then
 	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;

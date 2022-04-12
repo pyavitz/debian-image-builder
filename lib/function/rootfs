@@ -29,17 +29,17 @@ IMAGE_LOOP_DEV="$(losetup --show -P -f ${ROOTFS_FOLDER}${RELEASE_NAME})"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
 partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p sysroot
+mkdir -p ${ROOT}
 mount "${IMAGE_LOOP_DEV_ROOTFS}" ${ROOT}
 sync
-umount sysroot
+umount ${ROOT}
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" ${ROOT}
 }
 
 sysroot_setup(){
-RELEASE="sysroot/etc/apt/sources.list"
-mkdir -p sysroot/etc/apt/apt.conf.d sysroot/etc/dpkg/dpkg.cfg.d
-echo "force-unsafe-io" > "sysroot/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
+RELEASE="${ROOT}/etc/apt/sources.list"
+mkdir -p ${ROOT}/etc/apt/apt.conf.d ${ROOT}/etc/dpkg/dpkg.cfg.d
+echo "force-unsafe-io" > "${ROOT}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
 	choose_release;
 else
