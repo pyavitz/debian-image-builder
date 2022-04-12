@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 if [[ `grep -w 'FAMILY="allwinner"' "/root/board.txt"` ]]; then
 	source /root/allwinner.txt;
 fi
@@ -93,56 +94,10 @@ else
 fi
 
 # LED triggers
-# allwinner
-if [[ `grep -w 'BOARD="tritium"' "/root/board.txt"` ]]; then
-	tritium_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
-	nanopi_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="nanopineo"' "/root/board.txt"` ]]; then
-	nanopi_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="nanopim1"' "/root/board.txt"` ]]; then
-	nanopi_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="opione"' "/root/board.txt"` ]]; then
-	orangepi_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="opipc"' "/root/board.txt"` ]]; then
-	orangepi_led_triggers > /dev/null 2>&1;
-fi
-#amlogic
-if [[ `grep -w 'BOARD="lepotato"' "/root/board.txt"` ]]; then
-	lepotato_led_triggers;
-fi
-if [[ `grep -w 'BOARD="odroidc4"' "/root/board.txt"` ]]; then
-	odroidc4_led_triggers;
-fi
-if [[ `grep -w 'BOARD="odroidn2"' "/root/board.txt"` ]]; then
-	odroidn2_led_triggers;
-fi
-if [[ `grep -w 'BOARD="odroidn2plus"' "/root/board.txt"` ]]; then
-	odroidn2_led_triggers;
-fi
-if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
-	radxazero_led_triggers;
-fi
-# broadcom
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
-	mv -f raspi4 /usr/local/sbin/led-trigger;
+if [ -f "/root/led-trigger" ]; then 
+	mv -f /root/led-trigger /usr/local/sbin/led-trigger;
 	chmod +x /usr/local/sbin/led-trigger;
 	chown -R root:root /usr/local/sbin/;
-fi
-# rockchip
-if [[ `grep -w 'BOARD="rock64"' "/root/board.txt"` ]]; then
-	rock64_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="renegade"' "/root/board.txt"` ]]; then
-	renegade_led_triggers > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="nanopc"' "/root/board.txt"` ]]; then
-	nanopc_led_triggers > /dev/null 2>&1;
 fi
 
 # Bluetooth helper
@@ -223,7 +178,8 @@ fi
 mv -f smon /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}governor -P /usr/local/bin/
-if [[ `grep -w "bcm2711" "/root/board.txt"` ]]; then
+if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
+	wget -cq --show-progress ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/;
 	wget -cq --show-progress ${SCRIPTS_URL}write2usb -P /usr/local/bin/;
 	wget -cq --show-progress ${SCRIPTS_URL}update-fw -P /usr/local/bin/;
 fi

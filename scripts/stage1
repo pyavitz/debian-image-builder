@@ -101,76 +101,15 @@ if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
 	cp lib/function/rockchip p1/root/rockchip.txt;
 	p1_files;
 fi
-# allwinner
-# arm64
-if [[ `grep -w 'BOARD="tritium"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
-	cp files/led-trigger/tritium p1/root;
+# place led_trigger file in place for stage2
+if [ -f files/led-trigger/${BOARD} ]; then 
+	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
 fi
-if [[ `grep -w 'BOARD="nanopi"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root
-	cp files/led-trigger/nanopi p1/root;
-fi
-if [[ `grep -w 'BOARD="pine64"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
-fi
-# armhf
-if [[ `grep -w 'BOARD="nanopineo"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
-	cp files/led-trigger/nanopi p1/root;
-fi
-if [[ `grep -w 'BOARD="nanopim1"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
-	cp files/led-trigger/nanopi p1/root;
-fi
-if [[ `grep -w 'BOARD="opione"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
-	cp files/led-trigger/orangepi p1/root;
-fi
-if [[ `grep -w 'BOARD="opipc"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot-sunxi-with-spl.bin,*.deb} p1/root;
-	cp files/led-trigger/orangepi p1/root;
-fi
-# amlogic
-if [[ `grep -w 'BOARD="lepotato"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot.bin,*.deb} p1/root;
-	cp files/led-trigger/lepotato p1/root;
-fi
-if [[ `grep -w 'BOARD="odroidc4"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot.bin,*.deb} p1/root;
-	cp files/led-trigger/odroidc4 p1/root;
-fi
-if [[ `grep -w 'BOARD="odroidn2"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot.bin,*.deb} p1/root;
-	cp files/led-trigger/odroidn2 p1/root;
-fi
-if [[ `grep -w 'BOARD="odroidn2plus"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot.bin,*.deb} p1/root;
-	cp files/led-trigger/odroidn2 p1/root;
-fi
-if [[ `grep -w 'BOARD="radxazero"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{u-boot.bin,*.deb} p1/root;
-	cp files/led-trigger/radxazero p1/root;
-fi
-# broadcom
-if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{*.deb,u-boot.bin} p2/root;
-	cp files/led-trigger/raspi4 p2/root;
-fi
-# rockchip
-if [[ `grep -w 'BOARD="renegade"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{*.itb,*.bin,*.deb} p1/root;
-	cp files/led-trigger/renegade p1/root;
-fi
-if [[ `grep -w 'BOARD="rock64"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{*.itb,*.bin,*.deb} p1/root;
-fi
-if [[ `grep -w 'BOARD="rockpro64"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{*.itb,*.bin,*.deb} p1/root;
-fi
-if [[ `grep -w 'BOARD="nanopc"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{*.itb,*.bin,*.deb} p1/root;
-	cp files/led-trigger/nanopc p1/root;
+# place u-boot and kernel files in place for stage2
+if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
+	cp ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
+else
+	cp -f ${OUTPUT}/{u-boot*.bin,*.deb} ${P_VALUE}/root
 fi
 
 echo -e "${WHT}Starting chroot${FIN} ..."
