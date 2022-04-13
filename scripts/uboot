@@ -26,40 +26,40 @@ else
 	userdata;
 fi
 validation
-#if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
-#	set -eux -o pipefail;
-#else
-#	set -eu -o pipefail;
-#fi
-if [[ `grep -w "ccache=1" "userdata.txt"` ]]; then
+if [ $verbose -eq 1 ]; then
+	set -x;
+fi
+if [ $ccache -eq 1 ]; then
 	if [ -e /usr/bin/ccache ]; then
-		rm -f ccache.txt gcc.txt
-		ccache_version
+		rm -f {ccache.txt,gcc.txt};
+		ccache_version;
 	else
-		sudo apt update
-		sudo apt install -y ccache
-		sleep 2s
-		rm -f ccache.txt gcc.txt
+		sudo apt update;
+		sudo apt upgrade -y;
+		sudo apt install -y ccache;
+		sleep 1s;
+		rm -f {ccache.txt,gcc.txt};
 		ccache_version;
 	fi
 fi
-if [[ `grep -w "ccache=0" "userdata.txt"` ]]; then
-	rm -f ccache.txt gcc.txt
+
+if [ $ccache -eq 0 ]; then
+	rm -f {ccache.txt,gcc.txt};
 	gcc_version;
 fi
 ### Boards
-if [[ `grep -w 'FAMILY="amlogic"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
 	source lib/function/fip;
 	amlogic-uboot-string;
 fi
-if [[ `grep -w 'FAMILY="allwinner"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "allwinner" ]]; then
 	source lib/function/atf;
 	allwinner-uboot-string;
 fi
-if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	source lib/function/atf;
 	rockchip-uboot-string;
 fi
-if [[ `grep -w 'FAMILY="broadcom"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "broadcom" ]]; then
 	bcm2711-uboot-string;
 fi

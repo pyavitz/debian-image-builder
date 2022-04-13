@@ -111,19 +111,19 @@ mv -f ${ODKERNEL}-${VERSION} linux-${VERSION}
 setup(){
 sleep 1s
 cd ${KERNEL}-${VERSION}
-if [[ `grep -w "rtl8812au=1" "../../userdata.txt"` ]]; then
+if [ $rtl8812au -eq 1 ]; then
 	rtl8812au;
 fi
-if [[ `grep -w "rtl88x2bu=1" "../../userdata.txt"` ]]; then
+if [ $rtl88x2bu -eq 1 ]; then
 	rtl88x2bu;
 fi
-if [[ `grep -w "rtl8811cu=1" "../../userdata.txt"` ]]; then
+if [ $rtl8811cu -eq 1 ]; then
 	rtl8811cu;
 fi
-if [[ `grep -w "rtl8188eu=1" "../../userdata.txt"` ]]; then
+if [ $rtl8188eu -eq 1 ]; then
 	rtl8188eu;
 fi
-if [[ `grep -w 'BOARD="raspi4"' "../board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	rpi4_firmware;
 fi
 export ARCH=${ARCH}
@@ -138,7 +138,7 @@ chmod +x scripts/package/mkdebian
 cconfig(){
 echo_cconfig
 cp -f ../${DEF}/${MYCONFIG} arch/${ARCH}/configs/
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG};
 else
 	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG};
@@ -153,7 +153,7 @@ rtl8812au_module
 rtl88x2bu_module
 rtl8811cu_module
 rtl8188eu_module
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
 else
 	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
@@ -165,7 +165,7 @@ menuconfig(){
 echo ""
 echo_menuconfig
 sleep 1s
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig;
 else
 	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" menuconfig;

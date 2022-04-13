@@ -103,7 +103,7 @@ fi
 }
 
 u-boot(){
-if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
+if [[ "$ARCH" == "arm" ]]; then
 	:;
 else
 	echo ""
@@ -117,44 +117,44 @@ fi
 
 # EXTRACT AND SETUP
 echo ""
-if [[ `grep -w 'FAMILY="amlogic"' "../board.txt"` ]]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
 	echo_extracts;
 else
 	echo_extract;
 fi
-if [[ `grep -w 'FAMILY="amlogic"' "../board.txt"` ]]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ -e amlogic-boot-fip-master.tar.gz ]]; then
 		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
 	fi
 fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
-if [[ `grep -w 'FAMILY="allwinner"' "../board.txt"` ]]; then
-	if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
+if [[ "$FAMILY" == "allwinner" ]]; then
+	if [[ "$ARCH" == "arm" ]]; then
 		:;
 	else
 		cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin;
 	fi
 fi
-if [[ `grep -w 'FAMILY="rockchip"' "../board.txt"` ]]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
 cp board.txt u-boot/
 cd u-boot
-if [[ `grep -w 'FAMILY="amlogic"' "../board.txt"` ]]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
 	for i in ../${AMLOGIC}/uboot/*.patch; do patch -p1 < $i; done;
 fi
-if [[ `grep -w 'BOARD="odroidn2plus"' "../board.txt"` ]]; then
+if [[ "$BOARD" == "odroidn2plus" ]]; then
 	for i in ../${ON2PUBOOT}/*.patch; do patch -p1 < $i; done;
 fi
-if [[ `grep -w 'BOARD="nanopc"' "../board.txt"` ]]; then
+if [[ "$BOARD" == "nanopc" ]]; then
 	for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 else
-	if [[ `grep -w 'BOARD="rockpro64"' "../board.txt"` ]]; then
+	if [[ "$BOARD" == "rockpro64" ]]; then
 		for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
 	fi
 fi
-if [[ `grep -w 'BOARD="radxazero"' "../board.txt"` ]]; then
+if [[ "$BOARD" == "radxazero" ]]; then
 	if [[ `grep -w "VERSION = 2021" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 10" "Makefile"` ]]; then
 		for i in ../${RZUBOOT}/*.patch; do patch -p1 < $i; done;
 	else
@@ -165,7 +165,7 @@ echo ""
 export ARCH=${ARCH}
 mod_defconfigs
 # MAKE DEFCONFIG
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+if [ $crosscompile -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG};
 else
@@ -174,8 +174,8 @@ else
 fi
 
 # MENUCONFIG
-if [[ `grep -w "menuconfig=1" "../../userdata.txt"` ]]; then
-	if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+if [ $menuconfig -eq 1 ]; then
+	if [ $crosscompile -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
 		make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig;
 	else
@@ -187,7 +187,7 @@ fi
 # COMPILE
 echo
 echo_cuboot
-if [[ `grep -w "crosscompile=1" "../../userdata.txt"` ]]; then
+if [ $crosscompile -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE};
 else
@@ -199,7 +199,7 @@ fi
 # ALLWINNER RUN BUILD
 allwinner-uboot-string(){
 uboot-source
-if [[ `grep -w 'ARCH="arm"' "../board.txt"` ]]; then
+if [[ "$ARCH" == "arm" ]]; then
 	:;
 else
 	arm-trusted-firmware;
