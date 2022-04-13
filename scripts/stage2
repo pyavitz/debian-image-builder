@@ -1,22 +1,12 @@
 #!/usr/bin/env bash
-if [[ `grep -w "verbose=1" "/root/userdata.txt"` ]]; then
+source /root/source.txt
+source /root/board.txt > /dev/null 2>&1
+source /root/userdata.txt > /dev/null 2>&1
+if [ $verbose -eq 1 ]; then
 	set -x;
 fi
-if [[ `grep -w 'FAMILY="allwinner"' "/root/board.txt"` ]]; then
-	source /root/allwinner.txt;
-fi
-if [[ `grep -w 'FAMILY="amlogic"' "/root/board.txt"` ]]; then
-	source /root/amlogic.txt;
-fi
-if [[ `grep -w 'FAMILY="broadcom"' "/root/board.txt"` ]]; then
-	source /root/broadcom.txt;
-fi
-if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
-	source /root/rockchip.txt;
-fi
-source /root/source.txt
-source /root/userdata.txt > /dev/null 2>&1
 source /root/services.txt
+source /root/${FAMILY}.txt
 SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
 
 set -o errexit
@@ -31,8 +21,8 @@ mount -t sysfs sys sys/
 
 export DEBIAN_FRONTEND="noninteractive"
 
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
-	if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
+	if [[ "$DISTRO" == "ubuntu" ]]; then
 		apt_preferences;
 		echo "";
 	fi
@@ -48,20 +38,20 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "debian" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf haveged;
 fi
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends;
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} openresolv ifupdown ifupdown-extra ntp haveged;
 fi
-if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "ubuntu" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown rng-tools5;
 fi
-if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "kali" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf ntp haveged;
 fi
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	apt install -y ${RPI};
 fi
 apt -y clean
@@ -89,7 +79,7 @@ adduser ${user} spi
 
 # Initrd / uInitrd
 cd ~
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	initrd > /dev/null 2>&1;
 else
 	uinitrd > /dev/null 2>&1;
@@ -103,11 +93,11 @@ if [ -f "/root/led-trigger" ]; then
 fi
 
 # Bluetooth helper
-if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "pine64" ]]; then
 	pine64_bthelper > /dev/null 2>&1;
 fi
-if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$BOARD" == "pine64" ]]; then
+	if [[ "$DISTRO" == "devuan" ]]; then
 		:;
 	else
 		pine64_bt_service > /dev/null 2>&1;
@@ -115,7 +105,7 @@ if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
 fi
 
 # Brcm patchram
-if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "nanopi" ]]; then
 	echo ""
 	echo "Installing brcm patchram plus ..."
 	cd ~
@@ -139,7 +129,7 @@ mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
 # u-boot
-if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	mv -f *.bin /usr/lib/u-boot/;
 	mv -f *.itb /usr/lib/u-boot/;
 else
@@ -158,29 +148,33 @@ mkdir -p /usr/local/sbin
 mv -f setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
 # amlogic
-if [[ `grep -w 'BOARD="lepotato"' "/root/board.txt"` ]]; then
-	tweaks_service > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="odroidn2"' "/root/board.txt"` ]]; then
-	tweaks_service > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="odroidn2plus"' "/root/board.txt"` ]]; then
-	tweaks_service > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
-	tweaks_service > /dev/null 2>&1;
+if [[ "$FAMILY" == "amlogic" ]]; then
+	if [[ "$BOARD" == "lepotato" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
+	if [[ "$BOARD" == "odroidn2" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
+	if [[ "$BOARD" == "odroidn2plus" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
+	if [[ "$BOARD" == "radxazero" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
 fi
 # rockchip
-if [[ `grep -w 'BOARD="rockpro64"' "/root/board.txt"` ]]; then
-	tweaks_service > /dev/null 2>&1;
-fi
-if [[ `grep -w 'BOARD="nanopc"' "/root/board.txt"` ]]; then
-	tweaks_service > /dev/null 2>&1;
+if [[ "$FAMILY" == "rockchip" ]]; then
+	if [[ "$BOARD" == "rockpro64" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
+	if [[ "$BOARD" == "nanopc" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
 fi
 mv -f smon /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/
 wget -cq --show-progress ${SCRIPTS_URL}governor -P /usr/local/bin/
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	wget -cq --show-progress ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/;
 	wget -cq --show-progress ${SCRIPTS_URL}write2usb -P /usr/local/bin/;
 	wget -cq --show-progress ${SCRIPTS_URL}update-fw -P /usr/local/bin/;
@@ -192,11 +186,11 @@ chmod +x /usr/bin/growpart
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "nanopi" ]]; then
 	mv -f nanopi-bthelper /usr/local/sbin/
 	chmod +x /usr/local/sbin/nanopi-bthelper;
 fi
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	mkdir -p /etc/init.d
 	mv -f firstboot.init /etc/init.d/firstboot
 	mv -f leds.init /etc/init.d/leds
@@ -204,11 +198,11 @@ if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
 	mv -f governor.init /etc/init.d/governor
 	mv -f network.init /etc/init.d/network
 	mv -f zramswap.init /etc/init.d/zramswap
-	if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
+	if [[ "$BOARD" == "pine64" ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper
 		rm -f /etc/init.d/leds;
 	fi
-	if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
+	if [[ "$BOARD" == "nanopi" ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper;
 	fi
 fi
@@ -217,13 +211,12 @@ echo "Done."
 # MOTD
 echo ""
 mkdir -p /etc/update-motd.d
-if [[ `grep -w 'MOTD="default"' "/root/userdata.txt"` ]]; then
+if [[ "$MOTD" == "default" ]]; then
 	# use default motd
-	BOARD_MOTD=`grep "DEFAULT_MOTD" "/root/board.txt" | sed 's/DEFAULT_MOTD=//g' | tr -d '"'`
 	tee /etc/update-motd.d/15-brand <<EOF
 #!/bin/bash
 echo
-toilet -f small --filter metal '${BOARD_MOTD}'
+toilet -f small --filter metal '${DEFAULT_MOTD}'
 echo 
 EOF
 else
@@ -260,30 +253,30 @@ chown -R root:root /root
 chown -R ${user}:${user} /home/${user}
 
 # Firmware
-if [[ `grep -w 'FAMILY="allwinner"' "/root/board.txt"` ]]; then
-	if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
+if [[ "$FAMILY" == "allwinner" ]]; then
+	if [[ "$BOARD" == "nanopi" ]]; then
 		nanopi_firmware;
 	else
 		extra_firmware;
 	fi
 fi
-if [[ `grep -w 'FAMILY="amlogic"' "/root/board.txt"` ]]; then
-	if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
+	if [[ "$BOARD" == "radxazero" ]]; then
 		radxazero_firmware;
 	else
 		extra_firmware;
 	fi
 fi
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	rpi_firmware;
 fi
-if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	extra_firmware;
 fi
 
 # Network Setup
 network_setup > /dev/null 2>&1
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	:;
 else
 	credentials_service > /dev/null 2>&1;
@@ -303,12 +296,12 @@ chown root:root /etc/new.motd
 wireless_regdb
 
 # Bluetooth helper install
-if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "pine64" ]]; then
 	pine64_bthelper2;
 fi
 
 # Raspberry Pi
-if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	mkdir -p /lib/udev/rules.d/;
 	mv -f 99-com.rules /lib/udev/rules.d/99-com.rules;
 	# Sys-mods
@@ -318,7 +311,7 @@ if [[ `grep -w 'BOARD="raspi4"' "/root/board.txt"` ]]; then
 	apt update;
 	apt install -y debhelper d-shlibs rfkill;
 	git clone https://github.com/RPi-Distro/raspberrypi-sys-mods.git;
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+	if [[ "$DISTRO" == "devuan" ]]; then
 		mv raspberrypi-sys-mods.patch raspberrypi-sys-mods/;
 		cd raspberrypi-sys-mods;
 		patch -p1 < raspberrypi-sys-mods.patch;
@@ -381,45 +374,45 @@ sleep 1s
 fetch_version
 
 # Miscellaneous
-if [[ `grep -w 'FAMILY_EXT="odroid"' "/root/board.txt"` ]]; then
+if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
 	systemd_journald;
 fi
-if [[ `grep -w 'BOARD="lepotato"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "lepotato" ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w 'BOARD="radxazero"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "radxazero" ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w 'ARCH="arm"' "/root/board.txt"` ]]; then
+if [[ "$ARCH" == "arm" ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w 'BOARD="renegade"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "renegade" ]]; then
 	systemd_journald;
 fi
-if [[ `grep -w 'BOARD="rock64"' "/root/board.txt"` ]]; then
+if [[ "$BOARD" == "rock64" ]]; then
 	systemd_journald;
 fi
 
 # Services
-if [[ `grep -w 'FAMILY="rockchip"' "/root/board.txt"` ]]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	if [ -e /etc/default/haveged ]; then
 		sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged;
 	fi
 fi
 echo ""
 echo "Enabling Services ..."
-if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "kali" ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
-if [[ `grep -w 'BOARD="nanopi"' "/root/board.txt"` ]]; then
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$BOARD" == "nanopi" ]]; then
+	if [[ "$DISTRO" == "devuan" ]]; then
 		:;
 	else
 		nanopi_bt_service > /dev/null 2>&1;
 	fi
 fi
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	echo "== Sysvinit"
 	enable_sysvinit > /dev/null 2>&1;
 else
@@ -430,8 +423,8 @@ else
 	echo "== Systemd"
 	enable_systemd > /dev/null 2>&1;
 fi
-if [[ `grep -w 'BOARD="pine64"' "/root/board.txt"` ]]; then
-	if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$BOARD" == "pine64" ]]; then
+	if [[ "$DISTRO" == "devuan" ]]; then
 		:;
 	else
 		systemctl disable leds;

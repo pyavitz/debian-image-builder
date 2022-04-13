@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 source /root/source.txt
-source /root/board.txt
+source /root/board.txt> /dev/null 2>&1
 source /root/userdata.txt > /dev/null 2>&1
 export DEBIAN_FRONTEND="noninteractive"
 
@@ -24,17 +24,17 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if [[ `grep -w 'DISTRO="debian"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "debian" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} resolvconf haveged;
 fi
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends;
 	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown ifupdown-extra ntp haveged;
 fi
-if [[ `grep -w 'DISTRO="ubuntu"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "ubuntu" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown rng-tools5;
 fi
-if [[ `grep -w 'DISTRO="kali"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO" == "kali" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} dbus-user-session libical3 resolvconf ntp haveged;
 fi
 apt -y clean

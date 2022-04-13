@@ -27,21 +27,21 @@ else
 fi
 validation
 bclean
-if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
 else
 	set -eu -o pipefail;
 fi
-if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	devuan_keyring;
 fi
-if [[ `grep -w 'DISTRO="kali"' "userdata.txt"` ]]; then
+if [[ "$DISTRO" == "kali" ]]; then
 	kali_keyring;
 fi
 if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; then
 	:;
 else
-	if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; then
+	if [[ "$DISTRO" == "ubuntu" ]]; then
 		ubuntu_setup;
 	fi
 fi
@@ -53,9 +53,9 @@ if [ -e $RELEASE_TARBALL ]; then
 fi
 echo -e "${WHT}Starting debootstrap${FIN} ..."
 # start debootstrap
-if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
+if [ $rootfsxl -eq 1 ]; then
 	source lib/function/release
-	if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+	if [ $verbose -eq 1 ]; then
 		sysroot_partition;
 	else
 		sysroot_partition > /dev/null 2>&1;
@@ -63,14 +63,14 @@ if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
 fi
 mkdir -p ${ROOT}/usr/bin
 cp $(command -v "${STATIC}") ${ROOT}/usr/bin;
-if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	run_devuan-debootstrap;
 else
 	run_debootstrap;
 fi
 
 # creating developer tarball
-if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
+if [ $rootfsxl -eq 1 ]; then
 	sysroot_setup;
 	mount -o bind /dev ${ROOT}/dev;
 	mount -o bind /dev/pts ${ROOT}/dev/pts;
@@ -100,7 +100,7 @@ cd ${ROOT}
 XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../$RELEASE_TARBALL)
 cd ..
 
-if [[ `grep -w "rootfsxl=1" "userdata.txt"` ]]; then
+if [ $rootfsxl -eq 1 ]; then
 	losetup -d "${IMAGE_LOOP_DEV}";
 	rm -f "${ROOTFS_FOLDER}${RELEASE_NAME}";
 	if [ $RAM -ne 0 ]; then
