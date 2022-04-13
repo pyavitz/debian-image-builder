@@ -77,7 +77,7 @@ fi
 
 echo -e "${WHT}Starting chroot${FIN} ..."
 # mount and chroot p1
-if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
+if [[ "$P_VALUE" == "p1" ]]; then
 	mount -o bind /dev p1/dev;
 	mount -o bind /dev/pts p1/dev/pts;
 	chroot p1 /root/stage2;
@@ -108,7 +108,7 @@ if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
 	rmdir "${IMAGE_FOLDER}";
 	rmdir p1;
 	shrink;
-	if [[ `grep -w "compress_img=1" "userdata.txt"` ]]; then
+	if [ $compress_img -eq 1 ]; then
 		echo_compress;
 		compress_image;
 		echo_done;
@@ -121,7 +121,7 @@ if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
 fi
 
 # mount and chroot p2
-if [[ `grep -w 'P_VALUE="p2"' "board.txt"` ]]; then
+if [[ "$P_VALUE" == "p2" ]]; then
 	mount -o bind p1 p2/boot;
 	mount -o bind /dev p2/dev;
 	mount -o bind /dev/pts p2/dev/pts;
@@ -156,7 +156,7 @@ if [[ `grep -w 'P_VALUE="p2"' "board.txt"` ]]; then
 	rmdir "${IMAGE_FOLDER}";
 	rmdir p1 p2;
 	shrink;
-	if [[ `grep -w "compress_img=1" "userdata.txt"` ]]; then
+	if [ $compress_img -eq 1 ]; then
 		echo_compress;
 		compress_image;
 		echo_done;

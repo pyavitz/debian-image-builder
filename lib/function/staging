@@ -1,11 +1,11 @@
 p1_partition(){
-if [[ `grep -w 'FAMILY="allwinner"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "allwinner" ]]; then
 	OFFSET="2048";
 fi
-if [[ `grep -w 'FAMILY="amlogic"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
 	OFFSET="2248";
 fi
-if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	OFFSET="32767";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
@@ -157,7 +157,7 @@ if [ $verbose -eq 1 ]; then
 else
 	p2_uuid > /dev/null 2>&1;
 fi
-if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	bcm2711_config > /dev/null 2>&1;
 	if [ -e output/raspi4/u-boot.bin ]; then
 		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
@@ -203,7 +203,7 @@ cp files/misc/* p1/root
 cp files/scripts/* p1/root
 cp files/users/* p1/root
 cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p1/root
-if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	cp files/inits/*.init p1/root;
 fi
 }
@@ -216,11 +216,11 @@ cp board.txt p2/root
 cp files/misc/* p2/root
 cp files/scripts/* p2/root
 cp files/users/* p2/root
-if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	cp files/raspi4/* p2/root;
 fi
 cp firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
-if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
+if [[ "$DISTRO" == "devuan" ]]; then
 	cp files/inits/*.init p2/root;
 fi
 }
@@ -239,17 +239,17 @@ label default
 	#fdtoverlays
 	${CMDLINE}
 EOF
-if [[ `grep -w 'BOARD="pine64"' "board.txt"` ]]; then
+if [[ "$BOARD" == "pine64" ]]; then
 	sed -i '/initrd ..\/uInitrd/d' p1/boot/extlinux/extlinux.conf;
 fi
-if [[ `grep -w 'BOARD="radxazero"' "board.txt"` ]]; then
+if [[ "$BOARD" == "radxazero" ]]; then
 	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
 fi
 }
 
 p2_extlinux(){
 # broadcom
-if [[ `grep -w 'BOARD="raspi4"' "board.txt"` ]]; then
+if [[ "$BOARD" == "raspi4" ]]; then
 	CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes ${EXTRA} rootwait";
 fi
 mkdir -p p1/extlinux
