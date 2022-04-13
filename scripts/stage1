@@ -1,22 +1,13 @@
 #!/bin/bash
-if [[ `grep -w 'FAMILY="allwinner"' "board.txt"` ]]; then
-	source lib/function/allwinner;
-fi
-if [[ `grep -w 'FAMILY="amlogic"' "board.txt"` ]]; then
-	source lib/function/amlogic;
-fi
-if [[ `grep -w 'FAMILY="broadcom"' "board.txt"` ]]; then
-	source lib/function/broadcom;
-fi
-if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
-	source lib/function/rockchip;
-fi
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
 source lib/function/echoes
 source lib/source
 source board.txt > /dev/null 2>&1
+if [[ ! -z $FAMILY ]]; then
+	source lib/function/${FAMILY};
+fi
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
 
@@ -40,25 +31,16 @@ else
 fi
 validation
 bclean
-if [[ `grep -w "verbose=1" "userdata.txt"` ]]; then
+if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
 else
 	set -eu -o pipefail;
 fi
 echo ""
-if [[ `grep -w 'DISTRO="debian"' "userdata.txt"` ]]; then
-	debian_banner;
+if [[ ! -z $DISTRO ]]; then
+	${DISTRO}_banner;
 fi
-if [[ `grep -w 'DISTRO="devuan"' "userdata.txt"` ]]; then
-	devuan_banner;
-fi
-if [[ `grep -w 'DISTRO="kali"' "userdata.txt"` ]]; then
-	kali_banner;
-fi
-if [[ `grep -w 'DISTRO="ubuntu"' "userdata.txt"` ]]; then
-	ubuntu_banner;
-fi
-echo
+echo ""
 RAM=0
 PROXY=""
 IMAGE_FOLDER="img/"
@@ -72,44 +54,25 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then
 	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
 fi
-if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
-	RELEASE="p1/etc/apt/sources.list"
-	p1_setup;
-fi
-if [[ `grep -w 'P_VALUE="p2"' "board.txt"` ]]; then
-	RELEASE="p2/etc/apt/sources.list"
-	p2_setup;
+if [[ ! -z $P_VALUE ]]; then
+	RELEASE="${P_VALUE}/etc/apt/sources.list"
+	${P_VALUE}_setup;
 fi
 # setup stage2
-if [[ `grep -w 'FAMILY="allwinner"' "board.txt"` ]]; then
-	cp scripts/stage2 p1/root;
-	cp lib/function/allwinner p1/root/allwinner.txt;
-	p1_files;
-fi
-if [[ `grep -w 'FAMILY="amlogic"' "board.txt"` ]]; then
-	cp scripts/stage2 p1/root;
-	cp lib/function/amlogic p1/root/amlogic.txt;
-	p1_files;
-fi
-if [[ `grep -w 'FAMILY="broadcom"' "board.txt"` ]]; then
-	cp scripts/stage2 p2/root;
-	cp lib/function/broadcom p2/root/broadcom.txt;
-	p2_files;
-fi
-if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
-	cp scripts/stage2 p1/root;
-	cp lib/function/rockchip p1/root/rockchip.txt;
-	p1_files;
+if [[ ! -z $FAMILY ]]; then
+	cp scripts/stage2 ${P_VALUE}/root;
+	cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt;
+	${P_VALUE}_files;
 fi
 # place led_trigger file in place for stage2
 if [ -f files/led-trigger/${BOARD} ]; then 
 	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
 fi
 # place u-boot and kernel files in place for stage2
-if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]]; then
-	cp ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
+if [ -e ${OUTPUT}/*.itb ]; then
+	cp -f ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
 else
-	cp -f ${OUTPUT}/{u-boot*.bin,*.deb} ${P_VALUE}/root
+	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root
 fi
 
 echo -e "${WHT}Starting chroot${FIN} ..."
