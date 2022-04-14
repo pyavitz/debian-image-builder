@@ -141,26 +141,19 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 cp board.txt u-boot/
 cd u-boot
+
+# start patching
 if [[ "$FAMILY" == "amlogic" ]]; then
-	for i in ../${AMLOGIC}/uboot/*.patch; do patch -p1 < $i; done;
+	for i in ../../${UBOOT_PATCHDIR}/*.patch; do patch -p1 < $i; done;
 fi
 if [[ "$BOARD" == "odroidn2plus" ]]; then
-	for i in ../${ON2PUBOOT}/*.patch; do patch -p1 < $i; done;
+	for i in ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch; do patch -p1 < $i; done;
 fi
-if [[ "$BOARD" == "nanopc" ]]; then
-	for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
-else
-	if [[ "$BOARD" == "rockpro64" ]]; then
-		for i in ../${RKUBOOT}/*.patch; do patch -p1 < $i; done;
-	fi
+if [[ "$FAMILY_EXT" == "rk3399" ]]; then
+	for i in ../../${UBOOT_PATCHDIR}/*.patch; do patch -p1 < $i; done;
 fi
-if [[ "$BOARD" == "radxazero" ]]; then
-	if [[ `grep -w "VERSION = 2021" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 10" "Makefile"` ]]; then
-		for i in ../${RZUBOOT}/*.patch; do patch -p1 < $i; done;
-	else
-		:;
-	fi
-fi
+# finish patching
+
 echo ""
 export ARCH=${ARCH}
 mod_defconfigs

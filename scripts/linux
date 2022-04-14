@@ -8,6 +8,7 @@ source lib/function/wireless
 source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
 UD=userdata.txt > /dev/null 2>&1
+LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/'`
 
 userdata(){
 echo ""
@@ -50,12 +51,15 @@ if [ $ccache -eq 0 ]; then
 	gcc_version;
 fi
 
-kernel-source
+# sources directory
+kernel_source
+
 if [ -e ${KERNEL}-${VERSION} ]; then
 	echo "";
 	echo -e "${PNK}Cleaning${FIN} ...";
 	rm -fdr ${KERNEL}-${VERSION};
 fi
+
 # Download kernel and extract
 if [ $rc -eq 1 ]; then
 	if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
@@ -73,71 +77,34 @@ fi
 # Setup
 setup
 
-# Patching
-# AMLOGIC
+# Amlogic patching
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "lepotato" ]]; then
-		potato_patch;
+		amlogic_patching;
 	fi
-	if [[ "$BOARD" == "odroidn2" ]]; then
-		odroidn2_patch;
-	fi
-	if [[ "$BOARD" == "odroidn2plus" ]]; then
-		odroidn2_patch;
-	fi
-	if [[ "$BOARD" == "odroidc4" ]]; then
-		odroidc4_patch;
+	if [[ "$FAMILY_EXT" == "odroid" ]]; then
+		odroid_patching;
 	fi
 	if [[ "$BOARD" == "radxazero" ]]; then
-		radxazero_patch;
+		amlogic_patching;
 	fi
 fi
-# ALLWINNER
+
+# Allwinner patching
 if [[ "$FAMILY" == "allwinner" ]]; then
-	# arm64
-	if [[ "$BOARD" == "tritium" ]]; then
-		tritium_patch;
-	fi
-	if [[ "$BOARD" == "pine64" ]]; then
-		pine64_patch;
-	fi
-	if [[ "$BOARD" == "nanopi" ]]; then
-		nanopi_patch;
-	fi
-	# armhf
-	if [[ "$BOARD" == "nanopineo" ]]; then
-		sun8i_patch;
-	fi
-	if [[ "$BOARD" == "nanopim1" ]]; then
-		sun8i_patch;
-	fi
-	if [[ "$BOARD" == "opione" ]]; then
-		sun8i_patch;
-	fi
-	if [[ "$BOARD" == "opipc" ]]; then
-		sun8i_patch;
-	fi
+	allwinner_patching;
 fi
-# ROCKCHIP
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$BOARD" == "renegade" ]]; then
-		rk3328_patch;
-	fi
-	if [[ "$BOARD" == "rock64" ]]; then
-		rk3328_patch;
-	fi
-	if [[ "$BOARD" == "rockpro64" ]]; then
-		rk3399_patch;
-	fi
-	if [[ "$BOARD" == "nanopc" ]]; then
-		rk3399_patch;
-	fi
-fi
-# BROADCOM
+
+# Broadcom patching
 if [[ "$FAMILY" == "broadcom" ]]; then
 	if [[ "$BOARD" == "raspi4" ]]; then
-		raspberrypi_patch;
+		raspberrypi_patching;
 	fi
+fi
+
+# Rockchip patching
+if [[ "$FAMILY" == "rockchip" ]]; then
+	rockchip_patching;
 fi
 
 # Defconfig

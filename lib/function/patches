@@ -1,278 +1,142 @@
 # PATCHING
-allwinner-packaging(){
+allwinner-sun50i_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
 }
 
-allwinner-8i-packaging(){
+allwinner-sun8i_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/mkdebian
 }
 
-amlogic-packaging(){
+amlogic_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/mkdebian
 }
 
-raspberrypi-packaging(){
+raspberrypi_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/mkdebian
 }
 
-rockchip-packaging(){
+rockchip_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/mkdebian
 }
 
-## TRITIUM
-tritium_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-packaging
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## PINE64
-pine64_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-packaging
-for i in ../${PINE}/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## NANOPI
-nanopi_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-packaging
-for i in ../${NANOPI}/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## NANOPI H3
-sun8i_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-allwinner-8i-packaging
-for i in ../${SUN8I}/*.patch; do patch -p1 < $i; done
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-# Amlogic LTS
-lts_patching(){
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${AMLOGIC}/lts/*.patch; do patch -N -p1 < $i; done;
+user_patches(){
+if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
+	for i in ../../${USERPATCHES}/*.patch; do patch -p1 < $i; done;
 fi
 }
 
-## LE POTATO
-potato_patch(){
-echo
+# ALLWINNER
+allwinner_patching(){
+echo ""
 echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-for i in ../${AMLOGIC}/lepotato/*.patch; do patch -N -p1 < $i; done;
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -N -p1 < $i; done;
+patch -p1 < ../../${PACKAGING}/general-packaging.patch
+if [[ "$FAMILY_EXT" == "sun8i" ]]; then
+	allwinner-sun8i_packaging;
 fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
+if [[ "$FAMILY_EXT" == "sun50i" ]]; then
+	allwinner-sun50i_packaging;
 fi
-lts_patching
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done
+user_patches
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo_done
-echo
+echo ""
+}
+
+# AMLOGIC
+misc_patches(){
+if [[ "$LINUX_VERSION" == "5.15" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done;
+fi
+}
+
+amlogic_patching(){
+echo ""
+echo_patch
+patch -p1 < ../../${PACKAGING}/general-packaging.patch
+amlogic_packaging
+if [[ "$BOARD" == "lepotato" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done;
+fi
+if [[ "$BOARD" == "radxazero" ]]; then
+	if [[ "$LINUX_VERSION" == "5.15" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done;
+	else
+		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch -N -p1 < $i; done;
+	fi
+fi
+for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done
+misc_patches; user_patches;
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo_done
+echo ""
 }
 
 ## ODROID
-odroid_boards(){
-if [[ "$BOARD" == "odroidc4" ]]; then
-	for i in ../${AMLOGIC}/odroid/c4/*.patch; do patch -p1 < $i; done;
-fi
-if [[ "$BOARD" == "odroidn2" ]]; then
-	for i in ../${AMLOGIC}/odroid/n2/*.patch; do patch -p1 < $i; done;
-fi
-if [[ "$BOARD" == "odroidn2plus" ]]; then
-	for i in ../${AMLOGIC}/odroid/n2/*.patch; do patch -p1 < $i; done;
-fi
-}
-
-odroid_mainline(){
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${AMLOGIC}/odroid/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 16" "Makefile"` ]]; then
-	for i in ../${AMLOGIC}/odroid/5.16/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 17" "Makefile"` ]]; then
-	for i in ../${AMLOGIC}/odroid/5.17/*.patch; do patch -p1 < $i; done;
-fi
-}
-
-## ODROIDC4
-odroidc4_patch(){
-echo
+odroid_patching(){
+echo ""
 echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
+patch -p1 < ../../${PACKAGING}/general-packaging.patch
+amlogic_packaging
 if [ -e ../tobetter.txt ]; then
 	:;
 else
-	odroid_mainline;
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done;
 fi
-odroid_boards
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -N -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-lts_patching
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch -N -p1 < $i; done
+for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done
+misc_patches; user_patches;
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
-echo
+echo ""
 }
 
-## ODROIDN2
-odroidn2_patch(){
-echo
+## BROADCOM
+raspberrypi_patching(){
+echo ""
 echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-if [ -e ../tobetter.txt ]; then
-	:;
+patch -p1 < ../../${PACKAGING}/general-packaging.patch
+raspberrypi_packaging
+if [[ "$LINUX_VERSION" == "5.15" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done;
 else
-	odroid_mainline;
+	for i in ../../${LINUX_PATCHDIR}/edge/*.patch; do patch -N -p1 < $i; done;
 fi
-odroid_boards
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -N -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-lts_patching
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+user_patches
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
-echo
-}
-
-## RADXA ZERO
-radxazero_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-amlogic-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${RADXAZERO}/*.patch; do patch -N -p1 < $i; done;
-else
-	for i in ../${RADXAZERO}/edge/*.patch; do patch -N -p1 < $i; done;
-fi
-if [[ `ls ../${AMLOGIC}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${AMLOGIC}/*.patch; do patch -N -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-lts_patching
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
-}
-
-## RASPBERRY PI 4B
-raspberrypi_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-raspberrypi-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${BROADCOM}/*.patch; do patch -p1 < $i; done;
-else
-	for i in ../${BROADCOM}/edge/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
+echo ""
 }
 
 ## ROCKCHIP
-rk3328_patch(){
-echo
+rockchip_patching(){
+echo ""
 echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-rockchip-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${RK3328}/*.patch; do patch -N -p1 < $i; done;
+patch -p1 < ../../${PACKAGING}/general-packaging.patch
+rockchip_packaging
+if [[ "$LINUX_VERSION" == "5.15" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done;
 else
-	for i in ../${RK3328}/edge/*.patch; do patch -N -p1 < $i; done;
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done;
 fi
-if [[ `ls ../${ROCKCHIP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
+for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done
+user_patches
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo_done
-echo
-}
-
-rk3399_patch(){
-echo
-echo_patch
-patch -p1 < ../${PACKAGING}/general-packaging.patch
-rockchip-packaging
-if [[ `grep -w "VERSION = 5" "Makefile"` ]]; [[ `grep -w "PATCHLEVEL = 15" "Makefile"` ]]; then
-	for i in ../${RK3399}/*.patch; do patch -N -p1 < $i; done;
-else
-	for i in ../${RK3399}/edge/*.patch; do patch -N -p1 < $i; done;
-fi
-if [[ `ls ../${ROCKCHIP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${ROCKCHIP}/*.patch; do patch -p1 < $i; done;
-fi
-if [[ `ls ../${UP}/*.patch` ]] > /dev/null 2>&1; then
-	for i in ../${UP}/*.patch; do patch -p1 < $i; done;
-fi
-cp -f ../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
-echo_done
-echo
+echo ""
 }
