@@ -25,21 +25,23 @@ done
 }
 
 if [ -f "$UD" ]; then
-	echo ""
+	:;
 else 
 	userdata;
 fi
 validation
-bclean
+if [ -e p1 ]; then
+	make cleanup > /dev/null 2>&1;
+	clear -x;
+fi
 if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
 else
 	set -eu -o pipefail;
 fi
-echo ""
-if [[ ! -z $DISTRO ]]; then
-	${DISTRO}_banner;
-fi
+CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
+CAP_RELEASE=`echo "${DISTRO_VERSION}" | sed -e "s/\b\(.\)/\u\1/g"`
+echo -e "${WHT}Distribution${FIN}: ${CAP_DISTRO} ${CAP_RELEASE}"
 echo ""
 RAM=0
 PROXY=""
@@ -75,7 +77,8 @@ else
 	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root
 fi
 
-echo -e "${WHT}Starting chroot${FIN} ..."
+echo -en ": ${WHT}Starting chroot${FIN} ..."
+sleep 1s
 # mount and chroot p1
 if [[ "$P_VALUE" == "p1" ]]; then
 	mount -o bind /dev p1/dev;

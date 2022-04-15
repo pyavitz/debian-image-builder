@@ -48,59 +48,6 @@ FIRMWARE="firmware-linux-nonfree firmware-linux bluez-firmware \
 
 # do not edit below this line
 
-# banners
-debian_banner(){
-if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
-	toilet -f small --filter metal 'Debian';
-else
-	echo "${WHT}You are missing depends?${FIN}"
-	sleep 1s
-	sudo apt update
-	sudo apt install -y toilet figlet
-	echo ""
-	toilet -f small --filter metal 'Debian';
-fi
-}
-
-devuan_banner(){
-if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
-	toilet -f small --filter metal 'Devuan';
-else
-	echo "${WHT}You are missing depends?${FIN}"
-	sleep 1s
-	sudo apt update
-	sudo apt install -y toilet figlet
-	echo ""
-	toilet -f small --filter metal 'Devuan';
-fi
-}
-
-kali_banner(){
-if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
-	toilet -f small --filter metal 'Kali';
-else
-	echo "${WHT}You are missing depends?${FIN}"
-	sleep 1s
-	sudo apt update
-	sudo apt install -y toilet figlet
-	echo ""
-	toilet -f small --filter metal 'Kali';
-fi
-}
-
-ubuntu_banner(){
-if [ -e /usr/bin/toilet ]; [ -e /usr/share/figlet/small.flf ]; then
-	toilet -f small --filter metal 'Ubuntu';
-else
-	echo "${WHT}You are missing depends?${FIN}"
-	sleep 1s
-	sudo apt update
-	sudo apt install -y toilet figlet
-	echo ""
-	toilet -f small --filter metal 'Ubuntu';
-fi
-}
-
 # uinitrd
 uinitrd(){
 cd ~
@@ -374,30 +321,5 @@ if [ -e /etc/systemd/journald.conf ]; then
 	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
-fi
-}
-
-# Clean
-bclean(){
-if [ -e p1 ]; then
-	echo -en "${WHT}Cleaning${FIN} "
-	umount p1/proc p1/sys p1/dev p1/run > /dev/null 2>&1;
-	umount p2/proc p2/sys p2/dev p2/run > /dev/null 2>&1;
-	umount -l p1 p2 > /dev/null 2>&1;
-	rm -fdr {p1,p2,img,sysroot,root-id.txt,root-pid.txt,part-uuid.txt,kernel.txt,kpart*,ccache.txt,gcc.txt} > /dev/null 2>&1;
-	losetup -d /dev/loop* > /dev/null 2>&1;
-	sleep 1s
-	losetup -d /dev/loop* > /dev/null 2>&1;
-	echo_bdone;
-	sleep 1s;
-	clear -x;
-fi
-if [ -e sysroot ]; then
-	echo -en "${WHT}Cleaning${FIN} "
-	rm -fdr sysroot;
-	sleep 1s;
-	echo_bdone;
-	sleep 1s;
-	clear -x;
 fi
 }
