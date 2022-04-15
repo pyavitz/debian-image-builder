@@ -45,10 +45,10 @@ Distribution
 Distro:         # Supported: debian, devuan and ubuntu
 Release:	# Debian: bullseye, bookwork, testing, unstable and sid
 		# Devuan: chimaera, daedalus, testing, unstable and ceres
-		# Ubuntu: focal, impish and jammy
+		# Ubuntu: focal and jammy
 
 U-Boot and Linux
-U-Boot:         # Supported: v2022.01
+U-Boot:         # Supported: v2022.01 (available: v2022.04)
 Branch:         # Supported: 5.15
 Build:          # Kernel build version number
 RC:             # 1 for any x.y-rc
