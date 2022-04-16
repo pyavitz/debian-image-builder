@@ -39,7 +39,7 @@ Name:		# Whats your name?
 Username:       # Your username
 Password:       # Your password
 Branding:       # Set custom ASCII text banner
-Hostname:       # Set system hostname
+Hostname:       # Set custom system hostname
 
 Distribution
 Distro:         # Supported: debian, devuan and ubuntu

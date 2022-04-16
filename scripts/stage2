@@ -58,8 +58,15 @@ fi
 apt -y clean
 apt -y autoclean
 echo ""
-echo -n "${HOSTNAME}" > /etc/hostname
-sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
+if [[ "$HOSTNAME" == "default" ]]; then
+	# default hostname
+	echo -n "${BOARD}" > /etc/hostname;
+	sed -i "1 a 127.0.1.1	${BOARD}" /etc/hosts;
+else
+	# custom hostname
+	echo -n "${HOSTNAME}" > /etc/hostname;
+	sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts;
+fi
 adduser ${USERNAME} --gecos ${NAME} --disabled-password
 echo "${USERNAME}:${PASSWORD}" | chpasswd
 adduser ${USERNAME} sudo
