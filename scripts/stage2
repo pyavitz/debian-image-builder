@@ -38,6 +38,7 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
+apt autoremove -y
 if [[ "$DISTRO" == "debian" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} resolvconf haveged;
 fi
@@ -59,23 +60,23 @@ apt -y autoclean
 echo ""
 echo -n "${HOSTNAME}" > /etc/hostname
 sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
-adduser ${user} --gecos ${NAME} --disabled-password
-echo "${user}:${passwd}" | chpasswd
-adduser ${user} sudo
-adduser ${user} audio
-adduser ${user} dialout
-adduser ${user} video
-adduser ${user} disk
-adduser ${user} plugdev
-adduser ${user} netdev
-adduser ${user} bluetooth
-adduser ${user} input
-adduser ${user} tty
-adduser ${user} i2c
+adduser ${USERNAME} --gecos ${NAME} --disabled-password
+echo "${USERNAME}:${PASSWORD}" | chpasswd
+adduser ${USERNAME} sudo
+adduser ${USERNAME} audio
+adduser ${USERNAME} dialout
+adduser ${USERNAME} video
+adduser ${USERNAME} disk
+adduser ${USERNAME} plugdev
+adduser ${USERNAME} netdev
+adduser ${USERNAME} bluetooth
+adduser ${USERNAME} input
+adduser ${USERNAME} tty
+adduser ${USERNAME} i2c
 groupadd gpio
 groupadd spi
-adduser ${user} gpio
-adduser ${user} spi
+adduser ${USERNAME} gpio
+adduser ${USERNAME} spi
 
 # Initrd / uInitrd
 cd ~
@@ -246,11 +247,11 @@ mv -f darkred.ini /usr/share/mc/skins/darkred.ini
 mkdir -p /root/.config/mc
 mv -f root-ini /root/.config/mc/ini
 mv -f nanorc-root /root/.nanorc
-mkdir -p /home/${user}/.config/mc
-mv -f user-ini /home/${user}/.config/mc/ini
-mv -f nanorc-user /home/${user}/.nanorc
+mkdir -p /home/${USERNAME}/.config/mc
+mv -f user-ini /home/${USERNAME}/.config/mc/ini
+mv -f nanorc-user /home/${USERNAME}/.nanorc
 chown -R root:root /root
-chown -R ${user}:${user} /home/${user}
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
 # Firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
@@ -354,8 +355,8 @@ echo ""
 if [ -e /etc/sudoers.d/010_pi-nopasswd ]; then
 	rm -f /etc/sudoers.d/010_pi-nopasswd;
 fi
-tee /etc/sudoers.d/010_${user}-nopasswd <<EOF
-${user} ALL=(ALL) NOPASSWD: ALL
+tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
+${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
 
 # Kernel
@@ -433,7 +434,7 @@ fi
 echo "Done."
 
 # Own it
-chown -R ${user}:${user} /home/${user}
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chmod +x /usr/local/sbin/*

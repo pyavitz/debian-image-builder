@@ -2,9 +2,17 @@
 RED="\e[0;31m"
 FIN="\e[0m"
 
-NAME=""
-user=""
-passwd=""
+if [ -e profile.txt ]; then
+	source profile.txt;
+else
+	NAME="";
+	USERNAME="";
+	PASSWORD="";
+	LOCALE="en_US.UTF-8";
+	TIMEZONE="America/New_York";
+	USER_NAMESERVER1="8.8.8.8";
+	USER_NAMESERVER2="8.8.4.4";
+fi
 MOTD="default"
 HOSTNAME="computer"
 DISTRO="debian"
@@ -37,40 +45,40 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
 	  --title "Config Menu" \
 	  --form "Choose:" \
 0 40 0 \
-	"Name:"		1 1	"$NAME" 		1 7 26 0 \
-	"Username:"	2 1	"$user" 		2 11 22 0 \
-	"Password:"	3 1	"$passwd"  		3 11 22 0 \
+	"Name:"		1 1	"$NAME"			1 7 26 0 \
+	"Username:"	2 1	"$USERNAME"		2 11 22 0 \
+	"Password:"	3 1	"$PASSWORD"		3 11 22 0 \
 	"Branding:"	4 1	"$MOTD"			4 11 22 0 \
 	"Hostname:"	5 1	"$HOSTNAME"		5 11 22 0 \
 	""		6 1	""	 		6 14 0 0 \
 	"Distribution"	7 1	""	 		7 14 0 0 \
-	"Distro:"	8 1	"$DISTRO"	  	8 9 24 0 \
-	"Release:"	9 1	"$DISTRO_VERSION"  	9 10 23 0 \
-	""		10 1	""	 		10 14 0 0 \
-        "U-Boot:"   	11 1    "$UBOOT_VERSION"        11 9 13 0 \
-        "Branch:"   	12 1    "$VERSION"        	12 9 10 0 \
-        "Build:"   	13 1    "$BUILD_VERSION"        13 8 4 0 \
-        "RC:"   	14 1    "$rc"	        	14 5 2 0 \
-	"Menuconfig:"	15 1	"$menuconfig"  		15 13 2 0 \
-	"Compiler:"	16 1	"$COMPILER"  		16 11 9 0 \
-	"Crosscompile:" 17 1	"$crosscompile" 	17 15 2 0 \
+	"Distro:"	8 1	"$DISTRO"		8 9 24 0 \
+	"Release:"	9 1	"$DISTRO_VERSION"	9 10 23 0 \
+	""		10 1	""			10 14 0 0 \
+        "U-Boot:"   	11 1    "$UBOOT_VERSION"	11 9 13 0 \
+        "Branch:"   	12 1    "$VERSION"		12 9 10 0 \
+        "Build:"   	13 1    "$BUILD_VERSION"	13 8 4 0 \
+        "RC:"   	14 1    "$rc"			14 5 2 0 \
+	"Menuconfig:"	15 1	"$menuconfig"		15 13 2 0 \
+	"Compiler:"	16 1	"$COMPILER"		16 11 9 0 \
+	"Crosscompile:" 17 1	"$crosscompile"		17 15 2 0 \
 	"Caching on:"	18 1	"$ccache"	 	18 13 2 0 \
-	""		19 1	""	 		19 14 0 0 \
-	"Wireless"	20 1	""	 		20 14 0 0 \
-	"rtl88XXau:"	21 1	"$rtl88XXau"	 	21 12 2 0 \
-	"rtl88X2bu:"	22 1	"$rtl88X2bu"	 	22 12 2 0 \
-	"rtl88XXcu:"	23 1	"$rtl88XXcu"	 	23 12 2 0 \
-	"rtl8188eu:"	24 1	"$rtl8188eu"	 	24 12 2 0 \
-	""		25 1	""	 		25 14 0 0 \
-	"Customize"	26 1	""	 		26 14 0 0 \
-	"Defconfig:"	27 1	"$custom_defconfig" 	27 12 2 0 \
-	"Name:"		28 1	"$MYCONFIG"	  	28 7 26 0 \
-	""		29 1	""	 		29 14 0 0 \
-	"User Options"	30 1	""	 		30 14 0 0 \
-	"Logging:"	31 1	"$logging"	 	31 10 2 0 \
-	"Verbosity:"	32 1	"$verbose"	 	32 12 2 0 \
-	"Rootfs XL:"	33 1	"$rootfsxl"	 	33 12 2 0 \
-	"Compress img:"	34 1	"$compress_img" 	34 15 2 0 \
+	""		19 1	""			19 14 0 0 \
+	"Wireless"	20 1	""			20 14 0 0 \
+	"rtl88XXau:"	21 1	"$rtl88XXau"		21 12 2 0 \
+	"rtl88X2bu:"	22 1	"$rtl88X2bu"		22 12 2 0 \
+	"rtl88XXcu:"	23 1	"$rtl88XXcu"		23 12 2 0 \
+	"rtl8188eu:"	24 1	"$rtl8188eu"		24 12 2 0 \
+	""		25 1	""			25 14 0 0 \
+	"Customize"	26 1	""			26 14 0 0 \
+	"Defconfig:"	27 1	"$custom_defconfig"	27 12 2 0 \
+	"Name:"		28 1	"$MYCONFIG"		28 7 26 0 \
+	""		29 1	""			29 14 0 0 \
+	"User Options"	30 1	""			30 14 0 0 \
+	"Logging:"	31 1	"$logging"		31 10 2 0 \
+	"Verbosity:"	32 1	"$verbose"		32 12 2 0 \
+	"Rootfs XL:"	33 1	"$rootfsxl"		33 12 2 0 \
+	"Compress img:"	34 1	"$compress_img"		34 15 2 0 \
 2>&1 1>&3)
 
 # close fd
@@ -79,8 +87,8 @@ exec 3>&-
 # convert into vars
 echo "$VALUES" > tmp1
 echo NAME='"' > tmp0
-echo user='"' >> tmp0
-echo passwd='"' >> tmp0
+echo USERNAME='"' >> tmp0
+echo PASSWORD='"' >> tmp0
 echo MOTD='"' >> tmp0
 echo HOSTNAME='"' >> tmp0
 echo DISTRO='"' >> tmp0
@@ -111,18 +119,18 @@ echo KBUSER='"'marvin'"' >> tmp0
 echo KBHOST='"'martian'"' >> tmp0
 echo "set_locales(){" >> tmp0
 echo "apt install -y locales" >> tmp0
-echo "export LANGUAGE=en_US.UTF-8" >> tmp0
-echo "export LANG=en_US.UTF-8" >> tmp0
+echo "export LANGUAGE=${LOCALE}" >> tmp0
+echo "export LANG=${LOCALE}" >> tmp0
 echo "export LC_ALL=C.UTF-8" >> tmp0
-echo "locale-gen en_US.UTF-8" >> tmp0
+echo "locale-gen ${LOCALE}" >> tmp0
 echo "}" >> tmp0
 echo "set_timezone(){" >> tmp0
-echo "ln -snf /usr/share/zoneinfo/America/New_York /etc/localtime" >> tmp0
-echo "echo -n 'America/New_York' > /etc/timezone" >> tmp0
+echo "ln -snf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >> tmp0
+echo "echo -n '${TIMEZONE}' > /etc/timezone" >> tmp0
 echo "}" >> tmp0
-echo 'NAMESERVER1="8.8.8.8"' >> tmp0
-echo 'NAMESERVER2="8.8.4.4"' >> tmp0
-echo builder=3.7 >> tmp0
+echo NAMESERVER1='"'${USER_NAMESERVER1}'"' >> tmp0
+echo NAMESERVER2='"'${USER_NAMESERVER2}'"' >> tmp0
+echo builder=3.8 >> tmp0
 echo '"' > tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
