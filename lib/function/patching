@@ -103,8 +103,11 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 }
 
-# check log for fails and report
+# check log and report
 check(){
+if [[ `grep "Skipping patch" "${PATCH_LOG}/${BOARD}-patch.log"` ]]; then
+	grep "Skipping patch" "${PATCH_LOG}/${BOARD}-patch.log" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
+fi
 if [[ `grep "FAILED" "${PATCH_LOG}/${BOARD}-patch.log"` ]]; then
 	grep "FAILED" "${PATCH_LOG}/${BOARD}-patch.log" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
 	if [ $verbose -eq 1 ]; then
