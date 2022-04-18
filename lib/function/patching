@@ -43,14 +43,15 @@ if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
 fi
 }
 
-log_dir(){
-PATCH_LOG="../../output/logs"
-if [ -e ${PATCH_LOG}/${BOARD}-patch.log ]; then
-	mv -f ${PATCH_LOG}/${BOARD}-patch.log ${PATCH_LOG}/${BOARD}-patch.log.1;
-	echo `date` > ${PATCH_LOG}/${BOARD}-patch.log;
+log_setup(){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+if [ -e ${LOG_FILE} ]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1;
+	echo `date` > ${LOG_FILE};
 else
-	mkdir -p ${PATCH_LOG};
-	echo `date` > ${PATCH_LOG}/${BOARD}-patch.log;
+	mkdir -p ${LOG_DIR};
+	echo `date` > ${LOG_FILE};
 fi
 }
 
@@ -58,58 +59,58 @@ fi
 dryrun(){
 echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
 if [[ "$FAMILY" == "allwinner" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 fi
 if [[ "$BOARD" == "lepotato" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+	for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	if [ -e ../tobetter.txt ]; then
 		:;
 	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
-	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$BOARD" == "raspi4" ]]; then
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		for i in ../../${LINUX_PATCHDIR}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 }
 
 # check log and report
 check(){
-if [[ `grep "Skipping patch" "${PATCH_LOG}/${BOARD}-patch.log"` ]]; then
-	grep "Skipping patch" "${PATCH_LOG}/${BOARD}-patch.log" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
+if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
+	grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
 fi
-if [[ `grep "FAILED" "${PATCH_LOG}/${BOARD}-patch.log"` ]]; then
-	grep "FAILED" "${PATCH_LOG}/${BOARD}-patch.log" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
+if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
+	grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
 	if [ $verbose -eq 1 ]; then
 		exit 0;
 	fi
@@ -118,55 +119,55 @@ fi
 
 # apply patches
 apply(){
-echo "" >> ${PATCH_LOG}/${BOARD}-patch.log
-echo "# APPLYING PATCHES" >> ${PATCH_LOG}/${BOARD}-patch.log
+echo "" >> ${LOG_FILE}
+echo "# APPLYING PATCHES" >> ${LOG_FILE}
 echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
 if [[ "$FAMILY" == "allwinner" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 fi
 if [[ "$BOARD" == "lepotato" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+	for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	if [ -e ../tobetter.txt ]; then
 		:;
 	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
-	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$BOARD" == "raspi4" ]]; then
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		for i in ../../${LINUX_PATCHDIR}/edge/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${PATCH_LOG}/${BOARD}-patch.log;
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 }
