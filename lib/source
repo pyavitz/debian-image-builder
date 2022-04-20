@@ -10,7 +10,7 @@ USERPATCHES="patches/userpatches"
 
 # builder version
 validation(){
-if [[ `grep -w "builder=3.8" "userdata.txt"` ]]; then
+if [[ `grep -w "builder=3.9" "userdata.txt"` ]]; then
 	:;
 else
 	echo -e "${YLW}The userdata.txt file has expired. Please create a new one.${FIN}"
@@ -322,4 +322,29 @@ if [ -e /etc/systemd/journald.conf ]; then
 	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
 fi
+}
+
+# User scripts
+uscripts_stage1(){
+mkdir -p ${P_VALUE}/root/userscripts
+cp -f files/userscripts/* ${P_VALUE}/root/userscripts/
+if [ -f ${P_VALUE}/root/userscripts/README.md ]; then
+	rm -f ${P_VALUE}/root/userscripts/README.md;
+fi
+if [[ `grep -w "run_function1" "files/userscripts/uscripts"` ]]; then
+	source files/userscripts/uscripts;
+	run_function1;
+fi
+}
+
+uscripts_stage2(){
+echo -e "\e[1;33mRunning user scripts\e[0m."
+if [ -f /root/userscripts/uscripts ]; then
+	source /root/userscripts/uscripts;
+	run_function2;
+	if [ -e /root/userscripts ]; then
+		rm -fdr /root/userscripts;
+	fi
+fi
+echo -e "\e[1;33mDone\e[0m."
 }
