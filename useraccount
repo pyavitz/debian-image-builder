@@ -40,7 +40,7 @@ account_prompt(){
 echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 echo -e "${BOARD}" | sed -e 's/\(.*\)/\U\1/'
 echo ""
-echo "Welcome. Please create a User Account ..."
+echo "Welcome. Create a User Account ..."
 echo -en "Name: "
 read NAME
 echo -en "Username: "
@@ -67,19 +67,13 @@ if [ -f /boot/useraccount.txt ]; then
 	source /boot/useraccount.txt;
 	create_user > /dev/null 2>&1;
 	create_sudoers > /dev/null 2>&1;
-	mkdir -p /home/${USERNAME}/.config/mc;
-	mv -f /etc/opt/user-ini /home/${USERNAME}/.config/mc/ini;
-	mv -f /etc/opt/nanorc-user /home/${USERNAME}/.nanorc;
-	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
 	rm -f /boot/useraccount.txt
+	sleep 1s
 else
 	# headful
 	account_prompt;
 	create_user > /dev/null 2>&1;
 	create_sudoers > /dev/null 2>&1;
-	mv -f /etc/opt/user-ini /home/${USERNAME}/.config/mc/ini;
-	mv -f /etc/opt/nanorc-user /home/${USERNAME}/.nanorc;
-	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
 	rm -f /boot/rename_to_useraccount.txt
 	echo "Done.";
 	sleep 1s;
@@ -94,6 +88,15 @@ else
 			systemctl disable useraccount > /dev/null 2>&1;
 		fi
 	fi
+fi
+sleep 1s
+if [ -e /home/${USERNAME} ]; then
+	sleep 1s
+	mkdir -p /home/${USERNAME}/.config/mc/;
+	mv -f /etc/opt/user-ini /home/${USERNAME}/.config/mc/ini;
+	mv -f /etc/opt/nanorc-user /home/${USERNAME}/.nanorc;
+	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
+	rm -f /etc/opt/{nanorc-user,user-ini};
 fi
 
 exit 0
