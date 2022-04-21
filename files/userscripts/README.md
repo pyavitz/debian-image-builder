@@ -111,7 +111,8 @@ account_prompt(){
 echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 echo -e "${BOARD}" | sed -e 's/\(.*\)/\U\1/'
 echo ""
-echo "Welcome. Create a User Account ..."
+echo -e "\e[1;37mWelcome. Create a User Account\e[0m."
+echo ""
 echo -en "Name: "
 read NAME
 echo -en "Username: "
@@ -124,9 +125,9 @@ while true; do
 	if [ "$FIRST" = "$SECOND" ]; then
 		PASSWORD="${FIRST}";
 		echo "";
-		echo "Ceating a User Account for ${NAME}.";
+		echo -e "Ceating a User Account for \e[1;37m${NAME}\e[0m ...";
 	else
-		echo "The passwords don't match. Try again.";
+		echo -e "The passwords don't match. Try again.";
 		continue;
 	fi
 	break
@@ -136,9 +137,14 @@ done
 if [ -f /boot/useraccount.txt ]; then
 	# headless
 	source /boot/useraccount.txt;
+	echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
+	echo -e "${BOARD}" | sed -e 's/\(.*\)/\U\1/'
+	echo ""
+	echo -e "Creating user account for: \e[1;37m${NAME}\e[0m"
 	create_user > /dev/null 2>&1;
 	create_sudoers > /dev/null 2>&1;
 	rm -f /boot/useraccount.txt
+	echo "Done."
 	sleep 1s
 else
 	# headful
