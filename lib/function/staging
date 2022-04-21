@@ -37,7 +37,8 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
 p2_partition(){
-truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+if [[ "$FAMILY" == "broadcom" ]]; then
+	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
 o
 n
@@ -58,11 +59,38 @@ p
 w
 
 EOF
+else
+	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
+o
+n
+p
+1
+2048
+524287
+a
+t
+b
+n
+p
+2
+524288
+
+p
+w
+
+EOF
+fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}p1"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
 partprobe "${IMAGE_LOOP_DEV}"
-mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
+if [[ "$BOARD" == "odroidm1" ]]; then
+	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
+fi
+if [[ "$BOARD" == "raspi4" ]]; then
+	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}";
+fi
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
@@ -99,9 +127,15 @@ EOF
 }
 
 p2_fstab(){
+if [[ "$BOARD" == "odroidm1" ]]; then
+	FSTYPE="ext2	rw,relatime,errors=continue 0 0";
+fi
+if [[ "$BOARD" == "raspi4" ]]; then
+	FSTYPE="vfat	defaults 0 2";
+fi
 tee p2/etc/fstab <<EOF
-UUID=${BOOT_UUID}	/boot		vfat    defaults 0 2
-UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+UUID=${BOOT_UUID}	/boot	${FSTYPE}
+UUID=${ROOT_UUID}	/	ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
 tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
 }

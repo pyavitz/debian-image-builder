@@ -64,12 +64,22 @@ BOOT="${LOOP1}"
 mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1
-rm -f p1/extlinux/extlinux.conf
-rm -f p1/config.txt
+if [[ "$BOARD" == "raspi4" ]]; then
+	rm -f p1/extlinux/extlinux.conf;
+	rm -f p1/config.txt;
+fi
 find_p2_partuuid
 echo ""
-p2_extlinux
-bcm2711_config > /dev/null 2>&1
+if [[ "$BOARD" == "raspi4" ]]; then
+	p2_extlinux;
+	bcm2711_config > /dev/null 2>&1;
+fi
+if [[ "$BOARD" == "odroidm1" ]]; then
+	cp files/boot/odroidm1-boot.cmd p1/boot.cmd;
+	cp files/boot/odroidm1-config.ini p1/config.ini;
+	sed -i 's/setenv bootargs "root=PARTUUID= net.ifnames=0 rootwait rw"/setenv bootargs "root=PARTUUID=${ROOT_PARTUUID} net.ifnames=0 rootwait rw"/g' p1/boot.cmd;
+	mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+fi
 echo ""
 sleep 1s
 umount p1
