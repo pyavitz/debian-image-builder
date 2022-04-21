@@ -59,7 +59,6 @@ if [ -f /root/userscripts/useraccount.service ]; then
 	mkdir -p /etc/systemd/system/;
 	mv -f /root/userscripts/useraccount.service /etc/systemd/system/;
 	systemctl enable useraccount;
-	rm -f /root/userscripts/useraccount.service;
 fi
 if [ -f /root/userscripts/useraccount.txt ]; then
 	mkdir -p /boot;
@@ -125,7 +124,7 @@ while true; do
 	if [ "$FIRST" = "$SECOND" ]; then
 		PASSWORD="${FIRST}";
 		echo "";
-		echo -e "Ceating a User Account for \e[1;37m${NAME}\e[0m ...";
+		echo -e "Ceating a User Account for: \e[1;37m${NAME}\e[0m ...";
 	else
 		echo -e "The passwords don't match. Try again.";
 		continue;
