@@ -66,9 +66,14 @@ done
 if [ -f /boot/useraccount.txt ]; then
 	# headless
 	source /boot/useraccount.txt;
+	echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
+	echo -e "${BOARD}" | sed -e 's/\(.*\)/\U\1/'
+	echo ""
+	echo -e "Creating user account for: \e[1;37m${NAME}\e[0m"
 	create_user > /dev/null 2>&1;
 	create_sudoers > /dev/null 2>&1;
 	rm -f /boot/useraccount.txt
+	echo "Done."
 	sleep 1s
 else
 	# headful
