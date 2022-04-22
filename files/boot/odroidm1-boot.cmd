@@ -35,10 +35,10 @@ setenv bootargs "${bootargs} pci=nomsi"
 setenv bootargs "${bootargs} fsck.mode=force fsck.repair=yes"
 setenv bootargs "${bootargs} mtdparts=sfc_nor:0x20000@0xe0000(env),0x200000@0x100000(uboot),0x100000@0x300000(splash),0xc00000@0x400000(firmware)"
 
-setenv bootargs "${bootargs} mem=4096M"
+#setenv bootargs "${bootargs} mem=4096M"
 
-load ${devtype} ${devno}:${partition} ${loadaddr} ${prefix}config.ini \
-    &&  ini generic ${loadaddr}
+#load ${devtype} ${devno}:${partition} ${loadaddr} ${prefix}config.ini \
+#    &&  ini generic ${loadaddr}
 #if test -n "${overlay_profile}"; then
 #    ini overlay_${overlay_profile} ${loadaddr}
 #fi
