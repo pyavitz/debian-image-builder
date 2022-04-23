@@ -62,7 +62,6 @@ EOF
 else
 	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
 n
 p
 1
@@ -87,9 +86,6 @@ IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
 partprobe "${IMAGE_LOOP_DEV}"
 if [[ "$BOARD" == "odroidm1" ]]; then
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
-fi
-if [[ "$BOARD" == "raspi4" ]]; then
-	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}";
 fi
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1 p2
