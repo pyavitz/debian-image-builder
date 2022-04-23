@@ -27,7 +27,7 @@ setenv console "ttyFIQ0"
 setenv bootargs "${bootargs} earlycon=uart8250,mmio32,0xfe660000 console=tty1"
 
 # Builder bootargs
-setenv bootargs "root=PARTUUID= net.ifnames=0 rootwait rw"
+setenv bootargs "root=UUID= net.ifnames=0 rootwait rw"
 
 # MISC
 #
