@@ -1,0 +1,18 @@
+#!/bin/bash
+# mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr
+
+if [[ `command -v dtc` ]]; then
+	:;
+else
+	echo -e "Missing depends: device-tree-compiler";
+	exit 0;
+fi
+
+if [ -f /boot/boot.cmd ]; then
+	if [ -f /boot/boot.scr ]; then
+		rm -f /boot/boot.scr;
+		mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr;
+	fi
+fi
+
+exit 0
