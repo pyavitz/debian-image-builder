@@ -323,19 +323,11 @@ systemctl enable kali-hack
 enable_sysvinit(){
 chmod +x /etc/init.d/governor
 chmod +x /etc/init.d/firstboot
-if [[ "$BOARD" == "pine64" ]]; then
-	:;
+if [ -f /usr/local/sbin/led-trigger ]; then
+	chmod +x /etc/init.d/leds
+	update-rc.d leds defaults 2;
 else
-	if [[ "$BOARD" == "rockpro64" ]]; then
-		:;
-	else
-		if [[ "$BOARD" == "odroidm1" ]]; then
-			:;
-		else
-			chmod +x /etc/init.d/leds
-			update-rc.d leds defaults 2;
-		fi
-	fi
+	:;
 fi
 if [[ "$BOARD" == "pine64" ]]; then
 	chmod +x /etc/init.d/bthelper
