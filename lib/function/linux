@@ -7,7 +7,6 @@ kernel_source(){
 mkdir -p ${SRC}
 cp -f board.txt ${SRC}/
 cd ${SRC}
-rm -f {hardkernel.txt,tobetter.txt}
 }
 
 # Firmware
@@ -42,18 +41,14 @@ fi
 
 check_odroid(){
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	REPO_KERNEL="odroid"
+	REPO_KERNEL="odroid";
+	MAINTAINER="tobetter";
 fi
 if [[ "$FAMILY_EXT" == "rk3568" ]]; then
-	REPO_KERNEL="odroidm1"
+	REPO_KERNEL="odroidm1";
+	MAINTAINER="hardkernel";
 fi
 if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/linux/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	if [[ "$FAMILY_EXT" == "odroid" ]]; then
-		echo "" >> tobetter.txt
-	fi
-	if [[ "$FAMILY_EXT" == "rk3568" ]]; then
-		echo "" >> hardkernel.txt
-	fi	
 	odroid_download;
 	odroid_extract;
 else
