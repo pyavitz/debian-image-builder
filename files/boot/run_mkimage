@@ -1,0 +1,23 @@
+#!/bin/bash
+# mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr
+
+if [ "$USER" != "root" ]; then
+        echo "Please run this as root or with sudo privileges."
+        exit 1
+fi
+if [[ `command -v mkimage` ]]; then
+	:;
+else
+	echo -e "Missing depends: u-boot-tools";
+	exit 0;
+fi
+if [ -f boot.cmd ]; then
+	if [ -f boot.scr ]; then
+		rm -f boot.scr;
+		mkimage -C none -A arm -T script -d boot.cmd boot.scr;
+	else
+		mkimage -C none -A arm -T script -d boot.cmd boot.scr;
+	fi
+fi
+
+exit 0
