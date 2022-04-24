@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
---- a/scripts/package/builddeb	2022-03-22 11:53:07.722412000 -0400
-+++ b/scripts/package/builddeb	2022-03-25 09:17:01.912000797 -0400
+--- a/scripts/package/builddeb	2022-04-07 11:00:24.122606000 -0400
++++ b/scripts/package/builddeb	2022-04-21 10:29:11.231149798 -0400
 @@ -92,6 +92,24 @@
  else
  	cp System.map "$tmpdir/boot/System.map-$version"
@@ -26,7 +26,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  fi
  cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
  
-@@ -139,6 +157,66 @@
+@@ -139,6 +157,69 @@
  	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
  fi
  
@@ -88,12 +88,15 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +	if [ -e "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-rockpro64-v2.dtb" ]; then
 +		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-rockpro64-v2.dtb" "$tmpdir/boot/rockchip/rk3399-rockpro64-v2.dtb"
 +	fi
++	if [ -e "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-odroid-m1.dtb" ]; then
++		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-odroid-m1.dtb" "$tmpdir/boot/rockchip/rk3568-odroid-m1.dtb"
++	fi
 +fi
 +
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -164,6 +242,34 @@
+@@ -164,6 +245,34 @@
  	chmod 755 "$tmpdir/DEBIAN/$script"
  done
  
@@ -128,7 +131,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Build kernel header package
  (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
  (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-@@ -183,6 +289,53 @@
+@@ -183,6 +292,53 @@
  (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"

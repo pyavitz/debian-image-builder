@@ -64,12 +64,22 @@ BOOT="${LOOP1}"
 mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1
-rm -f p1/extlinux/extlinux.conf
-rm -f p1/config.txt
+if [[ "$BOARD" == "raspi4" ]]; then
+	rm -f p1/extlinux/extlinux.conf;
+	rm -f p1/config.txt;
+fi
 find_p2_partuuid
 echo ""
-p2_extlinux
-bcm2711_config > /dev/null 2>&1
+if [[ "$BOARD" == "raspi4" ]]; then
+	p2_extlinux;
+	bcm2711_config > /dev/null 2>&1;
+fi
+if [[ "$BOARD" == "odroidm1" ]]; then
+	cp files/boot/odroidm1-boot.cmd p1/boot.cmd;
+	cp files/boot/odroidm1-config.ini p1/config.ini;
+	sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
+	mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+fi
 echo ""
 sleep 1s
 umount p1
@@ -94,8 +104,10 @@ if [ -e part-uuid.txt ]; then
 	rm -f part-uuid.txt;
 fi
 ROOTFS="${LOOP2}"
+ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
+echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 
 source part-uuid.txt
 }
