@@ -1,16 +1,15 @@
 p1_partition(){
 if [[ "$FAMILY" == "allwinner" ]]; then
-	OFFSET="2048";
+	OFFSET="2048"
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	OFFSET="2248";
+	OFFSET="2248"
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	OFFSET="32767";
+	OFFSET="32767"
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
+echo -e "o
 n
 p
 1
@@ -21,9 +20,7 @@ b
 5859374
 
 p
-w
-
-EOF
+w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
 partprobe "${IMAGE_LOOP_DEV}"
@@ -37,53 +34,50 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
 p2_partition(){
+truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$FAMILY" == "broadcom" ]]; then
-	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2048
-524287
-a
-c
-t
-b
-n
-p
-2
-524288
-
-p
-w
-
-EOF
-else
-	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" <<EOF
-o
-n
-p
-1
-2048
-524287
-n
-p
-2
-524288
-
-a
-1
-p
-w
-
-EOF
+	echo -e "o
+	n
+	p
+	1
+	2048
+	524287
+	a
+	c
+	t
+	b
+	n
+	p
+	2
+	524288
+	
+	p
+	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if [[ "$FAMILY_EXT" == "rk3568" ]]; then
+	echo -e "o
+	n
+	p
+	1
+	2048
+	524287
+	n
+	p
+	2
+	524288
+	
+	a
+	1
+	p
+	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}p1"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
 partprobe "${IMAGE_LOOP_DEV}"
+if [[ "$BOARD" == "raspi4" ]]; then
+	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
+fi
 if [[ "$BOARD" == "odroidm1" ]]; then
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
 fi
