@@ -56,6 +56,14 @@ if [[ "$DISTRO" == "devuan" ]]; then
 		rm -f /root/userscripts/useraccount.service;
 	fi
 fi
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	if [ -f /root/userscripts/useraccount.service ]; then
+		mkdir -p /etc/systemd/system/;
+		mv -f /root/userscripts/useraccount.service /etc/systemd/system/;
+		systemctl enable useraccount;
+		rm -f /root/userscripts/useraccount.init;
+	fi
+fi
 if [ -f /root/userscripts/useraccount.txt ]; then
 	mkdir -p /boot;
 	mv -f /root/userscripts/useraccount.txt /boot/rename_to_useraccount.txt;
