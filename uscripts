@@ -39,10 +39,22 @@ if [ -f /root/userscripts/useraccount ]; then
 	chmod +x /usr/local/sbin/useraccount;
 	mv -f /root/{nanorc-user,user-ini} /etc/opt/;
 fi
-if [ -f /root/userscripts/useraccount.service ]; then
-	mkdir -p /etc/systemd/system/;
-	mv -f /root/userscripts/useraccount.service /etc/systemd/system/;
-	systemctl enable useraccount;
+if [[ "$DISTRO" == "debian" ]]; then
+	if [ -f /root/userscripts/useraccount.service ]; then
+		mkdir -p /etc/systemd/system/;
+		mv -f /root/userscripts/useraccount.service /etc/systemd/system/;
+		systemctl enable useraccount;
+		rm -f /root/userscripts/useraccount.init;
+	fi
+fi
+if [[ "$DISTRO" == "devuan" ]]; then
+	if [ -f /root/userscripts/useraccount.init ]; then
+		mkdir -p /etc/init.d;
+		mv -f /root/userscripts/useraccount.init /etc/init.d/useraccount;
+		chmod +x /etc/init.d/useraccount;
+		update-rc.d useraccount defaults 5;
+		rm -f /root/userscripts/useraccount.service;
+	fi
 fi
 if [ -f /root/userscripts/useraccount.txt ]; then
 	mkdir -p /boot;
