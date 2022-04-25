@@ -4,9 +4,8 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 BOOT=`findmnt -v -n -o SOURCE /boot`
 ROOTFS=`findmnt -v -n -o SOURCE /`
-GROW_MMC=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
+GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 GROW_SSD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
-GROW_NVME=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 
 # Functions
 partition_uuid(){
@@ -42,13 +41,13 @@ if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 	echo -e " \e[0;31mExpanding root filesystem\e[0m ...";
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]]; then
-	bash growpart $GROW_MMC > /dev/null 2>&1;
+	bash growpart $GROW > /dev/null 2>&1;
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
 	bash growpart $GROW_SSD > /dev/null 2>&1;
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
-	bash growpart $GROW_NVME > /dev/null 2>&1;
+	bash growpart $GROW > /dev/null 2>&1;
 fi
 sleep 1s
 resize2fs $ROOTFS > /dev/null 2>&1
