@@ -75,7 +75,11 @@ else
 fi
 
 # Setup
-setup
+if [[ "$MAINTAINER" == "hardkernel" ]]; then
+	odsetup;
+else	
+	setup;
+fi
 log_setup
 
 # Amlogic patching
@@ -99,12 +103,19 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 
 # Defconfig
-if [ $custom_defconfig -eq 1 ]; then
-	cconfig;
-else
-	bconfig;
+if [[ "$MAINTAINER" == "hardkernel" ]]; then
+	if [ $custom_defconfig -eq 1 ]; then
+		cconfig;
+	else
+		odconfig;
+	fi
+else	
+	if [ $custom_defconfig -eq 1 ]; then
+		cconfig;
+	else
+		bconfig;
+	fi
 fi
-
 # Menuconfig
 if [ $menuconfig -eq 1 ]; then
 	menuconfig;
@@ -120,7 +131,7 @@ echo
 
 # Finish
 cd ..
-rm -f {linux-libc-dev*.deb,*.buildinfo,*.changes}
+rm -f {*linux-image-dbg*.deb,linux-libc-dev*.deb,*.buildinfo,*.changes}
 if [[ `ls ../${OUTPUT}/*.deb` ]] > /dev/null 2>&1; then
 	mkdir -p ../${OUTPUT}/tmp;
 	mv -f ../${OUTPUT}/*.deb ../${OUTPUT}/tmp;

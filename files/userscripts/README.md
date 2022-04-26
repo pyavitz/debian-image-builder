@@ -43,7 +43,7 @@ if [ -f ${P_VALUE}/root/stage2 ]; then
 	sed -i 's/chown -R ${USERNAME}:${USERNAME} \/home\/${USERNAME}/#chown -R ${USERNAME}:${USERNAME} \/home\/${USERNAME}/g' ${P_VALUE}/root/stage2
 	sed -i 's/tee \/etc\/sudoers.d\/010_${USERNAME}-nopasswd <<EOF/#tee \/etc\/sudoers.d\/010_${USERNAME}-nopasswd <<EOF/g' ${P_VALUE}/root/stage2
 	sed -i 's/${USERNAME} ALL=(ALL) NOPASSWD: ALL/#${USERNAME} ALL=(ALL) NOPASSWD: ALL/g' ${P_VALUE}/root/stage2
-	sed -i '372d' ${P_VALUE}/root/stage2
+	sed -i '375d' ${P_VALUE}/root/stage2
 fi
 }
 

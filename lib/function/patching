@@ -75,7 +75,7 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	if [ -e ../tobetter.txt ]; then
+	if [[ "$MAINTAINER" == "tobetter" ]]; then
 		:;
 	else
 		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
@@ -94,12 +94,16 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	if [[ "$MAINTAINER" == "hardkernel" ]]; then
+		:;
 	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		if [[ "$LINUX_VERSION" == "5.15" ]]; then
+			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		else
+			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		fi
 	fi
 fi
 }
@@ -143,7 +147,7 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	if [ -e ../tobetter.txt ]; then
+	if [[ "$MAINTAINER" == "tobetter" ]]; then
 		:;
 	else
 		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
@@ -162,12 +166,16 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	if [[ "$MAINTAINER" == "hardkernel" ]]; then
+		:;
 	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		if [[ "$LINUX_VERSION" == "5.15" ]]; then
+			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		else
+			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		fi
 	fi
 fi
 }
@@ -217,7 +225,11 @@ echo ""
 rockchip_patching(){
 echo ""
 # packaging
-patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1
+if [[ "$MAINTAINER" == "hardkernel" ]]; then
+	patch -p1 < ../../${PACKAGING}/odroidm1-packaging.patch > /dev/null 2>&1;
+else
+	patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1;
+fi
 rockchip_packaging
 # patching
 dryrun; check; apply; user_patches;

@@ -2,13 +2,11 @@
 DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 STBURL="https://cdn.kernel.org/pub/linux/kernel/v5.x/"
 MLURL="https://git.kernel.org/torvalds/t/"
-ODURL="https://github.com/tobetter/linux/archive/refs/heads/"
 
 kernel_source(){
 mkdir -p ${SRC}
 cp -f board.txt ${SRC}/
 cd ${SRC}
-if [ -e tobetter.txt ]; then rm -f tobetter.txt; fi
 }
 
 # Firmware
@@ -42,8 +40,15 @@ fi
 }
 
 check_odroid(){
-if [[ `wget -S --spider https://raw.githubusercontent.com/tobetter/linux/odroid-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	echo "" >> tobetter.txt
+if [[ "$FAMILY_EXT" == "odroid" ]]; then
+	REPO_KERNEL="odroid";
+	MAINTAINER="tobetter";
+fi
+if [[ "$FAMILY_EXT" == "rk3568" ]]; then
+	REPO_KERNEL="odroidm1";
+	MAINTAINER="hardkernel";
+fi
+if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/linux/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	odroid_download;
 	odroid_extract;
 else
@@ -83,7 +88,7 @@ echo_odroid
 if [ -e ${ODKERNEL}-${VERSION}.tar.gz ]; then
 	echo -e "${YLW}${ODKERNEL}-${VERSION}.tar.gz found${FIN}.";
 else
-	${DOWNLOAD} ${ODURL}odroid-${VERSION}.tar.gz
+	${DOWNLOAD} https://github.com/${REPO}/linux/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
 	echo_bdone;
 fi
 extra_wireless
@@ -135,6 +140,20 @@ chmod +x scripts/package/builddeb
 chmod +x scripts/package/mkdebian
 }
 
+odsetup(){
+cd ${KERNEL}-${VERSION}
+if [ $rtl8812au -eq 1 ]; then
+	rtl8812au;
+fi
+if [ $rtl88x2bu -eq 1 ]; then
+	rtl88x2bu;
+fi
+if [ $rtl8811cu -eq 1 ]; then
+	rtl8811cu;
+fi
+export ARCH=${ARCH}
+}
+
 cconfig(){
 echo_cconfig
 cp -f ../${DEF}/${MYCONFIG} arch/${ARCH}/configs/
@@ -157,6 +176,21 @@ if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
 else
 	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
+fi
+echo_done
+}
+
+odconfig(){
+echo_odroid_defconfig
+rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+cp -f ../${DEF}/odroidm1-4.19.y_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+rtl8812au_module
+rtl88x2bu_module
+rtl8811cu_module
+if [ $crosscompile -eq 1 ]; then
+	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${ODROID_DEFCONFIG};
+else
+	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${ODROID_DEFCONFIG};
 fi
 echo_done
 }
