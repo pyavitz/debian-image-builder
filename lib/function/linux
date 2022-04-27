@@ -40,13 +40,18 @@ fi
 }
 
 check_odroid(){
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	REPO_KERNEL="odroid";
-	MAINTAINER="tobetter";
-fi
-if [[ "$FAMILY_EXT" == "rk3568" ]]; then
-	REPO_KERNEL="odroidm1";
-	MAINTAINER="hardkernel";
+echo ""
+echo -e "${WHT}Maintainer options${FIN}: hardkernel and tobetter"
+echo -e "${WHT}Branch examples${FIN}: odroid, odroidm1... etc."
+echo -en "Maintainer: "
+read MAINTAINER
+echo -en "Branch: "
+read BRANCH
+REPO="${MAINTAINER}"
+REPO_KERNEL="${BRANCH}"
+ODKERNEL="linux-${BRANCH}"
+if [[ "$VERSION" == "4.19.y" ]]; then
+	SETUP="vendor";
 fi
 if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/linux/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	odroid_download;
@@ -140,7 +145,7 @@ chmod +x scripts/package/builddeb
 chmod +x scripts/package/mkdebian
 }
 
-odsetup(){
+vendor_setup(){
 cd ${KERNEL}-${VERSION}
 if [ $rtl8812au -eq 1 ]; then
 	rtl8812au;
@@ -180,7 +185,7 @@ fi
 echo_done
 }
 
-odconfig(){
+vendor_config(){
 echo_odroid_defconfig
 rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
 cp -f ../${DEF}/odroidm1-4.19.y_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}

@@ -57,6 +57,7 @@ fi
 
 # create dry run log
 dryrun(){
+echo ""
 echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
 if [[ "$FAMILY" == "allwinner" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
@@ -75,11 +76,7 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	if [[ "$MAINTAINER" == "tobetter" ]]; then
-		:;
-	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
@@ -94,16 +91,12 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$MAINTAINER" == "hardkernel" ]]; then
-		:;
+	if [[ "$LINUX_VERSION" == "5.15" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		if [[ "$LINUX_VERSION" == "5.15" ]]; then
-			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		else
-			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		fi
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 }
@@ -147,11 +140,7 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	if [[ "$MAINTAINER" == "tobetter" ]]; then
-		:;
-	else
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
+	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
@@ -166,23 +155,18 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$MAINTAINER" == "hardkernel" ]]; then
-		:;
+	if [[ "$LINUX_VERSION" == "5.15" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	else
-		if [[ "$LINUX_VERSION" == "5.15" ]]; then
-			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		else
-			for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		fi
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 }
 
 # ALLWINNER
 allwinner_patching(){
-echo ""
 # packaging
 patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1
 if [[ "$FAMILY_EXT" == "sun8i" ]]; then
@@ -199,19 +183,21 @@ echo ""
 
 # AMLOGIC
 amlogic_patching(){
-echo ""
 # packaging
 patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1
 amlogic_packaging
 # patching
-dryrun; check; apply; user_patches;
+if [[ ! -z $MAINTAINER ]]; then
+	user_patches;
+else
+	dryrun; check; apply; user_patches;
+fi
 cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo ""
 }
 
 ## BROADCOM
 raspberrypi_patching(){
-echo ""
 # packaging
 patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1
 raspberrypi_packaging
@@ -223,16 +209,19 @@ echo ""
 
 ## ROCKCHIP
 rockchip_patching(){
-echo ""
 # packaging
-if [[ "$MAINTAINER" == "hardkernel" ]]; then
-	patch -p1 < ../../${PACKAGING}/odroidm1-packaging.patch > /dev/null 2>&1;
+if [[ "$SETUP" == "vendor" ]]; then
+	patch -p1 < ../../${PACKAGING}/vendor-packaging.patch > /dev/null 2>&1;
 else
 	patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1;
 fi
 rockchip_packaging
 # patching
-dryrun; check; apply; user_patches;
+if [[ ! -z $MAINTAINER ]]; then
+	user_patches;
+else
+	dryrun; check; apply; user_patches;
+fi
 cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch;
 echo ""
 }
