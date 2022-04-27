@@ -41,8 +41,8 @@ fi
 
 check_odroid(){
 echo ""
-echo -e "${WHT}Maintainer options${FIN}: hardkernel and tobetter"
-echo -e "${WHT}Branch examples${FIN}: odroid, odroidm1... etc."
+echo -e "${WHT}Maintainers${FIN}: hardkernel or tobetter"
+echo -e "${WHT}Branches${FIN}: odroid, odroidg12 and odroidm1"
 echo -en "Maintainer: "
 read MAINTAINER
 echo -en "Branch: "
@@ -50,6 +50,9 @@ read BRANCH
 REPO="${MAINTAINER}"
 REPO_KERNEL="${BRANCH}"
 ODKERNEL="linux-${BRANCH}"
+if [[ "$VERSION" == "4.9.y" ]]; then
+	SETUP="vendor";
+fi
 if [[ "$VERSION" == "4.19.y" ]]; then
 	SETUP="vendor";
 fi
@@ -187,8 +190,10 @@ echo_done
 
 vendor_config(){
 echo_odroid_defconfig
-rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
-cp -f ../${DEF}/odroidm1-4.19.y_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+if [[ "$BOARD" == "odroidm1" ]] && [[ "$VERSION" == "4.19.y" ]]; then
+	rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+	cp -f ../${DEF}/odroidm1-4.19.y_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+fi
 rtl8812au_module
 rtl88x2bu_module
 rtl8811cu_module

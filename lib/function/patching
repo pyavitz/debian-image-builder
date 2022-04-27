@@ -16,8 +16,10 @@ sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packa
 amlogic_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/mkdebian
+if [ -f scripts/package/mkdebian ]; then
+	sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/mkdebian;
+	sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/mkdebian;
+fi
 }
 
 raspberrypi_packaging(){
@@ -184,7 +186,11 @@ echo ""
 # AMLOGIC
 amlogic_patching(){
 # packaging
-patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1
+if [[ "$SETUP" == "vendor" ]] && [[ "$VERSION" == "4.9.y" ]]; then
+	patch -p1 < ../../${PACKAGING}/vendor-4.9-packaging.patch > /dev/null 2>&1;
+else
+	patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1;
+fi
 amlogic_packaging
 # patching
 if [[ ! -z $MAINTAINER ]]; then
@@ -210,8 +216,8 @@ echo ""
 ## ROCKCHIP
 rockchip_patching(){
 # packaging
-if [[ "$SETUP" == "vendor" ]]; then
-	patch -p1 < ../../${PACKAGING}/vendor-packaging.patch > /dev/null 2>&1;
+if [[ "$SETUP" == "vendor" ]] && [[ "$VERSION" == "4.19.y" ]]; then
+	patch -p1 < ../../${PACKAGING}/vendor-4.19-packaging.patch > /dev/null 2>&1;
 else
 	patch -p1 < ../../${PACKAGING}/general-packaging.patch > /dev/null 2>&1;
 fi
