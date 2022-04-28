@@ -1,0 +1,57 @@
+#!/bin/bash
+### DO NOT EDIT
+baseDir="/usr/local/lib/image-config-menu/"
+echo Number of args is $# 
+if [ $# -gt 0 ]; then
+	TITLE="$1" 
+	lsCmd="ls $baseDir/$1"
+else
+	TITLE="Main Config Menu"
+	lsCmd="ls -1 $baseDir"
+fi
+
+DIALOG_CANCEL=1
+DIALOG_ESC=255
+HEIGHT=0
+WIDTH=0
+
+#menu_items=`ls -d */ | while read name; do ((count+=1)); echo $count $name | sed -e 's/\(.*\)/\U\1/'; done`
+#menu_items=`ls -d */ | while read name; do ((count+=1)); echo $count ${name%/*} ; done`
+menu_items=`$lsCmd | while read name; do ((count+=1)); echo $count ${name%/*} ; done`
+while true; do
+	exec 3>&1
+	selection=$(dialog \
+	--backtitle "Debian Image Builder" \
+	--title "$TITLE" \
+	--clear \
+	--cancel-label "Exit" \
+	--menu "Select:" $HEIGHT $WIDTH 15 \
+	 $menu_items \
+	2>&1 1>&3)
+	exit_status=$?
+	exec 3>&-;
+case $exit_status in
+	$DIALOG_CANCEL)
+		clear
+		echo "Program terminated."
+		exit
+		;;
+	$DIALOG_ESC)
+		clear
+		echo "Program aborted." >&2
+		exit 1
+		;;
+esac
+if [ $selection -eq 0 ]; then
+        clear -x;
+        echo -e "${RED}Program terminated${FIN}.";
+else
+        cmd=`$lsCmd | head -n $selection | tail -n 1`;
+	if [ $# -gt 0 ]; then
+		$baseDir/$1/$cmd
+	else
+		$0 $cmd
+	fi
+        #chmod +x lib/dialog/general;
+fi
+done

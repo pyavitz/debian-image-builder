@@ -1,0 +1,21 @@
+#!/bin/bash
+clear -x
+
+read -p "Would you like to enable alsa sound on amlogic board [y/n]? " -n 1 -r
+echo    # (optional) move to a new line
+if [ "$REPLY" != "y" ]; then
+    exit 1
+fi
+
+echo "Enabling amlogic board sound"
+sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
+sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
+sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
+sudo amixer sset 'TOHDMITX' 'on'
+sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
+sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
+sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
+sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
+sudo alsactl store
+sleep 3
