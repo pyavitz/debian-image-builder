@@ -58,10 +58,8 @@ fi
 apt -y clean
 apt -y autoclean
 if [ $uscripts -eq 1 ]; then
-	echo ""
-	uscripts_stage2;
-else
 	echo "";
+	uscripts_stage2;
 fi
 if [[ "$HOSTNAME" == "default" ]]; then
 	# default hostname
@@ -72,24 +70,46 @@ else
 	echo -n "${HOSTNAME}" > /etc/hostname;
 	sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts;
 fi
-adduser ${USERNAME} --gecos ${NAME} --disabled-password
-echo "${USERNAME}:${PASSWORD}" | chpasswd
-adduser ${USERNAME} sudo
-adduser ${USERNAME} audio
-adduser ${USERNAME} dialout
-adduser ${USERNAME} video
-adduser ${USERNAME} disk
-adduser ${USERNAME} plugdev
-adduser ${USERNAME} netdev
-adduser ${USERNAME} bluetooth
-adduser ${USERNAME} input
-adduser ${USERNAME} tty
-adduser ${USERNAME} i2c
-groupadd gpio
-groupadd spi
-adduser ${USERNAME} gpio
-adduser ${USERNAME} spi
-
+if [ $useracct -eq 0 ]; then
+	echo "";
+	adduser ${USERNAME} --gecos ${NAME} --disabled-password
+	echo "${USERNAME}:${PASSWORD}" | chpasswd
+	adduser ${USERNAME} sudo
+	adduser ${USERNAME} audio
+	adduser ${USERNAME} dialout
+	adduser ${USERNAME} video
+	adduser ${USERNAME} disk
+	adduser ${USERNAME} plugdev
+	adduser ${USERNAME} netdev
+	adduser ${USERNAME} bluetooth
+	adduser ${USERNAME} input
+	adduser ${USERNAME} tty
+	adduser ${USERNAME} i2c
+	groupadd gpio
+	groupadd spi
+	adduser ${USERNAME} gpio
+	adduser ${USERNAME} spi
+fi
+if [ $useracct -eq 1 ]; then
+	mkdir -p /boot;
+	mkdir -p /usr/local/sbin;
+	mv -f /root/useracct/useraccount /usr/local/sbin/;
+	chmod +x /usr/local/sbin/useraccount;
+	mv -f /root/{nanorc-user,user-ini} /etc/opt/;
+	mv -f /root/useracct/useraccount.txt /boot/rename_to_useraccount.txt;
+	if [[ "$DISTRO" == "devuan" ]]; then
+		mkdir -p /etc/init.d;
+		mv -f /root/useracct/useraccount.init /etc/init.d/useraccount;
+		chmod +x /etc/init.d/useraccount;
+		update-rc.d useraccount defaults 5;
+		rm -fdr /root/useracct;
+	else
+		mkdir -p /etc/systemd/system/;
+		mv -f /root/useracct/useraccount.service /etc/systemd/system/;
+		systemctl enable useraccount > /dev/null 2>&1;
+		rm -fdr /root/useracct;
+	fi
+fi
 # Initrd / uInitrd
 cd ~
 if [[ "$BOARD" == "raspi4" ]]; then
@@ -265,11 +285,13 @@ mv -f darkred.ini /usr/share/mc/skins/darkred.ini
 mkdir -p /root/.config/mc
 mv -f root-ini /root/.config/mc/ini
 mv -f nanorc-root /root/.nanorc
-mkdir -p /home/${USERNAME}/.config/mc
-mv -f user-ini /home/${USERNAME}/.config/mc/ini
-mv -f nanorc-user /home/${USERNAME}/.nanorc
 chown -R root:root /root
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
+if [ $useracct -eq 0 ]; then
+	mkdir -p /home/${USERNAME}/.config/mc;
+	mv -f user-ini /home/${USERNAME}/.config/mc/ini;
+	mv -f nanorc-user /home/${USERNAME}/.nanorc;
+	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
+fi
 
 # Firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
@@ -369,13 +391,15 @@ if [[ "$BOARD" == "raspi4" ]]; then
 fi
 
 # Sudoers file
-echo ""
 if [ -e /etc/sudoers.d/010_pi-nopasswd ]; then
 	rm -f /etc/sudoers.d/010_pi-nopasswd;
 fi
-tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
+if [ $useracct -eq 0 ]; then
+	echo "";
+	tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
 ${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
+fi
 
 # Kernel
 echo ""
