@@ -34,6 +34,7 @@ make dialogrc   # Set builder theme (optional)
 ```
 #### Config Menu
 * Review the userdata.txt file for further options: locales, timezone and nameserver(s)
+* 1 active | 0 inactive
 ```sh
 Name:		# Whats your name?
 Username:       # Your username
@@ -51,27 +52,28 @@ U-Boot and Linux
 U-Boot:         # Supported: v2022.04
 Branch:         # Supported: 5.15 and current stable
 Build:          # Kernel build version number
-RC:             # 1 for any x.y-rc
-Menuconfig:     # 1 to run uboot and kernel menuconfig
-Compiler:       # Defaults at gcc-10
-Crosscompile:   # 1 to cross compile | 0 to native compile
-Caching on:     # 1 to enable ccache
+RC:             # Any x.y-rc
+Menuconfig:     # Run uboot and kernel menuconfig
+Compiler:       # Defaults at gcc-10 
+Crosscompile:   # 1 cross compile | 0 native compile
+Caching on:     # Ccache
 
 Extra wireless support
-rtl88XXau:      # 1 to add Realtek 8812AU/21AU wireless support
-rtl88XXbu:      # 1 to add Realtek 88X2BU wireless support
-rtl88XXcu:      # 1 to add Realtek 8811CU/21CU wireless support
-rtl8188eu:      # 1 to add Realtek 8188EU wireless support
+rtl88XXau:      # Realtek 8812AU/21AU wireless support
+rtl88XXbu:      # Realtek 88X2BU wireless support
+rtl88XXcu:      # Realtek 8811CU/21CU wireless support
+rtl8188eu:      # Realtek 8188EU wireless support
 
 Customize (user defconfig)
-Defconfig:	# 1 to enable
+Defconfig:	# User defconfig
 Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 
 User options
-Logging:	# 1 to enable logging > output/logs/$board-*.log (Menu interface only)
-Verbosity:	# 1 to enable verbose
-Rootfs XL:	# 1 to enabe developer rootfs tarball
-Compress img:	# 1 to auto compress img > img.xz
+Logging:	# Logging > output/logs/$board-*.log (Menu interface only)
+Verbosity:	# Verbose
+Rootfs XL:	# Developer rootfs tarball
+Compress img:	# Auto compress img > img.xz
+User service:	# Create user during first boot (bypass the user information above)
 ```
 
 #### User defconfig
