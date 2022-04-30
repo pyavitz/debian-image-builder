@@ -64,7 +64,7 @@ rtl88XXbu:      # Realtek 88X2BU wireless support
 rtl88XXcu:      # Realtek 8811CU/21CU wireless support
 rtl8188eu:      # Realtek 8188EU wireless support
 
-Customize (user defconfig)
+Customize
 Defconfig:	# User defconfig
 Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 
