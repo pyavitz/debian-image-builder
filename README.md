@@ -161,16 +161,16 @@ sudo alsactl store
 ```sh
 Rename file to credentials.txt and input your wifi information.
 
-SSID=" "			# Service set identifier
-PASSKEY=" "			# Wifi password
-COUNTRYCODE=" "			# Your country code
+SSID=""				# Service set identifier
+PASSKEY=""			# Wifi password
+COUNTRYCODE=""			# Your country code
 
 # set static ip
-MANUAL=n			# Set to y to enable a static ip
-IPADDR=" "			# Static ip address
-NETMASK=" "			# Your Netmask
-GATEWAY=" "			# Your Gateway
-NAMESERVERS=" "			# Your preferred dns
+MANUAL="n"			# Set to y to enable a static ip
+IPADDR=""			# Static ip address
+NETMASK=""			# Your Netmask
+GATEWAY=""			# Your Gateway
+NAMESERVERS=""			# Your preferred dns
 
 For headless use: ssh user@ipaddress
 
