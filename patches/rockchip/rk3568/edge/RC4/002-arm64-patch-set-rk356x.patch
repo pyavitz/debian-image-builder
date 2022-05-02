@@ -1,6 +1,6 @@
 diff -Naur a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation/devicetree/bindings/arm/rockchip.yaml
---- a/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-05-01 16:57:58.000000000 -0400
-+++ b/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-05-01 20:46:42.000000000 -0400
+--- a/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-04-17 16:57:31.000000000 -0400
++++ b/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-04-18 08:04:09.000000000 -0400
 @@ -545,6 +545,11 @@
            - const: radxa,rock2-square
            - const: rockchip,rk3288
@@ -25,77 +25,9 @@ diff -Naur a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation
  additionalProperties: true
  
  ...
-diff -Naur a/Documentation/devicetree/bindings/clock/rockchip,rk3399-cru.yaml b/Documentation/devicetree/bindings/clock/rockchip,rk3399-cru.yaml
---- a/Documentation/devicetree/bindings/clock/rockchip,rk3399-cru.yaml	2022-05-01 16:57:58.000000000 -0400
-+++ b/Documentation/devicetree/bindings/clock/rockchip,rk3399-cru.yaml	2022-05-01 20:46:42.000000000 -0400
-@@ -7,7 +7,7 @@
- title: Rockchip RK3399 Clock and Reset Unit
- 
- maintainers:
--  - Xing Zheng <zhengxing@rock-chips.com>
-+  - Elaine Zhang <zhangqing@rock-chips.com>
-   - Heiko Stuebner <heiko@sntech.de>
- 
- description: |
-@@ -22,11 +22,11 @@
-   There are several clocks that are generated outside the SoC. It is expected
-   that they are defined using standard clock bindings with following
-   clock-output-names:
--    - "xin24m" - crystal input - required,
--    - "xin32k" - rtc clock - optional,
--    - "clkin_gmac" - external GMAC clock - optional,
--    - "clkin_i2s" - external I2S clock - optional,
--    - "pclkin_cif" - external ISP clock - optional,
-+    - "xin24m"           - crystal input                          - required,
-+    - "xin32k"           - rtc clock                              - optional,
-+    - "clkin_gmac"       - external GMAC clock                    - optional,
-+    - "clkin_i2s"        - external I2S clock                     - optional,
-+    - "pclkin_cif"       - external ISP clock                     - optional,
-     - "clk_usbphy0_480m" - output clock of the pll in the usbphy0
-     - "clk_usbphy1_480m" - output clock of the pll in the usbphy1
- 
-@@ -46,24 +46,15 @@
-     const: 1
- 
-   clocks:
--    minItems: 1
-+    maxItems: 1
- 
--  assigned-clocks:
--    minItems: 1
--    maxItems: 64
--
--  assigned-clock-parents:
--    minItems: 1
--    maxItems: 64
--
--  assigned-clock-rates:
--    minItems: 1
--    maxItems: 64
-+  clock-names:
-+    const: xin24m
- 
-   rockchip,grf:
-     $ref: /schemas/types.yaml#/definitions/phandle
--    description: >
--      phandle to the syscon managing the "general register files". It is used
-+    description:
-+      Phandle to the syscon managing the "general register files". It is used
-       for GRF muxes, if missing any muxes present in the GRF will not be
-       available.
- 
-@@ -77,7 +68,7 @@
- 
- examples:
-   - |
--    pmucru: pmu-clock-controller@ff750000 {
-+    pmucru: clock-controller@ff750000 {
-       compatible = "rockchip,rk3399-pmucru";
-       reg = <0xff750000 0x1000>;
-       #clock-cells = <1>;
 diff -Naur a/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi.yaml b/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi.yaml
---- a/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi.yaml	2022-05-01 16:57:58.000000000 -0400
-+++ b/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi.yaml	2022-05-01 20:46:42.000000000 -0400
+--- a/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi.yaml	2022-04-17 16:57:31.000000000 -0400
++++ b/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi.yaml	2022-04-18 08:04:09.000000000 -0400
 @@ -23,10 +23,22 @@
        - rockchip,rk3288-dw-hdmi
        - rockchip,rk3328-dw-hdmi
@@ -192,7 +124,7 @@ diff -Naur a/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-hdmi
      $ref: /schemas/types.yaml#/definitions/phandle
 diff -Naur a/Documentation/devicetree/bindings/display/rockchip/rockchip-vop2.yaml b/Documentation/devicetree/bindings/display/rockchip/rockchip-vop2.yaml
 --- a/Documentation/devicetree/bindings/display/rockchip/rockchip-vop2.yaml	1969-12-31 19:00:00.000000000 -0500
-+++ b/Documentation/devicetree/bindings/display/rockchip/rockchip-vop2.yaml	2022-05-01 20:46:42.000000000 -0400
++++ b/Documentation/devicetree/bindings/display/rockchip/rockchip-vop2.yaml	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,140 @@
 +# SPDX-License-Identifier: GPL-2.0-only or BSD-2-Clause
 +%YAML 1.2
@@ -335,8 +267,8 @@ diff -Naur a/Documentation/devicetree/bindings/display/rockchip/rockchip-vop2.ya
 +            };
 +        };
 diff -Naur a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
---- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml	2022-05-01 16:57:58.000000000 -0400
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml	2022-05-01 20:46:42.000000000 -0400
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml	2022-04-17 16:57:31.000000000 -0400
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml	2022-04-18 08:04:09.000000000 -0400
 @@ -19,20 +19,10 @@
  allOf:
    - $ref: /schemas/pci/pci-bus.yaml#
@@ -369,7 +301,7 @@ diff -Naur a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Docum
                    <0x3 0x80000000 0x0 0x100000>;
 diff -Naur a/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml
 --- a/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml	1969-12-31 19:00:00.000000000 -0500
-+++ b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml	2022-05-01 20:46:42.000000000 -0400
++++ b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,77 @@
 +# SPDX-License-Identifier: GPL-2.0
 +%YAML 1.2
@@ -449,8 +381,8 @@ diff -Naur a/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml b/Doc
 +      rockchip,phy-grf = <&pcie30_phy_grf>;
 +    };
 diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
---- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-05-01 16:57:58.000000000 -0400
-+++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-05-01 20:46:42.000000000 -0400
+--- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-04-17 16:57:31.000000000 -0400
++++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-04-18 08:04:09.000000000 -0400
 @@ -14,7 +14,12 @@
      oneOf:
        - items:
@@ -465,8 +397,8 @@ diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documenta
                - rockchip,rv1108-usbgrf
            - const: syscon
 diff -Naur a/drivers/clk/rockchip/clk-rk3568.c b/drivers/clk/rockchip/clk-rk3568.c
---- a/drivers/clk/rockchip/clk-rk3568.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/clk/rockchip/clk-rk3568.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/clk/rockchip/clk-rk3568.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/clk/rockchip/clk-rk3568.c	2022-04-18 08:04:09.000000000 -0400
 @@ -1591,6 +1591,7 @@
  	"hclk_php",
  	"pclk_php",
@@ -476,8 +408,8 @@ diff -Naur a/drivers/clk/rockchip/clk-rk3568.c b/drivers/clk/rockchip/clk-rk3568
  
  static const char *const rk3568_pmucru_critical_clocks[] __initconst = {
 diff -Naur a/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c b/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c
---- a/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c	2022-04-18 08:04:09.000000000 -0400
 @@ -40,8 +40,6 @@
  
  #define PSR_WAIT_LINE_FLAG_TIMEOUT_MS	100
@@ -588,8 +520,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/analogix_dp-rockchip.c b/drivers/gpu/drm/r
  
  static const struct component_ops rockchip_dp_component_ops = {
 diff -Naur a/drivers/gpu/drm/rockchip/cdn-dp-core.c b/drivers/gpu/drm/rockchip/cdn-dp-core.c
---- a/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-04-18 08:04:09.000000000 -0400
 @@ -26,11 +26,17 @@
  #include "cdn-dp-reg.h"
  #include "rockchip_drm_vop.h"
@@ -631,8 +563,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/cdn-dp-core.c b/drivers/gpu/drm/rockchip/c
  
  	cancel_work_sync(&dp->event_work);
 diff -Naur a/drivers/gpu/drm/rockchip/cdn-dp-core.h b/drivers/gpu/drm/rockchip/cdn-dp-core.h
---- a/drivers/gpu/drm/rockchip/cdn-dp-core.h	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/cdn-dp-core.h	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/cdn-dp-core.h	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/cdn-dp-core.h	2022-04-18 08:04:09.000000000 -0400
 @@ -66,7 +66,7 @@
  	struct device *dev;
  	struct drm_device *drm_dev;
@@ -643,8 +575,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/cdn-dp-core.h b/drivers/gpu/drm/rockchip/c
  	struct platform_device *audio_pdev;
  	struct work_struct event_work;
 diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
---- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-04-18 08:04:09.000000000 -0400
 @@ -9,6 +9,7 @@
  #include <linux/platform_device.h>
  #include <linux/phy/phy.h>
@@ -1091,8 +1023,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockc
  
  static const struct component_ops dw_hdmi_rockchip_ops = {
 diff -Naur a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
---- a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-04-18 08:04:09.000000000 -0400
 @@ -181,8 +181,6 @@
  
  #define HIWORD_UPDATE(val, mask)	(val | (mask) << 16)
@@ -1153,8 +1085,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c b/drivers/gpu/drm/r
  		DRM_DEV_ERROR(dev, "Failed to bind: %d\n", ret);
  		goto out_pll_clk;
 diff -Naur a/drivers/gpu/drm/rockchip/inno_hdmi.c b/drivers/gpu/drm/rockchip/inno_hdmi.c
---- a/drivers/gpu/drm/rockchip/inno_hdmi.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/inno_hdmi.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/inno_hdmi.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/inno_hdmi.c	2022-04-18 08:04:09.000000000 -0400
 @@ -26,8 +26,6 @@
  
  #include "inno_hdmi.h"
@@ -1264,8 +1196,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/inno_hdmi.c b/drivers/gpu/drm/rockchip/inn
  	i2c_put_adapter(hdmi->ddc);
  	clk_disable_unprepare(hdmi->pclk);
 diff -Naur a/drivers/gpu/drm/rockchip/Kconfig b/drivers/gpu/drm/rockchip/Kconfig
---- a/drivers/gpu/drm/rockchip/Kconfig	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/Kconfig	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/Kconfig	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/Kconfig	2022-04-18 08:04:09.000000000 -0400
 @@ -23,8 +23,22 @@
  
  if DRM_ROCKCHIP
@@ -1290,8 +1222,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/Kconfig b/drivers/gpu/drm/rockchip/Kconfig
  	  This selects support for Rockchip SoC specific extensions
  	  for the Analogix Core DP driver. If you want to enable DP
 diff -Naur a/drivers/gpu/drm/rockchip/Makefile b/drivers/gpu/drm/rockchip/Makefile
---- a/drivers/gpu/drm/rockchip/Makefile	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/Makefile	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/Makefile	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/Makefile	2022-04-18 08:04:09.000000000 -0400
 @@ -4,8 +4,10 @@
  # Direct Rendering Infrastructure (DRI) in XFree86 4.1.0 and higher.
  
@@ -1305,8 +1237,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/Makefile b/drivers/gpu/drm/rockchip/Makefi
  rockchipdrm-$(CONFIG_ROCKCHIP_CDN_DP) += cdn-dp-core.o cdn-dp-reg.o
  rockchipdrm-$(CONFIG_ROCKCHIP_DW_HDMI) += dw_hdmi-rockchip.o
 diff -Naur a/drivers/gpu/drm/rockchip/rk3066_hdmi.c b/drivers/gpu/drm/rockchip/rk3066_hdmi.c
---- a/drivers/gpu/drm/rockchip/rk3066_hdmi.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rk3066_hdmi.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rk3066_hdmi.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rk3066_hdmi.c	2022-04-18 08:04:09.000000000 -0400
 @@ -47,7 +47,7 @@
  	void __iomem *regs;
  
@@ -1420,8 +1352,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rk3066_hdmi.c b/drivers/gpu/drm/rockchip/r
  	i2c_put_adapter(hdmi->ddc);
  	clk_disable_unprepare(hdmi->hclk);
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_drv.c b/drivers/gpu/drm/rockchip/rockchip_drm_drv.c
---- a/drivers/gpu/drm/rockchip/rockchip_drm_drv.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_drv.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_drv.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_drv.c	2022-04-18 08:04:09.000000000 -0400
 @@ -7,7 +7,6 @@
   */
  
@@ -1623,8 +1555,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_drv.c b/drivers/gpu/drm/rockc
  				CONFIG_ROCKCHIP_LVDS);
  	ADD_ROCKCHIP_SUB_DRIVER(rockchip_dp_driver,
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_drv.h b/drivers/gpu/drm/rockchip/rockchip_drm_drv.h
---- a/drivers/gpu/drm/rockchip/rockchip_drm_drv.h	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_drv.h	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_drv.h	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_drv.h	2022-04-18 08:04:09.000000000 -0400
 @@ -18,7 +18,7 @@
  
  #define ROCKCHIP_MAX_FB_BUFFER	3
@@ -1684,8 +1616,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_drv.h b/drivers/gpu/drm/rockc
 +
  #endif /* _ROCKCHIP_DRM_DRV_H_ */
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_fb.c b/drivers/gpu/drm/rockchip/rockchip_drm_fb.c
---- a/drivers/gpu/drm/rockchip/rockchip_drm_fb.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_fb.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_fb.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_fb.c	2022-04-18 08:04:09.000000000 -0400
 @@ -134,4 +134,6 @@
  
  	dev->mode_config.funcs = &rockchip_drm_mode_config_funcs;
@@ -1695,7 +1627,7 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_fb.c b/drivers/gpu/drm/rockch
  }
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop2.c b/drivers/gpu/drm/rockchip/rockchip_drm_vop2.c
 --- a/drivers/gpu/drm/rockchip/rockchip_drm_vop2.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop2.c	2022-05-01 20:46:42.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop2.c	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,2706 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -4405,7 +4337,7 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop2.c b/drivers/gpu/drm/rock
 +EXPORT_SYMBOL_GPL(vop2_component_ops);
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop2.h b/drivers/gpu/drm/rockchip/rockchip_drm_vop2.h
 --- a/drivers/gpu/drm/rockchip/rockchip_drm_vop2.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop2.h	2022-05-01 20:46:42.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop2.h	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,477 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
@@ -4885,8 +4817,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop2.h b/drivers/gpu/drm/rock
 +
 +#endif /* _ROCKCHIP_DRM_VOP2_H */
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop.c b/drivers/gpu/drm/rockchip/rockchip_drm_vop.c
---- a/drivers/gpu/drm/rockchip/rockchip_drm_vop.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_vop.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop.c	2022-04-18 08:04:09.000000000 -0400
 @@ -2175,6 +2175,8 @@
  		}
  	}
@@ -4897,8 +4829,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop.c b/drivers/gpu/drm/rockc
  
  err_disable_pm_runtime:
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop.h b/drivers/gpu/drm/rockchip/rockchip_drm_vop.h
---- a/drivers/gpu/drm/rockchip/rockchip_drm_vop.h	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop.h	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_vop.h	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop.h	2022-04-18 08:04:09.000000000 -0400
 @@ -54,9 +54,23 @@
  	struct vop_reg enable;
  	struct vop_reg win_sel;
@@ -4930,8 +4862,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_drm_vop.h b/drivers/gpu/drm/rockc
 +
  #endif /* _ROCKCHIP_DRM_VOP_H */
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_lvds.c b/drivers/gpu/drm/rockchip/rockchip_lvds.c
---- a/drivers/gpu/drm/rockchip/rockchip_lvds.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/rockchip_lvds.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/gpu/drm/rockchip/rockchip_lvds.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_lvds.c	2022-04-18 08:04:09.000000000 -0400
 @@ -36,12 +36,6 @@
  
  struct rockchip_lvds;
@@ -4993,7 +4925,7 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_lvds.c b/drivers/gpu/drm/rockchip
  static const struct component_ops rockchip_lvds_component_ops = {
 diff -Naur a/drivers/gpu/drm/rockchip/rockchip_vop2_reg.c b/drivers/gpu/drm/rockchip/rockchip_vop2_reg.c
 --- a/drivers/gpu/drm/rockchip/rockchip_vop2_reg.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/rockchip/rockchip_vop2_reg.c	2022-05-01 20:46:42.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/rockchip_vop2_reg.c	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,281 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
@@ -5277,8 +5209,8 @@ diff -Naur a/drivers/gpu/drm/rockchip/rockchip_vop2_reg.c b/drivers/gpu/drm/rock
 +	},
 +};
 diff -Naur a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-04-18 08:04:09.000000000 -0400
 @@ -10,13 +10,17 @@
  
  #include <linux/clk.h>
@@ -5462,8 +5394,8 @@ diff -Naur a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/control
  	if (ret)
  		goto disable_regulator;
 diff -Naur a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
---- a/drivers/phy/rockchip/Kconfig	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/phy/rockchip/Kconfig	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/phy/rockchip/Kconfig	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/phy/rockchip/Kconfig	2022-04-18 08:04:09.000000000 -0400
 @@ -83,6 +83,15 @@
  	help
  	  Enable this to support the Rockchip PCIe PHY.
@@ -5481,8 +5413,8 @@ diff -Naur a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
  	tristate "Rockchip TYPEC PHY Driver"
  	depends on OF && (ARCH_ROCKCHIP || COMPILE_TEST)
 diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
---- a/drivers/phy/rockchip/Makefile	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/phy/rockchip/Makefile	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/phy/rockchip/Makefile	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/phy/rockchip/Makefile	2022-04-18 08:04:09.000000000 -0400
 @@ -8,5 +8,6 @@
  obj-$(CONFIG_PHY_ROCKCHIP_INNO_USB2)	+= phy-rockchip-inno-usb2.o
  obj-$(CONFIG_PHY_ROCKCHIP_NANENG_COMBO_PHY)	+= phy-rockchip-naneng-combphy.o
@@ -5492,7 +5424,7 @@ diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
  obj-$(CONFIG_PHY_ROCKCHIP_USB)		+= phy-rockchip-usb.o
 diff -Naur a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
 --- a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c	2022-05-01 20:46:42.000000000 -0400
++++ b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,278 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -5773,8 +5705,8 @@ diff -Naur a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c b/drivers/phy/rockch
 +MODULE_DESCRIPTION("Rockchip Synopsys PCIe 3.0 PHY driver");
 +MODULE_LICENSE("GPL");
 diff -Naur a/drivers/soc/rockchip/grf.c b/drivers/soc/rockchip/grf.c
---- a/drivers/soc/rockchip/grf.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/soc/rockchip/grf.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/soc/rockchip/grf.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/soc/rockchip/grf.c	2022-04-18 08:04:09.000000000 -0400
 @@ -108,6 +108,20 @@
  	.num_values = ARRAY_SIZE(rk3399_defaults),
  };
@@ -5807,8 +5739,8 @@ diff -Naur a/drivers/soc/rockchip/grf.c b/drivers/soc/rockchip/grf.c
  	{ /* sentinel */ },
  };
 diff -Naur a/drivers/soc/rockchip/pm_domains.c b/drivers/soc/rockchip/pm_domains.c
---- a/drivers/soc/rockchip/pm_domains.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/soc/rockchip/pm_domains.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/soc/rockchip/pm_domains.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/soc/rockchip/pm_domains.c	2022-04-18 08:04:09.000000000 -0400
 @@ -1068,9 +1068,9 @@
  		.name   = "rockchip-pm-domain",
  		.of_match_table = rockchip_pm_domain_dt_match,
@@ -5823,8 +5755,8 @@ diff -Naur a/drivers/soc/rockchip/pm_domains.c b/drivers/soc/rockchip/pm_domains
  		.suppress_bind_attrs = true,
  	},
 diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple.c
---- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-05-01 16:57:58.000000000 -0400
-+++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-05-01 20:46:42.000000000 -0400
+--- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-04-17 16:57:31.000000000 -0400
++++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-04-18 08:04:09.000000000 -0400
 @@ -30,12 +30,16 @@
  	bool			need_reset;
  };
@@ -5897,7 +5829,7 @@ diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple
  MODULE_DEVICE_TABLE(of, of_dwc3_simple_match);
 diff -Naur a/include/dt-bindings/phy/phy-snps-pcie3.h b/include/dt-bindings/phy/phy-snps-pcie3.h
 --- a/include/dt-bindings/phy/phy-snps-pcie3.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/dt-bindings/phy/phy-snps-pcie3.h	2022-05-01 20:46:42.000000000 -0400
++++ b/include/dt-bindings/phy/phy-snps-pcie3.h	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,21 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
@@ -5922,7 +5854,7 @@ diff -Naur a/include/dt-bindings/phy/phy-snps-pcie3.h b/include/dt-bindings/phy/
 +#endif /* _DT_BINDINGS_PHY_SNPS_PCIE3 */
 diff -Naur a/include/dt-bindings/soc/rockchip,vop2.h b/include/dt-bindings/soc/rockchip,vop2.h
 --- a/include/dt-bindings/soc/rockchip,vop2.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/dt-bindings/soc/rockchip,vop2.h	2022-05-01 20:46:42.000000000 -0400
++++ b/include/dt-bindings/soc/rockchip,vop2.h	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +
@@ -5940,7 +5872,7 @@ diff -Naur a/include/dt-bindings/soc/rockchip,vop2.h b/include/dt-bindings/soc/r
 +#endif /* __DT_BINDINGS_ROCKCHIP_VOP2_H */
 diff -Naur a/include/linux/phy/pcie.h b/include/linux/phy/pcie.h
 --- a/include/linux/phy/pcie.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/linux/phy/pcie.h	2022-05-01 20:46:42.000000000 -0400
++++ b/include/linux/phy/pcie.h	2022-04-18 08:04:09.000000000 -0400
 @@ -0,0 +1,12 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
