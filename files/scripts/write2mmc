@@ -147,17 +147,11 @@ destroy_scroll_area
 
 # uuid / partuuid
 fetch_uuid(){
-echo 'ROOT_UUID="' > root1
-blkid -o export -- ${MMC}p1 | sed -ne 's/^UUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-id.txt
-rm -f root1 root2 root3
+ROOT_UUID=$(blkid -o export -- ${MMC}p1 | sed -ne 's/^UUID=//p')
+ROOT_PARTUUID=$(blkid -o export -- ${MMC}p1 | sed -ne 's/^PARTUUID=//p')
 
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- ${MMC}p1 | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
-rm -f root1 root2 root3
+echo ROOT_UUID='"'$ROOT_UUID'"' > /etc/opt/part-uuid.txt
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> /etc/opt/part-uuid.txt
 }
 
 # fstab
@@ -270,15 +264,14 @@ echo "Done."
 
 echo ""
 echo "Setting up boot ..."
-source /etc/opt/root-id.txt
-source /etc/opt/root-pid.txt
+source /etc/opt/part-uuid.txt
 create_fstab
 create_extlinux
 echo "Done."
 
 echo ""
 echo "Unmounting eMMC ..."
-rm -f {/etc/opt/root-pid.txt,/etc/opt/root-id.txt}
+rm -f /etc/opt/part-uuid.txt
 rm -fdr /mnt/mnt/*
 umount /mnt
 rm -fdr /mnt/*
