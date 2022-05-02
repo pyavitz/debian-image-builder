@@ -36,7 +36,7 @@ make dialogrc   # Set builder theme (optional)
 * Review the userdata.txt file for further options: locales, timezone and nameserver(s)
 * 1 active | 0 inactive
 ```sh
-Name:		# Whats your name?
+Name:		# Your name
 Username:       # Your username
 Password:       # Your password
 Branding:       # Set custom ASCII text banner
@@ -83,18 +83,10 @@ User service:	# Create user during first boot (bypass the user information above
 The config menu will append _defconfig to the end of the name in the
 userdata.txt file.
 ```
-
 #### User patches
 
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
-```
-
-#### Rootfs XL (testing)
-
-```sh
-Results in faster builds and saves time when building images for multiple boards
-or involved in development.
 ```
 #### Aircrack (rtl88XXau)
 
@@ -109,7 +101,6 @@ aircrack=0
 emmc=0
 ```
 #### Miscellaneous
-
 ```sh
 make cleanup    # Clean up image errors
 make purge      # Remove sources directory
@@ -156,6 +147,15 @@ sudo alsactl store
 ```
 
 ## Usage
+
+#### /boot/rename_to_useraccount.txt
+* Headless: rename file to useraccount.txt and fill in the variables
+* Headful: don't rename file & get prompted to create a user account
+```sh
+NAME=""
+USERNAME=""
+PASSWORD=""
+```
 
 #### /boot/rename_to_credentials.txt
 ```sh
