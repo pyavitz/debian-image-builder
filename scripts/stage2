@@ -13,6 +13,15 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+	# systemd-resolved breaks static ip when using ifupdown
+	# as a temp solution it will be disabled on jammy jellyfish
+	unlink /etc/resolv.conf;
+	if [ -f /etc/resolv.conf ]; then
+		rm -f /etc/resolv.conf;
+	fi
+	systemctl disable systemd-resolved;
+fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
