@@ -18,7 +18,7 @@ setenv board odroid${variant}
 setenv bootargs "${bootargs} quiet splash"
 setenv overlay_resize 8192
 
-setenv bootlabel "ODROID M1"
+setenv bootlabel "Odroid M1"
 
 # Default serial console
 setenv console "ttyFIQ0"
