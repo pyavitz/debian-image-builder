@@ -26,15 +26,12 @@ setenv console "ttyFIQ0"
 # Default TTY console
 setenv bootargs "${bootargs} earlycon=uart8250,mmio32,0xfe660000 console=tty1"
 
-# Builder bootargs
-setenv bootargs "root=UUID= net.ifnames=0 rootwait rw"
-
 # MISC
 #
 setenv bootargs "${bootargs} pci=nomsi"
 setenv bootargs "${bootargs} fsck.mode=force fsck.repair=yes"
 setenv bootargs "${bootargs} mtdparts=sfc_nor:0x20000@0xe0000(env),0x200000@0x100000(uboot),0x100000@0x300000(splash),0xc00000@0x400000(firmware)"
-
+setenv bootargs "${bootargs} root=UUID= barrier=0 net.ifnames=0 rootflags=data=writeback rootwait ro quiet loglevel=1"
 setenv bootargs "${bootargs} mem=8192M"
 
 load ${devtype} ${devno}:${partition} ${loadaddr} ${prefix}config.ini \
