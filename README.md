@@ -73,6 +73,7 @@ Logging:	# Logging > output/logs/$board-*.log (Menu interface only)
 Verbosity:	# Verbose
 Rootfs XL:	# Developer rootfs tarball
 Compress img:	# Auto compress img > img.xz
+User scripts:	# review the README in the files/userscripts directory
 User service:	# Create user during first boot (bypass the user information above)
 ```
 
