@@ -53,8 +53,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-fi
-if [[ "$FAMILY_EXT" == "rk3568" ]]; then
+else
 	echo -e "o
 	n
 	p
@@ -75,8 +74,7 @@ IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
 partprobe "${IMAGE_LOOP_DEV}"
 if [[ "$BOARD" == "raspi4" ]]; then
 	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
-fi
-if [[ "$BOARD" == "odroidm1" ]]; then
+else
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
 fi
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
@@ -115,11 +113,10 @@ EOF
 }
 
 p2_fstab(){
-if [[ "$BOARD" == "odroidm1" ]]; then
-	FSTYPE="ext2	rw,relatime,errors=continue 0 0";
-fi
 if [[ "$BOARD" == "raspi4" ]]; then
 	FSTYPE="vfat	defaults 0 2";
+else
+	FSTYPE="ext2	rw,relatime,errors=continue 0 0";
 fi
 tee p2/etc/fstab <<EOF
 UUID=${BOOT_UUID}	/boot	${FSTYPE}
