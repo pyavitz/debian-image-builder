@@ -6,6 +6,7 @@
 # reference: https://forum.doozan.com/read.php?2,12096
 
 uInitrd="/boot/uInitrd"
+initrd="/boot/initrd.gz"
 
 die(){
 	echo >&2 "Error: $@"
@@ -13,12 +14,11 @@ die(){
 	exit 1
 }
 
-if [ -e ${uInitrd} ]; then
+if [ -f ${uInitrd} ]; then
 	rm -f ${uInitrd};
 fi
 
 echo "Generating uInitrd for U-Boot:"
-
 if [ "$#" -eq 2 ]; then
 	if [ ! -z "$1" ] && [ -f "$2" ]; then
 		name="initramfs-$1";
@@ -30,3 +30,7 @@ if [ "$#" -eq 2 ]; then
 else
 	die "2 arguments required, $# provided";
 fi
+
+echo "Creating initrd.gz."
+rm -fdr /boot/{initrd.gz,initrd.img-*-bak} > /dev/null 2>&1
+cp -f /boot/initrd.img-* ${initrd}

@@ -67,6 +67,6 @@ fdt addr ${fdt_addr_r}
 
 load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}Image \
 && unzip ${ramdisk_addr_r} ${kernel_addr_r} \
-&& load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}uInitrd \
+&& load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}initrd.gz \
 && echo "Booting Debian ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
