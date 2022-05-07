@@ -52,17 +52,17 @@ fi
 load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${prefix}Image \
 && load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${prefix}amlogic/${fdtfile} \
 && load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}uInitrd \
-&& echo "Booting Debian ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
+&& echo "Booting ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
 
 load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${prefix}Image \
 && load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${prefix}amlogic/${fdtfile} \
 && load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}uInitrd \
-&& echo "Booting Debian ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
+&& echo "Booting ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
 
 load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${prefix}Image \
 && load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${prefix}amlogic/${fdtfile} \
 && load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}uInitrd \
-&& echo "Booting Debian from ${devtype} ${devnum}:${partition}..." \
+&& echo "Booting from ${devtype} ${devnum}:${partition}..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
