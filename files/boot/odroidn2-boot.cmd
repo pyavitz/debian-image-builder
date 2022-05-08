@@ -14,7 +14,7 @@
 #
 # The uboot must support the booti and generic filesystem load commands.
 
-setenv bootargs " ${bootargs} ro root=UUID= net.ifname=0 rootfstype=ext4 fsck.repair=yes loglevel=1 mitigations=off usb-storage.quirks=0x1f75:0x0621:u rootwait"
+setenv bootargs " ${bootargs} ro root=UUID= net.ifnames=0 rootfstype=ext4 fsck.repair=yes loglevel=1 mitigations=off usb-storage.quirks=0x1f75:0x0621:u rootwait"
 
 setenv bootlabel "Odroid N2"
 
