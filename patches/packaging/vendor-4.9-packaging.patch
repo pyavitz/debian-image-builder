@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 --- a/scripts/package/builddeb	2022-02-28 02:53:10.000000000 -0500
-+++ b/scripts/package/builddeb	2022-04-27 15:55:11.405171117 -0400
++++ b/scripts/package/builddeb	2022-05-08 12:05:37.606274427 -0400
 @@ -31,7 +31,7 @@
  
  	# Create the package
@@ -44,7 +44,25 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -342,6 +362,45 @@
+@@ -220,6 +240,17 @@
+ 	chmod 755 "$tmpdir/DEBIAN/$script"
+ done
+ 
++	cat > $tmpdir/DEBIAN/preinst <<EOT
++#!/bin/bash
++# remove initrd
++
++set -e
++
++rm -f /boot/{initrd.img*,uInitrd} 2>/dev/null
++exit 0
++EOT
++        chmod 755 $tmpdir/DEBIAN/preinst
++
+ # Try to determine maintainer and email values
+ if [ -n "$DEBEMAIL" ]; then
+        email=$DEBEMAIL
+@@ -342,6 +373,45 @@
  (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
