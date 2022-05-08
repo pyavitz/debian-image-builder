@@ -2,8 +2,16 @@
 # Bind root device activity to blue LED trigger
 # Turn blue LED off (default)
 
+if [ -f /sys/class/leds/n2:blue/trigger ]; then
+	LED="n2:blue";
+fi
+
+if [ -f /sys/class/leds/blue:heartbeat/trigger ]; then
+	LED="blue:heartbeat";
+fi
+
 activity(){
-BLUE_LED="/sys/class/leds/n2:blue/trigger"
+BLUE_LED="/sys/class/leds/${LED}/trigger"
 if [ -e $BLUE_LED ]; then
 	ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
 	ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
@@ -14,7 +22,7 @@ fi
 }
 
 off(){
-echo "0" > /sys/class/leds/n2:blue/brightness
+echo "0" > /sys/class/leds/${LED}/brightness
 }
 
 #activity
