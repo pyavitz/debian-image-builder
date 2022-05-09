@@ -8,6 +8,16 @@ source userdata.txt > /dev/null 2>&1
 if [ $uscripts -eq 1 ]; then
 	uscripts_pre-stage1;
 fi
+if [[ "$BOARD" == "odroidn2" ]]; then
+	if [ $petitboot -eq 1 ]; then
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
+	fi
+fi
+if [[ "$BOARD" == "odroidn2plus" ]]; then
+	if [ $petitboot -eq 1 ]; then
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
+	fi
+fi
 source board.txt > /dev/null 2>&1
 if [ $uscripts -eq 1 ]; then
 	uscripts_pre-stage1;
@@ -77,14 +87,24 @@ if [ -f files/led-trigger/${BOARD} ]; then
 	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
 fi
 # place u-boot and kernel files in place for stage2
-if [ -e ${OUTPUT}/*.itb ]; then
-	cp -f ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
-else
-	if [[ "$BOARD" == "odroidm1" ]]; then
+if [ "$FAMILY" == "allwinner" ]; then
+	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
+fi
+if [ "$FAMILY" == "amlogic" ]; then
+	if [ $petitboot -eq 1 ]; then
 		cp -f ${OUTPUT}/*.deb ${P_VALUE}/root;
 	else
 		cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 	fi
+fi
+if [ "$FAMILY" == "broadcom" ]; then
+	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
+fi
+if [ "$FAMILY" == "rockchip" ]; then
+	if [[ "$BOARD" == "odroidm1" ]]; then
+		cp -f ${OUTPUT}/*.deb ${P_VALUE}/root;
+	else
+		cp -f ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
 fi
 if [ $useracct -eq 1 ]; then
 	mkdir -p ${P_VALUE}/root/useracct;

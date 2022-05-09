@@ -15,7 +15,7 @@ set -o nounset
 
 if [[ "$DISTRO_VERSION" == "jammy" ]]; then
 	# systemd-resolved breaks static ip when using ifupdown
-	# as a temp solution it will be disabled on jammy jellyfish
+	# it will be disabled on jammy jellyfish
 	unlink /etc/resolv.conf;
 	if [ -f /etc/resolv.conf ]; then
 		rm -f /etc/resolv.conf;
@@ -121,7 +121,12 @@ if [ $useracct -eq 1 ]; then
 fi
 # Initrd / uInitrd
 cd ~
-initrd > /dev/null 2>&1;
+if [ -f /root/99-initrd ]; then
+	mkdir -p /etc/initramfs/post-update.d/
+	mv -f /root/99-initrd /etc/initramfs/post-update.d/;
+	chmod +x /etc/initramfs/post-update.d/99-initrd;
+	chown root:root /etc/initramfs/post-update.d/99-initrd;
+fi
 
 # LED triggers
 if [ -f "/root/led-trigger" ]; then 
@@ -166,15 +171,25 @@ mkdir -p /etc/opt
 mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
-# u-boot
-if [[ "$FAMILY" == "rockchip" ]]; then
+# move u-boot bin(s)
+if [ "$FAMILY" == "allwinner" ]; then
+	mv -f *.bin /usr/lib/u-boot/;
+fi
+if [ "$FAMILY" == "amlogic" ]; then
+	if [ $petitboot -eq 1 ]; then
+		:;
+	else
+		mv -f *.bin /usr/lib/u-boot/;
+	fi
+fi
+if [ "$FAMILY" == "broadcom" ]; then
+	mv -f *.bin /usr/lib/u-boot/;
+fi
+if [ "$FAMILY" == "rockchip" ]; then
 	if [[ "$BOARD" == "odroidm1" ]]; then
 		:;
 	else
 		mv -f *.bin *.itb /usr/lib/u-boot/;
-	fi
-else
-	mv -f *.bin /usr/lib/u-boot/;
 fi
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
@@ -188,6 +203,7 @@ mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
 mv -f setup /usr/local/bin/
 mv -f sysinfo /usr/local/bin/
+mv -f boot-cmd /usr/local/bin/
 mv -f menu-config /usr/local/bin
 mv -f image-config-menu /usr/local/lib
 # amlogic
@@ -281,7 +297,7 @@ chown root:root /etc/update-motd.d/15-brand
 chown root:root /etc/update-motd.d/20-sysinfo
 
 # Clean
-rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-uboot}
+rm -f {lepotato-tweaks,odroid-tweaks,nanopc-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,boot-cmd}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins
@@ -396,7 +412,7 @@ if [[ "$BOARD" == "raspi4" ]]; then
 fi
 
 # Sudoers file
-if [ -e /etc/sudoers.d/010_pi-nopasswd ]; then
+if [ -f /etc/sudoers.d/010_pi-nopasswd ]; then
 	rm -f /etc/sudoers.d/010_pi-nopasswd;
 fi
 if [ $useracct -eq 0 ]; then
@@ -444,7 +460,7 @@ fi
 
 # Services
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [ -e /etc/default/haveged ]; then
+	if [ -f /etc/default/haveged ]; then
 		sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged;
 	fi
 fi

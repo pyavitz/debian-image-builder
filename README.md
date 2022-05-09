@@ -95,8 +95,12 @@ Patches "-p1" placed in patches/userpatches are applied during compilation.
 # change from 0 to 1
 aircrack=0
 ```
-
-#### Amlogic eMMC boot
+#### Odroid N2/+ petitboot
+```sh
+# change from 0 to 1
+petitboot=0
+```
+#### Amlogic eMMC boot (u-boot only)
 ```sh
 # change from 0 to 1
 emmc=0

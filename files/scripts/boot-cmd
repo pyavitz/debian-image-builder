@@ -9,14 +9,14 @@ if [[ `command -v mkimage` ]]; then
 	:;
 else
 	echo -e "Missing depends: u-boot-tools";
-	exit 0;
+	apt install -y u-boot-tools;
 fi
-if [ -f boot.cmd ]; then
-	if [ -f boot.scr ]; then
-		rm -f boot.scr;
-		mkimage -C none -A arm -T script -d boot.cmd boot.scr;
+if [ -f /boot/boot.cmd ]; then
+	if [ -f /boot/boot.scr ]; then
+		rm -f /boot/boot.scr;
+		mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr;
 	else
-		mkimage -C none -A arm -T script -d boot.cmd boot.scr;
+		mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr;
 	fi
 fi
 
