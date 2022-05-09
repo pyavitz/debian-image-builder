@@ -2,6 +2,10 @@
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+if [ -f /etc/opt/board.txt ]; then
+	source /etc/opt/board.txt;
+fi
+
 BOOT=`findmnt -v -n -o SOURCE /boot`
 ROOTFS=`findmnt -v -n -o SOURCE /`
 GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
@@ -9,16 +13,12 @@ GROW_SSD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
 
 # Functions
 partition_uuid(){
-echo 'ROOT_PARTUUID="' > root1
-blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p' > root2
-echo '"' > root3
-paste -d '\0' root1 root2 root3  > /etc/opt/root-pid.txt
-rm -f root1 root2 root3
+ROOT_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > /etc/opt/part-uuid.txt
 }
 
 extlinux(){
-source /etc/opt/root-pid.txt > /dev/null 2>&1
-source /etc/opt/board.txt > /dev/null 2>&1
+source /etc/opt/part-uuid.txt
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
@@ -32,7 +32,7 @@ label default
 	#fdtoverlays
 	${CMDLINE}
 EOF
-rm -f /etc/opt/root-pid.txt
+rm -f /etc/opt/part-uuid.txt
 }
 
 # Expand root filesystem
@@ -53,7 +53,7 @@ sleep 1s
 resize2fs $ROOTFS > /dev/null 2>&1
 
 # Fix PARTUUID
-if [[ `grep -w 'ARCH="arm"' "/etc/opt/board.txt"` ]]; then
+if [[ "$ARCH" == "arm" ]]; then
 	partition_uuid > /dev/null 2>&1;
 	extlinux > /dev/null 2>&1;
 fi
