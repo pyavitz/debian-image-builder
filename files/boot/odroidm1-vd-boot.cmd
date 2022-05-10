@@ -83,13 +83,13 @@ fi
 load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${prefix}rockchip/${fdtfile}
 fdt addr ${fdt_addr_r}
 
-#if test "x{overlays}" != "x"; then
-#    for overlay in ${overlays}; do
-#        fdt resize ${overlay_resize}
-#        load ${devtype} ${devnum}:1 ${loadaddr} ${prefix}rockchip/overlays/${board}/${overlay}.dtbo \
-#                && fdt apply ${loadaddr}
-#    done
-#fi
+if test "x{overlays}" != "x"; then
+    for overlay in ${overlays}; do
+        fdt resize ${overlay_resize}
+        load ${devtype} ${devnum}:1 ${loadaddr} ${prefix}rockchip/overlays/${board}/${overlay}.dtbo \
+                && fdt apply ${loadaddr}
+    done
+fi
 
 load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}Image \
 && unzip ${ramdisk_addr_r} ${kernel_addr_r} \

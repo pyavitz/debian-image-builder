@@ -74,28 +74,24 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	p2_extlinux;
 	bcm2711_config > /dev/null 2>&1;
 fi
-if [[ "$BOARD" == "odroidm1" ]]; then
+if [[ "$BOOTCMD" == "odroidm1" ]]; then
 	if [[ `grep -o '^....' "kernel.txt"` == "4.19" ]]; then
-		cp files/boot/${BOARD}-vd-boot.cmd p1/boot.cmd;
+		cp files/boot/${BOOTCMD}-vd-boot.cmd p1/boot.cmd;
 	else
-		cp files/boot/${BOARD}-ml-boot.cmd p1/boot.cmd;
-	fi
-	if [ -f files/boot/${BOARD}-config.ini ]; then
-		cp files/boot/${BOARD}-config.ini p1/config.ini;
-	fi
-	if [ -f p1/boot.cmd ]; then
-		sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
-		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+		cp files/boot/${BOOTCMD}-ml-boot.cmd p1/boot.cmd;
 	fi
 fi
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	if [ -f files/boot/${FAMILY_EXT}n2-boot.cmd ]; then
-		cp files/boot/${FAMILY_EXT}n2-boot.cmd p1/boot.cmd;
+if [[ "$BOOTCMD" == "odroidn2" ]]; then
+	if [ -f files/boot/${BOOTCMD}-boot.cmd ]; then
+		cp files/boot/${BOOTCMD}-boot.cmd p1/boot.cmd;
 	fi
-	if [ -f p1/boot.cmd ]; then
-		sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
-		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
-	fi
+fi
+if [ -f files/boot/${BOOTCMD}-config.ini ]; then
+	cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
+fi
+if [ -f p1/boot.cmd ]; then
+	sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
+	mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
 fi
 echo ""
 sleep 1s
