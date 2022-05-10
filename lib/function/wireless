@@ -107,7 +107,7 @@ echo_done
 
 rtl8811cu(){
 if [[ "$MAINTAINER" == "hardkernel" ]]; then
-	rm -fdr drivers/net/wireless/rtl8821cu;
+	rm -fdr drivers/net/wireless/{rtl8821cu,rtl8821CU};
 fi
 rm -fdr drivers/net/wireless/rtl8811cu
 mkdir -p drivers/net/wireless/rtl8811cu
@@ -120,6 +120,8 @@ sed -i "s/^CONFIG_MP_VHT_HW_TX_MODE.*/CONFIG_MP_VHT_HW_TX_MODE = n/" drivers/net
 if [[ "$MAINTAINER" == "hardkernel" ]]; then
 	sed -i 's/source "drivers\/net\/wireless\/rtl8821cu\/Kconfig"//g' drivers/net/wireless/Kconfig;
 	sed -i 's/obj-$(CONFIG_RTL8821CU) += rtl8821cu\///g' drivers/net/wireless/Makefile;
+	sed -i 's/source "drivers\/net\/wireless\/rtl8821CU\/Kconfig"//g' drivers/net/wireless/Kconfig;
+	sed -i 's/obj-$(CONFIG_RTL8821CU) += rtl8821CU\///g' drivers/net/wireless/Makefile;
 fi
 echo "obj-\$(CONFIG_RTL8821CU) += rtl8811cu/" >> drivers/net/wireless/Makefile
 sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8811cu\/Kconfig"' drivers/net/wireless/Kconfig
