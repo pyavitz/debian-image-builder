@@ -112,32 +112,35 @@ systemctl enable leds
 tweaks_service(){
 cd ~
 if [[ "$BOARD" == "lepotato" ]]; then
-	mv -f lepotato-tweaks /usr/bin/lepotato-tweaks
-	chmod +x /usr/bin/lepotato-tweaks
+	mv -f lepotato-tweaks /usr/bin/lepotato-tweaks;
+	chmod +x /usr/bin/lepotato-tweaks;
 	chown root:root /usr/bin/lepotato-tweaks;
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f odroid-tweaks /usr/bin/odroid-tweaks
-	chmod +x /usr/bin/odroid-tweaks
+	echo "overclock=0" > /etc/opt/overclock.txt;
+	mv -f odroid-tweaks /usr/bin/odroid-tweaks;
+	mv -f irq-tweaks /usr/bin/odroid-tweaks;
+	chmod +x /usr/bin/odroid-tweaks;
+	chmod +x /usr/bin/irq-tweaks;
 	chown root:root /usr/bin/odroid-tweaks;
+	chown root:root /usr/bin/irq-tweaks;
 fi
 if [[ "$BOARD" == "nanopc" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks
-	chmod +x /usr/bin/rk3399-tweaks
+	echo "overclock=0" > /etc/opt/overclock.txt;
+	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks;
+	chmod +x /usr/bin/rk3399-tweaks;
 	chown root:root /usr/bin/rk3399-tweaks;
 fi
 if [[ "$BOARD" == "rockpro64" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks
-	chmod +x /usr/bin/rk3399-tweaks
+	echo "overclock=0" > /etc/opt/overclock.txt;
+	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks;
+	chmod +x /usr/bin/rk3399-tweaks;
 	chown root:root /usr/bin/rk3399-tweaks;
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f rzero-tweaks /usr/bin/rzero-tweaks
-	chmod +x /usr/bin/rzero-tweaks
+	echo "overclock=0" > /etc/opt/overclock.txt;
+	mv -f rzero-tweaks /usr/bin/rzero-tweaks;
+	chmod +x /usr/bin/rzero-tweaks;
 	chown root:root /usr/bin/rzero-tweaks;
 fi
 
@@ -181,6 +184,23 @@ StandardError=journal+console
 WantedBy=multi-user.target
 EOF
 systemctl enable tweaks
+
+tee /etc/systemd/system/irq-tweaks.service <<EOF
+[Unit]
+Description=ODROID IRQ Tweaks
+ConditionFileIsExecutable=/usr/bin/irq-tweaks
+After=rc-local.service
+Before=getty.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/irq-tweaks
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable irq-tweaks
 }
 
 rk3399_systemd(){

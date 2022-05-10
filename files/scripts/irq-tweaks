@@ -1,0 +1,7 @@
+#!/bin/bash
+
+USB3_IRQ=`cat /proc/interrupts | grep "xhci-hcd:usb1" | awk -F : '{print $1}' | sed s/" "//g`
+sleep 20s
+if [[ `grep -w "0-1" "/proc/irq/${USB3_IRQ}/smp_affinity_list"` ]]; then
+	echo "4" | tee /proc/irq/${USB3_IRQ}/smp_affinity_list;
+fi
