@@ -1,4 +1,6 @@
-### User Scripts
-
-* User Account (feature added to builder)
-* Petitboot (Odroid N2/+) (testing)
+### User Scripts 
+* If marked ^* than feature has been added to builder
+```sh
+Petitboot (Odroid N2/+) ^*
+User Account ^*
+```
