@@ -17,7 +17,7 @@ setenv fdtdir ""
 setenv fdtfile ""
 setenv fdt_addr_r ""
 
-load mmc ${devno}:1 ${loadaddr} config.ini && ini user_options ${loadaddr} && ini kernel ${loadaddr} && ini fdt ${loadaddr} && ini odroidn2 ${loadaddr}
+load mmc ${devno}:1 ${loadaddr} config.ini && ini user_options ${loadaddr}
 
 if test "x${overlay_profile}" != "x"; then
 	ini overlay_${overlay_profile} ${loadaddr}

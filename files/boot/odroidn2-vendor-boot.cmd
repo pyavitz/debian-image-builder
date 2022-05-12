@@ -20,6 +20,7 @@ setenv usbquirks ""
 setenv extra ""
 setenv console ""
 setenv display ""
+setenv cpu_freq ""
 
 # kernel
 setenv fk_kvers ""
@@ -31,24 +32,13 @@ setenv fdtdir ""
 setenv fdtfile ""
 setenv fdt_addr_r ""
 
-if test "${variant}" = "n2_plus"; then
-        setenv max_freq_a73 "2208"
-        setenv max_freq_a53 "1908"
-else
-        setenv max_freq_a73 "1800"
-        setenv max_freq_a53 "1896"
-fi
-
-setenv maxcpus "6"
-setenv bootargs "${bootargs} max_freq_a53=${max_freq_a53} max_freq_a73=${max_freq_a73} maxcpus=${maxcpus}"
-
-load mmc ${devno}:1 ${loadaddr} config.ini && ini user_options ${loadaddr} && ini kernel ${loadaddr} && ini fdt ${loadaddr} && ini odroidn2 ${loadaddr}
+load mmc ${devno}:1 ${loadaddr} config.ini && ini user_options ${loadaddr}
 
 if test "x${overlay_profile}" != "x"; then
 	ini overlay_${overlay_profile} ${loadaddr}
 fi
 
-setenv bootargs "${bootargs} ${console} ro root=${uuid} net.ifnames=0 rootfstype=${rootfstype} fsck.repair=yes loglevel=${verbose} ${extra} ${usbquirks} ${display} rootwait"
+setenv bootargs "${console} ro root=${uuid} net.ifnames=0 rootfstype=${rootfstype} fsck.repair=yes loglevel=${verbose} ${extra} ${usbquirks} ${display} ${cpu_freq} rootwait"
 
 if test -z "${distro_bootpart}"; then
 	setenv partition ${bootpart}
