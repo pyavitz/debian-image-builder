@@ -75,23 +75,34 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	bcm2711_config > /dev/null 2>&1;
 fi
 if [[ "$BOOTCMD" == "odroidm1" ]]; then
-	if [[ `grep -o '^....' "kernel.txt"` == "4.19" ]]; then
-		cp files/boot/${BOOTCMD}-vd-boot.cmd p1/boot.cmd;
+	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^....'`
+	if [[ "$VENDOR_KERNEL" == "4.19" ]]; then
+		cp files/boot/${BOOTCMD}-vendor-boot.cmd p1/boot.cmd;
+		cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
 	else
-		cp files/boot/${BOOTCMD}-ml-boot.cmd p1/boot.cmd;
+		cp files/boot/${BOOTCMD}-boot.cmd p1/boot.cmd;
+		cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
+
+	fi
+	if [ -f p1/boot.cmd ]; then
+		sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
+		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
 	fi
 fi
 if [[ "$BOOTCMD" == "odroidn2" ]]; then
-	if [ -f files/boot/${BOOTCMD}-boot.cmd ]; then
+	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^...'`
+	if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
+		cp files/boot/${BOOTCMD}-vendor-boot.cmd p1/boot.cmd;
+		cp files/boot/${BOOTCMD}-vendor-config.ini p1/config.ini;
+	else
 		cp files/boot/${BOOTCMD}-boot.cmd p1/boot.cmd;
+		cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
 	fi
-fi
-if [ -f files/boot/${BOOTCMD}-config.ini ]; then
-	cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
-fi
-if [ -f p1/boot.cmd ]; then
-	sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
-	mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+	if [ -f p1/boot.cmd ]; then
+		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
+		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
+		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+	fi
 fi
 echo ""
 sleep 1s
