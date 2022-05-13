@@ -7,12 +7,10 @@ setenv usbquirks ""
 setenv extra ""
 setenv console ""
 
-# kernel
 setenv fk_kvers ""
 setenv initrd ""
 setenv kernel_addr_r ""
-
-# fdt
+setenv ramdisk_addr_r ""
 setenv fdtdir ""
 setenv fdtfile ""
 setenv fdt_addr_r ""
