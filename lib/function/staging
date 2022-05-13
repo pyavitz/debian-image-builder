@@ -41,7 +41,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	p
 	1
 	2048
-	524287
+	526335
 	a
 	c
 	t
@@ -49,16 +49,22 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	n
 	p
 	2
-	524288
+	526336
 	
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 else
+	if [[ "$FAMILY" == "amlogic" ]]; then
+		OFFSET="2248";
+	fi
+	if [[ "$FAMILY" == "rockchip" ]]; then
+		OFFSET="2048";
+	fi
 	echo -e "o
 	n
 	p
 	1
-	2048
+	${OFFSET}
 	526335
 	n
 	p
@@ -72,7 +78,7 @@ IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}p1"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
 partprobe "${IMAGE_LOOP_DEV}"
-if [[ "$BOARD" == "raspi4" ]]; then
+if [[ "$FAMILY" == "broadcom" ]]; then
 	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
 else
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
@@ -81,6 +87,9 @@ mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
+if [[ "$FAMILY_EXT" == "odroid" ]]; then
+	flash_vendor-uboot;
+fi
 sync
 umount p2
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
@@ -113,7 +122,7 @@ EOF
 }
 
 p2_fstab(){
-if [[ "$BOARD" == "raspi4" ]]; then
+if [[ "$FAMILY" == "broadcom" ]]; then
 	FSTYPE="vfat	defaults 0 2";
 else
 	FSTYPE="ext2	rw,relatime,errors=continue 0 2";
@@ -178,7 +187,7 @@ if [ $verbose -eq 1 ]; then
 else
 	p2_uuid > /dev/null 2>&1;
 fi
-if [[ "$BOARD" == "raspi4" ]]; then
+if [[ "$FAMILY" == "broadcom" ]]; then
 	bcm2711_config > /dev/null 2>&1;
 	if [ -e output/raspi4/u-boot.bin ]; then
 		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
