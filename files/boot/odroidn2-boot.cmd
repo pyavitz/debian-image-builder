@@ -38,11 +38,5 @@ load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${prefix}${fk_kvers} \
 load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${prefix}${fk_kvers} \
 && load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${prefix}${fdtdir}/${fdtfile} \
 && load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}${initrd} \
-&& echo "Booting ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
-&& booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
-
-load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${prefix}${fk_kvers} \
-&& load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${prefix}${fdtdir}/${fdtfile} \
-&& load ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${prefix}${initrd} \
 && echo "Booting from ${devtype} ${devnum}:${partition}..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
