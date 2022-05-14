@@ -1,0 +1,46 @@
+diff -Naur a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-05-05 10:22:03.324486537 -0400
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-05-05 10:20:15.156430409 -0400
+@@ -262,7 +262,13 @@
+ 	if (IS_ERR(rockchip->rst_gpio))
+ 		return PTR_ERR(rockchip->rst_gpio);
+ 
+-	return 0;
++	rockchip->rst = devm_reset_control_array_get_exclusive(&pdev->dev);
++	if (IS_ERR(rockchip->rst))
++		return dev_err_probe(&pdev->dev, PTR_ERR(rockchip->rst),
++				     "failed to get reset lines\n");
++
++	return reset_control_assert(rockchip->rst);
++
+ }
+ 
+ static int rockchip_pcie_phy_init(struct rockchip_pcie *rockchip)
+@@ -298,18 +304,6 @@
+ 	phy_power_off(rockchip->phy);
+ }
+ 
+-static int rockchip_pcie_reset_control_release(struct rockchip_pcie *rockchip)
+-{
+-	struct device *dev = rockchip->pci.dev;
+-
+-	rockchip->rst = devm_reset_control_array_get_exclusive(dev);
+-	if (IS_ERR(rockchip->rst))
+-		return dev_err_probe(dev, PTR_ERR(rockchip->rst),
+-				     "failed to get reset lines\n");
+-
+-	return reset_control_deassert(rockchip->rst);
+-}
+-
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.link_up = rockchip_pcie_link_up,
+ 	.start_link = rockchip_pcie_start_link,
+@@ -360,7 +354,7 @@
+ 	if (ret)
+ 		goto disable_regulator;
+ 
+-	ret = rockchip_pcie_reset_control_release(rockchip);
++	ret = reset_control_deassert(rockchip->rst);
+ 	if (ret)
+ 		goto deinit_phy;
+ 
