@@ -75,6 +75,9 @@ Rootfs XL:	# Developer rootfs tarball
 Compress img:	# Auto compress img > img.xz
 User scripts:	# Review the README in the files/userscripts directory
 User service:	# Create user during first boot (bypass the user information above)
+
+Odroid N2/+
+petitboot:	# Enable boot option
 ```
 
 #### User defconfig
@@ -94,11 +97,6 @@ Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```sh
 # change from 0 to 1
 aircrack=0
-```
-#### Odroid N2/+ petitboot
-```sh
-# change from 0 to 1
-petitboot=0
 ```
 #### Amlogic eMMC boot (u-boot only)
 ```sh
