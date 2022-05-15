@@ -36,6 +36,8 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 p2_partition(){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$FAMILY" == "broadcom" ]]; then
+	P_BOOT="p1"
+	P_ROOTFS="p2"
 	echo -e "o
 	n
 	p
@@ -53,18 +55,15 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-else
-	if [[ "$FAMILY" == "amlogic" ]]; then
-		OFFSET="2248";
-	fi
-	if [[ "$FAMILY" == "rockchip" ]]; then
-		OFFSET="2048";
-	fi
+fi
+if [[ "$FAMILY" == "amlogic" ]]; then
+	P_BOOT="p1"
+	P_ROOTFS="p2"
 	echo -e "o
 	n
 	p
 	1
-	${OFFSET}
+	2248
 	526335
 	n
 	p
@@ -74,9 +73,39 @@ else
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 fi
+if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 1 ]; then
+	P_BOOT="p1"
+	P_ROOTFS="p2"
+	echo -e "o
+	n
+	p
+	1
+	2048
+	526335
+	n
+	p
+	2
+	526336
+
+	p
+	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
+if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
+	P_UBOOT="p1"
+	P_BOOT="p2"
+	P_ROOTFS="p3"
+	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 2:10240:+256MB "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 3: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -p "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}p1"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p2"
+if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
+	IMAGE_LOOP_DEV_UBOOT="${IMAGE_LOOP_DEV}${P_UBOOT}";
+fi
+IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
 if [[ "$FAMILY" == "broadcom" ]]; then
 	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
@@ -88,6 +117,9 @@ mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
+	flash_vendor-uboot;
+fi
+if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
 	flash_vendor-uboot;
 fi
 sync

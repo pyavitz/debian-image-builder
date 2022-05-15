@@ -44,8 +44,14 @@ rm -f kpart.txt
 }
 
 p2_kpartx(){
-echo 'LOOP1="/dev/mapper/' > kpart1
-echo 'LOOP2="/dev/mapper/' >> kpart1
+if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
+	echo 'LOOP0="/dev/mapper/' > kpart1;
+	echo 'LOOP1="/dev/mapper/' >> kpart1;
+	echo 'LOOP2="/dev/mapper/' >> kpart1;
+else
+	echo 'LOOP1="/dev/mapper/' > kpart1;
+	echo 'LOOP2="/dev/mapper/' >> kpart1;
+fi
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
 echo "$kpartx"
@@ -55,8 +61,14 @@ if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
 else
 	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
 fi
-echo '"' > kpart3
-echo '"' >> kpart3
+if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
+	echo '"' > kpart3;
+	echo '"' >> kpart3;
+	echo '"' >> kpart3;
+else
+	echo '"' > kpart3;
+	echo '"' >> kpart3;
+fi
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
@@ -85,7 +97,8 @@ if [[ "$BOOTCMD" == "odroidm1" ]]; then
 
 	fi
 	if [ -f p1/boot.cmd ]; then
-		sed -i "s/root=UUID=/root=UUID=${ROOT_UUID}/g" p1/boot.cmd;
+		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
+		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
 		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
 	fi
 fi

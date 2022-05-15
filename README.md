@@ -76,7 +76,7 @@ Compress img:	# Auto compress img > img.xz
 User scripts:	# Review the README in the files/userscripts directory
 User service:	# Create user during first boot (bypass the user information above)
 
-Odroid N2/+
+Odroids
 petitboot:	# Enable boot option
 ```
 
