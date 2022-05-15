@@ -95,10 +95,10 @@ if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
 	P_BOOT="p2"
 	P_ROOTFS="p3"
 	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 1:2048:10239:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 2:10240:+256MB "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 2:32767:+256MB "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 	sgdisk -n 3: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -p "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
