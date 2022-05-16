@@ -3,26 +3,39 @@ if [[ "$FAMILY" == "allwinner" ]]; then
 	OFFSET="2048";
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	OFFSET="2248";
+	OFFSET="4096";
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	OFFSET="32767";
+	OFFSET="32768";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-echo -e "o
-n
-p
-1
-${OFFSET}
-a
-t
-b
-5859374
+if [[ "$BOARD" == "odroidm1" ]]; then
+	P_UBOOT="p1";
+	P_ROOTFS="p2";
+	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 2:${OFFSET}: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+else
+	P_ROOTFS="p1";
+	echo -e "o
+	n
+	p
+	1
+	${OFFSET}
+	a
+	t
+	b
+	5859374
 
-p
-w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	p
+	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
+if [[ "$BOARD" == "odroidm1" ]]; then
+	IMAGE_LOOP_DEV_UBOOT="${IMAGE_LOOP_DEV}${P_UBOOT}";
+fi
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
@@ -34,6 +47,15 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
 p2_partition(){
+if [[ "$FAMILY" == "amlogic" ]]; then
+	OFFSET="4096";
+fi
+if [[ "$FAMILY" == "broadcom" ]]; then
+	OFFSET="2048";
+fi
+if [[ "$FAMILY" == "rockchip" ]]; then
+	OFFSET="32768";
+fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$FAMILY" == "broadcom" ]]; then
 	P_BOOT="p1"
@@ -42,7 +64,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	n
 	p
 	1
-	2048
+	${OFFSET}
 	526335
 	a
 	c
@@ -55,15 +77,14 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-fi
-if [[ "$FAMILY" == "amlogic" ]]; then
+else
 	P_BOOT="p1"
 	P_ROOTFS="p2"
 	echo -e "o
 	n
 	p
 	1
-	2248
+	${OFFSET}
 	526335
 	n
 	p
@@ -72,38 +93,8 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-fi
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 1 ]; then
-	P_BOOT="p1"
-	P_ROOTFS="p2"
-	echo -e "o
-	n
-	p
-	1
-	32767
-	526335
-	n
-	p
-	2
-	526336
-
-	p
-	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-fi
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
-	P_UBOOT="p1"
-	P_BOOT="p2"
-	P_ROOTFS="p3"
-	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 2:32767:+256MB "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 3: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
-	IMAGE_LOOP_DEV_UBOOT="${IMAGE_LOOP_DEV}${P_UBOOT}";
-fi
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
@@ -117,9 +108,6 @@ mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	flash_vendor-uboot;
-fi
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
 	flash_vendor-uboot;
 fi
 sync
@@ -186,7 +174,6 @@ else
 	make cleanup > /dev/null 2>&1;
 	exit;
 fi
-
 mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p p1/usr/bin
@@ -220,12 +207,12 @@ else
 	p2_uuid > /dev/null 2>&1;
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
-	bcm2711_config > /dev/null 2>&1;
-	if [ -e output/raspi4/u-boot.bin ]; then
+	bcm2711-txt > /dev/null 2>&1;
+	if [ -f output/raspi4/u-boot.bin ]; then
 		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
 	else
 		echo -e "${YLW}Missing u-boot.bin${FIN}."
-		exit;
+		exit 1;
 	fi
 fi
 if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then

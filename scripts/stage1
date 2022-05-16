@@ -18,6 +18,14 @@ if [[ `grep -w 'BOARD="odroidn2plus"' "board.txt"` ]]; then
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
 	fi
 fi
+if [[ `grep -w 'BOARD="odroidm1"' "board.txt"` ]]; then
+	if [ $petitboot -eq 0 ]; then
+		sed -i 's/IMGSIZE="3000MB"/IMGSIZE="2048MB"/g' board.txt;
+	fi
+	if [ $petitboot -eq 1 ]; then
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
+	fi
+fi
 source board.txt > /dev/null 2>&1
 if [ $uscripts -eq 1 ]; then
 	uscripts_pre-stage1;
@@ -186,6 +194,7 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	e4defrag -c p2;
 	umount p2;
 	umount p1;
+	echo ""
 	# finish
 	losetup -d "${IMAGE_LOOP_DEV}";
 	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";

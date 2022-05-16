@@ -16,7 +16,12 @@ fi
 }
 
 p1_kpartx(){
-echo 'LOOP1="/dev/mapper/' > kpart1
+if [[ "$P_ROOTFS" == "p2" ]]; then
+	echo 'LOOP0="/dev/mapper/' > kpart1;
+	echo 'LOOP1="/dev/mapper/' >> kpart1;
+else
+	echo 'LOOP1="/dev/mapper/' > kpart1;
+fi
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
 echo "$kpartx"
@@ -26,7 +31,12 @@ if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
 else
 	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
 fi
-echo '"' > kpart3
+if [[ "$P_ROOTFS" == "p2" ]]; then
+	echo '"' > kpart3;
+	echo '"' >> kpart3;
+else
+	echo '"' > kpart3;
+fi
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
@@ -48,14 +58,8 @@ rm -f kpart.txt
 }
 
 p2_kpartx(){
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
-	echo 'LOOP0="/dev/mapper/' > kpart1;
-	echo 'LOOP1="/dev/mapper/' >> kpart1;
-	echo 'LOOP2="/dev/mapper/' >> kpart1;
-else
-	echo 'LOOP1="/dev/mapper/' > kpart1;
-	echo 'LOOP2="/dev/mapper/' >> kpart1;
-fi
+echo 'LOOP1="/dev/mapper/' > kpart1
+echo 'LOOP2="/dev/mapper/' >> kpart1
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
 echo "$kpartx"
@@ -65,14 +69,8 @@ if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
 else
 	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
 fi
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
-	echo '"' > kpart3;
-	echo '"' >> kpart3;
-	echo '"' >> kpart3;
-else
-	echo '"' > kpart3;
-	echo '"' >> kpart3;
-fi
+echo '"' > kpart3
+echo '"' >> kpart3
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
@@ -80,15 +78,13 @@ BOOT="${LOOP1}"
 mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1
-if [[ "$BOARD" == "raspi4" ]]; then
-	rm -f p1/extlinux/extlinux.conf;
-	rm -f p1/config.txt;
-fi
 find_p2_partuuid
 echo ""
 if [[ "$BOARD" == "raspi4" ]]; then
+	rm -f p1/extlinux/extlinux.conf;
+	rm -f p1/config.txt;
 	p2_extlinux;
-	bcm2711_config > /dev/null 2>&1;
+	config-txt > /dev/null 2>&1;
 fi
 if [[ "$BOOTCMD" == "odroidm1" ]]; then
 	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^....'`
