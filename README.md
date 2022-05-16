@@ -52,7 +52,6 @@ U-Boot and Linux
 U-Boot:         # Supported: v2022.04
 Branch:         # Supported: 5.15 and current stable
 Build:          # Kernel build version number
-RC:             # Any x.y-rc
 Menuconfig:     # Run uboot and kernel menuconfig
 Compiler:       # Defaults at gcc-10 
 Crosscompile:   # 1 cross compile | 0 native compile

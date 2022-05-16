@@ -30,6 +30,17 @@ else
 fi
 }
 
+# mainline
+download(){
+if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	mainline_download;
+	mainline_extract;
+else
+	check_stable;
+fi
+}
+
+# lts / stable
 check_stable(){
 if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	stable_download;
@@ -39,7 +50,11 @@ else
 fi
 }
 
+# github
 check_odroid(){
+echo ""
+echo -e "${WHT}Notes${FIN}: hardkernel == odroidg12 and odroidm1"
+echo -e "         tobetter == odroid"
 echo ""
 echo -e "${WHT}Maintainers${FIN}: hardkernel or tobetter"
 echo -e "${WHT}Branches${FIN}: odroid, odroidg12 and odroidm1"

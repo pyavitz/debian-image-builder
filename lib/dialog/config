@@ -21,7 +21,6 @@ UBOOT_VERSION="v2022.04"
 VERSION="5.15.37"
 BUILD_VERSION="1"
 menuconfig="0"
-rc="0"
 COMPILER="gcc-10"
 crosscompile="1"
 ccache="0"
@@ -61,32 +60,31 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
         "U-Boot:"   	11 1    "$UBOOT_VERSION"	11 9 13 0 \
         "Branch:"   	12 1    "$VERSION"		12 9 10 0 \
         "Build:"   	13 1    "$BUILD_VERSION"	13 8 4 0 \
-        "RC:"   	14 1    "$rc"			14 5 2 0 \
-	"Menuconfig:"	15 1	"$menuconfig"		15 13 2 0 \
-	"Compiler:"	16 1	"$COMPILER"		16 11 9 0 \
-	"Crosscompile:" 17 1	"$crosscompile"		17 15 2 0 \
-	"Caching on:"	18 1	"$ccache"	 	18 13 2 0 \
-	""		19 1	""			19 14 0 0 \
-	"Wireless"	20 1	""			20 14 0 0 \
-	"rtl88XXau:"	21 1	"$rtl88XXau"		21 12 2 0 \
-	"rtl88X2bu:"	22 1	"$rtl88X2bu"		22 12 2 0 \
-	"rtl88XXcu:"	23 1	"$rtl88XXcu"		23 12 2 0 \
-	"rtl8188eu:"	24 1	"$rtl8188eu"		24 12 2 0 \
-	""		25 1	""			25 14 0 0 \
-	"Customize"	26 1	""			26 14 0 0 \
-	"Defconfig:"	27 1	"$custom_defconfig"	27 12 2 0 \
-	"Name:"		28 1	"$MYCONFIG"		28 7 26 0 \
-	""		29 1	""			29 14 0 0 \
-	"User Options"	30 1	""			30 14 0 0 \
-	"Logging:"	31 1	"$logging"		31 10 2 0 \
-	"Verbosity:"	32 1	"$verbose"		32 12 2 0 \
-	"Rootfs XL:"	33 1	"$rootfsxl"		33 12 2 0 \
-	"Compress img:"	34 1	"$compress_img"		34 15 2 0 \
-	"User scripts:"	35 1	"$uscripts"		35 15 2 0 \
-	"User service:"	36 1	"$useracct"		36 15 2 0 \
-	""		37 1	""			37 14 0 0 \
-	"Odroids"	38 1	""			38 14 0 0 \
-	"Petitboot:"	39 1	"$petitboot"		39 12 2 0 \
+	"Menuconfig:"	14 1	"$menuconfig"		14 13 2 0 \
+	"Compiler:"	15 1	"$COMPILER"		15 11 9 0 \
+	"Crosscompile:" 16 1	"$crosscompile"		16 15 2 0 \
+	"Caching on:"	17 1	"$ccache"	 	17 13 2 0 \
+	""		18 1	""			18 14 0 0 \
+	"Wireless"	19 1	""			19 14 0 0 \
+	"rtl88XXau:"	20 1	"$rtl88XXau"		20 12 2 0 \
+	"rtl88X2bu:"	21 1	"$rtl88X2bu"		21 12 2 0 \
+	"rtl88XXcu:"	22 1	"$rtl88XXcu"		22 12 2 0 \
+	"rtl8188eu:"	23 1	"$rtl8188eu"		23 12 2 0 \
+	""		24 1	""			24 14 0 0 \
+	"Customize"	25 1	""			25 14 0 0 \
+	"Defconfig:"	26 1	"$custom_defconfig"	26 12 2 0 \
+	"Name:"		27 1	"$MYCONFIG"		27 7 26 0 \
+	""		28 1	""			28 14 0 0 \
+	"User Options"	29 1	""			29 14 0 0 \
+	"Logging:"	30 1	"$logging"		30 10 2 0 \
+	"Verbosity:"	31 1	"$verbose"		31 12 2 0 \
+	"Rootfs XL:"	32 1	"$rootfsxl"		32 12 2 0 \
+	"Compress img:"	33 1	"$compress_img"		33 15 2 0 \
+	"User scripts:"	34 1	"$uscripts"		34 15 2 0 \
+	"User service:"	35 1	"$useracct"		35 15 2 0 \
+	""		36 1	""			36 14 0 0 \
+	"Odroids"	37 1	""			37 14 0 0 \
+	"Petitboot:"	38 1	"$petitboot"		38 12 2 0 \
 2>&1 1>&3)
 
 # close fd
@@ -104,7 +102,6 @@ echo DISTRO_VERSION='"' >> tmp0
 echo UBOOT_VERSION='"' >> tmp0
 echo VERSION='"' >> tmp0
 echo BUILD_VERSION='"' >> tmp0
-echo rc= >> tmp0
 echo menuconfig= >> tmp0
 echo COMPILER='"' >> tmp0
 echo crosscompile= >> tmp0
@@ -141,7 +138,7 @@ echo "echo -n '${TIMEZONE}' > /etc/timezone" >> tmp0
 echo "}" >> tmp0
 echo NAMESERVER1='"'${USER_NAMESERVER1}'"' >> tmp0
 echo NAMESERVER2='"'${USER_NAMESERVER2}'"' >> tmp0
-echo builder=4.1 >> tmp0
+echo builder=4.2 >> tmp0
 echo '"' > tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
@@ -152,7 +149,6 @@ echo '"' >> tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
-echo >> tmp2
 echo >> tmp2
 echo '"' >> tmp2
 echo >> tmp2
@@ -170,14 +166,14 @@ rm -f tmp0 tmp1 tmp2
 sed -i '1i### USER INFORMATION' userdata.txt
 sed -i '7i### DISTRIBUTION AND RELEASE' userdata.txt
 sed -i '10i### UBOOT AND LINUX KERNEL' userdata.txt
-sed -i '19i### WIRELESS' userdata.txt
-sed -i '24i### CUSTOM' userdata.txt
-sed -i '36i### COMPILER TUNING' userdata.txt
-sed -i '39i### WHOAMI AND HOST' userdata.txt
-sed -i '42i### LOCALES' userdata.txt
-sed -i '50i### TIMEZONE' userdata.txt
-sed -i '55i### NAME SERVER' userdata.txt
-sed -i '58i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '18i### WIRELESS' userdata.txt
+sed -i '23i### CUSTOM' userdata.txt
+sed -i '35i### COMPILER TUNING' userdata.txt
+sed -i '38i### WHOAMI AND HOST' userdata.txt
+sed -i '41i### LOCALES' userdata.txt
+sed -i '49i### TIMEZONE' userdata.txt
+sed -i '54i### NAME SERVER' userdata.txt
+sed -i '57i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # clear screen
 clear -x
