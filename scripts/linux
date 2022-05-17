@@ -56,12 +56,24 @@ kernel_source
 
 if [ -e ${KERNEL}-${VERSION} ]; then
 	echo "";
-	echo -e "${PNK}Cleaning${FIN} ...";
+	echo -en "${WHT}Cleaning${FIN} ";
 	rm -fdr ${KERNEL}-${VERSION};
+	echo_bdone
 fi
 
 # Download kernel and extract
-download
+if [ -e ${KERNEL}-${VERSION}.orig ]; then
+	NOBACKUP=`grep -w "VERSION" "../userdata.txt" | sed 's/[0-9]*//g'`
+	if [[ "$NOBACKUP" == "..y"  ]]; then
+		:;
+	else
+		echo -en "${WHT}Restoring${FIN} ";
+		cp -r ${KERNEL}-${VERSION}.orig ${KERNEL}-${VERSION};
+		echo_bdone;
+	fi
+else
+	download;
+fi
 
 # Setup
 if [[ "$SETUP" == "vendor" ]]; then
