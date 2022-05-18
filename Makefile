@@ -65,7 +65,6 @@ define create_rootfs
 	@chmod +x ${RFSX}
 	@${ROOTFS}
 endef
-
 # do not edit above this line
 
 help:
@@ -73,7 +72,7 @@ help:
 	@echo "\e[1;31m                  Debian Image Builder\e[0m"
 	@echo "\e[1;37m                  ********************"
 	@echo "Boards:\e[0m"
-	@echo "  Allwinner:  nanopim1 nanopineo nanopi opione opipc tritium"
+	@echo "  Allwinner:  nanopim1 nanopineo nanopi opione opipc pine64 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidn2 odroidn2plus radxazero"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc odroidm1 renegade rock64 rockpro64"
