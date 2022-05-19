@@ -53,10 +53,10 @@ fi
 # github
 check_odroid(){
 echo ""
-echo -e "${WHT}Notes${FIN}: hardkernel == odroidg12 and odroidm1"
-echo -e "         tobetter == odroid"
+echo -e "hardkernel == odroid odroidg12 odroidm1"
+echo -e "tobetter == odroid"
 echo ""
-echo -e "${WHT}Maintainers${FIN}: hardkernel or tobetter"
+echo -e "${WHT}Maintainers${FIN}: hardkernel / tobetter"
 echo -e "${WHT}Branches${FIN}: odroid, odroidg12 and odroidm1"
 echo -en "Maintainer: "
 read MAINTAINER
@@ -75,7 +75,7 @@ if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/linux/${REPO_K
 	odroid_download;
 	odroid_extract;
 else
-	echo ""
+	echo "";
 	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?";
 	exit;
 fi
@@ -146,6 +146,9 @@ echo ""
 echo_extract
 pv ${ODKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
 mv -f ${ODKERNEL}-${VERSION} linux-${VERSION}
+if [ -e linux-${VERSION}/debian ]; then
+	rm -fdr linux-${VERSION}/debian;
+fi
 }
 
 setup(){
@@ -219,11 +222,11 @@ vendor_config(){
 echo_odroid_defconfig
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$VERSION" == "4.9.y" ]]; then
 	rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
-	cp -f ../${DEF}/odroid-4.9.y_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
 fi
 if [[ "$BOARD" == "odroidm1" ]] && [[ "$VERSION" == "4.19.y" ]]; then
 	rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
-	cp -f ../${DEF}/odroidm1-4.19.y_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+	cp -f ../${DEF}/${BOARD}-${VERSION}_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
 fi
 rtl8812au_module
 rtl88x2bu_module
