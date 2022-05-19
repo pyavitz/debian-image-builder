@@ -1,6 +1,6 @@
 diff -Naur a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
---- a/sound/soc/meson/aiu-codec-ctrl.c	2021-12-04 20:30:56.553595732 -0500
-+++ b/sound/soc/meson/aiu-codec-ctrl.c	2021-12-04 20:31:17.839185510 -0500
+--- a/sound/soc/meson/aiu-codec-ctrl.c	2022-05-18 04:28:23.000000000 -0400
++++ b/sound/soc/meson/aiu-codec-ctrl.c	2022-05-19 10:44:34.350390104 -0400
 @@ -12,14 +12,60 @@
  #include "aiu.h"
  #include "meson-codec-glue.h"
@@ -127,7 +127,7 @@ diff -Naur a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
  
  	snd_soc_dapm_mux_update_power(dapm, kcontrol, mux, e, NULL);
  
- 	return 0;
+ 	return 1;
  }
  
 -static SOC_ENUM_SINGLE_DECL(aiu_hdmi_ctrl_mux_enum, AIU_HDMI_CLK_DATA_CTRL,
@@ -143,61 +143,3 @@ diff -Naur a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
  			  aiu_codec_ctrl_mux_put_enum);
  
  static const struct snd_soc_dapm_widget aiu_hdmi_ctrl_widgets[] = {
-diff -Naur a/sound/soc/meson/axg-tdm-interface.c b/sound/soc/meson/axg-tdm-interface.c
---- a/sound/soc/meson/axg-tdm-interface.c	2021-12-04 20:30:56.554595713 -0500
-+++ b/sound/soc/meson/axg-tdm-interface.c	2021-12-04 20:31:17.835185587 -0500
-@@ -351,13 +351,29 @@
- 	return 0;
- }
- 
--static int axg_tdm_iface_prepare(struct snd_pcm_substream *substream,
-+static int axg_tdm_iface_trigger(struct snd_pcm_substream *substream,
-+				 int cmd,
- 				 struct snd_soc_dai *dai)
- {
--	struct axg_tdm_stream *ts = snd_soc_dai_get_dma_data(dai, substream);
-+	struct axg_tdm_stream *ts =
-+		snd_soc_dai_get_dma_data(dai, substream);
- 
--	/* Force all attached formatters to update */
--	return axg_tdm_stream_reset(ts);
-+	switch (cmd) {
-+	case SNDRV_PCM_TRIGGER_START:
-+	case SNDRV_PCM_TRIGGER_RESUME:
-+	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
-+		axg_tdm_stream_start(ts);
-+		break;
-+	case SNDRV_PCM_TRIGGER_SUSPEND:
-+	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
-+	case SNDRV_PCM_TRIGGER_STOP:
-+		axg_tdm_stream_stop(ts);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return 0;
- }
- 
- static int axg_tdm_iface_remove_dai(struct snd_soc_dai *dai)
-@@ -397,8 +413,8 @@
- 	.set_fmt	= axg_tdm_iface_set_fmt,
- 	.startup	= axg_tdm_iface_startup,
- 	.hw_params	= axg_tdm_iface_hw_params,
--	.prepare	= axg_tdm_iface_prepare,
- 	.hw_free	= axg_tdm_iface_hw_free,
-+	.trigger	= axg_tdm_iface_trigger,
- };
- 
- /* TDM Backend DAIs */
-diff -Naur a/sound/soc/meson/meson-card-utils.c b/sound/soc/meson/meson-card-utils.c
---- a/sound/soc/meson/meson-card-utils.c	2021-12-04 20:30:56.555595694 -0500
-+++ b/sound/soc/meson/meson-card-utils.c	2021-12-04 20:31:17.833185626 -0500
-@@ -302,6 +302,7 @@
- 
- 	priv->card.owner = THIS_MODULE;
- 	priv->card.dev = dev;
-+	priv->card.driver_name = dev->driver->name;
- 	priv->match_data = data;
- 
- 	ret = snd_soc_of_parse_card_name(&priv->card, "model");
