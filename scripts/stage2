@@ -57,9 +57,11 @@ if [[ "$DISTRO" == "devuan" ]]; then
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} openresolv ifupdown rng-tools5;
-	# disable systemd-networkd and mask systemd-networkd-wait-online
-	systemctl disable systemd-networkd;
-	systemctl mask systemd-networkd-wait-online;
+	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+		# disable systemd-networkd and mask systemd-networkd-wait-online
+		systemctl disable systemd-networkd;
+		systemctl mask systemd-networkd-wait-online;
+	fi
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	apt install -y ${PKGS1} ${PKGS2} ${FIRMWARE} dbus-user-session libical3 resolvconf ntp haveged;
@@ -424,6 +426,13 @@ if [ $useracct -eq 0 ]; then
 	tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
 ${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
+fi
+
+# Remove zstd compression (not supported by vednor kernels)
+if [[ "$DISTRO" == "ubuntu" ]] && [[ "$DISTRO_VERSION" == "jammy" ]]; then
+	if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
+		sed 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf;
+	fi
 fi
 
 # Kernel
