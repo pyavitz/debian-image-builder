@@ -39,13 +39,13 @@ if [[ `command -v wget` ]]; then
 else
 	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 		echo -e "${WHT}Installing missing depends${FIN}."
-		sudo apt update
-		sudo apt upgrade -y
+		sudo apt update;
+		sudo apt upgrade -y;
 		sudo apt install -y wget;
 	else
-		echo_fail
-		echo ""
-		ierror
+		echo_fail;
+		echo "";
+		ierror;
 		exit > /dev/null 2>&1;
 	fi
 fi
@@ -54,12 +54,12 @@ fi
 internet_check(){
 echo -e -n "${WHT}Checking Internet Connection:${FIN} "
 if [[ `wget -S --spider https://github.com 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	echo_nok
+	echo_nok;
 	echo "";
 else
-	echo_fail
-	echo ""
-	ierror
+	echo_fail;
+	echo "";
+	ierror;
 	exit > /dev/null 2>&1;
 fi
 }
@@ -68,16 +68,16 @@ distro_check(){
 echo -e -n "${WHT}Checking Host Machine:${FIN} "
 sleep 1s
 if [[ `grep -w "jammy" "/etc/os-release"` ]]; then
-	echo_jammy
+	echo_jammy;
 	echo "";
 else
 	if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
-		echo_bullseye
+		echo_bullseye;
 		echo "";
 	else
-		echo_fail
-		echo ""
-		derror
+		echo_fail;
+		echo "";
+		derror;
 		exit > /dev/null 2>&1;
 	fi
 fi
@@ -88,27 +88,31 @@ depends_check
 internet_check
 distro_check
 echo ""
-echo -e "${WHT}Starting install ...${FIN}"
-sleep 2s
+echo -e "${WHT}Starting install${FIN} ..."
+sleep 1s
 
 if [[ `uname -m | grep x86_64` ]]; then
 	if [[ `command -v make` ]]; then
-		sudo apt update
+		sudo apt update;
+		sudo apt upgrade -y;
 		make ccompile;
 	else
-		sudo apt update
-		sudo apt install -y make
+		sudo apt update;
+		sudo apt upgrade -y;
+		sudo apt install -y make;
 		make ccompile;
 	fi
 fi
 
 if [[ `uname -m | grep aarch64` ]]; then
 	if [[ `command -v make` ]]; then
-		sudo apt update
+		sudo apt update;
+		sudo apt upgrade -y;
 		make ncompile;
 	else
-		sudo apt update
-		sudo apt install -y make
+		sudo apt update;
+		sudo apt upgrade -y;
+		sudo apt install -y make;
 		make ncompile;
 	fi
 fi
