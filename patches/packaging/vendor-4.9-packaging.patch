@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 --- a/scripts/package/builddeb	2022-02-28 02:53:10.000000000 -0500
-+++ b/scripts/package/builddeb	2022-05-08 12:05:37.606274427 -0400
++++ b/scripts/package/builddeb	2022-05-19 20:43:49.571679296 -0400
 @@ -31,7 +31,7 @@
  
  	# Create the package
@@ -20,7 +20,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  fi
  # Not all arches include the boot path in KBUILD_IMAGE
  if [ -e $KBUILD_IMAGE ]; then
-@@ -190,6 +193,23 @@
+@@ -190,6 +193,26 @@
  	$MAKE headers_install KBUILD_SRC= INSTALL_HDR_PATH="$libc_headers_dir/usr"
  fi
  
@@ -29,6 +29,9 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +fi
 +if [ -e $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb ]; then
 +	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb" "$tmpdir/boot/amlogic/meson64_odroidc4.dtb"
++fi
++if [ -e $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidhc4.dtb ]; then
++	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidhc4.dtb" "$tmpdir/boot/amlogic/meson64_odroidhc4.dtb";
 +fi
 +if [ -e $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb ]; then
 +	cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb" "$tmpdir/boot/amlogic/meson64_odroidn2.dtb"
@@ -44,7 +47,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -220,6 +240,17 @@
+@@ -220,6 +243,17 @@
  	chmod 755 "$tmpdir/DEBIAN/$script"
  done
  
@@ -62,7 +65,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Try to determine maintainer and email values
  if [ -n "$DEBEMAIL" ]; then
         email=$DEBEMAIL
-@@ -342,6 +373,45 @@
+@@ -342,6 +376,45 @@
  (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
