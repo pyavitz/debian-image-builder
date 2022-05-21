@@ -32,7 +32,7 @@ make config     # Create user data file
 make menu       # Open menu interface
 make dialogrc   # Set builder theme (optional)
 ```
-#### Config Menu
+#### Config Menu ([Linux kernel options](https://github.com/pyavitz/debian-image-builder/wiki/Building-vendor-kernels))
 * Review the userdata.txt file for further options: locales, timezone and nameserver(s)
 * 1 active | 0 inactive
 ```sh
