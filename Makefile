@@ -33,7 +33,7 @@ STG2=./scripts/stage2
 CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
-# boards
+# BOARDS
 BOARDS=$(shell sudo cp lib/boards/${board} board.txt)
 
 ifdef board
@@ -128,6 +128,20 @@ all:
 	$(call create_rootfs)
 	# Creating image
 	$(call build_image)
+
+# GITHUB
+ifdef branch
+include branch
+endif
+ifdef repo
+include repo
+endif
+
+repo:
+	@echo "$(repo)" > github.txt
+
+branch:
+	@echo "$(branch)" >> github.txt
 
 # MISCELLANEOUS
 menu:

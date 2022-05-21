@@ -46,34 +46,25 @@ if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1
 	stable_download;
 	stable_extract;
 else
-	check_odroid;
+	check_github;
 fi
 }
 
 # github
-check_odroid(){
-echo ""
-echo -e "hardkernel == odroid odroidg12 odroidm1"
-echo -e "tobetter == odroid"
-echo ""
-echo -e "${WHT}Maintainers${FIN}: hardkernel / tobetter"
-echo -e "${WHT}Branches${FIN}: odroid, odroidg12 and odroidm1"
-echo -en "Maintainer: "
-read MAINTAINER
-echo -en "Branch: "
-read BRANCH
-REPO="${MAINTAINER}"
-REPO_KERNEL="${BRANCH}"
-ODKERNEL="linux-${BRANCH}"
-if [[ "$VERSION" == "4.9.y" ]]; then
-	SETUP="vendor";
+check_github(){
+if [ -f ../github.txt ]; then
+	REPO=`sed 2d ../github.txt`
+	BRANCH=`sed 1d ../github.txt`
+	MAINTAINER=`sed 2d ../github.txt`
+	REPO_KERNEL=`sed 1d ../github.txt`
+	VKERNEL="linux-${BRANCH}"
 fi
-if [[ "$VERSION" == "4.19.y" ]]; then
+if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y" ]]; then
 	SETUP="vendor";
 fi
 if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/linux/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	odroid_download;
-	odroid_extract;
+	vendor_download;
+	vendor_extract;
 else
 	echo "";
 	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?";
@@ -105,11 +96,11 @@ fi
 extra_wireless
 }
 
-odroid_download(){
+vendor_download(){
 echo ""
-echo_odroid
-if [ -e ${ODKERNEL}-${VERSION}.tar.gz ]; then
-	echo -e "${YLW}${ODKERNEL}-${VERSION}.tar.gz found${FIN}.";
+echo_vendor
+if [ -e ${VKERNEL}-${VERSION}.tar.gz ]; then
+	echo -e "${YLW}${VKERNEL}-${VERSION}.tar.gz found${FIN}.";
 else
 	${DOWNLOAD} https://github.com/${REPO}/linux/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
 	echo_bdone;
@@ -141,11 +132,11 @@ if [ -e ${KERNEL}-${VERSION} ]; then
 fi
 }
 
-odroid_extract(){
+vendor_extract(){
 echo ""
 echo_extract
-pv ${ODKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-mv -f ${ODKERNEL}-${VERSION} linux-${VERSION}
+pv ${VKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+mv -f ${VKERNEL}-${VERSION} linux-${VERSION}
 if [ -e linux-${VERSION}/debian ]; then
 	rm -fdr linux-${VERSION}/debian;
 fi
@@ -219,22 +210,27 @@ echo_done
 }
 
 vendor_config(){
-echo_odroid_defconfig
+echo_vendor_defconfig
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$VERSION" == "4.9.y" ]]; then
-	rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
-	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+	rm -f arch/${ARCH}/configs/${VENDOR_DEFCONFIG}
+	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${VENDOR_DEFCONFIG}
 fi
 if [[ "$BOARD" == "odroidm1" ]] && [[ "$VERSION" == "4.19.y" ]]; then
-	rm -f arch/${ARCH}/configs/${ODROID_DEFCONFIG}
-	cp -f ../${DEF}/${BOARD}-${VERSION}_defconfig arch/${ARCH}/configs/${ODROID_DEFCONFIG}
+	rm -f arch/${ARCH}/configs/${VENDOR_DEFCONFIG}
+	cp -f ../${DEF}/${BOARD}-${VERSION}_defconfig arch/${ARCH}/configs/${VENDOR_DEFCONFIG}
+fi
+if [ -f arch/${ARCH}/configs/${VENDOR_DEFCONFIG} ]; then
+	:;
+else
+	cp -f ../${DEF}/${VENDOR_DEFCONFIG} arch/${ARCH}/configs/;
 fi
 rtl8812au_module
 rtl88x2bu_module
 rtl8811cu_module
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${ODROID_DEFCONFIG};
+	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${VENDOR_DEFCONFIG};
 else
-	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${ODROID_DEFCONFIG};
+	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${VENDOR_DEFCONFIG};
 fi
 echo_done
 }
