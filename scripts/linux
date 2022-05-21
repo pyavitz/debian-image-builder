@@ -45,26 +45,21 @@ if [ $ccache -eq 1 ]; then
 		ccache_version;
 	fi
 fi
-
 if [ $ccache -eq 0 ]; then
 	rm -f {ccache.txt,gcc.txt};
 	gcc_version;
 fi
-
 # sources directory
 kernel_source
-
 if [ -e ${KERNEL}-${VERSION} ]; then
 	echo "";
 	echo -en "${WHT}Cleaning${FIN} ";
 	rm -fdr ${KERNEL}-${VERSION};
 	echo_bdone
 fi
-
 # Download kernel and extract
 if [ -e ${KERNEL}-${VERSION}.orig ]; then
-	NOBACKUP=`grep -w "VERSION" "../userdata.txt" | sed 's/[0-9]*//g'`
-	if [[ "$NOBACKUP" == "..y"  ]]; then
+	if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y"  ]]; then
 		:;
 	else
 		echo -en "${WHT}Restoring${FIN} ";
@@ -75,14 +70,17 @@ if [ -e ${KERNEL}-${VERSION}.orig ]; then
 else
 	download;
 fi
-
 # Setup
 if [[ "$SETUP" == "vendor" ]]; then
-	vendor_setup;
+	if [[ "$VERSION" == "4.9.y" ]]; then
+		vendor_setup;
+	fi
+	if [[ "$VERSION" == "4.19.y" ]]; then
+		vendor_setup;
+	fi
 else
 	setup;
 fi
-
 # Amlogic patching
 if [[ "$FAMILY" == "amlogic" ]]; then
 	amlogic_patching;
@@ -102,7 +100,6 @@ fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	rockchip_patching;
 fi
-
 # Defconfig
 if [[ "$SETUP" == "vendor" ]]; then
 	if [ $custom_defconfig -eq 1 ]; then
@@ -128,8 +125,7 @@ if [ $crosscompile -eq 1 ]; then
 else
 	ncompile;
 fi
-echo
-
+echo ""
 # Finish
 cd ..
 rm -f {*linux-image-dbg*.deb,linux-libc-dev*.deb,*.buildinfo,*.changes}
