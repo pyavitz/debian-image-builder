@@ -130,7 +130,7 @@ all:
 	# Creating image
 	$(call build_image)
 
-# ADVANCED FEATURES
+# ADV COMMANDS
 ifdef version
 include version
 endif
@@ -173,7 +173,7 @@ dialogrc:
 rootfs:
 	# ROOTFS
 	$(call create_rootfs)
-	
+
 cleanup:
 	# Cleaning up
 	@chmod +x ${CLN}
