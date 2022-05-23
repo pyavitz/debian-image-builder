@@ -71,14 +71,15 @@ fi
 if [[ "$BOARD" == "lepotato" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	if [[ "$LINUX_VERSION" == "5.15" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	fi
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/${BOARD}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	else
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
@@ -136,13 +137,10 @@ if [[ "$BOARD" == "lepotato" ]]; then
 	fi
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/${BOARD}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	else
-		for i in ../../${LINUX_PATCHDIR}/${BOARD}/edge/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
