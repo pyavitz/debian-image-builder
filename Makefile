@@ -95,7 +95,7 @@ help:
 	@echo "For details consult the \e[1;37mREADME.md\e[0m file"
 	@echo
 
-
+# DEPENDENCIES
 ccompile:
 	# Installing cross dependencies:
 	@chmod +x ${CCOMPILE}
@@ -106,6 +106,7 @@ ncompile:
 	@chmod +x ${NCOMPILE}
 	@${NCOMPILE}
 
+# COMMANDS
 uboot:
 	# Compiling u-boot
 	$(call build_uboot)
@@ -128,6 +129,14 @@ all:
 	$(call create_rootfs)
 	# Creating image
 	$(call build_image)
+
+# ADVANCED FEATURES
+ifdef version
+include version
+endif
+
+version:
+	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
 
 # GITHUB
 ifdef branch
