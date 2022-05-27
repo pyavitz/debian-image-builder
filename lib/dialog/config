@@ -1,15 +1,17 @@
 #!/bin/bash
-LATEST="https://kernel.org/releases.json"
-LTS=$(curl -Ls $LATEST | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
+JSON_FILE="https://kernel.org/releases.json"
+LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
+LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 RED="\e[0;31m"
 FIN="\e[0m"
 
-if [ -e profile.txt ]; then
+if [ -f profile.txt ]; then
 	source profile.txt;
 else
 	NAME="";
 	USERNAME="";
 	PASSWORD="";
+	VERSION="$LATEST_LTS"
 	LOCALE="en_US.UTF-8";
 	TIMEZONE="America/New_York";
 	USER_NAMESERVER1="8.8.8.8";
@@ -20,7 +22,6 @@ HOSTNAME="default"
 DISTRO="debian"
 DISTRO_VERSION="bullseye"
 UBOOT_VERSION="v2022.04"
-VERSION="$LTS"
 BUILD_VERSION="1"
 menuconfig="0"
 COMPILER="gcc-10"
