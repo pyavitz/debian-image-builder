@@ -4,7 +4,19 @@ LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"ve
 LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 RED="\e[0;31m"
 FIN="\e[0m"
-
+if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+	:;
+else
+	echo -e "The Debian Image Builder requires internet connection."
+	exit 0;
+fi
+if [[ `command -v jq` ]]; then
+	:;
+else
+	echo -e "Missing depends: jq"
+	sudo apt update;
+	sudo apt install -y jq;
+fi
 if [ -f profile.txt ]; then
 	source profile.txt;
 else
