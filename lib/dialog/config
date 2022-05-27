@@ -1,9 +1,4 @@
 #!/bin/bash
-JSON_FILE="https://kernel.org/releases.json"
-LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
-LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
-RED="\e[0;31m"
-FIN="\e[0m"
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	:;
 else
@@ -17,6 +12,11 @@ else
 	sudo apt update;
 	sudo apt install -y jq;
 fi
+JSON_FILE="https://kernel.org/releases.json"
+LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
+LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
+RED="\e[0;31m"
+FIN="\e[0m"
 if [ -f profile.txt ]; then
 	source profile.txt;
 else
@@ -72,9 +72,9 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
 	"Distro:"	8 1	"$DISTRO"		8 9 24 0 \
 	"Release:"	9 1	"$DISTRO_VERSION"	9 10 23 0 \
 	""		10 1	""			10 14 0 0 \
-        "U-Boot:"   	11 1    "$UBOOT_VERSION"	11 9 13 0 \
-        "Branch:"   	12 1    "$VERSION"		12 9 10 0 \
-        "Build:"   	13 1    "$BUILD_VERSION"	13 8 4 0 \
+	"U-Boot:"   	11 1    "$UBOOT_VERSION"	11 9 13 0 \
+	"Branch:"   	12 1    "$VERSION"		12 9 10 0 \
+	"Build:"   	13 1    "$BUILD_VERSION"	13 8 4 0 \
 	"Menuconfig:"	14 1	"$menuconfig"		14 13 2 0 \
 	"Compiler:"	15 1	"$COMPILER"		15 11 9 0 \
 	"Crosscompile:" 16 1	"$crosscompile"		16 15 2 0 \
