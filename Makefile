@@ -138,15 +138,15 @@ endif
 version:
 	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
 
-ifdef defconfig
-include defconfig
+ifdef myconfig
+include myconfig
 endif
 
-defconfig:
+myconfig:
 	@$(shell sed -i "24s/.*/custom_defconfig=1/" userdata.txt)
-	@$(shell sed -i "25s/.*/MYCONFIG="'"${defconfig}_defconfig"'"/" userdata.txt)
+	@$(shell sed -i "25s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 
-defconfig_0:
+myconfig_0:
 	@$(shell sed -i "24s/.*/custom_defconfig=0/" userdata.txt)
 
 # GITHUB
