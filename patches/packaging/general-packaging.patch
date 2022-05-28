@@ -1,6 +1,6 @@
 diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 --- a/scripts/package/builddeb	2022-05-20 08:04:08.260615000 -0400
-+++ b/scripts/package/builddeb	2022-05-21 08:43:36.880496560 -0400
++++ b/scripts/package/builddeb	2022-05-28 05:47:22.728365112 -0400
 @@ -92,6 +92,24 @@
  else
  	cp System.map "$tmpdir/boot/System.map-$version"
@@ -108,42 +108,38 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
  # Install the maintainer scripts
  # Note: hook scripts under /etc/kernel are also executed by official Debian
  # kernel packages, as well as kernel packages built using make-kpkg.
-@@ -164,6 +257,34 @@
+@@ -164,6 +257,30 @@
  	chmod 755 "$tmpdir/DEBIAN/$script"
  done
  
-+if [ -e $tmpdir/usr/lib/raspberrypi-linux-image/broadcom ]; then
 +	cat > $tmpdir/DEBIAN/preinst <<EOT
 +#!/bin/bash
-+# purge kernel script
 +
 +set -e
 +
-+if [ -e /boot/Image ]; then
-+	rm -f /boot/{Image,*.dtb,vmlinuz-*,System.map-*,config-*,initrd.img*,uInitrd,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux};
-+else
-+	echo -e "\e[1;37mInstalling new kernel\e[0m ...";
++# linux
++if [ -f /boot/Image ]; then
++	rm -f /boot/{Image,vmlinuz-*,System.map-*,config-*};
++fi
++# initrd
++if [ -f /boot/uInitrd ]; then
++	rm -f /boot/{uInitrd,initrd.img-*};
++fi
++if [ -f /boot/initrd.gz ]; then
++	rm -f /boot/{initrd.gz,initrd.img-*};
++fi
++# raspberry pi
++if [ -f /boot/bcm2711-rpi-4-b.dtb ]; then
++	rm -f /boot/{*.dtb,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux};
 +fi
 +exit 0
 +EOT
 +	chmod 755 $tmpdir/DEBIAN/preinst
-+else
-+	cat > $tmpdir/DEBIAN/preinst <<EOT
-+#!/bin/bash
-+# remove initrd
-+
-+set -e
-+
-+rm -f /boot/{initrd.img*,uInitrd} 2>/dev/null
-+exit 0
-+EOT
-+        chmod 755 $tmpdir/DEBIAN/preinst
-+fi
 +
  # Build kernel header package
  (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
  (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-@@ -183,6 +304,53 @@
+@@ -183,6 +300,54 @@
  (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
  ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
  rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
@@ -174,7 +170,7 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
 +	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
 +fi
-+if [ -e .config.old ]; then rm -f .config.old; fi
++if [ -f .config.old ]; then rm -f .config.old; fi
 +}
 +
 +cd /usr/src/linux-headers-$version
@@ -184,7 +180,8 @@ diff -Naur a/scripts/package/builddeb b/scripts/package/builddeb
 +EOT
 +	chmod 755 $kernel_headers_dir/DEBIAN/postinst
 +fi
-+	mkdir -p $kernel_headers_dir/DEBIAN; cat > $kernel_headers_dir/DEBIAN/preinst <<EOT
++	mkdir -p $kernel_headers_dir/DEBIAN
++	cat > $kernel_headers_dir/DEBIAN/preinst <<EOT
 +#!/bin/sh
 +# remove old linux headers
 +
