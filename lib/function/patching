@@ -65,7 +65,11 @@ fi
 # create dry run log
 dryrun(){
 log_setup
-echo ""
+if [ -e ${KERNEL}-${VERSION}.orig ]; then
+	:;
+else
+	echo "";
+fi
 echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
 if [[ "$FAMILY" == "allwinner" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
