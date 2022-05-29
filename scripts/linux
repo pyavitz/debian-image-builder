@@ -53,18 +53,20 @@ fi
 kernel_source
 if [ -e ${KERNEL}-${VERSION} ]; then
 	echo "";
-	echo -en "${WHT}Cleaning${FIN} ";
+	echo -en "${WHT}${KERNEL}-${VERSION}${FIN}";
 	rm -fdr ${KERNEL}-${VERSION};
-	echo_bdone
+	echo -en " ${PNK}[${FIN}${GRN}cleaned${FIN}${PNK}]${FIN}";
 fi
 # Download kernel and extract
 if [ -e ${KERNEL}-${VERSION}.orig ]; then
 	if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y"  ]]; then
 		:;
 	else
-		echo -en "${WHT}Restoring${FIN} ";
-		cp -r ${KERNEL}-${VERSION}.orig ${KERNEL}-${VERSION};
-		echo_bdone;
+		mkdir -p ${KERNEL}-${VERSION};
+		cd ${KERNEL}-${VERSION}.orig;
+		tar cf - . | (cd ../${KERNEL}-${VERSION} && tar xf -);
+		cd ..;
+		echo -e " ${PNK}[${FIN}${GRN}restored${FIN}${PNK}]${FIN}";
 		extra_wireless;
 	fi
 else

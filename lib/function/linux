@@ -114,7 +114,10 @@ pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
 if [ -e ${KERNEL}-${VERSION} ]; then
 	echo "";
 	echo -en "${WHT}Creating backup${FIN} ";
-	cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.orig;
+	mkdir -p ${KERNEL}-${VERSION}.orig;
+	cd ${KERNEL}-${VERSION};
+	tar cf - . | (cd ../${KERNEL}-${VERSION}.orig && tar xf -);
+	cd ..;
 	echo_bdone;
 fi
 }
@@ -126,7 +129,10 @@ pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
 if [ -e ${KERNEL}-${VERSION} ]; then
 	echo "";
 	echo -en "${WHT}Creating backup${FIN} ";
-	cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.orig;
+	mkdir -p ${KERNEL}-${VERSION}.orig;
+	cd ${KERNEL}-${VERSION};
+	tar cf - . | (cd ../${KERNEL}-${VERSION}.orig && tar xf -);
+	cd ..;
 	echo_bdone;
 fi
 }
