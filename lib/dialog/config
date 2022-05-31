@@ -13,7 +13,11 @@ else
 	sudo apt install -y jq;
 fi
 JSON_FILE="https://kernel.org/releases.json"
-LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
+if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | grep -w 5.15` ]]; then
+	LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g');
+else
+	LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 5p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g');
+fi
 LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 RED="\e[0;31m"
 FIN="\e[0m"
