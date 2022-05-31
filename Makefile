@@ -123,7 +123,7 @@ all:
 	# - - - - - - - -
 	# Compiling u-boot
 	$(call build_uboot)
-	# Building linux package
+	# Compiling kernel
 	$(call build_kernel)
 	# Creating ROOTFS tarball
 	$(call create_rootfs)
@@ -173,12 +173,12 @@ menu:
 	@${MENU}
 
 config:
-	# Config Menu
+	# Please be patient
 	@chmod +x ${CONF}
 	@${CONF}
 
 dialogrc:
-	# Builder theme set
+	# Setting builder theme
 	@${DIALOGRC}
 
 rootfs:
