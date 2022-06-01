@@ -286,4 +286,4 @@ A service runs 'fan-ctrl -r' during boot.
 
 ### Support
 
-Should you come across any bugs, feel free to either open an issue on GitHub or talk with us directly by joining our channel on Libera; [`#arm-img-builder`](irc://irc.libera.chat/#arm-img-builder) or [Discord](https://discord.com/channels/898968760457781309/950159122031079524)
+Should you come across any bugs, feel free to either open an issue on GitHub or talk with us directly by joining our channel on Libera; [`#arm-img-builder`](irc://irc.libera.chat/#arm-img-builder). To chat on Discord request an invite.
