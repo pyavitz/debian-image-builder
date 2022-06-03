@@ -1,9 +1,9 @@
 #!/bin/bash
-### DO NOT EDIT
 source lib/boards/$1
 source userdata.txt
 MAKE_OUTPUT="output/$1"
-TITLE=`echo "$1" | sed -e 's/\(.*\)/\U\1/'`
+BTITLE=`echo $FAMILY: $DEFAULT_MOTD | sed -e 's/\(.*\)/\U\1/'`
+TITLE=`echo $DEFAULT_MOTD`
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 HEIGHT=0
@@ -12,16 +12,16 @@ WIDTH=0
 while true; do
 	exec 3>&1
 	selection=$(dialog \
-	--backtitle "Debian Image Builder" \
+	--backtitle "$BTITLE" \
 	--title "$TITLE" \
 	--clear \
 	--cancel-label "Exit" \
 	--menu "Select:" $HEIGHT $WIDTH 4 \
-	"1" "Make All" \
-	"2" "Make U-Boot" \
-	"3" "Make Kernel" \
-	"4" "Make ROOTFS" \
-	"5" "Make Image" \
+	"1" "Make All (Feeling lucky?)" \
+	"2" "Make Das U-Boot" \
+	"3" "Make Linux Kernel" \
+	"4" "Make Root Filesystem" \
+	"5" "Make Flashable Image" \
 	2>&1 1>&3)
 	exit_status=$?
 	exec 3>&-;
