@@ -105,19 +105,20 @@ fi
 }
 
 u-boot(){
-if [[ "$ARCH" == "arm" ]]; then
-	:;
+if [[ -e u-boot-${UBOOT_VERSION}.tar.gz ]]; then
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
+	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}";
 else
-	if [[ "$FAMILY" == "broadcom" ]]; then
+	if [[ "$ARCH" == "arm" ]]; then
 		:;
 	else
-		echo ""
+		if [[ "$FAMILY" == "broadcom" ]]; then
+			:;
+		else
+			echo ""
+		fi
 	fi
-fi
-echo_duboot
-if [[ -e u-boot-${UBOOT_VERSION}.tar.gz ]]; then
-	echo -e "${YLW}u-boot-${UBOOT_VERSION}.tar.gz found${FIN}.";
-else
+	echo_duboot;
 	uboot_search;
 fi
 
