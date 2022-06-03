@@ -40,7 +40,7 @@ EOF
 
 account_prompt(){
 echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
-echo -e "${BOARD}" | sed -e 's/\(.*\)/\U\1/'
+echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 echo ""
 echo -e "\e[1;37mWelcome. Create a User Account\e[0m."
 echo ""
@@ -69,13 +69,14 @@ if [ -f /boot/useraccount.txt ]; then
 	# headless
 	source /boot/useraccount.txt;
 	echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
-	echo -e "${BOARD}" | sed -e 's/\(.*\)/\U\1/'
+	echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 	echo ""
 	echo -e "Creating a user account for: \e[1;37m${NAME}\e[0m"
 	create_user > /dev/null 2>&1;
 	create_sudoers > /dev/null 2>&1;
-	rm -f /boot/useraccount.txt
-	sleep 1s
+	rm -f /boot/useraccount.txt;
+	echo "Almost done ...";
+	sleep 1s;
 else
 	# headful
 	account_prompt;
