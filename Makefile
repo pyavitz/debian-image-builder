@@ -64,13 +64,13 @@ define create_rootfs
 	@chmod +x ${RFS}
 	@chmod +x ${RFSX}
 	@${ROOTFS}
-endef
-# do not edit above this line
+endef 
 
+# USAGE
 help:
 	@echo ""
-	@echo "\e[1;31m                  Debian Image Builder\e[0m"
-	@echo "\e[1;37m                  ********************"
+	@echo "\t\t\t\e[1;31mDebian Image Builder\e[0m"
+	@echo "\t\t\t\e[1;37m********************"
 	@echo "Boards:\e[0m"
 	@echo "  Allwinner:  nanopim1 nanopineo nanopi opione opipc pine64 tritium"
 	@echo "  Amlogic:    lepotato odroidc4 odroidhc4 odroidn2 odroidn2plus radxazero"
