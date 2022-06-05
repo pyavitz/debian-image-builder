@@ -1,31 +1,11 @@
 #!/bin/bash
-#AARCH64 ROOTFS
-source lib/source
 source lib/function/echoes
+source lib/source
+validation
 source lib/function/rootfs
 source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
-UD=userdata.txt > /dev/null 2>&1
 
-userdata(){
-echo ""
-echo -e "Please create a ${RED}userdata.txt${FIN} file"
-while [ true ]; do
-read -t 10 -n 1
-if [ $? = 0 ]; then
-	exit;
-else
-	echo -e "run make config";
-fi
-done
-}
-
-if [ -f "$UD" ]; then
-	echo "";
-else 
-	userdata;
-fi
-validation
 if [ -e sysroot ]; then
 	make cleanup > /dev/null 2>&1;
 	clear -x;

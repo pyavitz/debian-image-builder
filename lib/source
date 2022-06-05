@@ -1,23 +1,33 @@
-# tmp
+#!/bin/bash
+
+# variables
 SRC="sources"
-
-# defconfig directory
 DEF="../defconfig"
-
-# patches
 PACKAGING="patches/packaging"
 USERPATCHES="patches/userpatches"
 
-# builder version
+# validate
 validation(){
+UD="userdata.txt"
+if [ -f "$UD" ]; then
+	echo "";
+else 
+	echo "";
+	echo "Create a $UD file";
+	while [ true ]; do
+		read -t 10 -n 1
+		if [ $? = 0 ]; then
+			exit 0;
+		fi
+	done
+fi
 if [[ `grep -w "builder=4.3" "userdata.txt"` ]]; then
 	:;
 else
-	echo -e "${YLW}The userdata.txt file has expired. Please create a new one.${FIN}"
+	echo -e "The ${WHT}$UD${FIN} file has expired. Please create a new one."
 	exit;
 fi
 }
-
 # do not edit above this line
 
 # kernel

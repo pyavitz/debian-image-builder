@@ -1,34 +1,15 @@
 #!/bin/bash
-source lib/source
 source lib/function/echoes
+source lib/source
+validation
 source lib/function/linux
 source lib/function/patching
 source lib/function/compiler
 source lib/function/wireless
 source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
-UD=userdata.txt > /dev/null 2>&1
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/'`
 
-userdata(){
-echo ""
-echo "Please create a userdata.txt file"
-while [ true ]; do
-read -t 10 -n 1
-if [ $? = 0 ]; then
-	exit;
-else
-	echo "run make config";
-fi
-done
-}
-
-if [ -f "$UD" ]; then
-	:;
-else 
-	userdata;
-fi
-validation
 if [ $verbose -eq 1 ]; then
 	set -x;
 fi

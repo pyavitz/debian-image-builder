@@ -1,13 +1,14 @@
 #!/bin/bash
+source lib/function/echoes
+source lib/source
+validation
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
-source lib/function/echoes
 source lib/source
 source userdata.txt > /dev/null 2>&1
-if [ $uscripts -eq 1 ]; then
-	uscripts_pre-stage1;
-fi
+
+# hack board-txt
 if [[ `grep -w 'BOARD="odroidn2"' "board.txt"` ]]; then
 	if [ $petitboot -eq 1 ]; then
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
@@ -37,38 +38,22 @@ if [[ `grep -w 'BOARD="odroidm1"' "board.txt"` ]]; then
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
 	fi
 fi
-source board.txt > /dev/null 2>&1
+
+# user scripts pre-stage1
 if [ $uscripts -eq 1 ]; then
 	uscripts_pre-stage1;
 fi
+source board.txt > /dev/null 2>&1
 if [[ ! -z $FAMILY ]]; then
 	source lib/function/${FAMILY};
 fi
-UD=userdata.txt > /dev/null 2>&1
+# end sourcing
 
-userdata(){
-echo ""
-echo "Please create a userdata.txt file"
-while [ true ]; do
-read -t 10 -n 1
-if [ $? = 0 ]; then
-	exit;
-else
-	echo "run make config";
-fi
-done
-}
-
-if [ -f "$UD" ]; then
-	:;
-else 
-	userdata;
-fi
-validation
 if [ -e p1 ]; then
 	make cleanup > /dev/null 2>&1;
 	clear -x;
 fi
+
 if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
 else
