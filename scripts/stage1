@@ -5,9 +5,7 @@ validation
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
-source lib/source
 source userdata.txt > /dev/null 2>&1
-
 # hack board-txt
 if [[ `grep -w 'BOARD="odroidn2"' "board.txt"` ]]; then
 	if [ $petitboot -eq 1 ]; then
@@ -38,7 +36,6 @@ if [[ `grep -w 'BOARD="odroidm1"' "board.txt"` ]]; then
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
 	fi
 fi
-
 # user scripts pre-stage1
 if [ $uscripts -eq 1 ]; then
 	uscripts_pre-stage1;
@@ -47,18 +44,18 @@ source board.txt > /dev/null 2>&1
 if [[ ! -z $FAMILY ]]; then
 	source lib/function/${FAMILY};
 fi
-# end sourcing
-
+# clean area if found
 if [ -e p1 ]; then
 	make cleanup > /dev/null 2>&1;
 	clear -x;
 fi
-
+# check verbosity
 if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
 else
 	set -eu -o pipefail;
 fi
+# start
 CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
 CAP_RELEASE=`echo "${DISTRO_VERSION}" | sed -e "s/\b\(.\)/\u\1/g"`
 echo ""
@@ -115,6 +112,7 @@ if [ $useracct -eq 1 ]; then
 	mkdir -p ${P_VALUE}/root/useracct;
 	cp -r files/useracct/* ${P_VALUE}/root/useracct;
 fi
+# user scripts stage1
 if [ $uscripts -eq 1 ]; then
 	uscripts_stage1;
 fi
