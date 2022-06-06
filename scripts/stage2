@@ -69,12 +69,17 @@ fi
 if [[ "$BOARD" == "raspi4" ]]; then
 	apt install -y ${RPI};
 fi
+#  Fix debconf errors when running tasksel (sudo tasksel --new-install)
+apt-get install --reinstall debconf
+# apt clean
 apt -y clean
 apt -y autoclean
+# User scripts stage2
 if [ $uscripts -eq 1 ]; then
 	echo "";
 	uscripts_stage2;
 fi
+# hostname / username / password
 if [[ "$HOSTNAME" == "default" ]]; then
 	# default hostname
 	echo -n "${BOARD}" > /etc/hostname;
