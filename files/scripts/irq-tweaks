@@ -1,8 +1,61 @@
 #!/bin/bash
-# Odroid N2 IRQ Tweaks
+# Odroid N2/N2+ irq set routine
 
-USB3_IRQ=`cat /proc/interrupts | grep "xhci-hcd:usb1" | awk -F : '{print $1}' | sed s/" "//g`
-sleep 20s
-if [[ `grep -w "0-1" "/proc/irq/${USB3_IRQ}/smp_affinity_list"` ]]; then
-	echo "4" | tee /proc/irq/${USB3_IRQ}/smp_affinity_list;
-fi
+sleep 5
+
+# get last core number
+last_core=`cat /proc/cpuinfo |grep processor | tail -n 1 |cut -d ':' -f 2 |sed 's/ *//'`
+# list of devices to be fixed to a core
+dev_list=("/mmc/" "/xhci-hcd/" "/eth0/")
+# list of interrupt numbers associated with device list
+interrupt_list=()
+interrupt_string="{"
+comma=""
+
+# get intrrupts assigned to devices identified by dev_list
+for dev in ${dev_list[@]}; do
+    #echo $dev
+    # loop incase there are multiple devices that match in interrupt list
+    for i in $(awk -F":" "$dev {print \$1}" </proc/interrupts | sed 's/\ //g'); do
+        interrupt_list+=("$i")
+        interrupt_string="$interrupt_string$comma$i"
+        comma=","
+    done
+done
+interrupt_string="$interrupt_string}"
+echo $interrupt_string
+
+
+# incase core assignment changes we'll keep looping
+while true; do
+    # Now fix the interrupts to a fixed single core number
+    core_num=$last_core
+    for int_num in ${interrupt_list[@]}; do
+        echo "interrupt $int_num was assigned to core: " `cat /proc/irq/$int_num/smp_affinity_list`
+        echo $core_num >/proc/irq/$int_num/smp_affinity_list
+        echo "interrupt $int_num now assigned to core: " `cat /proc/irq/$int_num/smp_affinity_list`
+        # set the next device to a lower core number
+        core_num=$[ core_num- 1]
+        # if core less than 0 set it back to last core number
+        if [ $core_num -lt 0 ]; then
+            core_num=$last_core
+        fi
+    done
+
+    wait_for_change=true
+    while $wait_for_change; do
+        sleep 30
+        # check to see if any of the interrupts have been assigned to multiple cores
+        grep_cmd="grep '-' /proc/irq/$interrupt_string/smp_affinity_list"
+        result=$(eval $grep_cmd)
+        if [ ! -z "$result" ]; then
+            echo Need to reset interrupt values
+            wait_for_change=false
+        fi
+
+    done
+
+done
+
+
+
