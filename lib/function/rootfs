@@ -1,17 +1,6 @@
 sysroot_partition(){
-RAM=0
-ROOTFS_FOLDER="img/"
-RELEASE_NAME=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}
-mkdir -p "$ROOTFS_FOLDER"
-if [ $RAM -ne 0 ]; then
-	ROOTFS_FOLDER="ram/"
-fi
-if [ $RAM -ne 0 ]; then
-	mount -t tmpfs -o size=3G tmpfs $ROOTFS_FOLDER
-fi
 truncate -s 2000MB "${ROOTFS_FOLDER}${RELEASE_NAME}"
-fdisk "${ROOTFS_FOLDER}${RELEASE_NAME}" <<EOF
-o
+echo -e "o
 n
 p
 1
@@ -22,9 +11,7 @@ b
 3906249
 
 p
-w
-
-EOF
+w" | fdisk "${ROOTFS_FOLDER}${RELEASE_NAME}"
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${ROOTFS_FOLDER}${RELEASE_NAME})"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}p1"
 partprobe "${IMAGE_LOOP_DEV}"

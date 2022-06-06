@@ -38,6 +38,16 @@ echo -e "${WHT}Starting debootstrap${FIN} ..."
 # start debootstrap
 if [ $rootfsxl -eq 1 ]; then
 	source lib/function/release
+	RAM=0
+	ROOTFS_FOLDER="img/"
+	RELEASE_NAME=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}
+	if [ $RAM -ne 0 ]; then
+		IMAGE_FOLDER="ram/";
+	fi
+	mkdir -p "$ROOTFS_FOLDER"
+	if [ $RAM -ne 0 ]; then
+		mount -t tmpfs -o size=3G tmpfs $ROOTFS_FOLDER;
+	fi
 	if [ $verbose -eq 1 ]; then
 		sysroot_partition;
 	else
@@ -87,10 +97,10 @@ if [ $rootfsxl -eq 1 ]; then
 	losetup -d "${IMAGE_LOOP_DEV}";
 	rm -f "${ROOTFS_FOLDER}${RELEASE_NAME}";
 	if [ $RAM -ne 0 ]; then
-		umount "${ROOTFSFOLDER}";
+		umount "${ROOTFS_FOLDER}";
 	fi
 	rmdir "${ROOTFS_FOLDER}";
-	# Missing something? Hit with the cleaner for the time being.
+	# just in case
 	make cleanup > /dev/null 2>&1;
 fi
 
