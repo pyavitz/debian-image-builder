@@ -5,19 +5,14 @@ else
 	echo -e "The builder requires a internet connection."
 	exit 0;
 fi
-if [[ `command -v jq` ]]; then
-	:;
-else
-	echo -e "Missing depends: jq"
-	sudo apt update;
-	sudo apt install -y jq;
-fi
+if [[ `command -v jq` ]]; then :; else echo -e "Missing depends: jq"; exit 0; fi
 JSON_FILE="https://kernel.org/releases.json"
 if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | grep -w 5.15` ]]; then
-	LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g');
+	LINE="4p";
 else
-	LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n 5p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g');
+	LINE="5p";
 fi
+LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LINE | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
 LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 RED="\e[0;31m"
 FIN="\e[0m"
