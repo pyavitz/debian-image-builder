@@ -40,7 +40,6 @@ ifdef board
 include lib/boards/${board}
 endif
 
-
 define build_uboot
 	@${BOARDS}
 	@chmod +x ${XUBOOT}
