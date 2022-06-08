@@ -109,8 +109,7 @@ ncompile:
 
 
 # ADV VARIABLE PROCESSING COMMANDS
-.PHONY: varprocess
-varprocess:
+varprocess: 
 ifdef version
 	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
 endif
@@ -133,11 +132,11 @@ ifdef branch
 endif
 
 # COMMANDS
-uboot:
+uboot: varprocess
 	# Compiling u-boot
 	$(call build_uboot)
 
-kernel:
+kernel: varprocess
 	# Compiling kernel
 	$(call build_kernel)
 
@@ -145,7 +144,7 @@ image:
 	# Creating image
 	$(call build_image)
 
-all:
+all: varprocess
 	# - - - - - - - -
 	# Compiling u-boot
 	$(call build_uboot)
@@ -157,7 +156,7 @@ all:
 	$(call build_image)
 
 # MISCELLANEOUS
-menu:
+menu: varprocess
 	# Menu
 	@chmod +x ${MENU}
 	@chmod +x ${GMENU}
