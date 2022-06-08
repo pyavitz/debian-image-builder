@@ -119,10 +119,6 @@ ifdef myconfig
 	@$(shell sed -i "25s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 endif
 
-ifdef myconfig_0
-	@$(shell sed -i "24s/.*/custom_defconfig=0/" userdata.txt)
-endif
-
 # GITHUB
 ifdef repo
 	@echo "$(repo)" > github.txt
@@ -163,6 +159,10 @@ menu: varprocess
 	@chmod +x ${RIT}
 	@chmod +x ${LIT}
 	@${MENU}
+
+# reset myconfig to 0
+myconfig_0:
+	@$(shell sed -i "24s/.*/custom_defconfig=0/" userdata.txt)
 
 config:
 	# Please be patient
