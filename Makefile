@@ -40,7 +40,6 @@ ifdef board
 include lib/boards/${board}
 endif
 
-
 define build_uboot
 	@${BOARDS}
 	@chmod +x ${XUBOOT}
@@ -108,8 +107,13 @@ ncompile:
 	@${NCOMPILE}
 
 
-# ADV VARIABLE PROCESSING COMMANDS
-varprocess: 
+# COMMANDS
+uboot: 
+	# Compiling u-boot
+	$(call build_uboot)
+
+kernel: 
+	@rm -f github.txt
 ifdef version
 	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
 endif
@@ -126,13 +130,6 @@ endif
 ifdef branch
 	@echo "$(branch)" >> github.txt
 endif
-
-# COMMANDS
-uboot: varprocess
-	# Compiling u-boot
-	$(call build_uboot)
-
-kernel: varprocess
 	# Compiling kernel
 	$(call build_kernel)
 
@@ -140,7 +137,7 @@ image:
 	# Creating image
 	$(call build_image)
 
-all: varprocess
+all: 
 	# - - - - - - - -
 	# Compiling u-boot
 	$(call build_uboot)
@@ -152,7 +149,7 @@ all: varprocess
 	$(call build_image)
 
 # MISCELLANEOUS
-menu: varprocess
+menu: 
 	# Menu
 	@chmod +x ${MENU}
 	@chmod +x ${GMENU}
