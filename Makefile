@@ -40,6 +40,7 @@ ifdef board
 include lib/boards/${board}
 endif
 
+
 define build_uboot
 	@${BOARDS}
 	@chmod +x ${XUBOOT}
@@ -106,6 +107,31 @@ ncompile:
 	@chmod +x ${NCOMPILE}
 	@${NCOMPILE}
 
+
+# ADV VARIABLE PROCESSING COMMANDS
+.PHONY: varprocess
+varprocess:
+ifdef version
+	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
+endif
+
+ifdef myconfig
+	@$(shell sed -i "24s/.*/custom_defconfig=1/" userdata.txt)
+	@$(shell sed -i "25s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
+endif
+
+ifdef myconfig_0
+	@$(shell sed -i "24s/.*/custom_defconfig=0/" userdata.txt)
+endif
+
+# GITHUB
+ifdef repo
+	@echo "$(repo)" > github.txt
+endif
+ifdef branch
+	@echo "$(branch)" >> github.txt
+endif
+
 # COMMANDS
 uboot:
 	# Compiling u-boot
@@ -129,39 +155,6 @@ all:
 	$(call create_rootfs)
 	# Creating image
 	$(call build_image)
-
-# ADV COMMANDS
-ifdef version
-include version
-endif
-
-version:
-	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
-
-ifdef myconfig
-include myconfig
-endif
-
-myconfig:
-	@$(shell sed -i "24s/.*/custom_defconfig=1/" userdata.txt)
-	@$(shell sed -i "25s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
-
-myconfig_0:
-	@$(shell sed -i "24s/.*/custom_defconfig=0/" userdata.txt)
-
-# GITHUB
-ifdef branch
-include branch
-endif
-ifdef repo
-include repo
-endif
-
-repo:
-	@echo "$(repo)" > github.txt
-
-branch:
-	@echo "$(branch)" >> github.txt
 
 # MISCELLANEOUS
 menu:
