@@ -197,9 +197,9 @@ Supported: Le Potato, NanoPi NEO Plus2, NanoPC-T4, Odroid C4/N2/N2+, Radxa Zero 
 Raspberry Pi 4B EEPROM Helper Script
 Usage: deb-eeprom -h
 
-   -U       Upgrade eeprom package
-   -w       Transfer to USB	# Supported: EXT4, BTRFS and F2FS
-   -u       Update script
+	-U	Upgrade eeprom package
+	-w	Transfer to USB	# Supported: EXT4, BTRFS and F2FS
+	-u	Update script
 
 Note:
 Upon install please run 'deb-eeprom -u' before using this script.
@@ -208,26 +208,26 @@ Upon install please run 'deb-eeprom -u' before using this script.
 ```sh
 swh -h
 
-   -s       Scan for SSID's
-   -u       Bring up interface
-   -d       Bring down interface
-   -r       Restart interface
-   -W       Edit wpa supplicant
-   -I       Edit interfaces
+	-s	Scan for SSID's
+	-u	Bring up interface
+	-d	Bring down interface
+	-r	Restart interface
+	-W	Edit wpa supplicant
+	-I	Edit interfaces
 ```
 #### CPU frequency scaling
 ```sh
 governor -h
 
-   -c       Conservative
-   -o       Ondemand
-   -p       Performance
-   -s       Schedutil
+	-c	Conservative
+	-o	Ondemand
+	-p	Performance
+	-s	Schedutil
 
-   -r       Run
-   -u       Update
+	-r	Run
+	-u	Update
    
-A systemd service runs 'governor -r' during boot.
+A service runs 'governor -r' during boot.
 ```
 #### Overclocking
 * **NanoPC-T4, Odroid N2/+, Radxa Zero & ROCKPro64**
