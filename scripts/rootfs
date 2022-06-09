@@ -36,7 +36,7 @@ if [ -e $RELEASE_TARBALL ]; then
 fi
 echo -e "${WHT}Starting debootstrap${FIN} ..."
 # start debootstrap
-if [ $rootfsxl -eq 1 ]; then
+if [ $devrootfs -eq 1 ]; then
 	source lib/function/release
 	RAM=0
 	ROOTFS_FOLDER="img/"
@@ -63,7 +63,7 @@ else
 fi
 
 # creating developer tarball
-if [ $rootfsxl -eq 1 ]; then
+if [ $devrootfs -eq 1 ]; then
 	sysroot_setup;
 	mount -o bind /dev ${ROOT}/dev;
 	mount -o bind /dev/pts ${ROOT}/dev/pts;
@@ -93,7 +93,7 @@ cd ${ROOT}
 XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../$RELEASE_TARBALL)
 cd ..
 
-if [ $rootfsxl -eq 1 ]; then
+if [ $devrootfs -eq 1 ]; then
 	losetup -d "${IMAGE_LOOP_DEV}";
 	rm -f "${ROOTFS_FOLDER}${RELEASE_NAME}";
 	if [ $RAM -ne 0 ]; then

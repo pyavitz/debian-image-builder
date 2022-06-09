@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # UBOOT
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0"
 
@@ -98,7 +100,7 @@ if [[ `wget -S --spider https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_V
 	${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
 	echo_bdone;
 else
-	echo
+	echo ""
 	echo -e "${WHT}It appears the version you selected is not available${FIN}?"
 	exit;
 fi
@@ -148,12 +150,7 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 cp board.txt u-boot/
 cd u-boot
-
-# start patching
-# u-boot v2022.04 doesn't need the overlay patch. after further testing remove.
-#if [[ "$FAMILY" == "amlogic" ]]; then
-#	for i in ../../${UBOOT_PATCHDIR}/*.patch; do patch -p1 < $i; done;
-#fi
+# patching
 if [[ "$BOARD" == "odroidn2plus" ]]; then
 	for i in ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch; do patch -p1 < $i; done;
 fi

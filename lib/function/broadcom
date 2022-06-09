@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # STAGE1
 config-txt(){
 tee p1/config.txt <<EOF
@@ -43,7 +45,7 @@ EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==10) {print substr
 if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_eeprom;
 else
-	EEPROM_VERSION="13.3"
+	EEPROM_VERSION="13.12";
 	download_eeprom;
 fi
 }
@@ -133,14 +135,14 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/updates/renesas_usb_fw.mem
 rm -f UPDATE.mem
-if [ -e /etc/firmware ]; then
+if [ -f /etc/firmware ]; then
 	:;
 else
 	ln -sr /lib/firmware /etc/firmware
 fi
 mkdir -p /lib/firmware/updates/rtl_nic
 cd /lib/firmware/updates/rtl_nic
-wget -cq --show-progress https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz
+wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz
 tar xf rtl_nic.tar.gz
 rm -f rtl_nic.tar.gz
 cd ~

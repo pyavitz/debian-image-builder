@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# variables
-SRC="sources"
-DEF="../defconfig"
-PACKAGING="patches/packaging"
-USERPATCHES="patches/userpatches"
-
 # validate
 validation(){
 UD="userdata.txt"
@@ -21,19 +15,22 @@ else
 		fi
 	done
 fi
-if [[ `grep -w "builder=4.3" "userdata.txt"` ]]; then
+if [[ `grep -w "builder=4.4" "userdata.txt"` ]]; then
 	:;
 else
 	echo -e "The ${WHT}$UD${FIN} file has expired. Please create a new one."
 	exit;
 fi
 }
-# do not edit above this line
 
-# kernel
+# variables
+SRC="sources"
+DEF="../defconfig"
+PACKAGING="patches/packaging"
+USERPATCHES="patches/userpatches"
 KERNEL="linux"
 
-# stage 2
+# base packages
 PKGS="tzdata keyboard-configuration sudo man-db dbus initramfs-tools \
 	e2fsprogs u-boot-tools fonty-rg patch wget apt-transport-https \
 	dirmngr rsync psmisc parted hdparm aria2 dosfstools pv fdisk chrony \
@@ -45,47 +42,15 @@ PKGS="tzdata keyboard-configuration sudo man-db dbus initramfs-tools \
 	lsb-release libell0 wireless-regdb bluez bluez-tools irqbalance ethtool i2c-tools \
 	python3-libgpiod python-is-python3"
 
+# raspberry pi packages
 RPI="curl cmake zip unzip help2man rsync pciutils debhelper d-shlibs"
 
+# firmware packages
 FIRMWARE="firmware-linux-nonfree firmware-linux bluez-firmware \
 	firmware-misc-nonfree firmware-realtek firmware-ralink"
 
-# do not edit below this line
-
-# wireless
-rtl88x2bu_conf(){
-mkdir -p /usr/lib/NetworkManager/conf.d/
-tee /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf <<EOF
-# Certain drivers are known not to support changing the MAC address.
-# Disable touching the MAC address on such devices.
-
-[device-rtl88x2bu]
-match-device=driver:rtl88x2bu
-wifi.scan-rand-mac-address=no
-wifi.cloned-mac-address=preserve
-ethernet.cloned-mac-address=preserve
-EOF
-chown root:root /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf
-}
-
-rtl8821cu_conf(){
-mkdir -p /usr/lib/NetworkManager/conf.d/
-tee /usr/lib/NetworkManager/conf.d/rtl8821cu.conf <<EOF
-# Certain drivers are known not to support changing the MAC address.
-# Disable touching the MAC address on such devices.
-
-[device-rtl8821cu]
-match-device=driver:rtl8821cu
-wifi.scan-rand-mac-address=no
-wifi.cloned-mac-address=preserve
-ethernet.cloned-mac-address=preserve
-EOF
-
-chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
-}
-
-# extra firmware
-extra_firmware(){
+# misc. stage2 functions
+extra_firmware(){ # extra firmware
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 echo ""
 echo "Adding extra firmware ..."
@@ -103,29 +68,30 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
-if [[ `grep -w "amlogic" "/root/board.txt"` ]]; then
-	${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz
-	tar xf meson-firmware-master.tar.gz
-	cp -R meson-firmware-master/meson/* /lib/firmware/meson
-	rm -fdr meson-firmware-master*
-	mkdir -p /lib/firmware/ene-ub6250
-	cd /lib/firmware/ene-ub6250
-	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_init.bin
-	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_rdwr.bin
-	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/msp_rdwr.bin
-	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init1.bin
-	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init2.bin
-	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_rdwr.bin
-	chown -R root:root /lib/firmware/ene-ub6250
+if [[ "$FAMILY" == "amlogic" ]]; then
+	${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz;
+	tar xf meson-firmware-master.tar.gz;
+	cp -R meson-firmware-master/meson/* /lib/firmware/meson;
+	rm -fdr meson-firmware-master*;
+	mkdir -p /lib/firmware/ene-ub6250;
+	cd /lib/firmware/ene-ub6250;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_init.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_rdwr.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/msp_rdwr.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init1.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init2.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_rdwr.bin;
+	chown -R root:root /lib/firmware/ene-ub6250;
 	cd ~;
 fi
 echo "Done."
 }
 
+# regulatory db
 wireless_regdb(){
 echo ""
 echo "Adding regulatory db ..."
-if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; then
+if [[ "$DISTRO" == "ubuntu" ]]; then
 	echo 'KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"' > /etc/udev/rules.d/60-regdb.rules;
 fi
 git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
@@ -168,34 +134,64 @@ xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED
 }
 
 # setup network
+rtl88x2bu_conf(){
+mkdir -p /usr/lib/NetworkManager/conf.d/
+tee /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf <<EOF
+# Certain drivers are known not to support changing the MAC address.
+# Disable touching the MAC address on such devices.
+
+[device-rtl88x2bu]
+match-device=driver:rtl88x2bu
+wifi.scan-rand-mac-address=no
+wifi.cloned-mac-address=preserve
+ethernet.cloned-mac-address=preserve
+EOF
+chown root:root /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf
+}
+
+rtl8821cu_conf(){
+mkdir -p /usr/lib/NetworkManager/conf.d/
+tee /usr/lib/NetworkManager/conf.d/rtl8821cu.conf <<EOF
+# Certain drivers are known not to support changing the MAC address.
+# Disable touching the MAC address on such devices.
+
+[device-rtl8821cu]
+match-device=driver:rtl8821cu
+wifi.scan-rand-mac-address=no
+wifi.cloned-mac-address=preserve
+ethernet.cloned-mac-address=preserve
+EOF
+chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
+}
+
 network_setup(){
 rm -f /etc/network/interfaces
 mv -f credentials.txt /boot/rename_to_credentials.txt
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	mv -f credentials.devuan /usr/local/bin/credentials
-	rm -f credentials.debian
-	ln -sr /etc/network/if-up.d/00check-network-cable /etc/network/if-pre-up.d/00check-network-cable
-	sed -i 's/#CONFIGURE_INTERFACES=yes/CONFIGURE_INTERFACES=yes/g' /etc/default/networking
-	sed -i 's/#WAIT_ONLINE_METHOD=ifup/WAIT_ONLINE_METHOD=ifup/g' /etc/default/networking
-	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking
+if [[ "$DISTRO" == "devuan" ]]; then
+	mv -f credentials.devuan /usr/local/bin/credentials;
+	rm -f credentials.debian;
+	ln -sr /etc/network/if-up.d/00check-network-cable /etc/network/if-pre-up.d/00check-network-cable;
+	sed -i 's/#CONFIGURE_INTERFACES=yes/CONFIGURE_INTERFACES=yes/g' /etc/default/networking;
+	sed -i 's/#WAIT_ONLINE_METHOD=ifup/WAIT_ONLINE_METHOD=ifup/g' /etc/default/networking;
+	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking;
 else
-	mv -f credentials.debian /usr/local/bin/credentials
+	mv -f credentials.debian /usr/local/bin/credentials;
 	rm -f credentials.devuan;
 fi
-if [[ `grep -w 'DISTRO="devuan"' "/root/userdata.txt"` ]]; then
-	if [ -e /etc/default/network-test ]; then
-		sed -i 's/DO_ARPING=${DO_ARPING:-yes}/DO_ARPING=${DO_ARPING:-no}/g' /etc/default/network-test
-		sed -i 's/DO_SYSLOG=${DO_SYSLOG:-yes}/DO_SYSLOG=${DO_SYSLOG:-no}/g' /etc/default/network-test
+if [[ "$DISTRO" == "devuan" ]]; then
+	if [ -f /etc/default/network-test ]; then
+		sed -i 's/DO_ARPING=${DO_ARPING:-yes}/DO_ARPING=${DO_ARPING:-no}/g' /etc/default/network-test;
+		sed -i 's/DO_SYSLOG=${DO_SYSLOG:-yes}/DO_SYSLOG=${DO_SYSLOG:-no}/g' /etc/default/network-test;
 	fi
 fi
-if [[ `grep -w 'DISTRO_VERSION="jammy"' "/root/userdata.txt"` ]]; then
+if [[ "$DISTRO_VERSION" == "jammy" ]]; then
 	# /etc/network/if-down.d/resolved: 12: mystatedir: not found
 	# /etc/network/if-up.d/resolved: 12: mystatedir: not found
-	if [ -e /etc/network/if-down.d/resolved ]; then
+	if [ -f /etc/network/if-down.d/resolved ]; then
 		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-down.d/resolved;
 		sed -i 's/return/exit 0/g' /etc/network/if-down.d/resolved;
 	fi
-	if [ -e /etc/network/if-up.d/resolved ]; then
+	if [ -f /etc/network/if-up.d/resolved ]; then
 		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-up.d/resolved;
 		sed -i 's/return/exit 0/g' /etc/network/if-up.d/resolved;
 	fi
@@ -203,10 +199,10 @@ fi
 chmod +x /usr/local/bin/credentials
 chown root:root /usr/local/bin/credentials
 mkdir -p /etc/modprobe.d
-if [[ `grep -w "rtl8188eu=1" "/root/userdata.txt"` ]]; then
+if [ $rtl8188eu -eq 1 ]; then
 	echo "blacklist r8188eu" > /etc/modprobe.d/50-8188eu.conf;
 	chown root:root /etc/modprobe.d/50-8188eu.conf;
-	if [ -e /lib/firmware/rtlwifi/rtl8188eufw.bin ]; then
+	if [ -f /lib/firmware/rtlwifi/rtl8188eufw.bin ]; then
 		:;
 	else
 		mkdir -p /lib/firmware/rtlwifi;
@@ -312,7 +308,7 @@ EOF
 # Flush runtime journal
 systemd_journald(){
 # system.journal corrupted or uncleanly shut down, renaming and replacing
-if [ -e /etc/systemd/journald.conf ]; then
+if [ -f /etc/systemd/journald.conf ]; then
 	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;

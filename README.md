@@ -70,7 +70,7 @@ Name:		# Name of _defconfig (Must be placed in defconfig dir.)
 User options
 Logging:	# Logging > output/logs/$board-*.log (Menu interface only)
 Verbosity:	# Verbose
-Rootfs XL:	# Developer rootfs tarball
+Devel Rootfs:	# Developer rootfs tarball
 Compress img:	# Auto compress img > img.xz
 User scripts:	# Review the README in the files/userscripts directory
 User service:	# Create user during first boot (bypass the user information above)
