@@ -271,13 +271,13 @@ Set trip point
 Odroid N2 Trip Point
 Usage: fan-ctrl -h
 
-   -1       65°C
-   -2       55°C
-   -3       45°C
-   -4       35°C
+	-6	65°C
+	-5	55°C
+	-4	45°C
+	-3	35°C
 
-   -r       Run
-   -u       Update
+	-r	Run
+	-u	Update
    
 A service runs 'fan-ctrl -r' during boot.
 ```
