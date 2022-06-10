@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-source /root/source.txt
-source /root/board.txt > /dev/null 2>&1
 source /root/userdata.txt > /dev/null 2>&1
 if [ $verbose -eq 1 ]; then
 	set -x;
 fi
+source /root/source.txt
+source /root/board.txt > /dev/null 2>&1
 source /root/services.txt
 source /root/${FAMILY}.txt
+source /root/networking.txt
 SCRIPTS_URL="https://raw.githubusercontent.com/pyavitz/scripts/master/"
 
 set -o errexit
@@ -217,7 +218,7 @@ mv -f sysinfo /usr/local/bin/
 mv -f bootcmd /usr/local/bin/
 mv -f menu-config /usr/local/bin
 mv -f image-config-menu /usr/local/lib
-# amlogic
+# Amlogic tweaks
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "lepotato" ]]; then
 		tweaks_service > /dev/null 2>&1;
@@ -232,7 +233,7 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		tweaks_service > /dev/null 2>&1;
 	fi
 fi
-# rockchip
+# Rockchip tweaks
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$BOARD" == "rockpro64" ]]; then
 		tweaks_service > /dev/null 2>&1;
@@ -348,15 +349,19 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 
 # Network Setup
-network_setup > /dev/null 2>&1
+ifupdown-setup > /dev/null 2>&1
 if [[ "$DISTRO" == "devuan" ]]; then
 	:;
 else
 	credentials_service > /dev/null 2>&1;
 fi
 
-# ZSWAP
-zramswap_config
+# Allocate zramswap
+if [ -f /etc/default/zramswap ]; then
+	sed -i 's/#ALLOCATION=256/ALLOCATION=1024/g' /etc/default/zramswap;
+	sed -i 's/#SIZE=256/SIZE=1024/g' /etc/default/zramswap;
+	sed -i 's/#PRIORITY=100/PRIORITY=100/g' /etc/default/zramswap;
+fi
 
 # MOTD instructions
 rm -f /etc/motd
@@ -451,9 +456,20 @@ dpkg -i *.deb
 rm -f *.deb
 echo "Done."
 sleep 1s
-fetch_version
+# take note of linux kernel release
+KERNEL_RELEASE=`cat /usr/src/linux-headers*/include/config/kernel.release`
+echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
 
 # Miscellaneous
+systemd_journald(){
+# system.journal corrupted or uncleanly shut down, renaming and replacing
+if [ -f /etc/systemd/journald.conf ]; then
+	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
+	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
+	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
+fi
+}
+
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
 	systemd_journald;

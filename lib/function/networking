@@ -1,0 +1,231 @@
+#!/bin/bash
+
+# general firmware
+extra_firmware(){
+ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
+echo ""
+echo "Adding extra firmware ..."
+sleep 1s
+mkdir -p /lib/firmware/brcm
+cd ~
+${ARIA2} https://github.com/armbian/firmware/archive/master.tar.gz
+tar xf firmware-master.tar.gz
+cp -R firmware-master/* /lib/firmware
+rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
+cp /lib/firmware/brcm/brcmfmac4356-sdio.txt /lib/firmware/brcm/brcmfmac4356-sdio.friendlyarm,nanopc-t4.txt
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
+rm -f UPDATE.mem
+if [[ "$FAMILY" == "amlogic" ]]; then
+	${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz;
+	tar xf meson-firmware-master.tar.gz;
+	cp -R meson-firmware-master/meson/* /lib/firmware/meson;
+	rm -fdr meson-firmware-master*;
+	mkdir -p /lib/firmware/ene-ub6250;
+	cd /lib/firmware/ene-ub6250;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_init.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_rdwr.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/msp_rdwr.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init1.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init2.bin;
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_rdwr.bin;
+	chown -R root:root /lib/firmware/ene-ub6250;
+	cd ~;
+fi
+echo "Done."
+}
+
+# regulatory db
+wireless_regdb(){
+echo ""
+echo "Adding regulatory db ..."
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	echo 'KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"' > /etc/udev/rules.d/60-regdb.rules;
+fi
+git clone https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
+sleep 1s
+cd wireless-regdb
+cp -f regulatory.db /lib/firmware/regulatory.db
+cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
+cd ~
+rm -fdr wireless-regdb
+echo "Done."
+}
+
+# wireless conf files (network-manager)
+rtl88x2bu_conf(){
+mkdir -p /usr/lib/NetworkManager/conf.d/
+tee /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf <<EOF
+# Certain drivers are known not to support changing the MAC address.
+# Disable touching the MAC address on such devices.
+
+[device-rtl88x2bu]
+match-device=driver:rtl88x2bu
+wifi.scan-rand-mac-address=no
+wifi.cloned-mac-address=preserve
+ethernet.cloned-mac-address=preserve
+EOF
+chown root:root /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf
+}
+
+rtl8821cu_conf(){
+mkdir -p /usr/lib/NetworkManager/conf.d/
+tee /usr/lib/NetworkManager/conf.d/rtl8821cu.conf <<EOF
+# Certain drivers are known not to support changing the MAC address.
+# Disable touching the MAC address on such devices.
+
+[device-rtl8821cu]
+match-device=driver:rtl8821cu
+wifi.scan-rand-mac-address=no
+wifi.cloned-mac-address=preserve
+ethernet.cloned-mac-address=preserve
+EOF
+chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
+}
+
+ifupdown-setup(){
+rm -f /etc/network/interfaces
+mv -f credentials.txt /boot/rename_to_credentials.txt
+if [[ "$DISTRO" == "devuan" ]]; then
+	mv -f credentials.devuan /usr/local/bin/credentials;
+	rm -f credentials.debian;
+	ln -sr /etc/network/if-up.d/00check-network-cable /etc/network/if-pre-up.d/00check-network-cable;
+	sed -i 's/#CONFIGURE_INTERFACES=yes/CONFIGURE_INTERFACES=yes/g' /etc/default/networking;
+	sed -i 's/#WAIT_ONLINE_METHOD=ifup/WAIT_ONLINE_METHOD=ifup/g' /etc/default/networking;
+	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking;
+else
+	mv -f credentials.debian /usr/local/bin/credentials;
+	rm -f credentials.devuan;
+fi
+if [[ "$DISTRO" == "devuan" ]]; then
+	if [ -f /etc/default/network-test ]; then
+		sed -i 's/DO_ARPING=${DO_ARPING:-yes}/DO_ARPING=${DO_ARPING:-no}/g' /etc/default/network-test;
+		sed -i 's/DO_SYSLOG=${DO_SYSLOG:-yes}/DO_SYSLOG=${DO_SYSLOG:-no}/g' /etc/default/network-test;
+	fi
+fi
+if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+	# /etc/network/if-down.d/resolved: 12: mystatedir: not found
+	# /etc/network/if-up.d/resolved: 12: mystatedir: not found
+	if [ -f /etc/network/if-down.d/resolved ]; then
+		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-down.d/resolved;
+		sed -i 's/return/exit 0/g' /etc/network/if-down.d/resolved;
+	fi
+	if [ -f /etc/network/if-up.d/resolved ]; then
+		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-up.d/resolved;
+		sed -i 's/return/exit 0/g' /etc/network/if-up.d/resolved;
+	fi
+fi
+
+# chmod and own credentials
+chmod +x /usr/local/bin/credentials
+chown root:root /usr/local/bin/credentials
+
+# blacklist old rtl8188eu wireless module
+mkdir -p /etc/modprobe.d
+if [ $rtl8188eu -eq 1 ]; then
+	echo "blacklist r8188eu" > /etc/modprobe.d/50-8188eu.conf;
+	chown root:root /etc/modprobe.d/50-8188eu.conf;
+	if [ -f /lib/firmware/rtlwifi/rtl8188eufw.bin ]; then
+		:;
+	else
+		mkdir -p /lib/firmware/rtlwifi;
+		wget -cq https://github.com/armbian/firmware/raw/master/rtlwifi/rtl8188eufw.bin -P /lib/firmware/rtlwifi/;
+	fi
+fi
+echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
+chown root:root /etc/modprobe.d/8821cu.conf
+
+# ifupdown interfaces and wpa_supplicant files
+tee /etc/opt/interfaces.manual <<EOF
+### Interfaces
+source /etc/network/interfaces.d/*
+
+### Loopback network interface
+auto lo
+iface lo inet loopback
+
+### Ethernet
+allow-hotplug eth0
+iface eth0 inet dhcp
+	#address 10.0.0.10
+	#netmask 255.255.255.0
+	#gateway 10.0.0.1
+	#dns-nameservers 8.8.8.8 8.8.4.4
+
+### Mobile tether
+#allow-hotplug usb0
+#iface usb0 inet dhcp
+
+### Wifi
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+	wireless-power off
+	#address 10.0.0.10
+	#netmask 255.255.255.0
+	#gateway 10.0.0.1
+	#dns-nameservers 8.8.8.8 8.8.4.4
+	wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+EOF
+
+tee /etc/opt/interfaces <<EOF
+### Interfaces
+source /etc/network/interfaces.d/*
+
+### Loopback network interface
+auto lo
+iface lo inet loopback
+
+### Ethernet
+allow-hotplug eth0
+iface eth0 inet dhcp
+	#address 10.0.0.10
+	#netmask 255.255.255.0
+	#gateway 10.0.0.1
+	#dns-nameservers 8.8.8.8 8.8.4.4
+
+### Mobile tether
+#allow-hotplug usb0
+#iface usb0 inet dhcp
+
+### Wifi
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+	wireless-power off
+	wlan_address 10.0.0.10
+	wlan_netmask 255.255.255.0
+	wlan_gateway 10.0.0.1
+	wlan_dns-nameservers 8.8.8.8 8.8.4.4
+	wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+EOF
+
+tee /etc/opt/wpa_supplicant.manual <<EOF
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=US
+
+network={
+	ssid="mywifissid"
+	scan_ssid=1
+	key_mgmt=WPA-PSK
+	psk="wifipasskey"
+}
+EOF
+
+tee /etc/opt/wpa_supplicant.conf <<EOF
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=
+
+network={
+	name=
+	scan_ssid=1
+	key_mgmt=WPA-PSK
+	password=
+}
+EOF
+}

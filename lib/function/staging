@@ -172,7 +172,7 @@ if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
 	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p1/;
 	echo_bdone;
 else
-	echo -e "${YLW}Missing rootfs tarball!${FIN}";
+	echo -e "${YLW}Missing rootfs tarball${FIN}?";
 	make cleanup > /dev/null 2>&1;
 	exit;
 fi
@@ -213,7 +213,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	if [ -f output/raspi4/u-boot.bin ]; then
 		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
 	else
-		echo -e "${YLW}Missing u-boot.bin${FIN}."
+		echo -e "${YLW}Missing u-boot.bin${FIN}?"
 		exit 1;
 	fi
 fi
@@ -222,7 +222,7 @@ if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
 	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p2/;
 	echo_bdone;
 else
-	echo -e "${YLW}Missing rootfs tarball${FIN}.";
+	echo -e "${YLW}Missing rootfs tarball${FIN}?";
 	make cleanup > /dev/null 2>&1;
 	exit;
 fi
@@ -248,6 +248,7 @@ fi
 }
 
 p1_files(){
+cp lib/function/networking p1/root/networking.txt
 cp lib/function/services p1/root/services.txt
 cp lib/source p1/root/source.txt
 cp userdata.txt p1/root
@@ -262,6 +263,7 @@ fi
 }
 
 p2_files(){
+cp lib/function/networking p2/root/networking.txt
 cp lib/function/services p2/root/services.txt
 cp lib/source p2/root/source.txt
 cp userdata.txt p2/root
@@ -278,6 +280,20 @@ if [[ "$DISTRO" == "devuan" ]]; then
 fi
 }
 
+# add kernel version to img
+rename_image(){
+source kernel.txt
+mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
+}
+
+# compress image to img.xz
+compress_image(){
+source kernel.txt
+mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
+xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
+}
+
+# create extlinux file (p1)
 p1_extlinux(){
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
@@ -306,6 +322,7 @@ if [[ "$BOARD" == "rockpro64" ]]; then
 fi
 }
 
+# create extlinux file (p2)
 p2_extlinux(){
 # broadcom
 if [[ "$BOARD" == "raspi4" ]]; then
