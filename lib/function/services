@@ -44,6 +44,8 @@ tee /etc/systemd/system/governor.service <<EOF
 [Unit]
 Description=Governor
 ConditionPathExists=/usr/local/bin/governor
+After=network.target
+Before=rc-local.service
 
 [Service]
 ExecStart=/usr/local/bin/governor -r &>/dev/null
@@ -372,10 +374,12 @@ if [[ "$BOARD" == "rockpro64" ]]; then
 	update-rc.d tweaks defaults 2;
 fi
 chmod +x /etc/init.d/zramswap
-chmod +x /etc/init.d/network
+if [ $networkmanager -eq 0 ]; then
+	chmod +x /etc/init.d/network;
+	update-rc.d -f networking remove;
+fi
 chmod +x /etc/init.d/credentials
 update-rc.d -f hwclock.sh remove
-update-rc.d -f networking remove
 update-rc.d firstboot defaults S
 update-rc.d governor defaults 2
 update-rc.d zramswap defaults 2

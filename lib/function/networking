@@ -88,19 +88,11 @@ chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
 
 ifupdown-setup(){
 rm -f /etc/network/interfaces
-mv -f credentials.txt /boot/rename_to_credentials.txt
 if [[ "$DISTRO" == "devuan" ]]; then
-	mv -f credentials.devuan /usr/local/bin/credentials;
-	rm -f credentials.debian;
 	ln -sr /etc/network/if-up.d/00check-network-cable /etc/network/if-pre-up.d/00check-network-cable;
 	sed -i 's/#CONFIGURE_INTERFACES=yes/CONFIGURE_INTERFACES=yes/g' /etc/default/networking;
 	sed -i 's/#WAIT_ONLINE_METHOD=ifup/WAIT_ONLINE_METHOD=ifup/g' /etc/default/networking;
 	sed -i 's/#WAIT_ONLINE_TIMEOUT=300/WAIT_ONLINE_TIMEOUT=10/g' /etc/default/networking;
-else
-	mv -f credentials.debian /usr/local/bin/credentials;
-	rm -f credentials.devuan;
-fi
-if [[ "$DISTRO" == "devuan" ]]; then
 	if [ -f /etc/default/network-test ]; then
 		sed -i 's/DO_ARPING=${DO_ARPING:-yes}/DO_ARPING=${DO_ARPING:-no}/g' /etc/default/network-test;
 		sed -i 's/DO_SYSLOG=${DO_SYSLOG:-yes}/DO_SYSLOG=${DO_SYSLOG:-no}/g' /etc/default/network-test;
@@ -119,10 +111,6 @@ if [[ "$DISTRO_VERSION" == "jammy" ]]; then
 	fi
 fi
 
-# chmod and own credentials
-chmod +x /usr/local/bin/credentials
-chown root:root /usr/local/bin/credentials
-
 # blacklist old rtl8188eu wireless module
 mkdir -p /etc/modprobe.d
 if [ $rtl8188eu -eq 1 ]; then
@@ -135,6 +123,8 @@ if [ $rtl8188eu -eq 1 ]; then
 		wget -cq https://github.com/armbian/firmware/raw/master/rtlwifi/rtl8188eufw.bin -P /lib/firmware/rtlwifi/;
 	fi
 fi
+
+# rtl8821cu conf
 echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
 chown root:root /etc/modprobe.d/8821cu.conf
 
@@ -228,4 +218,64 @@ network={
 	password=
 }
 EOF
+}
+
+networkmanager-setup(){
+if [ -f /etc/network/interfaces ]; then
+	rm -f /etc/network/interfaces;
+fi
+tee /etc/network/interfaces <<EOF
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+EOF
+echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" > /etc/wpa_supplicant/wpa_supplicant.conf
+chown root:root /etc/network/interfaces
+chown root:root /etc/wpa_supplicant/wpa_supplicant.conf
+if [ -f /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf ]; then
+	rm -f /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf;
+fi
+if [ -f /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf ]; then
+	sed -i 's/wifi.powersave = 3/wifi.powersave = 2/g' /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf;
+fi
+rtl88x2bu_conf
+rtl8821cu_conf
+}
+
+ifupdown-credentials(){
+if [ -f /root/ifupdown.credentials ]; then
+	mv -f /root/ifupdown.credentials /usr/local/bin/credentials;
+	chmod +x /usr/local/bin/credentials;
+	chown root:root /usr/local/bin/credentials;
+	rm -f /root/networkmanager.credentials;
+fi
+echo "# wifi credentials" > /boot/rename_to_credentials.txt
+echo 'SSID=""' >> /boot/rename_to_credentials.txt
+echo 'PASSKEY=""' >> /boot/rename_to_credentials.txt
+echo 'COUNTRYCODE=""' >> /boot/rename_to_credentials.txt
+echo "# set static ip address" >> /boot/rename_to_credentials.txt
+echo 'MANUAL="n"' >> /boot/rename_to_credentials.txt
+echo 'IPADDR=""' >> /boot/rename_to_credentials.txt
+echo 'NETMASK=""' >> /boot/rename_to_credentials.txt
+echo 'GATEWAY=""' >> /boot/rename_to_credentials.txt
+echo 'NAMESERVERS=""' >> /boot/rename_to_credentials.txt
+}
+
+networkmanager-credentials(){
+if [ -f /root/networkmanager.credentials ]; then
+	mv -f /root/networkmanager.credentials /usr/local/bin/credentials;
+	chmod +x /usr/local/bin/credentials;
+	chown root:root /usr/local/bin/credentials;
+	rm -f /root/ifupdown.credentials;
+fi
+echo "# wifi credentials" > /boot/rename_to_credentials.txt
+echo 'SSID=""' >> /boot/rename_to_credentials.txt
+echo 'PASSKEY=""' >> /boot/rename_to_credentials.txt
+echo 'COUNTRYCODE=""' >> /boot/rename_to_credentials.txt
+echo "# set static ip address" >> /boot/rename_to_credentials.txt
+echo 'MANUAL="n"' >> /boot/rename_to_credentials.txt
+echo 'IPADDR=""' >> /boot/rename_to_credentials.txt
+echo 'GATEWAY=""' >> /boot/rename_to_credentials.txt
+echo 'DNS=""' >> /boot/rename_to_credentials.txt
 }

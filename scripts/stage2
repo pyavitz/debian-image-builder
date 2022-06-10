@@ -14,14 +14,16 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [[ "$DISTRO_VERSION" == "jammy" ]]; then
-	# systemd-resolved breaks static ip when using ifupdown
-	# it will be disabled on jammy jellyfish
-	unlink /etc/resolv.conf;
-	if [ -f /etc/resolv.conf ]; then
-		rm -f /etc/resolv.conf;
+if [ $networkmanager -eq 0 ]; then
+	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+		# systemd-resolved breaks static ip when using ifupdown
+		# it will be disabled on jammy jellyfish
+		unlink /etc/resolv.conf;
+		if [ -f /etc/resolv.conf ]; then
+			rm -f /etc/resolv.conf;
+		fi
+		systemctl disable systemd-resolved;
 	fi
-	systemctl disable systemd-resolved;
 fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
@@ -49,23 +51,38 @@ set_timezone
 apt upgrade -y
 apt dist-upgrade -y
 apt autoremove -y
+# Set network variables
+if [ $networkmanager -eq 1 ]; then
+	NETWORKING="network-manager";
+	if [[ "$DISTRO" == "devuan" ]]; then
+		NETWORKING_EXTRA="";
+	fi
+else
+	NETWORKING="ifupdown";
+	if [[ "$DISTRO" == "devuan" ]]; then
+		NETWORKING_EXTRA="ifupdown-extra";
+	fi
+fi
+# Install base and extra packages
 if [[ "$DISTRO" == "debian" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} resolvconf haveged;
+	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} resolvconf haveged ${NETWORKING};
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends;
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} openresolv ifupdown ifupdown-extra haveged;
+	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} openresolv haveged ${NETWORKING} ${NETWORKING_EXTRA};
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} openresolv ifupdown rng-tools5;
-	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
-		# disable systemd-networkd and mask systemd-networkd-wait-online
-		systemctl disable systemd-networkd;
-		systemctl mask systemd-networkd-wait-online;
+	apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
+	if [ $networkmanager -eq 0 ]; then
+		if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+			# disable systemd-networkd and mask systemd-networkd-wait-online
+			systemctl disable systemd-networkd;
+			systemctl mask systemd-networkd-wait-online;
+		fi
 	fi
 fi
 if [[ "$DISTRO" == "kali" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} dbus-user-session libical3 resolvconf ntp haveged;
+	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} dbus-user-session libical3 resolvconf haveged ${NETWORKING};
 fi
 if [[ "$BOARD" == "raspi4" ]]; then
 	apt install -y ${RPI};
@@ -243,7 +260,9 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 	fi
 fi
 mv -f smon /usr/local/bin/
-wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/
+if [ $networkmanager -eq 0 ]; then
+	wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/;
+fi
 wget -cq --show-progress ${SCRIPTS_URL}governor -P /usr/local/bin/
 if [[ "$BOARD" == "raspi4" ]]; then
 	wget -cq --show-progress ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/;
@@ -259,19 +278,23 @@ chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
 chown -R root:root /usr/local/lib/image-config-menu
 if [[ "$BOARD" == "nanopi" ]]; then
-	mv -f nanopi-bthelper /usr/local/sbin/
+	mv -f nanopi-bthelper /usr/local/sbin/;
 	chmod +x /usr/local/sbin/nanopi-bthelper;
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
-	mkdir -p /etc/init.d
-	mv -f firstboot.init /etc/init.d/firstboot
-	mv -f leds.init /etc/init.d/leds
-	mv -f credentials.init /etc/init.d/credentials
-	mv -f governor.init /etc/init.d/governor
-	mv -f network.init /etc/init.d/network
-	mv -f zramswap.init /etc/init.d/zramswap
+	mkdir -p /etc/init.d;
+	mv -f firstboot.init /etc/init.d/firstboot;
+	mv -f leds.init /etc/init.d/leds;
+	mv -f credentials.init /etc/init.d/credentials;
+	mv -f governor.init /etc/init.d/governor;
+	if [ $networkmanager -eq 1 ]; then
+		rm -f network.init;
+	else
+		mv -f network.init /etc/init.d/network;
+	fi
+	mv -f zramswap.init /etc/init.d/zramswap;
 	if [[ "$BOARD" == "pine64" ]]; then
-		mv -f bthelper.init /etc/init.d/bthelper
+		mv -f bthelper.init /etc/init.d/bthelper;
 		rm -f /etc/init.d/leds;
 	fi
 	if [[ "$BOARD" == "nanopi" ]]; then
@@ -349,7 +372,13 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 
 # Network Setup
-ifupdown-setup > /dev/null 2>&1
+if [ $networkmanager -eq 1 ]; then
+	networkmanager-setup > /dev/null 2>&1;
+	networkmanager-credentials > /dev/null 2>&1;
+else
+	ifupdown-setup > /dev/null 2>&1;
+	ifupdown-credentials > /dev/null 2>&1;
+fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	:;
 else

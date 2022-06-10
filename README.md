@@ -91,6 +91,12 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
+#### Network Manager
+
+```sh
+# change from 0 to 1
+networkmanager=0
+```
 #### Aircrack (rtl88XXau)
 
 ```sh
