@@ -32,6 +32,12 @@ make config     # Create user data file
 make menu       # Open menu interface
 make dialogrc   # Set builder theme (optional)
 ```
+#### Miscellaneous
+```sh
+make cleanup    # Clean up image errors
+make purge      # Remove sources directory
+make purge-all  # Remove sources and output directory
+```
 #### Config Menu ([Linux kernel options](https://github.com/pyavitz/debian-image-builder/wiki/Building-vendor-kernels))
 * Review the userdata.txt file for further options: locales, timezone and nameserver(s)
 * 1 active | 0 inactive
@@ -91,7 +97,7 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
-#### Network Manager
+#### Network Manager (nmtui)
 
 ```sh
 # change from 0 to 1
@@ -108,12 +114,7 @@ aircrack=0
 # change from 0 to 1
 emmc=0
 ```
-#### Miscellaneous
-```sh
-make cleanup    # Clean up image errors
-make purge      # Remove sources directory
-make purge-all  # Remove sources and output directory
-```
+
 #### Notes
 * **Radxa Zero:** [Maskrom](https://wiki.radxa.com/Zero/dev/maskrom#Enable_maskrom) \ [Fastboot](https://wiki.radxa.com/Zero/dev/u-boot#Run_U-boot) \ [Wifi](https://github.com/pyavitz/debian-image-builder/tree/feature/patches/amlogic/rzero/wifi)
 
@@ -173,21 +174,20 @@ SSID=""				# Service set identifier
 PASSKEY=""			# Wifi password
 COUNTRYCODE=""			# Your country code
 
-# set static ip
+# set static ip (ifupdown)
 MANUAL="n"			# Set to y to enable a static ip
 IPADDR=""			# Static ip address
 NETMASK=""			# Your Netmask
 GATEWAY=""			# Your Gateway
 NAMESERVERS=""			# Your preferred dns
 
+# set static ip (network-manager)
+MANUAL="n"			# Set to y to enable a static ip
+IPADDR=""			# Static ip address
+GATEWAY=""			# Your Gateway
+DNS=""				# Your preferred dns
+
 For headless use: ssh user@ipaddress
-
-Note:
-You can also mount the ROOTFS partition and edit the following
-files, whilst leaving rename_to_credentials.txt untouched.
-
-/etc/opt/interfaces.manual
-/etc/opt/wpa_supplicant.manual
 ```
 
 #### Write to eMMC
