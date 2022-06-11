@@ -97,7 +97,7 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
-#### Network Manager (nmtui)
+#### Network Manager (`nmtui`)
 
 ```sh
 # change from 0 to 1
@@ -189,6 +189,8 @@ DNS=""				# Your preferred dns
 
 For headless use: ssh user@ipaddress
 ```
+#### System settings (`menu-config`)
+<img src="https://i.imgur.com/3ScdPjw.png" alt="rpi-img-builder" width="657" height="410" />
 
 #### Write to eMMC
 ```sh
@@ -212,7 +214,7 @@ Upon install please run 'deb-eeprom -u' before using this script.
 ```
 #### Simple wifi helper
 ```sh
-swh -h
+Usage: swh -h
 
 	-s	Scan for SSID's
 	-u	Bring up interface
@@ -223,7 +225,7 @@ swh -h
 ```
 #### CPU frequency scaling
 ```sh
-governor -h
+Usage: governor -h
 
 	-c	Conservative
 	-o	Ondemand
@@ -243,7 +245,7 @@ If you decide to overclock the board, make sure you are using passive or active 
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
 sudo service tweaks restart
 ```
-#### Odroid N2 Fan Control
+#### Odroid N2 fan control
 Install script and service
 ```sh
 sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin
