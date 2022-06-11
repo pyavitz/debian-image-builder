@@ -1,57 +1,319 @@
 #!/bin/bash
-### DO NOT EDIT
-baseDir="/usr/local/lib/image-config-menu/"
-echo Number of args is $# 
-if [ $# -gt 0 ]; then
-	TITLE="$1" 
-	lsCmd="ls $baseDir/$1"
-else
-	TITLE="Main Config Menu"
-	lsCmd="ls -1 $baseDir"
+# DEBIAN IMAGE BUILDER: SYSTEM MENU INTERFACE
+if [ -f /etc/opt/board.txt ]; then
+	source /etc/opt/board.txt;
 fi
 
-DIALOG_CANCEL=1
-DIALOG_ESC=255
-HEIGHT=0
-WIDTH=0
-
-#menu_items=`ls -d */ | while read name; do ((count+=1)); echo $count $name | sed -e 's/\(.*\)/\U\1/'; done`
-#menu_items=`ls -d */ | while read name; do ((count+=1)); echo $count ${name%/*} ; done`
-menu_items=`$lsCmd | while read name; do ((count+=1)); echo $count ${name%/*} ; done`
-while true; do
-	exec 3>&1
-	selection=$(dialog \
-	--backtitle "Debian Image Builder" \
-	--title "$TITLE" \
-	--clear \
-	--cancel-label "Exit" \
-	--menu "Select:" $HEIGHT $WIDTH 15 \
-	 $menu_items \
-	2>&1 1>&3)
-	exit_status=$?
-	exec 3>&-;
-case $exit_status in
-	$DIALOG_CANCEL)
-		clear
-		echo "Program terminated."
-		exit
-		;;
-	$DIALOG_ESC)
-		clear
-		echo "Program aborted." >&2
-		exit 1
-		;;
-esac
-if [ $selection -eq 0 ]; then
-        clear -x;
-        echo -e "${RED}Program terminated${FIN}.";
-else
-        cmd=`$lsCmd | head -n $selection | tail -n 1`;
-	if [ $# -gt 0 ]; then
-		$baseDir/$1/$cmd
-	else
-		$0 $cmd
-	fi
-        #chmod +x lib/dialog/general;
+# functions
+supported_list(){
+if [[ "$BOARD" == "odroidc4" ]]; then
+	BOARD_PN="Odroid C4";
+	supported_mixer=1;
 fi
+if [[ "$BOARD" == "odroidhc4" ]]; then
+	BOARD_PN="Odroid HC4";
+	supported_mixer=1;
+fi
+if [[ "$BOARD" == "odroidn2" ]]; then
+	BOARD_PN="Odroid N2";
+	supported_oc=1;
+	supported_mixer=1;
+fi
+if [[ "$BOARD" == "odroidn2plus" ]]; then
+	BOARD_PN="Odroid N2+";
+	supported_oc=1;
+	supported_mixer=1;
+fi
+if [[ "$BOARD" == "radxazero" ]]; then
+	BOARD_PN="Radxa Zero";
+	supported_oc=1;
+	supported_mixer=1;
+fi
+if [[ "$BOARD" == "nanopc" ]]; then
+	BOARD_PN="NanoPC-T4";
+	supported_oc=1;
+fi
+if [[ "$BOARD" == "rockpro64" ]]; then
+	BOARD_PN="RockPRO64";
+	supported_oc=1;
+fi
+}
+
+overclock(){
+echo "overclock=1" | sudo tee /etc/opt/overclock.txt
+sudo service tweaks restart
+}
+
+HA_NOTES="The following install has been tested on the Odroid N2+ and Raspberry Pi 4B. \
+I do not use audio out of my smart home controller, so I have not vailidated that \
+the HA audio container works correctly. Other than that, this will give you a good \
+platform for HA. If you use this install on the Raspberry Pi, I'd recommend using an \
+"A1" SDCARD. On the Odroid N2+ I recommend using an eMMC. The OS is arm64, which matters \
+when the final HA install script runs and you are asked to select the platform."
+
+homeAssistant(){
+clear -x
+echo ""
+echo "Installing Home Assistant ..."
+set -x
+if [[ "$FAMILY" == "amlogic" ]]; then
+	#Make sure sound is enabled on N2+
+	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
+	sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
+	sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
+	sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
+	sudo amixer sset 'TOHDMITX' 'on'
+	sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
+	sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
+	sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
+	sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
+	sudo alsactl store
+fi
+
+# install docker
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo \
+ "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]\
+ https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update; sudo apt-get -y upgrade
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+
+# install HA required packages
+sudo apt -y install jq libglib2.0-bin udisks2
+sudo apt -y install network-manager
+
+# install agent required by ha
+wget -cq --show-progress \
+https://github.com/home-assistant/os-agent/releases/download/1.2.2/os-agent_1.2.2_linux_aarch64.deb
+sudo dpkg -i os-agent_1.2.2_linux_aarch64.deb
+
+# enabed service required by HA
+sudo systemctl enable systemd-resolved.service
+sudo systemctl start systemd-resolved.service
+
+# need to fake grub so HA will install
+sudo touch /etc/default/grub
+echo '#!/bin/bash' | sudo tee /usr/bin/update-grub
+echo 'echo got it'  |sudo tee -a /usr/bin/update-grub
+sudo chmod 755 /usr/bin/update-grub
+
+# enable use of GPIO pins
+sudo apt install -y gpiod python3-libgpiod
+echo 'KERNEL=="gpiochip0", MODE="0666"' |sudo tee -a /etc/udev/rules.d/99-perm.rules 
+echo 'KERNEL=="gpiochip1", MODE="0666"' |sudo tee -a /etc/udev/rules.d/99-perm.rules 
+
+# install tools useful for sensor scripts that communicate with HA mosquitto broker
+sudo apt -y install netcat mosquitto-clients
+
+# install tools that allow for using usb nic for backup communication path
+sudo apt -y install networkd-dispatcher ifmetric
+
+# remove avahi-daemon as it's not required
+sudo apt -y remove --purge avahi-daemon
+
+# add some kernel arguments, some that are required, some that look to make system more stable
+if [ -f /boot/extlinux/extlinux.conf ]; then
+	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused  cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/extlinux/extlinux.conf;
+fi
+
+# grab the HA supervisor package which will install HA
+wget -cq --show-progress https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
+sudo dpkg -i homeassistant-supervised.deb
+
+# clean
+sleep 2s
+if [ -f os-agent_1.2.2_linux_aarch64.deb ]; then rm -f os-agent_1.2.2_linux_aarch64.deb; fi
+if [ -f homeassistant-supervised.deb ]; then rm -f homeassistant-supervised.deb; fi
+
+# finish
+read -p "Press enter to continue."
+}
+
+# main menu
+while [ 1 ]
+do
+CHOICE=$(
+export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+whiptail --backtitle "Menu Interface: System Settings" --title "System Settings" --menu "" --nocancel 0 25 0 \
+	"1)" "Governor" \
+	"2)" "Wireless" \
+	"3)" "Locales" \
+	"4)" "Keyboard" \
+	"5)" "Timezone" \
+	"6)" "Overclock" \
+	"" "" \
+	"7)" "Third-party" \
+	"8)" "Miscellaneous" \
+	"" "" \
+	"U)" "Update" \
+	"Q)" "Quit .." 3>&2 2>&1 1>&3
+)
+
+case $CHOICE in
+	"1)")
+		governor -m
+		;;
+	"2)")
+		if [[ `command -v nmtui` ]]; then
+			sudo nmtui;
+		else
+			swh -m;
+		fi
+		;;
+	"3)")
+		sudo dpkg-reconfigure locales
+		;;
+	"4)")
+		sudo dpkg-reconfigure keyboard-configuration
+		;;
+	"5)")
+		sudo dpkg-reconfigure tzdata
+		;;
+	"6)")
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+		supported_list
+		if [ $supported_oc -eq 1 ]; then
+			if (whiptail --backtitle "Board: $BOARD_PN" --title "$BOARD_PN" --yesno "   Overclock?" 0 0); then
+				echo ""
+				echo -e "Overclocking: $BOARD_PN ";
+				echo "";
+				echo -en "Running service: "
+				overclock > /dev/null 2>&1;
+				sleep 1s;
+				echo -e "[done]";
+				echo "";
+				echo -e "Cores:" $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
+				echo "";
+				read -p "You may need to reboot for it to take effect";
+				clear -x
+			fi
+		else
+			whiptail --msgbox "    Your board is not supported." 0 0;
+		fi
+		;;
+	"")
+		;;
+	"7)")
+		while [ 1 ]
+		do
+		THIRDPARTY=$(
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+		whiptail --backtitle "Third-party: Applications" --title "Install" --menu "" --nocancel 0 0 0 \
+			"HA)" "Home Assistant" \
+			"E)" "Exit .." 3>&2 2>&1 1>&3
+		)
+		case $THIRDPARTY in
+			"HA)")
+				export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+				if (whiptail --backtitle "Third-party: Home Assistant" --title "Home Assistant" --yesno "$HA_NOTES" 0 0); then
+					homeAssistant
+				else
+					whiptail --msgbox "    Hit enter to return to menu." 0 0;
+				fi
+				;;
+			"E)")
+				clear -x
+				break
+				;;
+			esac
+		done
+		;;
+	"8)")
+		while [ 1 ]
+		do
+		MISC=$(
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
+			"AA)" "Amlogic Audio" \
+			"RT)" "Repair Tasksel" \
+			"E)" "Exit .." 3>&2 2>&1 1>&3
+		)
+		case $MISC in
+			"AA)")
+				supported_list
+				if [ $supported_mixer -eq 1 ]; then
+					echo "";
+					echo "Running audio setup ...";
+					sleep 1s;
+					sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1';
+					sudo amixer sset 'FRDDR_A SRC 1 EN' 'on';
+					sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0';
+					sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B';
+					sudo amixer sset 'TOHDMITX' 'on';
+					sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2';
+					sudo amixer sset 'FRDDR_B SRC 1 EN' 'on';
+					sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3';
+					sudo amixer sset 'FRDDR_C SRC 1 EN' 'on';
+					sudo alsactl store;
+					echo "Done.";
+					echo "";
+					read -p "Press enter to continue.";
+					clear -x;
+				else
+					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+					whiptail --msgbox "    Your board is not supported." 0 0;
+				fi
+				;;
+			"RT)")
+				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					echo "";
+					echo "Repairing tasksel ...";
+					if [[ `command -v tasksel` ]]; then
+						:;
+					else
+						sudo apt update;
+						sudo apt install -y tasksel;
+					fi
+					sleep 1s;
+					sudo apt-get update;
+					sudo apt-get install --reinstall debconf;
+					sudo dpkg-reconfigure tasksel;
+					echo "Done.";
+					echo "";
+					read -p "Press enter to continue.";
+					clear -x;
+				else
+					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+					whiptail --msgbox "    This requires a internet connection." 0 0;
+				fi
+				;;
+			"E)")
+				clear -x
+				break
+				;;
+			esac
+		done
+		;;
+	"")
+		;;
+	"U)")
+		echo ""
+		echo -en "Updating menu and scripts "
+		governor -u > /dev/null 2>&1
+		swh -U > /dev/null 2>&1
+		MENU=`command -v menu-config`
+		MENUDIR="/usr/local/bin/"
+		if [ -f $MENU ]; then
+			sudo mv -f $MENU $MENU.orig;
+		fi
+		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config -P $MENUDIR
+		sudo chmod +x `command -v menu-config`
+		if [ -f $MENU ]; then
+			sudo rm -f $MENU.orig;
+		else
+			sudo mv -f $MENU.orig $MENU;
+		fi
+		echo -e "[done]"
+		sleep 1s
+		clear -x
+		;;
+	"Q)")
+		clear -x
+		exit 0
+		;;
+	esac
 done
+exit 0
