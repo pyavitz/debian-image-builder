@@ -290,25 +290,20 @@ case $CHOICE in
 	"")
 		;;
 	"U)")
-		echo ""
-		echo -en "Updating menu and scripts "
-		governor -u > /dev/null 2>&1
-		swh -U > /dev/null 2>&1
-		MENU=`command -v menu-config`
+		MCU=`command -v menu-config-update`
 		MENUDIR="/usr/local/bin/"
-		if [ -f $MENU ]; then
-			sudo mv -f $MENU $MENU.orig;
+		if [ -f $MCU ]; then
+			sudo mv -f $MCU $MCU.orig;
 		fi
-		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config -P $MENUDIR
-		sudo chmod +x $(command -v menu-config)
-		if [ -f $MENU ]; then
-			sudo rm -f $MENU.orig;
+		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config-update -P $MENUDIR
+		sudo chmod +x $(command -v menu-config-update)
+		if [ -f $MCU ]; then
+			sudo rm -f $MCU.orig;
 		else
-			sudo mv -f $MENU.orig $MENU;
+			sudo mv -f $MCU.orig $MCU;
 		fi
-		echo -e "[done]"
-		sleep 1s
-		clear -x
+		menu-config-update
+		exit 0
 		;;
 	"Q)")
 		clear -x
@@ -316,4 +311,3 @@ case $CHOICE in
 		;;
 	esac
 done
-exit 0
