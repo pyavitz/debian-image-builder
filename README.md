@@ -42,47 +42,48 @@ make purge-all  # Remove sources and output directory
 * Review the userdata.txt file for further options: locales, timezone and nameserver(s)
 * 1 active | 0 inactive
 ```sh
-Name:		# Your name
-Username:       # Your username
-Password:       # Your password
-Branding:       # Set custom ASCII text banner
-Hostname:       # Set custom system hostname
+Name:			# Your name
+Username:		# Your username
+Password:		# Your password
+Branding:		# Set custom ASCII text banner
+Hostname:		# Set custom system hostname
 
 Distribution
-Distro:         # Supported: debian, devuan and ubuntu
-Release:	# Debian: bullseye, bookwork, testing, unstable and sid
-		# Devuan: chimaera, daedalus, testing, unstable and ceres
-		# Ubuntu: focal and jammy
+Distro:			# Supported: debian, devuan and ubuntu
+Release:		# Debian: bullseye, bookwork, testing, unstable and sid
+			# Devuan: chimaera, daedalus, testing, unstable and ceres
+			# Ubuntu: focal and jammy
+Network Manager		# Enable nmtui (default: ifupdown)
 
 U-Boot and Linux
-U-Boot:         # Supported: v2022.04
-Branch:         # Supported: 5.15 and current stable
-Build:          # Kernel build version number
-Menuconfig:     # Run uboot and kernel menuconfig
-Compiler:       # Defaults at gcc-10 
-Crosscompile:   # 1 cross compile | 0 native compile
-Caching on:     # Ccache
+U-Boot:			# Supported: v2022.04
+Branch:			# Supported: 5.15 and current stable
+Build:			# Kernel build version number
+Menuconfig:		# Run uboot and kernel menuconfig
+Compiler:		# Defaults at gcc-10 
+Crosscompile:		# 1 cross compile | 0 native compile
+Caching on:		# Ccache
 
 Extra wireless support
-rtl88XXau:      # Realtek 8812AU/21AU wireless support
-rtl88XXbu:      # Realtek 88X2BU wireless support
-rtl88XXcu:      # Realtek 8811CU/21CU wireless support
-rtl8188eu:      # Realtek 8188EU wireless support
+rtl88XXau:		# Realtek 8812AU/21AU wireless support
+rtl88XXbu:		# Realtek 88X2BU wireless support
+rtl88XXcu:		# Realtek 8811CU/21CU wireless support
+rtl8188eu:		# Realtek 8188EU wireless support
 
 Customize
-Defconfig:	# User defconfig
-Name:		# Name of _defconfig (Must be placed in defconfig dir.)
+Defconfig:		# User defconfig
+Name:			# Name of _defconfig (must be placed in defconfig dir.)
 
 User options
-Logging:	# Logging > output/logs/$board-*.log (Menu interface only)
-Verbosity:	# Verbose
-Devel Rootfs:	# Developer rootfs tarball
-Compress img:	# Auto compress img > img.xz
-User scripts:	# Review the README in the files/userscripts directory
-User service:	# Create user during first boot (bypass the user information above)
+Logging:		# Logging > output/logs/$board-*.log (Menu interface only)
+Verbosity:		# Verbose
+Devel Rootfs:		# Developer rootfs tarball
+Compress img:		# Auto compress img > img.xz
+User scripts:		# Review the README in the files/userscripts directory
+User service:		# Create user during first boot (bypass the user information above)
 
 Odroids
-petitboot:	# Enable boot option
+petitboot:		# Enable boot option
 ```
 
 #### User defconfig
@@ -96,12 +97,6 @@ userdata.txt file.
 
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
-```
-#### Network Manager (`nmtui`)
-
-```sh
-# change from 0 to 1
-networkmanager=0
 ```
 #### Aircrack (rtl88XXau)
 
@@ -212,7 +207,7 @@ Usage: deb-eeprom -h
 Note:
 Upon install please run 'deb-eeprom -u' before using this script.
 ```
-#### Simple wifi helper
+#### Simple wifi helper (ifupdown)
 ```sh
 Usage: swh -h
 
