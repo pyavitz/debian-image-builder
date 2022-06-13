@@ -1,4 +1,5 @@
 #!/bin/bash
+source /etc/opt/board.txt
 WHT="\033[1m"
 FIN="\033[0m"
 
@@ -29,52 +30,6 @@ case "$choice" in
 esac
 }
 
-run(){
-echo ""
-echo -e "${WHT}Running System Setup${FIN} ..."
-sleep 1s
-sudo dpkg-reconfigure locales tzdata keyboard-configuration
-sleep 1s
-if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-	echo "";
-	echo "Preparing tasksel ...";
-	if [[ `command -v tasksel` ]]; then
-		:;
-	else
-		sudo apt update;
-		sudo apt install -y tasksel;
-	fi
-	sleep 1s;
-	sudo apt-get update;
-	sudo apt-get install --reinstall debconf;
-	sudo dpkg-reconfigure tasksel;
-	echo "Done.";
-	echo ""
-fi
-sleep 1s
-if [[ `grep -w 'BOARD="radxazero"' "/etc/opt/board.txt"` ]]; then
-	confirm;
-else
-	if [[ `grep 'FAMILY_EXT="odroid"' "/etc/opt/board.txt"` ]]; then
-		confirm;
-	else
-		:;
-	fi
-fi
-if [ -f /etc/motd ]; then
-	sudo rm -f /etc/motd
-	sudo touch /etc/motd;
-fi
-sleep 1s
-sudo update-ca-certificates -f
-echo ""
-echo -e "${WHT}System is ready to go${FIN}."
-if [ -f /usr/local/bin/setup ]; then
-	sudo rm -f /usr/local/bin/setup;
-fi
-exit 0
-}
-
 if [ $# -eq 0 ]; then
 	echo -e "\e[0;31mMissing options!${FIN}"
 	echo "(run $0 -h for help)"
@@ -86,7 +41,46 @@ while getopts "rh" OPTION; do
 	case $OPTION in
 
 		r)
-			ECHO="RUN"
+			echo ""
+			echo -e "${WHT}Running System Setup${FIN} ..."
+			sleep 1s
+			sudo dpkg-reconfigure locales tzdata keyboard-configuration
+			sleep 1s
+			if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+				echo "";
+				echo "Preparing tasksel ...";
+				if [[ `command -v tasksel` ]]; then
+					:;
+				else
+					sudo apt update;
+					sudo apt install -y tasksel;
+				fi
+				sleep 1s;
+				sudo apt-get update;
+				sudo apt-get install --reinstall debconf;
+				sudo dpkg-reconfigure tasksel;
+				echo "Done.";
+				echo ""
+			fi
+			sleep 1s
+			if [[ "$BOARD" == "radxazero" ]]; then
+				confirm;
+			fi
+			if [[ "$FAMILY_EXT" == "odroid" ]]; then
+				confirm;
+			fi
+			if [ -f /etc/motd ]; then
+				sudo rm -f /etc/motd
+				sudo touch /etc/motd;
+			fi
+			sleep 1s
+			sudo update-ca-certificates -f
+			echo ""
+			echo -e "${WHT}System is ready to go${FIN}."
+			if [ -f /usr/local/bin/setup ]; then
+				sudo rm -f /usr/local/bin/setup;
+			fi
+			exit 0
 			;;
 		h)                       
 			echo ""
@@ -96,7 +90,4 @@ while getopts "rh" OPTION; do
 			;;
 	esac
 done
-
-if [ $ECHO = "RUN" ]; then
-	run;
-fi
+exit 0
