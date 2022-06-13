@@ -228,6 +228,7 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio" \
+			"CP)" "Change Password" \
 			"ST)" "Setup Tasksel" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
@@ -256,6 +257,29 @@ case $CHOICE in
 					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
 					whiptail --msgbox "    Your board is not supported." 0 0;
 				fi
+				;;
+			"CP)")
+				while true; do
+					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+					PASSWD1=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password" --nocancel 8 78 3>&1 1>&2 2>&3)
+					PASSWD2=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password (again)" --nocancel 8 78 3>&1 1>&2 2>&3)
+					if [ "$PASSWD1" = "$PASSWD2" ]; then
+						PASSWORD="${PASSWD1}";
+						export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+						if (whiptail --backtitle "Menu Interface: User Password: Confirm" --title "Confirm" --yesno "    Set the new password?" 0 0); then
+							echo "$PASSWORD" | sed 's/.*/\0\n\0/' | sudo passwd -q $USER 2> /dev/null
+							whiptail --backtitle "Menu Interface: User Password: Confirmation" --title "Confirmation" --msgbox "    Password changed successfully." 0 0;
+						else
+							whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+						fi
+					else
+						export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+						whiptail --backtitle "" --msgbox "    Passwords don't match? Try again." 0 0;
+						continue;
+					fi
+					break
+					clear -x
+				done
 				;;
 			"ST)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
