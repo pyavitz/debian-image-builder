@@ -490,33 +490,16 @@ KERNEL_RELEASE=`cat /usr/src/linux-headers*/include/config/kernel.release`
 echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
 
 # Miscellaneous
-systemd_journald(){
 # system.journal corrupted or uncleanly shut down, renaming and replacing
 if [ -f /etc/systemd/journald.conf ]; then
 	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
 fi
-}
 
+# Odroid udev rules
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
-	systemd_journald;
-fi
-if [[ "$BOARD" == "lepotato" ]]; then
-	systemd_journald;
-fi
-if [[ "$BOARD" == "radxazero" ]]; then
-	systemd_journald;
-fi
-if [[ "$ARCH" == "arm" ]]; then
-	systemd_journald;
-fi
-if [[ "$BOARD" == "renegade" ]]; then
-	systemd_journald;
-fi
-if [[ "$BOARD" == "rock64" ]]; then
-	systemd_journald;
 fi
 
 # Services
