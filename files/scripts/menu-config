@@ -18,11 +18,13 @@ if [[ "$BOARD" == "odroidn2" ]]; then
 	BOARD_PN="Odroid N2";
 	supported_oc=1;
 	supported_mixer=1;
+	fan_ctrl=1;
 fi
 if [[ "$BOARD" == "odroidn2plus" ]]; then
 	BOARD_PN="Odroid N2+";
 	supported_oc=1;
 	supported_mixer=1;
+	fan_ctrl=1;
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	BOARD_PN="Radxa Zero";
@@ -112,6 +114,46 @@ while true; do
 	break
 	clear -x
 done
+}
+
+install_fanctrl(){
+if [[ `command -v fan-ctrl` ]]; then
+	:;
+else
+	sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin;
+	sudo chmod +x $(command -v fan-ctrl);
+fi
+}
+
+systemd_fanctrl(){
+if [ -f /etc/systemd/system/odroid-fan-ctrl.service ]; then
+	:;
+else
+	sudo tee /etc/systemd/system/odroid-fan-ctrl.service <<EOF
+[Unit]
+Description=Odroid Fan Control
+ConditionPathExists=/usr/local/bin/fan-ctrl
+
+[Service]
+ExecStart=/usr/local/bin/fan-ctrl -r &>/dev/null
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+	sudo systemctl enable odroid-fan-ctrl;
+fi
+}
+
+sysvinit_fanctrl(){
+if [ -f /etc/init.d/fan-ctrl ]; then
+	:;
+else
+	sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl;
+	sudo chmod +x /etc/init.d/fan-ctrl;
+	sudo update-rc.d fan-ctrl defaults 2;
+fi
 }
 
 HA_NOTES="The following install has been tested on the Odroid N2+ and Raspberry Pi 4B. \
@@ -294,7 +336,7 @@ case $CHOICE in
 					read -p "Press enter to continue.";
 					clear -x;
 				else
-					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+					export NEWT_COLORS='root=,black'
 					whiptail --msgbox "    This requires a internet connection." 0 0;
 				fi
 				;;
@@ -312,12 +354,42 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
+			"FC)" "Fan Control              Set Odroid N2 trip point" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $MISC in
 			"AA)")
 				supported_list
 				amlogic_audio
+				;;
+			"FC)")
+				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					:;
+				else
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    This requires a internet connection." 0 0;
+				fi
+				supported_list
+				if [ $fan_ctrl -eq 1 ]; then
+					if [[ `grep -w "ID=debian" "/etc/os-release"` ]]; then
+						systemd_fanctrl > /dev/null 2>&1;
+						install_fanctrl > /dev/null 2>&1;
+						fan-ctrl -m;
+					fi
+					if [[ `grep -w "ID=devuan" "/etc/os-release"` ]]; then
+						sysvinit_fanctrl > /dev/null 2>&1;
+						install_fanctrl > /dev/null 2>&1;
+						fan-ctrl -m;
+					fi
+					if [[ `grep -w "ID=ubuntu" "/etc/os-release"` ]]; then
+						systemd_fanctrl > /dev/null 2>&1;
+						install_fanctrl > /dev/null 2>&1;
+						fan-ctrl -m;
+					fi
+				else
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    Your board is not supported." 0 0;
+				fi
 				;;
 			"E)")
 				clear -x
