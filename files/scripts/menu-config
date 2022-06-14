@@ -39,9 +39,79 @@ if [[ "$BOARD" == "rockpro64" ]]; then
 fi
 }
 
+amlogic_audio(){
+if [ $supported_mixer -eq 1 ]; then
+	echo "";
+	echo "Running audio setup ...";
+	sleep 1s;
+	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1';
+	sudo amixer sset 'FRDDR_A SRC 1 EN' 'on';
+	sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0';
+	sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B';
+	sudo amixer sset 'TOHDMITX' 'on';
+	sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2';
+	sudo amixer sset 'FRDDR_B SRC 1 EN' 'on';
+	sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3';
+	sudo amixer sset 'FRDDR_C SRC 1 EN' 'on';
+	sudo alsactl store;
+	echo "Done.";
+	echo "";
+	read -p "Press enter to continue.";
+	clear -x;
+else
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+	whiptail --msgbox "    Your board is not supported." 0 0;
+fi
+}
+
 overclock(){
 echo "overclock=1" | sudo tee /etc/opt/overclock.txt
 sudo service tweaks restart
+}
+
+overclocking(){
+if [ $supported_oc -eq 1 ]; then
+	if (whiptail --backtitle "Board: $BOARD_PN" --title "$BOARD_PN" --yesno "   Overclock?" 0 0); then
+		echo ""
+		echo -e "Overclocking: $BOARD_PN ";
+		echo "";
+		echo -en "Running service: "
+		overclock > /dev/null 2>&1;
+		sleep 1s;
+		echo -e "[done]";
+		echo "";
+		echo -e "Cores:" $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
+		echo "";
+		read -p "You may need to reboot for it to take effect";
+		clear -x
+	fi
+else
+	whiptail --msgbox "    Your board is not supported." 0 0;
+fi
+}
+
+change_password(){
+while true; do
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+	PASSWD1=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password" --nocancel 8 78 3>&1 1>&2 2>&3)
+	PASSWD2=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password (again)" --nocancel 8 78 3>&1 1>&2 2>&3)
+	if [ "$PASSWD1" = "$PASSWD2" ]; then
+		PASSWORD="${PASSWD1}";
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+		if (whiptail --backtitle "Menu Interface: User Password: Confirm" --title "Confirm" --yesno "    Set the new password?" 0 0); then
+			echo "$PASSWORD" | sed 's/.*/\0\n\0/' | sudo passwd -q $USER 2> /dev/null;
+			whiptail --backtitle "Menu Interface: User Password: Confirmation" --title "Confirmation" --msgbox "    Password changed successfully." 0 0;
+		else
+			whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+		fi
+	else
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+		whiptail --backtitle "" --msgbox "    Passwords don't match? Try again." 0 0;
+		continue;
+	fi
+	break
+	clear -x
+done
 }
 
 HA_NOTES="The following install has been tested on the Odroid N2+ and Raspberry Pi 4B. \
@@ -137,75 +207,66 @@ while [ 1 ]
 do
 CHOICE=$(
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-whiptail --backtitle "Menu Interface: System Settings" --title "System Settings" --menu "" --nocancel 0 25 0 \
-	"1)" "Governor" \
-	"2)" "Wireless" \
-	"3)" "Locales" \
-	"4)" "Keyboard" \
-	"5)" "Timezone" \
-	"6)" "Overclock" \
+whiptail --backtitle "Menu Interface: System Settings" --title "System Menu Config" --menu "" --nocancel 0 25 0 \
+	"1)" "User Password     Change the default user password" \
+	"2)" "Keyboard          Change keyboard layout" \
+	"3)" "Locales           Change language settings" \
+	"4)" "Timezone          Change regional settings" \
+	"5)" "Wireless          Configure wireless network interface" \
 	"" "" \
-	"7)" "Third-party" \
-	"8)" "Miscellaneous" \
+	"6)" "Governor          Change CPU frequency scaling" \
+	"7)" "Overclock         Change CPU operating speed" \
 	"" "" \
-	"U)" "Update" \
+	"8)" "Software          Third-party software installers" \
+	"9)" "Miscellaneous     System settings" \
+	"" "" \
+	"U)" "Update            Menu interface configuration tool" \
 	"Q)" "Quit .." 3>&2 2>&1 1>&3
 )
 
 case $CHOICE in
 	"1)")
-		governor -m
+		change_password
 		;;
 	"2)")
+		sudo dpkg-reconfigure keyboard-configuration
+		;;
+	"3)")
+		sudo dpkg-reconfigure locales
+		;;
+	"4)")
+		sudo dpkg-reconfigure tzdata
+		;;
+	"5)")
 		if [[ `command -v nmtui` ]]; then
 			sudo nmtui;
 		else
 			swh -m;
 		fi
 		;;
-	"3)")
-		sudo dpkg-reconfigure locales
-		;;
-	"4)")
-		sudo dpkg-reconfigure keyboard-configuration
-		;;
-	"5)")
-		sudo dpkg-reconfigure tzdata
+	"")
 		;;
 	"6)")
+		governor -m
+		;;
+	"7)")
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		supported_list
-		if [ $supported_oc -eq 1 ]; then
-			if (whiptail --backtitle "Board: $BOARD_PN" --title "$BOARD_PN" --yesno "   Overclock?" 0 0); then
-				echo ""
-				echo -e "Overclocking: $BOARD_PN ";
-				echo "";
-				echo -en "Running service: "
-				overclock > /dev/null 2>&1;
-				sleep 1s;
-				echo -e "[done]";
-				echo "";
-				echo -e "Cores:" $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
-				echo "";
-				read -p "You may need to reboot for it to take effect";
-				clear -x
-			fi
-		else
-			whiptail --msgbox "    Your board is not supported." 0 0;
-		fi
+		overclocking
 		;;
 	"")
 		;;
-	"7)")
+	"8)")
 		while [ 1 ]
 		do
-		THIRDPARTY=$(
+		SOFTWARE=$(
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Third-party: Applications" --title "Install" --menu "" --nocancel 0 0 0 \
-			"HA)" "Home Assistant" \
+			"HA)" "Home Assistant           Home automation software" \
+			"TS)" "Tasksel (repair)         Tool for selecting tasks for installation" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
-		case $THIRDPARTY in
+		case $SOFTWARE in
 			"HA)")
 				export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 				if (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
@@ -214,74 +275,7 @@ case $CHOICE in
 					whiptail --msgbox "    Hit enter to return to menu." 0 0;
 				fi
 				;;
-			"E)")
-				clear -x
-				break
-				;;
-			esac
-		done
-		;;
-	"8)")
-		while [ 1 ]
-		do
-		MISC=$(
-		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
-			"AA)" "Amlogic Audio" \
-			"CP)" "Change Password" \
-			"ST)" "Setup Tasksel" \
-			"E)" "Exit .." 3>&2 2>&1 1>&3
-		)
-		case $MISC in
-			"AA)")
-				supported_list
-				if [ $supported_mixer -eq 1 ]; then
-					echo "";
-					echo "Running audio setup ...";
-					sleep 1s;
-					sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1';
-					sudo amixer sset 'FRDDR_A SRC 1 EN' 'on';
-					sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0';
-					sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B';
-					sudo amixer sset 'TOHDMITX' 'on';
-					sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2';
-					sudo amixer sset 'FRDDR_B SRC 1 EN' 'on';
-					sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3';
-					sudo amixer sset 'FRDDR_C SRC 1 EN' 'on';
-					sudo alsactl store;
-					echo "Done.";
-					echo "";
-					read -p "Press enter to continue.";
-					clear -x;
-				else
-					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
-					whiptail --msgbox "    Your board is not supported." 0 0;
-				fi
-				;;
-			"CP)")
-				while true; do
-					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
-					PASSWD1=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password" --nocancel 8 78 3>&1 1>&2 2>&3)
-					PASSWD2=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password (again)" --nocancel 8 78 3>&1 1>&2 2>&3)
-					if [ "$PASSWD1" = "$PASSWD2" ]; then
-						PASSWORD="${PASSWD1}";
-						export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-						if (whiptail --backtitle "Menu Interface: User Password: Confirm" --title "Confirm" --yesno "    Set the new password?" 0 0); then
-							echo "$PASSWORD" | sed 's/.*/\0\n\0/' | sudo passwd -q $USER 2> /dev/null
-							whiptail --backtitle "Menu Interface: User Password: Confirmation" --title "Confirmation" --msgbox "    Password changed successfully." 0 0;
-						else
-							whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
-						fi
-					else
-						export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
-						whiptail --backtitle "" --msgbox "    Passwords don't match? Try again." 0 0;
-						continue;
-					fi
-					break
-					clear -x
-				done
-				;;
-			"ST)")
+			"TS)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					echo "";
 					echo "Tasksel: Running setup ...";
@@ -303,6 +297,27 @@ case $CHOICE in
 					export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
 					whiptail --msgbox "    This requires a internet connection." 0 0;
 				fi
+				;;
+			"E)")
+				clear -x
+				break
+				;;
+			esac
+		done
+		;;
+	"9)")
+		while [ 1 ]
+		do
+		MISC=$(
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
+			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
+			"E)" "Exit .." 3>&2 2>&1 1>&3
+		)
+		case $MISC in
+			"AA)")
+				supported_list
+				amlogic_audio
 				;;
 			"E)")
 				clear -x
