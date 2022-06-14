@@ -364,31 +364,30 @@ case $CHOICE in
 				;;
 			"FC)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-					:;
+					supported_list
+					if [ $fan_ctrl -eq 1 ]; then
+						if [[ `grep -w "ID=debian" "/etc/os-release"` ]]; then
+							systemd_fanctrl > /dev/null 2>&1;
+							install_fanctrl > /dev/null 2>&1;
+							fan-ctrl -m;
+						fi
+						if [[ `grep -w "ID=devuan" "/etc/os-release"` ]]; then
+							sysvinit_fanctrl > /dev/null 2>&1;
+							install_fanctrl > /dev/null 2>&1;
+							fan-ctrl -m;
+						fi
+						if [[ `grep -w "ID=ubuntu" "/etc/os-release"` ]]; then
+							systemd_fanctrl > /dev/null 2>&1;
+							install_fanctrl > /dev/null 2>&1;
+							fan-ctrl -m;
+						fi
+					else
+						export NEWT_COLORS='root=,black'
+						whiptail --msgbox "    Your board is not supported." 0 0;
+					fi
 				else
 					export NEWT_COLORS='root=,black'
 					whiptail --msgbox "    This requires a internet connection." 0 0;
-				fi
-				supported_list
-				if [ $fan_ctrl -eq 1 ]; then
-					if [[ `grep -w "ID=debian" "/etc/os-release"` ]]; then
-						systemd_fanctrl > /dev/null 2>&1;
-						install_fanctrl > /dev/null 2>&1;
-						fan-ctrl -m;
-					fi
-					if [[ `grep -w "ID=devuan" "/etc/os-release"` ]]; then
-						sysvinit_fanctrl > /dev/null 2>&1;
-						install_fanctrl > /dev/null 2>&1;
-						fan-ctrl -m;
-					fi
-					if [[ `grep -w "ID=ubuntu" "/etc/os-release"` ]]; then
-						systemd_fanctrl > /dev/null 2>&1;
-						install_fanctrl > /dev/null 2>&1;
-						fan-ctrl -m;
-					fi
-				else
-					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    Your board is not supported." 0 0;
 				fi
 				;;
 			"E)")
