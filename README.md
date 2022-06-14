@@ -185,7 +185,7 @@ DNS=""				# Your preferred dns
 For headless use: ssh user@ipaddress
 ```
 #### System menu config (`menu-config`)
-<img src="https://i.imgur.com/O0qupPX.png" alt="Menu Interface: System Settings" width="657" height="410" />
+<img src="https://i.imgur.com/O0qupPX.png" alt="Menu Interface: System Settings" width="654" height="478" />
 
 #### Write to eMMC
 ```sh
