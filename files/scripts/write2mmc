@@ -6,26 +6,70 @@ FIN="\e[0m"
 if [ -f /etc/opt/board.txt ]; then
 	source /etc/opt/board.txt;
 else
-	echo "Missing /etc/opt/board.txt.";
-	exit 1;
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Your board is not supported." 0 0;
+	clear -x;
+	exit 0;
 fi
-
+if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+	:;
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    This script requires a internet connection." 0 0;
+	clear -x;
+	exit 0;
+fi
 if [[ "$P_VALUE" == "p2" ]]; then
-	echo "Petitboot is not supported.";
-	exit 1;
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Your partition scheme is not supported." 0 0;
+	clear -x;
+	exit 0;
 fi
 
-# confirm
-confirm(){
-echo -e "${YLW}This script requires a internet connection."
-echo -e "If not connected to the webs, than say no${FIN} ..."
-echo -e ""
-read -p "Continue (y/n)?" choice
-case "$choice" in 
-  y|Y ) echo && echo -e "${GRN}Confirmed${FIN}!";;
-  n|N ) echo && echo -e "${YLW}You have chosen${FIN}... ${YLW}wisely${FIN}." && exit 0;;
-  * ) echo && echo -e "${YLW}Invalid choice${FIN}." && exit 0;;
-esac
+supported_boards(){
+# allwinner
+if [[ "$BOARD" == "nanopi" ]]; then
+	MMC="/dev/mmcblk2";
+	OFFSET="2048";
+	supported=1;
+fi
+# amlogic
+if [[ "$BOARD" == "lepotato" ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="2248";
+	supported=1;
+fi
+if [[ "$BOARD" == "odroidc4" ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="2248";
+	supported=1;
+fi
+if [[ "$BOARD" == "odroidn2" ]]; then
+	MMC="/dev/mmcblk0";
+	OFFSET="2248";
+	supported=1;
+fi
+if [[ "$BOARD" == "odroidn2plus" ]]; then
+	MMC="/dev/mmcblk0";
+	OFFSET="2248";
+	supported=1;
+fi
+if [[ "$BOARD" == "radxazero" ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="2248";
+	supported=1;
+fi
+# rockchip
+if [[ "$BOARD" == "nanopc" ]]; then
+	MMC="/dev/mmcblk2";
+	OFFSET="32767";
+	supported=1;
+fi
+if [[ "$BOARD" == "renegade" ]]; then
+	MMC="/dev/mmcblk1";
+	OFFSET="32767";
+	supported=1;
+fi
 }
 
 # progress bar
@@ -67,41 +111,6 @@ lsblk -dno NAME,SIZE
 
 # partition
 partition(){
-# allwinner
-if [[ "$BOARD" == "nanopi" ]]; then
-	MMC="/dev/mmcblk2";
-	OFFSET="2048";
-fi
-# amlogic
-if [[ "$BOARD" == "lepotato" ]]; then
-	MMC="/dev/mmcblk1";
-	OFFSET="2248";
-fi
-if [[ "$BOARD" == "odroidc4" ]]; then
-	MMC="/dev/mmcblk1";
-	OFFSET="2248";
-fi
-if [[ "$BOARD" == "odroidn2" ]]; then
-	MMC="/dev/mmcblk0";
-	OFFSET="2248";
-fi
-if [[ "$BOARD" == "odroidn2plus" ]]; then
-	MMC="/dev/mmcblk0";
-	OFFSET="2248";
-fi
-if [[ "$BOARD" == "radxazero" ]]; then
-	MMC="/dev/mmcblk1";
-	OFFSET="2248";
-fi
-# rockchip
-if [[ "$BOARD" == "nanopc" ]]; then
-	MMC="/dev/mmcblk2";
-	OFFSET="32767";
-fi
-if [[ "$BOARD" == "renegade" ]]; then
-	MMC="/dev/mmcblk1";
-	OFFSET="32767";
-fi
 dd if=/dev/zero of=${MMC} bs=512 count=1
 fdisk ${MMC} <<EOF
 o
@@ -214,10 +223,16 @@ if [ "$USER" != "root" ]; then
         echo "Please run this as root or with sudo privileges.";
         exit 1;
 fi
-echo ""
-confirm
+supported_boards
+if [ $supported -eq 1 ]; then
+	:;
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Your board is not supported." 0 0;
+	clear -x;
+	exit 0;
+fi
 check_progressbar
-
 if [[ "$BOARD" == "lepotato" ]]; then
 	echo ""
 	echo "Binding eMMC ...";
