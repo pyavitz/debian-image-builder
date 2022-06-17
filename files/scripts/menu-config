@@ -59,7 +59,6 @@ if [ $supported_mixer -eq 1 ] > /dev/null 2>&1; then
 	echo "Done.";
 	echo "";
 	read -p "Press enter to continue.";
-	clear -x;
 else
 	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
 	whiptail --msgbox "    Your board is not supported." 0 0;
@@ -188,7 +187,6 @@ when the final HA install script runs and you are asked to select the platform."
 
 homeAssistant(){
 clear -x
-echo ""
 echo "Installing Home Assistant ..."
 set -x
 if [[ "$FAMILY" == "amlogic" ]]; then
@@ -264,6 +262,7 @@ if [ -f os-agent_1.2.2_linux_aarch64.deb ]; then rm -f os-agent_1.2.2_linux_aarc
 if [ -f homeassistant-supervised.deb ]; then rm -f homeassistant-supervised.deb; fi
 
 # finish
+echo ""
 read -p "Press enter to continue."
 }
 
@@ -293,6 +292,7 @@ whiptail --backtitle "Menu Interface: System Settings" --title "System Menu Conf
 
 case $CHOICE in
 	"W)")
+		clear -x
 		if [[ `command -v nmtui` ]]; then
 			sudo nmtui;
 		else
@@ -308,12 +308,15 @@ case $CHOICE in
 		change_hostname
 		;;
 	"3)")
+		clear -x
 		sudo dpkg-reconfigure keyboard-configuration
 		;;
 	"4)")
+		clear -x
 		sudo dpkg-reconfigure locales
 		;;
 	"5)")
+		clear -x
 		sudo dpkg-reconfigure tzdata
 		;;
 	"")
@@ -335,7 +338,6 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Third-party: Applications" --title "Install" --menu "" --nocancel 0 0 0 \
 			"HA)" "Home Assistant           Home automation software" \
-			"TS)" "Tasksel                  Tool for selecting tasks for installation" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $SOFTWARE in
@@ -345,31 +347,6 @@ case $CHOICE in
 					homeAssistant;
 				else
 					whiptail --msgbox "    Hit enter to return to menu." 0 0;
-				fi
-				;;
-			"TS)")
-				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-					echo "";
-					echo "Tasksel: Running setup ...";
-					if [[ `command -v tasksel` ]]; then
-						:;
-					else
-						sudo apt update;
-						sudo apt install -y tasksel;
-					fi
-					sleep 1s;
-					sudo apt-get update;
-					sudo apt-get install --reinstall debconf;
-					sudo dpkg-reconfigure tasksel;
-					echo "Done.";
-					echo "";
-					echo "To use, run 'sudo tasksel --new-install' in a terminal";
-					echo ""
-					read -p "Press enter to continue.";
-					clear -x;
-				else
-					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0;
 				fi
 				;;
 			"E)")
@@ -387,15 +364,18 @@ case $CHOICE in
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
 			"FC)" "Fan Control              Set Odroid N2 trip point" \
+			"ST)" "Setup Tasksel            Tool for selecting tasks for installation" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $MISC in
 			"AA)")
+				clear -x
 				supported_list
 				amlogic_audio
 				;;
 			"FC)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					clear -x
 					supported_list
 					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
 						if [[ `grep -w "ID=debian" "/etc/os-release"` ]]; then
@@ -417,6 +397,30 @@ case $CHOICE in
 						export NEWT_COLORS='root=,black'
 						whiptail --msgbox "    Your board is not supported." 0 0;
 					fi
+				else
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    This requires a internet connection." 0 0;
+				fi
+				;;
+			"ST)")
+				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					clear -x
+					echo -e "Running setup ...";
+					if [[ `command -v tasksel` ]]; then
+						:;
+					else
+						sudo apt update;
+						sudo apt install -y tasksel;
+					fi
+					sleep 1s;
+					sudo apt-get update;
+					sudo apt-get install --reinstall debconf;
+					sudo dpkg-reconfigure tasksel;
+					echo "";
+					echo -e "To use, run 'sudo tasksel --new-install' in a terminal";
+					echo ""
+					read -p "Press enter to continue.";
+					clear -x;
 				else
 					export NEWT_COLORS='root=,black'
 					whiptail --msgbox "    This requires a internet connection." 0 0;
