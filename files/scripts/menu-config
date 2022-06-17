@@ -42,7 +42,7 @@ fi
 }
 
 amlogic_audio(){
-if [ $supported_mixer -eq 1 ]; then
+if [ $supported_mixer -eq 1 ] > /dev/null 2>&1; then
 	echo "";
 	echo "Running audio setup ...";
 	sleep 1s;
@@ -72,7 +72,7 @@ sudo service tweaks restart
 }
 
 overclocking(){
-if [ $supported_oc -eq 1 ]; then
+if [ $supported_oc -eq 1 ] > /dev/null 2>&1; then
 	if (whiptail --backtitle "Board: $BOARD_PN" --title "$BOARD_PN" --yesno "   Overclock?" 0 0); then
 		echo ""
 		echo -e "Overclocking: $BOARD_PN ";
@@ -335,7 +335,7 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Third-party: Applications" --title "Install" --menu "" --nocancel 0 0 0 \
 			"HA)" "Home Assistant           Home automation software" \
-			"TS)" "Tasksel (repair)         Tool for selecting tasks for installation" \
+			"TS)" "Tasksel                  Tool for selecting tasks for installation" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $SOFTWARE in
@@ -363,6 +363,7 @@ case $CHOICE in
 					sudo dpkg-reconfigure tasksel;
 					echo "Done.";
 					echo "";
+					echo "To use, run `sudo tasksel --new-install` in a terminal";
 					read -p "Press enter to continue.";
 					clear -x;
 				else
@@ -395,7 +396,7 @@ case $CHOICE in
 			"FC)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					supported_list
-					if [ $fan_ctrl -eq 1 ]; then
+					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
 						if [[ `grep -w "ID=debian" "/etc/os-release"` ]]; then
 							systemd_fanctrl > /dev/null 2>&1;
 							install_fanctrl > /dev/null 2>&1;
