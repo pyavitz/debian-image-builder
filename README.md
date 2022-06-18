@@ -110,7 +110,7 @@ aircrack=0
 emmc=0
 ```
 ## Usage
-* **Review [wiki](https://github.com/pyavitz/debian-image-builder/wiki) for more information**
+* Review the [wiki](https://github.com/pyavitz/debian-image-builder/wiki)
 #### /boot/rename_to_useraccount.txt
 * Headless: rename file to useraccount.txt and fill in the variables
 * Headful: don't rename file & get prompted to create a user account
