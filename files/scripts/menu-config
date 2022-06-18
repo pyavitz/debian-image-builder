@@ -2,6 +2,10 @@
 # DEBIAN IMAGE BUILDER: SYSTEM MENU INTERFACE
 if [ -f /etc/opt/board.txt ]; then
 	source /etc/opt/board.txt;
+else
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+	whiptail --msgbox "    Your board is not supported." 0 0;
+	exit 0
 fi
 
 # functions
@@ -431,13 +435,19 @@ case $CHOICE in
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					clear -x
 					if [[ "$BOARD" == "radxazero" ]]; then
-						echo -e "Running setup ...";
 						if [[ `command -v dtc` ]]; then
 							:;
 						else
 							sudo apt update;
 							sudo apt install -y u-boot-tools;
 						fi
+						if [ -f /etc/initramfs/post-update.d/99-led ]; then
+							sudo rm -f /etc/initramfs/post-update.d/99-led;
+						fi
+						if [ -f /etc/initramfs/post-update.d/99-sdio-speed ]; then
+							sudo rm -f /etc/initramfs/post-update.d/99-sdio-speed;
+						fi
+						echo -e "Running setup ...";
 						sleep 1s;
 						GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/boot"
 						sudo mkdir -p /etc/initramfs/post-update.d/
