@@ -1,4 +1,7 @@
 #!/bin/bash
+GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files"
+MENU=`command -v menu-config`
+MENUDIR="/usr/local/bin/"
 clear -x
 echo -en "Updating menu and scripts "
 governor -u > /dev/null 2>&1
@@ -6,12 +9,20 @@ swh -U > /dev/null 2>&1
 if [[ `command -v fan-ctrl` ]]; then
 	fan-ctrl -u > /dev/null 2>&1;
 fi
-MENU=`command -v menu-config`
-MENUDIR="/usr/local/bin/"
+if [ -f /etc/update-motd.d/20-sysinfo ]; then
+	sudo mv /etc/update-motd.d/20-sysinfo /etc/update-motd.d/20-sysinfo.orig;
+	sudo wget -cq $GHURL/scripts/20-sysinfo -P /etc/update-motd.d/;
+	if [ -f /etc/update-motd.d/20-sysinfo ]; then
+		sudo chmod +x /etc/update-motd.d/20-sysinfo;
+		sudo rm -f /etc/update-motd.d/20-sysinfo.orig
+	else
+		sudo mv /etc/update-motd.d/20-sysinfo.orig /etc/update-motd.d/20-sysinfo;
+	fi
+fi
 if [ -f $MENU ]; then
 	sudo mv -f $MENU $MENU.orig;
 fi
-sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config -P $MENUDIR
+sudo wget -cq $GHURL/scripts/menu-config -P $MENUDIR
 sleep 1s
 sudo chmod +x $(command -v menu-config)
 if [ -f $MENU ]; then
