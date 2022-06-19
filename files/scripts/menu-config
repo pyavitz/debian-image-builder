@@ -369,7 +369,7 @@ case $CHOICE in
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
 			"FC)" "Fan Control              Set Odroid N2 trip point" \
 			"ST)" "Setup Tasksel            Tool for selecting tasks for installation" \
-			"RZ)" "Radxa Zero Rev 1.5       Wifi (cap SDIO speed) / LED support" \
+			"RZ)" "Radxa Zero Rev 1.5       Wifi (cap SDIO speed)" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $MISC in
@@ -441,9 +441,6 @@ case $CHOICE in
 							sudo apt update;
 							sudo apt install -y u-boot-tools;
 						fi
-						if [ -f /etc/initramfs/post-update.d/99-led ]; then
-							sudo rm -f /etc/initramfs/post-update.d/99-led;
-						fi
 						if [ -f /etc/initramfs/post-update.d/99-sdio-speed ]; then
 							sudo rm -f /etc/initramfs/post-update.d/99-sdio-speed;
 						fi
@@ -451,13 +448,7 @@ case $CHOICE in
 						sleep 1s;
 						GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/boot"
 						sudo mkdir -p /etc/initramfs/post-update.d/
-						sudo wget -cq $GHURL/99-led -P /etc/initramfs/post-update.d/
 						sudo wget -cq $GHURL/99-sdio-speed -P /etc/initramfs/post-update.d/
-						if [ -f /etc/initramfs/post-update.d/99-led ]; then
-							sudo chmod +x /etc/initramfs/post-update.d/99-led;
-							sudo chown root:root /etc/initramfs/post-update.d/99-led;
-							sudo /etc/initramfs/post-update.d/99-led;
-						fi
 						if [ -f /etc/initramfs/post-update.d/99-sdio-speed ]; then
 							sudo chmod +x /etc/initramfs/post-update.d/99-sdio-speed;
 							sudo chown root:root /etc/initramfs/post-update.d/99-sdio-speed;
