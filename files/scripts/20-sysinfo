@@ -1,17 +1,38 @@
 #!/bin/bash
+
+# variables
 COL="\033[1m"
 FIN="\033[0m"
+CPU0=`lscpu | grep "Model name" | sed -n 1p | sed 's/Model name://g' | sed -r '1s/\s+//g'`
+CPU0M=`lscpu | grep "CPU max MHz" | sed -n 1p | sed 's/CPU max MHz://g' | sed -r '1s/\s+//g' | sed 's/.0000//g'`
+CPU1=`lscpu | grep "Model name" | sed -n 2p | sed 's/Model name://g' | sed -r '1s/\s+//g'`
+CPU1M=`lscpu | grep "CPU max MHz" | sed -n 2p | sed 's/CPU max MHz://g' | sed -r '1s/\s+//g' | sed 's/.0000//g'`
+
+# function
+cpu_model(){
+if [[ `grep -w "0-5" "/sys/devices/system/cpu/present"` ]]; then
+	echo -en "${COL}Processor${FIN}:  " $CPU0; echo -en " ("$CPU0M; echo -en " MHz)";
+	echo -en "" $CPU1; echo -en " ("$CPU1M; echo -e " MHz)";
+else
+	echo -en "${COL}Processor${FIN}:  " $CPU0; echo -en " ("$CPU0M; echo -e " MHz)";
+fi
+}
+
 echo -e "${COL}== DISK USAGE${FIN}"
 df -h | egrep '(Filesystem)|(/dev/mmc)|(/dev/root)|(/dev/sd)|(/dev/nvme)'
 echo ""
 echo -e "${COL}== SYSTEM STATUS${FIN}"
-if [ -f /sys/class/thermal/thermal_zone0/temp ] && [ -f /sys/class/thermal/thermal_zone1/temp ]; then
-	echo -e "${COL}CPU Temp:${FIN} " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C $(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2)°C
+if [[ -f "/sys/class/thermal/thermal_zone0/temp" ]] && [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
+	echo -e "${COL}Temperature:${FIN}" $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C $(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2)°C
 else
-	echo -e "${COL}CPU Temp:${FIN} " $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C
+	echo -e "${COL}Temperature:${FIN}" $(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)°C
 fi
-echo -e "${COL}Cores:${FIN}    " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq)
-echo -e "${COL}Governor:${FIN} " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
-echo -e "${COL}Memory:${FIN}   " $(grep MemTotal /proc/meminfo | sed 's/MemTotal:        //g')
-echo -e "${COL}Entropy:${FIN}  " $(cat /proc/sys/kernel/random/entropy_avail)
-echo -e "${COL}Uptime:${FIN}   " $(uptime)
+if [[ -f "/sys/devices/system/cpu/present" ]]; then
+	cpu_model;
+else
+	echo -e "${COL}Cores:${FIN}      " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
+fi
+echo -e "${COL}Governor:${FIN}   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+echo -e "${COL}Memory:${FIN}     " $(grep MemTotal /proc/meminfo | sed 's/MemTotal:        //g')
+echo -e "${COL}Entropy:${FIN}    " $(cat /proc/sys/kernel/random/entropy_avail)
+echo -e "${COL}Uptime:${FIN}     " $(uptime)
