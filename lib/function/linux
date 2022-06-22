@@ -58,12 +58,12 @@ if [ -f ../github.txt ]; then
 	REPO=`sed 2d ../github.txt`
 	BRANCH=`sed 1d ../github.txt`
 	REPO_KERNEL=`sed 1d ../github.txt`
-	VKERNEL="linux-${BRANCH}"
+	VKERNEL="${GITHUB}-${BRANCH}"
 fi
 if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y" ]]; then
 	SETUP="vendor";
 fi
-if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/linux/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/${GITHUB}/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	vendor_download;
 	vendor_extract;
 else
@@ -100,7 +100,7 @@ if [ -f ${VKERNEL}-${VERSION}.tar.gz ]; then
 	:;
 else
 	echo_vendor;
-	${DOWNLOAD} https://github.com/${REPO}/linux/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
+	${DOWNLOAD} https://github.com/${REPO}/${GITHUB}/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
 	echo_bdone;
 fi
 extra_wireless
