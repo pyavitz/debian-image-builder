@@ -291,6 +291,82 @@ mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-
 xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${IMAGE_DATE}.img
 }
 
+# boot.cmd
+default_bootcmd(){
+if [[ "$P_VALUE" == "p1" ]]; then
+	P_BOOTCMD="p1/boot/boot.cmd"
+	P_BOOTSCR="p1/boot/boot.scr"
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	P_BOOTCMD="p1/boot.cmd"
+	P_BOOTSCR="p1/boot.scr"
+fi
+if [[ -f "files/boot/boot.cmd" ]]; then
+	cp files/boot/boot.cmd $P_BOOTCMD
+	if [[ -f "$P_BOOTCMD" ]]; then
+		CAP_FAMILY=`echo "$FAMILY" | sed -e "s/\b\(.\)/\u\1/g"`
+		sed -i '1s/.*/setenv bootlabel "'"$CAP_FAMILY"'"/' $P_BOOTCMD;
+		sed -i '2s/.*/setenv uuid "'"PARTUUID=$ROOT_PARTUUID"'"/' $P_BOOTCMD;
+		if [[ "$P_VALUE" == "p1" ]]; then
+			sed -i '10s/.*/setenv fk_kvers "'"boot/Image"'"/' $P_BOOTCMD;
+			sed -i '11s/.*/setenv initrd "'"boot/initrd.gz"'"/' $P_BOOTCMD;
+		fi
+		if [[ "$P_VALUE" == "p2" ]]; then
+			sed -i '10s/.*/setenv fk_kvers "'"Image"'"/' $P_BOOTCMD;
+			sed -i '11s/.*/setenv initrd "'"initrd.gz"'"/' $P_BOOTCMD;
+		fi
+		sed -i '6s/.*/setenv extra "'"$EXTRA"'"/' $P_BOOTCMD;
+		sed -i '7s/.*/setenv console "'"$CONSOLE"'"/' $P_BOOTCMD;
+		if [[ "$P_VALUE" == "p1" ]]; then
+			sed -i '14s/.*/setenv bootlabel "'"boot\/$FAMILY"'"/' $P_BOOTCMD;
+		fi
+		if [[ "$P_VALUE" == "p2" ]]; then
+			sed -i '14s/.*/setenv bootlabel "'"$FAMILY"'"/' $P_BOOTCMD;
+		fi
+		sed -i '15s/.*/setenv bootlabel "'"$DTB.dtb"'"/' $P_BOOTCMD;
+		mkimage -C none -A arm -T script -d $P_BOOTCMD $P_BOOTSCR;
+	fi
+fi
+}
+
+# vendor boot.cmd
+odroid_bootcmd(){
+if [[ "$BOARD" == "odroidm1" ]]; then
+	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^....'`
+	if [[ "$VENDOR_KERNEL" == "4.19" ]]; then
+		cp files/boot/odroid/${BOOTCMD}-vendor-boot.cmd p1/boot.cmd;
+		cp files/boot/odroid/${BOOTCMD}-config.ini p1/config.ini;
+	else
+		cp files/boot/odroid/${BOOTCMD}-boot.cmd p1/boot.cmd;
+		cp files/boot/odroid/${BOOTCMD}-config.ini p1/config.ini;
+
+	fi
+	if [ -f p1/boot.cmd ]; then
+		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
+		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
+		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+	fi
+fi
+if [[ "$FAMILY_EXT" == "odroid" ]]; then
+	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^...'`
+	if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
+		cp files/boot/odroid/${BOOTCMD}-vendor-boot.cmd p1/boot.cmd;
+		cp files/boot/odroid/${BOOTCMD}-vendor-config.ini p1/config.ini;
+	else
+		cp files/boot/odroid/${BOOTCMD}-boot.cmd p1/boot.cmd;
+		cp files/boot/odroid/${BOOTCMD}-config.ini p1/config.ini;
+	fi
+	if [ -f files/boot/odroid/odroid-boot-logo.bmp.gz ]; then
+		cp files/boot/odroid/odroid-boot-logo.bmp.gz p1/boot-logo.bmp.gz;
+	fi
+	if [ -f p1/boot.cmd ]; then
+		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
+		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
+		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+	fi
+fi
+}
+
 # create extlinux file (p1)
 p1_extlinux(){
 FDT="../${FAMILY}/${DTB}.dtb"

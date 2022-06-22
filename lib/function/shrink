@@ -17,6 +17,30 @@ if [[ "$P_VALUE" == "p2" ]]; then
 fi
 }
 
+find_p1_partuuid(){
+if [ -e part-uuid.txt ]; then
+	rm -f part-uuid.txt;
+fi
+ROOTFS="${LOOP1}"
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
+
+source part-uuid.txt
+}
+
+find_p2_partuuid(){
+if [ -e part-uuid.txt ]; then
+	rm -f part-uuid.txt;
+fi
+ROOTFS="${LOOP2}"
+ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
+echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
+
+source part-uuid.txt
+}
+
 p1_kpartx(){
 if [[ "$P_ROOTFS" == "p2" ]]; then
 	echo 'LOOP0="/dev/mapper/' > kpart1;
@@ -82,44 +106,16 @@ sleep 1s
 mount "${BOOT}" p1
 find_p2_partuuid
 echo ""
-if [[ "$BOARD" == "raspi4" ]]; then
-	rm -f p1/extlinux/extlinux.conf;
-	rm -f p1/config.txt;
-	p2_extlinux;
-	config-txt > /dev/null 2>&1;
-fi
-if [[ "$BOOTCMD" == "odroidm1" ]]; then
-	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^....'`
-	if [[ "$VENDOR_KERNEL" == "4.19" ]]; then
-		cp files/boot/${BOOTCMD}-vendor-boot.cmd p1/boot.cmd;
-		cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
+if [ $petitboot -eq 1 ]; then
+	odroid_bootcmd;
+else
+	if [[ "$BOARD" == "raspi4" ]]; then
+		rm -f p1/extlinux/extlinux.conf;
+		rm -f p1/config.txt;
+		p2_extlinux;
+		config-txt > /dev/null 2>&1;
 	else
-		cp files/boot/${BOOTCMD}-boot.cmd p1/boot.cmd;
-		cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
-
-	fi
-	if [ -f p1/boot.cmd ]; then
-		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
-		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
-		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
-	fi
-fi
-if [[ "$BOOTCMD" == "odroid" ]]; then
-	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^...'`
-	if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
-		cp files/boot/${BOOTCMD}-vendor-boot.cmd p1/boot.cmd;
-		cp files/boot/${BOOTCMD}-vendor-config.ini p1/config.ini;
-	else
-		cp files/boot/${BOOTCMD}-boot.cmd p1/boot.cmd;
-		cp files/boot/${BOOTCMD}-config.ini p1/config.ini;
-	fi
-	if [ -f files/boot/odroid-boot-logo.bmp.gz ]; then
-		cp files/boot/odroid-boot-logo.bmp.gz p1/boot-logo.bmp.gz;
-	fi
-	if [ -f p1/boot.cmd ]; then
-		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
-		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
-		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
+		default_bootcmd;
 	fi
 fi
 echo ""
@@ -128,28 +124,4 @@ umount p1
 rm -fdr p1
 kpartx -d ${IMAGE_FILE}
 rm -f kpart.txt
-}
-
-find_p1_partuuid(){
-if [ -e part-uuid.txt ]; then
-	rm -f part-uuid.txt;
-fi
-ROOTFS="${LOOP1}"
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
-
-source part-uuid.txt
-}
-
-find_p2_partuuid(){
-if [ -e part-uuid.txt ]; then
-	rm -f part-uuid.txt;
-fi
-ROOTFS="${LOOP2}"
-ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-
-source part-uuid.txt
 }
