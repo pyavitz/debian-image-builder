@@ -5,10 +5,14 @@ COL="\033[1m"
 FIN="\033[0m"
 CPU0=`lscpu | grep "Model name" | sed -n 1p | sed 's/Model name://g' | sed -r '1s/\s+//g'`
 CPU0M=`lscpu | grep "CPU max MHz" | sed -n 1p | sed 's/CPU max MHz://g' | sed -r '1s/\s+//g' | sed 's/.0000//g'`
-CPU0T=$(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2)
 CPU1=`lscpu | grep "Model name" | sed -n 2p | sed 's/Model name://g' | sed -r '1s/\s+//g'`
 CPU1M=`lscpu | grep "CPU max MHz" | sed -n 2p | sed 's/CPU max MHz://g' | sed -r '1s/\s+//g' | sed 's/.0000//g'`
-CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2)
+if [[ -f "/sys/class/thermal/thermal_zone0/temp" ]]; then
+	CPU0T=$(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2);
+fi
+if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
+	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
+fi
 NETWORK=$(ip -o -4 -br a | grep -v '^lo'| sed 's/^/ /' | sed 's/\/..//' | sed -r '1s/\s+/ /g' | sed -r '2s/\s+/ /g')
 ETH0=`echo -e ${COL}Wired:${FIN}`
 WLAN0=`echo -e ${COL}Wireless:${FIN}`
