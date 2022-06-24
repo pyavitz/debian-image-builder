@@ -1,5 +1,4 @@
 #!/bin/bash
-
 RED="\e[1;31m"
 GRN="\e[1;32m"
 PNK="\e[1;35m"
@@ -33,39 +32,21 @@ echo
 echo -e "${WHT}The OS you are running is not supported${FIN}."
 }
 
-depends_check(){
-if [[ `command -v wget` ]]; then
-	:;
-else
-	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-		echo -e "${WHT}Installing missing depends${FIN}."
-		sudo apt update;
-		sudo apt upgrade -y;
-		sudo apt install -y wget;
-	else
-		echo_fail;
-		echo "";
-		ierror;
-		exit > /dev/null 2>&1;
-	fi
-fi
-}
-
 internet_check(){
-echo -e -n "${WHT}Checking Internet Connection:${FIN} "
-if [[ `wget -S --spider https://github.com 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+echo -en "${WHT}Checking Internet Connection:${FIN} "
+if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	echo_nok;
 	echo "";
 else
 	echo_fail;
 	echo "";
 	ierror;
-	exit > /dev/null 2>&1;
+	exit 0;
 fi
 }
 
 distro_check(){
-echo -e -n "${WHT}Checking Host Machine:${FIN} "
+echo -en "${WHT}Checking Host Machine:${FIN} "
 sleep 1s
 if [[ `grep -w "jammy" "/etc/os-release"` ]]; then
 	echo_jammy;
@@ -78,19 +59,17 @@ else
 		echo_fail;
 		echo "";
 		derror;
-		exit > /dev/null 2>&1;
+		exit 0;
 	fi
 fi
 }
 
 echo ""
-depends_check
 internet_check
 distro_check
 echo ""
 echo -e "${WHT}Starting install${FIN} ..."
 sleep 1s
-
 if [[ `uname -m | grep x86_64` ]]; then
 	if [[ `command -v make` ]]; then
 		sudo apt update;
@@ -103,7 +82,6 @@ if [[ `uname -m | grep x86_64` ]]; then
 		make ccompile;
 	fi
 fi
-
 if [[ `uname -m | grep aarch64` ]]; then
 	if [[ `command -v make` ]]; then
 		sudo apt update;
@@ -116,7 +94,7 @@ if [[ `uname -m | grep aarch64` ]]; then
 		make ncompile;
 	fi
 fi
-
 make dialogrc > /dev/null 2>&1
 echo ""
 make
+exit 0
