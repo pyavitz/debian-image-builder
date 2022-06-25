@@ -1,0 +1,36 @@
+diff -Naur a/arch/arm64/include/asm/system_misc.h b/arch/arm64/include/asm/system_misc.h
+--- a/arch/arm64/include/asm/system_misc.h	2022-02-27 17:36:33.000000000 -0500
++++ b/arch/arm64/include/asm/system_misc.h	2022-03-03 13:51:34.031068479 -0500
+@@ -32,6 +32,8 @@
+ struct mm_struct;
+ extern void __show_regs(struct pt_regs *);
+ 
++extern void (*arm_pm_restart)(enum reboot_mode reboot_mode, const char *cmd);
++
+ #endif	/* __ASSEMBLY__ */
+ 
+ #endif	/* __ASM_SYSTEM_MISC_H */
+diff -Naur a/arch/arm64/kernel/process.c b/arch/arm64/kernel/process.c
+--- a/arch/arm64/kernel/process.c	2022-02-27 17:36:33.000000000 -0500
++++ b/arch/arm64/kernel/process.c	2022-03-03 13:53:35.651284725 -0500
+@@ -68,6 +68,8 @@
+ void (*pm_power_off)(void);
+ EXPORT_SYMBOL_GPL(pm_power_off);
+ 
++void (*arm_pm_restart)(enum reboot_mode reboot_mode, const char *cmd);
++
+ #ifdef CONFIG_HOTPLUG_CPU
+ void arch_cpu_idle_dead(void)
+ {
+@@ -138,7 +140,10 @@
+ 		efi_reboot(reboot_mode, NULL);
+ 
+ 	/* Now call the architecture specific reboot code. */
+-	do_kernel_restart(cmd);
++	if (arm_pm_restart)
++		arm_pm_restart(reboot_mode, cmd);
++	else
++		do_kernel_restart(cmd);
+ 
+ 	/*
+ 	 * Whoops - the architecture was unable to reboot.
