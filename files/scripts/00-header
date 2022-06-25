@@ -3,10 +3,19 @@
 if [[ -f "/etc/lsb-release" ]]; then
 	[ -r /etc/lsb-release ] && . /etc/lsb-release
 	if [ -z "$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
-	        # Fall back to using the very slow lsb_release utility
-	        DISTRIB_DESCRIPTION=$(lsb_release -s -d)
+		# Fall back to using the very slow lsb_release utility
+		DISTRIB_DESCRIPTION=$(lsb_release -s -d)
 	fi
-	printf "%s (%s %s %s)\n" "$DISTRIB_DESCRIPTION" "$(uname -o)" "$(uname -r)" "$(uname -m)"
+	printf "%s (%s %s %s)\n" "$DISTRIB_DESCRIPTION" "$(uname -r)" "$(uname -m)"
 else
-	uname -snrvm
+	if [[ -f "/etc/os-release" ]]; then
+		[ -r /etc/os-release ] && . /etc/os-release
+		if [ -z "$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
+			# Fall back to using the very slow lsb_release utility
+			DISTRIB_DESCRIPTION=$(lsb_release -s -d)
+		fi
+		printf "%s (%s %s %s)\n" "$DISTRIB_DESCRIPTION" "$(uname -r)" "$(uname -m)"
+	else
+		uname -snrvm
+	fi
 fi
