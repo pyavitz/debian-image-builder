@@ -2,10 +2,24 @@
 
 # rockchip flash u-boot
 flash_uboot(){
+dd if=${OUTPUT}/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
+dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
+}
+
+flash_vendor-boot(){
 if [[ "$BOARD" == "odroidm1" ]]; then
-	dd if=files/boot/odroidm1-u-boot.bin of="${IMAGE_LOOP_DEV_UBOOT}" conv=fsync;
-else
-	dd if=${OUTPUT}/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64;
-	dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384;
+	dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV_UBOOT}" conv=fsync;
+fi
+}
+
+gpt_partition_table(){
+if [[ "$BOARD" == "odroidm1" ]]; then
+	GPT="true";
+	P_UBOOT="p1";
+	P_ROOTFS="p2";
+	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 2:${OFFSET}: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 fi
 }

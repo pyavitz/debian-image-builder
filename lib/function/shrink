@@ -2,9 +2,7 @@
 
 # shrink image
 shrink(){
-if [[ "$BOARD" == "odroidm1" ]] && [ $petitboot -eq 0 ]; then
-	:;
-else
+if [[ "$GPT" == "false" ]]; then
 	chmod +x scripts/shrink;
 	scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img;
 fi
@@ -18,35 +16,21 @@ fi
 }
 
 find_p1_partuuid(){
-if [ -e part-uuid.txt ]; then
-	rm -f part-uuid.txt;
-fi
-ROOTFS="${LOOP1}"
+if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
+ROOTFS="${ROOTFS_LOOP}"
 ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
 echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
 
 source part-uuid.txt
 }
 
-find_p2_partuuid(){
-if [ -e part-uuid.txt ]; then
-	rm -f part-uuid.txt;
-fi
-ROOTFS="${LOOP2}"
-ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-
-source part-uuid.txt
-}
-
 p1_kpartx(){
+if [[ "$P_ROOTFS" == "p1" ]]; then
+	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1;
+fi
 if [[ "$P_ROOTFS" == "p2" ]]; then
-	echo 'LOOP0="/dev/mapper/' > kpart1;
-	echo 'LOOP1="/dev/mapper/' >> kpart1;
-else
 	echo 'LOOP1="/dev/mapper/' > kpart1;
+	echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1;
 fi
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
@@ -57,22 +41,24 @@ if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
 else
 	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
 fi
+if [[ "$P_ROOTFS" == "p1" ]]; then
+	echo '"' > kpart3;
+fi
 if [[ "$P_ROOTFS" == "p2" ]]; then
 	echo '"' > kpart3;
 	echo '"' >> kpart3;
-else
-	echo '"' > kpart3;
 fi
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
-ROOTFS="${LOOP1}"
+ROOTFS="${ROOTFS_LOOP}"
 mkdir -p p1
 sleep 1s
 mount "${ROOTFS}" p1
 find_p1_partuuid
 echo ""
 p1_extlinux
+default_bootcmd
 sleep 1s
 echo ""
 e4defrag -c p1
@@ -83,9 +69,20 @@ kpartx -d ${IMAGE_FILE}
 rm -f kpart.txt
 }
 
+find_p2_partuuid(){
+if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
+ROOTFS="${ROOTFS_LOOP}"
+ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
+echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
+echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
+
+source part-uuid.txt
+}
+
 p2_kpartx(){
-echo 'LOOP1="/dev/mapper/' > kpart1
-echo 'LOOP2="/dev/mapper/' >> kpart1
+echo 'BOOT_LOOP="/dev/mapper/' > kpart1
+echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
 echo "$kpartx"
@@ -100,7 +97,7 @@ echo '"' >> kpart3
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
-BOOT="${LOOP1}"
+BOOT="${BOOT_LOOP}"
 mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1

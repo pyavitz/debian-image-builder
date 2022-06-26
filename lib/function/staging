@@ -11,14 +11,10 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 	OFFSET="32768";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-if [[ "$BOARD" == "odroidm1" ]]; then
-	P_UBOOT="p1";
-	P_ROOTFS="p2";
-	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 2:${OFFSET}: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+	gpt_partition_table;
 else
+	GPT="false";
 	P_ROOTFS="p1";
 	echo -e "o
 	n
@@ -42,7 +38,12 @@ partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-flash_uboot
+if [[ "$GPT" == "true" ]]; then
+	flash_vendor-uboot;
+fi
+if [[ "$GPT" == "false" ]]; then
+	flash_uboot;
+fi
 sync
 umount p1
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
@@ -60,8 +61,9 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$FAMILY" == "broadcom" ]]; then
-	P_BOOT="p1"
-	P_ROOTFS="p2"
+	GPT="false";
+	P_BOOT="p1";
+	P_ROOTFS="p2";
 	echo -e "o
 	n
 	p
@@ -80,8 +82,9 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 else
-	P_BOOT="p1"
-	P_ROOTFS="p2"
+	GPT="false";
+	P_BOOT="p1";
+	P_ROOTFS="p2";
 	echo -e "o
 	n
 	p
