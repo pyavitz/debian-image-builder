@@ -10,28 +10,21 @@ if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
 
-run(){
 cpu_hwinfo(){
 if [[ `grep -w "0-5" "/sys/devices/system/cpu/present"` ]]; then
 	echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C";
 	echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C";
-	echo -e "Cur freq:   " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq | sed 's/...$//');
+	echo -e "Cur freq:   " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
 else
 	echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C";
-	echo -e "Cur freq:   " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq | sed 's/...$//');
+	echo -e "Cur freq:   " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
 fi
 }
 
+run(){
 echo -e "CPU Usage:  " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'`
 if [[ -f "/sys/devices/system/cpu/present" ]]; then
 	cpu_hwinfo;
-else
-	if [[ -f "/sys/class/thermal/thermal_zone0/temp" ]] && [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
-		echo -e "Temperature:" $CPU0T°C $CPU1T°C
-	else
-		echo -e "Temperature:" $CPU0T°C
-	fi
-	echo -e "Cores:      " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
 fi
 echo -e "Governor:   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "Memory:     " $(free -h | sed 's/i//g' | sed 's/Mem://g' | awk '{print $1" "$2}' | sed -n 'n;p')
