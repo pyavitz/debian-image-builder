@@ -15,8 +15,10 @@ cpu_hwinfo(){
 if [[ `grep -w "0-5" "/sys/devices/system/cpu/present"` ]]; then
 	echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C";
 	echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C";
+	echo -e "Cur freq:   " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq | sed 's/...$//');
 else
 	echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C";
+	echo -e "Cur freq:   " $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq | sed 's/...$//');
 fi
 }
 
