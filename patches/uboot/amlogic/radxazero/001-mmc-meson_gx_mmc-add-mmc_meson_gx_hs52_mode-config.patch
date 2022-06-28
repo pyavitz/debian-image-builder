@@ -1,0 +1,45 @@
+diff -Naur a/configs/radxa-zero_defconfig b/configs/radxa-zero_defconfig
+--- a/configs/radxa-zero_defconfig	2022-04-04 10:31:32.000000000 -0400
++++ b/configs/radxa-zero_defconfig	2022-06-28 19:35:32.954444112 -0400
+@@ -28,6 +28,7 @@
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_MMC_MESON_GX=y
++# CONFIG_MMC_MESON_GX_HS52_MODE is not set
+ CONFIG_MTD=y
+ CONFIG_DM_MTD=y
+ CONFIG_DM_ETH=y
+diff -Naur a/drivers/mmc/Kconfig b/drivers/mmc/Kconfig
+--- a/drivers/mmc/Kconfig	2022-04-04 10:31:32.000000000 -0400
++++ b/drivers/mmc/Kconfig	2022-06-28 19:35:27.886461765 -0400
+@@ -286,6 +286,15 @@
+ 	help
+ 	 Support for EMMC host controller on Meson GX ARM SoCs platform (S905)
+ 
++config MMC_MESON_GX_HS52_MODE
++	bool "Enable MMC High Speed 52MHz mode for Meson GX EMMC controller"
++	depends on MMC_MESON_GX
++	default y
++	help
++	 This selects HS52 mode for Meson controller. Some boards have stability
++	 issue when eMMC is running at this speed, and turning HS52 off allows
++	 eMMC to function properly.
++
+ config MMC_MXC
+ 	bool "Freescale i.MX21/27/31 or MPC512x Multimedia Card support"
+ 	help
+diff -Naur a/drivers/mmc/meson_gx_mmc.c b/drivers/mmc/meson_gx_mmc.c
+--- a/drivers/mmc/meson_gx_mmc.c	2022-04-04 10:31:32.000000000 -0400
++++ b/drivers/mmc/meson_gx_mmc.c	2022-06-28 19:35:27.886461765 -0400
+@@ -277,7 +277,11 @@
+ 	cfg->voltages = MMC_VDD_33_34 | MMC_VDD_32_33 |
+ 			MMC_VDD_31_32 | MMC_VDD_165_195;
+ 	cfg->host_caps = MMC_MODE_8BIT | MMC_MODE_4BIT |
++#ifdef CONFIG_MMC_MESON_GX_HS52_MODE
+ 			MMC_MODE_HS_52MHz | MMC_MODE_HS;
++#else
++			MMC_MODE_HS;
++#endif
+ 	cfg->f_min = DIV_ROUND_UP(SD_EMMC_CLKSRC_24M, CLK_MAX_DIV);
+ 	cfg->f_max = 100000000; /* 100 MHz */
+ 	cfg->b_max = 511; /* max 512 - 1 blocks */
