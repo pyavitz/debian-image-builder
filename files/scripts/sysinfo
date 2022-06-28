@@ -44,14 +44,13 @@ echo -e "Entropy:    " $(cat /proc/sys/kernel/random/entropy_avail)
 echo -e "Uptime:     " $(uptime)
 }
 
-update(){
+update_sysinfo(){
 if [ -f /usr/local/bin/sysinfo ]; then
 	sudo mv /usr/local/bin/sysinfo /usr/local/bin/sysinfo.orig;
 	sudo mv /usr/local/bin/smon /usr/local/bin/smon.orig;
-	URL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/"
-	sudo wget -cq ${URL}/sysinfo -P /usr/local/bin/;
-	sudo wget -cq ${URL}/smon -P /usr/local/bin/;
-	if [ -e /usr/local/bin/sysinfo ]; then
+	sudo wget -cq ${GHURL}/scripts/sysinfo -P /usr/local/bin/;
+	sudo wget -cq ${GHURL}/scripts/smon -P /usr/local/bin/;
+	if [ -f /usr/local/bin/sysinfo ]; then
 		sudo chmod +x /usr/local/bin/sysinfo;
 		sudo rm -f /usr/local/bin/sysinfo.orig;
 		ls -ls /usr/local/bin/sysinfo;
@@ -70,6 +69,32 @@ if [ -f /usr/local/bin/sysinfo ]; then
 fi
 }
 
+update_motd(){
+if [[ -f "/etc/default/dynamic-motd" ]]; then
+	sudo rm -f /etc/default/dynamic-motd;
+fi
+if [[ -f "/etc/update-motd.d/15-brand" ]]; then
+	sudo rm -f /etc/update-motd.d/15-brand;
+fi
+if [[ -f "/etc/update-motd.d/20-sysinfo" ]]; then
+	sudo rm -f /etc/update-motd.d/20-sysinfo;
+fi
+if [[ -f "/etc/update-motd.d/90-dynamic-motd" ]]; then
+	sudo rm -f /etc/update-motd.d/90-dynamic-motd;
+fi
+sudo wget -cq $GHURL/scripts/15-brand -P /etc/update-motd.d/
+sudo wget -cq $GHURL/scripts/20-sysinfo -P /etc/update-motd.d/
+sudo wget -cq $GHURL/scripts/90-dynamic-motd -P /etc/update-motd.d/
+sudo chmod +x /etc/update-motd.d/15-brand
+sudo chmod +x /etc/update-motd.d/20-sysinfo
+sudo chmod +x /etc/update-motd.d/90-dynamic-motd
+sudo sh -c "echo '# DYNAMIC MOTD VARIABLES' > /etc/default/dynamic-motd"
+sudo sh -c "echo 'BRANDING=true' >> /etc/default/dynamic-motd"
+sudo sh -c "echo 'T_FONT=small' >> /etc/default/dynamic-motd"
+sudo sh -c "echo 'T_FILTER=metal' >> /etc/default/dynamic-motd"
+sudo sh -c "echo 'MENUCONFIG=false' >> /etc/default/dynamic-motd"
+}
+
 if [ $# -eq 0 ]; then
 	echo -e "Missing options!"
 	echo "(run $0 -h for help)"
@@ -77,28 +102,27 @@ if [ $# -eq 0 ]; then
 	exit 0
 fi
 
-while getopts "rhu" OPTION; do
+while getopts "ruh" OPTION; do
 	case $OPTION in
 
 		r)
-			ECHO="RUN"
+			run
 			;;
 		u)
-			ECHO="UP"
+			if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+				GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files"
+				update_sysinfo;
+				update_motd;
+			else
+				echo -e "Requires a internet connection."
+				exit 0;
+			fi
 			;;
 		h)
 			echo ""
 			echo -e "   -r        Run"
-			echo -e "   -u        Update"
 			echo ""
 			exit 0
 			;;
 	esac
 done
-
-if [ $ECHO = "RUN" ]; then
-	run;
-fi
-if [ $ECHO = "UP" ]; then
-	update;
-fi
