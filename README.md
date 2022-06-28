@@ -45,7 +45,6 @@ make purge-all  # Remove sources and output directory
 Name:			# Your name
 Username:		# Your username
 Password:		# Your password
-Branding:		# Set custom ASCII text banner
 Hostname:		# Set custom system hostname
 
 Distribution

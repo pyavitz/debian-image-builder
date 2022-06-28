@@ -1,0 +1,13 @@
+#!/bin/bash
+source /etc/opt/board.txt
+
+if [[ -f "/proc/device-tree/model" ]]; then
+	MODEL=$(tr -d '\0' </proc/device-tree/model | sed 's/Hardkernel //g' | sed 's/FriendlyElec //g' | sed 's/Xunlong //g' | sed 's/[a-z]/\U&/g')
+	echo "";
+	toilet -f small --filter metal $MODEL;
+	echo "";
+else
+	echo "";
+	toilet -f small --filter metal $DEFAULT_MOTD;
+	echo "";
+fi
