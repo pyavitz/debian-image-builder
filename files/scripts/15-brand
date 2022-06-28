@@ -1,13 +1,20 @@
 #!/bin/bash
 source /etc/opt/board.txt
+source /etc/default/dynamic-motd
 
-if [[ -f "/proc/device-tree/model" ]]; then
-	MODEL=$(tr -d '\0' </proc/device-tree/model | sed 's/Hardkernel //g' | sed 's/FriendlyArm //g' | sed 's/FriendlyARM //g' | sed 's/FriendlyElec //g' | sed 's/Xunlong //g')
-	echo "";
-	toilet -f small --filter metal $MODEL;
-	echo "";
-else
+if [[ "$BRANDING" == "true" ]]; then
 	echo "";
 	toilet -f small --filter metal $DEFAULT_MOTD;
 	echo "";
+else
+	if [[ -f "/proc/device-tree/model" ]]; then
+		COL="\033[1m"
+		FIN="\033[0m"
+		MODEL=$(tr -d '\0' </proc/device-tree/model)
+		echo "";
+		echo -e "${COL}== BOARD${FIN}"
+		echo -en "${COL}Model:${FIN}       "
+		toilet -f term $MODEL;
+		echo "";
+	fi
 fi
