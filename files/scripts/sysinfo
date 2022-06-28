@@ -56,7 +56,6 @@ if [ -f /usr/local/bin/sysinfo ]; then
 		ls -ls /usr/local/bin/sysinfo;
 	else
 		sudo mv /usr/local/bin/sysinfo.orig /usr/local/bin/sysinfo;
-		echo -e "sysinfo [fail]" ;
 	fi
 	if [ -f /usr/local/bin/smon ]; then
 		sudo chmod +x /usr/local/bin/smon;
@@ -64,14 +63,20 @@ if [ -f /usr/local/bin/sysinfo ]; then
 		ls -ls /usr/local/bin/smon;
 	else
 		sudo mv /usr/local/bin/smon.orig /usr/local/bin/smon;
-		echo -e "smon [fail]";
 	fi
 fi
 }
 
 update_motd(){
+# remove
 if [[ -f "/etc/default/dynamic-motd" ]]; then
 	sudo rm -f /etc/default/dynamic-motd;
+fi
+if [[ -f "/etc/update-motd.d/00-header" ]]; then
+	sudo rm -f /etc/update-motd.d/00-header;
+fi
+if [[ -f "/etc/update-motd.d/10-uname" ]]; then
+	sudo rm -f /etc/update-motd.d/10-uname;
 fi
 if [[ -f "/etc/update-motd.d/15-brand" ]]; then
 	sudo rm -f /etc/update-motd.d/15-brand;
@@ -82,6 +87,8 @@ fi
 if [[ -f "/etc/update-motd.d/90-dynamic-motd" ]]; then
 	sudo rm -f /etc/update-motd.d/90-dynamic-motd;
 fi
+# download
+sudo wget -cq $GHURL/scripts/00-header -P /etc/update-motd.d/
 sudo wget -cq $GHURL/scripts/15-brand -P /etc/update-motd.d/
 sudo wget -cq $GHURL/scripts/20-sysinfo -P /etc/update-motd.d/
 sudo wget -cq $GHURL/scripts/90-dynamic-motd -P /etc/update-motd.d/
@@ -93,6 +100,22 @@ sudo sh -c "echo 'BRANDING=true' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'T_FONT=small' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'T_FILTER=metal' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'MENUCONFIG=false' >> /etc/default/dynamic-motd"
+# list update
+if [[ -f "/etc/default/dynamic-motd" ]]; then
+	ls -ls /etc/default/dynamic-motd;
+fi
+if [[ -f "/etc/update-motd.d/00-header" ]]; then
+	ls -ls /etc/update-motd.d/00-header;
+fi
+if [[ -f "/etc/update-motd.d/15-brand" ]]; then
+	ls -ls /etc/update-motd.d/15-brand;
+fi
+if [[ -f "/etc/update-motd.d/20-sysinfo" ]]; then
+	ls -ls /etc/update-motd.d/20-sysinfo;
+fi
+if [[ -f "/etc/update-motd.d/90-dynamic-motd" ]]; then
+	ls -ls /etc/update-motd.d/90-dynamic-motd;
+fi
 }
 
 if [ $# -eq 0 ]; then
