@@ -15,9 +15,6 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
-if [[ -f "/proc/device-tree/model" ]]; then
-        MODEL=$(tr -d '\0' </proc/device-tree/model)
-fi
 
 cpu_hwinfo(){
 if [[ `grep -w "0-5" "/sys/devices/system/cpu/present"` ]]; then
@@ -32,6 +29,7 @@ fi
 
 run(){
 if [[ -f "/proc/device-tree/model" ]]; then
+	MODEL=$(tr -d '\0' </proc/device-tree/model)
 	echo -e "== $MODEL"
 fi
 echo -e "CPU usage:  " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'`
