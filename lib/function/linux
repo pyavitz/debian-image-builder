@@ -27,8 +27,8 @@ cd ..
 if ls firmware/{fixup4.dat,start4.elf,LICENCE.broadcom,COPYING.linux} > /dev/null 2>&1; then
 	echo_bdone;
 else
-	echo_fail
-	exit;
+	echo_fail;
+	exit 0;
 fi
 }
 
@@ -110,30 +110,12 @@ stable_extract(){
 echo ""
 echo_extract
 pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
-if [ -e ${KERNEL}-${VERSION} ]; then
-	echo "";
-	echo -en "${WHT}Creating backup${FIN} ";
-	mkdir -p ${KERNEL}-${VERSION}.orig;
-	cd ${KERNEL}-${VERSION};
-	tar cf - . | (cd ../${KERNEL}-${VERSION}.orig && tar xf -);
-	cd ..;
-	echo_bdone;
-fi
 }
 
 mainline_extract(){
 echo ""
 echo_extract
 pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-if [ -e ${KERNEL}-${VERSION} ]; then
-	echo "";
-	echo -en "${WHT}Creating backup${FIN} ";
-	mkdir -p ${KERNEL}-${VERSION}.orig;
-	cd ${KERNEL}-${VERSION};
-	tar cf - . | (cd ../${KERNEL}-${VERSION}.orig && tar xf -);
-	cd ..;
-	echo_bdone;
-fi
 }
 
 vendor_extract(){
