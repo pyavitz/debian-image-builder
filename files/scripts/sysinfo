@@ -111,9 +111,9 @@ if [[ -f "/etc/update-motd.d/90-dynamic-motd" ]]; then
 fi
 # default dynamic motd
 sudo sh -c "echo '# DYNAMIC MOTD VARIABLES' > /etc/default/dynamic-motd"
-sudo sh -c "echo 'H_POS=-l' >> /etc/default/dynamic-motd"
+sudo sh -c "echo 'H_POS=-c' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'B_POS=-r' >> /etc/default/dynamic-motd"
-sudo sh -c "echo 'BRANDING=true' >> /etc/default/dynamic-motd"
+sudo sh -c "echo 'BRANDING=false' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'T_FONT=small' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'T_FILTER=metal' >> /etc/default/dynamic-motd"
 sudo sh -c "echo 'MENUCONFIG=false' >> /etc/default/dynamic-motd"
@@ -129,9 +129,12 @@ if [ $# -eq 0 ]; then
 	exit 0
 fi
 
-while getopts "ruh" OPTION; do
+while getopts "eruh" OPTION; do
 	case $OPTION in
 
+		e)
+			sudo nano /etc/default/dynamic-motd
+			;;
 		r)
 			run
 			;;
@@ -147,7 +150,8 @@ while getopts "ruh" OPTION; do
 			;;
 		h)
 			echo ""
-			echo -e "   -r        Run"
+			echo -e "\t-e\tEdit dynamic motd"
+			echo -e "\t-r\tRun script"
 			echo ""
 			exit 0
 			;;
