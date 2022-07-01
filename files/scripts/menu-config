@@ -1,5 +1,7 @@
 #!/bin/bash
 # DEBIAN IMAGE BUILDER: SYSTEM MENU INTERFACE
+# Description: SYSTEM MENU INTERFACE
+# Destination: /usr/local/bin/menu-config
 if [ -f /etc/opt/board.txt ]; then
 	source /etc/opt/board.txt;
 else
@@ -291,6 +293,7 @@ whiptail --backtitle "Menu Interface: System Settings" --title "System Menu Conf
 	"9)" "Miscellaneous     System settings" \
 	"" "" \
 	"U)" "Update            Menu interface configuration tool" \
+	"T)" "Test              Shows the Exec worked" \
 	"Q)" "Quit .." 3>&2 2>&1 1>&3
 )
 
@@ -478,18 +481,19 @@ case $CHOICE in
 	"U)")
 		MCU=`command -v menu-config-update`
 		MENUDIR="/usr/local/bin/"
-		if [ -f $MCU ]; then
-			sudo mv -f $MCU $MCU.orig > /dev/null 2>&1;
-		fi
-		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config-update -P $MENUDIR
-		sleep 1s
-		sudo chmod +x $(command -v menu-config-update)
-		if [ -f $MCU ]; then
-			sudo rm -f $MCU.orig;
-		else
-			sudo mv -f $MCU.orig $MCU > /dev/null 2>&1;
-		fi
+#		if [ -f $MCU ]; then
+#			sudo mv -f $MCU $MCU.orig > /dev/null 2>&1;
+#		fi
+#		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config-update -P $MENUDIR
+#		sleep 1s
+#		sudo chmod +x $(command -v menu-config-update)
+#		if [ -f $MCU ]; then
+#			sudo rm -f $MCU.orig;
+#		else
+#			sudo mv -f $MCU.orig $MCU > /dev/null 2>&1;
+#		fi
 		menu-config-update
+		exec menu-config
 		exit 0
 		;;
 	"Q)")
