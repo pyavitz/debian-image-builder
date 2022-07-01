@@ -34,34 +34,14 @@ fi
 kernel_source
 if [ -e ${KERNEL}-${VERSION} ]; then
 	CAP_KERNEL=`echo "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"`
-	if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y"  ]]; then
-		echo -en "${WHT}${CAP_KERNEL}-${VERSION}${FIN}";
-		echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN} ";
-		rm -fdr ${KERNEL}-${VERSION};
-		echo_bdone;
-	else
-		echo -en "${WHT}${CAP_KERNEL}-${VERSION}${FIN}";
-		echo -en " ${PNK}[${FIN}${YLW}prep${FIN}${PNK}]${FIN}";
-		rm -fdr ${KERNEL}-${VERSION};
-		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN} ";
-	fi
+	echo -en "${WHT}${CAP_KERNEL}-${VERSION}${FIN}";
+	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN} ";
+	rm -fdr ${KERNEL}-${VERSION};
+	echo -en "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}";
 fi
-# Download kernel and extract
-if [ -e ${KERNEL}-${VERSION}.orig ]; then
-	if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y"  ]]; then
-		:;
-	else
-		mkdir -p ${KERNEL}-${VERSION};
-		cd ${KERNEL}-${VERSION}.orig;
-		tar cf - . | (cd ../${KERNEL}-${VERSION} && tar xf -);
-		cd ..;
-		echo_bdone;
-		extra_wireless;
-	fi
-else
-	download;
-fi
-# Setup
+# download and extract
+download
+# setup
 if [[ "$SETUP" == "vendor" ]]; then
 	if [[ "$VERSION" == "4.9.y" ]]; then
 		vendor_setup;
@@ -75,26 +55,23 @@ if [[ "$SETUP" == "vendor" ]]; then
 else
 	setup;
 fi
-# Amlogic patching
+# amlogic patching
 if [[ "$FAMILY" == "amlogic" ]]; then
 	amlogic_patching;
 fi
-
-# Allwinner patching
+# allwinner patching
 if [[ "$FAMILY" == "allwinner" ]]; then
 	allwinner_patching;
 fi
-
-# Broadcom patching
+# broadcom patching
 if [[ "$FAMILY" == "broadcom" ]]; then
 	raspberrypi_patching;
 fi
-
-# Rockchip patching
+# rockchip patching
 if [[ "$FAMILY" == "rockchip" ]]; then
 	rockchip_patching;
 fi
-# Defconfig
+# defconfig
 if [[ "$SETUP" == "vendor" ]]; then
 	if [ $custom_defconfig -eq 1 ]; then
 		cconfig;
@@ -108,19 +85,19 @@ else
 		bconfig;
 	fi
 fi
-# Menuconfig
+# menuconfig
 if [ $menuconfig -eq 1 ]; then
 	menuconfig;
 fi
 
-# Builddeb
+# builddeb
 if [ $crosscompile -eq 1 ]; then
 	ccompile;
 else
 	ncompile;
 fi
 echo ""
-# Finish
+# finish
 cd ..
 rm -f {*linux-image-dbg*.deb,linux-libc-dev*.deb,*.buildinfo,*.changes}
 if [[ `ls ../${OUTPUT}/*.deb` ]] > /dev/null 2>&1; then
