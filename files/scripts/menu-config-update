@@ -1,31 +1,104 @@
 #!/bin/bash
-GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files"
-MENU=`command -v menu-config`
-MENUDIR="/usr/local/bin/"
-clear -x
-echo -en "Updating menu and scripts "
-if [[ `command -v governor` ]]; then
-	governor -u > /dev/null 2>&1;
+# Destination: /usr/local/bin/menu-config-update
+
+#github sites supporting scripts for distro are pulled from
+REPO_URLS=("https://github.com/pyavitz/debian-image-builder/trunk/files/scripts" \
+            "https://github.com/pyavitz/scripts/trunk")
+
+# location for pulling down scripts from github
+WORKING_DIR="/var/tmp"
+
+# Get in directory where we'll temporarily store things. 
+cd $WORKING_DIR
+
+# We use subversion to pull files out of git so it's not installed, install it
+if [[ ! `dpkg --list |grep "^ii\s*subversion\s"` ]]; then
+    echo Installing Subversion
+    sudo apt -qq -y install subversion
 fi
-if [[ `command -v swh` ]]; then
-	swh -U > /dev/null 2>&1;
-fi
-if [[ `command -v fan-ctrl` ]]; then
-	fan-ctrl -u > /dev/null 2>&1;
-fi
-if [ -f $MENU ]; then
-	sudo mv -f $MENU $MENU.orig;
-fi
-sudo wget -cq $GHURL/scripts/menu-config -P $MENUDIR
-sleep 1s
-sudo chmod +x $(command -v menu-config)
-if [ -f $MENU ]; then
-	sudo rm -f $MENU.orig;
-else
-	sudo mv -f $MENU.orig $MENU;
-fi
+
+# for each repo
+for str in ${REPO_URLS[@]}; do
+  # pull the directory of files from git
+  svn export $str 2>&1 > /dev/null
+
+  # svn stores files under final part of path we pulled from git
+  directory=$(basename $str)
+  # echo Working on $directory
+
+  # only do the work if we've pulled some files 
+  if [ -d $WORKING_DIR/$directory ]; then 
+    updates=() 
+    for filename in $WORKING_DIR/$directory/*; do
+      #echo filename is $filename
+
+      # Script needs to include location being updated to be worked
+      dest=`grep "^#\sDestination" $filename | cut -d ":" -f 2 | xargs`
+      if [ ! -z "$dest" ]; then
+        # echo Doing some work on $filename with dest $dest !!!!!!
+
+        # Script must already installed to be updated
+        if [ -f "$dest" ]; then
+
+          #file must have changed if we're to update 
+          oldmd5=`md5sum $dest|cut -d " " -f 1`
+          newmd5=`md5sum $filename| cut -d " " -f 1`
+          if [ $oldmd5 != $newmd5 ]; then
+
+            # As we're only updating distro scripts make sure file 
+            # isn't from a debian package
+            pkg=`dpkg -S "$dest" 2>/dev/null |grep "no path"`
+            if [ -z "$pkg" ]; then
+
+              desc=`grep "^#\sDescription" $filename|cut -d ":" -f 2- |xargs`
+              # add file to list that uses select to identify file to be updated
+              updates+=( "$dest" "$desc" "off" )
+            fi
+          fi
+        fi
+      fi
+
+    done
+
+    if [ ! -z "$updates" ]; then 
+      choices=($(whiptail --title "Available updates" --checklist "Select items to update" 22 80 15  "${updates[@]}" 3>&1 1>&2 2>&3))
+      #echo selected $choices
+      if [ ! -z "$choices" ]; then
+        for dest in "${choices[@]}"; do
+          # remove quotes from start and end of dest
+          dest="${dest#\"}"
+          dest="${dest%\"}"
+          filename=$(basename $dest)
+          src=$WORKING_DIR/$directory/$(basename $filename)
+          echo Source when making move is $src
+          #sudo mv $dest $dest.org
+          sudo mv $src $dest
+          sudo chown root: $dest
+          sudo chmod +x $dest 
+
+          # see if this is a service file that needs restared
+          serv=`grep "^#\sService" $dest | cut -d ":" -f 2 | xargs`
+          if [ ! -z "$serv" ]; then
+             # just incase it was the service file that was updated do reload
+             sudo systemctl daemon-reload
+             # only restart if service is enabled
+             isEnabled=`systemctl is-enabled $serv`
+             if [ "$isEnabled" = "enabled" ]; then
+               echo restarting service $serv
+               sudo systemctl restart $serv
+             fi
+          fi
+        done
+      fi
+    fi
+    # remove all the remaining files that we pulled that we not previously installed 
+    rm -r -f $WORKING_DIR/$directory
+  else
+    # svn didn't pull anything
+    echo $WORKING_DIR/$directory doesnt exist
+  fi
+done
+
 echo -e "[done]"
-sleep 1s
-clear -x
-menu-config
+#clear -x
 exit 0
