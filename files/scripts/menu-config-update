@@ -61,6 +61,8 @@ for str in ${REPO_URLS[@]}; do
     done
 
     if [ ! -z "$updates" ]; then 
+      hadUpdates=True
+      export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
       choices=($(whiptail --title "Available updates" --checklist "Select items to update" 22 80 15  "${updates[@]}" 3>&1 1>&2 2>&3))
       #echo selected $choices
       if [ ! -z "$choices" ]; then
@@ -99,6 +101,10 @@ for str in ${REPO_URLS[@]}; do
   fi
 done
 
-echo -e "[done]"
+if [ -z hadUpdates ]; then
+  export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
+  whiptail --msgbox "    No updates available." 0 0;
+fi
+#echo -e "[done]"
 #clear -x
 exit 0
