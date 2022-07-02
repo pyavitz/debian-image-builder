@@ -1,10 +1,10 @@
 #!/bin/bash
 
-WHT="\e[1;37m"
+TXT="\033[0m"
 FIN="\e[0m"
 
 jammy-ncompile(){
-sudo apt install -y \
+sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch make dosfstools zip unzip \
 	qemu debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
 	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
@@ -18,7 +18,7 @@ sudo apt install -y \
 }
 
 bullseye-ncompile(){
-sudo apt install -y \
+sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
 	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
 	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
@@ -30,8 +30,8 @@ sudo apt install -y \
 
 if [[ `uname -m | grep -w x86_64` ]]; then
 	echo ""
-	echo -e "${WHT}You are running x86_64?${FIN}"
-	echo -e "${WHT}Please run:${FIN} make ccompile"
+	echo -e "${TXT}You are running x86_64?${FIN}"
+	echo -e "${TXT}Please run:${FIN} make ccompile"
 	echo ""
 	exit 0;
 fi
@@ -45,7 +45,7 @@ else
 		bullseye-ncompile;
 	else
 		echo ""
-		echo -e "${WHT}What OS are you running?${FIN}"
+		echo -e "${TXT}What OS are you running?${FIN}"
 		echo ""
 		exit 0;
 	fi
