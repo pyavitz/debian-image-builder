@@ -481,12 +481,18 @@ sleep 1s
 KERNEL_RELEASE=`cat /usr/src/linux-headers*/include/config/kernel.release`
 echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
 
-# Miscellaneous
 # system.journal corrupted or uncleanly shut down, renaming and replacing
 if [ -f /etc/systemd/journald.conf ]; then
 	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
+fi
+
+# Whiptail color palette
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	mkdir -p /etc/newt;
+	palette-dark > /dev/null 2>&1;
+	ln -sf /etc/newt/palette.dark  /etc/alternatives/newt-palette;
 fi
 
 # Odroid udev rules
