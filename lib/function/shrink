@@ -105,15 +105,10 @@ find_p2_partuuid
 echo ""
 if [ $petitboot -eq 1 ]; then
 	odroid_bootcmd;
-else
-	if [[ "$BOARD" == "raspi4" ]]; then
-		rm -f p1/extlinux/extlinux.conf;
-		rm -f p1/config.txt;
-		p2_extlinux;
-		config-txt > /dev/null 2>&1;
-	else
-		default_bootcmd;
-	fi
+fi
+if [[ "$BOARD" == "raspi4" ]]; then
+	extlinux-conf
+	config-txt > /dev/null 2>&1;
 fi
 echo ""
 sleep 1s

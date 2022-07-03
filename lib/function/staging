@@ -50,17 +50,24 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
 p2_partition(){
+if [[ "$FAMILY" == "allwinner" ]]; then
+	OFFSET="2048";
+	VFAT="no";
+fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	OFFSET="4096";
+	VFAT="no";
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
 	OFFSET="2048";
+	VFAT="yes";
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	OFFSET="32768";
+	VFAT="no";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-if [[ "$FAMILY" == "broadcom" ]]; then
+if [[ "$VFAT" == "yes" ]]; then
 	GPT="false";
 	P_BOOT="p1";
 	P_ROOTFS="p2";
@@ -103,7 +110,7 @@ IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
-if [[ "$FAMILY" == "broadcom" ]]; then
+if [[ "$VFAT" == "yes" ]]; then
 	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
 else
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
@@ -147,7 +154,7 @@ EOF
 }
 
 p2_fstab(){
-if [[ "$FAMILY" == "broadcom" ]]; then
+if [[ "$VFAT" == "yes" ]]; then
 	FSTYPE="vfat	defaults 0 2";
 else
 	FSTYPE="ext2	rw,relatime,errors=continue 0 2";
@@ -212,12 +219,12 @@ else
 	p2_uuid > /dev/null 2>&1;
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
-	config-txt > /dev/null 2>&1;
 	if [ -f output/raspi4/u-boot.bin ]; then
+		config-txt > /dev/null 2>&1;
 		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
 	else
 		echo -e "${YLW}Missing u-boot.bin${FIN}?"
-		exit 1;
+		exit 0;
 	fi
 fi
 if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
@@ -397,18 +404,4 @@ fi
 if [[ "$BOARD" == "rockpro64" ]]; then
 	sed -i 's/#fdtoverlays/#fdtoverlays ..\/rockchip\/overlays\/rockchip-rk3399-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
 fi
-}
-
-# create extlinux file (p2)
-p2_extlinux(){
-# broadcom
-if [[ "$BOARD" == "raspi4" ]]; then
-	CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes ${EXTRA} rootwait";
-fi
-mkdir -p p1/extlinux
-tee p1/extlinux/extlinux.conf <<EOF
-label default
-	kernel /Image
-	${CMDLINE}
-EOF
 }
