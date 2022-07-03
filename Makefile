@@ -115,12 +115,12 @@ uboot:
 kernel: 
 	@rm -f github.txt
 ifdef version
-	@$(shell sed -i "13s/.*/VERSION="'"${version}"'"/" userdata.txt)
+	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
 endif
 
 ifdef myconfig
-	@$(shell sed -i "25s/.*/custom_defconfig=1/" userdata.txt)
-	@$(shell sed -i "26s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
+	@$(shell sed -i "24s/.*/custom_defconfig=1/" userdata.txt)
+	@$(shell sed -i "25s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 endif
 
 # GITHUB
