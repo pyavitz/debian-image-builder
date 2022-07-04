@@ -50,7 +50,7 @@ Hostname:		# Set custom system hostname
 
 Distribution
 Distro:			# Supported: debian, devuan and ubuntu
-Release:		# Debian: bullseye, bookwork, testing, unstable and sid
+Release:		# Debian: bullseye, bookworm, testing, unstable and sid
 			# Devuan: chimaera, daedalus, testing, unstable and ceres
 			# Ubuntu: focal and jammy
 Network Manager		# Enable nmtui (default: ifupdown)
