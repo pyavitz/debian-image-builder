@@ -76,6 +76,7 @@ help:
 	@echo "  Amlogic:    lepotato odroidc4 odroidhc4 odroidn2 odroidn2plus radxazero"
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc odroidm1 renegade rock64 rockpro64"
+	@echo "  Samsung:    odroidxu4"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install x86_64 dependencies"

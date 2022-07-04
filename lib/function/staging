@@ -10,6 +10,9 @@ fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	OFFSET="32768";
 fi
+if [[ "$FAMILY" == "samsung" ]]; then
+	OFFSET="4096";
+fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$FAMILY_EXT" == "rk356x" ]]; then
 	gpt_partition_table;
@@ -65,6 +68,10 @@ fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	OFFSET="32768";
 	VFAT="no";
+fi
+if [[ "$FAMILY" == "samsung" ]]; then
+	OFFSET="4096";
+	VFAT="yes";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$VFAT" == "yes" ]]; then
@@ -122,6 +129,9 @@ mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	flash_vendor-uboot;
 fi
+if [[ "$BOARD" == "odroidxu4" ]]; then
+	flash_uboot;
+fi
 sync
 umount p2
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
@@ -148,7 +158,7 @@ source part-uuid.txt
 
 p1_fstab(){
 tee p1/etc/fstab <<EOF
-UUID=${ROOT_UUID}	/		ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+UUID=${ROOT_UUID}	/	ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
 tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
 EOF
 }
@@ -265,7 +275,7 @@ cp userdata.txt p1/root
 cp board.txt p1/root
 cp files/scripts/* p1/root
 cp files/users/* p1/root
-cp files/firmware/* p1/root
+cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p1/root
 if [[ "$DISTRO" == "devuan" ]]; then
 	cp files/inits/*.init p1/root;
 fi
@@ -279,7 +289,7 @@ cp userdata.txt p2/root
 cp board.txt p2/root
 cp files/scripts/* p2/root
 cp files/users/* p2/root
-cp files/firmware/* p2/root
+cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
 if [[ "$BOARD" == "raspi4" ]]; then
 	cp files/raspi4/* p2/root;
 fi
@@ -375,6 +385,34 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
 	fi
 fi
+}
+
+odroidxu4_bootini(){
+if [[ -f "files/boot/odroid/${BOARD}-boot.ini" ]]; then
+	cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini;
+	sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini;
+fi
+if [[ -f "files/boot/odroid/${BOARD}-config.ini" ]]; then
+	cp -f files/boot/odroid/${BOARD}-config.ini p1/config.ini;
+fi
+}
+
+odroidxu4_bootcmd(){
+if [[ "$P_VALUE" == "p1" ]]; then
+	P_BOOTCMD="p1/boot/boot.cmd"
+	P_CONFIGINI="p1/boot/config.ini"
+	P_BOOTSCR="p1/boot/boot.scr"
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	P_BOOTCMD="p1/boot.cmd"
+	P_CONFIGINI="p1/config.ini"
+	P_BOOTSCR="p1/boot.scr"
+fi
+cp -f files/boot/odroid/${BOARD}-boot.cmd ${P_BOOTCMD}
+cp -f files/boot/odroid/${BOARD}-config.ini ${P_CONFIGINI}
+sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" ${P_CONFIGINI}
+sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" ${P_CONFIGINI}
+mkimage -C none -A arm -T script -d ${P_BOOTCMD} ${P_BOOTSCR}
 }
 
 # create extlinux file (p1)

@@ -256,6 +256,17 @@ if [ -e $tmpdir/usr/lib/rockchip64-linux-image/rockchip ]; then
 		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/overlays/" "$tmpdir/boot/rockchip/";
 	fi
 fi
+# Samsung
+if [ -e $tmpdir/usr/lib/exynos-linux-image ]; then
+	mkdir -p "$tmpdir/boot/"
+	if [ -f $tmpdir/usr/lib/exynos-linux-image/exynos5422-odroidxu4.dtb ]; then
+		cp -r "$tmpdir/usr/lib/exynos-linux-image/exynos5422-odroidxu4.dtb" "$tmpdir/boot/exynos5422-odroidxu4.dtb";
+	fi
+	if [ -e $tmpdir/usr/lib/exynos-linux-image/overlays ]; then
+		mkdir -p "$tmpdir/boot/overlays";
+		cp -r "$tmpdir/usr/lib/exynos-linux-image/overlays/" "$tmpdir/boot/";
+	fi
+fi
 
 # Install the maintainer scripts
 debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
@@ -292,7 +303,7 @@ fi
 if [ -f /boot/initrd.gz ]; then
 	rm -f /boot/{initrd.gz,initrd.img-*};
 fi
-if [ -f /boot/bcm2711-rpi-4-b.dtb ]; then
+if [ -e /boot/*.dtb ]; then
 	rm -f /boot/{*.dtb,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux};
 	if [ -e /boot/overlays ]; then
 		rm -fdr /boot/overlays;

@@ -41,6 +41,13 @@ sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g'
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/mkdebian
 }
 
+samsung_packaging(){
+sed -i 's/packagename=linux-image-$version/packagename=exynos-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=exynos-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=exynos-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=exynos-linux-headers/g' scripts/package/mkdebian
+}
+
 user_patches(){
 if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
 	echo ""
@@ -103,6 +110,9 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 fi
+if [[ "$FAMILY" == "samsung" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+fi
 }
 
 # check log and report
@@ -152,6 +162,9 @@ fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+fi
+if [[ "$FAMILY" == "samsung" ]]; then
+	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 fi
 }
 
@@ -211,5 +224,19 @@ else
 	dryrun; check; apply; user_patches;
 fi
 cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo ""
+}
+
+# SAMSUNG
+samsung_patching(){
+# packaging
+samsung_packaging
+# patching
+dryrun; check; apply; user_patches;
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+if [[ "$BOARD" == "odroidxu4" ]] && [[ -e "../../files/firmware/edid" ]]; then
+	mkdir -p firmware
+	cp -fr ../../files/firmware/edid firmware/;
+fi
 echo ""
 }
