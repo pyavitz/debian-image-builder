@@ -61,25 +61,17 @@ case $selection in
 		else
 			make "uboot" "board=$1"
 		fi
-		if [[ $FAMLIY == allwinner ]]; then
-			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
-		fi
-		if [[ $FAMLIY == amlogic ]]; then
-			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
-		fi
-		if [[ $FAMLIY == broadcom ]]; then
-			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
-		fi
-		if [[ $FAMILY == rockchip ]]; then
-			if [[ $BOARD == odroidm1 ]]; then
-				dialog --title "RK3568" --msgbox "The Odroid M1 uses a precompiled binary" 6 50;
-			else
-				dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/*.itb" 30 75;
-			fi
-		fi
-		if [[ $FAMILY == samsung ]]; then
-			if [[ $BOARD == odroidxu4 ]]; then
+		if [[ "$BOARD" == "odroidm1" ]]; then
+			dialog --title "RK3568" --msgbox "The Odroid M1 uses a precompiled binary" 6 50;
+		else
+			if [[ "$BOARD" == "odroidxu4" ]]; then
 				dialog --title "EXYNOS5422" --msgbox "The Odroid XU4 uses precompiled binaries" 6 50;
+			else
+				if [ -e $MAKE_OUTPUT/*.itb ]; then
+					dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/*.itb" 30 75;
+				else
+					dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin" 30 75;
+				fi
 			fi
 		fi
 		;;
