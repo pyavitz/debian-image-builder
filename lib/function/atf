@@ -3,16 +3,23 @@
 # ATF
 arm-trusted-firmware(){
 if [[ -e arm-trusted-firmware ]]; then
-	atf_clean;
+	echo -en "${WHT}Arm Trusted Firmware${FIN} ";
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} ";
 	cd arm-trusted-firmware;
+	echo -en "${PNK}[${FIN}${WHT}cleaning${FIN}${PNK}]${FIN} ";
 	make realclean > /dev/null 2>&1;
 	git config pull.rebase false;
-	git pull;
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} ";
+	git pull -q;
+	echo_bdone;
 else
-	atf_dl;
-	git clone https://github.com/ARM-software/arm-trusted-firmware.git;
+	echo -en "${WHT}Arm Trusted Firmware${FIN} ";
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} ";
+	git clone -q https://github.com/ARM-software/arm-trusted-firmware.git;
 	cd arm-trusted-firmware;
+	echo -en "${PNK}[${FIN}${WHT}cleaning${FIN}${PNK}]${FIN} ";
 	make realclean > /dev/null 2>&1;
+	echo_bdone;
 fi
 echo ""
 echo -e "${WHT}Compiling ATF${FIN} ..."
