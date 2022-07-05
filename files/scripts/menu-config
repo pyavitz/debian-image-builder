@@ -2,7 +2,7 @@
 # DEBIAN IMAGE BUILDER: SYSTEM MENU INTERFACE
 # Description: SYSTEM MENU INTERFACE
 # Destination: /usr/local/bin/menu-config
-if [ -f /etc/opt/board.txt ]; then
+if [[ -f "/etc/opt/board.txt" ]]; then
 	source /etc/opt/board.txt;
 else
 	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
@@ -30,6 +30,12 @@ if [[ "$BOARD" == "odroidn2plus" ]]; then
 	BOARD_PN="Odroid N2+";
 	supported_oc=1;
 	supported_mixer=1;
+	fan_ctrl=1;
+fi
+if [[ "$BOARD" == "odroidxu4" ]]; then
+	BOARD_PN="Odroid XU4";
+	supported_oc=0;
+	supported_mixer=0;
 	fan_ctrl=1;
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
@@ -154,7 +160,7 @@ fi
 }
 
 systemd_fanctrl(){
-if [ -f /etc/systemd/system/odroid-fan-ctrl.service ]; then
+if [[ -f "/etc/systemd/system/odroid-fan-ctrl.service" ]]; then
 	:;
 else
 	sudo tee /etc/systemd/system/odroid-fan-ctrl.service <<EOF
@@ -175,7 +181,7 @@ fi
 }
 
 sysvinit_fanctrl(){
-if [ -f /etc/init.d/fan-ctrl ]; then
+if [[ -f "/etc/init.d/fan-ctrl" ]]; then
 	:;
 else
 	sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl;
