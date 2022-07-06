@@ -1,0 +1,48 @@
+#!/bin/bash
+
+uboot_configs(){
+# ALLWINNER
+if [[ "$FAMILY" == "allwinner" ]]; then
+	echo CONFIG_SD_BOOT=y >> configs/${UBOOT_DEFCONFIG};
+	echo CONFIG_EXT4_WRITE=y >> configs/${UBOOT_DEFCONFIG};
+fi
+# AMLOGIC
+# odroid c4
+if [[ "$FAMILY" == "amlogic" ]]; then
+	echo CONFIG_SD_BOOT=y >> configs/${UBOOT_DEFCONFIG};
+	echo CONFIG_EXT4_WRITE=y >> configs/${UBOOT_DEFCONFIG};
+	if [[ "$BOARD" == "radxazero" ]]; then
+		echo CONFIG_LZ4=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_LZO=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_LZMA=y >> configs/${UBOOT_DEFCONFIG};
+	fi
+fi
+# BROADCOM
+if [[ "$FAMILY" == "broadcom" ]]; then
+	echo CONFIG_SD_BOOT=y >> configs/${UBOOT_DEFCONFIG};
+	echo CONFIG_EXT4_WRITE=y >> configs/${UBOOT_DEFCONFIG};
+fi
+# ROCKCHIP
+if [[ "$FAMILY" == "rockchip" ]]; then
+	echo CONFIG_SD_BOOT=y >> configs/${UBOOT_DEFCONFIG};
+	echo CONFIG_EXT4_WRITE=y >> configs/${UBOOT_DEFCONFIG};
+	if [[ "$BOARD" == "rockpro64" ]]; then
+		sed -i 's/CONFIG_USE_PREBOOT=y/# CONFIG_USE_PREBOOT= is not set/g' configs/${UBOOT_DEFCONFIG};
+		sed -i 's/CONFIG_USB_EHCI_HCD=y/# CONFIG_USB_EHCI_HCD= is not set/g' configs/${UBOOT_DEFCONFIG};
+		sed -i 's/CONFIG_USB_EHCI_GENERIC=y/# CONFIG_USB_EHCI_GENERIC= is not set/g' configs/${UBOOT_DEFCONFIG};
+		sed -i 's/CONFIG_USB_XHCI_HCD=y/# CONFIG_USB_XHCI_HCD= is not set/g' configs/${UBOOT_DEFCONFIG};
+		sed -i 's/CONFIG_USB_XHCI_DWC3=y/# CONFIG_USB_XHCI_DWC3= is not set/g' configs/${UBOOT_DEFCONFIG};
+		sed -i 's/CONFIG_USB_DWC3=y/# CONFIG_USB_DWC3= is not set/g' configs/${UBOOT_DEFCONFIG};
+		sed -i 's/CONFIG_USB_DWC3_GENERIC=y/# CONFIG_USB_DWC3_GENERIC= is not set/g' configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_OF_LIBFDT_OVERLAY=y >> configs/${UBOOT_DEFCONFIG};
+	fi
+	if [[ "$BOARD" == "nanopc" ]]; then
+		echo CONFIG_MISC=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_PHY_ROCKCHIP_INNO_USB2=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_PHY_ROCKCHIP_TYPEC=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_USB_DWC3_GENERIC=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_OF_LIBFDT_OVERLAY=y >> configs/${UBOOT_DEFCONFIG};
+	fi
+fi
+}

@@ -1,6 +1,4 @@
 #!/bin/bash
-
-# UBOOT
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0"
 
 uboot-source(){
@@ -10,85 +8,11 @@ cd ${SRC}
 rm -fdr {amlogic-boot-fip-master,blobs/amlogic-u-boot,u-boot}
 }
 
-mod_defconfigs(){
-# ALLWINNER
-# tritium
-echo CONFIG_SD_BOOT=y >> configs/libretech_all_h3_cc_h5_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/libretech_all_h3_cc_h5_defconfig
-# pine64+
-echo CONFIG_SD_BOOT=y >> configs/pine64_plus_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/pine64_plus_defconfig
-# nanopi neo
-echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_defconfig
-# nanopi m1
-echo CONFIG_SD_BOOT=y >> configs/nanopi_m1_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/nanopi_m1_defconfig
-# nanopi neo plus2
-echo CONFIG_SD_BOOT=y >> configs/nanopi_neo_plus2_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/nanopi_neo_plus2_defconfig
-# orangepi r1
-echo CONFIG_SD_BOOT=y >> configs/orangepi_r1_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/orangepi_r1_defconfig
-# orangepi one
-echo CONFIG_SD_BOOT=y >> configs/orangepi_one_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/orangepi_one_defconfig
-# orangepi pc
-echo CONFIG_SD_BOOT=y >> configs/orangepi_pc_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/orangepi_pc_defconfig
-# AMLOGIC
-# odroid c4
-echo CONFIG_SD_BOOT=y >> configs/odroid-c4_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/odroid-c4_defconfig
-echo CONFIG_SD_BOOT=y >> configs/odroid-hc4_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/odroid-hc4_defconfig
-# odroid n2
-echo CONFIG_SD_BOOT=y >> configs/odroid-n2_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/odroid-n2_defconfig
-# le potato
-echo CONFIG_SD_BOOT=y >> configs/libretech-cc_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/libretech-cc_defconfig
-# radxa zero
-echo CONFIG_SD_BOOT=y >> configs/radxa-zero_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/radxa-zero_defconfig
-echo CONFIG_LZ4=y >> configs/radxa-zero_defconfig
-echo CONFIG_LZO=y >> configs/radxa-zero_defconfig
-echo CONFIG_LZMA=y >> configs/radxa-zero_defconfig
-# BROADCOM
-echo CONFIG_SD_BOOT=y >> configs/rpi_4_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/rpi_4_defconfig
-# ROCKCHIP
-# rock64
-echo CONFIG_SD_BOOT=y >> configs/rock64-rk3328_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/rock64-rk3328_defconfig
-# renegade
-echo CONFIG_SD_BOOT=y >> configs/roc-cc-rk3328_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/roc-cc-rk3328_defconfig
-# rockpro64
-sed -i 's/CONFIG_USE_PREBOOT=y/# CONFIG_USE_PREBOOT= is not set/g' configs/rockpro64-rk3399_defconfig
-sed -i 's/CONFIG_USB_EHCI_HCD=y/# CONFIG_USB_EHCI_HCD= is not set/g' configs/rockpro64-rk3399_defconfig
-sed -i 's/CONFIG_USB_EHCI_GENERIC=y/# CONFIG_USB_EHCI_GENERIC= is not set/g' configs/rockpro64-rk3399_defconfig
-sed -i 's/CONFIG_USB_XHCI_HCD=y/# CONFIG_USB_XHCI_HCD= is not set/g' configs/rockpro64-rk3399_defconfig
-sed -i 's/CONFIG_USB_XHCI_DWC3=y/# CONFIG_USB_XHCI_DWC3= is not set/g' configs/rockpro64-rk3399_defconfig
-sed -i 's/CONFIG_USB_DWC3=y/# CONFIG_USB_DWC3= is not set/g' configs/rockpro64-rk3399_defconfig
-sed -i 's/CONFIG_USB_DWC3_GENERIC=y/# CONFIG_USB_DWC3_GENERIC= is not set/g' configs/rockpro64-rk3399_defconfig
-echo CONFIG_SD_BOOT=y >> configs/rockpro64-rk3399_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/rockpro64-rk3399_defconfig
-echo CONFIG_OF_LIBFDT_OVERLAY=y >> configs/rockpro64-rk3399_defconfig
-# nanopc-t4
-echo CONFIG_MISC=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_PHY_ROCKCHIP_INNO_USB2=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_PHY_ROCKCHIP_TYPEC=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_USB_DWC3_GENERIC=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_SD_BOOT=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_EXT4_WRITE=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_DISPLAY_ROCKCHIP_EDP=y >> configs/nanopc-t4-rk3399_defconfig
-echo CONFIG_OF_LIBFDT_OVERLAY=y >> configs/nanopc-t4-rk3399_defconfig
-}
-
 uboot_search(){
 if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	${ARIA2} https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
+	echo -en "${PNK}[${FIN}${YLW}downloading${FIN}${PNK}]${FIN} ";
+	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
 	echo_bdone;
 else
 	uboot_searching;
@@ -97,11 +21,13 @@ fi
 
 uboot_searching(){
 if [[ `wget -S --spider https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	${ARIA2} https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
+	echo -en "${PNK}[${FIN}${YLW}downloading${FIN}${PNK}]${FIN} ";
+	aria2c -q https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
 	echo_bdone;
 else
 	echo ""
-	echo -e "${WHT}It appears the version you selected is not available${FIN}?"
+	echo -e "${WHT}Version selected is not available.${FIN}"
 	exit;
 fi
 }
@@ -111,16 +37,6 @@ if [[ -f u-boot-${UBOOT_VERSION}.tar.gz ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
 	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}";
 else
-	if [[ "$ARCH" == "arm" ]]; then
-		:;
-	else
-		if [[ "$FAMILY" == "broadcom" ]]; then
-			:;
-		else
-			echo ""
-		fi
-	fi
-	echo_duboot;
 	uboot_search;
 fi
 
@@ -132,16 +48,14 @@ else
 	echo_extract;
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ -e amlogic-boot-fip-master.tar.gz ]]; then
+	if [[ -f amlogic-boot-fip-master.tar.gz ]]; then
 		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
 	fi
 fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
-if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$ARCH" == "arm" ]]; then
-		:;
-	else
+if [[ "$FAMILY" == "allwinner" ]]; then 
+	if [[ "$ARCH" == "arm64" ]]; then
 		cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin;
 	fi
 fi
@@ -157,9 +71,6 @@ fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	for i in ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch; do patch -p1 < $i; done;
 fi
-#if [[ "$FAMILY_EXT" == "rk3328" ]]; then
-#	for i in ../../${UBOOT_PATCHDIR}/*.patch; do patch -p1 < $i; done;
-#fi
 if [[ "$FAMILY_EXT" == "rk3399" ]]; then
 	for i in ../../${UBOOT_PATCHDIR}/*.patch; do patch -p1 < $i; done;
 fi
@@ -167,7 +78,7 @@ fi
 
 echo ""
 export ARCH=${ARCH}
-mod_defconfigs
+uboot_configs
 # MAKE DEFCONFIG
 if [ $crosscompile -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
