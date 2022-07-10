@@ -39,14 +39,9 @@ if [[ -f u-boot-${UBOOT_VERSION}.tar.gz ]]; then
 else
 	uboot_search;
 fi
-
-# EXTRACT AND SETUP
+# extract
 echo ""
-if [[ "$FAMILY" == "amlogic" ]]; then
-	echo_extracts;
-else
-	echo_extract;
-fi
+echo_extract
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ -f amlogic-boot-fip-master.tar.gz ]]; then
 		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
@@ -54,6 +49,7 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
+# arm trusted firmware
 if [[ "$FAMILY" == "allwinner" ]]; then 
 	if [[ "$ARCH" == "arm64" ]]; then
 		cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin;
@@ -62,9 +58,9 @@ fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
+# patching
 cp board.txt u-boot/
 cd u-boot
-# patching
 if [[ "$BOARD" == "odroidn2plus" ]]; then
 	for i in ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch; do patch -p1 < $i; done;
 fi
@@ -74,12 +70,10 @@ fi
 if [[ "$FAMILY_EXT" == "rk3399" ]]; then
 	for i in ../../${UBOOT_PATCHDIR}/*.patch; do patch -p1 < $i; done;
 fi
-# finish patching
-
+# make defconfig
 echo ""
 export ARCH=${ARCH}
 uboot_configs
-# MAKE DEFCONFIG
 if [ $crosscompile -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG};
@@ -87,8 +81,7 @@ else
 	echo -e "${GRN}  NC${FIN}"
 	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG};
 fi
-
-# MENUCONFIG
+# menuconfig
 if [ $menuconfig -eq 1 ]; then
 	if [ $crosscompile -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
@@ -98,8 +91,7 @@ if [ $menuconfig -eq 1 ]; then
 		make -j${CORES} CC=${NATIVE} menuconfig;
 	fi
 fi
-
-# COMPILE
+# compile
 echo
 echo_cuboot
 if [ $crosscompile -eq 1 ]; then
@@ -111,12 +103,10 @@ else
 fi
 }
 
-# ALLWINNER RUN BUILD
+# allwinner
 allwinner-uboot-string(){
 uboot-source
-if [[ "$ARCH" == "arm" ]]; then
-	:;
-else
+if [[ "$ARCH" == "arm64" ]]; then
 	arm-trusted-firmware;
 fi
 u-boot
@@ -129,11 +119,11 @@ if [ -f u-boot-sunxi-with-spl.bin ]; then
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit;
+	exit 1;
 fi
 }
 
-# AMLOGIC RUN BUILD
+# amlogic
 amlogic-uboot-string(){
 uboot-source
 amlogic-boot-fips
@@ -149,11 +139,11 @@ if [ -f fip/u-boot.bin ]; then
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit;
+	exit 1;
 fi
 }
 
-# BROADCOM RUN BUILD
+# broadcom
 bcm2711-uboot-string(){
 uboot-source
 u-boot
@@ -165,11 +155,11 @@ if [ -f u-boot.bin ]; then
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit;
+	exit 1;
 fi
 }
 
-# ROCKCHIP RUN BUILD
+# rockchip
 rockchip-uboot-string(){
 uboot-source
 arm-trusted-firmware
@@ -183,6 +173,6 @@ if [ -f idbloader.img ]; then
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit;
+	exit 1;
 fi
 }
