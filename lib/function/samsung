@@ -3,14 +3,9 @@
 # may need to run emmc bootloader recovery on the module before flashing the img
 # https://wiki.odroid.com/accessory/emmc/recovery_xu4
 flash_uboot(){
-signed_bl1_position=1
-bl2_position=31
-uboot_position=63
-tzsw_position=1503
-env_position=2015
-dd if=files/boot/odroidxu4-bl1.bin of="${IMAGE_LOOP_DEV}" seek=$signed_bl1_position conv=fsync
-dd if=files/boot/odroidxu4-bl2.bin of="${IMAGE_LOOP_DEV}" seek=$bl2_position conv=fsync
-dd if=files/boot/odroidxu4-u-boot.bin of="${IMAGE_LOOP_DEV}" seek=$uboot_position conv=fsync
-dd if=files/boot/odroidxu4-tzsw.bin of="${IMAGE_LOOP_DEV}" seek=$tzsw_position conv=fsync
-dd if=/dev/zero of="${IMAGE_LOOP_DEV}" seek=$env_position bs=512 count=32 conv=fsync
+dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" seek=1 conv=fsync
+dd if=${OUTPUT}/bl2.bin of="${IMAGE_LOOP_DEV}" seek=31 conv=fsync
+dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" seek=63 conv=fsync
+dd if=${OUTPUT}/tzsw.bin of="${IMAGE_LOOP_DEV}" seek=1503 conv=fsync
+dd if=/dev/zero of="${IMAGE_LOOP_DEV}" seek=2015 bs=512 count=32 conv=fsync
 }
