@@ -14,7 +14,7 @@ setenv initrd ""
 setenv fdtdir ""
 setenv fdtfile ""
 
-setenv bootargs " ${console} ro root=${uuid} rootfstype=${rootfstype} loglevel=${verbose} ${extra} ${usbquirks} rootwait"
+setenv bootargs " ${console} ro root=${uuid} rootfstype=${rootfstype} loglevel=${verbose} fsck.repair=yes ${extra} ${usbquirks} rootwait"
 
 ext4load ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${fk_kvers} \
 && ext4load ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
