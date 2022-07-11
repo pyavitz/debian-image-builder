@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # PATCHING
-allwinner-sun50i_packaging(){
+sun50i_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
 }
 
-allwinner-sun8i_packaging(){
+sun8i_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/mkdebian
 }
 
-amlogic_packaging(){
+meson64_packaging(){
 sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
 if [ -f scripts/package/mkdebian ]; then
@@ -25,6 +25,13 @@ fi
 if [[ `grep -w "fwpackagename=linux-firmware-image-$version" "scripts/package/builddeb"` ]]; then
 	sed -i 's/fwpackagename=linux-firmware-image-$version/fwpackagename=meson64-linux-firmware/g' scripts/package/builddeb;
 fi
+}
+
+meson8b_packaging(){
+sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/mkdebian
 }
 
 raspberrypi_packaging(){
@@ -176,10 +183,10 @@ fi
 allwinner_patching(){
 # packaging
 if [[ "$FAMILY_EXT" == "sun8i" ]]; then
-	allwinner-sun8i_packaging;
+	sun8i_packaging;
 fi
 if [[ "$FAMILY_EXT" == "sun50i" ]]; then
-	allwinner-sun50i_packaging;
+	sun50i_packaging;
 fi
 # patching
 dryrun; check; apply; user_patches;
@@ -193,7 +200,12 @@ amlogic_patching(){
 if [[ "$VERSION" == "4.9.y" ]]; then
 	patch -p1 < ../../${PACKAGING}/vendor-4.9-packaging.patch > /dev/null 2>&1;
 fi
-amlogic_packaging
+if [[ "$ARCH" == "arm" ]]; then
+	meson8b_packaging;
+fi
+if [[ "$ARCH" == "arm64" ]]; then
+	meson64_packaging;
+fi
 # patching
 if [[ ! -z $REPO_KERNEL ]]; then
 	user_patches;

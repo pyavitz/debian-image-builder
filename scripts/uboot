@@ -29,10 +29,17 @@ if [ $ccache -eq 0 ]; then
 	rm -f {ccache.txt,gcc.txt};
 	gcc_version;
 fi
-### Boards
+# boards
 if [[ "$FAMILY" == "amlogic" ]]; then
-	source lib/function/fip;
-	amlogic-uboot-string;
+	if [[ "$BOARD" == "odroidc1" ]]; then
+		echo -e "Using precompiled binaries.";
+		cp -f files/boot/odroidc1-bl1.bin ${OUTPUT}/bl1.bin;
+		cp -f files/boot/odroidc1-u-boot.bin ${OUTPUT}/u-boot.bin;
+		ls -ls ${OUTPUT}/*.bin;
+	else
+		source lib/function/fip;
+		amlogic-uboot-string;
+	fi
 fi
 if [[ "$FAMILY" == "allwinner" ]]; then
 	source lib/function/atf;

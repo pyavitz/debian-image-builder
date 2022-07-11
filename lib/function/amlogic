@@ -11,6 +11,12 @@ fi
 }
 
 flash_vendor-uboot(){
+if [[ "$BOARD" == "odroidc1" ]]; then
+	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync;
+	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync;
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=64 conv=fsync;
+	dd if=/dev/zero of="${IMAGE_LOOP_DEV}" seek=1024 count=32 bs=512 conv=fsync;
+fi
 if [[ "$BOARD" == "odroidn2" ]]; then
 	dd if=files/boot/odroidn2-vendor-u-boot.bin of="${IMAGE_LOOP_DEV}" conv=fsync,notrunc bs=512 seek=1;
 fi
@@ -75,4 +81,21 @@ ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0",ATTR{queue/
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1",ATTR{queue/scheduler}="deadline"
 ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
 EOF
+}
+
+make_uimage(){
+mkdir -p /etc/initramfs/post-update.d/
+tee /etc/initramfs/post-update.d/99-uimage <<EOF
+#!/bin/bash
+if [ -f /boot/uImage ]; then
+	rm -f /boot/uImage;
+fi
+if [ -f /boot/Image ]; then
+	echo "Generating uImage:"
+	mkimage -A arm -O linux -T kernel -C none -a 0x2080000 -e 0x2080000 -n "Linux" -d /boot/Image /boot/uImage;
+fi
+exit 0
+EOF
+chmod +x /etc/initramfs/post-update.d/99-uimage
+chown root:root /etc/initramfs/post-update.d/99-uimage
 }

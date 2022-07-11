@@ -55,26 +55,21 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 p2_partition(){
 if [[ "$FAMILY" == "allwinner" ]]; then
 	OFFSET="2048";
-	VFAT="no";
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	OFFSET="4096";
-	VFAT="no";
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
 	OFFSET="2048";
-	VFAT="yes";
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	OFFSET="32768";
-	VFAT="no";
 fi
 if [[ "$FAMILY" == "samsung" ]]; then
 	OFFSET="4096";
-	VFAT="yes";
 fi
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-if [[ "$VFAT" == "yes" ]]; then
+if [[ "$VFAT" == "true" ]]; then
 	GPT="false";
 	P_BOOT="p1";
 	P_ROOTFS="p2";
@@ -117,7 +112,7 @@ IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
-if [[ "$VFAT" == "yes" ]]; then
+if [[ "$VFAT" == "true" ]]; then
 	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
 else
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
@@ -126,7 +121,7 @@ mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
+if [[ "$FAMILY_EXT" == "odroid" ]] || [[ "$BOARD" == "odroidc1" ]]; then
 	flash_vendor-uboot;
 fi
 if [[ "$BOARD" == "odroidxu4" ]]; then
@@ -164,7 +159,7 @@ EOF
 }
 
 p2_fstab(){
-if [[ "$VFAT" == "yes" ]]; then
+if [[ "$VFAT" == "true" ]]; then
 	FSTYPE="vfat	defaults 0 2";
 else
 	FSTYPE="ext2	rw,relatime,errors=continue 0 2";
@@ -387,7 +382,7 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 fi
 }
 
-odroidxu4_bootini(){
+odroid_bootini(){
 if [[ -f "files/boot/odroid/${BOARD}-boot.ini" ]]; then
 	cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini;
 	sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini;
