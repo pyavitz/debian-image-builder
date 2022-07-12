@@ -16,9 +16,11 @@
 
 case "$1" in
 	start)
-		log_daemon_msg "LEDs"
-		/usr/local/sbin/led-trigger 2>/dev/null
-		log_end_msg $?
+		if [ -f /usr/local/sbin/led-trigger ]; then
+			log_daemon_msg "LEDs";
+			/usr/local/sbin/led-trigger 2>/dev/null;
+			log_end_msg $?;
+		fi
 		;;
 	*)
 		echo "Usage: $0 start" >&2
