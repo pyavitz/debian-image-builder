@@ -1,9 +1,12 @@
 #!/bin/bash
-# led trigger
-if [ -e /sys/class/leds/standby/brightness ]; then
-        echo 0 > /sys/class/leds/standby/brightness;
-else
-        if [ -e /sys/class/leds/led-1/brightness ]; then
-                echo 0 > /sys/class/leds/led-1/brightness;
-        fi
+
+if [ -f /sys/class/leds/standby/brightness ]; then
+	LED="standby";
+fi
+if [ -f /sys/class/leds/led-1/brightness ]; then
+	LED="led-1"
+fi
+
+if [ -f /sys/class/leds/${LED}/brightness ]; then
+        echo "0" > /sys/class/leds/${LED}/brightness;
 fi
