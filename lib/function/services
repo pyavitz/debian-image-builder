@@ -347,29 +347,33 @@ enable_sysvinit(){
 chmod +x /etc/init.d/governor
 chmod +x /etc/init.d/firstboot
 if [ -f /usr/local/sbin/led-trigger ]; then
-	chmod +x /etc/init.d/leds
+	chmod +x /etc/init.d/leds;
 	update-rc.d leds defaults 2;
 else
 	:;
 fi
 if [[ "$BOARD" == "pine64" ]]; then
-	chmod +x /etc/init.d/bthelper
+	chmod +x /etc/init.d/bthelper;
 	update-rc.d bthelper defaults 2;
 fi
 if [[ "$BOARD" == "nanopi" ]]; then
-	chmod +x /etc/init.d/bthelper
+	chmod +x /etc/init.d/bthelper;
 	update-rc.d bthelper defaults 2;
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	chmod +x /etc/init.d/tweaks
-	update-rc.d tweaks defaults 2;
+	if [[ "$FAMILY_EXT" == "meson8b" ]]; then
+		:;
+	else
+		chmod +x /etc/init.d/tweaks;
+		update-rc.d tweaks defaults 2;
+	fi
 fi
 if [[ "$BOARD" == "nanopc" ]]; then
-	chmod +x /etc/init.d/tweaks
+	chmod +x /etc/init.d/tweaks;
 	update-rc.d tweaks defaults 2;
 fi
 if [[ "$BOARD" == "rockpro64" ]]; then
-	chmod +x /etc/init.d/tweaks
+	chmod +x /etc/init.d/tweaks;
 	update-rc.d tweaks defaults 2;
 fi
 chmod +x /etc/init.d/zramswap
