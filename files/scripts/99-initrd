@@ -1,19 +1,19 @@
 #!/bin/bash
+# Place this file in /etc/initramfs/post-update.d/ and make it executable
+# Reference: https://forum.doozan.com/read.php?2,12096
 
-# uInitrd generator for U-Boot
-# place this file to /etc/initramfs/post-update.d/ directory,
-# and make it executable
-# reference: https://forum.doozan.com/read.php?2,12096
-
+# variables
 uInitrd="/boot/uInitrd"
 initrd="/boot/initrd.gz"
 
-die(){
-	echo >&2 "Error: $@"
-	echo >&2 "uInitrd generation failed - exiting."
-	exit 1
+# functions
+failed(){
+echo >&2 "Error: $@"
+echo >&2 "uInitrd generation failed - exiting."
+exit 1
 }
 
+# uinitrd
 if [ -f ${uInitrd} ]; then
 	rm -f ${uInitrd};
 fi
@@ -21,16 +21,17 @@ fi
 echo "Generating uInitrd for U-Boot:"
 if [ "$#" -eq 2 ]; then
 	if [ ! -z "$1" ] && [ -f "$2" ]; then
-		name="initramfs-$1";
-		file="$2";
+		name="initramfs-$1"
+		file="$2"
 		mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${uInitrd};
 	else
-		die "wrong arguments: '$1', '$2'";
+		failed;
 	fi
 else
-	die "2 arguments required, $# provided";
+	failed;
 fi
 
+# initrd.gz
 echo "Creating initrd.gz."
-rm -fdr /boot/{initrd.gz,initrd.img-*-bak} > /dev/null 2>&1
+rm -f /boot/{initrd.gz,initrd.img-*-bak}
 cp -f /boot/initrd.img-* ${initrd}
