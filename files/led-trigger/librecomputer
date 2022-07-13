@@ -1,0 +1,39 @@
+#!/bin/bash
+# Bind root activity to green LED
+# Stop status LED blinking
+
+# tritium
+if [ -f /sys/class/leds/librecomputer:green:pwr/trigger ]; then
+	GREEN="librecomputer:green:pwr"
+fi
+if [ -f /sys/class/leds/librecomputer:blue:status/brightness ]; then
+	BLUE="librecomputer:blue:status"
+fi
+# le potato
+if [ -f /sys/class/leds/librecomputer:system-status/trigger ]; then
+	GREEN="librecomputer:system-status"
+fi
+if [ -f /sys/class/leds/librecomputer:blue/brightness ]; then
+	BLUE="librecomputer:blue"
+fi
+# renegade
+if [ -f /sys/class/leds/firefly:yellow:user/trigger ]; then
+	# green act led
+	GREEN="firefly:yellow:user"
+fi
+if [ -f /sys/class/leds/firefly:blue:power/brightness ]; then
+	# red power led
+	BLUE="firefly:blue:power"
+fi
+
+if [ -f /sys/class/leds/$GREEN/trigger ]; then
+	ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
+	ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
+	ROOT_DEVICE=${ROOT_DEVICE/mmcblk/mmc}
+	ROOT_DEVICE=${ROOT_DEVICE/p[0-9]/}
+	echo -n "$ROOT_DEVICE" > /sys/class/leds/$GREEN/trigger
+fi
+
+if [ -f /sys/class/leds/$BLUE/brightness ]; then
+	echo "0" > /sys/class/leds/$BLUE/brightness
+fi
