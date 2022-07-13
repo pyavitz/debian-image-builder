@@ -1,8 +1,5 @@
 #!/bin/bash
 
-WHT="\e[1;37m"
-FIN="\e[0m"
-
 chip="ap6212"
 uart_dev="ttyS3"
 index=`rfkill list | grep "sunxi-bt" | cut -f 1 -d":"`
@@ -10,7 +7,7 @@ index=`rfkill list | grep "sunxi-bt" | cut -f 1 -d":"`
 reset_bt(){
 BTWAKE="/proc/bluetooth/sleep/btwake"
 if [ -f ${BTWAKE} ]; then
-	echo 0 > ${BTWAKE}
+	echo "0" > ${BTWAKE}
 fi
 
 index=`rfkill list | grep $1 | cut -f 1 -d":"` 
@@ -80,33 +77,23 @@ if [ $# -eq 0 ]; then
 	exit 0
 fi
 
-ECHO="false"
-
 while getopts "skh" OPTION; do
-        case $OPTION in
+	case $OPTION in
 
-                s)
-                        ECHO="start_bt"
-                        ;;
-                k)
-                        ECHO="kill_bt"
-                        ;;
-                h)
-                        echo ""                
-                        echo -e "${WHT}NanoPi NEO Plus2${FIN}"
-                        echo ""
-                        echo "   -s       Start bluetooth service"
-                        echo "   -k       Kill bluetooth service"
-                        echo ""
-                        exit 0
-                        ;;
-
-        esac
+		s)
+			start_bt
+			;;
+		k)
+			kill_bt
+			;;
+		h)
+			echo -e ""
+			echo -e "NanoPi NEO Plus2"
+			echo -e ""
+			echo -e "\t-s\tStart bluetooth"
+			echo -e "\t-k\tStop bluetooth"
+			echo -e ""
+			exit 0
+			;;
+	esac
 done
-
-if [ $ECHO = "start_bt" ]; then
-	start_bt;
-fi
-if [ $ECHO = "kill_bt" ]; then
-	kill_bt;
-fi
