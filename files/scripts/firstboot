@@ -54,8 +54,10 @@ resize2fs $ROOTFS > /dev/null 2>&1
 
 # Fix PARTUUID
 if [[ "$ARCH" == "arm" ]]; then
-	partition_uuid > /dev/null 2>&1;
-	extlinux > /dev/null 2>&1;
+	if [ -f /boot/extlinux/extlinux.conf ]; then
+		partition_uuid > /dev/null 2>&1;
+		extlinux > /dev/null 2>&1;
+	fi
 fi
 
 # Fsck boot partition
