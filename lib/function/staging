@@ -124,9 +124,6 @@ mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
 if [[ "$FAMILY_EXT" == "odroid" ]] || [[ "$BOARD" == "odroidc1" ]]; then
 	flash_vendor-uboot;
 fi
-if [[ "$BOARD" == "odroidxu4" ]]; then
-	flash_uboot;
-fi
 sync
 umount p2
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
@@ -135,7 +132,6 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
 p1_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-
 source part-uuid.txt
 }
 
@@ -147,7 +143,6 @@ ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PART
 echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
 echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
 echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-
 source part-uuid.txt
 }
 
@@ -390,24 +385,6 @@ fi
 if [[ -f "files/boot/odroid/${BOARD}-config.ini" ]]; then
 	cp -f files/boot/odroid/${BOARD}-config.ini p1/config.ini;
 fi
-}
-
-odroidxu4_bootcmd(){
-if [[ "$P_VALUE" == "p1" ]]; then
-	P_BOOTCMD="p1/boot/boot.cmd"
-	P_CONFIGINI="p1/boot/config.ini"
-	P_BOOTSCR="p1/boot/boot.scr"
-fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	P_BOOTCMD="p1/boot.cmd"
-	P_CONFIGINI="p1/config.ini"
-	P_BOOTSCR="p1/boot.scr"
-fi
-cp -f files/boot/odroid/${BOARD}-boot.cmd ${P_BOOTCMD}
-cp -f files/boot/odroid/${BOARD}-config.ini ${P_CONFIGINI}
-sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" ${P_CONFIGINI}
-sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" ${P_CONFIGINI}
-mkimage -C none -A arm -T script -d ${P_BOOTCMD} ${P_BOOTSCR}
 }
 
 # create extlinux file (p1)

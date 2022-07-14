@@ -20,7 +20,6 @@ if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
 ROOTFS="${ROOTFS_LOOP}"
 ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
 echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
-
 source part-uuid.txt
 }
 
@@ -76,7 +75,6 @@ ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
 echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
 echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-
 source part-uuid.txt
 }
 
@@ -110,7 +108,7 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	extlinux-conf;
 	config-txt > /dev/null 2>&1;
 fi
-if [[ "$BOARD" == "odroidc1" ]] || [[ "$BOARD" == "odroidxu4" ]]; then
+if [[ "$BOARD" == "odroidc1" ]]; then
 	odroid_bootini;
 fi
 echo ""
