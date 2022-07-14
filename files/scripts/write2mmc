@@ -2,7 +2,7 @@
 
 if [ -f /etc/opt/board.txt ]; then
 	DIR="/usr/lib/u-boot"
-	source /etc/opt/board.txt;
+	source /etc/opt/board.txt
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Your board is not supported." 0 0;
@@ -24,54 +24,46 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	exit 0;
 fi
 
+# functions
 supported_boards(){
 MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
-# allwinner
+# allwinner (nanopi = /dev/mmcblk2)
 if [[ "$BOARD" == "nanopi" ]]; then
-	#MMC="/dev/mmcblk2";
 	OFFSET="2048";
 	supported=1;
 fi
-# amlogic
+# amlogic (amlogic = /dev/mmcblk1) (odroidn2/+ = /dev/mmcblk0)
 if [[ "$BOARD" == "lepotato" ]]; then
-	#MMC="/dev/mmcblk1";
 	OFFSET="4096";
 	supported=1;
 fi
 if [[ "$BOARD" == "odroidc4" ]]; then
-	#MMC="/dev/mmcblk1";
 	OFFSET="4096";
 	supported=1;
 fi
 if [[ "$BOARD" == "odroidn2" ]]; then
-	#MMC="/dev/mmcblk0";
 	OFFSET="4096";
 	supported=1;
 fi
 if [[ "$BOARD" == "odroidn2plus" ]]; then
-	#MMC="/dev/mmcblk0";
 	OFFSET="4096";
 	supported=1;
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
-	#MMC="/dev/mmcblk1";
 	OFFSET="4096";
 	supported=1;
 fi
-# rockchip
+# rockchip (nanopc = /dev/mmcblk2) (renegade = /dev/mmcblk1)
 if [[ "$BOARD" == "nanopc" ]]; then
-	#MMC="/dev/mmcblk2";
 	OFFSET="32767";
 	supported=1;
 fi
 if [[ "$BOARD" == "renegade" ]]; then
-	#MMC="/dev/mmcblk1";
 	OFFSET="32767";
 	supported=1;
 fi
-# samsung
+# samsung (odroidxu4 = /dev/mmcblk0)
 if [[ "$BOARD" == "odroidxu4" ]]; then
-	#MMC="/dev/mmcblk0";
 	OFFSET="4096";
 	supported=1;
 fi
@@ -79,13 +71,12 @@ fi
 
 # progress bar
 check_progressbar(){
-DPB="sudo wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/"
-MPB="sudo mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt"
 if [ -f /etc/opt/progressbar.txt ]; then
 	:;
 else
-	$DPB;
-	$MPB;
+	mkdir -p /etc/opt
+	wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/
+	mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt
 fi
 }
 
@@ -223,7 +214,7 @@ dd if=${DIR}/u-boot.itb of=${MMC} seek=16384
 sync
 }
 
-samsung_flash_uboot(){
+samsung_flash_uboot(){ # samsung
 DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
 echo 0 > /sys/block/${DEVICE}/force_ro
 sleep 1s
@@ -234,7 +225,7 @@ dd if=${DIR}/tzsw.bin of=/dev/${DEVICE} seek=1502 conv=fsync
 dd if=/dev/zero of=/dev/${DEVICE} seek=2015 bs=512 count=32 conv=fsync
 }
 
-# run
+# run script
 if [ "$USER" != "root" ]; then
         echo "Please run this as root or with sudo privileges.";
         exit 1;
@@ -296,24 +287,24 @@ fi
 echo "Done."
 
 echo ""
-echo "Fetching UUID ..."
-fetch_uuid
-echo "Done."
+echo -en "Fetching UUID "
+fetch_uuid > /dev/null 2>&1
+echo "[done]"
 
 echo ""
-echo "Setting up boot ..."
+echo "Creating fstab and extlinux ..."
 source /etc/opt/part-uuid.txt
 create_fstab
 create_extlinux
 echo "Done."
 
 echo ""
-echo "Unmounting eMMC ..."
+echo -en "Unmounting eMMC "
 rm -f /etc/opt/part-uuid.txt
 rm -fdr /mnt/mnt/*
 umount /mnt
 rm -fdr /mnt/*
-echo "Done."
+echo "[done]"
 echo ""
 echo "You may now power down and remove the sdcard."
 exit 0
