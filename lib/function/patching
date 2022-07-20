@@ -81,12 +81,14 @@ fi
 # create dry run log
 dryrun(){
 log_setup
-if [ -e ../${KERNEL}-${VERSION}.orig ]; then
-	:;
-else
-	echo "";
-fi
+echo ""
 echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
+# apply across all boards
+if [[ -d "../../${PATCHESALL}/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${PATCHESALL}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${PATCHESALL}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	fi
+fi
 if [[ "$FAMILY" == "allwinner" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/../${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
@@ -140,6 +142,12 @@ apply(){
 echo "" >> ${LOG_FILE}
 echo "# APPLYING PATCHES" >> ${LOG_FILE}
 echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
+# apply across all boards
+if [[ -d "../../${PATCHESALL}/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${PATCHESALL}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${PATCHESALL}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	fi
+fi
 if [[ "$FAMILY" == "allwinner" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	for i in ../../${LINUX_PATCHDIR}/../${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
