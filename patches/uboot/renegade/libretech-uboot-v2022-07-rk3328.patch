@@ -1,0 +1,469 @@
+diff -Naur a/arch/arm/dts/rk3328-evb-u-boot.dtsi b/arch/arm/dts/rk3328-evb-u-boot.dtsi
+--- a/arch/arm/dts/rk3328-evb-u-boot.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328-evb-u-boot.dtsi	2022-07-18 02:16:12.000000000 -0400
+@@ -44,8 +44,3 @@
+ 	/* Integrated PHY unsupported by U-boot */
+ 	status = "broken";
+ };
+-
+-&usb_host0_xhci {
+-	vbus-supply = <&vcc5v0_host_xhci>;
+-	status = "okay";
+-};
+diff -Naur a/arch/arm/dts/rk3328-roc-cc-u-boot.dtsi b/arch/arm/dts/rk3328-roc-cc-u-boot.dtsi
+--- a/arch/arm/dts/rk3328-roc-cc-u-boot.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328-roc-cc-u-boot.dtsi	2022-07-18 02:16:12.000000000 -0400
+@@ -15,17 +15,17 @@
+ 
+ 		smbios {
+ 			system {
+-				manufacturer = "firefly";
++				manufacturer = "libre-computer";
+ 				product = "roc-rk3328-cc";
+ 			};
+ 
+ 			baseboard {
+-				manufacturer = "firefly";
++				manufacturer = "libre-computer";
+ 				product = "roc-rk3328-cc";
+ 			};
+ 
+ 			chassis {
+-				manufacturer = "firefly";
++				manufacturer = "libre-computer";
+ 				product = "roc-rk3328-cc";
+ 			};
+ 		};
+@@ -48,20 +48,6 @@
+ 	u-boot,dm-spl;
+ };
+ 
+-&usb_host0_xhci {
+-	vbus-supply = <&vcc_host1_5v>;
+-	status = "okay";
+-};
+-
+-/*
+- * This makes XHCI responsible for toggling VBUS. This is needed to work
+- * around an issue where either XHCI only works with USB 2.0 or OTG doesn't
+- * work, depending on how VBUS is configured. Having USB 3.0 seems better.
+- */
+-&vcc_host1_5v {
+-	/delete-property/ regulator-always-on;
+-};
+-
+ /* Need this and all the pinctrl/gpio stuff above to set pinmux */
+ &vcc_sd {
+ 	u-boot,dm-spl;
+diff -Naur a/arch/arm/dts/rk3328-roc-cc.dts b/arch/arm/dts/rk3328-roc-cc.dts
+--- a/arch/arm/dts/rk3328-roc-cc.dts	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328-roc-cc.dts	2022-07-18 02:16:12.000000000 -0400
+@@ -7,12 +7,12 @@
+ #include "rk3328.dtsi"
+ 
+ / {
+-	model = "Firefly roc-rk3328-cc";
+-	compatible = "firefly,roc-rk3328-cc", "rockchip,rk3328";
++	model = "Libre Computer ROC-RK3328-CC";
++	compatible = "libre-computer,roc-rk3328-cc", "rockchip,rk3328";
+ 
+ 	aliases {
+-		mmc0 = &sdmmc;
+-		mmc1 = &emmc;
++		mmc0 = &emmc;
++		mmc1 = &sdmmc;
+ 	};
+ 
+ 	chosen {
+@@ -139,7 +139,6 @@
+ 	max-frequency = <150000000>;
+ 	mmc-ddr-1_8v;
+ 	mmc-hs200-1_8v;
+-	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&emmc_clk &emmc_cmd &emmc_bus8>;
+ 	vmmc-supply = <&vcc_io>;
+diff -Naur a/arch/arm/dts/rk3328-rock-pi-e-u-boot.dtsi b/arch/arm/dts/rk3328-rock-pi-e-u-boot.dtsi
+--- a/arch/arm/dts/rk3328-rock-pi-e-u-boot.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328-rock-pi-e-u-boot.dtsi	2022-07-18 02:16:12.000000000 -0400
+@@ -45,11 +45,6 @@
+ 	u-boot,dm-spl;
+ };
+ 
+-&usb_host0_xhci {
+-	vbus-supply = <&vcc_host_5v>;
+-	status = "okay";
+-};
+-
+ /* Need this and all the pinctrl/gpio stuff above to set pinmux */
+ &vcc_sd {
+ 	u-boot,dm-spl;
+diff -Naur a/arch/arm/dts/rk3328-rock64-u-boot.dtsi b/arch/arm/dts/rk3328-rock64-u-boot.dtsi
+--- a/arch/arm/dts/rk3328-rock64-u-boot.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328-rock64-u-boot.dtsi	2022-07-18 02:16:12.000000000 -0400
+@@ -48,11 +48,6 @@
+ 	u-boot,dm-spl;
+ };
+ 
+-&usb_host0_xhci {
+-	vbus-supply = <&vcc_host_5v>;
+-	status = "okay";
+-};
+-
+ /*
+  * This makes XHCI responsible for toggling VBUS. This is needed to work
+  * around an issue where either XHCI only works with USB 2.0 or OTG doesn't
+diff -Naur a/arch/arm/dts/rk3328-u-boot.dtsi b/arch/arm/dts/rk3328-u-boot.dtsi
+--- a/arch/arm/dts/rk3328-u-boot.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328-u-boot.dtsi	2022-07-18 02:16:12.000000000 -0400
+@@ -24,17 +24,6 @@
+ 		       0x0 0xff720000 0x0 0x1000
+ 		       0x0 0xff798000 0x0 0x1000>;
+ 	};
+-
+-	usb_host0_xhci: usb@ff600000 {
+-		compatible = "rockchip,rk3328-xhci";
+-		reg = <0x0 0xff600000 0x0 0x100000>;
+-		interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;
+-		snps,dis-enblslpm-quirk;
+-		snps,phyif-utmi-bits = <16>;
+-		snps,dis-u2-freeclk-exists-quirk;
+-		snps,dis-u2-susphy-quirk;
+-		status = "disabled";
+-	};
+ };
+ 
+ &cru {
+diff -Naur a/arch/arm/dts/rk3328.dtsi b/arch/arm/dts/rk3328.dtsi
+--- a/arch/arm/dts/rk3328.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3328.dtsi	2022-07-18 02:16:12.000000000 -0400
+@@ -105,7 +105,7 @@
+ 		};
+ 	};
+ 
+-	cpu0_opp_table: opp_table0 {
++	cpu0_opp_table: opp_table-0 {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
+@@ -306,6 +306,10 @@
+ 			};
+ 			power-domain@RK3328_PD_VIDEO {
+ 				reg = <RK3328_PD_VIDEO>;
++				clocks = <&cru ACLK_RKVDEC>,
++					 <&cru HCLK_RKVDEC>,
++					 <&cru SCLK_VDEC_CABAC>,
++					 <&cru SCLK_VDEC_CORE>;
+ 				#power-domain-cells = <0>;
+ 			};
+ 			power-domain@RK3328_PD_VPU {
+@@ -489,7 +493,7 @@
+ 		status = "disabled";
+ 	};
+ 
+-	dmac: dmac@ff1f0000 {
++	dmac: dma-controller@ff1f0000 {
+ 		compatible = "arm,pl330", "arm,primecell";
+ 		reg = <0x0 0xff1f0000 0x0 0x4000>;
+ 		interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
+@@ -560,6 +564,119 @@
+ 		status = "disabled";
+ 	};
+ 
++	qos_cpu: qos@ff700000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff700000 0x0 0x20>;
++	};
++	qos_gpu0: qos@ff710000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff710000 0x0 0x20>;
++	};
++	qos_gpu1: qos@ff710080 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff710080 0x0 0x20>;
++	};
++	qos_msch: qos@ff720000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff720000 0x0 0x44>;
++	};
++	qos_emmc: qos@ff730000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730000 0x0 0x20>;
++	};
++	qos_gmac2io: qos@ff730080 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730080 0x0 0x20>;
++	};
++	qos_nand: qos@ff730100 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730100 0x0 0x20>;
++	};
++	qos_sdio: qos@ff730180 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730180 0x0 0x20>;
++	};
++	qos_sdmmc: qos@ff730200 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730200 0x0 0x20>;
++	};
++	qos_usbhost0: qos@ff730280 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730280 0x0 0x20>;
++	};
++	qos_usbotg30: qos@ff730300 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730300 0x0 0x20>;
++	};
++	qos_usbotg: qos@ff730400 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730400 0x0 0x20>;
++	};
++	qos_gmac2phy: qos@ff730480 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730480 0x0 0x20>;
++	};
++	qos_sdmmc_ext: qos@ff730500 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff730500 0x0 0x20>;
++	};
++	qos_dma: qos@ff740000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff740000 0x0 0x20>;
++	};
++	qos_crypto: qos@ff740080 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff740080 0x0 0x20>;
++	};
++	qos_tsp: qos@ff740100 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff740100 0x0 0x20>;
++	};
++	qos_rkvdec_r: qos@ff750000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff750000 0x0 0x20>;
++	};
++	qos_rkvdec_w: qos@ff750080 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff750080 0x0 0x20>;
++	};
++	qos_vio_hdcp: qos@ff760000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff760000 0x0 0x20>;
++	};
++	qos_vop: qos@ff760080 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff760080 0x0 0x20>;
++	};
++	qos_vio_iep: qos@ff760100 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff760100 0x0 0x20>;
++	};
++	qos_vio_vip: qos@ff760180 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff760180 0x0 0x20>;
++	};
++	qos_vio_rga_r: qos@ff760200 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff760200 0x0 0x20>;
++	};
++	qos_vio_rga_w: qos@ff760280 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff760280 0x0 0x20>;
++	};
++	qos_rkvenc_h265: qos@ff770000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff770000 0x0 0x20>;
++	};
++	qos_rkvenc_h264: qos@ff770100 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff770100 0x0 0x20>;
++	};
++	qos_vpu: qos@ff778000 {
++		compatible = "rockchip,rk3328-qos", "syscon";
++		reg = <0x0 0xff778000 0x0 0x20>;
++	};
++
+ 	efuse: efuse@ff260000 {
+ 		compatible = "rockchip,rk3328-efuse";
+ 		reg = <0x0 0xff260000 0x0 0x50>;
+@@ -599,7 +716,7 @@
+ 
+ 	gpu: gpu@ff300000 {
+ 		compatible = "rockchip,rk3328-mali", "arm,mali-450";
+-		reg = <0x0 0xff300000 0x0 0x40000>;
++		reg = <0x0 0xff300000 0x0 0x30000>;
+ 		interrupts = <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 87 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>,
+@@ -671,7 +788,6 @@
+ 		clocks = <&cru ACLK_RKVDEC>, <&cru HCLK_RKVDEC>;
+ 		clock-names = "aclk", "iface";
+ 		#iommu-cells = <0>;
+-		status = "disabled";
+ 	};
+ 
+ 	vop: vop@ff370000 {
+diff -Naur a/arch/arm/mach-rockchip/rk3328/Kconfig b/arch/arm/mach-rockchip/rk3328/Kconfig
+--- a/arch/arm/mach-rockchip/rk3328/Kconfig	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/mach-rockchip/rk3328/Kconfig	2022-07-18 02:16:12.000000000 -0400
+@@ -10,6 +10,9 @@
+ 	  with full function and phisical connectors support like
+ 	  usb2.0 host ports, LVDS, JTAG, MAC, SDcard, HDMI, USB-2-serial...
+ 
++config TARGET_ROC_CC_RK3328
++	bool "Libre Computer ROC-RK3328-CC board"
++
+ endchoice
+ 
+ config ROCKCHIP_BOOT_MODE_REG
+@@ -43,5 +46,6 @@
+ 	default 0xff098000
+ 
+ source "board/rockchip/evb_rk3328/Kconfig"
++source "board/libre-computer/roc-rk3328-cc/Kconfig"
+ 
+ endif
+diff -Naur a/board/libre-computer/roc-rk3328-cc/Kconfig b/board/libre-computer/roc-rk3328-cc/Kconfig
+--- a/board/libre-computer/roc-rk3328-cc/Kconfig	1969-12-31 19:00:00.000000000 -0500
++++ b/board/libre-computer/roc-rk3328-cc/Kconfig	2022-07-18 02:16:12.000000000 -0400
+@@ -0,0 +1,16 @@
++if TARGET_ROC_CC_RK3328
++
++config SYS_BOARD
++        default "roc-rk3328-cc"
++
++config SYS_VENDOR
++        default "libre-computer"
++
++config SYS_CONFIG_NAME
++        default "roc-cc-rk3328"
++
++config BOARD_SPECIFIC_OPTIONS # dummy
++        def_bool y
++
++endif
++
+diff -Naur a/board/libre-computer/roc-rk3328-cc/Makefile b/board/libre-computer/roc-rk3328-cc/Makefile
+--- a/board/libre-computer/roc-rk3328-cc/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ b/board/libre-computer/roc-rk3328-cc/Makefile	2022-07-18 02:16:12.000000000 -0400
+@@ -0,0 +1,7 @@
++#
++# (C) Copyright 2016 Rockchip Electronics Co., Ltd
++#
++# SPDX-License-Identifier:     GPL-2.0+
++#
++
++obj-y	+= roc-rk3328-cc.o
+diff -Naur a/board/libre-computer/roc-rk3328-cc/roc-rk3328-cc.c b/board/libre-computer/roc-rk3328-cc/roc-rk3328-cc.c
+--- a/board/libre-computer/roc-rk3328-cc/roc-rk3328-cc.c	1969-12-31 19:00:00.000000000 -0500
++++ b/board/libre-computer/roc-rk3328-cc/roc-rk3328-cc.c	2022-07-18 02:16:12.000000000 -0400
+@@ -0,0 +1,21 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * (C) Copyright 2016 Rockchip Electronics Co., Ltd
++ */
++
++#include <asm/io.h>
++
++#define PRIORITY_HIGH_SHIFT 2
++#define PRIORITY_LOW_SHIFT 0
++#define VIO_VOP_QOS 0xff760080
++#define CPU_AXI_QOS_PRIORITY 0x08
++
++int roc_rk3328_cc_qos_init(void){
++	int val = 2 << PRIORITY_HIGH_SHIFT | 2 << PRIORITY_LOW_SHIFT;
++	writel(val, CPU_AXI_QOS_PRIORITY + VIO_VOP_QOS);
++	return 0;
++}
++
++int rk_board_late_init(void){
++	roc_rk3328_cc_qos_init();
++}
+diff -Naur a/common/spl/Kconfig b/common/spl/Kconfig
+--- a/common/spl/Kconfig	2022-07-11 09:42:58.000000000 -0400
++++ b/common/spl/Kconfig	2022-07-18 02:16:12.000000000 -0400
+@@ -382,7 +382,7 @@
+ 	default 0x200 if ARCH_SOCFPGA || ARCH_AT91
+ 	default 0x300 if ARCH_ZYNQ || ARCH_KEYSTONE || OMAP34XX || OMAP44XX || \
+ 		         OMAP54XX || AM33XX || AM43XX || ARCH_K3
+-	default 0x4000 if ARCH_ROCKCHIP
++	default 0x200 if ARCH_ROCKCHIP
+ 	default 0x822 if TARGET_SIFIVE_UNLEASHED || TARGET_SIFIVE_UNMATCHED
+ 	help
+ 	  Address on the MMC to load U-Boot from, when the MMC is being used
+diff -Naur a/configs/roc-cc-rk3328_defconfig b/configs/roc-cc-rk3328_defconfig
+--- a/configs/roc-cc-rk3328_defconfig	2022-07-11 09:42:58.000000000 -0400
++++ b/configs/roc-cc-rk3328_defconfig	2022-07-18 02:16:12.000000000 -0400
+@@ -12,6 +12,7 @@
+ CONFIG_TPL_LIBCOMMON_SUPPORT=y
+ CONFIG_TPL_LIBGENERIC_SUPPORT=y
+ CONFIG_SPL_DRIVERS_MISC=y
++CONFIG_TARGET_ROC_CC_RK3328=y
+ CONFIG_SPL_STACK_R_ADDR=0x600000
+ CONFIG_DEBUG_UART_BASE=0xFF130000
+ CONFIG_DEBUG_UART_CLOCK=24000000
+@@ -22,9 +23,11 @@
+ CONFIG_FIT=y
+ CONFIG_FIT_VERBOSE=y
+ CONFIG_SPL_LOAD_FIT=y
++CONFIG_USE_PREBOOT=y
+ CONFIG_DEFAULT_FDT_FILE="rockchip/rk3328-roc-cc.dtb"
+ # CONFIG_DISPLAY_CPUINFO is not set
+ CONFIG_DISPLAY_BOARDINFO_LATE=y
++CONFIG_BOARD_LATE_INIT=y
+ CONFIG_MISC_INIT_R=y
+ # CONFIG_SPL_RAW_IMAGE_SUPPORT is not set
+ CONFIG_TPL_SYS_MALLOC_SIMPLE=y
+@@ -34,6 +37,7 @@
+ CONFIG_SPL_ATF=y
+ CONFIG_SPL_ATF_NO_PLATFORM_PARAM=y
+ CONFIG_CMD_BOOTZ=y
++CONFIG_CMD_GPIO=y
+ CONFIG_CMD_GPT=y
+ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
+diff -Naur a/include/configs/rk3328_common.h b/include/configs/rk3328_common.h
+--- a/include/configs/rk3328_common.h	2022-07-11 09:42:58.000000000 -0400
++++ b/include/configs/rk3328_common.h	2022-07-18 02:16:12.000000000 -0400
+@@ -14,7 +14,7 @@
+ 
+ #define CONFIG_SYS_INIT_SP_ADDR		0x00300000
+ #define CONFIG_SPL_STACK		0x00400000
+-#define CONFIG_SPL_MAX_SIZE		0x40000
++#define CONFIG_SPL_MAX_SIZE		0x30000
+ #define CONFIG_SPL_BSS_START_ADDR	0x2000000
+ #define CONFIG_SPL_BSS_MAX_SIZE		0x2000
+ 
+diff -Naur a/include/configs/roc-cc-rk3328.h b/include/configs/roc-cc-rk3328.h
+--- a/include/configs/roc-cc-rk3328.h	1969-12-31 19:00:00.000000000 -0500
++++ b/include/configs/roc-cc-rk3328.h	2022-07-18 02:16:12.000000000 -0400
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * (C) Copyright 2016 Rockchip Electronics Co., Ltd
++ */
++
++#ifndef __ROC_CC_RK3328_H
++#define __ROC_CC_RK3328_H
++
++#define CONFIG_SPL_PAD_TO		229376
++
++#include <configs/rk3328_common.h>
++
++#define SDRAM_BANK_SIZE			(2UL << 30)
++
++#endif
+diff -Naur a/include/configs/rockchip-common.h b/include/configs/rockchip-common.h
+--- a/include/configs/rockchip-common.h	2022-07-11 09:42:58.000000000 -0400
++++ b/include/configs/rockchip-common.h	2022-07-18 02:16:12.000000000 -0400
+@@ -10,7 +10,9 @@
+ #define CONFIG_SYS_NS16550_MEM32
+ 
+ /* ((CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR - 64) * 512) */
+-#define CONFIG_SPL_PAD_TO		8355840
++#ifndef CONFIG_SPL_PAD_TO
++	#define CONFIG_SPL_PAD_TO		8355840
++#endif
+ 
+ #ifndef CONFIG_SPL_BUILD
+ 
