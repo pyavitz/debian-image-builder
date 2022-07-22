@@ -2,7 +2,12 @@
 # Need to restart auto-negotiation on ethernet
 
 if [ -e /sys/class/net/eth0/carrier ]; then
-	if [[ `sleep 5s; grep "1" /sys/class/net/eth0/carrier` ]] > /dev/null 2>&1; then
-		ethtool -r eth0;
+	if [[ `grep "1" /sys/class/net/eth0/carrier` ]] > /dev/null 2>&1; then
+		if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+			:;
+		else
+			sleep 5s;
+			ethtool -r eth0;
+		fi
 	fi
 fi
