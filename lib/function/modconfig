@@ -25,6 +25,11 @@ fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	echo CONFIG_SD_BOOT=y >> configs/${UBOOT_DEFCONFIG};
 	echo CONFIG_EXT4_WRITE=y >> configs/${UBOOT_DEFCONFIG};
+	if [[ "$BOARD" == "renegade" ]]; then
+		echo CONFIG_USE_PREBOOT=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_BOARD_LATE_INIT=y >> configs/${UBOOT_DEFCONFIG};
+		echo CONFIG_CMD_GPIO=y >> configs/${UBOOT_DEFCONFIG};
+	fi
 	if [[ "$BOARD" == "rockpro64" ]]; then
 		sed -i 's/CONFIG_USE_PREBOOT=y/# CONFIG_USE_PREBOOT= is not set/g' configs/${UBOOT_DEFCONFIG};
 		sed -i 's/CONFIG_USB_EHCI_HCD=y/# CONFIG_USB_EHCI_HCD= is not set/g' configs/${UBOOT_DEFCONFIG};
