@@ -1,103 +1,403 @@
-diff -Naur a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-06-19 16:06:47.000000000 -0400
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c	2022-06-20 15:41:58.782344209 -0400
-@@ -20,6 +20,7 @@
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
- #include <linux/reset.h>
-+#include <linux/phy/pcie.h>
+diff -Naur a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation/devicetree/bindings/arm/rockchip.yaml
+--- a/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-07-10 17:40:51.000000000 -0400
++++ b/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-07-11 05:18:34.000000000 -0400
+@@ -554,6 +554,11 @@
+           - const: vamrs,rk3399pro-vmarc-som
+           - const: rockchip,rk3399pro
  
- #include "pcie-designware.h"
- 
-@@ -45,6 +46,7 @@
- #define PCIE_CLIENT_GENERAL_DEBUG	0x104
- #define PCIE_CLIENT_HOT_RESET_CTRL	0x180
- #define PCIE_CLIENT_LTSSM_STATUS	0x300
-+#define PCIE_LEGACY_INT_ENABLE		GENMASK(3, 0)
- #define PCIE_LTSSM_ENABLE_ENHANCE	BIT(4)
- #define PCIE_LTSSM_STATUS_MASK		GENMASK(5, 0)
- 
-@@ -58,6 +60,8 @@
- 	struct gpio_desc		*rst_gpio;
- 	struct regulator                *vpcie3v3;
- 	struct irq_domain		*irq_domain;
-+	raw_spinlock_t			irq_lock;
-+	bool				bifurcation;
- };
- 
- static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip,
-@@ -90,16 +94,30 @@
- 
- static void rockchip_intx_mask(struct irq_data *data)
- {
--	rockchip_pcie_writel_apb(irq_data_get_irq_chip_data(data),
--				 HIWORD_UPDATE_BIT(BIT(data->hwirq)),
--				 PCIE_CLIENT_INTR_MASK_LEGACY);
-+	struct rockchip_pcie *rockchip = irq_data_get_irq_chip_data(data);
-+	unsigned long flags;
-+	u32 val;
++      - description: Radxa ROCK Pi S
++        items:
++          - const: radxa,rockpis
++          - const: rockchip,rk3308
 +
-+	/* disable legacy interrupts */
-+	raw_spin_lock_irqsave(&rockchip->irq_lock, flags);
-+	val = HIWORD_UPDATE_BIT(PCIE_LEGACY_INT_ENABLE);
-+	val |= PCIE_LEGACY_INT_ENABLE;
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_LEGACY);
-+	raw_spin_unlock_irqrestore(&rockchip->irq_lock, flags);
- };
+       - description: Radxa Rock2 Square
+         items:
+           - const: radxa,rock2-square
+@@ -683,6 +688,11 @@
+           - const: rockchip,rk3568-bpi-r2pro
+           - const: rockchip,rk3568
  
- static void rockchip_intx_unmask(struct irq_data *data)
- {
--	rockchip_pcie_writel_apb(irq_data_get_irq_chip_data(data),
--				 HIWORD_DISABLE_BIT(BIT(data->hwirq)),
--				 PCIE_CLIENT_INTR_MASK_LEGACY);
-+	struct rockchip_pcie *rockchip = irq_data_get_irq_chip_data(data);
-+	unsigned long flags;
-+	u32 val;
++      - description: Rockchip RK3568 Hardkernel ODROID-M1
++        items:
++          - const: rockchip,rk3568-odroid-m1
++          - const: rockchip,rk3568
 +
-+	/* enable legacy interrupts */
-+	raw_spin_lock_irqsave(&rockchip->irq_lock, flags);
-+	val = HIWORD_UPDATE_BIT(PCIE_LEGACY_INT_ENABLE);
-+	val &= ~PCIE_LEGACY_INT_ENABLE;
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_LEGACY);
-+	raw_spin_unlock_irqrestore(&rockchip->irq_lock, flags);
+ additionalProperties: true
+ 
+ ...
+diff -Naur a/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml
+--- a/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml	1969-12-31 19:00:00.000000000 -0500
++++ b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml	2022-07-11 05:18:34.000000000 -0400
+@@ -0,0 +1,77 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/phy/rockchip-pcie3-phy.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Rockchip PCIe v3 phy
++
++maintainers:
++  - Heiko Stuebner <heiko@sntech.de>
++
++properties:
++  compatible:
++    enum:
++      - rockchip,rk3568-pcie3-phy
++      - rockchip,rk3588-pcie3-phy
++
++  reg:
++    maxItems: 2
++
++  clocks:
++    minItems: 1
++    maxItems: 3
++
++  clock-names:
++    contains:
++      anyOf:
++        - enum: [ refclk_m, refclk_n, pclk ]
++
++  "#phy-cells":
++    const: 0
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    const: phy
++
++  rockchip,phy-grf:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the syscon managing the phy "general register files"
++
++  rockchip,pipe-grf:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the syscon managing the pipe "general register files"
++
++  rockchip,pcie30-phymode:
++    $ref: '/schemas/types.yaml#/definitions/uint32'
++    description: |
++      use PHY_MODE_PCIE_AGGREGATION if not defined
++    minimum: 0x0
++    maximum: 0x4
++
++
++required:
++  - compatible
++  - reg
++  - rockchip,phy-grf
++
++additionalProperties: false
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/rk3568-cru.h>
++    pcie30phy: phy@fe8c0000 {
++      compatible = "rockchip,rk3568-pcie3-phy";
++      reg = <0x0 0xfe8c0000 0x0 0x20000>;
++      #phy-cells = <0>;
++      clocks = <&pmucru CLK_PCIE30PHY_REF_M>, <&pmucru CLK_PCIE30PHY_REF_N>,
++       <&cru PCLK_PCIE30PHY>;
++      clock-names = "refclk_m", "refclk_n", "pclk";
++      resets = <&cru SRST_PCIE30PHY>;
++      reset-names = "phy";
++      rockchip,phy-grf = <&pcie30_phy_grf>;
++    };
+diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
+--- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-07-10 17:40:51.000000000 -0400
++++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-07-11 05:18:34.000000000 -0400
+@@ -14,6 +14,8 @@
+     oneOf:
+       - items:
+           - enum:
++              - rockchip,pcie30-phy-grf
++              - rockchip,pcie30-pipe-grf
+               - rockchip,rk3288-sgrf
+               - rockchip,rk3566-pipe-grf
+               - rockchip,rk3568-pipe-grf
+diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+--- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-07-10 17:40:51.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-07-11 05:18:34.000000000 -0400
+@@ -91,80 +91,88 @@
+ 
+ static const struct dw_hdmi_mpll_config rockchip_mpll_cfg[] = {
+ 	{
+-		27000000, {
+-			{ 0x00b3, 0x0000},
+-			{ 0x2153, 0x0000},
+-			{ 0x40f3, 0x0000}
+-		},
+-	}, {
+-		36000000, {
+-			{ 0x00b3, 0x0000},
+-			{ 0x2153, 0x0000},
+-			{ 0x40f3, 0x0000}
+-		},
+-	}, {
+-		40000000, {
+-			{ 0x00b3, 0x0000},
+-			{ 0x2153, 0x0000},
+-			{ 0x40f3, 0x0000}
+-		},
+-	}, {
+-		54000000, {
+-			{ 0x0072, 0x0001},
+-			{ 0x2142, 0x0001},
+-			{ 0x40a2, 0x0001},
+-		},
+-	}, {
+-		65000000, {
+-			{ 0x0072, 0x0001},
+-			{ 0x2142, 0x0001},
+-			{ 0x40a2, 0x0001},
+-		},
+-	}, {
+-		66000000, {
+-			{ 0x013e, 0x0003},
+-			{ 0x217e, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		74250000, {
+-			{ 0x0072, 0x0001},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		83500000, {
+-			{ 0x0072, 0x0001},
+-		},
+-	}, {
+-		108000000, {
+-			{ 0x0051, 0x0002},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		106500000, {
+-			{ 0x0051, 0x0002},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		146250000, {
+-			{ 0x0051, 0x0002},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		148500000, {
+-			{ 0x0051, 0x0003},
+-			{ 0x214c, 0x0003},
+-			{ 0x4064, 0x0003}
++		30666000, {
++			{ 0x00b3, 0x0000 },
++			{ 0x2153, 0x0000 },
++			{ 0x40f3, 0x0000 },
++		},
++	},  {
++		36800000, {
++			{ 0x00b3, 0x0000 },
++			{ 0x2153, 0x0000 },
++			{ 0x40a2, 0x0001 },
++		},
++	},  {
++		46000000, {
++			{ 0x00b3, 0x0000 },
++			{ 0x2142, 0x0001 },
++			{ 0x40a2, 0x0001 },
++		},
++	},  {
++		61333000, {
++			{ 0x0072, 0x0001 },
++			{ 0x2142, 0x0001 },
++			{ 0x40a2, 0x0001 },
++		},
++	},  {
++		73600000, {
++			{ 0x0072, 0x0001 },
++			{ 0x2142, 0x0001 },
++			{ 0x4061, 0x0002 },
++		},
++	},  {
++		92000000, {
++			{ 0x0072, 0x0001 },
++			{ 0x2145, 0x0002 },
++			{ 0x4061, 0x0002 },
++		},
++	},  {
++		122666000, {
++			{ 0x0051, 0x0002 },
++			{ 0x2145, 0x0002 },
++			{ 0x4061, 0x0002 },
++		},
++	},  {
++		147200000, {
++			{ 0x0051, 0x0002 },
++			{ 0x2145, 0x0002 },
++			{ 0x4064, 0x0003 },
++		},
++	},  {
++		184000000, {
++			{ 0x0051, 0x0002 },
++			{ 0x214c, 0x0003 },
++			{ 0x4064, 0x0003 },
++		},
++	},  {
++		226666000, {
++			{ 0x0040, 0x0003 },
++			{ 0x214c, 0x0003 },
++			{ 0x4064, 0x0003 },
++		},
++	},  {
++		272000000, {
++			{ 0x0040, 0x0003 },
++			{ 0x214c, 0x0003 },
++			{ 0x5a64, 0x0003 },
++		},
++	},  {
++		340000000, {
++			{ 0x0040, 0x0003 },
++			{ 0x3b4c, 0x0003 },
++			{ 0x5a64, 0x0003 },
++		},
++	},  {
++		600000000, {
++			{ 0x1a40, 0x0003 },
++			{ 0x3b4c, 0x0003 },
++			{ 0x5a64, 0x0003 },
+ 		},
+-	}, {
++	},  {
+ 		~0UL, {
+-			{ 0x00a0, 0x000a },
+-			{ 0x2001, 0x000f },
+-			{ 0x4002, 0x000f },
++			{ 0x0000, 0x0000 },
++			{ 0x0000, 0x0000 },
++			{ 0x0000, 0x0000 },
+ 		},
+ 	}
+ };
+@@ -172,20 +180,8 @@
+ static const struct dw_hdmi_curr_ctrl rockchip_cur_ctr[] = {
+ 	/*      pixelclk    bpp8    bpp10   bpp12 */
+ 	{
+-		40000000,  { 0x0018, 0x0018, 0x0018 },
+-	}, {
+-		65000000,  { 0x0028, 0x0028, 0x0028 },
+-	}, {
+-		66000000,  { 0x0038, 0x0038, 0x0038 },
+-	}, {
+-		74250000,  { 0x0028, 0x0038, 0x0038 },
+-	}, {
+-		83500000,  { 0x0028, 0x0038, 0x0038 },
+-	}, {
+-		146250000, { 0x0038, 0x0038, 0x0038 },
+-	}, {
+-		148500000, { 0x0000, 0x0038, 0x0038 },
+-	}, {
++		600000000, { 0x0000, 0x0000, 0x0000 },
++	},  {
+ 		~0UL,      { 0x0000, 0x0000, 0x0000},
+ 	}
+ };
+@@ -195,6 +191,7 @@
+ 	{ 74250000,  0x8009, 0x0004, 0x0272},
+ 	{ 148500000, 0x802b, 0x0004, 0x028d},
+ 	{ 297000000, 0x8039, 0x0005, 0x028d},
++	{ 594000000, 0x8039, 0x0000, 0x019d},
+ 	{ ~0UL,	     0x0000, 0x0000, 0x0000}
  };
  
- static struct irq_chip rockchip_intx_irq_chip = {
-@@ -249,7 +267,7 @@
- 		return dev_err_probe(&pdev->dev, PTR_ERR(rockchip->rst),
- 				     "failed to get reset lines\n");
- 
--	return 0;
-+	return reset_control_assert(rockchip->rst);
+@@ -240,26 +237,6 @@
+ 	return 0;
  }
  
- static int rockchip_pcie_phy_init(struct rockchip_pcie *rockchip)
-@@ -262,6 +280,12 @@
- 		return dev_err_probe(dev, PTR_ERR(rockchip->phy),
- 				     "missing PHY\n");
+-static enum drm_mode_status
+-dw_hdmi_rockchip_mode_valid(struct dw_hdmi *hdmi, void *data,
+-			    const struct drm_display_info *info,
+-			    const struct drm_display_mode *mode)
+-{
+-	const struct dw_hdmi_mpll_config *mpll_cfg = rockchip_mpll_cfg;
+-	int pclk = mode->clock * 1000;
+-	bool valid = false;
+-	int i;
+-
+-	for (i = 0; mpll_cfg[i].mpixelclock != (~0UL); i++) {
+-		if (pclk == mpll_cfg[i].mpixelclock) {
+-			valid = true;
+-			break;
+-		}
+-	}
+-
+-	return (valid) ? MODE_OK : MODE_BAD;
+-}
+-
+ static void dw_hdmi_rockchip_encoder_disable(struct drm_encoder *encoder)
+ {
+ }
+@@ -425,7 +402,6 @@
+ };
  
-+	if (rockchip->bifurcation) {
-+		ret = phy_set_mode_ext(rockchip->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_BIFURCATION);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	ret = phy_init(rockchip->phy);
- 	if (ret < 0)
- 		return ret;
-@@ -326,6 +350,9 @@
- 		}
+ static const struct dw_hdmi_plat_data rk3228_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg = rockchip_mpll_cfg,
+ 	.cur_ctr = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -442,7 +418,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3288_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg   = rockchip_mpll_cfg,
+ 	.cur_ctr    = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -462,7 +437,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3328_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg = rockchip_mpll_cfg,
+ 	.cur_ctr = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -480,7 +454,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3399_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg   = rockchip_mpll_cfg,
+ 	.cur_ctr    = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -493,7 +466,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3568_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg   = rockchip_mpll_cfg,
+ 	.cur_ctr    = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -597,6 +569,14 @@
  	}
  
-+	if (device_property_read_bool(dev, "rockchip,bifurcation"))
-+		rockchip->bifurcation = true;
+ 	if (hdmi->chip_data == &rk3568_chip_data) {
++		regmap_write(hdmi->regmap, RK3568_GRF_VO_CON1,
++			     HIWORD_UPDATE(RK3568_HDMI_SDAIN_MSK |
++					   RK3568_HDMI_SCLIN_MSK,
++					   RK3568_HDMI_SDAIN_MSK |
++					   RK3568_HDMI_SCLIN_MSK));
++	}
 +
- 	ret = rockchip_pcie_phy_init(rockchip);
- 	if (ret)
- 		goto disable_regulator;
++	if (hdmi->chip_data == &rk3568_chip_data) {
+ 		regmap_write(hdmi->regmap, RK3568_GRF_VO_CON1,
+ 			     HIWORD_UPDATE(RK3568_HDMI_SDAIN_MSK |
+ 					   RK3568_HDMI_SCLIN_MSK,
 diff -Naur a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
---- a/drivers/phy/rockchip/Kconfig	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/phy/rockchip/Kconfig	2022-05-25 10:27:15.000000000 -0400
+--- a/drivers/phy/rockchip/Kconfig	2022-07-10 17:40:51.000000000 -0400
++++ b/drivers/phy/rockchip/Kconfig	2022-07-11 05:18:34.000000000 -0400
 @@ -83,6 +83,15 @@
  	help
  	  Enable this to support the Rockchip PCIe PHY.
@@ -115,8 +415,8 @@ diff -Naur a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
  	tristate "Rockchip TYPEC PHY Driver"
  	depends on OF && (ARCH_ROCKCHIP || COMPILE_TEST)
 diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
---- a/drivers/phy/rockchip/Makefile	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/phy/rockchip/Makefile	2022-05-25 10:27:15.000000000 -0400
+--- a/drivers/phy/rockchip/Makefile	2022-07-10 17:40:51.000000000 -0400
++++ b/drivers/phy/rockchip/Makefile	2022-07-11 05:18:34.000000000 -0400
 @@ -8,5 +8,6 @@
  obj-$(CONFIG_PHY_ROCKCHIP_INNO_USB2)	+= phy-rockchip-inno-usb2.o
  obj-$(CONFIG_PHY_ROCKCHIP_NANENG_COMBO_PHY)	+= phy-rockchip-naneng-combphy.o
@@ -126,7 +426,7 @@ diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
  obj-$(CONFIG_PHY_ROCKCHIP_USB)		+= phy-rockchip-usb.o
 diff -Naur a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
 --- a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c	2022-05-25 10:27:15.000000000 -0400
++++ b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c	2022-07-11 05:18:34.000000000 -0400
 @@ -0,0 +1,278 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -407,8 +707,8 @@ diff -Naur a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c b/drivers/phy/rockch
 +MODULE_DESCRIPTION("Rockchip Synopsys PCIe 3.0 PHY driver");
 +MODULE_LICENSE("GPL");
 diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple.c
---- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-05-25 10:27:15.000000000 -0400
+--- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-07-10 17:40:51.000000000 -0400
++++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-07-11 05:18:34.000000000 -0400
 @@ -30,12 +30,16 @@
  	bool			need_reset;
  };
@@ -481,7 +781,7 @@ diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple
  MODULE_DEVICE_TABLE(of, of_dwc3_simple_match);
 diff -Naur a/include/dt-bindings/phy/phy-snps-pcie3.h b/include/dt-bindings/phy/phy-snps-pcie3.h
 --- a/include/dt-bindings/phy/phy-snps-pcie3.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/dt-bindings/phy/phy-snps-pcie3.h	2022-05-25 10:27:15.000000000 -0400
++++ b/include/dt-bindings/phy/phy-snps-pcie3.h	2022-07-11 05:18:34.000000000 -0400
 @@ -0,0 +1,21 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
@@ -506,7 +806,7 @@ diff -Naur a/include/dt-bindings/phy/phy-snps-pcie3.h b/include/dt-bindings/phy/
 +#endif /* _DT_BINDINGS_PHY_SNPS_PCIE3 */
 diff -Naur a/include/linux/phy/pcie.h b/include/linux/phy/pcie.h
 --- a/include/linux/phy/pcie.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/linux/phy/pcie.h	2022-05-25 10:27:15.000000000 -0400
++++ b/include/linux/phy/pcie.h	2022-07-11 05:18:34.000000000 -0400
 @@ -0,0 +1,12 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
