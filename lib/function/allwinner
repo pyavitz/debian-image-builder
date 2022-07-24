@@ -6,28 +6,14 @@ dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1
 }
 
 # STAGE2
-cypress_firmware(){
-echo ""
-echo "Adding brcm/cypress firmware ..."
-sleep 1s
-mkdir cypress
-cd cypress
-aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false https://github.com/pyavitz/debian-image-builder/releases/download/cypress-fmac/cypress-fmac-v5.4.18-2020_0402.zip
-unzip -qq cypress-fmac-v5.4.18-2020_0402.zip
-tar -xf cypress-firmware-v5.4.18-2020_0402.tar.gz
-rm -f firmware/*pcie*
-cp -f firmware/* /lib/firmware/brcm/
-cd ~
-rm -fdr cypress
-echo "Done."
-}
-
 nanopi_firmware(){
 echo ""
 echo "Adding NanoPi NEO Plus2 firmware ..."
 cd ~
 git clone -b nanopi https://github.com/pyavitz/firmware.git
-rm -f firmware/README.md
+if [[ -f "firmware/README.md" ]]; then
+	rm -f firmware/README.md;
+fi
 cp -fr firmware/* /lib/firmware
 if [ -f fw-0a5c_21e8.hcd ]; then 
 	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;

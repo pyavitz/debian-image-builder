@@ -1,5 +1,4 @@
 #!/bin/bash
-ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0"
 
 uboot-source(){
 mkdir -p ${SRC}
@@ -9,7 +8,7 @@ rm -fdr {amlogic-boot-fip-master,blobs/amlogic-u-boot,u-boot}
 }
 
 uboot_search(){
-if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
 	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} ";
 	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot-${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
@@ -33,7 +32,7 @@ fi
 }
 
 u-boot(){
-if [[ -f u-boot-${UBOOT_VERSION}.tar.gz ]]; then
+if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
 	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}";
 else
@@ -43,20 +42,22 @@ fi
 echo ""
 echo_extract
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ -f amlogic-boot-fip-master.tar.gz ]]; then
+	if [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then
 		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
 	fi
 fi
 pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 mv -f u-boot-${UBOOT_VERSION} u-boot
 # arm trusted firmware
-if [[ "$FAMILY" == "allwinner" ]]; then 
+if [[ "$FAMILY" == "allwinner" ]] || [[ "$FAMILY" == "rockchip" ]]; then 
 	if [[ "$ARCH" == "arm64" ]]; then
-		cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin;
+		if [[ -f "arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin" ]]; then
+			cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin;
+		fi
+		if [[ -f "arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
+			cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
+		fi
 	fi
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
 fi
 # patching
 cp board.txt u-boot/
@@ -102,7 +103,7 @@ if [[ "$ARCH" == "arm64" ]]; then
 	arm-trusted-firmware;
 fi
 u-boot
-if [ -f u-boot-sunxi-with-spl.bin ]; then
+if [[ -f "u-boot-sunxi-with-spl.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot-sunxi-with-spl.bin ../../${OUTPUT}/
 	cp -f tools/mkimage ../../${OUTPUT}/
@@ -120,8 +121,11 @@ amlogic-uboot-string(){
 uboot-source
 amlogic-boot-fips
 u-boot
-$RUN_FIP
-if [ -f fip/u-boot.bin ]; then
+if [[ ! -z $RUN_FIP ]]; then
+	echo "$DEFAULT_MOTD : Firmware Image Package" | sed 's/ :/:/g'
+	${RUN_FIP};
+fi
+if [[ -f "fip/u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f fip/u-boot.bin ../../${OUTPUT}
 	cp -f fip/u-boot.bin.sd.bin ../../${OUTPUT}
@@ -139,7 +143,7 @@ fi
 bcm2711-uboot-string(){
 uboot-source
 u-boot
-if [ -f u-boot.bin ]; then
+if [[ -f "u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot.bin ../../${OUTPUT}/
 	echo_done
@@ -156,7 +160,7 @@ rockchip-uboot-string(){
 uboot-source
 arm-trusted-firmware
 u-boot
-if [ -f idbloader.img ]; then
+if [[ -f "idbloader.img" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
 	cp -f u-boot.itb ../../${OUTPUT}/
@@ -173,7 +177,7 @@ fi
 samsung-uboot-string(){
 uboot-source
 u-boot
-if [ -f u-boot.bin ]; then
+if [[ -f "u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot.bin ../../${OUTPUT}/
 	cp -f ../../${CUBOOT}/${BOARD}-bl1.bin ../../${OUTPUT}/bl1.bin;
