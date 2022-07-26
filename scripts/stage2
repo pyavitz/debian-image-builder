@@ -15,7 +15,7 @@ set -o pipefail
 set -o nounset
 
 if [ $networkmanager -eq 0 ]; then
-	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+	if [[ "$DISTRO_VERSION" == "jammy" ]] || [[ "$DISTRO_VERSION" == "kinetic" ]]; then
 		# systemd-resolved breaks static ip when using ifupdown
 		# it will be disabled on jammy jellyfish
 		unlink /etc/resolv.conf;
@@ -74,7 +74,7 @@ fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
 	if [ $networkmanager -eq 0 ]; then
-		if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+		if [[ "$DISTRO_VERSION" == "jammy" ]] || [[ "$DISTRO_VERSION" == "kinetic" ]]; then
 			# disable systemd-networkd and mask systemd-networkd-wait-online
 			systemctl disable systemd-networkd;
 			systemctl mask systemd-networkd-wait-online;
@@ -196,32 +196,17 @@ if [[ "$BOARD" == "nanopi" ]]; then
 fi
 
 # eMMC flash tools
+cd ~
 mkdir -p /etc/opt
-mkdir -p /usr/lib/u-boot
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
 # move u-boot bin(s)
-if [ "$FAMILY" == "allwinner" ]; then
-	mv -f *.bin /usr/lib/u-boot/;
+if [[ `ls u-boot.itb` ]]; then
+	mkdir -p /usr/lib/u-boot;
+	mv -f *.itb /usr/lib/u-boot/;
 fi
-if [ "$FAMILY" == "amlogic" ]; then
-	if [ $petitboot -eq 1 ]; then
-		:;
-	else
-		mv -f *.bin /usr/lib/u-boot/;
-	fi
-fi
-if [ "$FAMILY" == "broadcom" ]; then
-	mv -f *.bin /usr/lib/u-boot/;
-fi
-if [ "$FAMILY" == "rockchip" ]; then
-	if [[ "$BOARD" == "odroidm1" ]]; then
-		mv -f *.itb /usr/lib/u-boot/;
-	else
-		mv -f *.bin *.itb /usr/lib/u-boot/;
-	fi
-fi
-if [ "$FAMILY" == "samsung" ]; then
+if [[ `ls *.bin` ]];
+	mkdir -p /usr/lib/u-boot;
 	mv -f *.bin /usr/lib/u-boot/;
 fi
 chmod +x /usr/local/bin/write2mmc
@@ -231,7 +216,6 @@ chown root:root /usr/local/bin/write2mmc
 echo ""
 echo "Moving scripts ..."
 sleep 1s
-cd ~
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
 mv -f setup /usr/local/bin/
@@ -464,12 +448,13 @@ EOF
 fi
 
 # Remove zstd compression (not supported by vednor kernels)
-if [[ "$DISTRO" == "ubuntu" ]] && [[ "$DISTRO_VERSION" == "jammy" ]]; then
-	if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
-		sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf;
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO_VERSION" == "jammy" ]] || [[ "$DISTRO_VERSION" == "kinetic" ]]; then
+		if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
+			sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf;
+		fi
 	fi
 fi
-
 
 # uImage
 if [[ "$BOARD" == "odroidc1" ]]; then
