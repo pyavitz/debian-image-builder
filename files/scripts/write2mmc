@@ -6,7 +6,6 @@ if [ -f /etc/opt/board.txt ]; then
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Your board is not supported." 0 0;
-	clear -x;
 	exit 0;
 fi
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
@@ -14,13 +13,11 @@ if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Script requires a internet connection." 0 0;
-	clear -x;
 	exit 0;
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Partition scheme is not supported." 0 0;
-	clear -x;
 	exit 0;
 fi
 
@@ -31,7 +28,7 @@ if [[ "$BOARD" == "nanopi" ]]; then
 	# allwinner (nanopi = /dev/mmcblk2)
 	supported=1;
 fi
-if [[ "$BOARD" == "lepotato" ]] || [[ "$BOARD" == "odroidc4" ]] || [[ "$BOARD" == "odroidn2" ]] || [[ "$BOARD" == "odroidn2" ]] || [[ "$BOARD" == "odroidn2plus" ]] || [[ "$BOARD" == "radxazero" ]]; then
+if [[ "$BOARD" == "lepotato" ]] || [[ "$BOARD" == "odroidc4" ]] || [[ "$BOARD" == "odroidn2" ]] || [[ "$BOARD" == "odroidn2plus" ]] || [[ "$BOARD" == "radxazero" ]]; then
 	# amlogic (amlogic = /dev/mmcblk1) (odroidn2/+ = /dev/mmcblk0)
 	supported=1;
 fi
@@ -248,6 +245,7 @@ sleep 1s
 clear -x
 
 echo "Writing u-boot ..."
+sleep 1s
 if [[ "$FAMILY" == "allwinner" ]]; then
 	allwinner_flash_uboot;
 fi
