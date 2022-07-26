@@ -201,13 +201,25 @@ mkdir -p /etc/opt
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
 # move u-boot bin(s)
-if [[ `ls u-boot.itb` ]]; then
-	mkdir -p /usr/lib/u-boot;
-	mv -f *.itb /usr/lib/u-boot/;
-fi
-if [[ `ls *.bin` ]];
+if [[ "$FAMILY" == "allwinner" ]] || [[ "$FAMILY" == "broadcom" ]] || [[ "$FAMILY" == "samsung" ]]; then
 	mkdir -p /usr/lib/u-boot;
 	mv -f *.bin /usr/lib/u-boot/;
+fi
+if [[ "$FAMILY" == "amlogic" ]]; then
+	if [ $petitboot -eq 1 ]; then
+		:;
+	else
+		mkdir -p /usr/lib/u-boot;
+		mv -f *.bin /usr/lib/u-boot/;
+	fi
+fi
+if [[ "$FAMILY" == "rockchip" ]]; then
+	mkdir -p /usr/lib/u-boot;
+	if [[ "$BOARD" == "odroidm1" ]]; then
+		mv -f *.itb /usr/lib/u-boot/;
+	else
+		mv -f *.bin *.itb /usr/lib/u-boot/;
+	fi
 fi
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
