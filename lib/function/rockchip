@@ -13,11 +13,16 @@ fi
 }
 
 gpt_partition_table(){
-GPT="true";
-P_UBOOT="p1";
-P_ROOTFS="p2";
+GPT="true"
 sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-sgdisk -n 2:${OFFSET}: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+if [[ "$BOARD" == "odroidm1" ]]; then
+	P_UBOOT="p1" 
+	P_ROOTFS="p2"
+	sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+	sgdisk -n 2:${OFFSET}: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+else
+	P_ROOTFS="p1"
+	sgdisk -n 1:${OFFSET} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+fi
 sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 }

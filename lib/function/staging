@@ -30,7 +30,11 @@ mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
 if [[ "$GPT" == "true" ]]; then
-	flash_vendor-uboot;
+	if [[ "$BOARD" == "odroidm1" ]]; then
+		flash_vendor-uboot;
+	else
+		flash_uboot;
+	fi
 fi
 if [[ "$GPT" == "false" ]]; then
 	flash_uboot;
@@ -41,11 +45,11 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
 }
 
 p2_partition(){
+GPT="false"
+P_BOOT="p1"
+P_ROOTFS="p2"
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$VFAT" == "true" ]]; then
-	GPT="false";
-	P_BOOT="p1";
-	P_ROOTFS="p2";
 	echo -e "o
 	n
 	p
@@ -64,9 +68,6 @@ if [[ "$VFAT" == "true" ]]; then
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 else
-	GPT="false";
-	P_BOOT="p1";
-	P_ROOTFS="p2";
 	echo -e "o
 	n
 	p
@@ -105,6 +106,10 @@ mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
 p1_uuid(){
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
+if [[ "$GPT" == "true" ]]; then
+	ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
+	echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
+fi
 source part-uuid.txt
 }
 
@@ -112,7 +117,6 @@ p2_uuid(){
 BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
 ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
-
 echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
 echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
 echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
@@ -150,7 +154,7 @@ if [ $verbose -eq 1 ]; then
 else
 	p1_uuid > /dev/null 2>&1;
 fi
-if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
+if [[ -f "${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz" ]]; then
 	echo -en "${WHT}Extracting rootfs${FIN} ";
 	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p1/;
 	echo_bdone;
@@ -172,6 +176,13 @@ if [ $verbose -eq 1 ]; then
 	p1_fstab;
 else
 	p1_fstab > /dev/null 2>&1;
+fi
+if [[ "$GPT" == "true" ]]; then
+	if [ $verbose -eq 1 ]; then
+		p1_extlinux;
+	else
+		p1_extlinux > /dev/null 2>&1;
+	fi
 fi
 if [ -n "$PROXY" ]; then
 	tee "p1/etc/apt/apt.conf.d/30proxy" <<EOF
@@ -200,7 +211,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 		exit 0;
 	fi
 fi
-if [ -e ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz ]; then
+if [[ -f "${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz" ]]; then
 	echo -en "${WHT}Extracting rootfs${FIN} ";
 	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p2/;
 	echo_bdone;
@@ -324,7 +335,7 @@ if [[ "$BOARD" == "odroidm1" ]]; then
 		cp files/boot/odroid/${BOARD}-config.ini p1/config.ini;
 
 	fi
-	if [ -f p1/boot.cmd ]; then
+	if [[ -f "p1/boot.cmd" ]]; then
 		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
 		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
 		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
@@ -339,10 +350,10 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 		cp files/boot/odroid/${FAMILY_EXT}-boot.cmd p1/boot.cmd;
 		cp files/boot/odroid/${FAMILY_EXT}-config.ini p1/config.ini;
 	fi
-	if [ -f files/boot/odroid/odroid-boot-logo.bmp.gz ]; then
+	if [[ -f "files/boot/odroid/odroid-boot-logo.bmp.gz" ]]; then
 		cp files/boot/odroid/odroid-boot-logo.bmp.gz p1/boot-logo.bmp.gz;
 	fi
-	if [ -f p1/boot.cmd ]; then
+	if [[ -f "p1/boot.cmd" ]]; then
 		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
 		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
 		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;

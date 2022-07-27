@@ -67,31 +67,31 @@ if [[ ! -z $FAMILY ]]; then
 	${P_VALUE}_files;
 fi
 # place led_trigger file in place for stage2
-if [ -f files/led-trigger/${BOARD} ]; then 
+if [[ -f "files/led-trigger/${BOARD}" ]]; then 
 	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
 fi
 # place u-boot and kernel files in place for stage2
-if [ "$FAMILY" == "allwinner" ]; then
+if [[ "$FAMILY" == "allwinner" ]]; then
 	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 fi
-if [ "$FAMILY" == "amlogic" ]; then
+if [[ "$FAMILY" == "amlogic" ]]; then
 	if [ $petitboot -eq 1 ]; then
 		cp -f ${OUTPUT}/*.deb ${P_VALUE}/root;
 	else
 		cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 	fi
 fi
-if [ "$FAMILY" == "broadcom" ]; then
+if [[ "$FAMILY" == "broadcom" ]]; then
 	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 fi
-if [ "$FAMILY" == "rockchip" ]; then
+if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$BOARD" == "odroidm1" ]]; then
 		cp -f ${OUTPUT}/{*.itb,*.deb} ${P_VALUE}/root;
 	else
 		cp -f ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
 	fi
 fi
-if [ "$FAMILY" == "samsung" ]; then
+if [[ "$FAMILY" == "samsung" ]]; then
 	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 fi
 if [ $useracct -eq 1 ]; then
@@ -112,10 +112,10 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	# unmount
 	umount p1/dev/pts;
 	umount p1/dev;
-	if [ -f p1/usr/bin/qemu-arm-static ]; then
+	if [[ -f "p1/usr/bin/qemu-arm-static" ]]; then
 		rm -f p1/usr/bin/qemu-arm-static;
 	fi
-	if [ -f p1/usr/bin/qemu-aarch64-static ]; then
+	if [[ -f "p1/usr/bin/qemu-aarch64-static" ]]; then
 		rm -f p1/usr/bin/qemu-aarch64-static;
 	fi
 	cp -f p1/root/kernel.txt .;
@@ -135,7 +135,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	fi
 	rmdir "${IMAGE_FOLDER}";
 	rmdir p1;
-	shrink;
+	if [[ "$GPT" == "true" ]]; then :; else shrink; fi
 	if [ $compress_img -eq 1 ]; then
 		echo_compress;
 		compress_image;
@@ -157,10 +157,10 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	umount p2/dev/pts;
 	umount p2/dev;
 	umount p2/boot;
-	if [ -f p2/usr/bin/qemu-arm-static ]; then
+	if [[ -f "p2/usr/bin/qemu-arm-static" ]]; then
 		rm -f p2/usr/bin/qemu-arm-static;
 	fi
-	if [ -f p2/usr/bin/qemu-aarch64-static ]; then
+	if [[ -f "p2/usr/bin/qemu-aarch64-static" ]]; then
 		rm -f p2/usr/bin/qemu-aarch64-static;
 	fi
 	cp -f p2/root/kernel.txt .;
