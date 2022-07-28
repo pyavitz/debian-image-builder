@@ -38,6 +38,14 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 	chown -R root:root /lib/firmware/ene-ub6250;
 	cd ~;
 fi
+if [[ "$FAMILY" == "rk356x" ]]; then
+	mkdir -p /lib/firmware/bnx2;
+	wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+archive/refs/heads/main/bnx2.tar.gz -P /lib/firmware/bnx2;
+	if [[ -f "/lib/firmware/bnx2/bnx2.tar.gz" ]]; then
+		tar xf /lib/firmware/bnx2/bnx2.tar.gz  -C /lib/firmware/bnx2;
+		rm -f /lib/firmware/bnx2/bnx2.tar.gz;
+	fi
+fi
 mkdir -p /lib/firmware/rtl_nic
 wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
 if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
