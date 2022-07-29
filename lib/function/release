@@ -1,6 +1,6 @@
 #!/bin/bash
 
-debian_bullseye(){
+debian_stable(){
 rm -f ${RELEASE}
 tee ${RELEASE} <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
@@ -18,7 +18,7 @@ deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
-devuan_chimaera(){
+devuan_stable(){
 rm -f ${RELEASE}
 tee ${RELEASE} <<EOF
 deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
@@ -69,35 +69,15 @@ EOF
 choose_release(){
 if [[ "$DISTRO" == "debian" ]]; then
 	if [[ "$DISTRO_VERSION" == "bullseye" ]]; then
-		debian_bullseye;
-	fi
-	if [[ "$DISTRO_VERSION" == "bookworm" ]]; then
-		debian_unstable;
-	fi
-	if [[ "$DISTRO_VERSION" == "testing" ]]; then
-		debian_unstable;
-	fi
-	if [[ "$DISTRO_VERSION" == "unstable" ]]; then
-		debian_unstable;
-	fi
-	if [[ "$DISTRO_VERSION" == "sid" ]]; then
+		debian_stable;
+	else
 		debian_unstable;
 	fi
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	if [[ "$DISTRO_VERSION" == "chimaera" ]]; then
-		devuan_chimaera;
-	fi
-	if [[ "$DISTRO_VERSION" == "daedalus" ]]; then
-		devuan_unstable;
-	fi
-	if [[ "$DISTRO_VERSION" == "testing" ]]; then
-		devuan_unstable;
-	fi
-	if [[ "$DISTRO_VERSION" == "unstable" ]]; then
-		devuan_unstable;
-	fi
-	if [[ "$DISTRO_VERSION" == "ceres" ]]; then
+		devuan_stable;
+	else
 		devuan_unstable;
 	fi
 fi
