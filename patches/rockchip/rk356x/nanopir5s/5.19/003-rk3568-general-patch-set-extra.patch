@@ -1,0 +1,163 @@
+diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-half-divider.c
+--- a/drivers/clk/rockchip/clk-half-divider.c	2022-08-04 12:24:21.472172050 -0400
++++ b/drivers/clk/rockchip/clk-half-divider.c	2022-08-04 12:25:39.130947969 -0400
+@@ -166,7 +166,7 @@
+ 					  unsigned long flags,
+ 					  spinlock_t *lock)
+ {
+-	struct clk_hw *hw = ERR_PTR(-ENOMEM);
++	struct clk_hw *hw;
+ 	struct clk_mux *mux = NULL;
+ 	struct clk_gate *gate = NULL;
+ 	struct clk_divider *div = NULL;
+diff -Naur a/kernel/dma/pool.c b/kernel/dma/pool.c
+--- a/kernel/dma/pool.c	2022-08-04 12:24:25.751104597 -0400
++++ b/kernel/dma/pool.c	2022-08-04 12:25:39.128948000 -0400
+@@ -189,13 +189,10 @@
+ 	int ret = 0;
+ 
+ 	/*
+-	 * If coherent_pool was not used on the command line, default the pool
+-	 * sizes to 128KB per 1GB of memory, min 128KB, max MAX_ORDER-1.
++	 * Use 2MiB as default pool size.
+ 	 */
+ 	if (!atomic_pool_size) {
+-		unsigned long pages = totalram_pages() / (SZ_1G / SZ_128K);
+-		pages = min_t(unsigned long, pages, MAX_ORDER_NR_PAGES);
+-		atomic_pool_size = max_t(size_t, pages << PAGE_SHIFT, SZ_128K);
++		atomic_pool_size = SZ_2M;
+ 	}
+ 	INIT_WORK(&atomic_pool_work, atomic_pool_work_fn);
+ 
+diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
+--- a/sound/soc/codecs/rt5651.c	2022-08-04 12:24:26.459093436 -0400
++++ b/sound/soc/codecs/rt5651.c	2022-08-04 12:26:25.296220419 -0400
+@@ -24,6 +24,7 @@
+ #include <sound/initval.h>
+ #include <sound/tlv.h>
+ #include <sound/jack.h>
++#include <linux/clk.h>
+ 
+ #include "rl6231.h"
+ #include "rt5651.h"
+@@ -1511,6 +1512,7 @@
+ static int rt5651_set_bias_level(struct snd_soc_component *component,
+ 			enum snd_soc_bias_level level)
+ {
++	struct rt5651_priv *rt5651 = snd_soc_component_get_drvdata(component);
+ 	switch (level) {
+ 	case SND_SOC_BIAS_PREPARE:
+ 		if (SND_SOC_BIAS_STANDBY == snd_soc_component_get_bias_level(component)) {
+@@ -1518,6 +1520,13 @@
+ 				snd_soc_component_update_bits(component, RT5651_D_MISC,
+ 						    0xc00, 0xc00);
+ 		}
++		if (!IS_ERR(rt5651->mclk)){
++			if (snd_soc_component_get_bias_level(component) == SND_SOC_BIAS_ON) {
++				clk_disable_unprepare(rt5651->mclk);
++			} else {
++				clk_prepare_enable(rt5651->mclk);
++			}
++		}
+ 		break;
+ 	case SND_SOC_BIAS_STANDBY:
+ 		if (SND_SOC_BIAS_OFF == snd_soc_component_get_bias_level(component)) {
+@@ -2059,6 +2068,13 @@
+ {
+ 	struct rt5651_priv *rt5651 = snd_soc_component_get_drvdata(component);
+ 
++	/* Check if MCLK provided */
++	rt5651->mclk = devm_clk_get(component->dev, "mclk");
++	if (PTR_ERR(rt5651->mclk) == -EPROBE_DEFER){
++		dev_err(component->dev, "unable to get mclk\n");
++		return -EPROBE_DEFER;
++	}
++
+ 	rt5651->component = component;
+ 
+ 	snd_soc_component_update_bits(component, RT5651_PWR_ANLG1,
+diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
+--- a/sound/soc/codecs/rt5651.h	2022-08-04 12:24:26.459093436 -0400
++++ b/sound/soc/codecs/rt5651.h	2022-08-04 12:26:25.296220419 -0400
+@@ -2097,6 +2097,7 @@
+ 
+ 	int dmic_en;
+ 	bool hp_mute;
++	struct clk *mclk;
+ };
+ 
+ #endif /* __RT5651_H__ */
+diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple.c
+--- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-07-10 17:40:51.000000000 -0400
++++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-07-11 05:18:34.000000000 -0400
+@@ -30,12 +30,16 @@
+ 	bool			need_reset;
+ };
+ 
++struct dwc3_of_simple_data {
++	bool			need_reset;
++};
++
+ static int dwc3_of_simple_probe(struct platform_device *pdev)
+ {
+ 	struct dwc3_of_simple	*simple;
+ 	struct device		*dev = &pdev->dev;
+ 	struct device_node	*np = dev->of_node;
+-
++	const struct dwc3_of_simple_data *data = of_device_get_match_data(dev);
+ 	int			ret;
+ 
+ 	simple = devm_kzalloc(dev, sizeof(*simple), GFP_KERNEL);
+@@ -49,8 +53,8 @@
+ 	 * Some controllers need to toggle the usb3-otg reset before trying to
+ 	 * initialize the PHY, otherwise the PHY times out.
+ 	 */
+-	if (of_device_is_compatible(np, "rockchip,rk3399-dwc3"))
+-		simple->need_reset = true;
++	if (data->need_reset)
++		simple->need_reset = data->need_reset;
+ 
+ 	simple->resets = of_reset_control_array_get(np, false, true,
+ 						    true);
+@@ -170,13 +174,34 @@
+ 			dwc3_of_simple_runtime_resume, NULL)
+ };
+ 
++static const struct dwc3_of_simple_data dwc3_of_simple_data_rk3399 = {
++	.need_reset = true,
++};
++
+ static const struct of_device_id of_dwc3_simple_match[] = {
+-	{ .compatible = "rockchip,rk3399-dwc3" },
+-	{ .compatible = "cavium,octeon-7130-usb-uctl" },
+-	{ .compatible = "sprd,sc9860-dwc3" },
+-	{ .compatible = "allwinner,sun50i-h6-dwc3" },
+-	{ .compatible = "hisilicon,hi3670-dwc3" },
+-	{ .compatible = "intel,keembay-dwc3" },
++	{
++		.compatible = "allwinner,sun50i-h6-dwc3",
++	},
++	{
++		.compatible = "cavium,octeon-7130-usb-uctl",
++	},
++	{
++		.compatible = "hisilicon,hi3670-dwc3",
++	},
++	{
++		.compatible = "intel,keembay-dwc3",
++	},
++	{
++		.compatible = "rockchip,rk3399-dwc3",
++		.data = &dwc3_of_simple_data_rk3399,
++	},
++	{
++		.compatible = "rockchip,rk3568-dwc3",
++		.data = &dwc3_of_simple_data_rk3399,
++	},
++	{
++		.compatible = "sprd,sc9860-dwc3",
++	},
+ 	{ /* Sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, of_dwc3_simple_match);
+

@@ -116,8 +116,14 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	if [[ "$FAMILY_EXT" == "rk3328" ]] || [[ "$FAMILY_EXT" == "rk3399" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	fi
+	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${BOARD}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+	fi
 fi
 if [[ "$FAMILY" == "samsung" ]] || [[ "$FAMILY_EXT" == "meson8b" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
@@ -175,8 +181,14 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	fi
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	if [[ "$FAMILY_EXT" == "rk3328" ]] || [[ "$FAMILY_EXT" == "rk3399" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	fi
+	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${BOARD}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+	fi
 fi
 if [[ "$FAMILY" == "samsung" ]] || [[ "$FAMILY_EXT" == "meson8b" ]]; then
 	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
