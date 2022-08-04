@@ -1,33 +1,41 @@
-diff -Naur a/arch/arm/boot/dts/sunxi-h3-h5.dtsi b/arch/arm/boot/dts/sunxi-h3-h5.dtsi
---- a/arch/arm/boot/dts/sunxi-h3-h5.dtsi	2022-07-15 04:13:00.000000000 -0400
-+++ b/arch/arm/boot/dts/sunxi-h3-h5.dtsi	2022-07-15 08:35:20.719145811 -0400
-@@ -105,6 +105,25 @@
+From fecab45973fe96686e754239556b4932a340afa3 Mon Sep 17 00:00:00 2001
+From: Jernej Skrabec <jernej.skrabec@gmail.com>
+Date: Sun, 9 May 2021 11:04:58 +0200
+Subject: [PATCH 371/467] ARM: dts: sunxi: h3/h5: Add hdmi sound card
+
+H3 and H5 support HDMI audio. Add a sound card node for it.
+
+Signed-off-by: Jernej Skrabec <jernej.skrabec@gmail.com>
+---
+ arch/arm/boot/dts/sunxi-h3-h5.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm/boot/dts/sunxi-h3-h5.dtsi b/arch/arm/boot/dts/sunxi-h3-h5.dtsi
+index 2560a40c8..345355d8b 100644
+--- a/arch/arm/boot/dts/sunxi-h3-h5.dtsi
++++ b/arch/arm/boot/dts/sunxi-h3-h5.dtsi
+@@ -105,6 +105,20 @@ de: display-engine {
  		status = "disabled";
  	};
  
-+	hdmi_sound: hdmi-sound {
-+		compatible = "simple-audio-card";
-+		simple-audio-card,format = "i2s";
-+		simple-audio-card,name = "sun8i-h3-hdmi";
-+		simple-audio-card,mclk-fs = <128>;
-+		simple-audio-card,frame-inversion;
++	sound_hdmi: sound_hdmi {
++		compatible = "allwinner,sun9i-a80-hdmi-audio",
++			     "allwinner,sun8i-h3-hdmi-audio";
 +		status = "disabled";
 +
-+		simple-audio-card,codec {
++		codec {
 +			sound-dai = <&hdmi>;
 +		};
 +
-+		simple-audio-card,cpu {
++		cpu {
 +			sound-dai = <&i2s2>;
-+			dai-tdm-slot-num = <2>;
-+			dai-tdm-slot-width = <32>;
 +		};
 +	};
 +
  	soc {
  		compatible = "simple-bus";
  		#address-cells = <1>;
-@@ -807,6 +826,7 @@
+@@ -808,6 +822,7 @@ csi: camera@1cb0000 {
  		};
  
  		hdmi: hdmi@1ee0000 {
@@ -35,4 +43,7 @@ diff -Naur a/arch/arm/boot/dts/sunxi-h3-h5.dtsi b/arch/arm/boot/dts/sunxi-h3-h5.
  			compatible = "allwinner,sun8i-h3-dw-hdmi",
  				     "allwinner,sun8i-a83t-dw-hdmi";
  			reg = <0x01ee0000 0x10000>;
+-- 
+2.34.1
+
 
