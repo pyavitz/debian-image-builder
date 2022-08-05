@@ -40,7 +40,12 @@ if [ -e ${KERNEL}-${VERSION} ]; then
 	echo -en "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}";
 fi
 # download and extract
-download
+if [[ -f "github.txt" ]] && [[ `grep -w "megous" "github.txt"` ]]; then
+	# orange pi repo
+	check_github;
+else
+	download;
+fi
 # setup
 if [[ "$SETUP" == "vendor" ]]; then
 	if [[ "$VERSION" == "4.9.y" ]]; then
