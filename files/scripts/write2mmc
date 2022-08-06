@@ -32,7 +32,7 @@ if [[ "$BOARD" == "bananapim5" ]] || [[ "$BOARD" == "lepotato" ]] || [[ "$BOARD"
 	# amlogic (amlogic = /dev/mmcblk1) (odroidn2/+ = /dev/mmcblk0)
 	supported=1;
 fi
-if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "renegade" ]]; then
+if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "nanopir5s" ]] || [[ "$BOARD" == "renegade" ]]; then
 	# rockchip (nanopc = /dev/mmcblk2) (renegade = /dev/mmcblk1)
 	supported=1;
 fi
@@ -80,21 +80,26 @@ lsblk -dno NAME,SIZE
 
 # partition
 partition(){
-dd if=/dev/zero of=${MMC} bs=512 count=1
-fdisk ${MMC} <<EOF
-o
-n
-p
-1
-${OFFSET}
-a
-t
-b
-4101561
-p
-w
-EOF
+if [[ "$GPT" == "true" ]]; then
+	dd if=/dev/zero of=${MMC} bs=8M count=1
+	sgdisk -og ${MMC}
+	sgdisk -n 1:${OFFSET} ${MMC}
+	sgdisk -evp ${MMC}
+else
+	dd if=/dev/zero of=${MMC} bs=512 count=1
+	echo -e "o
+	n
+	p
+	1
+	${OFFSET}
+	a
+	t
+	b
+	4101561
 
+	p
+	w" | fdisk ${MMC}
+fi
 partprobe ${MMC}
 echo 'y' | mkfs.ext4 -L ROOTFS ${MMC}p1
 mount ${MMC}p1 /mnt
@@ -170,34 +175,6 @@ if [[ "$BOARD" == "nanopc" ]]; then
 fi
 }
 
-# flash u-boot
-allwinner_flash_uboot(){ # allwinner
-dd if=${DIR}/u-boot-sunxi-with-spl.bin of=${MMC} conv=fsync bs=1024 seek=8
-sync
-}
-
-amlogic_flash_uboot(){ # amlogic
-dd if=${DIR}/u-boot.bin of=${MMC} bs=512 seek=1
-sync
-}
-
-rockchip_flash_uboot(){ # rockchip
-dd if=${DIR}/idbloader.bin of=${MMC} seek=64
-dd if=${DIR}/u-boot.itb of=${MMC} seek=16384
-sync
-}
-
-samsung_flash_uboot(){ # samsung
-DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
-echo 0 > /sys/block/${DEVICE}/force_ro
-sleep 1s
-dd if=${DIR}/bl1.bin of=/dev/${DEVICE} seek=0 conv=fsync
-dd if=${DIR}/bl2.bin of=/dev/${DEVICE} seek=30 conv=fsync
-dd if=${DIR}/u-boot.bin of=/dev/${DEVICE} seek=62 conv=fsync
-dd if=${DIR}/tzsw.bin of=/dev/${DEVICE} seek=1502 conv=fsync
-dd if=/dev/zero of=/dev/${DEVICE} seek=2015 bs=512 count=32 conv=fsync
-}
-
 # run script
 if [ "$USER" != "root" ]; then
         echo "Please run this as root or with sudo privileges.";
@@ -247,16 +224,24 @@ clear -x
 echo "Writing u-boot ..."
 sleep 1s
 if [[ "$FAMILY" == "allwinner" ]]; then
-	allwinner_flash_uboot;
+	dd if=${DIR}/u-boot-sunxi-with-spl.bin of=${MMC} conv=fsync bs=1024 seek=8
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	amlogic_flash_uboot;
+	dd if=${DIR}/u-boot.bin of=${MMC} bs=512 seek=1
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
-	rockchip_flash_uboot;
+	dd if=${DIR}/idbloader.bin of=${MMC} seek=64
+	dd if=${DIR}/u-boot.itb of=${MMC} seek=16384
 fi
 if [[ "$FAMILY" == "samsung" ]]; then
-	samsung_flash_uboot;
+	DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
+	echo 0 > /sys/block/${DEVICE}/force_ro
+	sleep 1s
+	dd if=${DIR}/bl1.bin of=/dev/${DEVICE} seek=0 conv=fsync
+	dd if=${DIR}/bl2.bin of=/dev/${DEVICE} seek=30 conv=fsync
+	dd if=${DIR}/u-boot.bin of=/dev/${DEVICE} seek=62 conv=fsync
+	dd if=${DIR}/tzsw.bin of=/dev/${DEVICE} seek=1502 conv=fsync
+	dd if=/dev/zero of=/dev/${DEVICE} seek=2015 bs=512 count=32 conv=fsync
 fi
 echo "Done."
 

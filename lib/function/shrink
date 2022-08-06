@@ -26,10 +26,13 @@ source part-uuid.txt
 p1_kpartx(){
 if [[ "$P_ROOTFS" == "p1" ]]; then
 	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1;
+	echo '"' > kpart3;
 fi
 if [[ "$P_ROOTFS" == "p2" ]]; then
 	echo 'LOOP1="/dev/mapper/' > kpart1;
 	echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1;
+	echo '"' > kpart3;
+	echo '"' >> kpart3;
 fi
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
@@ -39,13 +42,6 @@ if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
 	grep -o 'loop[0-9]\+p.' <<<"$kpartx" > kpart2;
 else
 	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
-fi
-if [[ "$P_ROOTFS" == "p1" ]]; then
-	echo '"' > kpart3;
-fi
-if [[ "$P_ROOTFS" == "p2" ]]; then
-	echo '"' > kpart3;
-	echo '"' >> kpart3;
 fi
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
