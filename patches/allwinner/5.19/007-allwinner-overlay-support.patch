@@ -1,27 +1,6 @@
-diff -Naur a/Makefile b/Makefile
---- a/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/Makefile	2022-08-05 01:07:39.796258287 -0400
-@@ -1373,7 +1373,7 @@
- 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
- 
- %.dtbo: include/config/kernel.release scripts_dtc
--	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
-+	$(Q)$(MAKE) $(build)=$(dtstree)/overlays $(dtstree)/overlays/$@
- 
- PHONY += dtbs dtbs_install dtbs_check
- dtbs: include/config/kernel.release scripts_dtc
-diff -Naur a/arch/arm/boot/.gitignore b/arch/arm/boot/.gitignore
---- a/arch/arm/boot/.gitignore	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm/boot/.gitignore	2022-08-05 01:10:29.526607798 -0400
-@@ -4,3 +4,5 @@
- xipImage
- bootpImage
- uImage
-+*.dtb*
-+*.scr
 diff -Naur a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
 --- a/arch/arm/boot/dts/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm/boot/dts/Makefile	2022-08-05 01:32:38.869311302 -0400
++++ b/arch/arm/boot/dts/Makefile	2022-08-07 14:20:36.845839326 -0400
 @@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
 +subdir-y += overlays
@@ -31,63 +10,48 @@ diff -Naur a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
  dtb-$(CONFIG_MACH_ARTPEC6) += \
 diff -Naur a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
 --- a/arch/arm/boot/dts/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-05 01:25:10.398147000 -0400
++++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-07 14:24:41.415966000 -0400
 @@ -0,0 +1,6 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
-+	ir-tx.dtbo
++	sunxi-h3-h5-overclock.dtbo
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
-diff -Naur a/arch/arm/boot/dts/overlays/ir-tx.dts b/arch/arm/boot/dts/overlays/ir-tx.dts
---- a/arch/arm/boot/dts/overlays/ir-tx.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/ir-tx.dts	2022-08-05 01:03:54.385271000 -0400
-@@ -0,0 +1,33 @@
+diff -Naur a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts
+--- a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	2022-08-07 14:18:02.030244000 -0400
+@@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
 +
 +/ {
-+	compatible = "allwinner,sun8i-h3";
-+
-+	/*
-+	 * This fragment is needed only for the internal pull-up activation,
-+	 * external pull-up resistor is highly recommended if using long wires
-+	 */
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
 +	fragment@0 {
-+		target = <&pio>;
++		target-path = "/opp-table-cpu";
 +		__overlay__ {
-+			ir_tx1_pins: ir-tx1-pins {
-+				pins = "PA10";
-+				function = "gpio_out";
-+			};
-+		};
-+	};
-+
-+	fragment@1 {
-+		target-path = "/";
-+		__overlay__ {
-+			gpio_ir_tx1: gpio-ir-transmitter-1 {
-+				compatible = "gpio-ir-tx";
-+				pinctrl-names = "default";
-+				pinctrl-0 = <&ir_tx1_pins>;
-+				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
-+				status = "okay";
++			turbo-mode {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++	 			clock-latency-ns = <244144>; /* 8 32k periods */
 +			};
 +		};
 +	};
 +};
-diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
---- a/arch/arm64/boot/.gitignore	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/.gitignore	2022-08-05 01:10:53.750947042 -0400
-@@ -1,3 +1,5 @@
- # SPDX-License-Identifier: GPL-2.0-only
- Image
- Image.gz
+diff -Naur a/arch/arm/boot/.gitignore b/arch/arm/boot/.gitignore
+--- a/arch/arm/boot/.gitignore	2022-07-31 17:03:01.000000000 -0400
++++ b/arch/arm/boot/.gitignore	2022-08-07 14:20:36.845839326 -0400
+@@ -4,3 +4,5 @@
+ xipImage
+ bootpImage
+ uImage
 +*.dtb*
 +*.scr
 diff -Naur a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
 --- a/arch/arm64/boot/dts/allwinner/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/dts/allwinner/Makefile	2022-08-05 01:25:17.026102115 -0400
++++ b/arch/arm64/boot/dts/allwinner/Makefile	2022-08-07 14:20:36.846839310 -0400
 @@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
 +subdir-y += overlays
@@ -97,54 +61,60 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwin
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/dts/allwinner/overlays/Makefile
 --- a/arch/arm64/boot/dts/allwinner/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile	2022-08-05 01:25:10.398147332 -0400
++++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile	2022-08-07 14:24:41.415966080 -0400
 @@ -0,0 +1,6 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
-+	ir-tx.dtbo
++	sunxi-h3-h5-overclock.dtbo
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
-diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts b/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts
---- a/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts	2022-08-05 01:03:54.385271000 -0400
-@@ -0,0 +1,33 @@
+diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+--- a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	2022-08-07 14:18:02.030244000 -0400
+@@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
 +
 +/ {
-+	compatible = "allwinner,sun50i-a64", "allwinner,sun50i-h5";
-+
-+	/*
-+	 * This fragment is needed only for the internal pull-up activation,
-+	 * external pull-up resistor is highly recommended if using long wires
-+	 */
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
 +	fragment@0 {
-+		target = <&pio>;
++		target-path = "/opp-table-cpu";
 +		__overlay__ {
-+			ir_tx1_pins: ir-tx1-pins {
-+				pins = "PA10";
-+				function = "gpio_out";
-+			};
-+		};
-+	};
-+
-+	fragment@1 {
-+		target-path = "/";
-+		__overlay__ {
-+			gpio_ir_tx1: gpio-ir-transmitter-1 {
-+				compatible = "gpio-ir-tx";
-+				pinctrl-names = "default";
-+				pinctrl-0 = <&ir_tx1_pins>;
-+				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
-+				status = "okay";
++			turbo-mode {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++	 			clock-latency-ns = <244144>; /* 8 32k periods */
 +			};
 +		};
 +	};
 +};
+diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
+--- a/arch/arm64/boot/.gitignore	2022-07-31 17:03:01.000000000 -0400
++++ b/arch/arm64/boot/.gitignore	2022-08-07 14:20:36.846839310 -0400
+@@ -1,3 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ Image
+ Image.gz
++*.dtb*
++*.scr
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2022-07-31 17:03:01.000000000 -0400
++++ b/Makefile	2022-08-07 14:20:36.844839341 -0400
+@@ -1373,7 +1373,7 @@
+ 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
+ 
+ %.dtbo: include/config/kernel.release scripts_dtc
+-	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
++	$(Q)$(MAKE) $(build)=$(dtstree)/overlays $(dtstree)/overlays/$@
+ 
+ PHONY += dtbs dtbs_install dtbs_check
+ dtbs: include/config/kernel.release scripts_dtc
 diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
 --- a/scripts/Makefile.dtbinst	2022-07-31 17:03:01.000000000 -0400
-+++ b/scripts/Makefile.dtbinst	2022-08-05 01:26:59.033558511 -0400
++++ b/scripts/Makefile.dtbinst	2022-08-07 14:20:36.847839295 -0400
 @@ -18,9 +18,10 @@
  include $(src)/Makefile
  
@@ -159,7 +129,7 @@ diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
  quiet_cmd_dtb_install = INSTALL $@
 diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
 --- a/scripts/Makefile.lib	2022-07-31 17:03:01.000000000 -0400
-+++ b/scripts/Makefile.lib	2022-08-05 01:32:47.345327982 -0400
++++ b/scripts/Makefile.lib	2022-08-07 14:20:36.847839295 -0400
 @@ -317,6 +317,7 @@
  DTC_FLAGS += -Wno-unit_address_vs_reg \
  	-Wno-avoid_unnecessary_addr_size \
@@ -187,4 +157,3 @@ diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
  dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
  
  # Bzip2
-

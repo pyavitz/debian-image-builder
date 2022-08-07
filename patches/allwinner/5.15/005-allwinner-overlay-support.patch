@@ -8,53 +8,38 @@ diff -Naur a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
  dtb-$(CONFIG_ARCH_ALPINE) += \
  	alpine-db.dtb
  dtb-$(CONFIG_MACH_ARTPEC6) += \
-diff -Naur a/arch/arm/boot/dts/overlays/ir-tx.dts b/arch/arm/boot/dts/overlays/ir-tx.dts
---- a/arch/arm/boot/dts/overlays/ir-tx.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/ir-tx.dts	2022-08-05 20:00:01.111857231 -0400
-@@ -0,0 +1,33 @@
+diff -Naur a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
+--- a/arch/arm/boot/dts/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-07 14:24:41.415966000 -0400
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	sunxi-h3-h5-overclock.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff -Naur a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts
+--- a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	2022-08-07 14:18:02.030244000 -0400
+@@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
 +
 +/ {
-+	compatible = "allwinner,sun8i-h3";
-+
-+	/*
-+	 * This fragment is needed only for the internal pull-up activation,
-+	 * external pull-up resistor is highly recommended if using long wires
-+	 */
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
 +	fragment@0 {
-+		target = <&pio>;
++		target-path = "/opp-table-cpu";
 +		__overlay__ {
-+			ir_tx1_pins: ir-tx1-pins {
-+				pins = "PA10";
-+				function = "gpio_out";
-+			};
-+		};
-+	};
-+
-+	fragment@1 {
-+		target-path = "/";
-+		__overlay__ {
-+			gpio_ir_tx1: gpio-ir-transmitter-1 {
-+				compatible = "gpio-ir-tx";
-+				pinctrl-names = "default";
-+				pinctrl-0 = <&ir_tx1_pins>;
-+				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
-+				status = "okay";
++			turbo-mode {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++	 			clock-latency-ns = <244144>; /* 8 32k periods */
 +			};
 +		};
 +	};
 +};
-diff -Naur a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
---- a/arch/arm/boot/dts/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-05 20:00:01.111857231 -0400
-@@ -0,0 +1,6 @@
-+# SPDX-License-Identifier: GPL-2.0
-+dtbo-y += \
-+	ir-tx.dtbo
-+
-+targets += $(dtbo-y)
-+always-y := $(dtbo-y)
 diff -Naur a/arch/arm/boot/.gitignore b/arch/arm/boot/.gitignore
 --- a/arch/arm/boot/.gitignore	2022-08-03 06:03:56.000000000 -0400
 +++ b/arch/arm/boot/.gitignore	2022-08-05 20:00:01.110857246 -0400
@@ -83,53 +68,38 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwin
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-amarula-relic.dtb
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-bananapi-m64.dtb
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
-diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts b/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts
---- a/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/ir-tx.dts	2022-08-05 20:00:01.112857217 -0400
-@@ -0,0 +1,33 @@
+diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/dts/allwinner/overlays/Makefile
+--- a/arch/arm64/boot/dts/allwinner/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile	2022-08-07 14:24:41.415966080 -0400
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	sunxi-h3-h5-overclock.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+--- a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	2022-08-07 14:18:02.030244000 -0400
+@@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
 +
 +/ {
-+	compatible = "allwinner,sun50i-a64", "allwinner,sun50i-h5";
-+
-+	/*
-+	 * This fragment is needed only for the internal pull-up activation,
-+	 * external pull-up resistor is highly recommended if using long wires
-+	 */
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
 +	fragment@0 {
-+		target = <&pio>;
++		target-path = "/opp-table-cpu";
 +		__overlay__ {
-+			ir_tx1_pins: ir-tx1-pins {
-+				pins = "PA10";
-+				function = "gpio_out";
-+			};
-+		};
-+	};
-+
-+	fragment@1 {
-+		target-path = "/";
-+		__overlay__ {
-+			gpio_ir_tx1: gpio-ir-transmitter-1 {
-+				compatible = "gpio-ir-tx";
-+				pinctrl-names = "default";
-+				pinctrl-0 = <&ir_tx1_pins>;
-+				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
-+				status = "okay";
++			turbo-mode {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++	 			clock-latency-ns = <244144>; /* 8 32k periods */
 +			};
 +		};
 +	};
 +};
-diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/dts/allwinner/overlays/Makefile
---- a/arch/arm64/boot/dts/allwinner/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile	2022-08-05 20:00:01.112857217 -0400
-@@ -0,0 +1,6 @@
-+# SPDX-License-Identifier: GPL-2.0
-+dtbo-y += \
-+	ir-tx.dtbo
-+
-+targets += $(dtbo-y)
-+always-y := $(dtbo-y)
 diff -Naur a/Makefile b/Makefile
 --- a/Makefile	2022-08-03 06:03:56.000000000 -0400
 +++ b/Makefile	2022-08-05 20:00:01.109857261 -0400
