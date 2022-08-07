@@ -1,21 +1,13 @@
 #!/bin/bash
 
 p1_partition(){
+P_ROOTFS="p1"
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$GPT" == "true" ]]; then
 	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	if [[ "$BOARD" == "odroidm1" ]]; then
-		P_UBOOT="p1" 
-		P_ROOTFS="p2"
-		sgdisk -n 1:2048:+4MB -c 1:"uboot" -t 1:8300 "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-		sgdisk -n 2:${OFFSET}: "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-	else
-		P_ROOTFS="p1"
-		sgdisk -n 1:${OFFSET} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-	fi
+	sgdisk -n 1:${OFFSET} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 else
-	P_ROOTFS="p1"
 	echo -e "o
 	n
 	p
@@ -30,24 +22,12 @@ else
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-if [[ "$BOARD" == "odroidm1" ]]; then
-	IMAGE_LOOP_DEV_UBOOT="${IMAGE_LOOP_DEV}${P_UBOOT}";
-fi
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
 mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
-if [[ "$GPT" == "true" ]]; then
-	if [[ "$BOARD" == "odroidm1" ]]; then
-		flash_vendor-uboot;
-	else
-		flash_uboot;
-	fi
-fi
-if [[ "$GPT" == "false" ]]; then
-	flash_uboot;
-fi
+flash_uboot
 sync
 umount p1
 mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
@@ -333,22 +313,6 @@ fi
 
 # vendor boot.cmd
 odroid_bootcmd(){
-if [[ "$BOARD" == "odroidm1" ]]; then
-	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^....'`
-	if [[ "$VENDOR_KERNEL" == "4.19" ]]; then
-		cp files/boot/odroid/${BOARD}-vendor-boot.cmd p1/boot.cmd;
-		cp files/boot/odroid/${BOARD}-config.ini p1/config.ini;
-	else
-		cp files/boot/odroid/${BOARD}-boot.cmd p1/boot.cmd;
-		cp files/boot/odroid/${BOARD}-config.ini p1/config.ini;
-
-	fi
-	if [[ -f "p1/boot.cmd" ]]; then
-		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
-		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
-		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
-	fi
-fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^...'`
 	if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
