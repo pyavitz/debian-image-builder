@@ -12,6 +12,10 @@ fi
 
 # functions
 supported_list(){
+if [[ "$BOARD" == "raspi4" ]]; then
+	BOARD_PN="Raspberry Pi 4";
+	supported_ha=1;
+fi
 if [[ "$BOARD" == "bananapim5" ]]; then
 	BOARD_PN="Banana Pi M5";
 	supported_mixer=1;
@@ -29,18 +33,21 @@ if [[ "$BOARD" == "odroidn2" ]]; then
 	supported_oc=1;
 	supported_mixer=1;
 	fan_ctrl=1;
+	supported_ha=1;
 fi
 if [[ "$BOARD" == "odroidn2plus" ]]; then
 	BOARD_PN="Odroid N2+";
 	supported_oc=1;
 	supported_mixer=1;
 	fan_ctrl=1;
+	supported_ha=1;
 fi
 if [[ "$BOARD" == "odroidxu4" ]]; then
 	BOARD_PN="Odroid XU4";
 	supported_oc=0;
 	supported_mixer=0;
 	fan_ctrl=1;
+	supported_ha=1;
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	BOARD_PN="Radxa Zero";
@@ -359,7 +366,10 @@ case $CHOICE in
 		case $SOFTWARE in
 			"HA)")
 				export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-				if (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
+				supported_list
+				if [[ $supported_ha -ne 1 ]]; then
+					whiptail --msgbox "    HA install not currently supported on this platform." 0 0;
+				elif (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
 					homeAssistant;
 				else
 					whiptail --msgbox "    Hit enter to return to menu." 0 0;
