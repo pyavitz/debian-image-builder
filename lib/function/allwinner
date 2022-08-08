@@ -38,14 +38,16 @@ echo "Done."
 pine64_bthelper(){
 tee /usr/local/sbin/pine64-bthelper <<EOF
 #!/bin/bash
-echo 1 > /sys/class/rfkill/rfkill0/state
-sleep 1s
-rtk_hciattach /dev/ttyS1 rtk_h5
-sleep 2s
-hciconfig hci0 up
+if [[ -f "/sys/class/rfkill/rfkill0/state" ]]; then
+	echo "1" > /sys/class/rfkill/rfkill0/state
+	sleep 1s
+	rtk_hciattach /dev/ttyS1 rtk_h5
+	sleep 2s
+	hciconfig hci0 up
+fi
 EOF
-if [ -f /usr/local/sbin/pine64-bthelper ]; then
-	chmod + x /usr/local/sbin/pine64-bthelper;
+if [[ -f "/usr/local/sbin/pine64-bthelper" ]]; then
+	chmod +x /usr/local/sbin/pine64-bthelper;
 fi
 }
 
