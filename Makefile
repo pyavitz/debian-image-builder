@@ -75,7 +75,7 @@ help:
 	@echo "  Allwinner:  nanopim1 nanopineo nanopi opione opipc pine64 tritium"
 	@echo "  Amlogic:    bananapim5 lepotato odroidc4/hc4 odroidn2/plus radxazero"
 	@echo "  Broadcom:   raspi4"
-	@echo "  Rockchip:   nanopc nanopir5s odroidm1 renegade rock64 rockpro64"
+	@echo "  Rockchip:   nanopc nanopir5s odroidm1 pinebookpro renegade rock/pro64"
 	@echo "  Samsung:    odroidxu4"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"

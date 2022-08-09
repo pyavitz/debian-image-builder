@@ -1,0 +1,130 @@
+diff -Naur a/arch/arm/dts/rk3399-pinebook-pro.dts b/arch/arm/dts/rk3399-pinebook-pro.dts
+--- a/arch/arm/dts/rk3399-pinebook-pro.dts	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3399-pinebook-pro.dts	2022-08-09 18:27:08.568959412 -0400
+@@ -943,7 +943,7 @@
+ 	disable-wp;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_bus4>;
+-	sd-uhs-sdr104;
++	sd-uhs-sdr50;
+ 	vmmc-supply = <&vcc3v0_sd>;
+ 	vqmmc-supply = <&vcc_sdio>;
+ 	status = "okay";
+diff -Naur a/arch/arm/mach-rockchip/rk3399/rk3399.c b/arch/arm/mach-rockchip/rk3399/rk3399.c
+--- a/arch/arm/mach-rockchip/rk3399/rk3399.c	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/mach-rockchip/rk3399/rk3399.c	2022-08-09 18:27:03.136038738 -0400
+@@ -20,6 +20,7 @@
+ #include <asm/arch-rockchip/hardware.h>
+ #include <linux/bitops.h>
+ #include <power/regulator.h>
++#include <dt-bindings/pinctrl/rockchip.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+@@ -157,6 +158,19 @@
+ 				  GPIO_PULL_NORMAL);
+ 	}
+ 
++	{
++		/*
++		 * Temporary (and ugly) hack to turn the Pinebook Pro's
++		 * RGB status LED on as early as possible during boot:
++		 * - Set GPIO0_A2/B3 to GPIO_ACTIVE_HIGH
++		 * - Set GPIO0_A2/B3 to OUTPUT
++		 */
++		int mask = (1UL << RK_PA2) | (1UL << RK_PB3);
++
++		setbits_le32(&gpio->swport_dr, mask);
++		setbits_le32(&gpio->swport_ddr, mask);
++	}
++
+ 	/* Enable early UART2 channel C on the RK3399 */
+ 	rk_clrsetreg(&grf->gpio4c_iomux,
+ 		     GRF_GPIO4C3_SEL_MASK,
+diff -Naur a/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c b/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c
+--- a/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c	2022-07-11 09:42:58.000000000 -0400
++++ b/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c	2022-08-09 18:27:00.392078796 -0400
+@@ -7,13 +7,15 @@
+ #include <common.h>
+ #include <dm.h>
+ #include <syscon.h>
++#include <linux/delay.h>
++#include <asm/gpio.h>
+ #include <asm/io.h>
+ #include <asm/arch-rockchip/clock.h>
+ #include <asm/arch-rockchip/grf_rk3399.h>
++#include <asm/arch-rockchip/gpio.h>
+ #include <asm/arch-rockchip/hardware.h>
+ #include <asm/arch-rockchip/misc.h>
+ #include <power/regulator.h>
+-
+ #define GRF_IO_VSEL_BT565_SHIFT 0
+ #define PMUGRF_CON0_VSEL_SHIFT 8
+ 
+@@ -59,6 +61,7 @@
+ 	const u32 cpuid_length = 0x10;
+ 	u8 cpuid[cpuid_length];
+ 	int ret;
++	unsigned int gpio;
+ 
+ 	setup_iodomain();
+ 
+@@ -70,6 +73,11 @@
+ 	if (ret)
+ 		return ret;
+ 
++	gpio_lookup_name("B22", NULL, NULL, &gpio);
++	gpio_direction_output(gpio, 0);
++	udelay(500000);
++	gpio_direction_output(gpio, 1);
++
+ 	return ret;
+ }
+ #endif
+diff -Naur a/drivers/mmc/Kconfig b/drivers/mmc/Kconfig
+--- a/drivers/mmc/Kconfig	2022-07-11 09:42:58.000000000 -0400
++++ b/drivers/mmc/Kconfig	2022-08-09 18:27:05.409005552 -0400
+@@ -468,6 +468,13 @@
+ 	  This enables support for the SDMA (Single Operation DMA) defined
+ 	  in the SD Host Controller Standard Specification Version 1.00 .
+ 
++config SPL_MMC_SDHCI_SDMA
++	bool "Support SDHCI SDMA in SPL"
++	depends on MMC_SDHCI
++	help
++	  This enables support for the SDMA (Single Operation DMA) defined
++	  in the SD Host Controller Standard Specification Version 1.00 in SPL.
++
+ config MMC_SDHCI_ADMA
+ 	bool "Support SDHCI ADMA2"
+ 	depends on MMC_SDHCI
+diff -Naur a/drivers/mmc/sdhci.c b/drivers/mmc/sdhci.c
+--- a/drivers/mmc/sdhci.c	2022-07-11 09:42:58.000000000 -0400
++++ b/drivers/mmc/sdhci.c	2022-08-09 18:27:05.409005552 -0400
+@@ -70,7 +70,7 @@
+ 	}
+ }
+ 
+-#if (defined(CONFIG_MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
++#if (CONFIG_IS_ENABLED(MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
+ static void sdhci_prepare_dma(struct sdhci_host *host, struct mmc_data *data,
+ 			      int *is_aligned, int trans_bytes)
+ {
+@@ -177,7 +177,7 @@
+ 		}
+ 	} while (!(stat & SDHCI_INT_DATA_END));
+ 
+-#if (defined(CONFIG_MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
++#if (CONFIG_IS_ENABLED(MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
+ 	dma_unmap_single(host->start_addr, data->blocks * data->blocksize,
+ 			 mmc_get_dma_dir(data));
+ #endif
+@@ -854,7 +854,7 @@
+ #endif
+ 	debug("%s, caps: 0x%x\n", __func__, caps);
+ 
+-#ifdef CONFIG_MMC_SDHCI_SDMA
++#if CONFIG_IS_ENABLED(MMC_SDHCI_SDMA)
+ 	if ((caps & SDHCI_CAN_DO_SDMA)) {
+ 		host->flags |= USE_SDMA;
+ 	} else {
