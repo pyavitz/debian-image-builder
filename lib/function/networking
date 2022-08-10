@@ -22,6 +22,15 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
+if [[ "$BOARD" == "pinebookpro" ]]; then
+	# wifi and bluetooth firmware
+	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/brcmfmac43456-sdio.txt;
+	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/brcmfmac43456-sdio.bin;
+	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/brcmfmac43456-sdio.clm_blob;
+	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/BCM4345C5.hcd;
+	cp -f brcmfmac43456-sdio.txt brcmfmac43456-sdio.pine64,pinebook-pro.txt;
+	mv -f {brcmfmac43456-*,BCM4345C5.hcd} /lib/firmware/brcm/;
+fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz;
 	tar xf meson-firmware-master.tar.gz;
