@@ -1,34 +1,5 @@
 #!/bin/bash
 
-# RTL8189ES
-rtl8189es_download(){
-if [ -e rtl8189es ]; then
-	cd rtl8189es
-	git config pull.rebase false
-	git pull
-	cd ..;
-else
-	git clone https://github.com/jwrdegoede/rtl8189ES_linux rtl8189es;
-fi
-}
-
-rtl8189es(){
-rm -fdr drivers/net/wireless/rtl8189es
-mkdir -p drivers/net/wireless/rtl8189es
-cp -R ../rtl8189es/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8189es
-cp -R ../rtl8189es/Makefile drivers/net/wireless/rtl8189es/Makefile
-sed -i 's/---help---/help/g' rtl8189es/Kconfig
-cp -R ../rtl8189es/Kconfig drivers/net/wireless/rtl8189es/Kconfig
-echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/Makefile
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8189es\/Kconfig"' drivers/net/wireless/Kconfig
-}
-
-rtl8189es_module(){
-if [[ `grep -w "opir1" "../../board.txt"` ]]; then
-	echo CONFIG_RTL8189ES=m >> arch/arm/configs/allwinner-r1_defconfig;
-fi
-}
-
 # RTL8812AU
 rtl8812au_download(){
 if [ $aircrack -eq 1 ]; then
@@ -70,7 +41,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 }
 
 rtl8812au_select(){
-if [ -e arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
+if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
 	echo CONFIG_88XXAU=m >> arch/${ARCH}/configs/${LINUX_DEFCONFIG};
 fi
 }
@@ -119,7 +90,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 }
 
 rtl8811cu_select(){
-if [ -e arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
+if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
 	echo CONFIG_RTL8821CU=m >> arch/${ARCH}/configs/${LINUX_DEFCONFIG};
 fi
 }
@@ -164,7 +135,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 }
 
 rtl88x2bu_select(){
-if [ -e arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
+if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
 	echo CONFIG_RTL8822BU=m >> arch/${ARCH}/configs/${LINUX_DEFCONFIG};
 fi
 }
@@ -205,7 +176,7 @@ echo "	  Help message of RTL8188EU" >> drivers/net/wireless/rtl8188eu/Kconfig
 }
 
 rtl8188eu_select(){
-if [ -e arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
+if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
 	echo CONFIG_RTL8188EU=m >> arch/${ARCH}/configs/${LINUX_DEFCONFIG};
 fi
 }
@@ -213,6 +184,44 @@ fi
 rtl8188eu_module(){
 if [ $rtl8188eu -eq 1 ]; then
 	rtl8188eu_select;
+fi
+}
+
+# RTL8189ES
+rtl8189es_download(){
+if [ -e rtl8189es ]; then
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} ";
+	cd rtl8189es;
+	git config pull.rebase false;
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} ";
+	git pull -q;
+	cd ..;
+else
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} ";
+	git clone -q https://github.com/jwrdegoede/rtl8189ES_linux rtl8189es;
+fi
+}
+
+rtl8189es(){
+rm -fdr drivers/net/wireless/rtl8189es
+mkdir -p drivers/net/wireless/rtl8189es
+cp -R ../rtl8189es/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8189es
+cp -R ../rtl8189es/Makefile drivers/net/wireless/rtl8189es/Makefile
+sed -i 's/---help---/help/g' ../rtl8189es/Kconfig
+cp -R ../rtl8189es/Kconfig drivers/net/wireless/rtl8189es/Kconfig
+echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/Makefile
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8189es\/Kconfig"' drivers/net/wireless/Kconfig
+}
+
+rtl8189es_select(){
+if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
+	echo CONFIG_RTL8189ES=m >> arch/${ARCH}/configs/${LINUX_DEFCONFIG};
+fi
+}
+
+rtl8189es_module(){
+if [[ "$BOARD" == "opir1" ]]; then
+	rtl8189es_select;
 fi
 }
 
@@ -249,6 +258,14 @@ if [ $rtl8188eu -eq 1 ]; then
 	echo_bdone;
 else
 	echo -en "${WHT}Realtek 8188EU${FIN} ";
+	echo -e "${PNK}[${FIN}${WHT}not selected${FIN}${PNK}]${FIN}";
+fi
+if [[ "$BOARD" == "opir1" ]]; then
+	echo -en "${WHT}Realtek 8189ES${FIN} ";
+	rtl8189es_download;
+	echo_bdone;
+else
+	echo -en "${WHT}Realtek 8189ES${FIN} ";
 	echo -e "${PNK}[${FIN}${WHT}not selected${FIN}${PNK}]${FIN}";
 fi
 }

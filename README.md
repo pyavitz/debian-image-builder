@@ -1,6 +1,6 @@
 ## Boards
 ```sh
-Allwinner:      # NanoPi M1/NEO/NEO Plus2, OrangePi One/PC & Tritium
+Allwinner:      # NanoPi M1/NEO/NEO Plus2, OrangePi One/PC/R1 & Tritium
 Amlogic:        # Banana Pi M5, Le Potato, Odroid C4/HC4/N2/N2+ & Radxa Zero
 Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, NanoPi R5S, Odroid M1, Pinebook Pro, Renegade & ROCKPro64
