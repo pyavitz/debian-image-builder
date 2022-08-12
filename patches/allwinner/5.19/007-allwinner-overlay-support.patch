@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
---- a/arch/arm/boot/dts/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm/boot/dts/Makefile	2022-08-08 14:01:21.558022317 -0400
+--- a/arch/arm/boot/dts/Makefile	2022-08-11 07:22:05.000000000 -0400
++++ b/arch/arm/boot/dts/Makefile	2022-08-11 23:39:37.873588948 -0400
 @@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
 +subdir-y += overlays
@@ -10,18 +10,221 @@ diff -Naur a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
  dtb-$(CONFIG_MACH_ARTPEC6) += \
 diff -Naur a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
 --- a/arch/arm/boot/dts/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-08 14:03:21.698147679 -0400
-@@ -0,0 +1,7 @@
++++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,14 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
++	sun8i-h3-i2c0.dtbo \
++	sun8i-h3-i2c1.dtbo \
++	sun8i-h3-i2c2.dtbo \
++	sun8i-h3-spi-spidev.dtbo \
++	sun8i-h3-uart1.dtbo \
++	sun8i-h3-uart2.dtbo \
++	sun8i-h3-uart3.dtbo \
 +	sunxi-h3-h5-ir-tx.dtbo \
 +	sunxi-h3-h5-overclock.dtbo
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts b/arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,20 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			i2c0 = "/soc/i2c@01c2ac00";
++		};
++	};
++
++	fragment@1 {
++		target = <&i2c0>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-i2c1.dts b/arch/arm/boot/dts/overlays/sun8i-h3-i2c1.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-i2c1.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-i2c1.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,20 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			i2c1 = "/soc/i2c@01c2b000";
++		};
++	};
++
++	fragment@1 {
++		target = <&i2c1>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-i2c2.dts b/arch/arm/boot/dts/overlays/sun8i-h3-i2c2.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-i2c2.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-i2c2.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,20 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			i2c2 = "/soc/i2c@01c2b400";
++		};
++	};
++
++	fragment@1 {
++		target = <&i2c2>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-spi-spidev.dts b/arch/arm/boot/dts/overlays/sun8i-h3-spi-spidev.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-spi-spidev.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-spi-spidev.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,42 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			spi0 = "/soc/spi@01c68000";
++			spi1 = "/soc/spi@01c69000";
++		};
++	};
++
++	fragment@1 {
++		target = <&spi0>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++			};
++		};
++	};
++
++	fragment@2 {
++		target = <&spi1>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++			};
++		};
++	};
++};
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-uart1.dts b/arch/arm/boot/dts/overlays/sun8i-h3-uart1.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-uart1.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-uart1.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,22 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			serial1 = "/soc/serial@01c28400";
++		};
++	};
++
++	fragment@1 {
++		target = <&uart1>;
++		 __overlay__ {
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart1_pins>;
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-uart2.dts b/arch/arm/boot/dts/overlays/sun8i-h3-uart2.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-uart2.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-uart2.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,22 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			serial2 = "/soc/serial@01c28800";
++		};
++	};
++
++	fragment@1 {
++		target = <&uart2>;
++		 __overlay__ {
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart2_pins>;
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-uart3.dts b/arch/arm/boot/dts/overlays/sun8i-h3-uart3.dts
+--- a/arch/arm/boot/dts/overlays/sun8i-h3-uart3.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-uart3.dts	2022-08-11 23:35:00.039510000 -0400
+@@ -0,0 +1,22 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			serial3 = "/soc/serial@01c28c00";
++		};
++	};
++
++	fragment@1 {
++		target = <&uart3>;
++		 __overlay__ {
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart3_pins>;
++			status = "okay";
++		};
++	};
++};
 diff -Naur a/arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
 --- a/arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts	2022-08-08 13:51:20.106380000 -0400
++++ b/arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts	2022-08-11 23:35:00.039510000 -0400
 @@ -0,0 +1,33 @@
 +/dts-v1/;
 +/plugin/;
@@ -58,7 +261,7 @@ diff -Naur a/arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm/boot/dt
 +};
 diff -Naur a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts
 --- a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	2022-08-08 13:59:40.112622000 -0400
++++ b/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts	2022-08-11 23:35:00.039510000 -0400
 @@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
@@ -79,8 +282,8 @@ diff -Naur a/arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts b/arch/arm/boo
 +	};
 +};
 diff -Naur a/arch/arm/boot/.gitignore b/arch/arm/boot/.gitignore
---- a/arch/arm/boot/.gitignore	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm/boot/.gitignore	2022-08-08 14:01:21.559022302 -0400
+--- a/arch/arm/boot/.gitignore	2022-08-11 07:22:05.000000000 -0400
++++ b/arch/arm/boot/.gitignore	2022-08-11 23:39:37.878588861 -0400
 @@ -4,3 +4,5 @@
  xipImage
  bootpImage
@@ -88,8 +291,8 @@ diff -Naur a/arch/arm/boot/.gitignore b/arch/arm/boot/.gitignore
 +*.dtb*
 +*.scr
 diff -Naur a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
---- a/arch/arm64/boot/dts/allwinner/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/dts/allwinner/Makefile	2022-08-08 14:01:21.559022302 -0400
+--- a/arch/arm64/boot/dts/allwinner/Makefile	2022-08-11 07:22:05.000000000 -0400
++++ b/arch/arm64/boot/dts/allwinner/Makefile	2022-08-11 23:39:37.889588670 -0400
 @@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
 +subdir-y += overlays
@@ -99,7 +302,7 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwin
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/dts/allwinner/overlays/Makefile
 --- a/arch/arm64/boot/dts/allwinner/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile	2022-08-08 13:52:21.896472000 -0400
++++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile	2022-08-11 23:39:37.890588653 -0400
 @@ -0,0 +1,8 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
@@ -111,7 +314,7 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/d
 +always-y := $(dtbo-y)
 diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
 --- a/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts	2022-08-08 13:38:00.000000000 -0400
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts	2022-08-11 23:39:37.890588653 -0400
 @@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
@@ -133,7 +336,7 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts b/ar
 +};
 diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
 --- a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts	2022-08-08 13:51:20.106380000 -0400
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts	2022-08-11 23:39:37.890588653 -0400
 @@ -0,0 +1,33 @@
 +/dts-v1/;
 +/plugin/;
@@ -170,7 +373,7 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts b/arch
 +};
 diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
 --- a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	2022-08-08 13:59:40.112622000 -0400
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts	2022-08-11 23:39:37.890588653 -0400
 @@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
@@ -191,8 +394,8 @@ diff -Naur a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/
 +	};
 +};
 diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
---- a/arch/arm64/boot/.gitignore	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/.gitignore	2022-08-08 14:01:21.564022223 -0400
+--- a/arch/arm64/boot/.gitignore	2022-08-11 07:22:05.000000000 -0400
++++ b/arch/arm64/boot/.gitignore	2022-08-11 23:39:37.890588653 -0400
 @@ -1,3 +1,5 @@
  # SPDX-License-Identifier: GPL-2.0-only
  Image
@@ -200,8 +403,8 @@ diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
 +*.dtb*
 +*.scr
 diff -Naur a/Makefile b/Makefile
---- a/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/Makefile	2022-08-08 14:01:21.564022223 -0400
+--- a/Makefile	2022-08-11 07:22:05.000000000 -0400
++++ b/Makefile	2022-08-11 23:39:37.907588358 -0400
 @@ -1373,7 +1373,7 @@
  	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
  
@@ -212,8 +415,8 @@ diff -Naur a/Makefile b/Makefile
  PHONY += dtbs dtbs_install dtbs_check
  dtbs: include/config/kernel.release scripts_dtc
 diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
---- a/scripts/Makefile.dtbinst	2022-07-31 17:03:01.000000000 -0400
-+++ b/scripts/Makefile.dtbinst	2022-08-08 14:01:21.565022207 -0400
+--- a/scripts/Makefile.dtbinst	2022-08-11 07:22:05.000000000 -0400
++++ b/scripts/Makefile.dtbinst	2022-08-11 23:39:37.924588062 -0400
 @@ -18,9 +18,10 @@
  include $(src)/Makefile
  
@@ -227,8 +430,8 @@ diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
  
  quiet_cmd_dtb_install = INSTALL $@
 diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
---- a/scripts/Makefile.lib	2022-07-31 17:03:01.000000000 -0400
-+++ b/scripts/Makefile.lib	2022-08-08 14:01:21.565022207 -0400
+--- a/scripts/Makefile.lib	2022-08-11 07:22:05.000000000 -0400
++++ b/scripts/Makefile.lib	2022-08-11 23:39:37.925588045 -0400
 @@ -317,6 +317,7 @@
  DTC_FLAGS += -Wno-unit_address_vs_reg \
  	-Wno-avoid_unnecessary_addr_size \
