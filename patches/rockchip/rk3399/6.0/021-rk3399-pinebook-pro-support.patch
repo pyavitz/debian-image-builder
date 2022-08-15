@@ -297,8 +297,8 @@ diff -Naur a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
  		pdev->ops->attention(pdev, vdo);
  }
 diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
---- a/drivers/usb/typec/tcpm/tcpm.c	2022-08-11 07:22:05.000000000 -0400
-+++ b/drivers/usb/typec/tcpm/tcpm.c	2022-08-11 15:28:33.883896736 -0400
+--- a/drivers/usb/typec/tcpm/tcpm.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/usb/typec/tcpm/tcpm.c	2022-08-15 12:54:56.866392384 -0400
 @@ -8,6 +8,7 @@
  #include <linux/completion.h>
  #include <linux/debugfs.h>
@@ -307,7 +307,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  #include <linux/hrtimer.h>
  #include <linux/jiffies.h>
  #include <linux/kernel.h>
-@@ -475,6 +476,12 @@
+@@ -483,6 +484,12 @@
  	 * SNK_READY for non-pd link.
  	 */
  	bool slow_charger_loop;
@@ -320,7 +320,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  #ifdef CONFIG_DEBUG_FS
  	struct dentry *dentry;
  	struct mutex logbuffer_lock;	/* log buffer access lock */
-@@ -862,6 +869,35 @@
+@@ -870,6 +877,35 @@
  	port->ams = NONE_AMS;
  }
  
@@ -356,16 +356,16 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  static int tcpm_pd_transmit(struct tcpm_port *port,
  			    enum tcpm_transmit_type type,
  			    const struct pd_message *msg)
-@@ -1074,6 +1110,8 @@
+@@ -1081,6 +1117,8 @@
+ 	port->data_role = data;
  	typec_set_data_role(port->typec_port, data);
  	typec_set_pwr_role(port->typec_port, role);
- 
++	
 +	tcpm_update_extcon_data(port, attached);
-+
+ 
  	return 0;
  }
- 
-@@ -1523,7 +1561,7 @@
+@@ -1531,7 +1569,7 @@
  		paltmode->mode = i;
  		paltmode->vdo = p[i];
  
@@ -374,7 +374,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  			 pmdata->altmodes, paltmode->svid,
  			 paltmode->mode, paltmode->vdo);
  
-@@ -1544,6 +1582,8 @@
+@@ -1552,6 +1590,8 @@
  			tcpm_log(port, "Failed to register partner SVID 0x%04x",
  				 modep->altmode_desc[i].svid);
  			altmode = NULL;
@@ -383,7 +383,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  		}
  		port->partner_altmode[i] = altmode;
  	}
-@@ -1678,9 +1718,11 @@
+@@ -1686,9 +1726,11 @@
  			modep->svid_index++;
  			if (modep->svid_index < modep->nsvids) {
  				u16 svid = modep->svids[modep->svid_index];
@@ -395,15 +395,15 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  				tcpm_register_partner_altmodes(port);
  			}
  			break;
-@@ -3622,6 +3664,7 @@
+@@ -3681,6 +3723,7 @@
  static void tcpm_typec_disconnect(struct tcpm_port *port)
  {
  	if (port->connected) {
 +		tcpm_update_extcon_data(port, false);
+ 		typec_partner_set_usb_power_delivery(port->partner, NULL);
  		typec_unregister_partner(port->partner);
  		port->partner = NULL;
- 		port->connected = false;
-@@ -3700,6 +3743,8 @@
+@@ -3767,6 +3810,8 @@
  	}
  
  	tcpm_reset_port(port);
@@ -412,7 +412,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  }
  
  static void tcpm_src_detach(struct tcpm_port *port)
-@@ -5924,6 +5969,64 @@
+@@ -5991,6 +6036,64 @@
  }
  EXPORT_SYMBOL_GPL(tcpm_tcpc_reset);
  
@@ -474,10 +474,10 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
 +	return 0;
 +}
 +
- static int tcpm_fw_get_caps(struct tcpm_port *port,
- 			    struct fwnode_handle *fwnode)
+ static void tcpm_port_unregister_pd(struct tcpm_port *port)
  {
-@@ -5934,6 +6037,23 @@
+ 	usb_power_delivery_unregister_capabilities(port->port_sink_caps);
+@@ -6063,6 +6166,23 @@
  	if (!fwnode)
  		return -EINVAL;
  
@@ -501,10 +501,11 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  	/*
  	 * This fwnode has a "compatible" property, but is never populated as a
  	 * struct device. Instead we simply parse it to read the properties.
-@@ -6359,6 +6479,17 @@
+@@ -6488,6 +6608,18 @@
  		goto out_destroy_wq;
  
  	port->try_role = port->typec_caps.prefer_role;
++	
 +#ifdef CONFIG_EXTCON
 +	port->extcon = devm_extcon_dev_allocate(dev, port->extcon_cables);
 +	if (IS_ERR(port->extcon)) {
@@ -519,7 +520,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  
  	port->typec_caps.fwnode = tcpc->fwnode;
  	port->typec_caps.revision = 0x0120;	/* Type-C spec release 1.2 */
-@@ -6393,6 +6524,12 @@
+@@ -6528,6 +6660,12 @@
  				     port->port_altmode, ALTMODE_DISCOVERY_MAX);
  	port->registered = true;
  
