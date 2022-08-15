@@ -1,0 +1,42 @@
+From a6d529d04e47b37a0a5bbe768faf6c345d4a2d17 Mon Sep 17 00:00:00 2001
+From: Liang He <windhl@126.com>
+Date: Thu, 16 Jun 2022 10:17:13 +0800
+Subject: [PATCH 41/51] ARM: rockchip: Add missing of_node_put() in
+ rockchip_suspend_init()
+
+In rockchip_suspend_init(), of_find_matching_node_and_match() will
+return a node pointer with refcount incremented. We should use
+of_node_put() in fail path or when it is not used anymore.
+
+Signed-off-by: Liang He <windhl@126.com>
+Link: https://lore.kernel.org/r/20220616021713.3973472-1-windhl@126.com
+Signed-off-by: Heiko Stuebner <heiko@sntech.de>
+---
+ arch/arm/mach-rockchip/pm.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+--- a/arch/arm/mach-rockchip/pm.c
++++ b/arch/arm/mach-rockchip/pm.c
+@@ -311,7 +311,7 @@ void __init rockchip_suspend_init(void)
+ 					     &match);
+ 	if (!match) {
+ 		pr_err("Failed to find PMU node\n");
+-		return;
++		goto out_put;
+ 	}
+ 	pm_data = (struct rockchip_pm_data *) match->data;
+ 
+@@ -320,9 +320,12 @@ void __init rockchip_suspend_init(void)
+ 
+ 		if (ret) {
+ 			pr_err("%s: matches init error %d\n", __func__, ret);
+-			return;
++			goto out_put;
+ 		}
+ 	}
+ 
+ 	suspend_set_ops(pm_data->ops);
++
++out_put:
++	of_node_put(np);
+ }

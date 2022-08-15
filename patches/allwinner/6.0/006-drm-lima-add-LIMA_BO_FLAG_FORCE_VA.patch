@@ -1,0 +1,65 @@
+diff -Naur a/include/uapi/drm/lima_drm.h b/include/uapi/drm/lima_drm.h
+--- a/include/uapi/drm/lima_drm.h	2022-07-31 17:03:01.000000000 -0400
++++ b/include/uapi/drm/lima_drm.h	2022-08-02 03:40:00.000000000 -0400
+@@ -37,7 +37,12 @@
+  * due to lack of heap memory. size field of heap buffer is an up bound of
+  * the backup memory which can be set to a fairly large value.
+  */
+-#define LIMA_BO_FLAG_HEAP  (1 << 0)
++#define LIMA_BO_FLAG_HEAP        (1 << 0)
++/*
++ * force buffer GPU virtual address to be drm_lima_gem_create.va, this is
++ * used to replay some task with fixed GPU virtual address
++ */
++#define LIMA_BO_FLAG_FORCE_VA    (1 << 1)
+ 
+ /**
+  * create a buffer for used by GPU
+@@ -46,7 +51,7 @@
+ 	__u32 size;    /* in, buffer size */
+ 	__u32 flags;   /* in, buffer flags */
+ 	__u32 handle;  /* out, GEM buffer handle */
+-	__u32 pad;     /* pad, must be zero */
++	__u32 va;      /* in, buffer va */
+ };
+ 
+ /**
+diff -Naur a/include/linux/mfd/ac100.h b/include/linux/mfd/ac100.h
+--- a/include/linux/mfd/ac100.h	2022-07-31 17:03:01.000000000 -0400
++++ b/include/linux/mfd/ac100.h	2022-08-02 03:40:00.000000000 -0400
+@@ -80,6 +80,7 @@
+ #define AC100_ERPOUT_CTRL		0x57
+ #define AC100_SPKOUT_CTRL		0x58
+ #define AC100_LINEOUT_CTRL		0x59
++#define AC100_ADDA_TUNE1 		0x5a
+ 
+ /* ADC digital audio processing (high pass filter & auto gain control */
+ #define AC100_ADC_DAP_L_STA		0x80
+diff -Naur a/include/linux/mfd/sun4i-gpadc.h b/include/linux/mfd/sun4i-gpadc.h
+--- a/include/linux/mfd/sun4i-gpadc.h	2022-07-31 17:03:01.000000000 -0400
++++ b/include/linux/mfd/sun4i-gpadc.h	2022-08-02 03:40:00.000000000 -0400
+@@ -81,8 +81,8 @@
+ #define SUN4I_GPADC_TEMP_DATA				0x20
+ #define SUN4I_GPADC_DATA				0x24
+ 
+-#define SUN4I_GPADC_IRQ_FIFO_DATA			0
+-#define SUN4I_GPADC_IRQ_TEMP_DATA			1
++#define SUN4I_GPADC_IRQ_FIFO_DATA			1
++#define SUN4I_GPADC_IRQ_TEMP_DATA			2
+ 
+ /* 10s delay before suspending the IP */
+ #define SUN4I_GPADC_AUTOSUSPEND_DELAY			10000
+diff -Naur a/drivers/mfd/ac100.c b/drivers/mfd/ac100.c
+--- a/drivers/mfd/ac100.c	2022-07-31 17:03:01.000000000 -0400
++++ b/drivers/mfd/ac100.c	2022-08-02 03:40:00.000000000 -0400
+@@ -80,6 +80,9 @@
+ 		.name		= "ac100-codec",
+ 		.of_compatible	= "x-powers,ac100-codec",
+ 	}, {
++		.name		= "ac100-codec-analog",
++		.of_compatible	= "x-powers,ac100-codec-analog",
++	}, {
+ 		.name		= "ac100-rtc",
+ 		.of_compatible	= "x-powers,ac100-rtc",
+ 	},
+
