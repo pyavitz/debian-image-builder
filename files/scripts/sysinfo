@@ -4,8 +4,8 @@
 
 export LANG=$LANG:C
 if [[ $EUID -ne 0 ]]; then
-   sudo $0 $@ 
-   exit 
+	sudo $0 $@ 
+	exit 
 fi
 
 CPU0=`lscpu | grep "Model name" | sed -n 1p | sed 's/Model name://g' | sed -r '1s/\s+//g'`
@@ -47,7 +47,8 @@ fi
 run(){
 if [[ -f "/proc/device-tree/model" ]]; then
 	MODEL=$(tr -d '\0' </proc/device-tree/model)
-	echo -e "== $MODEL"
+	echo -en "== $MODEL"
+	echo -e " (`uname -r`)"
 fi
 echo -e "CPU usage:  " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'`
 if [[ -f "/sys/devices/system/cpu/present" ]]; then
