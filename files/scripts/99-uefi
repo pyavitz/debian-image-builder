@@ -43,9 +43,18 @@ if [[ -d "/boot/efi" ]]; then
 	cp -fr /boot/{Image,initrd.gz} /boot/efi/
 	rm -f /boot/efi/dtb/${FAMILY}/*.dtb
 	cp -fr /boot/${FAMILY}/*.dtb /boot/efi/dtb/${FAMILY}/
+	if [[ -f "/boot/efi/EFI/BOOT/BOOTARM.EFI" ]]; then
+		rm -f /boot/efi/EFI/BOOT/BOOTARM.BAK;
+		mv -f /boot/efi/EFI/BOOT/BOOTARM.EFI /boot/efi/EFI/BOOT/BOOTARM.BAK;
+	fi
 	if [[ -f "/boot/efi/EFI/BOOT/BOOTAA64.EFI" ]]; then
 		rm -f /boot/efi/EFI/BOOT/BOOTAA64.BAK;
 		mv -f /boot/efi/EFI/BOOT/BOOTAA64.EFI /boot/efi/EFI/BOOT/BOOTAA64.BAK;
 	fi
-	grub-mkstandalone -O arm64-efi -o /boot/efi/EFI/BOOT/BOOTAA64.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg"
+	if [[ "$ARCH" == "arm" ]]; then
+		grub-mkstandalone -O arm-efi -o /boot/efi/EFI/BOOT/BOOTARM.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg";
+	fi
+	if [[ "$ARCH" == "arm64" ]]; then
+		grub-mkstandalone -O arm64-efi -o /boot/efi/EFI/BOOT/BOOTAA64.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg";
+	fi
 fi
