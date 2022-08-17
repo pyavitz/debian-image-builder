@@ -334,7 +334,7 @@ echo "" > /etc/motd
 chown root:root /etc/motd
 
 # Clean
-rm -f {lepotato-tweaks,odroid-tweaks,irq-tweaks,nanopc-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,boot-cmd}
+rm -f {lepotato-tweaks,odroid-tweaks,irq-tweaks,nanopc-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,boot-cmd}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins
@@ -500,9 +500,9 @@ else
 fi
 echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
 
-# UEFI post update script
 if [[ "$EFI" == "true" ]]; then
-	# source board-txt
+	# 99-uefi uses /etc/opt/board.txt, this script does not.
+	# re-source /root/board.txt to ensure no confusion.
 	source /root/board.txt
 fi
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# UEFI/GRUB post update file management
 
 if [[ -f "/etc/opt/board.txt" ]]; then
 	source /etc/opt/board.txt
@@ -42,5 +43,9 @@ if [[ -d "/boot/efi" ]]; then
 	cp -fr /boot/{Image,initrd.gz} /boot/efi/
 	rm -f /boot/efi/dtb/${FAMILY}/*.dtb
 	cp -fr /boot/${FAMILY}/*.dtb /boot/efi/dtb/${FAMILY}/
+	if [[ -f "/boot/efi/EFI/BOOT/BOOTAA64.EFI" ]]; then
+		rm -f /boot/efi/EFI/BOOT/BOOTAA64.BAK;
+		mv -f /boot/efi/EFI/BOOT/BOOTAA64.EFI /boot/efi/EFI/BOOT/BOOTAA64.BAK;
+	fi
 	grub-mkstandalone -O arm64-efi -o /boot/efi/EFI/BOOT/BOOTAA64.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg"
 fi
