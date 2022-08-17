@@ -137,14 +137,23 @@ fi
 
 # mount and chroot p2
 if [[ "$P_VALUE" == "p2" ]]; then
-	mount -o bind p1 p2/boot;
+	if [[ "$EFI" == "true" ]]; then
+		mkdir -p p2/boot/efi;
+		mount -o bind p1 p2/boot/efi;
+	else
+		mount -o bind p1 p2/boot;
+	fi
 	mount -o bind /dev p2/dev;
 	mount -o bind /dev/pts p2/dev/pts;
 	chroot p2 /root/stage2;
 	# unmount
 	umount p2/dev/pts;
 	umount p2/dev;
-	umount p2/boot;
+	if [[ "$EFI" == "true" ]]; then
+		umount p2/boot/efi;
+	else
+		umount p2/boot;
+	fi
 	if [[ -f "p2/usr/bin/qemu-arm-static" ]]; then
 		rm -f p2/usr/bin/qemu-arm-static;
 	fi

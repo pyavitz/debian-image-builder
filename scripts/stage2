@@ -472,6 +472,9 @@ echo ""
 echo "Installing kernel ..."
 apt update
 apt upgrade -y
+if [[ "$EFI" == "true" ]]; then
+	apt install -y grub-efi;
+fi
 apt -y clean
 apt -y autoclean
 sleep 1s
@@ -487,6 +490,41 @@ else
 	KERNEL_RELEASE=`ls /boot/config-* | sed 's/\/boot\/config-//g'`
 fi
 echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
+
+# UEFI
+if [[ "$EFI" == "true" ]]; then
+	# create menu
+	CBOARD=`echo "$BOARD" | sed -e 's/\(.*\)/\U\1/'`
+	cat <<EOF > /etc/opt/grub.cfg
+set timeout=0
+set default=0
+menuentry $CBOARD {
+	insmod gzio
+	insmod part_msdos
+	insmod ext2
+	set root=hd0,msdos1
+	echo Loading kernel ...
+	linux /Image root=LABEL=ROOTFS ${CONSOLE} rw rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA}
+	echo Loading ramdisk ...
+	initrd /initrd.gz
+}
+EOF
+	# image initrd and dtb
+	mkdir -p /boot/efi/dtb/${FAMILY}
+	mkdir -p /boot/efi/EFI/BOOT
+	cp -fr /boot/{Image,initrd.gz} /boot/efi/
+	cp -f /boot/${FAMILY}/${DTB}.dtb /boot/efi/dtb/${FAMILY}/${DTB}.dtb
+	grub-mkstandalone -O arm64-efi -o /boot/efi/EFI/BOOT/BOOTAA64.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg"
+fi
+if [[ "$EFI" == "true" ]]; then
+	# uefi kernel and menu update script
+	mkdir -p /etc/initramfs/post-update.d/
+	mv -f /root/99-uefi /etc/initramfs/post-update.d/;
+	chmod +x /etc/initramfs/post-update.d/99-uefi;
+	chown root:root /etc/initramfs/post-update.d/99-uefi;
+else
+	rm -f /root/99-uefi;
+fi
 
 # system.journal corrupted or uncleanly shut down, renaming and replacing
 if [ -f /etc/systemd/journald.conf ]; then

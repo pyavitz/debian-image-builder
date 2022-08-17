@@ -75,7 +75,11 @@ IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
 if [[ "$VFAT" == "true" ]]; then
-	mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}"
+	if [[ "$EFI" == "true" ]]; then
+		mkfs.vfat -n EFI "${IMAGE_LOOP_DEV_BOOT}";
+	else
+		mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}";
+	fi
 else
 	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
 fi
@@ -83,8 +87,13 @@ mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
 mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
-if [[ "$FAMILY_EXT" == "odroid" ]] || [[ "$BOARD" == "odroidc1" ]]; then
-	flash_vendor-uboot;
+if [[ "$EFI" == "true" ]]; then
+	flash_uboot;
+fi
+if [[ "$EFI" == "false" ]]; then
+	if [[ "$FAMILY_EXT" == "odroid" ]] || [[ "$BOARD" == "odroidc1" ]]; then
+		flash_vendor-uboot;
+	fi
 fi
 sync
 umount p2
@@ -119,13 +128,18 @@ EOF
 }
 
 p2_fstab(){
-if [[ "$VFAT" == "true" ]]; then
-	FSTYPE="vfat	defaults 0 2";
+if [[ "$EFI" == "true" ]]; then
+	BMP="/boot/efi"
 else
-	FSTYPE="ext2	rw,relatime,errors=continue 0 2";
+	BMP="/boot"
+fi
+if [[ "$VFAT" == "true" ]]; then
+	FSTYPE="vfat	defaults 0 2"
+else
+	FSTYPE="ext2	rw,relatime,errors=continue 0 2"
 fi
 tee p2/etc/fstab <<EOF
-UUID=${BOOT_UUID}	/boot	${FSTYPE}
+UUID=${BOOT_UUID}	${BMP}	${FSTYPE}
 UUID=${ROOT_UUID}	/	ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
 tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
