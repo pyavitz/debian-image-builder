@@ -1052,44 +1052,6 @@ diff -Naur a/drivers/gpu/drm/panel/panel-sitronix-st7703.c b/drivers/gpu/drm/pan
  		drm_panel_remove(&ctx->panel);
  		return ret;
  	}
-diff -Naur a/drivers/gpu/drm/rockchip/cdn-dp-core.c b/drivers/gpu/drm/rockchip/cdn-dp-core.c
---- a/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-08-02 03:40:00.000000000 -0400
-@@ -968,6 +968,7 @@
- 		DRM_DEV_INFO(dp->dev, "Not connected. Disabling cdn\n");
- 		dp->connected = false;
- 
-+		cdn_dp_disable(dp);
- 	/* Connected but not enabled, enable the block */
- 	} else if (!dp->active) {
- 		DRM_DEV_INFO(dp->dev, "Connected, not enabled. Enabling cdn\n");
-diff -Naur a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
---- a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-08-02 03:40:00.000000000 -0400
-@@ -413,6 +413,14 @@
- 	 */
- 	vco = (dsi->lane_mbps < 200) ? 0 : (dsi->lane_mbps + 100) / 200;
- 
-+	if (dsi->cdata->lanecfg1_grf_reg) {
-+		regmap_write(dsi->grf_regmap, dsi->cdata->lanecfg1_grf_reg,
-+					      dsi->cdata->lanecfg1);
-+
-+	  dev_info(dsi->dev, "dw_mipi_dsi_phy_init / dw_mipi_dsi_rockchip_config: %08x => set=%08x\n",
-+			dsi->cdata->lanecfg1_grf_reg, dsi->cdata->lanecfg1);
-+	}
-+
- 	i = max_mbps_to_parameter(dsi->lane_mbps);
- 	if (i < 0) {
- 		DRM_DEV_ERROR(dsi->dev,
-@@ -611,7 +619,7 @@
- 			continue;
- 
- 		delta = abs(fout - tmp);
--		if (delta < min_delta) {
-+		if (delta < min_delta && fout < tmp) {
- 			best_prediv = _prediv;
- 			best_fbdiv = _fbdiv;
- 			min_delta = delta;
 diff -Naur a/drivers/gpu/drm/sun4i/sun4i_crtc.c b/drivers/gpu/drm/sun4i/sun4i_crtc.c
 --- a/drivers/gpu/drm/sun4i/sun4i_crtc.c	2022-07-31 17:03:01.000000000 -0400
 +++ b/drivers/gpu/drm/sun4i/sun4i_crtc.c	2022-08-02 03:40:00.000000000 -0400

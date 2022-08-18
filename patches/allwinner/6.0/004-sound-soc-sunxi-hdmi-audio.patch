@@ -1,6 +1,234 @@
+diff -Naur a/drivers/clk/sunxi-ng/ccu-sun50i-a64.c b/drivers/clk/sunxi-ng/ccu-sun50i-a64.c
+--- a/drivers/clk/sunxi-ng/ccu-sun50i-a64.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/clk/sunxi-ng/ccu-sun50i-a64.c	2022-08-17 20:39:43.000000000 -0400
+@@ -47,15 +47,35 @@
+  * With sigma-delta modulation for fractional-N on the audio PLL,
+  * we have to use specific dividers. This means the variable divider
+  * can no longer be used, as the audio codec requests the exact clock
+- * rates we support through this mechanism. So we now hard code the
+- * variable divider to 1. This means the clock rates will no longer
+- * match the clock names.
++ * rates we support through this mechanism.
++ *
++ * For the audio codec to work correctly, pll-audio must be exactly
++ * 22579200 Hz or 24576000 Hz, and pll-audio-4x (1x the base) must be
++ * between 3x and 8x that frequency. For the SRC to work at 96 kHz,
++ * pll-audio-4x must be at least 6x pll-audio.
++ *
++ * For now, hard code the variable divider to 3.
+  */
+ #define SUN50I_A64_PLL_AUDIO_REG	0x008
++#define SUN50I_A64_PLL_AUDIO_BIAS_REG	0x224
+ 
+ static struct ccu_sdm_setting pll_audio_sdm_table[] = {
+-	{ .rate = 22579200, .pattern = 0xc0010d84, .m = 8, .n = 7 },
+-	{ .rate = 24576000, .pattern = 0xc000ac02, .m = 14, .n = 14 },
++	/* 24000000 * (  7 + 0x10d84 / 131072 ) /  8 / 1 - 22579200 == -6.9Hz */
++	{ .rate =  22579200, .pattern = 0xc0010d84, .m =  8, .n =  7 },
++	/* 24000000 * ( 14 + 0x0ac02 / 131072 ) / 14 / 1 - 24576000 == -2.5Hz */
++	{ .rate =  24576000, .pattern = 0xc000ac08, .m = 14, .n = 14 },
++	/* 24000000 * (  8 + 0x0ef35 / 131072 ) /  3 / 3 - 22579200 ==  3.3Hz */
++	{ .rate =  67737600, .pattern = 0xc000ef35, .m =  3, .n =  8 },
++	/* 24000000 * ( 15 + 0x0b852 / 131072 ) /  5 / 3 - 24576000 ==  1.0Hz */
++	{ .rate =  73728000, .pattern = 0xc000b852, .m =  5, .n = 15 },
++	/* 24000000 * (  7 + 0x10d84 / 131072 ) /  2 / 4 - 22579200 == -6.9Hz */
++	{ .rate =  90316800, .pattern = 0xc0010d84, .m =  2, .n =  7 },
++	/* 24000000 * ( 16 + 0x0c49c / 131072 ) /  4 / 4 - 24576000 ==  4.0Hz */
++	{ .rate =  98304000, .pattern = 0xc000c49c, .m =  4, .n = 16 },
++	/* 24000000 * (  5 + 0x14a23 / 131072 ) /  1 / 6 - 22579200 == -6.9Hz */
++	{ .rate = 135475200, .pattern = 0xc0014a23, .m =  1, .n =  5 },
++	/* 24000000 * ( 12 + 0x09375 / 131072 ) /  2 / 6 - 24576000 ==  4.0Hz */
++	{ .rate = 147456000, .pattern = 0xc0009375, .m =  2, .n = 12 },
+ };
+ 
+ static SUNXI_CCU_NM_WITH_SDM_GATE_LOCK(pll_audio_base_clk, "pll-audio-base",
+@@ -604,10 +624,10 @@
+ 	&pll_audio_base_clk.common.hw
+ };
+ 
+-/* We hardcode the divider to 1 for now */
++/* We hardcode the divider to 3 for now */
+ static CLK_FIXED_FACTOR_HWS(pll_audio_clk, "pll-audio",
+ 			    clk_parent_pll_audio,
+-			    1, 1, CLK_SET_RATE_PARENT);
++			    3, 1, CLK_SET_RATE_PARENT);
+ static CLK_FIXED_FACTOR_HWS(pll_audio_2x_clk, "pll-audio-2x",
+ 			    clk_parent_pll_audio,
+ 			    2, 1, CLK_SET_RATE_PARENT);
+@@ -946,10 +966,13 @@
+ 	if (IS_ERR(reg))
+ 		return PTR_ERR(reg);
+ 
+-	/* Force the PLL-Audio-1x divider to 1 */
++	/* Force the pll-audio variable divider to 3 */
+ 	val = readl(reg + SUN50I_A64_PLL_AUDIO_REG);
+ 	val &= ~GENMASK(19, 16);
+-	writel(val | (0 << 16), reg + SUN50I_A64_PLL_AUDIO_REG);
++	writel(val | (2 << 16), reg + SUN50I_A64_PLL_AUDIO_REG);
++
++	/* Decrease the PLL AUDIO bias current to reduce noise. */
++	writel(0x10040000, reg + SUN50I_A64_PLL_AUDIO_BIAS_REG);
+ 
+ 	writel(0x515, reg + SUN50I_A64_PLL_MIPI_REG);
+ 
+diff -Naur a/drivers/mfd/ac100.c b/drivers/mfd/ac100.c
+--- a/drivers/mfd/ac100.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/mfd/ac100.c	2022-08-17 20:39:43.000000000 -0400
+@@ -80,6 +80,9 @@
+ 		.name		= "ac100-codec",
+ 		.of_compatible	= "x-powers,ac100-codec",
+ 	}, {
++		.name		= "ac100-codec-analog",
++		.of_compatible	= "x-powers,ac100-codec-analog",
++	}, {
+ 		.name		= "ac100-rtc",
+ 		.of_compatible	= "x-powers,ac100-rtc",
+ 	},
+diff -Naur a/include/linux/mfd/ac100.h b/include/linux/mfd/ac100.h
+--- a/include/linux/mfd/ac100.h	2022-08-14 18:50:18.000000000 -0400
++++ b/include/linux/mfd/ac100.h	2022-08-17 20:39:43.000000000 -0400
+@@ -80,6 +80,7 @@
+ #define AC100_ERPOUT_CTRL		0x57
+ #define AC100_SPKOUT_CTRL		0x58
+ #define AC100_LINEOUT_CTRL		0x59
++#define AC100_ADDA_TUNE1 		0x5a
+ 
+ /* ADC digital audio processing (high pass filter & auto gain control */
+ #define AC100_ADC_DAP_L_STA		0x80
+diff -Naur a/sound/soc/codecs/ec25.c b/sound/soc/codecs/ec25.c
+--- a/sound/soc/codecs/ec25.c	1969-12-31 19:00:00.000000000 -0500
++++ b/sound/soc/codecs/ec25.c	2022-08-17 20:39:43.000000000 -0400
+@@ -0,0 +1,95 @@
++// SPDX-License-Identifier: GPL-2.0-only
++
++#include <linux/module.h>
++#include <sound/soc.h>
++
++static const struct snd_soc_dapm_widget ec25_dapm_widgets[] = {
++	SND_SOC_DAPM_OUTPUT("AOUT"),
++	SND_SOC_DAPM_INPUT("AIN"),
++};
++
++static const struct snd_soc_dapm_route ec25_dapm_routes[] = {
++	{ "AOUT", NULL, "Playback" },
++	{ "AOUT", NULL, "Wideband Playback" },
++	{ "Capture", NULL, "AIN" },
++	{ "Wideband Capture", NULL, "AIN" },
++};
++
++static const struct snd_soc_component_driver ec25_component_driver = {
++	.dapm_widgets		= ec25_dapm_widgets,
++	.num_dapm_widgets	= ARRAY_SIZE(ec25_dapm_widgets),
++	.dapm_routes		= ec25_dapm_routes,
++	.num_dapm_routes	= ARRAY_SIZE(ec25_dapm_routes),
++	.endianness		= 1,
++	.non_legacy_dai_naming	= 1,
++};
++
++static struct snd_soc_dai_driver ec25_dais[] = {
++	{
++		.name = "ec25",
++		.capture = {
++			.stream_name	= "Capture",
++			.channels_min	= 1,
++			.channels_max	= 1,
++			.rates		= SNDRV_PCM_RATE_8000,
++			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++		},
++		.playback = {
++			.stream_name	= "Playback",
++			.channels_min	= 1,
++			.channels_max	= 1,
++			.rates		= SNDRV_PCM_RATE_8000,
++			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++		},
++		.symmetric_rate = 1,
++		.symmetric_channels = 1,
++		.symmetric_sample_bits = 1,
++	},
++	{
++		.name = "ec25-wb",
++		.capture = {
++			.stream_name	= "Wideband Capture",
++			.channels_min	= 1,
++			.channels_max	= 1,
++			.rates		= SNDRV_PCM_RATE_16000,
++			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++		},
++		.playback = {
++			.stream_name	= "Wideband Playback",
++			.channels_min	= 1,
++			.channels_max	= 1,
++			.rates		= SNDRV_PCM_RATE_16000,
++			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++		},
++		.symmetric_rate = 1,
++		.symmetric_channels = 1,
++		.symmetric_sample_bits = 1,
++	},
++};
++
++static int ec25_codec_probe(struct platform_device *pdev)
++{
++	return devm_snd_soc_register_component(&pdev->dev, &ec25_component_driver,
++					       ec25_dais, ARRAY_SIZE(ec25_dais));
++}
++
++static const struct of_device_id ec25_codec_of_match[] = {
++	{ .compatible = "quectel,ec25", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, ec25_codec_of_match);
++
++static struct platform_driver ec25_codec_driver = {
++	.driver	= {
++		.name		= "ec25",
++		.of_match_table	= of_match_ptr(ec25_codec_of_match),
++	},
++	.probe	= ec25_codec_probe,
++};
++
++module_platform_driver(ec25_codec_driver);
++
++MODULE_DESCRIPTION("ASoC ec25 driver");
++MODULE_AUTHOR("Samuel Holland <samuel@sholland.org>");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:ec25");
+diff -Naur a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
+--- a/sound/soc/codecs/Kconfig	2022-08-14 18:50:18.000000000 -0400
++++ b/sound/soc/codecs/Kconfig	2022-08-17 20:39:43.000000000 -0400
+@@ -903,6 +903,9 @@
+ 	select SND_PCM_IEC958
+ 	select HDMI
+ 
++config SND_SOC_EC25
++	tristate "EC25 LTE module CODEC"
++
+ config SND_SOC_ES7134
+ 	tristate "Everest Semi ES7134 CODEC"
+ 
+diff -Naur a/sound/soc/codecs/Makefile b/sound/soc/codecs/Makefile
+--- a/sound/soc/codecs/Makefile	2022-08-14 18:50:18.000000000 -0400
++++ b/sound/soc/codecs/Makefile	2022-08-17 20:39:43.000000000 -0400
+@@ -97,6 +97,7 @@
+ snd-soc-da732x-objs := da732x.o
+ snd-soc-da9055-objs := da9055.o
+ snd-soc-dmic-objs := dmic.o
++snd-soc-ec25-objs := ec25.o
+ snd-soc-es7134-objs := es7134.o
+ snd-soc-es7241-objs := es7241.o
+ snd-soc-es8316-objs := es8316.o
+@@ -452,6 +453,7 @@
+ obj-$(CONFIG_SND_SOC_DA732X)	+= snd-soc-da732x.o
+ obj-$(CONFIG_SND_SOC_DA9055)	+= snd-soc-da9055.o
+ obj-$(CONFIG_SND_SOC_DMIC)	+= snd-soc-dmic.o
++obj-$(CONFIG_SND_SOC_EC25)	+= snd-soc-ec25.o
+ obj-$(CONFIG_SND_SOC_ES7134)	+= snd-soc-es7134.o
+ obj-$(CONFIG_SND_SOC_ES7241)	+= snd-soc-es7241.o
+ obj-$(CONFIG_SND_SOC_ES8316)    += snd-soc-es8316.o
 diff -Naur a/sound/soc/sunxi/ac100-codec.c b/sound/soc/sunxi/ac100-codec.c
 --- a/sound/soc/sunxi/ac100-codec.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/sound/soc/sunxi/ac100-codec.c	2022-08-02 03:40:00.000000000 -0400
++++ b/sound/soc/sunxi/ac100-codec.c	2022-08-17 20:39:43.000000000 -0400
 @@ -0,0 +1,1002 @@
 +/*
 + * This driver supports the controls for X-Powers (Allwinner)
@@ -1005,8 +1233,8 @@ diff -Naur a/sound/soc/sunxi/ac100-codec.c b/sound/soc/sunxi/ac100-codec.c
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS("platform:ac100-codec");
 diff -Naur a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
---- a/sound/soc/sunxi/Kconfig	2022-07-31 17:03:01.000000000 -0400
-+++ b/sound/soc/sunxi/Kconfig	2022-08-02 03:40:00.000000000 -0400
+--- a/sound/soc/sunxi/Kconfig	2022-08-14 18:50:18.000000000 -0400
++++ b/sound/soc/sunxi/Kconfig	2022-08-17 20:39:43.000000000 -0400
 @@ -16,12 +16,25 @@
  	depends on MACH_SUN8I || (ARM64 && ARCH_SUNXI) || COMPILE_TEST
  	depends on COMMON_CLK
@@ -1050,30 +1278,18 @@ diff -Naur a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
  	tristate
  	select REGMAP
 diff -Naur a/sound/soc/sunxi/Makefile b/sound/soc/sunxi/Makefile
---- a/sound/soc/sunxi/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/sound/soc/sunxi/Makefile	2022-08-02 03:40:00.000000000 -0400
+--- a/sound/soc/sunxi/Makefile	2022-08-14 18:50:18.000000000 -0400
++++ b/sound/soc/sunxi/Makefile	2022-08-17 20:39:43.000000000 -0400
 @@ -6,3 +6,5 @@
  obj-$(CONFIG_SND_SUN50I_CODEC_ANALOG) += sun50i-codec-analog.o
  obj-$(CONFIG_SND_SUN8I_CODEC) += sun8i-codec.o
  obj-$(CONFIG_SND_SUN8I_ADDA_PR_REGMAP) += sun8i-adda-pr-regmap.o
 +obj-$(CONFIG_SND_SUN9I_HDMI_AUDIO) += sun9i-hdmi-audio.o
 +obj-$(CONFIG_SND_AC100_CODEC) += ac100-codec.o
-diff -Naur a/sound/soc/sunxi/sun4i-codec.c b/sound/soc/sunxi/sun4i-codec.c
---- a/sound/soc/sunxi/sun4i-codec.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/sound/soc/sunxi/sun4i-codec.c	2022-08-02 03:40:00.000000000 -0400
-@@ -1825,7 +1825,7 @@
- 
- 	ret = snd_soc_register_card(card);
- 	if (ret) {
--		dev_err(&pdev->dev, "Failed to register our card\n");
-+		dev_err_probe(&pdev->dev, ret, "Failed to register our card\n");
- 		goto err_assert_reset;
- 	}
- 
 diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-codec-analog.c
---- a/sound/soc/sunxi/sun50i-codec-analog.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/sound/soc/sunxi/sun50i-codec-analog.c	2022-08-02 03:40:00.000000000 -0400
-@@ -116,8 +116,20 @@
+--- a/sound/soc/sunxi/sun50i-codec-analog.c	2022-08-14 18:50:18.000000000 -0400
++++ b/sound/soc/sunxi/sun50i-codec-analog.c	2022-08-17 20:39:43.000000000 -0400
+@@ -116,9 +116,20 @@
  #define SUN50I_ADDA_HS_MBIAS_CTRL	0x0e
  #define SUN50I_ADDA_HS_MBIAS_CTRL_MMICBIASEN	7
  
@@ -1084,7 +1300,7 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
 +
  #define SUN50I_ADDA_JACK_MIC_CTRL	0x1d
 +#define SUN50I_ADDA_JACK_MIC_CTRL_JACKDETEN	7
-+#define SUN50I_ADDA_JACK_MIC_CTRL_INNERRESEN	6
+ #define SUN50I_ADDA_JACK_MIC_CTRL_INNERRESEN	6
  #define SUN50I_ADDA_JACK_MIC_CTRL_HMICBIASEN	5
 +#define SUN50I_ADDA_JACK_MIC_CTRL_MICADCEN	4
 +
@@ -1094,7 +1310,7 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
  
  /* mixer controls */
  static const struct snd_kcontrol_new sun50i_a64_codec_mixer_controls[] = {
-@@ -296,6 +308,19 @@
+@@ -297,6 +308,19 @@
  			SUN50I_ADDA_EARPIECE_CTRL1_ESPPA_MUTE, 1, 0),
  };
  
@@ -1114,7 +1330,7 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
  static const struct snd_soc_dapm_widget sun50i_a64_codec_widgets[] = {
  	/* DAC */
  	SND_SOC_DAPM_DAC("Left DAC", NULL, SUN50I_ADDA_MIX_DAC_CTRL,
-@@ -367,7 +392,8 @@
+@@ -368,7 +392,8 @@
  	/* Microphone Bias */
  	SND_SOC_DAPM_SUPPLY("HBIAS", SUN50I_ADDA_JACK_MIC_CTRL,
  			    SUN50I_ADDA_JACK_MIC_CTRL_HMICBIASEN,
@@ -1124,7 +1340,7 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
  
  	/* Mic input path */
  	SND_SOC_DAPM_PGA("Mic2 Amplifier", SUN50I_ADDA_MIC2_CTRL,
-@@ -471,17 +497,57 @@
+@@ -472,17 +497,57 @@
  	{ "EARPIECE", NULL, "Earpiece Amp" },
  };
  
@@ -1189,7 +1405,7 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
  }
  
  static const struct snd_soc_component_driver sun50i_codec_analog_cmpnt_drv = {
-@@ -491,8 +557,10 @@
+@@ -492,8 +557,10 @@
  	.num_dapm_widgets	= ARRAY_SIZE(sun50i_a64_codec_widgets),
  	.dapm_routes		= sun50i_a64_codec_routes,
  	.num_dapm_routes	= ARRAY_SIZE(sun50i_a64_codec_routes),
@@ -1202,13 +1418,14 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
  };
  
  static const struct of_device_id sun50i_codec_analog_of_match[] = {
-@@ -505,9 +573,19 @@
+@@ -506,10 +573,20 @@
  
  static int sun50i_codec_analog_probe(struct platform_device *pdev)
  {
 +	struct sun50i_codec_analog *codec;
  	struct regmap *regmap;
  	void __iomem *base;
+ 	bool enable;
  
 +	codec = devm_kzalloc(&pdev->dev, sizeof(*codec), GFP_KERNEL);
 +	if (!codec)
@@ -1223,8 +1440,8 @@ diff -Naur a/sound/soc/sunxi/sun50i-codec-analog.c b/sound/soc/sunxi/sun50i-code
  	if (IS_ERR(base)) {
  		dev_err(&pdev->dev, "Failed to map the registers\n");
 diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
---- a/sound/soc/sunxi/sun8i-codec.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/sound/soc/sunxi/sun8i-codec.c	2022-08-02 03:40:00.000000000 -0400
+--- a/sound/soc/sunxi/sun8i-codec.c	2022-08-14 18:50:18.000000000 -0400
++++ b/sound/soc/sunxi/sun8i-codec.c	2022-08-17 20:39:43.000000000 -0400
 @@ -12,12 +12,18 @@
  #include <linux/module.h>
  #include <linux/delay.h>
@@ -1565,7 +1782,7 @@ diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
  static const struct snd_soc_component_driver sun8i_soc_component = {
  	.controls		= sun8i_codec_controls,
  	.num_controls		= ARRAY_SIZE(sun8i_codec_controls),
-@@ -1276,30 +1485,398 @@
+@@ -1276,29 +1485,397 @@
  	.dapm_routes		= sun8i_codec_dapm_routes,
  	.num_dapm_routes	= ARRAY_SIZE(sun8i_codec_dapm_routes),
  	.probe			= sun8i_codec_component_probe,
@@ -1573,7 +1790,6 @@ diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
  	.idle_bias_on		= 1,
 +	.suspend_bias_off	= 1,
  	.endianness		= 1,
- 	.non_legacy_dai_naming	= 1,
  };
  
 -static const struct regmap_config sun8i_codec_regmap_config = {
@@ -1965,7 +2181,7 @@ diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
  	scodec->clk_module = devm_clk_get(&pdev->dev, "mod");
  	if (IS_ERR(scodec->clk_module)) {
  		dev_err(&pdev->dev, "Failed to get the module clock\n");
-@@ -1312,17 +1889,31 @@
+@@ -1311,17 +1888,31 @@
  		return PTR_ERR(base);
  	}
  
@@ -2001,7 +2217,7 @@ diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
  	pm_runtime_enable(&pdev->dev);
  	if (!pm_runtime_enabled(&pdev->dev)) {
  		ret = sun8i_codec_runtime_resume(&pdev->dev);
-@@ -1352,6 +1943,14 @@
+@@ -1351,6 +1942,14 @@
  
  static int sun8i_codec_remove(struct platform_device *pdev)
  {
@@ -2016,7 +2232,7 @@ diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
  	pm_runtime_disable(&pdev->dev);
  	if (!pm_runtime_status_suspended(&pdev->dev))
  		sun8i_codec_runtime_suspend(&pdev->dev);
-@@ -1360,16 +1959,23 @@
+@@ -1359,16 +1958,23 @@
  }
  
  static const struct sun8i_codec_quirks sun8i_a33_quirks = {
@@ -2042,7 +2258,7 @@ diff -Naur a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
  MODULE_DEVICE_TABLE(of, sun8i_codec_of_match);
 diff -Naur a/sound/soc/sunxi/sun9i-hdmi-audio.c b/sound/soc/sunxi/sun9i-hdmi-audio.c
 --- a/sound/soc/sunxi/sun9i-hdmi-audio.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/sound/soc/sunxi/sun9i-hdmi-audio.c	2022-08-02 03:40:00.000000000 -0400
++++ b/sound/soc/sunxi/sun9i-hdmi-audio.c	2022-08-17 20:39:43.000000000 -0400
 @@ -0,0 +1,180 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//

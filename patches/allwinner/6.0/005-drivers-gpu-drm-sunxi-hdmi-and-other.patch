@@ -1,15 +1,15 @@
 diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
---- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-08-18 12:24:03.606691590 -0400
 @@ -9,6 +9,7 @@
  #include <linux/clk.h>
  #include <linux/delay.h>
  #include <linux/err.h>
 +#include <linux/extcon.h>
  #include <linux/hdmi.h>
+ #include <linux/i2c.h>
  #include <linux/irq.h>
- #include <linux/module.h>
-@@ -210,6 +211,8 @@
+@@ -211,6 +212,8 @@
  	hdmi_codec_plugged_cb plugged_cb;
  	struct device *codec_dev;
  	enum drm_connector_status last_connector_result;
@@ -18,7 +18,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  };
  
  #define HDMI_IH_PHY_STAT0_RX_SENSE \
-@@ -1702,6 +1705,12 @@
+@@ -1703,6 +1706,12 @@
  enum drm_connector_status dw_hdmi_phy_read_hpd(struct dw_hdmi *hdmi,
  					       void *data)
  {
@@ -31,7 +31,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  	return hdmi_readb(hdmi, HDMI_PHY_STAT0) & HDMI_PHY_HPD ?
  		connector_status_connected : connector_status_disconnected;
  }
-@@ -1712,7 +1721,7 @@
+@@ -1713,7 +1722,7 @@
  {
  	u8 old_mask = hdmi->phy_mask;
  
@@ -40,7 +40,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  		hdmi->phy_mask |= HDMI_PHY_RX_SENSE;
  	else
  		hdmi->phy_mask &= ~HDMI_PHY_RX_SENSE;
-@@ -2465,7 +2474,7 @@
+@@ -2466,7 +2475,7 @@
  
  	mutex_lock(&hdmi->mutex);
  	if (result != hdmi->last_connector_result) {
@@ -49,7 +49,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  		handle_plugged_change(hdmi,
  				      result == connector_status_connected);
  		hdmi->last_connector_result = result;
-@@ -3135,12 +3144,12 @@
+@@ -3136,12 +3145,12 @@
  		}
  	}
  
@@ -64,7 +64,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  			status == connector_status_connected ?
  			"plugin" : "plugout");
  
-@@ -3342,6 +3351,25 @@
+@@ -3343,6 +3352,25 @@
  	return 0;
  }
  
@@ -90,7 +90,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  struct dw_hdmi *dw_hdmi_probe(struct platform_device *pdev,
  			      const struct dw_hdmi_plat_data *plat_data)
  {
-@@ -3383,15 +3411,38 @@
+@@ -3384,15 +3412,38 @@
  	if (ret < 0)
  		return ERR_PTR(ret);
  
@@ -131,7 +131,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  	} else {
  		dev_dbg(hdmi->dev, "no ddc property found\n");
  	}
-@@ -3635,6 +3686,8 @@
+@@ -3636,6 +3687,8 @@
  	clk_disable_unprepare(hdmi->isfr_clk);
  err_res:
  	i2c_put_adapter(hdmi->ddc);
@@ -140,7 +140,7 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  
  	return ERR_PTR(ret);
  }
-@@ -3642,6 +3695,8 @@
+@@ -3643,6 +3696,8 @@
  
  void dw_hdmi_remove(struct dw_hdmi *hdmi)
  {
@@ -150,8 +150,8 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  
  	if (hdmi->audio && !IS_ERR(hdmi->audio))
 diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
---- a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c	2022-08-18 12:24:03.606691590 -0400
 @@ -265,6 +265,7 @@
  	struct dw_mipi_dsi *master; /* dual-dsi master ptr */
  	struct dw_mipi_dsi *slave; /* dual-dsi slave ptr */
@@ -267,9 +267,9 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c b/drivers/gpu/drm/bri
  	.mode_valid		= dw_mipi_dsi_bridge_mode_valid,
  	.attach			= dw_mipi_dsi_bridge_attach,
 diff -Naur a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
---- a/drivers/gpu/drm/drm_fb_helper.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/drm_fb_helper.c	2022-08-02 03:40:00.000000000 -0400
-@@ -2363,6 +2363,7 @@
+--- a/drivers/gpu/drm/drm_fb_helper.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/drm_fb_helper.c	2022-08-18 12:24:03.607691576 -0400
+@@ -2375,6 +2375,7 @@
  	struct fb_info *fbi;
  	u32 format;
  	struct iosys_map map;
@@ -277,7 +277,7 @@ diff -Naur a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
  	int ret;
  
  	drm_dbg_kms(dev, "surface width(%d), height(%d) and bpp(%d)\n",
-@@ -2421,6 +2422,19 @@
+@@ -2433,6 +2434,19 @@
  			fbi->fix.smem_start =
  				page_to_phys(virt_to_page(fbi->screen_buffer));
  #endif
@@ -298,8 +298,8 @@ diff -Naur a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
  
  	return 0;
 diff -Naur a/drivers/gpu/drm/lima/lima_drv.c b/drivers/gpu/drm/lima/lima_drv.c
---- a/drivers/gpu/drm/lima/lima_drv.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/lima/lima_drv.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/lima/lima_drv.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/lima/lima_drv.c	2022-08-18 12:24:03.607691576 -0400
 @@ -79,16 +79,27 @@
  {
  	struct drm_lima_gem_create *args = data;
@@ -354,8 +354,8 @@ diff -Naur a/drivers/gpu/drm/lima/lima_drv.c b/drivers/gpu/drm/lima/lima_drv.c
  
  	.gem_create_object  = lima_gem_create_object,
 diff -Naur a/drivers/gpu/drm/lima/lima_gem.c b/drivers/gpu/drm/lima/lima_gem.c
---- a/drivers/gpu/drm/lima/lima_gem.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/lima/lima_gem.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/lima/lima_gem.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/lima/lima_gem.c	2022-08-18 12:24:03.608691562 -0400
 @@ -101,7 +101,7 @@
  }
  
@@ -379,8 +379,8 @@ diff -Naur a/drivers/gpu/drm/lima/lima_gem.c b/drivers/gpu/drm/lima/lima_gem.c
  		if (err)
  			goto out;
 diff -Naur a/drivers/gpu/drm/lima/lima_gem.h b/drivers/gpu/drm/lima/lima_gem.h
---- a/drivers/gpu/drm/lima/lima_gem.h	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/lima/lima_gem.h	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/lima/lima_gem.h	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/lima/lima_gem.h	2022-08-18 12:24:03.608691562 -0400
 @@ -15,6 +15,8 @@
  	struct mutex lock;
  	struct list_head va;
@@ -400,8 +400,8 @@ diff -Naur a/drivers/gpu/drm/lima/lima_gem.h b/drivers/gpu/drm/lima/lima_gem.h
  int lima_gem_submit(struct drm_file *file, struct lima_submit *submit);
  int lima_gem_wait(struct drm_file *file, u32 handle, u32 op, s64 timeout_ns);
 diff -Naur a/drivers/gpu/drm/lima/lima_vm.c b/drivers/gpu/drm/lima/lima_vm.c
---- a/drivers/gpu/drm/lima/lima_vm.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/lima/lima_vm.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/lima/lima_vm.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/lima/lima_vm.c	2022-08-18 12:24:03.608691562 -0400
 @@ -3,6 +3,7 @@
  
  #include <linux/slab.h>
@@ -437,9 +437,9 @@ diff -Naur a/drivers/gpu/drm/lima/lima_vm.c b/drivers/gpu/drm/lima/lima_vm.c
  		goto err_out1;
  
 diff -Naur a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
---- a/drivers/gpu/drm/panel/Kconfig	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/panel/Kconfig	2022-08-02 03:40:00.000000000 -0400
-@@ -143,6 +143,15 @@
+--- a/drivers/gpu/drm/panel/Kconfig	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/panel/Kconfig	2022-08-18 12:24:03.609691547 -0400
+@@ -154,6 +154,15 @@
  	  Say Y if you want to enable support for panels based on the
  	  Feiyang FY07024DI26A30-D MIPI-DSI interface.
  
@@ -456,16 +456,16 @@ diff -Naur a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
  	tristate "Ilitek ILI9322 320x240 QVGA panels"
  	depends on OF && SPI
 diff -Naur a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
---- a/drivers/gpu/drm/panel/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/panel/Makefile	2022-08-02 03:40:00.000000000 -0400
-@@ -72,3 +72,4 @@
+--- a/drivers/gpu/drm/panel/Makefile	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/panel/Makefile	2022-08-18 12:24:03.609691547 -0400
+@@ -73,3 +73,4 @@
  obj-$(CONFIG_DRM_PANEL_VISIONOX_RM69299) += panel-visionox-rm69299.o
  obj-$(CONFIG_DRM_PANEL_WIDECHIPS_WS2401) += panel-widechips-ws2401.o
  obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
 +obj-$(CONFIG_DRM_PANEL_HIMAX_HX8394) += panel-himax-hx8394.o
 diff -Naur a/drivers/gpu/drm/panel/panel-himax-hx8394.c b/drivers/gpu/drm/panel/panel-himax-hx8394.c
 --- a/drivers/gpu/drm/panel/panel-himax-hx8394.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/panel/panel-himax-hx8394.c	2022-08-02 03:40:00.000000000 -0400
++++ b/drivers/gpu/drm/panel/panel-himax-hx8394.c	2022-08-18 12:24:03.610691533 -0400
 @@ -0,0 +1,430 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -898,8 +898,8 @@ diff -Naur a/drivers/gpu/drm/panel/panel-himax-hx8394.c b/drivers/gpu/drm/panel/
 +MODULE_DESCRIPTION("DRM driver for Himax HX8394 based MIPI DSI panels");
 +MODULE_LICENSE("GPL v2");
 diff -Naur a/drivers/gpu/drm/panel/panel-sitronix-st7703.c b/drivers/gpu/drm/panel/panel-sitronix-st7703.c
---- a/drivers/gpu/drm/panel/panel-sitronix-st7703.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/panel/panel-sitronix-st7703.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/panel/panel-sitronix-st7703.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/panel/panel-sitronix-st7703.c	2022-08-18 12:24:03.610691533 -0400
 @@ -58,6 +58,7 @@
  
  	struct dentry *debugfs;
@@ -1052,47 +1052,9 @@ diff -Naur a/drivers/gpu/drm/panel/panel-sitronix-st7703.c b/drivers/gpu/drm/pan
  		drm_panel_remove(&ctx->panel);
  		return ret;
  	}
-diff -Naur a/drivers/gpu/drm/rockchip/cdn-dp-core.c b/drivers/gpu/drm/rockchip/cdn-dp-core.c
---- a/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/cdn-dp-core.c	2022-08-02 03:40:00.000000000 -0400
-@@ -968,6 +968,7 @@
- 		DRM_DEV_INFO(dp->dev, "Not connected. Disabling cdn\n");
- 		dp->connected = false;
- 
-+		cdn_dp_disable(dp);
- 	/* Connected but not enabled, enable the block */
- 	} else if (!dp->active) {
- 		DRM_DEV_INFO(dp->dev, "Connected, not enabled. Enabling cdn\n");
-diff -Naur a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
---- a/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c	2022-08-02 03:40:00.000000000 -0400
-@@ -413,6 +413,14 @@
- 	 */
- 	vco = (dsi->lane_mbps < 200) ? 0 : (dsi->lane_mbps + 100) / 200;
- 
-+	if (dsi->cdata->lanecfg1_grf_reg) {
-+		regmap_write(dsi->grf_regmap, dsi->cdata->lanecfg1_grf_reg,
-+					      dsi->cdata->lanecfg1);
-+
-+	  dev_info(dsi->dev, "dw_mipi_dsi_phy_init / dw_mipi_dsi_rockchip_config: %08x => set=%08x\n",
-+			dsi->cdata->lanecfg1_grf_reg, dsi->cdata->lanecfg1);
-+	}
-+
- 	i = max_mbps_to_parameter(dsi->lane_mbps);
- 	if (i < 0) {
- 		DRM_DEV_ERROR(dsi->dev,
-@@ -611,7 +619,7 @@
- 			continue;
- 
- 		delta = abs(fout - tmp);
--		if (delta < min_delta) {
-+		if (delta < min_delta && fout < tmp) {
- 			best_prediv = _prediv;
- 			best_fbdiv = _fbdiv;
- 			min_delta = delta;
 diff -Naur a/drivers/gpu/drm/sun4i/sun4i_crtc.c b/drivers/gpu/drm/sun4i/sun4i_crtc.c
---- a/drivers/gpu/drm/sun4i/sun4i_crtc.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun4i_crtc.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/sun4i/sun4i_crtc.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun4i_crtc.c	2022-08-18 12:24:03.613691491 -0400
 @@ -103,6 +103,20 @@
  			drm_crtc_send_vblank_event(crtc, event);
  		spin_unlock_irq(&crtc->dev->event_lock);
@@ -1115,9 +1077,9 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_crtc.c b/drivers/gpu/drm/sun4i/sun4i_cr
  
  static void sun4i_crtc_atomic_disable(struct drm_crtc *crtc,
 diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tcon.c
---- a/drivers/gpu/drm/sun4i/sun4i_tcon.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun4i_tcon.c	2022-08-02 03:40:00.000000000 -0400
-@@ -39,6 +39,8 @@
+--- a/drivers/gpu/drm/sun4i/sun4i_tcon.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun4i_tcon.c	2022-08-18 12:24:03.615691462 -0400
+@@ -40,6 +40,8 @@
  #include "sun8i_tcon_top.h"
  #include "sunxi_engine.h"
  
@@ -1126,7 +1088,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  static struct drm_connector *sun4i_tcon_get_connector(const struct drm_encoder *encoder)
  {
  	struct drm_connector *connector;
-@@ -107,9 +109,11 @@
+@@ -108,9 +110,11 @@
  
  	if (enabled) {
  		clk_prepare_enable(clk);
@@ -1140,7 +1102,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  		clk_disable_unprepare(clk);
  	}
  }
-@@ -239,6 +243,34 @@
+@@ -240,6 +244,34 @@
  }
  EXPORT_SYMBOL(sun4i_tcon_enable_vblank);
  
@@ -1175,7 +1137,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  /*
   * This function is a helper for TCON output muxing. The TCON output
   * muxing control register in earlier SoCs (without the TCON TOP block)
-@@ -290,18 +322,6 @@
+@@ -291,18 +323,6 @@
  	return delay;
  }
  
@@ -1194,7 +1156,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  static void sun4i_tcon0_mode_set_dithering(struct sun4i_tcon *tcon,
  					   const struct drm_connector *connector)
  {
-@@ -364,12 +384,18 @@
+@@ -365,12 +385,18 @@
  	u8 bpp = mipi_dsi_pixel_format_to_bpp(device->format);
  	u8 lanes = device->lanes;
  	u32 block_space, start_delay;
@@ -1215,7 +1177,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	/* Set dithering if needed */
  	sun4i_tcon0_mode_set_dithering(tcon, sun4i_tcon_get_connector(encoder));
-@@ -393,9 +419,7 @@
+@@ -394,9 +420,7 @@
  	 * The datasheet says that this should be set higher than 20 *
  	 * pixel cycle, but it's not clear what a pixel cycle is.
  	 */
@@ -1226,7 +1188,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  	block_space -= mode->hdisplay + 40;
  
  	regmap_write(tcon->regs, SUN4I_TCON0_CPU_TRI0_REG,
-@@ -437,7 +461,14 @@
+@@ -438,7 +462,14 @@
  
  	tcon->dclk_min_div = 7;
  	tcon->dclk_max_div = 7;
@@ -1242,7 +1204,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	/* Set dithering if needed */
  	sun4i_tcon0_mode_set_dithering(tcon, sun4i_tcon_get_connector(encoder));
-@@ -474,7 +505,9 @@
+@@ -475,7 +506,9 @@
  		     SUN4I_TCON0_BASIC2_V_TOTAL(mode->crtc_vtotal * 2) |
  		     SUN4I_TCON0_BASIC2_V_BACKPORCH(bp));
  
@@ -1253,7 +1215,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  	if (sun4i_tcon_get_pixel_depth(encoder) == 24)
  		reg |= SUN4I_TCON0_LVDS_IF_BITWIDTH_24BITS;
  	else
-@@ -514,7 +547,14 @@
+@@ -515,7 +548,14 @@
  
  	tcon->dclk_min_div = tcon->quirks->dclk_min_div;
  	tcon->dclk_max_div = 127;
@@ -1269,7 +1231,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	/* Set dithering if needed */
  	sun4i_tcon0_mode_set_dithering(tcon, connector);
-@@ -706,6 +746,13 @@
+@@ -707,6 +747,13 @@
  			 const struct drm_encoder *encoder,
  			 const struct drm_display_mode *mode)
  {
@@ -1283,7 +1245,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  	switch (encoder->encoder_type) {
  	case DRM_MODE_ENCODER_DSI:
  		/* DSI is tied to special case of CPU interface */
-@@ -790,8 +837,8 @@
+@@ -791,8 +838,8 @@
  			dev_err(dev, "Couldn't get the TCON channel 0 clock\n");
  			return PTR_ERR(tcon->sclk0);
  		}
@@ -1293,7 +1255,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	if (tcon->quirks->has_channel_1) {
  		tcon->sclk1 = devm_clk_get(dev, "tcon-ch1");
-@@ -854,6 +901,7 @@
+@@ -855,6 +902,7 @@
  		return PTR_ERR(tcon->regs);
  	}
  
@@ -1301,7 +1263,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  	/* Make sure the TCON is disabled and all IRQs are off */
  	regmap_write(tcon->regs, SUN4I_TCON_GCTL_REG, 0);
  	regmap_write(tcon->regs, SUN4I_TCON_GINT0_REG, 0);
-@@ -862,6 +910,7 @@
+@@ -863,6 +911,7 @@
  	/* Disable IO lines and set them to tristate */
  	regmap_write(tcon->regs, SUN4I_TCON0_IO_TRI_REG, ~0);
  	regmap_write(tcon->regs, SUN4I_TCON1_IO_TRI_REG, ~0);
@@ -1309,7 +1271,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	return 0;
  }
-@@ -1133,6 +1182,9 @@
+@@ -1134,6 +1183,9 @@
  	tcon->dev = dev;
  	tcon->id = engine->id;
  	tcon->quirks = of_device_get_match_data(dev);
@@ -1319,7 +1281,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	tcon->lcd_rst = devm_reset_control_get(dev, "lcd");
  	if (IS_ERR(tcon->lcd_rst)) {
-@@ -1154,12 +1206,14 @@
+@@ -1155,12 +1207,14 @@
  		}
  	}
  
@@ -1334,7 +1296,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  
  	if (tcon->quirks->supports_lvds) {
  		/*
-@@ -1287,6 +1341,11 @@
+@@ -1288,6 +1342,11 @@
  
  	list_add_tail(&tcon->list, &drv->tcon_list);
  
@@ -1346,7 +1308,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  	return 0;
  
  err_free_dotclock:
-@@ -1321,8 +1380,15 @@
+@@ -1322,8 +1381,15 @@
  	const struct sun4i_tcon_quirks *quirks;
  	struct drm_bridge *bridge;
  	struct drm_panel *panel;
@@ -1362,7 +1324,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  	quirks = of_device_get_match_data(&pdev->dev);
  
  	/* panels and bridges are present only on TCONs with channel 0 */
-@@ -1509,6 +1575,14 @@
+@@ -1510,6 +1576,14 @@
  	.supports_lvds		= true,
  };
  
@@ -1377,7 +1339,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  static const struct sun4i_tcon_quirks sun8i_a83t_lcd_quirks = {
  	.supports_lvds		= true,
  	.has_channel_0		= true,
-@@ -1567,6 +1641,7 @@
+@@ -1568,6 +1642,7 @@
  	{ .compatible = "allwinner,sun9i-a80-tcon-tv", .data = &sun9i_a80_tcon_tv_quirks },
  	{ .compatible = "allwinner,sun20i-d1-tcon-lcd", .data = &sun20i_d1_lcd_quirks },
  	{ .compatible = "allwinner,sun20i-d1-tcon-tv", .data = &sun8i_r40_tv_quirks },
@@ -1386,9 +1348,9 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.c b/drivers/gpu/drm/sun4i/sun4i_tc
  };
  MODULE_DEVICE_TABLE(of, sun4i_tcon_of_table);
 diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.h b/drivers/gpu/drm/sun4i/sun4i_tcon.h
---- a/drivers/gpu/drm/sun4i/sun4i_tcon.h	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun4i_tcon.h	2022-08-02 03:40:00.000000000 -0400
-@@ -18,6 +18,7 @@
+--- a/drivers/gpu/drm/sun4i/sun4i_tcon.h	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun4i_tcon.h	2022-08-18 12:24:03.616691448 -0400
+@@ -19,6 +19,7 @@
  
  #define SUN4I_TCON_GCTL_REG			0x0
  #define SUN4I_TCON_GCTL_TCON_ENABLE			BIT(31)
@@ -1396,7 +1358,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.h b/drivers/gpu/drm/sun4i/sun4i_tc
  #define SUN4I_TCON_GCTL_IOMAP_MASK			BIT(0)
  #define SUN4I_TCON_GCTL_IOMAP_TCON1			(1 << 0)
  #define SUN4I_TCON_GCTL_IOMAP_TCON0			(0 << 0)
-@@ -228,7 +229,13 @@
+@@ -229,7 +230,13 @@
  #define SUN4I_TCON1_FILL_BEG2_REG		0x31c
  #define SUN4I_TCON1_FILL_END2_REG		0x320
  #define SUN4I_TCON1_FILL_DATA2_REG		0x324
@@ -1411,7 +1373,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.h b/drivers/gpu/drm/sun4i/sun4i_tc
  
  #define SUN4I_TCON_MAX_CHANNELS		2
  
-@@ -242,6 +249,7 @@
+@@ -243,6 +250,7 @@
  	bool    needs_edp_reset; /* a80 edp reset needed for tcon0 access */
  	bool	supports_lvds;   /* Does the TCON support an LVDS output? */
  	bool	polarity_in_ch0; /* some tcon1 channels have polarity bits in tcon0 pol register */
@@ -1419,7 +1381,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.h b/drivers/gpu/drm/sun4i/sun4i_tc
  	u8	dclk_min_div;	/* minimum divider for TCON0 DCLK */
  
  	/* callback to handle tcon muxing options */
-@@ -285,6 +293,8 @@
+@@ -286,6 +294,8 @@
  
  	/* TCON list management */
  	struct list_head		list;
@@ -1428,7 +1390,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.h b/drivers/gpu/drm/sun4i/sun4i_tc
  };
  
  struct drm_bridge *sun4i_tcon_find_bridge(struct device_node *node);
-@@ -296,6 +306,9 @@
+@@ -297,6 +307,9 @@
  			 const struct drm_display_mode *mode);
  void sun4i_tcon_set_status(struct sun4i_tcon *crtc,
  			   const struct drm_encoder *encoder, bool enable);
@@ -1439,8 +1401,8 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun4i_tcon.h b/drivers/gpu/drm/sun4i/sun4i_tc
  extern const struct of_device_id sun4i_tcon_of_table[];
  
 diff -Naur a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c b/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c
---- a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c	2022-08-18 12:24:03.616691448 -0400
 @@ -732,6 +732,7 @@
  	reset_control_deassert(dsi->reset);
  	clk_prepare_enable(dsi->mod_clk);
@@ -1512,8 +1474,8 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.c b/drivers/gpu/drm/sun4i/sun6
  				    "allwinner,sun6i-a31-mipi-dsi"))
  		bus_clk_name = "bus";
 diff -Naur a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h b/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h
---- a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h	2022-08-18 12:24:03.619691405 -0400
 @@ -31,6 +31,8 @@
  	struct mipi_dsi_device	*device;
  	struct drm_device	*drm;
@@ -1524,9 +1486,9 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun6i_mipi_dsi.h b/drivers/gpu/drm/sun4i/sun6
  
  static inline struct sun6i_dsi *host_to_sun6i_dsi(struct mipi_dsi_host *host)
 diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_mixer.c
---- a/drivers/gpu/drm/sun4i/sun8i_mixer.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun8i_mixer.c	2022-08-02 03:40:00.000000000 -0400
-@@ -22,6 +22,7 @@
+--- a/drivers/gpu/drm/sun4i/sun8i_mixer.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun8i_mixer.c	2022-08-18 12:24:03.624691334 -0400
+@@ -23,6 +23,7 @@
  #include <drm/drm_probe_helper.h>
  
  #include "sun4i_drv.h"
@@ -1534,7 +1496,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  #include "sun8i_mixer.h"
  #include "sun8i_ui_layer.h"
  #include "sun8i_vi_layer.h"
-@@ -32,6 +33,8 @@
+@@ -33,6 +34,8 @@
  	u32	de2_fmt;
  };
  
@@ -1543,7 +1505,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  static const struct de2_fmt_info de2_formats[] = {
  	{
  		.drm_fmt = DRM_FORMAT_ARGB8888,
-@@ -250,8 +253,36 @@
+@@ -251,8 +254,36 @@
  
  static void sun8i_mixer_commit(struct sunxi_engine *engine)
  {
@@ -1580,7 +1542,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  	regmap_write(engine->regs, SUN8I_MIXER_GLOBAL_DBUFF,
  		     SUN8I_MIXER_GLOBAL_DBUFF_ENABLE);
  }
-@@ -284,8 +315,13 @@
+@@ -285,8 +316,13 @@
  
  	for (i = 0; i < mixer->cfg->ui_num; i++) {
  		struct sun8i_ui_layer *layer;
@@ -1595,7 +1557,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  		if (IS_ERR(layer)) {
  			dev_err(drm->dev, "Couldn't initialize %s plane\n",
  				i ? "overlay" : "primary");
-@@ -391,6 +427,7 @@
+@@ -392,6 +428,7 @@
  	dev_set_drvdata(dev, mixer);
  	mixer->engine.ops = &sun8i_engine_ops;
  	mixer->engine.node = dev->of_node;
@@ -1603,7 +1565,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  
  	if (of_find_property(dev->of_node, "iommus", NULL)) {
  		/*
-@@ -415,6 +452,11 @@
+@@ -416,6 +453,11 @@
  	 */
  	mixer->engine.id = sun8i_mixer_of_get_id(dev->of_node);
  
@@ -1615,7 +1577,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  	mixer->cfg = of_device_get_match_data(dev);
  	if (!mixer->cfg)
  		return -EINVAL;
-@@ -462,8 +504,11 @@
+@@ -463,8 +505,11 @@
  	 * reason for the mixer to be functional. Make sure it's the
  	 * case.
  	 */
@@ -1627,7 +1589,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  
  	clk_prepare_enable(mixer->mod_clk);
  
-@@ -471,6 +516,7 @@
+@@ -472,6 +517,7 @@
  
  	base = sun8i_blender_base(mixer);
  
@@ -1635,7 +1597,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  	/* Reset registers and disable unused sub-engines */
  	if (mixer->cfg->is_de3) {
  		for (i = 0; i < DE3_MIXER_UNIT_SIZE; i += 4)
-@@ -502,6 +548,7 @@
+@@ -503,6 +549,7 @@
  	/* Enable the mixer */
  	regmap_write(mixer->engine.regs, SUN8I_MIXER_GLOBAL_CTL,
  		     SUN8I_MIXER_GLOBAL_CTL_RT_EN);
@@ -1643,7 +1605,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  
  	/* Set background color to black */
  	regmap_write(mixer->engine.regs, SUN8I_MIXER_BLEND_BKCOLOR(base),
-@@ -522,8 +569,10 @@
+@@ -523,8 +570,10 @@
  			     SUN8I_MIXER_BLEND_MODE(base, i),
  			     SUN8I_MIXER_BLEND_MODE_DEF);
  
@@ -1654,7 +1616,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  
  	return 0;
  
-@@ -553,6 +602,15 @@
+@@ -554,6 +603,15 @@
  
  static int sun8i_mixer_probe(struct platform_device *pdev)
  {
@@ -1671,8 +1633,8 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_m
  }
  
 diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.h b/drivers/gpu/drm/sun4i/sun8i_mixer.h
---- a/drivers/gpu/drm/sun4i/sun8i_mixer.h	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun8i_mixer.h	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/sun4i/sun8i_mixer.h	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun8i_mixer.h	2022-08-18 12:24:03.625691320 -0400
 @@ -183,6 +183,9 @@
  
  	struct clk			*bus_clk;
@@ -1684,9 +1646,9 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_mixer.h b/drivers/gpu/drm/sun4i/sun8i_m
  
  static inline struct sun8i_mixer *
 diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8i_ui_layer.c
---- a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun8i_ui_layer.c	2022-08-02 03:40:00.000000000 -0400
-@@ -24,10 +24,12 @@
+--- a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun8i_ui_layer.c	2022-08-18 12:24:03.627691292 -0400
+@@ -26,10 +26,12 @@
  #include "sun8i_ui_scaler.h"
  
  static void sun8i_ui_layer_enable(struct sun8i_mixer *mixer, int channel,
@@ -1701,7 +1663,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  
  	bld_base = sun8i_blender_base(mixer);
  	ch_base = sun8i_channel_base(mixer, channel);
-@@ -35,28 +37,56 @@
+@@ -37,28 +39,56 @@
  	DRM_DEBUG_DRIVER("%sabling channel %d overlay %d\n",
  			 enable ? "En" : "Dis", channel, overlay);
  
@@ -1773,7 +1735,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  		val = SUN8I_MIXER_BLEND_PIPE_CTL_EN(zpos);
  
  		regmap_update_bits(mixer->engine.regs,
-@@ -69,7 +99,13 @@
+@@ -71,7 +101,13 @@
  				   SUN8I_MIXER_BLEND_ROUTE(bld_base),
  				   SUN8I_MIXER_BLEND_ROUTE_PIPE_MSK(zpos),
  				   val);
@@ -1787,7 +1749,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  }
  
  static void sun8i_ui_layer_update_alpha(struct sun8i_mixer *mixer, int channel,
-@@ -167,6 +203,7 @@
+@@ -169,6 +205,7 @@
  	struct drm_plane_state *state = plane->state;
  	const struct drm_format_info *fmt;
  	u32 val, ch_base, hw_fmt;
@@ -1795,7 +1757,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  	int ret;
  
  	ch_base = sun8i_channel_base(mixer, channel);
-@@ -178,11 +215,19 @@
+@@ -180,11 +217,19 @@
  		return -EINVAL;
  	}
  
@@ -1815,7 +1777,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  	return 0;
  }
  
-@@ -258,19 +303,6 @@
+@@ -260,19 +305,6 @@
  						   true, true);
  }
  
@@ -1835,7 +1797,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  static void sun8i_ui_layer_atomic_update(struct drm_plane *plane,
  					 struct drm_atomic_state *state)
  {
-@@ -282,28 +314,37 @@
+@@ -284,28 +316,37 @@
  	unsigned int zpos = new_state->normalized_zpos;
  	unsigned int old_zpos = old_state->normalized_zpos;
  	struct sun8i_mixer *mixer = layer->mixer;
@@ -1887,7 +1849,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  	.atomic_update	= sun8i_ui_layer_atomic_update,
  };
  
-@@ -312,7 +353,7 @@
+@@ -314,7 +355,7 @@
  	.atomic_duplicate_state	= drm_atomic_helper_plane_duplicate_state,
  	.destroy		= drm_plane_cleanup,
  	.disable_plane		= drm_atomic_helper_disable_plane,
@@ -1896,7 +1858,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  	.update_plane		= drm_atomic_helper_update_plane,
  };
  
-@@ -346,9 +387,9 @@
+@@ -348,9 +389,9 @@
  
  struct sun8i_ui_layer *sun8i_ui_layer_init_one(struct drm_device *drm,
  					       struct sun8i_mixer *mixer,
@@ -1908,7 +1870,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  	int channel = mixer->cfg->vi_num + index;
  	struct sun8i_ui_layer *layer;
  	unsigned int plane_cnt;
-@@ -358,9 +399,6 @@
+@@ -360,9 +401,6 @@
  	if (!layer)
  		return ERR_PTR(-ENOMEM);
  
@@ -1919,8 +1881,8 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.c b/drivers/gpu/drm/sun4i/sun8
  	ret = drm_universal_plane_init(drm, &layer->plane, 0,
  				       &sun8i_ui_layer_funcs,
 diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.h b/drivers/gpu/drm/sun4i/sun8i_ui_layer.h
---- a/drivers/gpu/drm/sun4i/sun8i_ui_layer.h	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun8i_ui_layer.h	2022-08-02 03:40:00.000000000 -0400
+--- a/drivers/gpu/drm/sun4i/sun8i_ui_layer.h	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun8i_ui_layer.h	2022-08-18 12:24:03.628691278 -0400
 @@ -63,5 +63,6 @@
  
  struct sun8i_ui_layer *sun8i_ui_layer_init_one(struct drm_device *drm,
@@ -1930,9 +1892,9 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_ui_layer.h b/drivers/gpu/drm/sun4i/sun8
 +					       enum drm_plane_type type);
  #endif /* _SUN8I_UI_LAYER_H_ */
 diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8i_vi_layer.c
---- a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/gpu/drm/sun4i/sun8i_vi_layer.c	2022-08-02 03:40:00.000000000 -0400
-@@ -18,10 +18,12 @@
+--- a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c	2022-08-14 18:50:18.000000000 -0400
++++ b/drivers/gpu/drm/sun4i/sun8i_vi_layer.c	2022-08-18 12:24:03.631691235 -0400
+@@ -20,10 +20,12 @@
  #include "sun8i_vi_scaler.h"
  
  static void sun8i_vi_layer_enable(struct sun8i_mixer *mixer, int channel,
@@ -1947,7 +1909,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  
  	bld_base = sun8i_blender_base(mixer);
  	ch_base = sun8i_channel_base(mixer, channel);
-@@ -29,28 +31,56 @@
+@@ -31,28 +33,56 @@
  	DRM_DEBUG_DRIVER("%sabling VI channel %d overlay %d\n",
  			 enable ? "En" : "Dis", channel, overlay);
  
@@ -2019,7 +1981,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  		val = SUN8I_MIXER_BLEND_PIPE_CTL_EN(zpos);
  
  		regmap_update_bits(mixer->engine.regs,
-@@ -63,7 +93,13 @@
+@@ -65,7 +95,13 @@
  				   SUN8I_MIXER_BLEND_ROUTE(bld_base),
  				   SUN8I_MIXER_BLEND_ROUTE_PIPE_MSK(zpos),
  				   val);
@@ -2033,7 +1995,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  }
  
  static void sun8i_vi_layer_update_alpha(struct sun8i_mixer *mixer, int channel,
-@@ -263,6 +299,7 @@
+@@ -265,6 +301,7 @@
  	struct drm_plane_state *state = plane->state;
  	u32 val, ch_base, csc_mode, hw_fmt;
  	const struct drm_format_info *fmt;
@@ -2041,7 +2003,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  	int ret;
  
  	ch_base = sun8i_channel_base(mixer, channel);
-@@ -274,11 +311,19 @@
+@@ -276,11 +313,19 @@
  		return ret;
  	}
  
@@ -2061,7 +2023,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  	csc_mode = sun8i_vi_layer_get_csc_mode(fmt);
  	if (csc_mode != SUN8I_CSC_MODE_OFF) {
  		sun8i_csc_set_ccsc_coefficients(mixer, channel, csc_mode,
-@@ -289,6 +334,10 @@
+@@ -291,6 +336,10 @@
  		sun8i_csc_enable_ccsc(mixer, channel, false);
  	}
  
@@ -2072,7 +2034,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  	if (!fmt->is_yuv)
  		val = SUN8I_MIXER_CHAN_VI_LAYER_ATTR_RGB_MODE;
  	else
-@@ -298,6 +347,10 @@
+@@ -300,6 +349,10 @@
  			   SUN8I_MIXER_CHAN_VI_LAYER_ATTR(ch_base, overlay),
  			   SUN8I_MIXER_CHAN_VI_LAYER_ATTR_RGB_MODE, val);
  
@@ -2083,7 +2045,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  	return 0;
  }
  
-@@ -392,19 +445,6 @@
+@@ -394,19 +447,6 @@
  						   true, true);
  }
  
@@ -2103,7 +2065,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  static void sun8i_vi_layer_atomic_update(struct drm_plane *plane,
  					 struct drm_atomic_state *state)
  {
-@@ -416,28 +456,37 @@
+@@ -418,28 +458,37 @@
  	unsigned int zpos = new_state->normalized_zpos;
  	unsigned int old_zpos = old_state->normalized_zpos;
  	struct sun8i_mixer *mixer = layer->mixer;
@@ -2155,7 +2117,7 @@ diff -Naur a/drivers/gpu/drm/sun4i/sun8i_vi_layer.c b/drivers/gpu/drm/sun4i/sun8
  	.atomic_update	= sun8i_vi_layer_atomic_update,
  };
  
-@@ -446,7 +495,7 @@
+@@ -448,7 +497,7 @@
  	.atomic_duplicate_state	= drm_atomic_helper_plane_duplicate_state,
  	.destroy		= drm_plane_cleanup,
  	.disable_plane		= drm_atomic_helper_disable_plane,
