@@ -38,23 +38,31 @@ P_BOOT="p1"
 P_ROOTFS="p2"
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$VFAT" == "true" ]]; then
-	echo -e "o
-	n
-	p
-	1
-	${OFFSET}
-	526335
-	a
-	c
-	t
-	b
-	n
-	p
-	2
-	526336
-	
-	p
-	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+	if [[ "$GPT" == "true" ]]; then
+		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
+		mklabel gpt \
+		mkpart 1 fat32 16MiB 256MiB \
+		mkpart 2 ext2 256MiB 100% \
+		set 1 esp on
+	else
+		echo -e "o
+		n
+		p
+		1
+		${OFFSET}
+		526335
+		a
+		c
+		t
+		b
+		n
+		p
+		2
+		526336
+
+		p
+		w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+	fi
 else
 	echo -e "o
 	n
