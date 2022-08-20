@@ -23,7 +23,6 @@ fi
 
 # functions
 supported_boards(){
-MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
 if [[ "$BOARD" == "nanopi" ]]; then
 	# allwinner (nanopi = /dev/mmcblk2)
 	supported=1;
@@ -80,6 +79,7 @@ lsblk -dno NAME,SIZE
 
 # partition
 partition(){
+MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
 if [[ "$GPT" == "true" ]]; then
 	dd if=/dev/zero of=${MMC} bs=8M count=1
 	sgdisk -og ${MMC}
