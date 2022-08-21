@@ -23,9 +23,9 @@ menuentry $CBOARD {
 	insmod ext2
 	set root=hd0,${PTYPE}1
 	echo Loading kernel ...
-	linux /Image root=LABEL=ROOTFS ${CONSOLE} rw rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA}
+	linux (hd0,2)/boot/Image root=LABEL=ROOTFS ${CONSOLE} rw rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA}
 	echo Loading ramdisk ...
-	initrd /initrd.gz
+	initrd (hd0,2)/boot/initrd.gz
 }
 EOF
 }
@@ -37,17 +37,13 @@ else
 fi
 
 if [[ -d "/boot/efi" ]]; then
-	mkdir -p /boot/efi/dtb/${FAMILY}
+	mkdir -p /boot/dtb/
 	mkdir -p /boot/efi/EFI/BOOT
-	if [[ -f "/boot/efi/Image" ]]; then
-		rm -f /boot/efi/Image;
+	if [[ -e "/boot/dtb/${FAMILY}" ]]; then
+		:;
+	else
+		ln -s /boot/${FAMILY} /boot/dtb;
 	fi
-	if [[ -f "/boot/efi/initrd.gz" ]]; then
-		rm -f /boot/efi/initrd.gz;
-	fi
-	cp -fr /boot/{Image,initrd.gz} /boot/efi/
-	rm -f /boot/efi/dtb/${FAMILY}/*.dtb
-	cp -fr /boot/${FAMILY}/*.dtb /boot/efi/dtb/${FAMILY}/
 	if [[ -f "/boot/efi/EFI/BOOT/BOOTARM.EFI" ]]; then
 		rm -f /boot/efi/EFI/BOOT/BOOTARM.BAK;
 		mv -f /boot/efi/EFI/BOOT/BOOTARM.EFI /boot/efi/EFI/BOOT/BOOTARM.BAK;
