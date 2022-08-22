@@ -7,35 +7,25 @@ else
 	exit 0
 fi
 
-grub_cfg(){
-if [[ "$GPT" == "true" ]]; then
-	PTYPE="gpt"
-else
-	PTYPE="msdos"
-fi
-CBOARD=`echo "$BOARD" | sed -e 's/\(.*\)/\U\1/'`
+default_cfg(){
+if [[ "$GPT" == "true" ]]; then PTYPE="gpt"; else PTYPE="msdos"; fi
 cat <<EOF > /etc/opt/grub.cfg
 set timeout=0
 set default=0
-menuentry $CBOARD {
+menuentry "${DEFAULT_MOTD}" {
 	insmod gzio
 	insmod part_${PTYPE}
 	insmod ext2
 	set root=hd0,${PTYPE}1
-	echo Loading kernel ...
+	echo "Loading kernel ..."
 	linux (hd0,2)/boot/Image root=LABEL=ROOTFS ${CONSOLE} rw rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA}
-	echo Loading ramdisk ...
+	echo "Loading ramdisk ..."
 	initrd (hd0,2)/boot/initrd.gz
 }
 EOF
 }
 
-if [[ -f "/etc/opt/grub.cfg" ]]; then
-	:;
-else
-	grub_cfg > /dev/null 2>&1;
-fi
-
+if [[ -f "/etc/opt/grub.cfg" ]]; then :; else default_cfg; fi
 if [[ -d "/boot/efi" ]]; then
 	mkdir -p /boot/dtb/
 	mkdir -p /boot/efi/EFI/BOOT
