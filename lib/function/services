@@ -134,6 +134,11 @@ if [[ "$BOARD" == "nanopc" ]]; then
 	chmod +x /usr/bin/rk3399-tweaks;
 	chown root:root /usr/bin/rk3399-tweaks;
 fi
+if [[ "$BOARD" == "nanopir5s" ]]; then
+	mv -f nanopir5s-tweaks /usr/bin/nanopir5s-tweaks;
+	chmod +x /usr/bin/nanopir5s-tweaks;
+	chown root:root /usr/bin/nanopir5s-tweaks;
+fi
 if [[ "$BOARD" == "rockpro64" ]]; then
 	echo "overclock=0" > /etc/opt/overclock.txt;
 	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks;
@@ -248,6 +253,27 @@ EOF
 systemctl enable tweaks
 }
 
+nanopir5s_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=NanoPi R5S Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/nanopir5s-tweaks
+After=sysinit.target local-fs.target network.target bluetooth.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/nanopir5s-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 if [[ "$DISTRO" == "devuan" ]]; then
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
@@ -261,6 +287,9 @@ else
 	fi
 	if [[ "$BOARD" == "nanopc" ]]; then
 		rk3399_systemd;			
+	fi
+	if [[ "$BOARD" == "nanopir5s" ]]; then
+		nanopir5s_systemd;			
 	fi
 	if [[ "$BOARD" == "rockpro64" ]]; then
 		rk3399_systemd;			
@@ -367,6 +396,10 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 	fi
 fi
 if [[ "$BOARD" == "nanopc" ]]; then
+	chmod +x /etc/init.d/tweaks;
+	update-rc.d tweaks defaults 2;
+fi
+if [[ "$BOARD" == "nanopir5s" ]]; then
 	chmod +x /etc/init.d/tweaks;
 	update-rc.d tweaks defaults 2;
 fi
