@@ -4,7 +4,7 @@
 # Set R5S eth port LEDs to activity
 
 GREEN_LED="/sys/class/leds/nanopi:green:pwr/trigger"
-if [ -f $GREEN_LED ]; then
+if [[ -f "$GREEN_LED" ]]; then
 	ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
 	ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
 	ROOT_DEVICE=${ROOT_DEVICE/mmcblk/mmc}
@@ -13,28 +13,31 @@ if [ -f $GREEN_LED ]; then
 fi
 
 RED_LED="/sys/class/leds/nanopi:red:status/brightness"
-if [ -f $RED_LED ]; then
+if [[ -f "$RED_LED" ]]; then
 	echo "0" > $RED_LED
 fi
 
 BLUE_LED="/sys/class/leds/nanopi:blue:status/brightness"
-if [ -f $BLUE_LED ]; then
+if [[ -f "$BLUE_LED" ]]; then
 	echo "0" > $BLUE_LED
 fi
 
 # NanoPi R5S eth ports
-if [[ -f "/sys/class/leds/green:wan/trigger" ]]; then
-	echo "default-on" > /sys/class/leds/green:wan/trigger
-	sleep 1s
-	echo "activity" > /sys/class/leds/green:wan/trigger
+WAN_LED="/sys/class/leds/green:wan/trigger"
+LAN1_LED="/sys/class/leds/green:lan1/trigger"
+LAN2_LED="/sys/class/leds/green:lan2/trigger"
+if [[ -f "$WAN_LED" ]]; then
+	echo "default-on" > $WAN_LED
+	sleep .50
+	echo "netdev" > $WAN_LED
 fi
-if [[ -f "/sys/class/leds/green:lan1/trigger" ]]; then
-	echo "default-on" > /sys/class/leds/green:lan1/trigger
-	sleep 1s
-	echo "activity" > /sys/class/leds/green:lan1/trigger
+if [[ -f "$LAN1_LED" ]]; then
+	echo "default-on" > $LAN1_LED
+	sleep .50
+	echo "netdev" > $LAN1_LED
 fi
-if [[ -f "/sys/class/leds/green:lan2/trigger" ]]; then
-	echo "default-on" > /sys/class/leds/green:lan2/trigger
-	sleep 1s
-	echo "activity" > /sys/class/leds/green:lan2/trigger
+if [[ -f "$LAN2_LED" ]]; then
+	echo "default-on" > $LAN2_LED
+	sleep .50
+	echo "netdev" > $LAN2_LED
 fi
