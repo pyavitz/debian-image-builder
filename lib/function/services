@@ -263,7 +263,7 @@ After=sysinit.target local-fs.target network.target bluetooth.target
 [Service]
 Type=forking
 ExecStart=/usr/bin/nanopir5s-tweaks
-TimeoutSec=0
+TimeoutSec=205
 RemainAfterExit=yes
 StandardOutput=journal+console
 StandardError=journal+console
@@ -310,9 +310,12 @@ Before=rc-local.service
 ConditionPathExists=/usr/local/bin/credentials
 
 [Service]
-ExecStart=/usr/local/bin/credentials > /dev/null 2>&1
 Type=oneshot
+ExecStart=/usr/local/bin/credentials > /dev/null 2>&1
+TimeoutSec=0
 RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
 
 [Install]
 WantedBy=multi-user.target
