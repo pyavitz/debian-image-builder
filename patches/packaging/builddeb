@@ -322,7 +322,7 @@ EOF
 	chmod 755 "$tmpdir/DEBIAN/$script"
 done
 
-cat > $tmpdir/DEBIAN/preinst <<EOT
+cat <<EOF > "$tmpdir/DEBIAN/preinst"
 #!/bin/bash
 set -e
 
@@ -344,8 +344,8 @@ if [ -e /boot/*.dtb ]; then
 fi
 
 exit 0
-EOT
-chmod 755 $tmpdir/DEBIAN/preinst
+EOF
+chmod 755 "$tmpdir/DEBIAN/preinst"
 
 # Build kernel header package
 (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
@@ -372,7 +372,7 @@ if [ -f headers-byteshift.patch ]; then
 	cp -f "headers-byteshift.patch" "$destdir/"
 	cp -f "$srctree/scripts/module.lds" "$destdir/"
 	mkdir -p "$kernel_headers_dir/DEBIAN"
-	cat > $kernel_headers_dir/DEBIAN/postinst <<EOT
+	cat <<EOF > "$kernel_headers_dir/DEBIAN/postinst"
 #!/bin/bash
 set -e
 
@@ -402,12 +402,12 @@ echo -e "Compiling headers ..."
 clean_headers > /dev/null 2>&1;
 
 exit 0
-EOT
-	chmod 755 $kernel_headers_dir/DEBIAN/postinst
+EOF
+	chmod 755 "$kernel_headers_dir/DEBIAN/postinst"
 fi
 
 mkdir -p $kernel_headers_dir/DEBIAN
-cat > $kernel_headers_dir/DEBIAN/preinst <<EOT
+cat <<EOF > "$kernel_headers_dir/DEBIAN/preinst"
 #!/bin/sh
 set -e
 
@@ -415,8 +415,8 @@ set -e
 rm -fdr /usr/src/linux-headers-* > /dev/null 2>&1
 
 exit 0
-EOT
-chmod 755 $kernel_headers_dir/DEBIAN/preinst
+EOF
+chmod 755 "$kernel_headers_dir/DEBIAN/preinst"
 
 if [ "$ARCH" != "um" ]; then
 	create_package "$kernel_headers_packagename" "$kernel_headers_dir"
