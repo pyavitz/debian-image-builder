@@ -6,14 +6,19 @@ dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1
 }
 
 # STAGE2
-nanopi_firmware(){
+alt_firmware(){
 echo ""
-echo "Adding NanoPi NEO Plus2 firmware ..."
-cd ~
-git clone -b nanopi https://github.com/pyavitz/firmware.git
-if [[ -f "firmware/README.md" ]]; then
-	rm -f firmware/README.md;
+if [[ "$BOARD" == "nanopi" ]]; then
+	echo "Adding NanoPi NEO Plus2 firmware ..."
+	cd ~
+	git clone -b nanopi https://github.com/pyavitz/firmware.git
 fi
+if [[ "$BOARD" == "cubietruck" ]]; then
+	echo "Adding Cubietruck firmware ..."
+	cd ~
+	git clone -b cubietruck https://github.com/pyavitz/firmware.git
+fi
+if [[ -f "firmware/README.md" ]]; then rm -f firmware/README.md; fi
 cp -fr firmware/* /lib/firmware
 if [ -f fw-0a5c_21e8.hcd ]; then 
 	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;

@@ -1,21 +1,35 @@
 #!/bin/bash
 
 # PATCHING
-sun50i_packaging(){
-sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
+sun7i_packaging(){ # allwinner
+sed -i 's/packagename=linux-image-$version/packagename=sun7i-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun7i-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=sun7i-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun7i-linux-headers/g' scripts/package/mkdebian
 }
 
-sun8i_packaging(){
+sun8i_packaging(){ # allwinner
 sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/mkdebian
 }
 
-meson64_packaging(){
+sun50i_packaging(){ # allwinner
+sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
+}
+
+meson8b_packaging(){ # amlogic
+sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/mkdebian
+}
+
+meson64_packaging(){ # amlogic
 sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
 if [ -f scripts/package/mkdebian ]; then
@@ -27,28 +41,21 @@ if [[ `grep -w "fwpackagename=linux-firmware-image-$version" "scripts/package/bu
 fi
 }
 
-meson8b_packaging(){
-sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/mkdebian
-}
-
-raspberrypi_packaging(){
+raspberrypi_packaging(){ # broadcom
 sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/mkdebian
 }
 
-rockchip_packaging(){
+rockchip_packaging(){ # rockchip
 sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/mkdebian
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/mkdebian
 }
 
-samsung_packaging(){
+samsung_packaging(){ # samsung
 sed -i 's/packagename=linux-image-$version/packagename=exynos-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=exynos-linux-headers/g' scripts/package/builddeb
 sed -i 's/packagename=linux-image-$version/packagename=exynos-linux-image/g' scripts/package/mkdebian
@@ -198,6 +205,9 @@ fi
 # ALLWINNER
 allwinner_patching(){
 # packaging
+if [[ "$FAMILY_EXT" == "sun7i" ]]; then
+	sun7i_packaging;
+fi
 if [[ "$FAMILY_EXT" == "sun8i" ]]; then
 	sun8i_packaging;
 fi
