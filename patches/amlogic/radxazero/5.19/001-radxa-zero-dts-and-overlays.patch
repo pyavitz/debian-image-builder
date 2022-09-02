@@ -116,8 +116,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
  };
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts/amlogic/overlays/Makefile
 --- a/arch/arm64/boot/dts/amlogic/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile	2022-05-23 06:12:47.973207468 -0400
-@@ -0,0 +1,18 @@
++++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile	2022-09-02 17:00:46.010666981 -0400
+@@ -0,0 +1,19 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
 +	meson-g12a-gpio-10-led.dtbo \
@@ -132,7 +132,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts
 +	meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dtbo \
 +	meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
 +	meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
-+	meson-g12a-uart-ee-c.dtbo
++	meson-g12a-uart-ee-c.dtbo \
++	meson-g12-gxl-set-cma-pool-to-896MB.dtbo
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
@@ -590,6 +591,29 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts b/arc
 +			status = "okay";
 +			pinctrl-0 = <&uart_c_pins &uart_c_cts_rts_pins>;
 +			pinctrl-names = "default";
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-set-cma-pool-to-896MB.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-set-cma-pool-to-896MB.dts
+--- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-set-cma-pool-to-896MB.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-set-cma-pool-to-896MB.dts	2022-09-02 16:47:02.573586000 -0400
+@@ -0,0 +1,19 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "amlogic,g12a", "amlogic,g12b", "amlogic,meson-gxl";
++
++	fragment@0 {
++		target-path = "/reserved-memory";
++		__overlay__ {
++			linux,cma {
++				compatible = "shared-dma-pool";
++				reusable;
++				size = <0x0 0x38000000>;
++				alignment = <0x0 0x400000>;
++				linux,cma-default;
++			};
 +		};
 +	};
 +};
