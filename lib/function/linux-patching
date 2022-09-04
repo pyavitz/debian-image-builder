@@ -22,6 +22,13 @@ sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scr
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
 }
 
+freescale_packaging(){ # freescale
+sed -i 's/packagename=linux-image-$version/packagename=imx6-linux-image/g' scripts/package/builddeb
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=imx6-linux-headers/g' scripts/package/builddeb
+sed -i 's/packagename=linux-image-$version/packagename=imx6-linux-image/g' scripts/package/mkdebian
+sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=imx6-linux-headers/g' scripts/package/mkdebian
+}
+
 meson8b_packaging(){ # amlogic
 sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/builddeb
 sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/builddeb
@@ -238,6 +245,16 @@ if [[ ! -z $REPO_KERNEL ]]; then
 else
 	dryrun; check; apply; user_patches;
 fi
+cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+echo ""
+}
+
+## FREESCALE
+freescale_patching(){
+# packaging
+freescale_packaging
+# patching
+user_patches
 cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 echo ""
 }
