@@ -17,16 +17,17 @@ LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 COL="\e[0;37m"
 FIN="\e[0m"
 if [ -f profile.txt ]; then
-	source profile.txt;
+	. profile.txt
 else
-	NAME="";
-	USERNAME="";
-	PASSWORD="";
-	VERSION="$LATEST_LTS";
-	LOCALE="en_US.UTF-8";
-	TIMEZONE="America/New_York";
-	USER_NAMESERVER1="8.8.8.8";
-	USER_NAMESERVER2="8.8.4.4";
+	NAME=""
+	USERNAME=""
+	PASSWORD=""
+	VERSION="$LATEST_LTS"
+	useracct="0"
+	LOCALE="en_US.UTF-8"
+	TIMEZONE="America/New_York"
+	USER_NAMESERVER1="8.8.8.8"
+	USER_NAMESERVER2="8.8.4.4"
 fi
 HOSTNAME="default"
 DISTRO="debian"
@@ -49,7 +50,6 @@ verbose="0"
 devrootfs="1"
 compress_img="0"
 uscripts="0"
-useracct="0"
 petitboot="0"
 
 # open fd
@@ -154,7 +154,7 @@ echo "echo -n '${TIMEZONE}' > /etc/timezone" >> tmp0
 echo "}" >> tmp0
 echo NAMESERVER1='"'${USER_NAMESERVER1}'"' >> tmp0
 echo NAMESERVER2='"'${USER_NAMESERVER2}'"' >> tmp0
-echo builder=4.7 >> tmp0
+echo builder=4.8 >> tmp0
 echo '"' > tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2

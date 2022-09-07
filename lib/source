@@ -15,10 +15,10 @@ else
 		fi
 	done
 fi
-if [[ `grep -w "builder=4.7" "userdata.txt"` ]]; then
+if [[ `grep -w "builder=4.8" "userdata.txt"` ]]; then
 	:;
 else
-	echo -e "The ${WHT}$UD${FIN} file has expired. Please create a new one."
+	echo -e "The ${WHT}$UD${FIN} file has expired. Create a new one."
 	exit;
 fi
 }
@@ -74,7 +74,7 @@ EOF
 
 # user scripts (stage1 and stage2)
 uscripts_pre-stage1(){
-if [ -f files/userscripts/uscripts ]; then
+if [[ -f "files/userscripts/uscripts" ]]; then
 	if [[ `grep -w "run_function0" "files/userscripts/uscripts"` ]]; then
 		source files/userscripts/uscripts;
 		run_function0;
@@ -83,10 +83,10 @@ fi
 }
 
 uscripts_stage1(){
-if [ -f files/userscripts/uscripts ]; then
+if [[ -f "files/userscripts/uscripts" ]]; then
 	mkdir -p ${P_VALUE}/root/userscripts;
 	cp -fr files/userscripts/* ${P_VALUE}/root/userscripts/;
-	if [ -f ${P_VALUE}/root/userscripts/README.md ]; then
+	if [[ -f "${P_VALUE}/root/userscripts/README.md" ]]; then
 		rm -f ${P_VALUE}/root/userscripts/README.md;
 	fi
 	if [[ `grep -w "run_function1" "files/userscripts/uscripts"` ]]; then
@@ -102,7 +102,7 @@ fi
 }
 
 uscripts_stage2(){
-if [ -f /root/userscripts/uscripts ]; then
+if [[ -f "/root/userscripts/uscripts" ]]; then
 	if [[ `grep -w "run_function2" "/root/userscripts/uscripts"` ]]; then
 		echo -e "\033[1mRunning user scripts\e[0m.";
 		source /root/userscripts/uscripts;
