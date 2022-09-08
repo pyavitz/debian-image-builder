@@ -282,17 +282,22 @@ if [[ "$DISTRO" == "devuan" ]]; then
 fi
 }
 
-# add kernel version to img
-rename_image(){
-source kernel.txt
-mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
-}
-
-# compress image to img.xz
-compress_image(){
-source kernel.txt
-mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
-xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
+# rename and check for compression
+finish_image(){
+if [[ -f "kernel.txt" ]]; then source kernel.txt; fi
+if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img" ]]; then
+	mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img \
+	${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
+	if [ $compress_img -eq 1 ]; then
+		echo_compress
+		xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
+	fi
+fi
+if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz" ]]; then
+	sha256sum ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz \
+	> ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz.sha256sum
+	sha256sum --check ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz.sha256
+fi
 }
 
 # boot.cmd
