@@ -77,6 +77,7 @@ help:
 	@echo "  Broadcom:   raspi4"
 	@echo "  Rockchip:   nanopc renegade rock64 rockpro64"
 	@echo "  Samsung:    odroidxu4"
+	@echo "  WIP:        cubietruck cuboxi bananapim5 nanopir5s odroidc1/m1 pinebookpro"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install x86_64 dependencies"
