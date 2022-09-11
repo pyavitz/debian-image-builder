@@ -151,6 +151,12 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	chmod +x /usr/bin/rzero-tweaks;
 	chown root:root /usr/bin/rzero-tweaks;
 fi
+if [[ "$BOARD" == "cubietruck" ]]; then
+	echo "overclock=0" > /etc/opt/overclock.txt;
+	mv -f rzero-tweaks /usr/bin/cubietruck-tweaks;
+	chmod +x /usr/bin/cubietruck-tweaks;
+	chown root:root /usr/bin/cubietruck-tweaks;
+fi
 
 lepotato_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
@@ -274,6 +280,27 @@ EOF
 systemctl enable tweaks
 }
 
+cubietruck_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=Cubietruck Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/cubietruck-tweaks
+After=sysinit.target local-fs.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/cubietruck-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 if [[ "$DISTRO" == "devuan" ]]; then
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
@@ -296,6 +323,9 @@ else
 	fi
 	if [[ "$BOARD" == "radxazero" ]]; then
 		rzero_systemd;
+	fi
+	if [[ "$BOARD" == "cubietruck" ]]; then
+		cubietruck_systemd;
 	fi
 fi
 }
@@ -404,6 +434,10 @@ if [[ "$BOARD" == "nanopir5s" ]]; then
 	update-rc.d tweaks defaults 2;
 fi
 if [[ "$BOARD" == "rockpro64" ]]; then
+	chmod +x /etc/init.d/tweaks;
+	update-rc.d tweaks defaults 2;
+fi
+if [[ "$BOARD" == "cubietruck" ]]; then
 	chmod +x /etc/init.d/tweaks;
 	update-rc.d tweaks defaults 2;
 fi

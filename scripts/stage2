@@ -243,30 +243,21 @@ mv -f sysinfo /usr/local/bin/
 mv -f bootcmd /usr/local/bin/
 mv -f menu-config /usr/local/bin
 mv -f menu-config-update /usr/local/bin
+# Allwinner tweaks
+if [[ "$FAMILY" == "allwinner" ]]; then
+	if [[ "$BOARD" == "cubietruck" ]]; then
+		tweaks_service > /dev/null 2>&1;
+	fi
+fi
 # Amlogic tweaks
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ "$BOARD" == "lepotato" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-	if [[ "$BOARD" == "odroidn2" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-	if [[ "$BOARD" == "odroidn2plus" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-	if [[ "$BOARD" == "radxazero" ]]; then
+	if [[ "$BOARD" == "lepotato" ]] || [[ "$BOARD" == "odroidn2" ]] || [[ "$BOARD" == "odroidn2plus" ]] || [[ "$BOARD" == "radxazero" ]]; then
 		tweaks_service > /dev/null 2>&1;
 	fi
 fi
 # Rockchip tweaks
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$BOARD" == "nanopc" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-	if [[ "$BOARD" == "nanopir5s" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-	if [[ "$BOARD" == "rockpro64" ]]; then
+	if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "nanopir5s" ]] || [[ "$BOARD" == "rockpro64" ]]; then
 		tweaks_service > /dev/null 2>&1;
 	fi
 fi
@@ -342,7 +333,7 @@ echo "" > /etc/motd
 chown root:root /etc/motd
 
 # Clean
-rm -f {lepotato-tweaks,odroid-tweaks,irq-tweaks,nanopc-tweaks,nanopir5s-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,boot-cmd}
+rm -f {cubietruck-tweaks,lepotato-tweaks,odroid-tweaks,irq-tweaks,nanopc-tweaks,nanopir5s-tweaks,rk3399-tweaks,rzero-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,boot-cmd}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins
