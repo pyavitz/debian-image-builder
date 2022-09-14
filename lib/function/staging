@@ -4,9 +4,15 @@ p1_partition(){
 P_ROOTFS="p1"
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$GPT" == "true" ]]; then
-	parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
-	mklabel gpt \
-	mkpart 1 ext2 16MiB 100%
+	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -n 1:${OFFSET} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	# parted is leaving filesystems read-only after the first boot
+	# script is run on RK3568 and RK3399. I have not noticed this
+	# happening when two partitions are used, such as when using UEFI.
+	#parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
+	#mklabel gpt \
+	#mkpart 1 ext2 16MiB 100%
 else
 	echo -e "o
 	n
