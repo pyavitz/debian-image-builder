@@ -157,6 +157,12 @@ if [[ "$BOARD" == "cubietruck" ]]; then
 	chmod +x /usr/bin/cubietruck-tweaks;
 	chown root:root /usr/bin/cubietruck-tweaks;
 fi
+if [[ "$BOARD" == "cuboxi" ]]; then
+	echo "overclock=0" > /etc/opt/overclock.txt;
+	mv -f cuboxi-tweaks /usr/bin/cuboxi-tweaks;
+	chmod +x /usr/bin/cuboxi-tweaks;
+	chown root:root /usr/bin/cuboxi-tweaks;
+fi
 
 lepotato_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
@@ -301,6 +307,27 @@ EOF
 systemctl enable tweaks
 }
 
+cuboxi_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=Cubox-i Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/cuboxi-tweaks
+After=sysinit.target local-fs.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/cuboxi-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 if [[ "$DISTRO" == "devuan" ]]; then
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
@@ -312,20 +339,20 @@ else
 	if [[ "$FAMILY_EXT" == "odroid" ]]; then
 		odroid_systemd;
 	fi
-	if [[ "$BOARD" == "nanopc" ]]; then
+	if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "rockpro64" ]]; then
 		rk3399_systemd;			
 	fi
 	if [[ "$BOARD" == "nanopir5s" ]]; then
 		nanopir5s_systemd;			
-	fi
-	if [[ "$BOARD" == "rockpro64" ]]; then
-		rk3399_systemd;			
 	fi
 	if [[ "$BOARD" == "radxazero" ]]; then
 		rzero_systemd;
 	fi
 	if [[ "$BOARD" == "cubietruck" ]]; then
 		cubietruck_systemd;
+	fi
+	if [[ "$BOARD" == "cuboxi" ]]; then
+		cuboxi_systemd;
 	fi
 fi
 }
@@ -409,11 +436,7 @@ if [ -f /usr/local/sbin/led-trigger ]; then
 	chmod +x /etc/init.d/leds;
 	update-rc.d leds defaults 2;
 fi
-if [[ "$BOARD" == "pine64" ]]; then
-	chmod +x /etc/init.d/bthelper;
-	update-rc.d bthelper defaults 2;
-fi
-if [[ "$BOARD" == "nanopi" ]]; then
+if [[ "$BOARD" == "pine64" ]] || [[ "$BOARD" == "nanopi" ]]; then
 	chmod +x /etc/init.d/bthelper;
 	update-rc.d bthelper defaults 2;
 fi
@@ -425,19 +448,7 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		update-rc.d tweaks defaults 2;
 	fi
 fi
-if [[ "$BOARD" == "nanopc" ]]; then
-	chmod +x /etc/init.d/tweaks;
-	update-rc.d tweaks defaults 2;
-fi
-if [[ "$BOARD" == "nanopir5s" ]]; then
-	chmod +x /etc/init.d/tweaks;
-	update-rc.d tweaks defaults 2;
-fi
-if [[ "$BOARD" == "rockpro64" ]]; then
-	chmod +x /etc/init.d/tweaks;
-	update-rc.d tweaks defaults 2;
-fi
-if [[ "$BOARD" == "cubietruck" ]]; then
+if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "nanopir5s" ]] || [[ "$BOARD" == "rockpro64" ]] || [[ "$BOARD" == "cubietruck" ]] || [[ "$BOARD" == "cuboxi" ]]; then
 	chmod +x /etc/init.d/tweaks;
 	update-rc.d tweaks defaults 2;
 fi
@@ -457,12 +468,8 @@ update-rc.d credentials defaults 2
 enable_systemd(){
 systemctl enable rc-local
 systemctl enable ifplugd
-if [[ "$DISTRO" == "debian" ]]; then
+if [[ "$DISTRO" == "debian" ]] || [[ "$DISTRO" == "kali" ]]; then
 	systemctl enable resolvconf;
-else
-	if [[ "$DISTRO" == "kali" ]]; then
-		systemctl enable resolvconf;
-	fi
 fi
 systemctl enable zramswap
 systemctl enable firstboot
