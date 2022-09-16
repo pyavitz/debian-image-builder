@@ -1,18 +1,18 @@
 diff -Naur a/Makefile b/Makefile
---- a/Makefile	2022-08-14 18:50:18.000000000 -0400
-+++ b/Makefile	2022-08-15 12:25:53.767482291 -0400
-@@ -1380,7 +1380,7 @@
+--- a/Makefile	2022-09-08 05:24:08.000000000 -0400
++++ b/Makefile	2022-09-16 08:01:47.627500140 -0400
+@@ -1377,7 +1377,7 @@
  	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
  
- %.dtbo: dtbs_prepare
+ %.dtbo: include/config/kernel.release scripts_dtc
 -	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
 +	$(Q)$(MAKE) $(build)=$(dtstree)/overlays $(dtstree)/overlays/$@
  
- PHONY += dtbs dtbs_prepare dtbs_install dtbs_check
- dtbs: dtbs_prepare
+ PHONY += dtbs dtbs_install dtbs_check
+ dtbs: include/config/kernel.release scripts_dtc
 diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
---- a/arch/arm64/boot/.gitignore	2022-05-22 15:52:31.000000000 -0400
-+++ b/arch/arm64/boot/.gitignore	2022-05-23 06:12:47.965207532 -0400
+--- a/arch/arm64/boot/.gitignore	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/.gitignore	2022-09-16 08:01:47.627500140 -0400
 @@ -1,3 +1,5 @@
  # SPDX-License-Identifier: GPL-2.0-only
  Image
@@ -20,8 +20,8 @@ diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
 +*.dtb*
 +*.scr
 diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
---- a/arch/arm64/boot/dts/amlogic/Makefile	2022-06-19 16:06:47.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/Makefile	2022-06-25 17:25:44.109046378 -0400
+--- a/arch/arm64/boot/dts/amlogic/Makefile	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/Makefile	2022-09-16 08:01:47.627500140 -0400
 @@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
 +subdir-y += overlays
@@ -30,9 +30,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j100.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-s400.dtb
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
---- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2022-05-22 15:52:31.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2022-05-23 06:12:47.933207787 -0400
-@@ -60,6 +60,14 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2022-09-16 08:03:39.759498132 -0400
+@@ -60,6 +60,17 @@
  		clock-names = "ext_clock";
  	};
  
@@ -42,12 +42,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		vin-supply = <&ao_5v>;
++
++		gpio = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
 +	};
 +
  	ao_5v: regulator-ao_5v {
  		compatible = "regulator-fixed";
  		regulator-name = "AO_5V";
-@@ -189,6 +197,29 @@
+@@ -189,6 +200,29 @@
  		clock-frequency = <32768>;
  		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
  	};
@@ -77,7 +80,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
  };
  
  &arb {
-@@ -278,6 +309,22 @@
+@@ -278,6 +312,22 @@
  	pinctrl-names = "default";
  };
  
@@ -100,7 +103,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
  &pwm_AO_cd {
  	pinctrl-0 = <&pwm_ao_d_e_pins>;
  	pinctrl-names = "default";
-@@ -401,5 +448,12 @@
+@@ -401,5 +451,12 @@
  
  &usb {
  	status = "okay";
@@ -116,7 +119,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/
  };
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts/amlogic/overlays/Makefile
 --- a/arch/arm64/boot/dts/amlogic/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile	2022-09-02 17:00:46.010666981 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,19 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
@@ -139,7 +142,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts
 +always-y := $(dtbo-y)
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays b/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays
 --- a/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,168 @@
 +## Introduction
 +
@@ -309,9 +312,32 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays b/arch/a
 +    Default: 10000000
 +    Range: 3000 - 100000000
 +
+diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
+--- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts	2022-09-16 08:01:47.631500140 -0400
+@@ -0,0 +1,19 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "amlogic,g12a", "amlogic,g12b", "amlogic,meson-gxl";
++
++	fragment@0 {
++		target-path = "/reserved-memory";
++		__overlay__ {
++			linux,cma {
++				compatible = "shared-dma-pool";
++				reusable;
++				size = <0x0 0x38000000>;
++				alignment = <0x0 0x400000>;
++				linux,cma-default;
++			};
++		};
++	};
++};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts	2022-05-23 06:12:47.973207468 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,24 @@
 +/dts-v1/;
 +/plugin/;
@@ -339,7 +365,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts b/a
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts	2022-05-23 06:12:47.961207563 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -358,7 +384,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts	2022-05-23 06:12:47.961207563 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -377,7 +403,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-g
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts	2022-05-23 06:12:47.961207563 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -396,7 +422,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts	2022-05-23 06:12:47.961207563 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -415,7 +441,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts	2022-05-23 06:12:47.973207468 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,17 @@
 +/dts-v1/;
 +/plugin/;
@@ -436,7 +462,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-opp-2ghz.dts b/arch
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,17 @@
 +/dts-v1/;
 +/plugin/;
@@ -457,7 +483,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dt
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,17 @@
 +/dts-v1/;
 +/plugin/;
@@ -478,7 +504,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-1
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,38 @@
 +/dts-v1/;
 +/plugin/;
@@ -520,7 +546,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts b/ar
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -539,7 +565,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -558,7 +584,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts	2022-09-16 08:01:47.627500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -577,7 +603,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts	2022-05-23 06:12:47.965207532 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts	2022-09-16 08:01:47.631500140 -0400
 @@ -0,0 +1,15 @@
 +/dts-v1/;
 +/plugin/;
@@ -594,32 +620,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts b/arc
 +		};
 +	};
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
---- a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts	2022-09-02 16:47:02.573586000 -0400
-@@ -0,0 +1,19 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	compatible = "amlogic,g12a", "amlogic,g12b", "amlogic,meson-gxl";
-+
-+	fragment@0 {
-+		target-path = "/reserved-memory";
-+		__overlay__ {
-+			linux,cma {
-+				compatible = "shared-dma-pool";
-+				reusable;
-+				size = <0x0 0x38000000>;
-+				alignment = <0x0 0x400000>;
-+				linux,cma-default;
-+			};
-+		};
-+	};
-+};
 diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
---- a/scripts/Makefile.dtbinst	2022-05-22 15:52:31.000000000 -0400
-+++ b/scripts/Makefile.dtbinst	2022-05-23 06:12:47.965207532 -0400
+--- a/scripts/Makefile.dtbinst	2022-09-08 05:24:08.000000000 -0400
++++ b/scripts/Makefile.dtbinst	2022-09-16 08:01:47.631500140 -0400
 @@ -18,9 +18,10 @@
  include $(src)/Makefile
  
@@ -633,9 +636,9 @@ diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
  
  quiet_cmd_dtb_install = INSTALL $@
 diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
---- a/scripts/Makefile.lib	2022-05-22 15:52:31.000000000 -0400
-+++ b/scripts/Makefile.lib	2022-05-23 06:12:47.969207500 -0400
-@@ -295,6 +295,7 @@
+--- a/scripts/Makefile.lib	2022-09-08 05:24:08.000000000 -0400
++++ b/scripts/Makefile.lib	2022-09-16 08:01:47.631500140 -0400
+@@ -315,6 +315,7 @@
  # Disable noisy checks by default
  ifeq ($(findstring 1,$(KBUILD_EXTRA_WARN)),)
  DTC_FLAGS += -Wno-unit_address_vs_reg \
@@ -643,7 +646,7 @@ diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
  	-Wno-avoid_unnecessary_addr_size \
  	-Wno-alias_paths \
  	-Wno-graph_child_address \
-@@ -366,6 +367,18 @@
+@@ -386,6 +387,18 @@
  $(obj)/%.dtbo: $(src)/%.dts $(DTC) FORCE
  	$(call if_changed_dep,dtc)
  
