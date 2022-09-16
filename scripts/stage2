@@ -150,7 +150,7 @@ if [ $rootpasswd -eq 1 ]; then
 fi
 # Initrd / uInitrd
 cd ~
-if [ -f /root/99-initrd ]; then
+if [[ -f "/root/99-initrd" ]]; then
 	mkdir -p /etc/initramfs/post-update.d/
 	mv -f /root/99-initrd /etc/initramfs/post-update.d/;
 	chmod +x /etc/initramfs/post-update.d/99-initrd;
@@ -167,7 +167,7 @@ else
 fi
 
 # LED triggers
-if [ -f "/root/led-trigger" ]; then 
+if [[ -f "/root/led-trigger" ]]; then
 	mv -f /root/led-trigger /usr/local/sbin/led-trigger;
 	chmod +x /usr/local/sbin/led-trigger;
 	chown -R root:root /usr/local/sbin/;
@@ -312,13 +312,13 @@ echo "Done."
 
 # MOTD
 mkdir -p /etc/update-motd.d
-if [ -f /etc/update-motd.d/10-uname ]; then
+if [[ -f "/etc/update-motd.d/10-uname" ]]; then
 	rm -f /etc/update-motd.d/10-uname;
 fi
-if [ -f /etc/update-motd.d/10-help-text ]; then
+if [[ -f "/etc/update-motd.d/10-help-text" ]]; then
 	rm -f /etc/update-motd.d/10-help-text;
 fi
-if [ -f /etc/update-motd.d/00-header ]; then
+if [[ -f "/etc/update-motd.d/00-header" ]]; then
 	rm -f /etc/update-motd.d/00-header;
 fi
 mv -f {00-header,15-brand,20-sysinfo,90-dynamic-motd} /etc/update-motd.d/
@@ -399,7 +399,7 @@ else
 fi
 
 # Allocate zramswap
-if [ -f /etc/default/zramswap ]; then
+if [[ -f "/etc/default/zramswap" ]]; then
 	sed -i 's/#ALLOCATION=256/ALLOCATION=1024/g' /etc/default/zramswap;
 	sed -i 's/#SIZE=256/SIZE=1024/g' /etc/default/zramswap;
 	sed -i 's/#PRIORITY=100/PRIORITY=100/g' /etc/default/zramswap;
@@ -437,13 +437,13 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	cd ~;
 	dpkg -i raspberrypi-sys-mods*.deb;
 	rm -fdR raspberrypi-sys-mods*;
-	if [ -e /etc/apt/sources.list.d/vscode.list ];
+	if [[ -f "/etc/apt/sources.list.d/vscode.list" ]];
 		then rm -f /etc/apt/sources.list.d/vscode.list;
 	fi
-	if [ -e /etc/apt/trusted.gpg.d/microsoft.gpg ];
+	if [[ -f "/etc/apt/trusted.gpg.d/microsoft.gpg" ]];
 		then rm -f /etc/apt/trusted.gpg.d/microsoft.gpg;
 	fi
-	if [ -e /etc/apt/preferences.d/3rd_parties.pref ];
+	if [[ -f "/etc/apt/preferences.d/3rd_parties.pref" ]];
 		then rm -f /etc/apt/preferences.d/3rd_parties.pref;
 	fi
 	echo "Done.";
@@ -462,7 +462,7 @@ if [[ "$BOARD" == "raspi4" ]]; then
 fi
 
 # Sudoers file
-if [ -f /etc/sudoers.d/010_pi-nopasswd ]; then
+if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then
 	rm -f /etc/sudoers.d/010_pi-nopasswd;
 fi
 if [ $useracct -eq 0 ]; then
@@ -503,7 +503,7 @@ rm -f *.deb
 echo "Done."
 sleep 1s
 # take note of linux kernel release
-if [ -f /usr/src/linux-headers-*/include/config/kernel.release ]; then
+if [[ -f "/usr/src/linux-headers-*/include/config/kernel.release" ]]; then
 	KERNEL_RELEASE=`cat /usr/src/linux-headers-*/include/config/kernel.release`
 else
 	KERNEL_RELEASE=`ls /boot/config-* | sed 's/\/boot\/config-//g'`
@@ -517,7 +517,7 @@ if [[ "$EFI" == "true" ]]; then
 fi
 
 # system.journal corrupted or uncleanly shut down, renaming and replacing
-if [ -f /etc/systemd/journald.conf ]; then
+if [[ -f "/etc/systemd/journald.conf" ]]; then
 	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
@@ -537,7 +537,7 @@ fi
 
 # Services
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [ -f /etc/default/haveged ]; then
+	if [[ -f "/etc/default/haveged" ]]; then
 		sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged;
 	fi
 fi
@@ -560,7 +560,7 @@ else
 	firstboot_service > /dev/null 2>&1;
 	governor_service > /dev/null 2>&1;
 	led_service > /dev/null 2>&1;
-	if [ -f /usr/local/sbin/led-trigger ]; then
+	if [[ -f "/usr/local/sbin/led-trigger" ]]; then
 		:;
 	else
 		systemctl disable leds > /dev/null 2>&1;
