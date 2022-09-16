@@ -1,50 +1,44 @@
 #!/bin/bash
 
-debian_stable(){
-rm -f ${RELEASE}
-tee ${RELEASE} <<EOF
+debian_release(){
+if [[ "$DISTRO_VERSION" == "bullseye" ]]; then
+	tee ${RELEASE} <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-updates main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-proposed-updates main contrib non-free
 deb http://deb.debian.org/debian-security ${DISTRO_VERSION}-security main contrib non-free
 deb http://deb.debian.org/debian ${DISTRO_VERSION}-backports main contrib non-free
 EOF
-}
-
-debian_unstable(){
-rm -f ${RELEASE}
-tee ${RELEASE} <<EOF
+else
+	tee ${RELEASE} <<EOF
 deb http://deb.debian.org/debian ${DISTRO_VERSION} main contrib non-free
 EOF
+fi
 }
 
-devuan_stable(){
-rm -f ${RELEASE}
-tee ${RELEASE} <<EOF
+devuan_release(){
+if [[ "$DISTRO_VERSION" == "chimaera" ]]; then
+	tee ${RELEASE} <<EOF
 deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-updates main contrib non-free
 deb http://deb.devuan.org/devuan ${DISTRO_VERSION}-proposed-updates main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-security main contrib non-free
 deb http://deb.devuan.org/merged ${DISTRO_VERSION}-backports main contrib non-free
 EOF
-}
-
-devuan_unstable(){
-rm -f ${RELEASE}
-tee ${RELEASE} <<EOF
+else
+	tee ${RELEASE} <<EOF
 deb http://deb.devuan.org/merged ${DISTRO_VERSION} main contrib non-free
 EOF
+fi
 }
 
-kali_rolling(){
-rm -f ${RELEASE}
+kali_release(){
 tee ${RELEASE} <<EOF
 deb http://http.kali.org/kali ${DISTRO_VERSION} main contrib non-free
 EOF
 }
 
 ubuntu_release(){
-rm -f ${RELEASE}
 tee ${RELEASE} <<EOF
 deb http://ports.ubuntu.com/ubuntu-ports/ ${DISTRO_VERSION} main restricted
 deb http://ports.ubuntu.com/ubuntu-ports/ ${DISTRO_VERSION}-updates main restricted
@@ -67,24 +61,15 @@ EOF
 }
 
 choose_release(){
+rm -f ${RELEASE}
 if [[ "$DISTRO" == "debian" ]]; then
-	if [[ "$DISTRO_VERSION" == "bullseye" ]]; then
-		debian_stable;
-	else
-		debian_unstable;
-	fi
+	debian_release;
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
-	if [[ "$DISTRO_VERSION" == "chimaera" ]]; then
-		devuan_stable;
-	else
-		devuan_unstable;
-	fi
+	devuan_release;
 fi
 if [[ "$DISTRO" == "kali" ]]; then
-	if [[ "$DISTRO_VERSION" == "kali-rolling" ]]; then
-		kali_rolling;
-	fi
+	kali_release;
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	ubuntu_release;
