@@ -1,11 +1,12 @@
 #!/bin/bash
 # Frequencies: 396000 792000 996000 overclock: 1080000 1152000
+source /etc/opt/overclock.txt
 
 DF="1080000"
 OC="1152000"
 
 if [[ -f "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq" ]] && [[ -f "/sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq" ]]; then
-	if [[ `grep -w "overclock=1" "/etc/opt/overclock.txt"` ]]; then
+	if [ $overclock -eq 1 ]; then
 		echo "$OC" | tee /sys/devices/system/cpu/cpu{0,1}/cpufreq/scaling_max_freq;
 	else
 		echo "$DF" | tee /sys/devices/system/cpu/cpu{0,1}/cpufreq/scaling_max_freq;

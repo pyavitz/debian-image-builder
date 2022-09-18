@@ -1,23 +1,15 @@
 #!/bin/bash
 
-turbo-mode(){
-if [[ `grep -w "overclock=1" "/etc/opt/overclock.txt"` ]]; then
-	echo "1" > /sys/devices/system/cpu/cpufreq/boost;
-else
-	echo "0" > /sys/devices/system/cpu/cpufreq/boost;
-fi
-}
+source /etc/opt/overclock.txt
 
-if [ -e /sys/devices/system/cpu/cpufreq/boost ]; then
-	turbo-mode;
-	governor -r > /dev/null 2>&1;
+if [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
+	if [ $overclock -eq 1 ]; then
+		echo "1" > /sys/devices/system/cpu/cpufreq/boost;
+		governor -r;
+	else
+		echo "0" > /sys/devices/system/cpu/cpufreq/boost;
+		governor -r;
+	fi
 fi
 
-# enable if having wifi issues
-#if [[ `sleep 6s; ip a | grep "wlan0"` ]]; then
-#	:;
-#else
-#	rmmod brcmfmac;
-#	sleep 2s;
-#	modprobe brcmfmac;
-#fi
+exit 0
