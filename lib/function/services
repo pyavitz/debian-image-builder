@@ -128,22 +128,16 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	chown root:root /usr/bin/odroid-tweaks;
 	chown root:root /usr/bin/irq-tweaks;
 fi
-if [[ "$BOARD" == "nanopc" ]]; then
+if [[ "$FAMILY_EXT" == "rk3399" ]] || [[ "$FAMILY_EXT" == "rk3328" ]]; then
 	echo "overclock=0" > /etc/opt/overclock.txt;
-	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks;
-	chmod +x /usr/bin/rk3399-tweaks;
-	chown root:root /usr/bin/rk3399-tweaks;
+	mv -f rk-tweaks /usr/bin/rk-tweaks;
+	chmod +x /usr/bin/rk-tweaks;
+	chown root:root /usr/bin/rk-tweaks;
 fi
 if [[ "$BOARD" == "nanopir5s" ]]; then
 	mv -f nanopir5s-tweaks /usr/bin/nanopir5s-tweaks;
 	chmod +x /usr/bin/nanopir5s-tweaks;
 	chown root:root /usr/bin/nanopir5s-tweaks;
-fi
-if [[ "$BOARD" == "rockpro64" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt;
-	mv -f rk3399-tweaks /usr/bin/rk3399-tweaks;
-	chmod +x /usr/bin/rk3399-tweaks;
-	chown root:root /usr/bin/rk3399-tweaks;
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	echo "overclock=0" > /etc/opt/overclock.txt;
@@ -223,16 +217,16 @@ EOF
 systemctl enable irq-tweaks
 }
 
-rk3399_systemd(){
+rockchip_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=RK3399 Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/rk3399-tweaks
+Description=Rockchip Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/rk-tweaks
 After=sysinit.target local-fs.target
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/rk3399-tweaks
+ExecStart=/usr/bin/rk-tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -339,8 +333,8 @@ else
 	if [[ "$FAMILY_EXT" == "odroid" ]]; then
 		odroid_systemd;
 	fi
-	if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "rockpro64" ]]; then
-		rk3399_systemd;			
+	if [[ "$FAMILY_EXT" == "rk3399" ]] || [[ "$FAMILY_EXT" == "rk3328" ]]; then
+		rockchip_systemd;			
 	fi
 	if [[ "$BOARD" == "nanopir5s" ]]; then
 		nanopir5s_systemd;			
@@ -448,7 +442,7 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		update-rc.d tweaks defaults 2;
 	fi
 fi
-if [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "nanopir5s" ]] || [[ "$BOARD" == "rockpro64" ]] || [[ "$BOARD" == "cubietruck" ]] || [[ "$BOARD" == "cuboxi" ]]; then
+if [[ "$FAMILY_EXT" == "rk3399" ]] || [[ "$FAMILY_EXT" == "rk3328" ]] || [[ "$BOARD" == "nanopir5s" ]] || [[ "$BOARD" == "cubietruck" ]] || [[ "$BOARD" == "cuboxi" ]]; then
 	chmod +x /etc/init.d/tweaks;
 	update-rc.d tweaks defaults 2;
 fi
