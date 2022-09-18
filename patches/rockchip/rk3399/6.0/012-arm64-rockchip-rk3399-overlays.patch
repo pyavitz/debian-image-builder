@@ -1,7 +1,7 @@
 diff -Naur a/Makefile b/Makefile
---- a/Makefile	2022-08-14 18:50:18.000000000 -0400
-+++ b/Makefile	2022-08-15 12:25:53.767482291 -0400
-@@ -1380,7 +1380,7 @@
+--- a/Makefile	2022-09-11 16:22:01.000000000 -0400
++++ b/Makefile	2022-09-18 08:21:33.523799736 -0400
+@@ -1377,7 +1377,7 @@
  	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
  
  %.dtbo: dtbs_prepare
@@ -11,8 +11,8 @@ diff -Naur a/Makefile b/Makefile
  PHONY += dtbs dtbs_prepare dtbs_install dtbs_check
  dtbs: dtbs_prepare
 diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
---- a/arch/arm64/boot/.gitignore	2022-04-20 03:36:28.000000000 -0400
-+++ b/arch/arm64/boot/.gitignore	2022-04-28 19:29:45.876385195 -0400
+--- a/arch/arm64/boot/.gitignore	2022-09-11 16:22:01.000000000 -0400
++++ b/arch/arm64/boot/.gitignore	2022-09-18 08:21:33.523799736 -0400
 @@ -1,3 +1,5 @@
  # SPDX-License-Identifier: GPL-2.0-only
  Image
@@ -20,8 +20,8 @@ diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
 +*.dtb*
 +*.scr
 diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
---- a/arch/arm64/boot/dts/rockchip/Makefile	2022-04-20 03:36:28.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-04-28 19:29:45.876385195 -0400
+--- a/arch/arm64/boot/dts/rockchip/Makefile	2022-09-11 16:22:01.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-09-18 08:21:33.527799736 -0400
 @@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
 +subdir-y += overlays
@@ -31,7 +31,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
  dtb-$(CONFIG_ARCH_ROCKCHIP) += px30-engicam-px30-core-ctouch2-of10.dtb
 diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/Makefile b/arch/arm64/boot/dts/rockchip/overlays/Makefile
 --- a/arch/arm64/boot/dts/rockchip/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/Makefile	2022-04-28 19:29:45.876385195 -0400
++++ b/arch/arm64/boot/dts/rockchip/overlays/Makefile	2022-09-18 08:21:33.527799736 -0400
 @@ -0,0 +1,6 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
@@ -41,13 +41,13 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/Makefile b/arch/arm64/boot/dt
 +always-y := $(dtbo-y)
 diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts b/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts
 --- a/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts	2022-04-28 19:40:56.273920549 -0400
-@@ -0,0 +1,32 @@
++++ b/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts	2022-09-18 08:16:19.263805000 -0400
+@@ -0,0 +1,44 @@
 +/dts-v1/;
 +/plugin/;
 +
 +/ {
-+	/* compatible = "friendlyarm,nanopc-t4", "rockchip,rk3399"; */
++	compatible = "rockchip,rk3399";
 +
 +	fragment@0 {
 +		target-path = "/opp-table-0";
@@ -55,6 +55,14 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts 
 +			opp06 {
 +				opp-hz = /bits/ 64 <1512000000>;
 +				opp-microvolt = <1200000>;
++			};
++			opp07 {
++				opp-hz = /bits/ 64 <1608000000>;
++				opp-microvolt = <1225000>;
++			};
++			opp08 {
++				opp-hz = /bits/ 64 <1800000000>;
++				opp-microvolt = <1275000>;
 +				turbo-mode;
 +			};
 +		};
@@ -62,22 +70,26 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/rockchip-rk3399-opp-2ghz.dts 
 +};
 +
 +/ {
-+	/* compatible = "friendlyarm,nanopc-t4", "rockchip,rk3399"; */
++	compatible = "rockchip,rk3399";
 +
 +	fragment@1 {
 +		target-path = "/opp-table-1";
 +		__overlay__ {
 +			opp08 {
 +				opp-hz = /bits/ 64 <2016000000>;
-+				opp-microvolt = <1300000>;
++				opp-microvolt = <1250000>;
++			};
++			opp09 {
++				opp-hz = /bits/ 64 <2208000000>;
++				opp-microvolt = <1325000>;
 +				turbo-mode;
 +			};
 +		};
 +	};
 +};
 diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
---- a/scripts/Makefile.dtbinst	2022-04-20 03:36:28.000000000 -0400
-+++ b/scripts/Makefile.dtbinst	2022-04-28 19:29:45.880385175 -0400
+--- a/scripts/Makefile.dtbinst	2022-09-11 16:22:01.000000000 -0400
++++ b/scripts/Makefile.dtbinst	2022-09-18 08:21:33.527799736 -0400
 @@ -18,9 +18,10 @@
  include $(src)/Makefile
  
@@ -91,9 +103,9 @@ diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
  
  quiet_cmd_dtb_install = INSTALL $@
 diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
---- a/scripts/Makefile.lib	2022-04-20 03:36:28.000000000 -0400
-+++ b/scripts/Makefile.lib	2022-04-28 19:29:45.880385175 -0400
-@@ -306,6 +306,7 @@
+--- a/scripts/Makefile.lib	2022-09-11 16:22:01.000000000 -0400
++++ b/scripts/Makefile.lib	2022-09-18 08:21:33.527799736 -0400
+@@ -317,6 +317,7 @@
  DTC_FLAGS += -Wno-unit_address_vs_reg \
  	-Wno-avoid_unnecessary_addr_size \
  	-Wno-alias_paths \
@@ -101,9 +113,9 @@ diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
  	-Wno-graph_child_address \
  	-Wno-simple_bus_reg \
  	-Wno-unique_unit_address
-@@ -377,6 +378,18 @@
- $(obj)/%.dt.yaml: $(src)/%.dts $(DTC) $(DT_TMP_SCHEMA) FORCE
- 	$(call if_changed_rule,dtc)
+@@ -386,6 +387,18 @@
+ $(obj)/%.dtbo: $(src)/%.dts $(DTC) FORCE
+ 	$(call if_changed_dep,dtc)
  
 +quiet_cmd_dtco = DTCO    $@
 +cmd_dtco = mkdir -p $(dir ${dtc-tmp}) ; \
@@ -120,4 +132,3 @@ diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
  dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
  
  # Bzip2
-
