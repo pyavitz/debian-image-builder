@@ -669,178 +669,24 @@ diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_ve
  
  	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu.c
---- a/drivers/gpu/drm/meson/meson_viu.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_viu.c	2021-10-19 00:24:08.000000000 -0400
-@@ -78,32 +78,52 @@
- 	EOTF_COEFF_RIGHTSHIFT /* right shift */
- };
- 
--static void meson_viu_set_g12a_osd1_matrix(struct meson_drm *priv,
--					   int *m, bool csc_on)
-+static void meson_viu_set_g12a_osd_matrix(struct meson_drm *priv,
-+					  int *m, bool csc_on)
- {
- 	/* VPP WRAP OSD1 matrix */
- 	writel(((m[0] & 0xfff) << 16) | (m[1] & 0xfff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_PRE_OFFSET0_1));
-+	writel(((m[0] & 0xfff) << 16) | (m[1] & 0xfff),
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_PRE_OFFSET0_1));
- 	writel(m[2] & 0xfff,
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_PRE_OFFSET2));
-+	writel(m[2] & 0xfff,
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_PRE_OFFSET2));
- 	writel(((m[3] & 0x1fff) << 16) | (m[4] & 0x1fff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF00_01));
-+	writel(((m[3] & 0x1fff) << 16) | (m[4] & 0x1fff),
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_COEF00_01));
- 	writel(((m[5] & 0x1fff) << 16) | (m[6] & 0x1fff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF02_10));
-+	writel(((m[5] & 0x1fff) << 16) | (m[6] & 0x1fff),
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_COEF02_10));
- 	writel(((m[7] & 0x1fff) << 16) | (m[8] & 0x1fff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF11_12));
-+	writel(((m[7] & 0x1fff) << 16) | (m[8] & 0x1fff),
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_COEF11_12));
- 	writel(((m[9] & 0x1fff) << 16) | (m[10] & 0x1fff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF20_21));
-+	writel(((m[9] & 0x1fff) << 16) | (m[10] & 0x1fff),
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_COEF20_21));
- 	writel((m[11] & 0x1fff) << 16,
- 		priv->io_base +	_REG(VPP_WRAP_OSD1_MATRIX_COEF22));
-+	writel((m[11] & 0x1fff) << 16,
-+		priv->io_base +	_REG(VPP_WRAP_OSD2_MATRIX_COEF22));
- 
- 	writel(((m[18] & 0xfff) << 16) | (m[19] & 0xfff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_OFFSET0_1));
-+	writel(((m[18] & 0xfff) << 16) | (m[19] & 0xfff),
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_OFFSET0_1));
- 	writel(m[20] & 0xfff,
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_OFFSET2));
-+	writel(m[20] & 0xfff,
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_OFFSET2));
- 
- 	writel_bits_relaxed(BIT(0), csc_on ? BIT(0) : 0,
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_EN_CTRL));
-+	writel_bits_relaxed(BIT(0), csc_on ? BIT(0) : 0,
-+		priv->io_base + _REG(VPP_WRAP_OSD2_MATRIX_EN_CTRL));
- }
- 
- static void meson_viu_set_osd_matrix(struct meson_drm *priv,
-@@ -114,21 +134,36 @@
- 		/* osd matrix, VIU_MATRIX_0 */
- 		writel(((m[0] & 0xfff) << 16) | (m[1] & 0xfff),
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_PRE_OFFSET0_1));
-+		writel(((m[0] & 0xfff) << 16) | (m[1] & 0xfff),
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_PRE_OFFSET0_1));
- 		writel(m[2] & 0xfff,
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_PRE_OFFSET2));
-+		writel(m[2] & 0xfff,
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_PRE_OFFSET2));
- 		writel(((m[3] & 0x1fff) << 16) | (m[4] & 0x1fff),
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_COEF00_01));
-+		writel(((m[3] & 0x1fff) << 16) | (m[4] & 0x1fff),
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_COEF00_01));
- 		writel(((m[5] & 0x1fff) << 16) | (m[6] & 0x1fff),
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_COEF02_10));
-+		writel(((m[5] & 0x1fff) << 16) | (m[6] & 0x1fff),
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_COEF02_10));
- 		writel(((m[7] & 0x1fff) << 16) | (m[8] & 0x1fff),
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_COEF11_12));
-+		writel(((m[7] & 0x1fff) << 16) | (m[8] & 0x1fff),
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_COEF11_12));
- 		writel(((m[9] & 0x1fff) << 16) | (m[10] & 0x1fff),
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_COEF20_21));
-+		writel(((m[9] & 0x1fff) << 16) | (m[10] & 0x1fff),
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_COEF20_21));
- 
- 		if (m[21]) {
- 			writel(((m[11] & 0x1fff) << 16) | (m[12] & 0x1fff),
- 				priv->io_base +
- 					_REG(VIU_OSD1_MATRIX_COEF22_30));
-+			writel(((m[11] & 0x1fff) << 16),
-+				priv->io_base +
-+					_REG(VIU_OSD2_MATRIX_COEF22));
- 			writel(((m[13] & 0x1fff) << 16) | (m[14] & 0x1fff),
- 				priv->io_base +
- 					_REG(VIU_OSD1_MATRIX_COEF31_32));
-@@ -137,14 +172,21 @@
- 					_REG(VIU_OSD1_MATRIX_COEF40_41));
- 			writel(m[17] & 0x1fff, priv->io_base +
- 				_REG(VIU_OSD1_MATRIX_COLMOD_COEF42));
--		} else
-+		} else {
- 			writel((m[11] & 0x1fff) << 16, priv->io_base +
- 				_REG(VIU_OSD1_MATRIX_COEF22_30));
-+			writel((m[11] & 0x1fff) << 16, priv->io_base +
-+				_REG(VIU_OSD2_MATRIX_COEF22));
-+		}
- 
- 		writel(((m[18] & 0xfff) << 16) | (m[19] & 0xfff),
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_OFFSET0_1));
-+		writel(((m[18] & 0xfff) << 16) | (m[19] & 0xfff),
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_OFFSET0_1));
- 		writel(m[20] & 0xfff,
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_OFFSET2));
-+		writel(m[20] & 0xfff,
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_OFFSET2));
- 
- 		writel_bits_relaxed(3 << 30, m[21] << 30,
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_COLMOD_COEF42));
-@@ -154,8 +196,12 @@
- 		/* 23 reserved for clipping control */
- 		writel_bits_relaxed(BIT(0), csc_on ? BIT(0) : 0,
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_CTRL));
-+		writel_bits_relaxed(BIT(0), csc_on ? BIT(0) : 0,
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_CTRL));
- 		writel_bits_relaxed(BIT(1), 0,
- 			priv->io_base + _REG(VIU_OSD1_MATRIX_CTRL));
-+		writel_bits_relaxed(BIT(1), 0,
-+			priv->io_base + _REG(VIU_OSD2_MATRIX_CTRL));
- 	} else if (m_select == VIU_MATRIX_OSD_EOTF) {
- 		int i;
- 
-@@ -425,14 +471,12 @@
+--- a/drivers/gpu/drm/meson/meson_viu.c	2022-08-17 09:16:21.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_viu.c	2022-08-18 21:44:58.000000000 -0400
+@@ -425,6 +425,7 @@
  	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXM) ||
  	    meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXL))
  		meson_viu_load_matrix(priv);
--	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
--		meson_viu_set_g12a_osd1_matrix(priv, RGB709_to_YUV709l_coeff,
 +#if 0
-+	/* FIXME: */
-+	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A))
-+		meson_viu_set_g12a_osd_matrix(priv, RGB709_to_YUV709l_coeff,
+ 	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
+ 		meson_viu_set_g12a_osd1_matrix(priv, RGB709_to_YUV709l_coeff,
  					       true);
--		/* fix green/pink color distortion from vendor u-boot */
--		writel_bits_relaxed(OSD1_HDR2_CTRL_REG_ONLY_MAT |
--				OSD1_HDR2_CTRL_VDIN0_HDR2_TOP_EN, 0,
--				priv->io_base + _REG(OSD1_HDR2_CTRL));
--	}
+@@ -433,6 +434,7 @@
+ 				OSD1_HDR2_CTRL_VDIN0_HDR2_TOP_EN, 0,
+ 				priv->io_base + _REG(OSD1_HDR2_CTRL));
+ 	}
 +#endif
  
  	/* Initialize OSD1 fifo control register */
  	reg = VIU_OSD_DDR_PRIORITY_URGENT |
-@@ -469,14 +513,13 @@
- 			priv->io_base + _REG(VD2_IF0_LUMA_FIFO_SIZE));
- 
- 	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
--		writel_relaxed(VIU_OSD_BLEND_REORDER(0, 1) |
--			       VIU_OSD_BLEND_REORDER(1, 0) |
--			       VIU_OSD_BLEND_REORDER(2, 0) |
--			       VIU_OSD_BLEND_REORDER(3, 0) |
--			       VIU_OSD_BLEND_DIN_EN(1) |
--			       VIU_OSD_BLEND1_DIN3_BYPASS_TO_DOUT1 |
--			       VIU_OSD_BLEND1_DOUT_BYPASS_TO_BLEND2 |
--			       VIU_OSD_BLEND_DIN0_BYPASS_TO_DOUT0 |
-+		/* setup bypass to have OSD1->DOUT0 + OSD2->DOUT1 */
-+		writel_relaxed(VIU_OSD_BLEND_REORDER(0, 1) |	/* OSD1 to DIN0 */
-+			       VIU_OSD_BLEND_REORDER(1, 4) |
-+			       VIU_OSD_BLEND_REORDER(2, 4) |
-+			       VIU_OSD_BLEND_REORDER(3, 2) |	/* OSD2 to DIN3 */
-+			       VIU_OSD_BLEND_DIN_EN(9) |	/* Enable DIN0 & DIN3 */
-+			       VIU_OSD_BLEND_DIN0_BYPASS_TO_DOUT0 |	/* DIN0 to DOUT0 */
- 			       VIU_OSD_BLEND_BLEN2_PREMULT_EN(1) |
- 			       VIU_OSD_BLEND_HOLD_LINES(4),
- 			       priv->io_base + _REG(VIU_OSD_BLEND_CTRL));
 diff -Naur a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
 --- a/drivers/gpu/drm/tiny/ili9341.c	2021-10-18 02:00:13.000000000 -0400
 +++ b/drivers/gpu/drm/tiny/ili9341.c	2021-10-19 00:24:08.000000000 -0400
