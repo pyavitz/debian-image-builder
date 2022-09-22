@@ -1,3 +1,110 @@
+diff --git a/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml b/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml
+new file mode 100644
+index 000000000000..9f2d8d2cc7a5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml
+@@ -0,0 +1,80 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/phy/rockchip,pcie3-phy.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Rockchip PCIe v3 phy
++
++maintainers:
++  - Heiko Stuebner <heiko@sntech.de>
++
++properties:
++  compatible:
++    enum:
++      - rockchip,rk3568-pcie3-phy
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    minItems: 3
++    maxItems: 3
++
++  clock-names:
++    items:
++      - const: refclk_m
++      - const: refclk_n
++      - const: pclk
++
++  data-lanes:
++    description: which lanes (by position) should be mapped to which
++      controller (value). 0 means lane disabled, higher value means used.
++      (controller-number +1 )
++    $ref: /schemas/types.yaml#/definitions/uint32-array
++    minItems: 2
++    maxItems: 16
++    items:
++      minimum: 0
++      maximum: 16
++
++  "#phy-cells":
++    const: 0
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    const: phy
++
++  rockchip,phy-grf:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the syscon managing the phy "general register files"
++
++  rockchip,pipe-grf:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the syscon managing the pipe "general register files"
++
++required:
++  - compatible
++  - reg
++  - rockchip,phy-grf
++  - "#phy-cells"
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/rk3568-cru.h>
++    pcie30phy: phy@fe8c0000 {
++      compatible = "rockchip,rk3568-pcie3-phy";
++      reg = <0xfe8c0000 0x20000>;
++      #phy-cells = <0>;
++      clocks = <&pmucru CLK_PCIE30PHY_REF_M>,
++               <&pmucru CLK_PCIE30PHY_REF_N>,
++               <&cru PCLK_PCIE30PHY>;
++      clock-names = "refclk_m", "refclk_n", "pclk";
++      resets = <&cru SRST_PCIE30PHY>;
++      reset-names = "phy";
++      rockchip,phy-grf = <&pcie30_phy_grf>;
++    };
+-- 
+2.34.1
+diff --git a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
+index 75a2b8bb25fb..97301c470173 100644
+--- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
++++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
+@@ -16,9 +16,12 @@ properties:
+           - enum:
+               - rockchip,rk3288-sgrf
+               - rockchip,rk3566-pipe-grf
++              - rockchip,rk3568-pcie3-phy-grf
+               - rockchip,rk3568-pipe-grf
+               - rockchip,rk3568-pipe-phy-grf
+               - rockchip,rk3568-usb2phy-grf
++              - rockchip,rk3588-pcie3-phy-grf
++              - rockchip,rk3588-pcie3-pipe-grf
+               - rockchip,rv1108-usbgrf
+           - const: syscon
+       - items:
+-- 
+2.34.1
 diff --git a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
 index 9022e395c056..94360fc96a6f 100644
 --- a/drivers/phy/rockchip/Kconfig
@@ -372,6 +479,8 @@ index 000000000000..e7ac81764576
 +#define PHY_MODE_PCIE_BIFURCATION 22
 +
 +#endif
+-- 
+2.34.1
 diff --git a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
 index 2bdf8c7e9765..ba67b58f05b7 100644
 --- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi
@@ -505,4 +614,31 @@ index 2bdf8c7e9765..ba67b58f05b7 100644
  	gmac0: ethernet@fe2a0000 {
  		compatible = "rockchip,rk3568-gmac", "snps,dwmac-4.20a";
  		reg = <0x0 0xfe2a0000 0x0 0x10000>;
+-- 
+2.34.1
+diff -Naur a/include/dt-bindings/phy/phy-snps-pcie3.h b/include/dt-bindings/phy/phy-snps-pcie3.h
+--- a/include/dt-bindings/phy/phy-snps-pcie3.h	1969-12-31 19:00:00.000000000 -0500
++++ b/include/dt-bindings/phy/phy-snps-pcie3.h	2022-07-11 05:18:34.000000000 -0400
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
++/*
++ * Copyright (c) 2021 Rockchip Electronics Co., Ltd.
++ */
++
++#ifndef _DT_BINDINGS_PHY_SNPS_PCIE3
++#define _DT_BINDINGS_PHY_SNPS_PCIE3
++
++/*
++ * pcie30_phy_mode[2:0]
++ * bit2: aggregation
++ * bit1: bifurcation for port 1
++ * bit0: bifurcation for port 0
++ */
++#define PHY_MODE_PCIE_AGGREGATION 4	/* PCIe3x4 */
++#define PHY_MODE_PCIE_NANBNB	0	/* P1:PCIe3x2  +  P0:PCIe3x2 */
++#define PHY_MODE_PCIE_NANBBI	1	/* P1:PCIe3x2  +  P0:PCIe3x1*2 */
++#define PHY_MODE_PCIE_NABINB	2	/* P1:PCIe3x1*2 + P0:PCIe3x2 */
++#define PHY_MODE_PCIE_NABIBI	3	/* P1:PCIe3x1*2 + P0:PCIe3x1*2 */
++
++#endif /* _DT_BINDINGS_PHY_SNPS_PCIE3 */
 
