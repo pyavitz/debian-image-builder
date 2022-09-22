@@ -1,0 +1,72 @@
+diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-09-20 06:43:50.000000000 -0400
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-09-22 08:24:39.006800429 -0400
+@@ -2719,6 +2719,9 @@
+ 	 * if supported. In any case the default RGB888 format is added
+ 	 */
+ 
++	/* Default 8bit RGB fallback */
++	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
++
+ 	if (max_bpc >= 16 && info->bpc == 16) {
+ 		if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
+ 			output_fmts[i++] = MEDIA_BUS_FMT_YUV16_1X48;
+@@ -2752,9 +2755,6 @@
+ 	if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
+ 		output_fmts[i++] = MEDIA_BUS_FMT_YUV8_1X24;
+ 
+-	/* Default 8bit RGB fallback */
+-	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
+-
+ 	*num_output_fmts = i;
+ 
+ 	return output_fmts;
+diff -Naur a/drivers/gpu/drm/meson/meson_plane.c b/drivers/gpu/drm/meson/meson_plane.c
+--- a/drivers/gpu/drm/meson/meson_plane.c	2022-09-20 06:43:50.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_plane.c	2022-09-22 08:25:46.598799218 -0400
+@@ -168,7 +168,7 @@
+ 
+ 	/* Enable OSD and BLK0, set max global alpha */
+ 	priv->viu.osd1_ctrl_stat = OSD_ENABLE |
+-				   (0xFF << OSD_GLOBAL_ALPHA_SHIFT) |
++				   (0x100 << OSD_GLOBAL_ALPHA_SHIFT) |
+ 				   OSD_BLK0_ENABLE;
+ 
+ 	priv->viu.osd1_ctrl_stat2 = readl(priv->io_base +
+diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
+--- a/drivers/gpu/drm/meson/meson_venc.c	2022-09-20 06:43:50.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_venc.c	2022-09-22 08:27:26.574797428 -0400
+@@ -866,10 +866,10 @@
+ 			    DRM_MODE_FLAG_PVSYNC | DRM_MODE_FLAG_NVSYNC))
+ 		return MODE_BAD;
+ 
+-	if (mode->hdisplay < 640 || mode->hdisplay > 1920)
++	if (mode->hdisplay < 384 || mode->hdisplay > 1920)
+ 		return MODE_BAD_HVALUE;
+ 
+-	if (mode->vdisplay < 480 || mode->vdisplay > 1200)
++	if (mode->vdisplay < 384 || mode->vdisplay > 1920)
+ 		return MODE_BAD_VVALUE;
+ 
+ 	return MODE_OK;
+diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu.c
+--- a/drivers/gpu/drm/meson/meson_viu.c	2022-09-20 06:43:50.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_viu.c	2022-09-22 08:29:32.614795171 -0400
+@@ -94,7 +94,7 @@
+ 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF11_12));
+ 	writel(((m[9] & 0x1fff) << 16) | (m[10] & 0x1fff),
+ 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF20_21));
+-	writel((m[11] & 0x1fff) << 16,
++	writel((m[11] & 0x1fff),
+ 		priv->io_base +	_REG(VPP_WRAP_OSD1_MATRIX_COEF22));
+ 
+ 	writel(((m[18] & 0xfff) << 16) | (m[19] & 0xfff),
+@@ -436,7 +436,7 @@
+ 
+ 	/* Initialize OSD1 fifo control register */
+ 	reg = VIU_OSD_DDR_PRIORITY_URGENT |
+-		VIU_OSD_HOLD_FIFO_LINES(31) |
++		VIU_OSD_HOLD_FIFO_LINES(4) |
+ 		VIU_OSD_FIFO_DEPTH_VAL(32) | /* fifo_depth_val: 32*8=256 */
+ 		VIU_OSD_WORDS_PER_BURST(4) | /* 4 words in 1 burst */
+ 		VIU_OSD_FIFO_LIMITS(2);      /* fifo_lim: 2*16=32 */
