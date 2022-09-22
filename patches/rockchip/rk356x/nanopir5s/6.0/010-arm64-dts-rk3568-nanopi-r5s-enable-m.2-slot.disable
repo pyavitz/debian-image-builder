@@ -1,0 +1,39 @@
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts
+--- a/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2022-09-10 00:28:11.851328198 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2022-09-10 00:27:35.923328842 -0400
+@@ -157,6 +157,8 @@
+ 		regulator-max-microvolt = <3300000>;
+ 		enable-active-high;
+ 		gpios = <&gpio0 RK_PD4 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&pcie_enable_h>;
+ 		startup-delay-us = <200000>;
+ 		vin-supply = <&vcc5v0_sys>;
+ 	};
+@@ -602,6 +604,8 @@
+ 
+ &pcie2x1 {
+ 	num-viewport = <4>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_reset_h>;
+ 	reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
+ };
+@@ -638,6 +642,16 @@
+ 		};
+ 	};
+ 
++	pcie {
++		pcie_enable_h: pcie-enable-h {
++			rockchip,pins = <0 RK_PD4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		pcie_reset_h: pcie-reset-h {
++			rockchip,pins = <0 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
+ 	pmic {
+ 		pmic_int: pmic_int {
+ 			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+
