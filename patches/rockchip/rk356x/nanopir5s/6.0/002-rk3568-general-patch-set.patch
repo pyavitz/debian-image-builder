@@ -1,103 +1,3 @@
-diff -Naur a/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml b/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml
---- a/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml	1969-12-31 19:00:00.000000000 -0500
-+++ b/Documentation/devicetree/bindings/phy/rockchip,pcie3-phy.yaml	2022-08-09 16:57:21.010380774 -0400
-@@ -0,0 +1,80 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/phy/rockchip,pcie3-phy.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Rockchip PCIe v3 phy
-+
-+maintainers:
-+  - Heiko Stuebner <heiko@sntech.de>
-+
-+properties:
-+  compatible:
-+    enum:
-+      - rockchip,rk3568-pcie3-phy
-+
-+  reg:
-+    maxItems: 1
-+
-+  clocks:
-+    minItems: 3
-+    maxItems: 3
-+
-+  clock-names:
-+    items:
-+      - const: refclk_m
-+      - const: refclk_n
-+      - const: pclk
-+
-+  data-lanes:
-+    description: which lanes (by position) should be mapped to which
-+      controller (value). 0 means lane disabled, higher value means used.
-+      (controller-number +1 )
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+    minItems: 2
-+    maxItems: 16
-+    items:
-+      minimum: 0
-+      maximum: 16
-+
-+  "#phy-cells":
-+    const: 0
-+
-+  resets:
-+    maxItems: 1
-+
-+  reset-names:
-+    const: phy
-+
-+  rockchip,phy-grf:
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+    description: phandle to the syscon managing the phy "general register files"
-+
-+  rockchip,pipe-grf:
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+    description: phandle to the syscon managing the pipe "general register files"
-+
-+required:
-+  - compatible
-+  - reg
-+  - rockchip,phy-grf
-+  - "#phy-cells"
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/rk3568-cru.h>
-+    pcie30phy: phy@fe8c0000 {
-+      compatible = "rockchip,rk3568-pcie3-phy";
-+      reg = <0xfe8c0000 0x20000>;
-+      #phy-cells = <0>;
-+      clocks = <&pmucru CLK_PCIE30PHY_REF_M>,
-+               <&pmucru CLK_PCIE30PHY_REF_N>,
-+               <&cru PCLK_PCIE30PHY>;
-+      clock-names = "refclk_m", "refclk_n", "pclk";
-+      resets = <&cru SRST_PCIE30PHY>;
-+      reset-names = "phy";
-+      rockchip,phy-grf = <&pcie30_phy_grf>;
-+    };
-diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
---- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-07-31 17:03:01.000000000 -0400
-+++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2022-08-09 16:57:21.011380760 -0400
-@@ -16,9 +16,12 @@
-           - enum:
-               - rockchip,rk3288-sgrf
-               - rockchip,rk3566-pipe-grf
-+              - rockchip,rk3568-pcie3-phy-grf
-               - rockchip,rk3568-pipe-grf
-               - rockchip,rk3568-pipe-phy-grf
-               - rockchip,rk3568-usb2phy-grf
-+              - rockchip,rk3588-pcie3-phy-grf
-+              - rockchip,rk3588-pcie3-pipe-grf
-               - rockchip,rv1108-usbgrf
-           - const: syscon
-       - items:
 diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-half-divider.c
 --- a/drivers/clk/rockchip/clk-half-divider.c	2022-07-31 17:03:01.000000000 -0400
 +++ b/drivers/clk/rockchip/clk-half-divider.c	2022-08-09 17:00:56.992472371 -0400
@@ -110,34 +10,9 @@ diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-
  	struct clk_mux *mux = NULL;
  	struct clk_gate *gate = NULL;
  	struct clk_divider *div = NULL;
-diff -Naur a/drivers/phy/rockchip/phy-rockchip-inno-usb2.c b/drivers/phy/rockchip/phy-rockchip-inno-usb2.c
---- a/drivers/phy/rockchip/phy-rockchip-inno-usb2.c	2022-07-31 17:03:01.000000000 -0400
-+++ b/drivers/phy/rockchip/phy-rockchip-inno-usb2.c	2022-08-09 17:00:48.769584117 -0400
-@@ -978,7 +978,9 @@
- 
- 		switch (rport->port_id) {
- 		case USB2PHY_PORT_OTG:
--			ret |= rockchip_usb2phy_otg_mux_irq(irq, rport);
-+			if (rport->mode != USB_DR_MODE_HOST &&
-+			    rport->mode != USB_DR_MODE_UNKNOWN)
-+				ret |= rockchip_usb2phy_otg_mux_irq(irq, rport);
- 			break;
- 		case USB2PHY_PORT_HOST:
- 			ret |= rockchip_usb2phy_linestate_irq(irq, rport);
-@@ -1162,6 +1164,12 @@
- 					EXTCON_USB_HOST, &rport->event_nb);
- 		if (ret)
- 			dev_err(rphy->dev, "register USB HOST notifier failed\n");
-+
-+		if (!of_property_read_bool(rphy->dev->of_node, "extcon")) {
-+			/* do initial sync of usb state */
-+			ret = property_enabled(rphy->grf, &rport->port_cfg->utmi_id);
-+			extcon_set_state_sync(rphy->edev, EXTCON_USB_HOST, !ret);
-+		}
- 	}
- 
- out:
-@@ -1283,7 +1291,7 @@
+--- a/drivers/phy/rockchip/phy-rockchip-inno-usb2.c
++++ b/drivers/phy/rockchip/phy-rockchip-inno-usb2.c
+@@ -1283,7 +1283,7 @@ static int rockchip_usb2phy_probe(struct
  
  		phy = devm_phy_create(dev, child_np, &rockchip_usb2phy_ops);
  		if (IS_ERR(phy)) {
@@ -296,4 +171,280 @@ diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
  };
  
  #endif /* __RT5651_H__ */
-
+diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+--- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-07-10 17:40:51.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2022-07-11 05:18:34.000000000 -0400
+@@ -91,80 +91,88 @@
+ 
+ static const struct dw_hdmi_mpll_config rockchip_mpll_cfg[] = {
+ 	{
+-		27000000, {
+-			{ 0x00b3, 0x0000},
+-			{ 0x2153, 0x0000},
+-			{ 0x40f3, 0x0000}
+-		},
+-	}, {
+-		36000000, {
+-			{ 0x00b3, 0x0000},
+-			{ 0x2153, 0x0000},
+-			{ 0x40f3, 0x0000}
+-		},
+-	}, {
+-		40000000, {
+-			{ 0x00b3, 0x0000},
+-			{ 0x2153, 0x0000},
+-			{ 0x40f3, 0x0000}
+-		},
+-	}, {
+-		54000000, {
+-			{ 0x0072, 0x0001},
+-			{ 0x2142, 0x0001},
+-			{ 0x40a2, 0x0001},
+-		},
+-	}, {
+-		65000000, {
+-			{ 0x0072, 0x0001},
+-			{ 0x2142, 0x0001},
+-			{ 0x40a2, 0x0001},
+-		},
+-	}, {
+-		66000000, {
+-			{ 0x013e, 0x0003},
+-			{ 0x217e, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		74250000, {
+-			{ 0x0072, 0x0001},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		83500000, {
+-			{ 0x0072, 0x0001},
+-		},
+-	}, {
+-		108000000, {
+-			{ 0x0051, 0x0002},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		106500000, {
+-			{ 0x0051, 0x0002},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		146250000, {
+-			{ 0x0051, 0x0002},
+-			{ 0x2145, 0x0002},
+-			{ 0x4061, 0x0002}
+-		},
+-	}, {
+-		148500000, {
+-			{ 0x0051, 0x0003},
+-			{ 0x214c, 0x0003},
+-			{ 0x4064, 0x0003}
++		30666000, {
++			{ 0x00b3, 0x0000 },
++			{ 0x2153, 0x0000 },
++			{ 0x40f3, 0x0000 },
++		},
++	},  {
++		36800000, {
++			{ 0x00b3, 0x0000 },
++			{ 0x2153, 0x0000 },
++			{ 0x40a2, 0x0001 },
++		},
++	},  {
++		46000000, {
++			{ 0x00b3, 0x0000 },
++			{ 0x2142, 0x0001 },
++			{ 0x40a2, 0x0001 },
++		},
++	},  {
++		61333000, {
++			{ 0x0072, 0x0001 },
++			{ 0x2142, 0x0001 },
++			{ 0x40a2, 0x0001 },
++		},
++	},  {
++		73600000, {
++			{ 0x0072, 0x0001 },
++			{ 0x2142, 0x0001 },
++			{ 0x4061, 0x0002 },
++		},
++	},  {
++		92000000, {
++			{ 0x0072, 0x0001 },
++			{ 0x2145, 0x0002 },
++			{ 0x4061, 0x0002 },
++		},
++	},  {
++		122666000, {
++			{ 0x0051, 0x0002 },
++			{ 0x2145, 0x0002 },
++			{ 0x4061, 0x0002 },
++		},
++	},  {
++		147200000, {
++			{ 0x0051, 0x0002 },
++			{ 0x2145, 0x0002 },
++			{ 0x4064, 0x0003 },
++		},
++	},  {
++		184000000, {
++			{ 0x0051, 0x0002 },
++			{ 0x214c, 0x0003 },
++			{ 0x4064, 0x0003 },
++		},
++	},  {
++		226666000, {
++			{ 0x0040, 0x0003 },
++			{ 0x214c, 0x0003 },
++			{ 0x4064, 0x0003 },
++		},
++	},  {
++		272000000, {
++			{ 0x0040, 0x0003 },
++			{ 0x214c, 0x0003 },
++			{ 0x5a64, 0x0003 },
++		},
++	},  {
++		340000000, {
++			{ 0x0040, 0x0003 },
++			{ 0x3b4c, 0x0003 },
++			{ 0x5a64, 0x0003 },
++		},
++	},  {
++		600000000, {
++			{ 0x1a40, 0x0003 },
++			{ 0x3b4c, 0x0003 },
++			{ 0x5a64, 0x0003 },
+ 		},
+-	}, {
++	},  {
+ 		~0UL, {
+-			{ 0x00a0, 0x000a },
+-			{ 0x2001, 0x000f },
+-			{ 0x4002, 0x000f },
++			{ 0x0000, 0x0000 },
++			{ 0x0000, 0x0000 },
++			{ 0x0000, 0x0000 },
+ 		},
+ 	}
+ };
+@@ -172,20 +180,8 @@
+ static const struct dw_hdmi_curr_ctrl rockchip_cur_ctr[] = {
+ 	/*      pixelclk    bpp8    bpp10   bpp12 */
+ 	{
+-		40000000,  { 0x0018, 0x0018, 0x0018 },
+-	}, {
+-		65000000,  { 0x0028, 0x0028, 0x0028 },
+-	}, {
+-		66000000,  { 0x0038, 0x0038, 0x0038 },
+-	}, {
+-		74250000,  { 0x0028, 0x0038, 0x0038 },
+-	}, {
+-		83500000,  { 0x0028, 0x0038, 0x0038 },
+-	}, {
+-		146250000, { 0x0038, 0x0038, 0x0038 },
+-	}, {
+-		148500000, { 0x0000, 0x0038, 0x0038 },
+-	}, {
++		600000000, { 0x0000, 0x0000, 0x0000 },
++	},  {
+ 		~0UL,      { 0x0000, 0x0000, 0x0000},
+ 	}
+ };
+@@ -195,6 +191,7 @@
+ 	{ 74250000,  0x8009, 0x0004, 0x0272},
+ 	{ 148500000, 0x802b, 0x0004, 0x028d},
+ 	{ 297000000, 0x8039, 0x0005, 0x028d},
++	{ 594000000, 0x8039, 0x0000, 0x019d},
+ 	{ ~0UL,	     0x0000, 0x0000, 0x0000}
+ };
+ 
+@@ -240,26 +237,6 @@
+ 	return 0;
+ }
+ 
+-static enum drm_mode_status
+-dw_hdmi_rockchip_mode_valid(struct dw_hdmi *hdmi, void *data,
+-			    const struct drm_display_info *info,
+-			    const struct drm_display_mode *mode)
+-{
+-	const struct dw_hdmi_mpll_config *mpll_cfg = rockchip_mpll_cfg;
+-	int pclk = mode->clock * 1000;
+-	bool valid = false;
+-	int i;
+-
+-	for (i = 0; mpll_cfg[i].mpixelclock != (~0UL); i++) {
+-		if (pclk == mpll_cfg[i].mpixelclock) {
+-			valid = true;
+-			break;
+-		}
+-	}
+-
+-	return (valid) ? MODE_OK : MODE_BAD;
+-}
+-
+ static void dw_hdmi_rockchip_encoder_disable(struct drm_encoder *encoder)
+ {
+ }
+@@ -425,7 +402,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3228_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg = rockchip_mpll_cfg,
+ 	.cur_ctr = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -442,7 +418,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3288_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg   = rockchip_mpll_cfg,
+ 	.cur_ctr    = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -462,7 +437,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3328_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg = rockchip_mpll_cfg,
+ 	.cur_ctr = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -480,7 +454,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3399_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg   = rockchip_mpll_cfg,
+ 	.cur_ctr    = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -493,7 +466,6 @@
+ };
+ 
+ static const struct dw_hdmi_plat_data rk3568_hdmi_drv_data = {
+-	.mode_valid = dw_hdmi_rockchip_mode_valid,
+ 	.mpll_cfg   = rockchip_mpll_cfg,
+ 	.cur_ctr    = rockchip_cur_ctr,
+ 	.phy_config = rockchip_phy_config,
+@@ -597,6 +569,14 @@
+ 	}
+ 
+ 	if (hdmi->chip_data == &rk3568_chip_data) {
++		regmap_write(hdmi->regmap, RK3568_GRF_VO_CON1,
++			     HIWORD_UPDATE(RK3568_HDMI_SDAIN_MSK |
++					   RK3568_HDMI_SCLIN_MSK,
++					   RK3568_HDMI_SDAIN_MSK |
++					   RK3568_HDMI_SCLIN_MSK));
++	}
++
++	if (hdmi->chip_data == &rk3568_chip_data) {
+ 		regmap_write(hdmi->regmap, RK3568_GRF_VO_CON1,
+ 			     HIWORD_UPDATE(RK3568_HDMI_SDAIN_MSK |
+ 					   RK3568_HDMI_SCLIN_MSK,
