@@ -437,14 +437,14 @@ if [[ "$BOARD" == "raspi4" ]]; then
 	cd ~;
 	dpkg -i raspberrypi-sys-mods*.deb;
 	rm -fdR raspberrypi-sys-mods*;
-	if [[ -f "/etc/apt/sources.list.d/vscode.list" ]];
-		then rm -f /etc/apt/sources.list.d/vscode.list;
+	if [[ -f "/etc/apt/sources.list.d/vscode.list" ]]; then
+		rm -f /etc/apt/sources.list.d/vscode.list;
 	fi
-	if [[ -f "/etc/apt/trusted.gpg.d/microsoft.gpg" ]];
-		then rm -f /etc/apt/trusted.gpg.d/microsoft.gpg;
+	if [[ -f "/etc/apt/trusted.gpg.d/microsoft.gpg" ]]; then
+		rm -f /etc/apt/trusted.gpg.d/microsoft.gpg;
 	fi
-	if [[ -f "/etc/apt/preferences.d/3rd_parties.pref" ]];
-		then rm -f /etc/apt/preferences.d/3rd_parties.pref;
+	if [[ -f "/etc/apt/preferences.d/3rd_parties.pref" ]]; then
+		rm -f /etc/apt/preferences.d/3rd_parties.pref;
 	fi
 	echo "Done.";
 	# Userland
@@ -533,6 +533,10 @@ fi
 # Odroid udev rules
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	odroid_udev_rules > /dev/null 2>&1;
+fi
+if [[ "$FAMILY_EXT" == "exynos" ]]; then
+	mkdir -p /etc/modprobe.d/;
+	echo "blacklist ina231_sensor" > /etc/modprobe.d/blacklist-odroid.conf;
 fi
 
 # Services
