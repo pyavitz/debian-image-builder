@@ -21,18 +21,6 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  	*num_output_fmts = i;
  
  	return output_fmts;
-diff -Naur a/drivers/gpu/drm/meson/meson_plane.c b/drivers/gpu/drm/meson/meson_plane.c
---- a/drivers/gpu/drm/meson/meson_plane.c	2022-09-20 06:43:50.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_plane.c	2022-09-22 08:25:46.598799218 -0400
-@@ -168,7 +168,7 @@
- 
- 	/* Enable OSD and BLK0, set max global alpha */
- 	priv->viu.osd1_ctrl_stat = OSD_ENABLE |
--				   (0xFF << OSD_GLOBAL_ALPHA_SHIFT) |
-+				   (0x100 << OSD_GLOBAL_ALPHA_SHIFT) |
- 				   OSD_BLK0_ENABLE;
- 
- 	priv->viu.osd1_ctrl_stat2 = readl(priv->io_base +
 diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
 --- a/drivers/gpu/drm/meson/meson_venc.c	2022-09-20 06:43:50.000000000 -0400
 +++ b/drivers/gpu/drm/meson/meson_venc.c	2022-09-22 08:27:26.574797428 -0400
@@ -50,17 +38,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_ve
  
  	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu.c
---- a/drivers/gpu/drm/meson/meson_viu.c	2022-09-20 06:43:50.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_viu.c	2022-09-22 08:29:32.614795171 -0400
-@@ -94,7 +94,7 @@
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF11_12));
- 	writel(((m[9] & 0x1fff) << 16) | (m[10] & 0x1fff),
- 		priv->io_base + _REG(VPP_WRAP_OSD1_MATRIX_COEF20_21));
--	writel((m[11] & 0x1fff) << 16,
-+	writel((m[11] & 0x1fff),
- 		priv->io_base +	_REG(VPP_WRAP_OSD1_MATRIX_COEF22));
- 
- 	writel(((m[18] & 0xfff) << 16) | (m[19] & 0xfff),
+--- a/drivers/gpu/drm/meson/meson_viu.c	2022-09-23 08:14:07.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_viu.c	2022-09-23 09:05:30.693438582 -0400
 @@ -436,7 +436,7 @@
  
  	/* Initialize OSD1 fifo control register */
