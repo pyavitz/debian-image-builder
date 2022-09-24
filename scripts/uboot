@@ -25,11 +25,11 @@ if [ $ccache -eq 1 ]; then
 		ccache_version;
 	fi
 fi
-
 if [ $ccache -eq 0 ]; then
 	rm -f {ccache.txt,gcc.txt};
 	gcc_version;
 fi
+
 # boards
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "odroidc1" ]]; then
@@ -40,24 +40,15 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		ls -ls ${OUTPUT}/*.bin;
 	else
 		source lib/function/fip
-		amlogic-uboot-string;
+		${FAMILY}-uboot-string;
 	fi
 fi
-if [[ "$FAMILY" == "allwinner" ]]; then
+if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "rockchip" ]]; then
 	source lib/function/atf
-	allwinner-uboot-string;
+	${FAMILY}-uboot-string;
 fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	bcm2711-uboot-string;
+if [[ "$FAMILY" == "broadcom" || "$FAMILY" == "freescale" || "$FAMILY" == "samsung" ]]; then
+	${FAMILY}-uboot-string;
 fi
-if [[ "$FAMILY" == "freescale" ]]; then
-	freescale-uboot-string;
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	source lib/function/atf
-	rockchip-uboot-string;
-fi
-if [[ "$FAMILY" == "samsung" ]]; then
-	samsung-uboot-string;
-fi
+
 exit 0

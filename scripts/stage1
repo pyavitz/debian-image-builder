@@ -5,7 +5,7 @@ validation
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
-source userdata.txt > /dev/null 2>&1
+source userdata.txt
 # hack board-txt
 if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
 	if [ $petitboot -eq 1 ]; then
@@ -62,8 +62,13 @@ if [[ -f "files/led-trigger/${BOARD}" ]]; then
 	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
 fi
 # place u-boot and kernel files in place for stage2
-if [[ "$FAMILY" == "allwinner" ]]; then
+if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "broadcom" || "$FAMILY" == "freescale" || "$FAMILY" == "samsung" ]]; then
 	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
+	if [[ "$BOARD" == "cuboxi" ]]; then
+		mkdir -p ${P_VALUE}/lib/firmware/{qcom,vpu}
+		cp -r files/firmware/qcom/* ${P_VALUE}/lib/firmware/qcom;
+		cp -r files/firmware/vpu/* ${P_VALUE}/lib/firmware/vpu;
+	fi
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [ $petitboot -eq 1 ]; then
@@ -72,22 +77,8 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 	fi
 fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
-fi
-if [[ "$FAMILY" == "freescale" ]]; then
-	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
-	if [[ "$BOARD" == "cuboxi" ]]; then
-		mkdir -p ${P_VALUE}/lib/firmware/{qcom,vpu}
-		cp -r files/firmware/qcom/* ${P_VALUE}/lib/firmware/qcom;
-		cp -r files/firmware/vpu/* ${P_VALUE}/lib/firmware/vpu;
-	fi
-fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	cp -f ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
-fi
-if [[ "$FAMILY" == "samsung" ]]; then
-	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
 fi
 if [ $useracct -eq 1 ]; then
 	mkdir -p ${P_VALUE}/root/useracct;

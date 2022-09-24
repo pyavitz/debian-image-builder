@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-source /root/userdata.txt > /dev/null 2>&1
+source /root/userdata.txt
 if [ $verbose -eq 1 ]; then
 	set -x;
 fi
 source /root/source.txt
-source /root/board.txt > /dev/null 2>&1
+source /root/board.txt
 source /root/services.txt
 source /root/${FAMILY}.txt
 source /root/networking.txt
@@ -15,7 +15,7 @@ set -o pipefail
 set -o nounset
 
 if [ $networkmanager -eq 0 ]; then
-	if [[ "$DISTRO_VERSION" == "jammy" ]] || [[ "$DISTRO_VERSION" == "kinetic" ]]; then
+	if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
 		# systemd-resolved breaks static ip when using ifupdown
 		# it will be disabled on jammy jellyfish
 		unlink /etc/resolv.conf;
@@ -74,7 +74,7 @@ fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
 	if [ $networkmanager -eq 0 ]; then
-		if [[ "$DISTRO_VERSION" == "jammy" ]] || [[ "$DISTRO_VERSION" == "kinetic" ]]; then
+		if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
 			# disable systemd-networkd and mask systemd-networkd-wait-online
 			systemctl disable systemd-networkd;
 			systemctl mask systemd-networkd-wait-online;
@@ -213,7 +213,7 @@ mkdir -p /etc/opt
 cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
 # move u-boot bin(s)
-if [[ "$FAMILY" == "allwinner" ]] || [[ "$FAMILY" == "broadcom" ]] || [[ "$FAMILY" == "freescale" ]] || [[ "$FAMILY" == "samsung" ]]; then
+if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "broadcom" || "$FAMILY" == "freescale" || "$FAMILY" == "samsung" ]]; then
 	mkdir -p /usr/lib/u-boot;
 	mv -f *.bin /usr/lib/u-boot/;
 fi
@@ -251,7 +251,7 @@ if [[ "$FAMILY" == "allwinner" ]]; then
 fi
 # Amlogic tweaks
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ "$BOARD" == "lepotato" ]] || [[ "$BOARD" == "odroidn2" ]] || [[ "$BOARD" == "odroidn2plus" ]] || [[ "$BOARD" == "radxazero" ]]; then
+	if [[ "$BOARD" == "lepotato" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "radxazero" ]]; then
 		tweaks_service > /dev/null 2>&1;
 	fi
 fi
@@ -263,7 +263,7 @@ if [[ "$FAMILY" == "freescale" ]]; then
 fi
 # Rockchip tweaks
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$FAMILY_EXT" == "rk3399" ]] || [[ "$FAMILY_EXT" == "rk3328" ]] || [[ "$BOARD" == "nanopir5s" ]]; then
+	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$BOARD" == "nanopir5s" ]]; then
 		tweaks_service > /dev/null 2>&1;
 	fi
 fi
@@ -358,7 +358,7 @@ fi
 
 # Firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$BOARD" == "nanopi" ]] || [[ "$BOARD" == "cubietruck" ]]; then
+	if [[ "$BOARD" == "nanopi" || "$BOARD" == "cubietruck" ]]; then
 		alt_firmware;
 	else
 		extra_firmware;
@@ -371,17 +371,11 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		extra_firmware;
 	fi
 fi
-if [[ "$FAMILY" == "freescale" ]]; then
+if [[ "$FAMILY" == "freescale" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
 	extra_firmware;
 fi
 if [[ "$BOARD" == "raspi4" ]]; then
 	rpi_firmware;
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	extra_firmware;
-fi
-if [ "$FAMILY" == "samsung" ]; then
-	extra_firmware;
 fi
 
 # Network Setup
@@ -474,7 +468,7 @@ fi
 
 # Remove zstd compression (not supported by vednor kernels)
 if [[ "$DISTRO" == "ubuntu" ]]; then
-	if [[ "$DISTRO_VERSION" == "jammy" ]] || [[ "$DISTRO_VERSION" == "kinetic" ]]; then
+	if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
 		if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
 			sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf;
 		fi
@@ -509,7 +503,6 @@ else
 	KERNEL_RELEASE=`ls /boot/config-* | sed 's/\/boot\/config-//g'`
 fi
 echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
-
 if [[ "$EFI" == "true" ]]; then
 	# 99-uefi uses /etc/opt/board.txt, this script does not.
 	# re-source /root/board.txt to ensure no confusion.

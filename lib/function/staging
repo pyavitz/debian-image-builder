@@ -105,7 +105,7 @@ if [[ "$EFI" == "true" ]]; then
 	flash_uboot;
 fi
 if [[ "$EFI" == "false" ]]; then
-	if [[ "$FAMILY_EXT" == "odroid" ]] || [[ "$BOARD" == "odroidc1" ]]; then
+	if [[ "$FAMILY_EXT" == "odroid" || "$BOARD" == "odroidc1" ]]; then
 		flash_vendor-uboot;
 	fi
 fi
@@ -381,6 +381,7 @@ p1_extlinux(){
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
+CHECK=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g'`
 mkdir -p p1/boot/extlinux
 tee p1/boot/extlinux/extlinux.conf <<EOF
 label default
@@ -394,10 +395,11 @@ EOF
 if [[ "$BOARD" == "radxazero" ]]; then
 	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
 fi
-if [[ "$BOARD" == "nanopc" ]]; then
-	sed -i 's/#fdtoverlays/#fdtoverlays ..\/rockchip\/overlays\/rockchip-rk3399-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
-fi
-if [[ "$BOARD" == "rockpro64" ]]; then
-	sed -i 's/#fdtoverlays/#fdtoverlays ..\/rockchip\/overlays\/rockchip-rk3399-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
+if [[ "$CHECK" == "5.15" ]]; then
+	:;
+else
+	if [[ "$FAMILY_EXT" == "rk3399" ]]; then
+		sed -i 's/#fdtoverlays/fdtoverlays ..\/rockchip\/overlays\/rockchip-rk3399-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
+	fi
 fi
 }

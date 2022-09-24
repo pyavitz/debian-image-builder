@@ -15,11 +15,8 @@ if [ $verbose -eq 1 ]; then
 else
 	set -eu -o pipefail;
 fi
-if [[ "$DISTRO" == "devuan" ]]; then
-	devuan_keyring;
-fi
-if [[ "$DISTRO" == "kali" ]]; then
-	kali_keyring;
+if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" ]]; then
+	${DISTRO}_keyring;
 fi
 if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; then
 	:;
@@ -30,8 +27,8 @@ else
 fi
 ROOT="sysroot"
 RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
-if [ -f $RELEASE_TARBALL ]; then
-	ls $RELEASE_TARBALL;
+if [[ -f "$RELEASE_TARBALL" ]]; then
+	ls -ls $RELEASE_TARBALL;
 	exit;
 fi
 echo -e "${WHT}Starting debootstrap${FIN} ..."
@@ -78,10 +75,10 @@ if [ $devrootfs -eq 1 ]; then
 	rm -f ${ROOT}/etc/apt/sources.list
 fi
 # clean up
-if [ -f ${ROOT}/usr/bin/qemu-aarch64-static ]; then
+if [[ -f "${ROOT}/usr/bin/qemu-aarch64-static" ]]; then
 	rm -f ${ROOT}/usr/bin/qemu-aarch64-static
 fi
-if [ -f ${ROOT}/usr/bin/qemu-arm-static ]; then
+if [[ -f "${ROOT}/usr/bin/qemu-arm-static" ]]; then
 	rm -f ${ROOT}/usr/bin/qemu-arm-static
 fi
 rm -f ${ROOT}/var/cache/debconf/*
@@ -108,11 +105,12 @@ if [ -e ${ROOT} ]; then
 	rm -fdr ${ROOT}
 fi
 
-if [ -f /usr/share/debootstrap/scripts/chimaera ]; then
+if [[ -f "/usr/share/debootstrap/scripts/chimaera" ]]; then
 	rm -f /usr/share/debootstrap/scripts/chimaera;
 fi
-if [ -f /usr/share/debootstrap/scripts/daedalus ]; then
+if [[ -f "/usr/share/debootstrap/scripts/daedalus" ]]; then
 	rm -f /usr/share/debootstrap/scripts/daedalus;
 fi
+
 clear -x
 exit 0

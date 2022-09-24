@@ -41,7 +41,7 @@ fi
 download
 # setup
 if [[ "$SETUP" == "vendor" ]]; then
-	if [[ "$VERSION" == "4.9.y" ]] || [[ "$VERSION" == "4.19.y" ]]; then
+	if [[ "$VERSION" == "4.9.y" || "$VERSION" == "4.19.y" ]]; then
 		vendor_setup;
 	else
 		setup;
@@ -49,29 +49,9 @@ if [[ "$SETUP" == "vendor" ]]; then
 else
 	setup;
 fi
-# amlogic patching
-if [[ "$FAMILY" == "amlogic" ]]; then
-	amlogic_patching;
-fi
-# allwinner patching
-if [[ "$FAMILY" == "allwinner" ]]; then
-	allwinner_patching;
-fi
-# broadcom patching
-if [[ "$FAMILY" == "broadcom" ]]; then
-	raspberrypi_patching;
-fi
-# freescale patching
-if [[ "$FAMILY" == "freescale" ]]; then
-	freescale_patching;
-fi
-# rockchip patching
-if [[ "$FAMILY" == "rockchip" ]]; then
-	rockchip_patching;
-fi
-# samsung patching
-if [[ "$FAMILY" == "samsung" ]]; then
-	samsung_patching;
+# patching
+if [[ ! -z $FAMILY ]]; then
+	${FAMILY}_patching;
 fi
 # defconfig
 if [[ "$SETUP" == "vendor" ]]; then
