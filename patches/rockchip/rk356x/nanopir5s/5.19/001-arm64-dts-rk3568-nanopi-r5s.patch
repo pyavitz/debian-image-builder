@@ -7,17 +7,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-evb1-v10.dtb
 +dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-nanopi-r5s.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-rock-3a.dtb
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk3566.dtsi b/arch/arm64/boot/dts/rockchip/rk3566.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-08-09 16:59:32.416618211 -0400
-@@ -29,3 +29,7 @@
- 	extcon = <&usb2phy0>;
- 	maximum-speed = "high-speed";
- };
-+
-+&vop {
-+	compatible = "rockchip,rk3566-vop";
-+};
 --- /dev/null	2022-09-19 05:48:12.228480272 -0400
 +++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2022-09-19 06:20:09.055498252 -0400
 @@ -0,0 +1,825 @@
@@ -846,9 +835,31 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3566.dtsi b/arch/arm64/boot/dts/rock
 +		remote-endpoint = <&hdmi_in_vp0>;
 +	};
 +};
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3566.dtsi b/arch/arm64/boot/dts/rockchip/rk3566.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-09-24 04:17:49.139462033 -0400
+@@ -29,3 +29,7 @@
+ 	extcon = <&usb2phy0>;
+ 	maximum-speed = "high-speed";
+ };
++
++&vop {
++	compatible = "rockchip,rk3566-vop";
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-09-24 04:06:26.580397310 -0400
+@@ -137,3 +137,7 @@
+ 	phys = <&usb2phy0_otg>, <&combphy0 PHY_TYPE_USB3>;
+ 	phy-names = "usb2-phy", "usb3-phy";
+ };
++
++&vop {
++	compatible = "rockchip,rk3568-vop";
++};
 diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-08-09 17:00:13.266065774 -0400
+--- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-09-24 04:14:47.547903417 -0400
 @@ -129,6 +129,11 @@
  		};
  	};
@@ -861,7 +872,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
  	firmware {
  		scmi: scmi {
  			compatible = "arm,scmi-smc";
-@@ -178,6 +183,22 @@
+@@ -144,6 +149,22 @@
  		};
  	};
  
@@ -881,16 +892,16 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
 +		};
 +	};
 +
- 	pmu {
- 		compatible = "arm,cortex-a55-pmu";
- 		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_HIGH>,
+ 	gpu_opp_table: opp-table-1 {
+ 		compatible = "operating-points-v2";
+ 
 @@ -632,6 +653,84 @@
  		};
  	};
  
 +	vop: vop@fe040000 {
 +		reg = <0x0 0xfe040000 0x0 0x3000>, <0x0 0xfe044000 0x0 0x1000>;
-+		reg-names = "vop", "gamma-lut";
++		reg-names = "regs", "gamma_lut";
 +		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
 +		clocks = <&cru ACLK_VOP>, <&cru HCLK_VOP>, <&cru DCLK_VOP0>,
 +			 <&cru DCLK_VOP1>, <&cru DCLK_VOP2>;
@@ -1050,4 +1061,3 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
  
  	i2s1_8ch: i2s@fe410000 {
  		compatible = "rockchip,rk3568-i2s-tdm";
-
