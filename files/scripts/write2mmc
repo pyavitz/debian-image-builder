@@ -1,49 +1,50 @@
 #!/bin/bash
 
-if [ -f /etc/opt/board.txt ]; then
+if [[ -f "/etc/opt/board.txt" ]]; then
 	DIR="/usr/lib/u-boot"
-	source /etc/opt/board.txt
+	MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
+	. /etc/opt/board.txt
 else
 	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Your board is not supported." 0 0;
-	exit 0;
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
 fi
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	:;
 else
 	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Script requires a internet connection." 0 0;
-	exit 0;
+	whiptail --msgbox "    Script requires a internet connection." 0 0
+	exit 0
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Partition scheme is not supported." 0 0;
-	exit 0;
+	whiptail --msgbox "    Partition scheme is not supported." 0 0
+	exit 0
 fi
 
 # functions
 supported_boards(){
 if [[ "$BOARD" == "nanopi" ]]; then
-	# allwinner (nanopi = /dev/mmcblk2)
+	# allwinner
 	supported=1;
 fi
-if [[ "$BOARD" == "bananapim5" ]] || [[ "$BOARD" == "lepotato" ]] || [[ "$BOARD" == "odroidc4" ]] || [[ "$BOARD" == "odroidn2" ]] || [[ "$BOARD" == "odroidn2plus" ]] || [[ "$BOARD" == "radxazero" ]]; then
-	# amlogic (amlogic = /dev/mmcblk1) (odroidn2/+ = /dev/mmcblk0)
+if [[ "$BOARD" == "bananapim5" || "$BOARD" == "lepotato" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "radxazero" ]]; then
+	# amlogic
 	supported=1;
 fi
-if [[ "$BOARD" == "pinebookpro" ]] || [[ "$BOARD" == "nanopc" ]] || [[ "$BOARD" == "nanopir5s" ]] || [[ "$BOARD" == "renegade" ]]; then
-	# rockchip (nanopc = /dev/mmcblk2) (renegade = /dev/mmcblk1)
+if [[ "$BOARD" == "pinebookpro" || "$BOARD" == "nanopc" || "$BOARD" == "nanopir5s" || "$BOARD" == "renegade" ]]; then
+	# rockchip
 	supported=1;
 fi
 if [[ "$BOARD" == "odroidxu4" ]]; then
-	# samsung (odroidxu4 = /dev/mmcblk0)
+	# samsung
 	supported=1;
 fi
 }
 
 # progress bar
 check_progressbar(){
-if [ -f /etc/opt/progressbar.txt ]; then
+if [[ -f "/etc/opt/progressbar.txt" ]]; then
 	:;
 else
 	mkdir -p /etc/opt
@@ -79,12 +80,11 @@ lsblk -dno NAME,SIZE
 
 # partition
 partition(){
-MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
 if [[ "$GPT" == "true" ]]; then
 	dd if=/dev/zero of=${MMC} bs=8M count=1
-	sgdisk -og ${MMC}
-	sgdisk -n 1:${OFFSET} ${MMC}
-	sgdisk -evp ${MMC}
+	parted --script ${MMC} \
+	mklabel gpt \
+	mkpart 1 ext2 16MiB 100%
 else
 	dd if=/dev/zero of=${MMC} bs=512 count=1
 	echo -e "o
@@ -101,14 +101,21 @@ else
 	w" | fdisk ${MMC}
 fi
 partprobe ${MMC}
-echo 'y' | mkfs.ext4 -L ROOTFS ${MMC}p1
-mount ${MMC}p1 /mnt
-sync
-umount /mnt
-mount -o defaults,noatime ${MMC}p1 /mnt
-bash growpart ${MMC} 1
-sleep 1s
-resize2fs ${MMC}p1
+if [[ -e "${MMC}p1" ]]; then
+	echo 'y' | mkfs.ext4 -L ROOTFS ${MMC}p1
+	sleep .50
+	mount ${MMC}p1 /mnt
+	sync
+	umount /mnt
+	sleep .50
+	mount -o defaults,noatime ${MMC}p1 /mnt
+	bash growpart ${MMC} 1
+	sleep .75
+	resize2fs ${MMC}p1
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Partitioning failed!" 0 0
+	exit 0
 }
 
 # rsync
@@ -170,8 +177,8 @@ EOF
 if [[ "$BOARD" == "radxazero" ]]; then
 	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
 fi
-if [[ "$BOARD" == "nanopc" ]]; then
-	sed -i 's/#fdtoverlays/#fdtoverlays ..\/rockchip\/overlays\/rockchip-rk3399-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
+if [[ "$FAMILY_EXT" == "rk3399" ]]; then
+	sed -i 's/#fdtoverlays/fdtoverlays ..\/rockchip\/overlays\/rockchip-rk3399-opp-2ghz.dtbo/g' /mnt/boot/extlinux/extlinux.conf;
 fi
 }
 
@@ -185,9 +192,8 @@ if [ $supported -eq 1 ]; then
 	:;
 else
 	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Your board is not supported." 0 0;
-	clear -x;
-	exit 0;
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
 fi
 check_progressbar
 if [[ "$BOARD" == "lepotato" ]]; then
@@ -210,19 +216,25 @@ if [[ "$BOARD" == "renegade" ]]; then
 fi
 
 echo ""
-echo -en "Partitioning "
-partition > /dev/null 2>&1
-echo "[done]"
+if [[ -e "${MMC}" ]]; then
+	echo -en "Partitioning "
+	partition > /dev/null 2>&1
+	echo "[done]"
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Did you attach the eMMC module?" 0 0
+	exit 0;
+fi
 
 echo ""
 echo -e "Please be patient as the root filesystem"
 echo -e "is transferred over to the eMMC module."
 transfer_to_emmc
-sleep 1s
+sleep .75
 clear -x
 
 echo "Writing u-boot ..."
-sleep 1s
+sleep .75
 if [[ "$FAMILY" == "allwinner" ]]; then
 	dd if=${DIR}/u-boot-sunxi-with-spl.bin of=${MMC} conv=fsync bs=1024 seek=8
 fi
