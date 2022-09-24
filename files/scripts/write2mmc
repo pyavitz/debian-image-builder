@@ -3,7 +3,7 @@
 if [[ -f "/etc/opt/board.txt" ]]; then
 	DIR="/usr/lib/u-boot"
 	MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
-	. /etc/opt/board.txt
+	source /etc/opt/board.txt
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Your board is not supported." 0 0
@@ -81,12 +81,12 @@ lsblk -dno NAME,SIZE
 # partition
 partition(){
 if [[ "$GPT" == "true" ]]; then
-	dd if=/dev/zero of=${MMC} bs=8M count=1
-	parted --script ${MMC} \
+	dd if=/dev/zero of="${MMC}" bs=8M count=1
+	parted --script "${MMC}" \
 	mklabel gpt \
 	mkpart 1 ext2 16MiB 100%
 else
-	dd if=/dev/zero of=${MMC} bs=512 count=1
+	dd if=/dev/zero of="${MMC}" bs=512 count=1
 	echo -e "o
 	n
 	p
@@ -98,24 +98,25 @@ else
 	4101561
 
 	p
-	w" | fdisk ${MMC}
+	w" | fdisk "${MMC}"
 fi
-partprobe ${MMC}
-if [[ -e "${MMC}p1" ]]; then
-	echo 'y' | mkfs.ext4 -L ROOTFS ${MMC}p1
+partprobe "${MMC}"
+if [[ `ls "${MMC}p1"` ]]; then
+	echo 'y' | mkfs.ext4 -L ROOTFS "${MMC}p1"
 	sleep .50
-	mount ${MMC}p1 /mnt
+	mount "${MMC}p1" /mnt
 	sync
 	umount /mnt
 	sleep .50
-	mount -o defaults,noatime ${MMC}p1 /mnt
+	mount -o defaults,noatime "${MMC}p1" /mnt
 	bash growpart ${MMC} 1
 	sleep .75
-	resize2fs ${MMC}p1
+	resize2fs "${MMC}p1"
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Partitioning failed!" 0 0
 	exit 0
+fi
 }
 
 # rsync
@@ -216,10 +217,10 @@ if [[ "$BOARD" == "renegade" ]]; then
 fi
 
 echo ""
-if [[ -e "${MMC}" ]]; then
-	echo -en "Partitioning "
-	partition > /dev/null 2>&1
-	echo "[done]"
+if [[ `ls "${MMC}"` ]]; then
+	echo -e "Partitioning "
+	partition
+	echo -e "[done]"
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Did you attach the eMMC module?" 0 0
