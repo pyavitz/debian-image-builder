@@ -56,27 +56,23 @@ fi
 }
 
 # bind emmc
-libre_bind_emmc(){
-echo -n d0074000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/unbind
-sleep 1
-echo -n d0074000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/bind
-sleep 1
-lsblk -dno NAME,SIZE
-}
-
-odroid_bind_emmc(){
-echo -n ffe07000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/unbind
-sleep 1
-echo -n ffe07000.mmc > /sys/bus/platform/drivers/meson-gx-mmc/bind
-sleep 1
-lsblk -dno NAME,SIZE
-}
-
-renegade_bind_emmc(){
-echo -n ff520000.mmc > /sys/bus/platform/drivers/dwmmc_rockchip/unbind
-sleep 1
-echo -n ff520000.mmc > /sys/bus/platform/drivers/dwmmc_rockchip/bind
-sleep 1
+bind_emmc(){
+if [[ "$BOARD" == "lepotato" ]]; then
+	MMC_TARGET="d0074000.mmc"
+	SOC_FAMILY="meson-gx-mmc"
+fi
+if [[ "$FAMILY_EXT" == "odroid" ]]; then
+	MMC_TARGET="ffe07000.mmc"
+	SOC_FAMILY="meson-gx-mmc"
+fi
+if [[ "$BOARD" == "renegade" ]]; then
+	MMC_TARGET="ff520000.mmc"
+	SOC_FAMILY="dwmmc_rockchip"
+fi
+echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
+sleep .75
+echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
+sleep .75
 lsblk -dno NAME,SIZE
 }
 
@@ -199,23 +195,11 @@ else
 	exit 0
 fi
 check_progressbar
-if [[ "$BOARD" == "lepotato" ]]; then
+if [[ "$BOARD" == "lepotato" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "renegade" ]]; then
 	echo ""
-	echo "Binding eMMC ...";
-	libre_bind_emmc;
-	echo "Done.";
-fi
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	echo ""
-	echo "Binding eMMC ...";
-	odroid_bind_emmc;
-	echo "Done.";
-fi
-if [[ "$BOARD" == "renegade" ]]; then
-	echo ""
-	echo "Binding eMMC ...";
-	renegade_bind_emmc;
-	echo "Done.";
+	echo "Binding eMMC ..."
+	bind_emmc
+	echo "Done."
 fi
 
 echo ""
