@@ -1,7 +1,6 @@
 #!/bin/bash
 # Bind root device activity to Linux kernel LED trigger
 # Stop status LED from blinking
-# Set R5S eth port LEDs to activity
 
 GREEN_LED="/sys/class/leds/nanopi:green:pwr/trigger"
 if [[ -f "$GREEN_LED" ]]; then
@@ -20,24 +19,4 @@ fi
 BLUE_LED="/sys/class/leds/nanopi:blue:status/brightness"
 if [[ -f "$BLUE_LED" ]]; then
 	echo "0" > $BLUE_LED
-fi
-
-# NanoPi R5S eth ports
-WAN_LED="/sys/class/leds/green:wan/trigger"
-LAN1_LED="/sys/class/leds/green:lan1/trigger"
-LAN2_LED="/sys/class/leds/green:lan2/trigger"
-if [[ -f "$WAN_LED" ]]; then
-	echo "default-on" > $WAN_LED
-	sleep .75
-	echo "netdev" > $WAN_LED
-fi
-if [[ -f "$LAN1_LED" ]]; then
-	echo "default-on" > $LAN1_LED
-	sleep .75
-	echo "netdev" > $LAN1_LED
-fi
-if [[ -f "$LAN2_LED" ]]; then
-	echo "default-on" > $LAN2_LED
-	sleep .75
-	echo "netdev" > $LAN2_LED
 fi
