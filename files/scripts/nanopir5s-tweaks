@@ -1,4 +1,7 @@
 #!/bin/bash
+# NanoPi R5S Networking Tweaks
+
+MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 
 get_device_irq(){
 	local device="$1"
@@ -19,26 +22,24 @@ set_interface_core(){
 	echo -n "${core_mask}" > /proc/irq/${irq}/smp_affinity
 }
 
-MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 if [[ -e "/sys/class/net/eth0" ]]; then
 	ip link set dev eth0 address $MACADDR
+	set_interface_core 8 "eth0"
+	echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
 fi
 if [[ -e "/sys/class/net/eth1" ]]; then
 	ip link set dev eth1 address $MACADDR
+	set_interface_core 4 "eth1-0"
+	set_interface_core 4 "eth1-16"
+	set_interface_core 4 "eth1-18"
+	echo b > /sys/class/net/eth1/queues/rx-0/rps_cpus
 fi
 if [[ -e "/sys/class/net/eth2" ]]; then
 	ip link set dev eth2 address $MACADDR
+	set_interface_core 2 "eth2-0"
+	set_interface_core 2 "eth2-16"
+	set_interface_core 2 "eth2-18"
+	echo d > /sys/class/net/eth2/queues/rx-0/rps_cpus
 fi
-
-set_interface_core 8 "eth0"
-echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
-set_interface_core 4 "eth1-0"
-set_interface_core 4 "eth1-16"
-set_interface_core 4 "eth1-18"
-echo b > /sys/class/net/eth1/queues/rx-0/rps_cpus
-set_interface_core 2 "eth2-0"
-set_interface_core 2 "eth2-16"
-set_interface_core 2 "eth2-18"
-echo d > /sys/class/net/eth2/queues/rx-0/rps_cpus
 
 exit 0
