@@ -37,17 +37,27 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/Kconfig b/arch/arm/mach-rockchip/rk35
 +source "board/friendlyelec/nanopi-r5s-rk3568/Kconfig"
  
  endif
---- /dev/null
-+++ b/arch/arm/dts/rk3568-nanopi-r5s-u-boot.dtsi
-@@ -0,0 +1,25 @@
+--- /dev/null	2022-09-26 04:13:42.362494410 -0400
++++ b/arch/arm/dts/rk3568-nanopi-r5s-u-boot.dtsi	2022-09-26 04:17:44.134490080 -0400
+@@ -0,0 +1,6 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * (C) Copyright 2021 Rockchip Electronics Co., Ltd
 + */
 +
 +#include "rk3568-u-boot.dtsi"
+--- /dev/null	2022-09-26 04:13:42.362494410 -0400
++++ b/arch/arm/dts/rk3568-nanopi-r5s.dts	2022-09-26 04:17:44.134490080 -0400
+@@ -0,0 +1,34 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++
++/dts-v1/;
++#include "rk3568-evb.dts"
 +
 +/ {
++	model = "FriendlyElec NanoPi R5S";
++	compatible = "friendlyelec,nanopi-r5s", "rockchip,rk3568";
++
 +	chosen {
 +		stdout-path = &uart2;
 +		u-boot,spl-boot-order = "same-as-spl", &sdmmc0, &sdhci;
@@ -60,22 +70,18 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/Kconfig b/arch/arm/mach-rockchip/rk35
 +	u-boot,spl-fifo-mode;
 +};
 +
++&sdhci {
++	bus-width = <8>;
++	u-boot,dm-spl;
++	mmc-hs200-1_8v;
++	non-removable;
++	status = "okay";
++};
++
 +&uart2 {
 +	clock-frequency = <24000000>;
 +	u-boot,dm-spl;
 +	status = "okay";
-+};
---- /dev/null
-+++ b/arch/arm/dts/rk3568-nanopi-r5s.dts
-@@ -0,0 +1,9 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+
-+/dts-v1/;
-+#include "rk3568-evb.dts"
-+
-+/ {
-+	model = "FriendlyElec NanoPi R5S";
-+	compatible = "friendlyelec,nanopi-r5s", "rockchip,rk3568";
 +};
 --- /dev/null
 +++ b/board/friendlyelec/nanopi-r5s-rk3568/Kconfig
