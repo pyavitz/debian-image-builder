@@ -19,6 +19,17 @@ set_interface_core(){
 	echo -n "${core_mask}" > /proc/irq/${irq}/smp_affinity
 }
 
+MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+if [[ -e "/sys/class/net/eth0" ]]; then
+	ip link set dev eth0 address $MACADDR
+fi
+if [[ -e "/sys/class/net/eth1" ]]; then
+	ip link set dev eth1 address $MACADDR
+fi
+if [[ -e "/sys/class/net/eth2" ]]; then
+	ip link set dev eth2 address $MACADDR
+fi
+
 set_interface_core 8 "eth0"
 echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
 set_interface_core 4 "eth1-0"
