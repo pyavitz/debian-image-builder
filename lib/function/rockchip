@@ -5,3 +5,10 @@ flash_uboot(){
 dd if=${OUTPUT}/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
+
+nanopir5s_udev_rules(){
+mkdir -p /etc/udev/rules.d
+echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/nanopi-r5s-led.rules
+echo 'SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/nanopi-r5s-led.rules
+echo 'SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/nanopi-r5s-led.rules
+}

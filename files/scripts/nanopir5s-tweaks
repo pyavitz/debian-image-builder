@@ -1,22 +1,22 @@
 #!/bin/bash
 
-get_device_irq() {
-    local device="$1"
-    local line=$(grep -m 1 "${device}\$" /proc/interrupts)
-    echo ${line} | sed 's/:.*//'
+get_device_irq(){
+	local device="$1"
+	local line=$(grep -m 1 "${device}\$" /proc/interrupts)
+	echo ${line} | sed 's/:.*//'
 }
 
-set_interface_core() {
-    local core_mask="$1"
-    local interface="$2"
-    local device="$3"
+set_interface_core(){
+	local core_mask="$1"
+	local interface="$2"
+	local device="$3"
 
-    [ -z "${device}" ] && device="$interface"
+	[ -z "${device}" ] && device="$interface"
 
-    local irq=$(get_device_irq "$device")
-    [ -z "$irq" ] && return 0
+	local irq=$(get_device_irq "$device")
+	[ -z "$irq" ] && return 0
 
-    echo -n "${core_mask}" > /proc/irq/${irq}/smp_affinity
+	echo -n "${core_mask}" > /proc/irq/${irq}/smp_affinity
 }
 
 set_interface_core 8 "eth0"
