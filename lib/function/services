@@ -129,16 +129,16 @@ if [[ "$FAMILY_EXT" == "odroid" ]]; then
 	chown root:root /usr/bin/odroid-tweaks;
 	chown root:root /usr/bin/irq-tweaks;
 fi
-if [[ "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk3328" ]]; then
+if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	echo "overclock=0" > /etc/opt/overclock.txt;
 	mv -f rk-tweaks /usr/bin/rk-tweaks;
 	chmod +x /usr/bin/rk-tweaks;
 	chown root:root /usr/bin/rk-tweaks;
 fi
 if [[ "$BOARD" == "nanopir5s" ]]; then
-	mv -f nanopir5s-tweaks /usr/bin/nanopir5s-tweaks;
-	chmod +x /usr/bin/nanopir5s-tweaks;
-	chown root:root /usr/bin/nanopir5s-tweaks;
+	mv -f ${BOARD}-tweaks /usr/bin/${BOARD}-tweaks;
+	chmod +x /usr/bin/${BOARD}-tweaks;
+	chown root:root /usr/bin/${BOARD}-tweaks;
 fi
 
 lepotato_systemd(){
@@ -206,6 +206,7 @@ tee /etc/systemd/system/tweaks.service <<EOF
 Description=Rockchip Specific System Tweaks
 ConditionFileIsExecutable=/usr/bin/rk-tweaks
 After=sysinit.target local-fs.target
+Before=network.target bluetooth.target
 
 [Service]
 Type=forking

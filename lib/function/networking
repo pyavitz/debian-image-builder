@@ -113,6 +113,46 @@ EOF
 chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
 }
 
+router_udev_rules(){
+mkdir -p /etc/udev/rules.d
+if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" ]]; then
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-r4s-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-r4s-led.rules
+fi
+if [[ "$BOARD" == "nanopir5s" ]]; then
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-r5s-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-r5s-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-r5s-led.rules
+fi
+}
+
+router_ifupdown(){
+if [[ "$BOARD" == "opir1" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" ]]; then
+	if [[ -f "/etc/opt/interfaces" ]]; then
+		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/opt/interfaces
+		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/opt/interfaces
+	fi
+	if [[ -f "/etc/opt/interfaces.manual" ]]; then
+		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/opt/interfaces.manual
+		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/opt/interfaces.manual
+	fi
+fi
+if [[ "$BOARD" == "nanopir5s" ]]; then
+	if [[ -f "/etc/opt/interfaces" ]]; then
+		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/opt/interfaces
+		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/opt/interfaces
+		sed -i 's/#allow-hotplug eth2/allow-hotplug eth2/g' /etc/opt/interfaces
+		sed -i 's/#iface eth2 inet dhcp/iface eth2 inet dhcp/g' /etc/opt/interfaces
+	fi
+	if [[ -f "/etc/opt/interfaces.manual" ]]; then
+		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/opt/interfaces.manual
+		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/opt/interfaces.manual
+		sed -i 's/#allow-hotplug eth2/allow-hotplug eth2/g' /etc/opt/interfaces.manual
+		sed -i 's/#iface eth2 inet dhcp/iface eth2 inet dhcp/g' /etc/opt/interfaces.manual
+	fi
+fi
+}
+
 ifupdown-setup(){
 rm -f /etc/network/interfaces
 if [[ "$DISTRO" == "devuan" ]]; then

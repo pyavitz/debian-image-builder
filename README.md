@@ -6,7 +6,7 @@ Broadcom:       # Raspberry Pi 4B
 Rockchip:       # NanoPC-T4, Renegade, ROCK64 & ROCKPro64
 Samsung:        # Odroid XU4
 
-WIP:		# Cubietruck, Cubox-i, Banana Pi M5, NanoPi R5S
+WIP:		# Cubietruck, Cubox-i, Banana Pi M5, NanoPi R4S/R4SE/R5S
 		# Odroid C1/M1 & Pinebook Pro
 ```
 

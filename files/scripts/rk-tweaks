@@ -1,7 +1,9 @@
 #!/bin/bash
 
+source /etc/opt/board.txt
 source /etc/opt/overclock.txt
 
+# Overclock
 if [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
 	if [ $overclock -eq 1 ]; then
 		echo "1" > /sys/devices/system/cpu/cpufreq/boost;
@@ -9,6 +11,18 @@ if [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
 	else
 		echo "0" > /sys/devices/system/cpu/cpufreq/boost;
 		governor -r;
+	fi
+fi
+
+# NanoPi R4SE Networking Tweak
+if [[ "$BOARD" == "nanopir4se" ]]; then
+	DEVNAME="eth0"
+	MACADDR=$(/sbin/ip link | grep -A1 ${DEVNAME} | awk -F" " '/ether / {print $2}')
+	if [[ -e "/sys/class/net/eth0" ]]; then
+		ip link set dev eth0 address $MACADDR
+	fi
+	if [[ -e "/sys/class/net/eth1" ]]; then
+		ip link set dev eth1 address $MACADDR
 	fi
 fi
 
