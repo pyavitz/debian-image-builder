@@ -16,8 +16,7 @@ fi
 
 # NanoPi R4SE Networking Tweak
 if [[ "$BOARD" == "nanopir4se" ]]; then
-	DEVNAME="eth0"
-	MACADDR=$(/sbin/ip link | grep -A1 ${DEVNAME} | awk -F" " '/ether / {print $2}')
+	MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 	if [[ -e "/sys/class/net/eth0" ]]; then
 		ip link set dev eth0 address $MACADDR
 	fi
