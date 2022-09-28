@@ -1,304 +1,30 @@
+diff -Naur a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation/devicetree/bindings/arm/rockchip.yaml
+--- a/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-09-23 08:14:07.000000000 -0400
++++ b/Documentation/devicetree/bindings/arm/rockchip.yaml	2022-09-28 04:27:20.098516144 -0400
+@@ -683,6 +683,11 @@
+           - const: rockchip,rk3568-bpi-r2pro
+           - const: rockchip,rk3568
+ 
++      - description: Hardkernel ODROID-M1
++        items:
++          - const: rockchip,rk3568-odroid-m1
++          - const: rockchip,rk3568
++
+ additionalProperties: true
+ 
+ ...
 diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
---- a/arch/arm64/boot/dts/rockchip/Makefile	2022-07-10 17:40:51.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-07-23 16:32:28.543407474 -0400
-@@ -1,4 +1,5 @@
- # SPDX-License-Identifier: GPL-2.0
-+dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-odroid-m1.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += px30-evb.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += px30-engicam-px30-core-ctouch2.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += px30-engicam-px30-core-ctouch2-of10.dtb
-@@ -65,3 +66,5 @@
+--- a/arch/arm64/boot/dts/rockchip/Makefile	2022-09-23 08:14:07.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-09-28 04:28:33.690514827 -0400
+@@ -64,4 +64,5 @@
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-soquartz-cm4.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-bpi-r2-pro.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-evb1-v10.dtb
++dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-odroid-m1.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-rock-3a.dtb
-+
-+subdir-y += overlays/odroidm1
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,14 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	fragment@0 {
-+		// i2c3 aliased with i2c0.
-+		// This activates i2c3 but it will be named as i2c0 on the userspace.
-+		target = <&i2c3>;
-+
-+		__overlay__ {
-+			status = "okay";
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts	2022-07-23 16:32:47.947181608 -0400
-@@ -0,0 +1,12 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	fragment@0 {
-+		target = <&i2c1>;
-+
-+		__overlay__ {
-+			status = "okay";
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,11 @@
-+dtbo-y += \
-+	i2c0.dtbo \
-+	i2c1.dtbo \
-+	onewire.dtbo \
-+	pwm1.dtbo \
-+	pwm2.dtbo \
-+	pwm9.dtbo \
-+	uart1.dtbo
-+
-+targets += $(dtbo-y)
-+always-y := $(dtbo-y)
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,19 @@
-+/dts-v1/;
-+/plugin/;
-+
-+#include <dt-bindings/gpio/gpio.h>
-+#include <dt-bindings/pinctrl/rockchip.h>
-+
-+/ {
-+	fragment@0 {
-+		target-path = "/";
-+
-+		__overlay__ {
-+				onewire:onewire {
-+					compatible = "w1-gpio";
-+					gpios = <&gpio3 RK_PB2 GPIO_ACTIVE_HIGH>;
-+					status = "okay";
-+			};
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,13 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	fragment@0 {
-+		// pwmchip0, pwm@fdd70010
-+		target = <&pwm1>;
-+
-+		__overlay__ {
-+			status = "okay";
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,13 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	fragment@0 {
-+		// pwmchip1, pwm@fdd70020
-+		target = <&pwm2>;
-+
-+		__overlay__ {
-+			status = "okay";
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,13 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	fragment@0 {
-+		// pwmchip3, pwm@fe6f0010
-+		target = <&pwm9>;
-+
-+		__overlay__ {
-+			status = "okay";
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts
---- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts	2022-07-23 16:33:08.692934983 -0400
-@@ -0,0 +1,15 @@
-+/dts-v1/;
-+/plugin/;
-+
-+/ {
-+	fragment@0 {
-+		// uart0 aliased with serial1.
-+		target = <&uart0>;
-+
-+		__overlay__ {
-+			status = "okay";
-+
-+			dma-names = "tx", "rx";
-+		};
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-07-10 17:40:51.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-07-23 16:29:01.786081008 -0400
-@@ -42,6 +42,128 @@
- 		reg = <0x0 0xfe190200 0x0 0x20>;
- 	};
- 
-+	pcie30_phy_grf: syscon@fdcb8000 {
-+		compatible = "rockchip,pcie30-phy-grf", "syscon";
-+		reg = <0x0 0xfdcb8000 0x0 0x10000>;
-+	};
-+
-+	pcie30phy: phy@fe8c0000 {
-+		compatible = "rockchip,rk3568-pcie3-phy";
-+		reg = <0x0 0xfe8c0000 0x0 0x20000>;
-+		#phy-cells = <0>;
-+		clocks = <&pmucru CLK_PCIE30PHY_REF_M>, <&pmucru CLK_PCIE30PHY_REF_N>,
-+			 <&cru PCLK_PCIE30PHY>;
-+		clock-names = "refclk_m", "refclk_n", "pclk";
-+		resets = <&cru SRST_PCIE30PHY>;
-+		reset-names = "phy";
-+		rockchip,phy-grf = <&pcie30_phy_grf>;
-+		status = "disabled";
-+	};
-+
-+	pcie3x1: pcie@fe270000 {
-+		compatible = "rockchip,rk3568-pcie";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		bus-range = <0x10 0x1f>;
-+		clocks = <&cru ACLK_PCIE30X1_MST>, <&cru ACLK_PCIE30X1_SLV>,
-+			 <&cru ACLK_PCIE30X1_DBI>, <&cru PCLK_PCIE30X1>,
-+			 <&cru CLK_PCIE30X1_AUX_NDFT>;
-+		clock-names = "aclk_mst", "aclk_slv",
-+			      "aclk_dbi", "pclk", "aux";
-+		device_type = "pci";
-+		interrupts = <GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 158 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-names = "sys", "pmc", "msg", "legacy", "err";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie3x1_intc 0>,
-+				<0 0 0 2 &pcie3x1_intc 1>,
-+				<0 0 0 3 &pcie3x1_intc 2>,
-+				<0 0 0 4 &pcie3x1_intc 3>;
-+		linux,pci-domain = <1>;
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		max-link-speed = <3>;
-+		msi-map = <0x1000 &gic 0x1000 0x1000>;
-+		num-lanes = <1>;
-+		phys = <&pcie30phy>;
-+		phy-names = "pcie-phy";
-+		power-domains = <&power RK3568_PD_PIPE>;
-+		reg = <0x3 0xc0400000 0x0 0x00400000>,
-+		      <0x0 0xfe270000 0x0 0x00010000>,
-+		      <0x3 0x40000000 0x0 0x01000000>;
-+		ranges = <0x01000000 0x0 0x01000000 0x3 0x41000000 0x0 0x00100000>,
-+			 <0x02000000 0x0 0x02000000 0x3 0x41100000 0x0 0x3ef00000>;
-+		reg-names = "dbi", "apb", "config";
-+		resets = <&cru SRST_PCIE30X1_POWERUP>;
-+		reset-names = "pipe";
-+		/* rockchip,bifurcation; lane1 when using 1+1 */
-+		status = "disabled";
-+
-+		pcie3x1_intc: legacy-interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 157 IRQ_TYPE_EDGE_RISING>;
-+		};
-+	};
-+
-+	pcie3x2: pcie@fe280000 {
-+		compatible = "rockchip,rk3568-pcie";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		bus-range = <0x20 0x2f>;
-+		clocks = <&cru ACLK_PCIE30X2_MST>, <&cru ACLK_PCIE30X2_SLV>,
-+			 <&cru ACLK_PCIE30X2_DBI>, <&cru PCLK_PCIE30X2>,
-+			 <&cru CLK_PCIE30X2_AUX_NDFT>;
-+		clock-names = "aclk_mst", "aclk_slv",
-+			      "aclk_dbi", "pclk", "aux";
-+		device_type = "pci";
-+		interrupts = <GIC_SPI 165 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-names = "sys", "pmc", "msg", "legacy", "err";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie3x2_intc 0>,
-+				<0 0 0 2 &pcie3x2_intc 1>,
-+				<0 0 0 3 &pcie3x2_intc 2>,
-+				<0 0 0 4 &pcie3x2_intc 3>;
-+		linux,pci-domain = <2>;
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		max-link-speed = <3>;
-+		msi-map = <0x2000 &gic 0x2000 0x1000>;
-+		num-lanes = <2>;
-+		phys = <&pcie30phy>;
-+		phy-names = "pcie-phy";
-+		power-domains = <&power RK3568_PD_PIPE>;
-+		reg = <0x3 0xc0800000 0x0 0x00400000>,
-+		      <0x0 0xfe280000 0x0 0x00010000>,
-+		      <0x3 0x80000000 0x0 0x01000000>;
-+		ranges = <0x01000000 0x0 0x01000000 0x3 0x81000000 0x0 0x00100000>,
-+			 <0x02000000 0x0 0x02000000 0x3 0x81100000 0x0 0x3ef00000>;
-+		reg-names = "dbi", "apb", "config";
-+		resets = <&cru SRST_PCIE30X2_POWERUP>;
-+		reset-names = "pipe";
-+		/* rockchip,bifurcation; lane0 when using 1+1 */
-+		status = "disabled";
-+
-+		pcie3x2_intc: legacy-interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 162 IRQ_TYPE_EDGE_RISING>;
-+		};
-+	};
-+
- 	gmac0: ethernet@fe2a0000 {
- 		compatible = "rockchip,rk3568-gmac", "snps,dwmac-4.20a";
- 		reg = <0x0 0xfe2a0000 0x0 0x10000>;
-@@ -137,3 +259,7 @@
- 	phys = <&usb2phy0_otg>, <&combphy0 PHY_TYPE_USB3>;
- 	phy-names = "usb2-phy", "usb3-phy";
- };
-+
-+&vop {
-+	compatible = "rockchip,rk3568-vop";
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts
---- a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts	2022-07-12 23:50:26.000000000 -0400
-@@ -0,0 +1,676 @@
+--- /dev/null	2022-09-28 03:52:19.326553765 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts	2022-09-28 04:27:20.106516144 -0400
+@@ -0,0 +1,727 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2022 Hardkernel Co., Ltd.
@@ -326,8 +52,17 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +		serial1 = &uart0;
 +	};
 +
-+	chosen: chosen {
++	chosen {
 +		stdout-path = "serial2:1500000n8";
++	};
++
++	dc_12v: dc-12v-regulator {
++		compatible = "regulator-fixed";
++		regulator-name = "dc_12v";
++		regulator-always-on;
++		regulator-boot-on;
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
 +	};
 +
 +	hdmi-con {
@@ -341,16 +76,24 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +		};
 +	};
 +
-+	leds: leds {
++	ir-receiver {
++		compatible = "gpio-ir-receiver";
++		gpios = <&gpio0 RK_PC2 GPIO_ACTIVE_LOW>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&ir_receiver_pin>;
++	};
++
++	leds {
 +		compatible = "gpio-leds";
 +
 +		led_power: led-0 {
-+			gpios = <&gpio0 RK_PC6 GPIO_ACTIVE_LOW>;
++			gpios = <&gpio0 RK_PC6 GPIO_ACTIVE_HIGH>;
 +			function = LED_FUNCTION_POWER;
 +			color = <LED_COLOR_ID_RED>;
++			default-state = "keep";
 +			linux,default-trigger = "default-on";
 +			pinctrl-names = "default";
-+			pinctrl-0 = <&led_power_en>;
++			pinctrl-0 = <&led_power_pin>;
 +		};
 +		led_work: led-1 {
 +			gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
@@ -358,16 +101,25 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +			color = <LED_COLOR_ID_BLUE>;
 +			linux,default-trigger = "heartbeat";
 +			pinctrl-names = "default";
-+			pinctrl-0 = <&led_work_en>;
++			pinctrl-0 = <&led_work_pin>;
 +		};
 +	};
 +
 +	rk809-sound {
 +		compatible = "simple-audio-card";
++		pinctrl-names = "default";
++		pinctrl-0 = <&hp_det_pin>;
++		simple-audio-card,name = "Analog RK817";
 +		simple-audio-card,format = "i2s";
-+		simple-audio-card,name = "ODROID-M1-FRONT";
++		simple-audio-card,hp-det-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_HIGH>;
 +		simple-audio-card,mclk-fs = <256>;
-+		status = "okay";
++		simple-audio-card,widgets =
++			"Headphone", "Headphones",
++			"Speaker", "Speaker";
++		simple-audio-card,routing =
++			"Headphones", "HPOL",
++			"Headphones", "HPOR",
++			"Speaker", "SPKO";
 +
 +		simple-audio-card,cpu {
 +			sound-dai = <&i2s1_8ch>;
@@ -378,98 +130,78 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +		};
 +	};
 +
-+	pcie30_avdd0v9: pcie30-avdd0v9 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pcie30_avdd0v9";
-+		regulator-always-on;
-+		regulator-boot-on;
-+		regulator-min-microvolt = <900000>;
-+		regulator-max-microvolt = <900000>;
-+		vin-supply = <&vcc3v3_sys>;
-+	};
-+
-+	pcie30_avdd1v8: pcie30-avdd1v8 {
-+	        compatible = "regulator-fixed";
-+	        regulator-name = "pcie30_avdd1v8";
-+		regulator-always-on;
-+		regulator-boot-on;
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		vin-supply = <&vcc3v3_sys>;
-+	};
-+
-+	vcc12v_dcin: vcc12v-dcin {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc12v_dcin";
-+		regulator-always-on;
-+		regulator-boot-on;
-+	};
-+
-+	vcc3v3_pcie: gpio-regulator {
++	vcc3v3_pcie: vcc3v3-pcie-regulator {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc3v3_pcie";
 +		enable-active-high;
++		gpio = <&gpio4 RK_PA7 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&vcc3v3_pcie_en_pin>;
 +		regulator-min-microvolt = <3300000>;
 +		regulator-max-microvolt = <3300000>;
-+		gpio = <&gpio4 RK_PA7 GPIO_ACTIVE_HIGH>;
 +		startup-delay-us = <5000>;
-+		vin-supply = <&vcc12v_dcin>;
++		vin-supply = <&vcc3v3_sys>;
 +	};
 +
-+	vcc3v3_sys: vcc3v3-sys {
++	vcc3v3_sys: vcc3v3-sys-regulator {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc3v3_sys";
 +		regulator-always-on;
 +		regulator-boot-on;
 +		regulator-min-microvolt = <3300000>;
 +		regulator-max-microvolt = <3300000>;
-+		vin-supply = <&vcc12v_dcin>;
++		vin-supply = <&dc_12v>;
 +	};
 +
-+	vcc5v0_usb: vcc5v0-usb {
++	vcc5v0_sys: vcc5v0-sys-regulator {
 +		compatible = "regulator-fixed";
-+		regulator-name = "vcc5v0_usb";
++		regulator-name = "vcc5v0_sys";
 +		regulator-always-on;
 +		regulator-boot-on;
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&vcc12v_dcin>;
++		vin-supply = <&dc_12v>;
 +	};
 +
-+	vcc5v0_usb_host: vcc5v0-usb-host {
++	vcc5v0_usb_host: vcc5v0-usb-host-regulator {
 +		compatible = "regulator-fixed";
++		regulator-name = "vcc5v0_usb_host";
 +		enable-active-high;
 +		gpio = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>;
 +		pinctrl-names = "default";
-+		pinctrl-0 = <&vcc5v0_usb_host_en>;
-+		regulator-name = "vcc5v0_usb_host";
++		pinctrl-0 = <&vcc5v0_usb_host_en_pin>;
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&vcc5v0_usb>;
++		vin-supply = <&vcc5v0_sys>;
 +	};
 +
-+	vcc5v0_usb_otg: vcc5v0-usb-otg {
++	vcc5v0_usb_otg: vcc5v0-usb-otg-regulator {
 +		compatible = "regulator-fixed";
++		regulator-name = "vcc5v0_usb_otg";
 +		enable-active-high;
 +		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_HIGH>;
 +		pinctrl-names = "default";
-+		pinctrl-0 = <&vcc5v0_usb_otg_en>;
-+		regulator-name = "vcc5v0_usb_otg";
++		pinctrl-0 = <&vcc5v0_usb_otg_en_pin>;
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&vcc5v0_usb>;
++		vin-supply = <&vcc5v0_sys>;
 +	};
 +};
 +
 +&combphy0 {
++	/* Used for USB3 */
++	phy-supply = <&vcc5v0_usb_host>;
 +	status = "okay";
 +};
 +
 +&combphy1 {
++	/* Used for USB3 */
++	phy-supply = <&vcc5v0_usb_otg>;
 +	status = "okay";
 +};
 +
 +&combphy2 {
++	/* used for SATA */
 +	status = "okay";
 +};
 +
@@ -496,6 +228,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +	clock_in_out = "output";
 +	phy-handle = <&rgmii_phy0>;
 +	phy-mode = "rgmii";
++	phy-supply = <&vcc3v3_sys>;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&gmac0_miim
 +		     &gmac0_tx_bus2
@@ -532,7 +265,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +};
 +
 +&hdmi_sound {
-+	simple-audio-card,name = "ODROID-M1-HDMI";
 +	status = "okay";
 +};
 +
@@ -567,7 +299,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +		clock-names = "mclk";
 +		clocks = <&cru I2S1_MCLKOUT_TX>;
 +		pinctrl-names = "default";
-+		pinctrl-0 = <&pmic_int>, <&i2s1m0_mclk>;
++		pinctrl-0 = <&pmic_int_l>, <&i2s1m0_mclk>;
 +		rockchip,system-power-controller;
 +		#sound-dai-cells = <0>;
 +		vcc1-supply = <&vcc3v3_sys>;
@@ -686,6 +418,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +			vccio_acodec: LDO_REG4 {
 +				regulator-name = "vccio_acodec";
 +				regulator-always-on;
++				regulator-boot-on;
 +				regulator-min-microvolt = <3300000>;
 +				regulator-max-microvolt = <3300000>;
 +
@@ -771,17 +504,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +				};
 +			};
 +		};
-+
-+		codec {
-+			mic-in-differential;
-+		};
 +	};
-+};
-+
-+&i2c3 {
-+	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c3m1_xfer>;
 +};
 +
 +&i2s0_8ch {
@@ -808,33 +531,54 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +};
 +
 +&pcie3x2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_reset_pin>;
 +	reset-gpios = <&gpio2 RK_PD6 GPIO_ACTIVE_HIGH>;
 +	vpcie3v3-supply = <&vcc3v3_pcie>;
 +	status = "okay";
 +};
 +
 +&pinctrl {
++	ir-receiver {
++		ir_receiver_pin: ir-receiver-pin {
++			rockchip,pins = <0 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
 +	leds {
-+		led_power_en: led_power_en {
++		led_power_pin: led-power-pin {
 +			rockchip,pins = <0 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
-+		led_work_en: led_work_en {
++		led_work_pin: led-work-pin {
 +			rockchip,pins = <0 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
 +	};
 +
++	pcie {
++		pcie_reset_pin: pcie-reset-pin {
++			rockchip,pins = <2 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++		vcc3v3_pcie_en_pin: vcc3v3-pcie-en-pin {
++			rockchip,pins = <4 RK_PA7 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
 +	pmic {
-+		pmic_int: pmic_int {
-+			rockchip,pins =
-+				<0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
++		pmic_int_l: pmic-int-l {
++			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	rk809 {
++		hp_det_pin: hp-det-pin {
++			rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
 +	};
 +
 +	usb {
-+		vcc5v0_usb_host_en: vcc5v0_usb_host_en {
++		vcc5v0_usb_host_en_pin: vcc5v0-usb-host-en-pin {
 +			rockchip,pins = <0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
-+		vcc5v0_usb_otg_en: vcc5v0_usb_otg_en {
++		vcc5v0_usb_otg_en_pin: vcc5v0-usb-dr-en-pin {
 +			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
 +	};
@@ -851,16 +595,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +	vccio6-supply = <&vcc_3v3>;
 +	vccio7-supply = <&vcc_3v3>;
 +	status = "okay";
-+};
-+
-+&pwm1 {
-+	status = "disabled";
-+	pinctrl-0 = <&pwm1m1_pins>;
-+};
-+
-+&pwm2 {
-+	status = "disabled";
-+	pinctrl-0 = <&pwm2m1_pins>;
 +};
 +
 +&saradc {
@@ -890,10 +624,53 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +	disable-wp;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
-+	sd-uhs-sdr104;
++	sd-uhs-sdr50;
 +	vmmc-supply = <&vcc3v3_sd>;
 +	vqmmc-supply = <&vccio_sd>;
 +	status = "okay";
++};
++
++&sfc {
++	pinctrl-0 = <&fspi_pins>;
++	pinctrl-names = "default";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	status = "okay";
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <24000000>;
++		spi-rx-bus-width = <4>;
++		spi-tx-bus-width = <1>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "SPL";
++				reg = <0x0 0xe0000>;
++			};
++			partition@e0000 {
++				label = "U-Boot Env";
++				reg = <0xe0000 0x20000>;
++			};
++			partition@100000 {
++				label = "U-Boot";
++				reg = <0x100000 0x200000>;
++			};
++			partition@300000 {
++				label = "splash";
++				reg = <0x300000 0x100000>;
++			};
++			partition@400000 {
++				label = "Filesystem";
++				reg = <0x400000 0xc00000>;
++			};
++		};
++	};
 +};
 +
 +&tsadc {
@@ -915,7 +692,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +};
 +
 +&usb_host0_xhci {
-+	extcon = <&usb2phy0>;
++	dr_mode = "host";
 +	status = "okay";
 +};
 +
@@ -941,7 +718,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +};
 +
 +&usb2phy0_otg {
-+	vbus-supply = <&vcc5v0_usb_otg>;
++	phy-supply = <&vcc5v0_usb_otg>;
 +	status = "okay";
 +};
 +
@@ -975,27 +752,44 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts b/arch/arm64/boot
 +		remote-endpoint = <&hdmi_in_vp0>;
 +	};
 +};
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3566.dtsi b/arch/arm64/boot/dts/rockchip/rk3566.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-09-24 04:17:49.139462033 -0400
+@@ -29,3 +29,7 @@
+ 	extcon = <&usb2phy0>;
+ 	maximum-speed = "high-speed";
+ };
++
++&vop {
++	compatible = "rockchip,rk3566-vop";
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-09-24 04:06:26.580397310 -0400
+@@ -137,3 +137,7 @@
+ 	phys = <&usb2phy0_otg>, <&combphy0 PHY_TYPE_USB3>;
+ 	phy-names = "usb2-phy", "usb3-phy";
+ };
++
++&vop {
++	compatible = "rockchip,rk3568-vop";
++};
 diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-07-10 17:40:51.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-07-23 16:29:09.091944422 -0400
-@@ -127,6 +127,16 @@
- 			opp-hz = /bits/ 64 <1800000000>;
- 			opp-microvolt = <1050000 1050000 1150000>;
+--- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-09-08 05:24:08.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-09-24 04:14:47.547903417 -0400
+@@ -129,6 +129,11 @@
  		};
-+
-+		opp-1992000000 {
-+			opp-hz = /bits/ 64 <1992000000>;
-+			opp-microvolt = <1150000 1150000 1150000>;
-+		};
-+	};
-+
+ 	};
+ 
 +	display_subsystem: display-subsystem {
 +		compatible = "rockchip,display-subsystem";
 +		ports = <&vop_out>;
- 	};
- 
++	};
++
  	firmware {
-@@ -178,6 +188,22 @@
+ 		scmi: scmi {
+ 			compatible = "arm,scmi-smc";
+@@ -144,6 +149,22 @@
  		};
  	};
  
@@ -1015,10 +809,10 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
 +		};
 +	};
 +
- 	pmu {
- 		compatible = "arm,cortex-a55-pmu";
- 		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_HIGH>,
-@@ -632,6 +658,84 @@
+ 	gpu_opp_table: opp-table-1 {
+ 		compatible = "operating-points-v2";
+ 
+@@ -632,6 +653,84 @@
  		};
  	};
  
@@ -1103,7 +897,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
  	qos_gpu: qos@fe128000 {
  		compatible = "rockchip,rk3568-qos", "syscon";
  		reg = <0x0 0xfe128000 0x0 0x20>;
-@@ -752,6 +856,56 @@
+@@ -752,6 +851,56 @@
  		reg = <0x0 0xfe1a8100 0x0 0x20>;
  	};
  
@@ -1160,7 +954,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
  	sdmmc0: mmc@fe2b0000 {
  		compatible = "rockchip,rk3568-dw-mshc", "rockchip,rk3288-dw-mshc";
  		reg = <0x0 0xfe2b0000 0x0 0x4000>;
-@@ -817,6 +971,23 @@
+@@ -817,6 +966,23 @@
  		#sound-dai-cells = <0>;
  		status = "disabled";
  	};
@@ -1184,4 +978,3 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rock
  
  	i2s1_8ch: i2s@fe410000 {
  		compatible = "rockchip,rk3568-i2s-tdm";
-

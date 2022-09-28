@@ -1,0 +1,152 @@
+diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
+--- a/arch/arm64/boot/dts/rockchip/Makefile	2022-09-28 04:46:10.926495894 -0400
++++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-09-28 04:44:07.694498100 -0400
+@@ -66,3 +66,5 @@
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-evb1-v10.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-odroid-m1.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-rock-3a.dtb
++
+++subdir-y += overlays/odroidm1
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c0.dts	2022-07-12 23:50:26.000000000 -0400
+@@ -0,0 +1,14 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		// i2c3 aliased with i2c0.
++		// This activates i2c3 but it will be named as i2c0 on the userspace.
++		target = <&i2c3>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/i2c1.dts	2022-07-23 16:32:47.947181608 -0400
+@@ -0,0 +1,12 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		target = <&i2c1>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/Makefile	2022-07-12 23:50:26.000000000 -0400
+@@ -0,0 +1,11 @@
++dtbo-y += \
++	i2c0.dtbo \
++	i2c1.dtbo \
++	onewire.dtbo \
++	pwm1.dtbo \
++	pwm2.dtbo \
++	pwm9.dtbo \
++	uart1.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/onewire.dts	2022-07-12 23:50:26.000000000 -0400
+@@ -0,0 +1,19 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pinctrl/rockchip.h>
++
++/ {
++	fragment@0 {
++		target-path = "/";
++
++		__overlay__ {
++				onewire:onewire {
++					compatible = "w1-gpio";
++					gpios = <&gpio3 RK_PB2 GPIO_ACTIVE_HIGH>;
++					status = "okay";
++			};
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm1.dts	2022-07-12 23:50:26.000000000 -0400
+@@ -0,0 +1,13 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		// pwmchip0, pwm@fdd70010
++		target = <&pwm1>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm2.dts	2022-07-12 23:50:26.000000000 -0400
+@@ -0,0 +1,13 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		// pwmchip1, pwm@fdd70020
++		target = <&pwm2>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/pwm9.dts	2022-07-12 23:50:26.000000000 -0400
+@@ -0,0 +1,13 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		// pwmchip3, pwm@fe6f0010
++		target = <&pwm9>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts
+--- a/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts	1969-12-31 19:00:00.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/overlays/odroidm1/uart1.dts	2022-07-23 16:33:08.692934983 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		// uart0 aliased with serial1.
++		target = <&uart0>;
++
++		__overlay__ {
++			status = "okay";
++
++			dma-names = "tx", "rx";
++		};
++	};
++};
+
