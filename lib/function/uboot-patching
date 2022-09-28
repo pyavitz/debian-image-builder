@@ -17,14 +17,14 @@ fi
 
 uboot_patching(){
 # dry run
-if [[ -d "../../${UBOOT_PATCHDIR}/${BOARD}" ]]; then
+if [[ -d "../../${UBOOT_PATCHDIR}/${BOARD}" ]] || [[ -d "../../${UBOOT_PATCHDIR}/${FAMILY_EXT}" ]]; then
 	log_setup;
 	echo "";
 	echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch` ]]; then
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
 		for i in ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${FAMILY_EXT}/*.patch` ]]; then
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
 		for i in ../../${UBOOT_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
@@ -41,14 +41,14 @@ if [[ -f "${LOG_FILE}" ]]; then
 	fi
 fi
 # apply patches
-if [[ -d "../../${UBOOT_PATCHDIR}/${BOARD}" ]]; then
+if [[ -d "../../${UBOOT_PATCHDIR}/${BOARD}" ]] || [[ -d "../../${UBOOT_PATCHDIR}/${FAMILY_EXT}" ]]; then
 	echo "" >> ${LOG_FILE}
 	echo "# APPLYING PATCHES" >> ${LOG_FILE}
 	echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch` ]]; then
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
 		for i in ../../${UBOOT_PATCHDIR}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${FAMILY_EXT}/*.patch` ]]; then
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
 		for i in ../../${UBOOT_PATCHDIR}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 	fi
 fi
