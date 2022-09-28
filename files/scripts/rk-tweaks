@@ -16,7 +16,13 @@ fi
 
 # NanoPi R4SE Networking Tweak
 if [[ "$BOARD" == "nanopir4se" ]]; then
-	MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+	MACDEV=`findmnt -v -n -o SOURCE / | sed 's/dev//g' | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##' | sed 's/p1//g' | sed 's/p2//'`
+	if [[ -f /sys/class/block/$MACDEV/device/cid ]]; then
+		HASHDEV=`sha256sum /sys/class/block/$MACDEV/device/cid`
+		MACADDR=`echo "${HASHDEV}" | dd bs=1 count=12 2>/dev/null | sed 's/../&:/g; s/:$//'`
+	else
+		MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+	fi
 	if [[ -e "/sys/class/net/eth0" ]]; then
 		ip link set dev eth0 address $MACADDR
 	fi
