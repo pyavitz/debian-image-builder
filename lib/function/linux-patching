@@ -1,72 +1,26 @@
 #!/bin/bash
 
 # PATCHING
-sun7i_packaging(){ # allwinner
-sed -i 's/packagename=linux-image-$version/packagename=sun7i-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun7i-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=sun7i-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun7i-linux-headers/g' scripts/package/mkdebian
-}
-
-sun8i_packaging(){ # allwinner
-sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=sun8i-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun8i-linux-headers/g' scripts/package/mkdebian
-}
-
-sun50i_packaging(){ # allwinner
-sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=sun50i-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=sun50i-linux-headers/g' scripts/package/mkdebian
-}
-
-freescale_packaging(){ # freescale
-sed -i 's/packagename=linux-image-$version/packagename=imx6-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=imx6-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=imx6-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=imx6-linux-headers/g' scripts/package/mkdebian
-}
-
-meson8b_packaging(){ # amlogic
-sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=meson8b-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson8b-linux-headers/g' scripts/package/mkdebian
-}
-
-meson64_packaging(){ # amlogic
-sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/builddeb
-if [ -f scripts/package/mkdebian ]; then
-	sed -i 's/packagename=linux-image-$version/packagename=meson64-linux-image/g' scripts/package/mkdebian;
-	sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=meson64-linux-headers/g' scripts/package/mkdebian;
+linux_packaging(){
+echo device_tree='"'$DEVICETREE'"' > "scripts/package/pkgvars"
+echo platform='"'$PLATFORM'"' >> "scripts/package/pkgvars"
+if [ $standard_packaging -eq 1 ]; then
+	echo series_name='"'$COMMONNAME'"' >> "scripts/package/pkgvars"
+	echo linux_name='"'$LINUXCOMMON'"' >> "scripts/package/pkgvars"
+	echo headers_name='"'$HEADERSCOMMON'"' >> "scripts/package/pkgvars"
+	echo linux_path='"'$COMMONPATH'"' >> "scripts/package/pkgvars"
+	echo dtb_path='"'$COMMONDTREE'"' >> "scripts/package/pkgvars"
+	echo overlays_path='"'$COMMONOLYS'"' >> "scripts/package/pkgvars"
+else
+	echo series_name='"'$LEGACYNAME'"' >> "scripts/package/pkgvars"
+	echo linux_name='"'$LINUXLEGACY'"' >> "scripts/package/pkgvars"
+	echo headers_name='"'$HEADERSLEGACY'"' >> "scripts/package/pkgvars"
+	echo linux_path='"'$LEGACYPATH'"' >> "scripts/package/pkgvars"
+	echo dtb_path='"'$LEGACYDTREE'"' >> "scripts/package/pkgvars"
+	echo overlays_path='"'$LEGACYOLYS'"' >> "scripts/package/pkgvars"
 fi
-if [[ `grep -w "fwpackagename=linux-firmware-image-$version" "scripts/package/builddeb"` ]]; then
-	sed -i 's/fwpackagename=linux-firmware-image-$version/fwpackagename=meson64-linux-firmware/g' scripts/package/builddeb;
-fi
-}
-
-raspberrypi_packaging(){ # broadcom
-sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=raspberrypi-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=raspberrypi-linux-headers/g' scripts/package/mkdebian
-}
-
-rockchip_packaging(){ # rockchip
-sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=rockchip64-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=rockchip64-linux-headers/g' scripts/package/mkdebian
-}
-
-samsung_packaging(){ # samsung
-sed -i 's/packagename=linux-image-$version/packagename=exynos-linux-image/g' scripts/package/builddeb
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=exynos-linux-headers/g' scripts/package/builddeb
-sed -i 's/packagename=linux-image-$version/packagename=exynos-linux-image/g' scripts/package/mkdebian
-sed -i 's/kernel_headers_packagename=linux-headers-$version/kernel_headers_packagename=exynos-linux-headers/g' scripts/package/mkdebian
+echo install_devicetree='"'$INSTALL_DTB'"' >> "scripts/package/pkgvars"
+echo install_overlays='"'$INSTALL_OLYS'"' >> "scripts/package/pkgvars"
 }
 
 user_patches(){
@@ -215,89 +169,21 @@ if [[ "$FAMILY" == "samsung" ]] || [[ "$FAMILY_EXT" == "meson8b" ]]; then
 fi
 }
 
-# ALLWINNER
-allwinner_patching(){
-# packaging
-if [[ "$FAMILY_EXT" == "sun7i" ]]; then
-	sun7i_packaging;
-fi
-if [[ "$FAMILY_EXT" == "sun8i" ]]; then
-	sun8i_packaging;
-fi
-if [[ "$FAMILY_EXT" == "sun50i" ]]; then
-	sun50i_packaging;
-fi
-# patching
-dryrun; check; apply; user_patches;
-cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo ""
-}
-
-# AMLOGIC
-amlogic_patching(){
+linux_patching(){
 # packaging
 if [[ "$VERSION" == "4.9.y" ]]; then
 	patch -p1 < ../../${PACKAGING}/vendor-4.9-packaging.patch > /dev/null 2>&1;
 fi
-if [[ "$ARCH" == "arm" ]]; then
-	meson8b_packaging;
-fi
-if [[ "$ARCH" == "arm64" ]]; then
-	meson64_packaging;
-fi
-# patching
-if [[ ! -z $REPO_KERNEL ]]; then
-	user_patches;
-else
-	dryrun; check; apply; user_patches;
-fi
-cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo ""
-}
-
-## FREESCALE
-freescale_patching(){
-# packaging
-freescale_packaging
-# patching
-dryrun; check; apply; user_patches;
-cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo ""
-}
-
-## BROADCOM
-broadcom_patching(){
-# packaging
-raspberrypi_packaging
-# patching
-user_patches
-cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo ""
-}
-
-## ROCKCHIP
-rockchip_patching(){
-# packaging
 if [[ "$VERSION" == "4.19.y" ]]; then
 	patch -p1 < ../../${PACKAGING}/vendor-4.19-packaging.patch > /dev/null 2>&1;
 fi
-rockchip_packaging
+linux_packaging
 # patching
 if [[ ! -z $REPO_KERNEL ]]; then
 	user_patches;
 else
 	dryrun; check; apply; user_patches;
 fi
-cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
-echo ""
-}
-
-# SAMSUNG
-samsung_patching(){
-# packaging
-samsung_packaging
-# patching
-dryrun; check; apply; user_patches;
 cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
 if [[ "$BOARD" == "odroidxu4" ]] && [[ -e "../../files/firmware/edid" ]]; then
 	mkdir -p firmware
