@@ -36,15 +36,25 @@ create_package() {
 	dpkg-deb -Zxz --build "$pdir" ..
 }
 
+if [ -f scripts/package/pkgvars ]; then
+	. scripts/package/pkgvars
+else
+	echo "Missing: pkgvars"
+	exit 0
+fi
+
 version=$KERNELRELEASE
 tmpdir="$objtree/debian/tmp"
 kernel_headers_dir="$objtree/debian/hdrtmp"
 libc_headers_dir="$objtree/debian/headertmp"
 dbg_dir="$objtree/debian/dbgtmp"
-packagename=linux-image-$version
-kernel_headers_packagename=linux-headers-$version
 libc_headers_packagename=linux-libc-dev
 dbg_packagename=$packagename-dbg
+
+# variables set by pkgvars
+packagename=$linux_name
+kernel_headers_packagename=$headers_name
+# end of pkgvars
 
 if [ "$ARCH" = "um" ] ; then
 	packagename=user-mode-linux-$version
@@ -147,178 +157,21 @@ if [ "$ARCH" != "um" ]; then
 	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
 fi
 
-# Allwinner
-if [ -d $tmpdir/usr/lib/sun7i-linux-image ]; then
-	mkdir -p "$tmpdir/boot/allwinner"
-	if [ -f $tmpdir/usr/lib/sun7i-linux-image/sun7i-a20-cubietruck.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun7i-linux-image/sun7i-a20-cubietruck.dtb" "$tmpdir/boot/allwinner/sun7i-a20-cubietruck.dtb";
+# variables set by pkgvars
+if [ -d $tmpdir/$linux_path ]; then
+	# devicetree
+	if [ -f $tmpdir/$dtb_path ]; then
+		mkdir -p "$tmpdir/$boot_path"
+		cp -r "$tmpdir/$dtb_path" "$tmpdir/$install_devicetree"
+	fi
+	# overlays
+	if [ -d $tmpdir/$overlays_path ]; then
+		mkdir -p "$tmpdir/$boot_path/overlays"
+		cp -r "$tmpdir/$overlays_path/" "$tmpdir/$install_overlays/"
+
 	fi
 fi
-if [ -d $tmpdir/usr/lib/sun8i-linux-image ]; then
-	mkdir -p "$tmpdir/boot/allwinner"
-	if [ -f $tmpdir/usr/lib/sun8i-linux-image/sun8i-h2-plus-orangepi-r1.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun8i-linux-image/sun8i-h2-plus-orangepi-r1.dtb" "$tmpdir/boot/allwinner/sun8i-h2-plus-orangepi-r1.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-nanopi-m1.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-nanopi-m1.dtb" "$tmpdir/boot/allwinner/sun8i-h3-nanopi-m1.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-nanopi-neo.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-nanopi-neo.dtb" "$tmpdir/boot/allwinner/sun8i-h3-nanopi-neo.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-orangepi-one.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-orangepi-one.dtb" "$tmpdir/boot/allwinner/sun8i-h3-orangepi-one.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-orangepi-pc.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun8i-linux-image/sun8i-h3-orangepi-pc.dtb" "$tmpdir/boot/allwinner/sun8i-h3-orangepi-pc.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/sun8i-linux-image/overlays ]; then
-		mkdir -p "$tmpdir/boot/allwinner/overlays";
-		cp -r "$tmpdir/usr/lib/sun8i-linux-image/overlays/" "$tmpdir/boot/allwinner/";
-	fi
-fi
-if [ -d $tmpdir/usr/lib/sun50i-linux-image/allwinner ]; then
-	mkdir -p "$tmpdir/boot/allwinner"
-	if [ -f $tmpdir/usr/lib/sun50i-linux-image/allwinner/sun50i-h5-libretech-all-h3-cc.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun50i-linux-image/allwinner/sun50i-h5-libretech-all-h3-cc.dtb" "$tmpdir/boot/allwinner/sun50i-h5-libretech-all-h3-cc.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/sun50i-linux-image/allwinner/sun50i-a64-pine64-plus.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun50i-linux-image/allwinner/sun50i-a64-pine64-plus.dtb" "$tmpdir/boot/allwinner/sun50i-a64-pine64-plus.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/sun50i-linux-image/allwinner/sun50i-h5-nanopi-neo-plus2.dtb ]; then
-		cp -r "$tmpdir/usr/lib/sun50i-linux-image/allwinner/sun50i-h5-nanopi-neo-plus2.dtb" "$tmpdir/boot/allwinner/sun50i-h5-nanopi-neo-plus2.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/sun50i-linux-image/allwinner/overlays ]; then
-		mkdir -p "$tmpdir/boot/allwinner/overlays";
-		cp -r "$tmpdir/usr/lib/sun50i-linux-image/allwinner/overlays/" "$tmpdir/boot/allwinner/";
-	fi
-fi
-# Amlogic & Odroid
-if [ -d $tmpdir/usr/lib/meson8b-linux-image ]; then
-	mkdir -p "$tmpdir/boot/"
-	if [ -f $tmpdir/usr/lib/meson8b-linux-image/meson8b-odroidc1.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson8b-linux-image/meson8b-odroidc1.dtb" "$tmpdir/boot/meson8b-odroidc1.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson8b-linux-image/meson8b_odroidc.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson8b-linux-image/meson8b_odroidc.dtb" "$tmpdir/boot/meson8b_odroidc.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/meson8b-linux-image/overlays ]; then
-		mkdir -p "$tmpdir/boot/overlays";
-		cp -r "$tmpdir/usr/lib/meson8b-linux-image/overlays/" "$tmpdir/boot/";
-	fi
-fi
-if [ -d $tmpdir/usr/lib/meson64-linux-image/amlogic ]; then
-	mkdir -p "$tmpdir/boot/amlogic"
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-gxl-s905x-libretech-cc.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-gxl-s905x-libretech-cc.dtb" "$tmpdir/boot/amlogic/meson-gxl-s905x-libretech-cc.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-bananapi-m5.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-bananapi-m5.dtb" "$tmpdir/boot/amlogic/meson-sm1-bananapi-m5.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-c4.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-c4.dtb" "$tmpdir/boot/amlogic/meson-sm1-odroid-c4.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-hc4.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-sm1-odroid-hc4.dtb" "$tmpdir/boot/amlogic/meson-sm1-odroid-hc4.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2-plus.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12b-odroid-n2-plus.dtb" "$tmpdir/boot/amlogic/meson-g12b-odroid-n2-plus.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12a-radxa-zero.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson-g12a-radxa-zero.dtb" "$tmpdir/boot/amlogic/meson-g12a-radxa-zero.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidc4.dtb" "$tmpdir/boot/amlogic/meson64_odroidc4.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidhc4.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidhc4.dtb" "$tmpdir/boot/amlogic/meson64_odroidhc4.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2.dtb" "$tmpdir/boot/amlogic/meson64_odroidn2.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2_plus.dtb ]; then
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/meson64_odroidn2_plus.dtb" "$tmpdir/boot/amlogic/meson64_odroidn2_plus.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/meson64-linux-image/amlogic/overlays ]; then
-		mkdir -p "$tmpdir/boot/amlogic/overlays";
-		cp -r "$tmpdir/usr/lib/meson64-linux-image/amlogic/overlays/" "$tmpdir/boot/amlogic/";
-	fi
-fi
-# Broadcom
-if [ -d $tmpdir/usr/lib/raspberrypi-linux-image/broadcom ]; then
-	mkdir -p "$tmpdir/boot"
-	if [ -f $tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-4-b.dtb ]; then
-		cp -r "$tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-4-b.dtb" "$tmpdir/boot/bcm2711-rpi-4-b.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-400.dtb ]; then
-		cp -r "$tmpdir/usr/lib/raspberrypi-linux-image/broadcom/bcm2711-rpi-400.dtb" "$tmpdir/boot/bcm2711-rpi-400.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/raspberrypi-linux-image/overlays ]; then
-		mkdir -p "$tmpdir/boot/overlays";
-		cp -r "$tmpdir/usr/lib/raspberrypi-linux-image/overlays/" "$tmpdir/boot/";
-	fi
-fi
-# Freescale
-if [ -d $tmpdir/usr/lib/imx6-linux-image ]; then
-	mkdir -p "$tmpdir/boot/freescale"
-	if [ -f $tmpdir/usr/lib/imx6-linux-image/imx6q-cubox-i.dtb ]; then
-		cp -r "$tmpdir/usr/lib/imx6-linux-image/imx6q-cubox-i.dtb" "$tmpdir/boot/freescale/imx6q-cubox-i.dtb";
-	fi
-fi
-# Rockchip
-if [ -d $tmpdir/usr/lib/rockchip64-linux-image/rockchip ]; then
-	mkdir -p "$tmpdir/boot/rockchip"
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3328-roc-cc.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3328-roc-cc.dtb" "$tmpdir/boot/rockchip/rk3328-roc-cc.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3328-rock64.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3328-rock64.dtb" "$tmpdir/boot/rockchip/rk3328-rock64.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-nanopc-t4.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-nanopc-t4.dtb" "$tmpdir/boot/rockchip/rk3399-nanopc-t4.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-nanopi-r4s.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-nanopi-r4s.dtb" "$tmpdir/boot/rockchip/rk3399-nanopi-r4s.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-nanopi-r4se.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-nanopi-r4se.dtb" "$tmpdir/boot/rockchip/rk3399-nanopi-r4se.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-pinebook-pro.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-pinebook-pro.dtb" "$tmpdir/boot/rockchip/rk3399-pinebook-pro.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-rockpro64.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-rockpro64.dtb" "$tmpdir/boot/rockchip/rk3399-rockpro64.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-rockpro64-v2.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3399-rockpro64-v2.dtb" "$tmpdir/boot/rockchip/rk3399-rockpro64-v2.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-odroid-m1.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-odroid-m1.dtb" "$tmpdir/boot/rockchip/rk3568-odroid-m1.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-nanopi-r5s.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-nanopi-r5s.dtb" "$tmpdir/boot/rockchip/rk3568-nanopi-r5s.dtb";
-	fi
-	if [ -f $tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-nanopi5-rev01.dtb ]; then
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/rk3568-nanopi5-rev01.dtb" "$tmpdir/boot/rockchip/rk3568-nanopi5-rev01.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/rockchip64-linux-image/rockchip/overlays ]; then
-		mkdir -p "$tmpdir/boot/rockchip/overlays";
-		cp -r "$tmpdir/usr/lib/rockchip64-linux-image/rockchip/overlays/" "$tmpdir/boot/rockchip/";
-	fi
-fi
-# Samsung
-if [ -d $tmpdir/usr/lib/exynos-linux-image ]; then
-	mkdir -p "$tmpdir/boot/samsung"
-	if [ -f $tmpdir/usr/lib/exynos-linux-image/exynos5422-odroidxu4.dtb ]; then
-		cp -r "$tmpdir/usr/lib/exynos-linux-image/exynos5422-odroidxu4.dtb" "$tmpdir/boot/samsung/exynos5422-odroidxu4.dtb";
-	fi
-	if [ -e $tmpdir/usr/lib/exynos-linux-image/overlays ]; then
-		mkdir -p "$tmpdir/boot/samsung/overlays";
-		cp -r "$tmpdir/usr/lib/exynos-linux-image/overlays/" "$tmpdir/boot/samsung/";
-	fi
-fi
+# end of pkgvars
 
 # Install the maintainer scripts
 debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
