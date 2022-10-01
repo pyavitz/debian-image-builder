@@ -1,22 +1,8 @@
 #!/bin/bash
-# bind blue led to root (default)
-# blue led off
-
-if [ -f /sys/class/leds/c1:blue:alive/trigger ]; then
-	LED="c1:blue:alive";
-fi
-if [ -f /sys/class/leds/blue:status/trigger ]; then
-	LED="blue:status";
-fi
-if [ -f /sys/class/leds/n2:blue/trigger ]; then
-	LED="n2:blue";
-fi
-if [ -f /sys/class/leds/blue:heartbeat/trigger ]; then
-	LED="blue:heartbeat";
-fi
+# If mainline bind blue led to mmc
+# If vendor turn blue led off
 
 activity(){
-BLUE_LED="/sys/class/leds/${LED}/trigger"
 if [ -e $BLUE_LED ]; then
 	ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
 	ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
@@ -32,5 +18,22 @@ if [ -f /sys/class/leds/${LED}/brightness ]; then
 fi
 }
 
-activity
-#off
+if [ -f /sys/class/leds/c1:blue:alive/trigger ]; then
+	LED="c1:blue:alive";
+fi
+if [ -f /sys/class/leds/blue:status/trigger ]; then
+	LED="blue:status";
+fi
+if [ -f /sys/class/leds/n2:blue/trigger ]; then
+	LED="n2:blue";
+fi
+if [ -f /sys/class/leds/blue:heartbeat/trigger ]; then
+	LED="blue:heartbeat";
+fi
+
+BLUE_LED="/sys/class/leds/${LED}/trigger"
+if [[ `uname -r | grep -Po '.*(?=....$)' | grep -w "4.9"` ]]; then
+	off;
+else
+	activity;
+fi
