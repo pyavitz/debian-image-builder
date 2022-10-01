@@ -62,6 +62,8 @@ tee /etc/systemd/system/pine64-bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
 ConditionPathExists=/usr/local/sbin/pine64-bthelper
+After=network.target network-online.target ifup@.service
+Before=bluetooth.service
 
 [Service]
 Type=forking
@@ -78,6 +80,7 @@ nanopi_bt_service(){
 tee /etc/systemd/system/nanopi-bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
+After=network.target network-online.target ifup@.service
 Before=bluetooth.service
 
 [Service]
@@ -99,6 +102,8 @@ tee /etc/systemd/system/leds.service <<EOF
 [Unit]
 Description=LEDs
 ConditionPathExists=/usr/local/sbin/led-trigger
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
 
 [Service]
 Type=oneshot
@@ -205,8 +210,8 @@ tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Rockchip Specific System Tweaks
 ConditionFileIsExecutable=/usr/bin/rk-tweaks
-After=sysinit.target local-fs.target
-Before=network.target bluetooth.target
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=network.target bluetooth.target rc-local.service
 
 [Service]
 Type=forking
@@ -227,7 +232,7 @@ tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Radxa Zero Specific System Tweaks
 ConditionFileIsExecutable=/usr/bin/radxazero-tweaks
-After=sysinit.target local-fs.target network.target bluetooth.target
+After=systemd-remount-fs.service sysinit.target local-fs.target network.target bluetooth.target
 
 [Service]
 Type=forking
@@ -248,7 +253,8 @@ tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=NanoPi R5S Specific System Tweaks
 ConditionFileIsExecutable=/usr/bin/nanopir5s-tweaks
-Before=local-fs.target
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=network.target
 
 [Service]
 Type=forking
@@ -269,7 +275,8 @@ tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Cubietruck Specific System Tweaks
 ConditionFileIsExecutable=/usr/bin/cubietruck-tweaks
-After=sysinit.target local-fs.target
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
 
 [Service]
 Type=forking
@@ -290,7 +297,8 @@ tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Cubox-i Specific System Tweaks
 ConditionFileIsExecutable=/usr/bin/cuboxi-tweaks
-After=sysinit.target local-fs.target
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
 
 [Service]
 Type=forking
@@ -328,7 +336,7 @@ credentials_service(){
 tee /etc/systemd/system/credentials.service <<EOF
 [Unit]
 Description=Credentials
-After=firstboot.service network.target
+After=firstboot.service network.target systemd-remount-fs.service sysinit.target local-fs.target
 Before=rc-local.service
 ConditionPathExists=/usr/local/bin/credentials
 
