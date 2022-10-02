@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# STAGE1
 # /boot/config.txt
 config-txt(){
 if [[ -f "p1/config.txt" ]]; then
@@ -8,19 +7,28 @@ if [[ -f "p1/config.txt" ]]; then
 fi
 tee p1/config.txt <<EOF
 arm_64bit=1
+#kernel=Image
 kernel=u-boot.bin
 initramfs initrd.gz followkernel
 
-disable_overscan=1
-#gpu_mem=128
+# needed by uboot
 enable_uart=1
-disable_splash=1
-max_framebuffers=1
 
-# overclock
-arm_freq=1800
-#gpu_freq=750
-over_voltage=2
+# camera
+#start_x=1
+#gpu_mem=128
+
+# display
+disable_overscan=1
+disable_splash=1
+#max_framebuffers=1
+#avoid_warnings=1
+
+# overclock: https://www.tomshardware.com/how-to/overclock-any-raspberry-pi
+#arm_freq=
+#core_freq=
+#gpu_freq=
+#over_voltage=
 EOF
 }
 
@@ -33,9 +41,17 @@ CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsc
 mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF
 label default
-	kernel /Image
+	kernel ../Image
+	initrd ../initrd.gz
+	#fdt ../${DTB}.dtb
 	${CMDLINE}
 EOF
+tee p1/cmdline.txt <<EOF
+${CMDLINE}
+EOF
+if [[ -f "p1/cmdline.txt" ]]; then
+	sed -i 's/append //g' p1/cmdline.txt;
+fi
 }
 
 # STAGE 2

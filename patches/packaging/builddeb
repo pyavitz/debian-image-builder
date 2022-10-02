@@ -98,17 +98,28 @@ else
 	if [ -f arch/arm64/boot/Image ]; then
 		cp arch/arm64/boot/Image "$tmpdir/boot/Image";
 	fi
-	if [ -f firmware/fixup4.dat ]; then
-		install -m 0644 firmware/fixup4*.dat "$tmpdir/boot";
-	fi
-	if [ -f firmware/start4.elf ]; then
-		install -m 0644 firmware/start4*.elf "$tmpdir/boot";
-	fi
-	if [ -f firmware/LICENCE.broadcom ]; then
-		install -m 0644 firmware/LICENCE.broadcom "$tmpdir/boot";
-	fi
-	if [ -f firmware/COPYING.linux ]; then
-		install -m 0644 firmware/COPYING.linux "$tmpdir/boot";
+	if [ "$platform" = "broadcom" ]; then
+		if [ -f firmware/bootcode.bin ]; then
+			install -m 0644 firmware/bootcode.bin "$tmpdir/boot";
+		fi
+		if [ -f firmware/fixup.dat ]; then
+			install -m 0644 firmware/fixup*.dat "$tmpdir/boot";
+		fi
+		if [ -f firmware/start.elf ]; then
+			install -m 0644 firmware/start*.elf "$tmpdir/boot";
+		fi
+		if [ -f firmware/fixup4.dat ]; then
+			install -m 0644 firmware/fixup4*.dat "$tmpdir/boot";
+		fi
+		if [ -f firmware/start4.elf ]; then
+			install -m 0644 firmware/start4*.elf "$tmpdir/boot";
+		fi
+		if [ -f firmware/LICENCE.broadcom ]; then
+			install -m 0644 firmware/LICENCE.broadcom "$tmpdir/boot";
+		fi
+		if [ -f firmware/COPYING.linux ]; then
+			install -m 0644 firmware/COPYING.linux "$tmpdir/boot";
+		fi
 	fi
 fi
 cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"

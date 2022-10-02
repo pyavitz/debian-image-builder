@@ -219,9 +219,9 @@ else
 	p2_uuid > /dev/null 2>&1;
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
-	if [ -f output/raspi4/u-boot.bin ]; then
+	if [ -f output/${BOARD}/u-boot.bin ]; then
 		config-txt > /dev/null 2>&1;
-		install -v -m 0644 output/raspi4/u-boot.bin p1/ > /dev/null 2>&1;
+		install -v -m 0644 output/${BOARD}/u-boot.bin p1/ > /dev/null 2>&1;
 	else
 		echo -e "${YLW}Missing u-boot.bin${FIN}?"
 		exit 0;
@@ -280,8 +280,8 @@ cp board.txt p2/root
 cp files/scripts/* p2/root
 cp files/users/* p2/root
 cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
-if [[ "$BOARD" == "raspi4" ]]; then
-	cp files/raspi4/* p2/root;
+if [[ "$FAMILY" == "broadcom" ]]; then
+	cp files/raspberrypi/* p2/root;
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	cp files/inits/*.init p2/root;

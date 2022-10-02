@@ -12,29 +12,48 @@ cd ${SRC}
 }
 
 # Firmware
-rpi4_firmware(){
+rpi_firmware(){
 BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
 mkdir -p firmware
 rm -f firmware/*
 cd firmware
 echo ""
 echo_firm
-${DOWNLOAD} ${BINURL}fixup4.dat
-${DOWNLOAD} ${BINURL}fixup4cd.dat
-${DOWNLOAD} ${BINURL}fixup4db.dat
-${DOWNLOAD} ${BINURL}fixup4x.dat
-${DOWNLOAD} ${BINURL}start4.elf
-${DOWNLOAD} ${BINURL}start4cd.elf
-${DOWNLOAD} ${BINURL}start4db.elf
-${DOWNLOAD} ${BINURL}start4x.elf
 ${DOWNLOAD} ${BINURL}LICENCE.broadcom
 ${DOWNLOAD} ${BINURL}COPYING.linux
-cd ..
-if ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux} > /dev/null 2>&1; then
-	echo_bdone;
+if [[ "$SERIES" == "bcm2711" ]]; then
+	${DOWNLOAD} ${BINURL}fixup4.dat
+	${DOWNLOAD} ${BINURL}fixup4cd.dat
+	${DOWNLOAD} ${BINURL}fixup4db.dat
+	${DOWNLOAD} ${BINURL}fixup4x.dat
+	${DOWNLOAD} ${BINURL}start4.elf
+	${DOWNLOAD} ${BINURL}start4cd.elf
+	${DOWNLOAD} ${BINURL}start4db.elf
+	${DOWNLOAD} ${BINURL}start4x.elf
+	cd ..
+	if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
+		echo_bdone;
+	else
+		echo_fail;
+		exit 0;
+	fi
 else
-	echo_fail;
-	exit 0;
+	${DOWNLOAD} ${BINURL}bootcode.bin
+	${DOWNLOAD} ${BINURL}fixup.dat
+	${DOWNLOAD} ${BINURL}fixup_cd.dat
+	${DOWNLOAD} ${BINURL}fixup_db.dat
+	${DOWNLOAD} ${BINURL}fixup_x.dat
+	${DOWNLOAD} ${BINURL}start.elf
+	${DOWNLOAD} ${BINURL}start_cd.elf
+	${DOWNLOAD} ${BINURL}start_db.elf
+	${DOWNLOAD} ${BINURL}start_x.elf
+	cd ..
+	if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
+		echo_bdone;
+	else
+		echo_fail;
+		exit 0;
+	fi
 fi
 }
 
@@ -152,8 +171,8 @@ fi
 if [[ "$BOARD" == "opir1" ]]; then
 	rtl8189es;
 fi
-if [[ "$BOARD" == "raspi4" ]]; then
-	rpi4_firmware;
+if [[ "$FAMILY" == "broadcom" ]]; then
+	rpi_firmware;
 fi
 export ARCH=${ARCH}
 # remove builddeb and mkdebian scripts
