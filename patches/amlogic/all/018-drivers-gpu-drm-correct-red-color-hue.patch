@@ -1,0 +1,23 @@
+diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-09-20 06:43:50.000000000 -0400
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-09-22 08:24:39.006800429 -0400
+@@ -2719,6 +2719,9 @@
+ 	 * if supported. In any case the default RGB888 format is added
+ 	 */
+ 
++	/* Default 8bit RGB fallback */
++	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
++
+ 	if (max_bpc >= 16 && info->bpc == 16) {
+ 		if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
+ 			output_fmts[i++] = MEDIA_BUS_FMT_YUV16_1X48;
+@@ -2752,9 +2755,6 @@
+ 	if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
+ 		output_fmts[i++] = MEDIA_BUS_FMT_YUV8_1X24;
+ 
+-	/* Default 8bit RGB fallback */
+-	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
+-
+ 	*num_output_fmts = i;
+ 
+ 	return output_fmts;
