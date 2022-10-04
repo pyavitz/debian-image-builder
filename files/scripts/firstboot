@@ -6,12 +6,7 @@ if [ -f /etc/opt/board.txt ]; then
 	. /etc/opt/board.txt
 fi
 
-PEFI=`findmnt -v -n -o SOURCE /boot/efi`
-PBOOT=`findmnt -v -n -o SOURCE /boot`
-PBRCM=`findmnt -v -n -o SOURCE /boot/broadcom`
 ROOTFS=`findmnt -v -n -o SOURCE /`
-GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
-GROW_SD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
 
 # Functions
 partition_uuid(){
@@ -41,12 +36,15 @@ if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 	echo -e " \033[1mExpanding root filesystem\033[0m ..."
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]]; then
+	GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 	bash growpart $GROW > /dev/null 2>&1
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
-	bash growpart $GROW_SD > /dev/null 2>&1
+	GROW=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
+	bash growpart $GROW > /dev/null 2>&1
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
+	GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 	bash growpart $GROW > /dev/null 2>&1
 fi
 sleep 1s
@@ -67,23 +65,26 @@ fi
 
 # Fsck fat partition
 if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
+	BOOT=`findmnt -v -n /boot | grep -w "vfat"`
 	umount /boot
 	sleep 1s
-	bash fsck.fat -trawl $PBOOT > /dev/null 2>&1
+	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
 	sleep 1s
 	mount /boot
 fi
 if [[ `findmnt -v -n /boot/efi | grep -w "vfat"` ]]; then
+	BOOT=`findmnt -v -n /boot/efi | grep -w "vfat"`
 	umount /boot/efi
 	sleep 1s
-	bash fsck.fat -trawl $PEFI > /dev/null 2>&1
+	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
 	sleep 1s
 	mount /boot/efi
 fi
 if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
+	BOOT=`findmnt -v -n /boot/broadcom | grep -w "vfat"`
 	umount /boot/broadcom
 	sleep 1s
-	bash fsck.fat -trawl $PBRCM > /dev/null 2>&1
+	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
 	sleep 1s
 	mount /boot/broadcom
 fi
