@@ -102,7 +102,11 @@ mkdir -p p1 p2
 mount "${IMAGE_LOOP_DEV_BOOT}" p1
 mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
 if [[ "$EFI" == "true" ]]; then
-	flash_uboot;
+	if [[ "$FAMILY" == "broadcom" ]]; then
+		:;
+	else
+		flash_uboot;
+	fi
 fi
 if [[ "$EFI" == "false" ]]; then
 	if [[ "$FAMILY_EXT" == "odroid" || "$BOARD" == "odroidc1" ]]; then
