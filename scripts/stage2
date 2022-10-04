@@ -159,11 +159,17 @@ fi
 if [[ "$EFI" == "true" ]]; then
 	# uefi kernel, initrd, dtb and grub cfg script
 	mkdir -p /etc/initramfs/post-update.d/
-	mv -f /root/99-uefi /etc/initramfs/post-update.d/;
+	if [[ "$FAMILY" == "broadcom" ]]; then
+		mv -f /root/99-uefi-brcm /etc/initramfs/post-update.d/99-uefi;
+		rm -f /root/99-uefi;
+	else
+		mv -f /root/99-uefi /etc/initramfs/post-update.d/;
+		rm -f /root/99-uefi-brcm;
+	fi
 	chmod +x /etc/initramfs/post-update.d/99-uefi;
 	chown root:root /etc/initramfs/post-update.d/99-uefi;
 else
-	rm -f /root/99-uefi;
+	rm -f /root/{99-uefi,99-uefi-brcm};
 fi
 
 # LED triggers

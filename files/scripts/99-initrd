@@ -1,10 +1,10 @@
 #!/bin/bash
-# Place this file in /etc/initramfs/post-update.d/ and make it executable
-# Reference: https://forum.doozan.com/read.php?2,12096
+# Place file in /etc/initramfs/post-update.d/ and make it executable
 
 # variables
 uInitrd="/boot/uInitrd"
 initrd="/boot/initrd.gz"
+brcmdir="/boot/broadcom"
 
 # functions
 failed(){
@@ -35,3 +35,8 @@ fi
 echo "Creating initrd.gz."
 rm -f /boot/{initrd.gz,initrd.img-*-bak}
 cp -f /boot/initrd.img-* ${initrd}
+
+# raspberry pi
+if [ -d ${brcmdir} ]; then
+	cp -f ${initrd} ${brcmdir}/;
+fi

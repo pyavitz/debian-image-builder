@@ -34,18 +34,20 @@ EOF
 
 # /boot/extlinux/extlinux.conf
 extlinux-conf(){
-if [[ -f "p1/extlinux/extlinux.conf" ]]; then
-	rm -f p1/extlinux/extlinux.conf;
-fi
-CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes ${EXTRA} rootwait";
-mkdir -p p1/extlinux
-tee p1/extlinux/extlinux.conf <<EOF
+if [[ "$EFI" == "false" ]]; then
+	if [[ -f "p1/extlinux/extlinux.conf" ]]; then
+		rm -f p1/extlinux/extlinux.conf;
+	fi
+	CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes ${EXTRA} rootwait";
+	mkdir -p p1/extlinux
+	tee p1/extlinux/extlinux.conf <<EOF
 label default
 	kernel ../Image
 	initrd ../initrd.gz
 	#fdt ../${DTB}.dtb
 	${CMDLINE}
 EOF
+fi
 tee p1/cmdline.txt <<EOF
 ${CMDLINE}
 EOF

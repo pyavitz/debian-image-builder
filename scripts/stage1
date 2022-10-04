@@ -132,10 +132,21 @@ fi
 # mount and chroot p2
 if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$EFI" == "true" ]]; then
-		mkdir -p p2/boot/efi;
-		mount -o bind p1 p2/boot/efi;
+		if [[ "$FAMILY" == "broadcom" ]]; then
+			P_EFI="p2/boot/${FAMILY}"
+		else
+			P_EFI="p2/boot/efi"
+		fi
+		mkdir -p ${P_EFI};
+		mount -o bind p1 ${P_EFI};
 	else
-		mount -o bind p1 p2/boot;
+		if [[ "$FAMILY" == "broadcom" ]]; then
+			P_NORM="p2/boot/${FAMILY}"
+		else
+			P_NORM="p2/boot"
+		fi
+		mkdir -p ${P_NORM};
+		mount -o bind p1 ${P_NORM};
 	fi
 	mount -o bind /dev p2/dev;
 	mount -o bind /dev/pts p2/dev/pts;
@@ -144,9 +155,9 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	umount p2/dev/pts;
 	umount p2/dev;
 	if [[ "$EFI" == "true" ]]; then
-		umount p2/boot/efi;
+		umount ${P_EFI};
 	else
-		umount p2/boot;
+		umount ${P_NORM};
 	fi
 	if [[ -f "p2/usr/bin/qemu-arm-static" ]]; then
 		rm -f p2/usr/bin/qemu-arm-static;

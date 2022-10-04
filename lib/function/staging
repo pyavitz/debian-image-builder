@@ -143,9 +143,17 @@ EOF
 
 p2_fstab(){
 if [[ "$EFI" == "true" ]]; then
-	BMP="/boot/efi"
+	if [[ "$PLATFORM" == "broadcom" ]]; then
+		BMP="/boot/${PLATFORM}"
+	else
+		BMP="/boot/efi"
+	fi
 else
-	BMP="/boot"
+	if [[ "$PLATFORM" == "broadcom" ]]; then
+		BMP="/boot/${PLATFORM}"
+	else
+		BMP="/boot"
+	fi
 fi
 if [[ "$VFAT" == "true" ]]; then
 	FSTYPE="vfat	defaults 0 2"

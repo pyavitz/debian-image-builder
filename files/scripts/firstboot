@@ -3,13 +3,15 @@
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 if [ -f /etc/opt/board.txt ]; then
-	source /etc/opt/board.txt;
+	. /etc/opt/board.txt
 fi
 
-BOOT=`findmnt -v -n -o SOURCE /boot`
+PEFI=`findmnt -v -n -o SOURCE /boot/efi`
+PBOOT=`findmnt -v -n -o SOURCE /boot`
+PBRCM=`findmnt -v -n -o SOURCE /boot/broadcom`
 ROOTFS=`findmnt -v -n -o SOURCE /`
 GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
-GROW_SSD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
+GROW_SD=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
 
 # Functions
 partition_uuid(){
@@ -35,50 +37,65 @@ EOF
 
 # Expand root filesystem
 if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-	echo "";
-	echo -e " \033[1mExpanding root filesystem\033[0m ...";
+	echo ""
+	echo -e " \033[1mExpanding root filesystem\033[0m ..."
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]]; then
-	bash growpart $GROW > /dev/null 2>&1;
+	bash growpart $GROW > /dev/null 2>&1
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
-	bash growpart $GROW_SSD > /dev/null 2>&1;
+	bash growpart $GROW_SD > /dev/null 2>&1
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
-	bash growpart $GROW > /dev/null 2>&1;
+	bash growpart $GROW > /dev/null 2>&1
 fi
 sleep 1s
 resize2fs $ROOTFS > /dev/null 2>&1
 
 # Fix PARTUUID
 if [[ "$ARCH" == "arm" ]]; then
-	partition_uuid > /dev/null 2>&1;
-	source /etc/opt/part-uuid.txt
-	if [ -f /boot/extlinux/extlinux.conf ]; then
-		extlinux_conf > /dev/null 2>&1;
+	partition_uuid > /dev/null 2>&1
+	. /etc/opt/part-uuid.txt
+	if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
+		extlinux_conf > /dev/null 2>&1
 	fi
-	if [ -f /boot/boot.ini ]; then
-		sed -i '3s/.*/setenv uuid "'"root=PARTUUID=${ROOT_PARTUUID}"'"/' /boot/boot.ini;
+	if [[ -f "/boot/boot.ini" ]]; then
+		sed -i '3s/.*/setenv uuid "'"root=PARTUUID=${ROOT_PARTUUID}"'"/' /boot/boot.ini
 	fi
-	rm -f /etc/opt/part-uuid.txt;
+	rm -f /etc/opt/part-uuid.txt
 fi
 
-# Fsck boot partition
+# Fsck fat partition
 if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
-	umount /boot;
-	sleep 1s;
-	bash fsck.fat -trawl $BOOT > /dev/null 2>&1;
-	sleep 1s;
-	mount /boot;
+	umount /boot
+	sleep 1s
+	bash fsck.fat -trawl $PBOOT > /dev/null 2>&1
+	sleep 1s
+	mount /boot
+fi
+if [[ `findmnt -v -n /boot/efi | grep -w "vfat"` ]]; then
+	umount /boot/efi
+	sleep 1s
+	bash fsck.fat -trawl $PEFI > /dev/null 2>&1
+	sleep 1s
+	mount /boot/efi
+fi
+if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
+	umount /boot/broadcom
+	sleep 1s
+	bash fsck.fat -trawl $PBRCM > /dev/null 2>&1
+	sleep 1s
+	mount /boot/broadcom
 fi
 
 ### Clean up
 if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-	update-rc.d firstboot remove;
-	rm -f /etc/init.d/firstboot;
+	update-rc.d firstboot remove
+	rm -f /etc/init.d/firstboot
 else
-	systemctl disable firstboot;
+	systemctl disable firstboot
 fi
 rm -f /var/cache/debconf/*
 rm -f /usr/local/sbin/firstboot
+
 exit 0
