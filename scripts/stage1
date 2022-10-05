@@ -24,6 +24,13 @@ if [[ -d "p1" ]]; then
 	make cleanup;
 	clear -x;
 fi
+# check output
+if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/{*linux-*.deb,u-boot-*.deb}` ]]; then
+	:;
+else
+	echo -e "Missing u-boot and linux deb packages"
+	exit 0;
+fi
 # check verbosity
 if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
@@ -56,30 +63,18 @@ if [[ ! -z $FAMILY ]]; then
 	cp scripts/stage2 ${P_VALUE}/root;
 	cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt;
 	${P_VALUE}_files;
-fi
-# place led_trigger file in place for stage2
-if [[ -f "files/led-trigger/${BOARD}" ]]; then 
-	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
-fi
-# place u-boot and kernel files in place for stage2
-if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "broadcom" || "$FAMILY" == "freescale" || "$FAMILY" == "samsung" ]]; then
-	cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
+	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root;
 	if [[ "$BOARD" == "cuboxi" ]]; then
 		mkdir -p ${P_VALUE}/lib/firmware/{qcom,vpu}
 		cp -r files/firmware/qcom/* ${P_VALUE}/lib/firmware/qcom;
 		cp -r files/firmware/vpu/* ${P_VALUE}/lib/firmware/vpu;
 	fi
 fi
-if [[ "$FAMILY" == "amlogic" ]]; then
-	if [ $petitboot -eq 1 ]; then
-		cp -f ${OUTPUT}/*.deb ${P_VALUE}/root;
-	else
-		cp -f ${OUTPUT}/{*.bin,*.deb} ${P_VALUE}/root;
-	fi
+# place led_trigger file in place for stage2
+if [[ -f "files/led-trigger/${BOARD}" ]]; then 
+	cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger;
 fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	cp -f ${OUTPUT}/{*.itb,*.bin,*.deb} ${P_VALUE}/root;
-fi
+# user account service
 if [ $useracct -eq 1 ]; then
 	mkdir -p ${P_VALUE}/root/useracct;
 	cp -r files/useracct/* ${P_VALUE}/root/useracct;

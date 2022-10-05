@@ -30,3 +30,171 @@ echo install_overlays='"'$INSTALL_OLYS'"' >> "scripts/package/pkgvars"
 echo "# packaging compression" >> "scripts/package/pkgvars"
 echo compression='"'$COMPRESSION'"' >> "scripts/package/pkgvars"
 }
+
+uboot_packaging(){
+PKGNAME="u-boot-${SERIES}"
+PKGVERSION=`echo $UBOOT_VERSION | sed 's/v//g'`
+BV="${BUILD_VERSION}"
+mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN
+mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+if [[ "$FAMILY" == "allwinner" ]]; then
+	cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+if [[ "$FAMILY" == "amlogic" ]]; then
+	cp -f fip/u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f fip/u-boot.bin.sd.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+if [[ "$FAMILY" == "broadcom" ]]; then
+	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+if [[ "$FAMILY" == "freescale" ]]; then
+	cp -f SPL ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/sploader.bin
+	cp -f u-boot.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+fi
+if [[ "$FAMILY" == "rockchip" ]]; then
+	cp -f idbloader.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/idbloader.bin
+	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
+	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f ../../${CUBOOT}/bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f ../../${CUBOOT}/bl2.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f ../../${CUBOOT}/tzsw.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+
+# control file
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
+	echo "Package: ${PKGNAME}" > "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Version: ${PKGVERSION}-${BV}" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Architecture: ${ARCH_EXT}" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Maintainer: ${KBUSER} <${KBUSER}@${KBHOST}.com>" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Description: Das U-Boot ${SERIES} for the ${DEFAULT_MOTD}" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+fi
+
+# preinst script
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
+	cat <<EOF > "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/preinst"
+#!/bin/bash
+set -e
+
+# clean
+rm -fdr /usr/lib/u-boot
+if [ -d /usr/lib/${PKGNAME} ]; then
+	rm -fr /usr/lib/${PKGNAME}/*
+fi
+
+exit 0
+EOF
+	chmod 755 "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/preinst"
+fi
+
+# postinst script
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
+	cat <<EOF > "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/postinst"
+#!/bin/bash
+set -e
+
+# symlink
+if [ -d /usr/lib/${PKGNAME} ]; then
+	ln -s /usr/lib/${PKGNAME} /usr/lib/u-boot
+fi
+
+# broadcom
+if [ -d /boot/broadcom ]; then
+	if [ -f /boot/broadcom/u-boot.bin ]; then
+		rm -f /boot/broadcom/u-boot.bin
+	fi
+	if [ -f /usr/lib/${PKGNAME}/u-boot.bin ]; then
+		cp -r /usr/lib/${PKGNAME}/u-boot.bin /boot/broadcom/u-boot.bin
+	fi
+fi
+
+exit 0
+EOF
+	chmod 755 "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/postinst"
+fi
+
+# build deb package
+dpkg-deb -Z${COMPRESSION} --build --root-owner-group ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}
+if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
+	if [[ `ls ../../${OUTPUT}/${PKGNAME}_*.deb` ]] > /dev/null 2>&1; then
+		mkdir -p ../../${OUTPUT}/tmp
+		mv -f ../../${OUTPUT}/${PKGNAME}_*.deb ../../${OUTPUT}/tmp/
+	fi
+	mv -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ../../${OUTPUT}/
+fi
+}
+
+uboot_odroidc1_packaging(){
+PKGNAME="u-boot-${SERIES}"
+PKGVERSION="2011.03"
+BV="${BUILD_VERSION}"
+mkdir -p ${OUTPUT}/
+echo -e "Using precompiled binaries."
+cp -f ${CUBOOT}/bl1.bin ${OUTPUT}/
+cp -f ${CUBOOT}/u-boot.bin ${OUTPUT}/
+cd ${OUTPUT}/
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}" ]]; then
+	rm -fdr "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}"
+fi
+if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
+	rm -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb"
+fi
+mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN
+mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+cp -f bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+
+# control file
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
+	echo "Package: ${PKGNAME}" > "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Version: ${PKGVERSION}-${BV}" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Architecture: ${ARCH_EXT}" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Maintainer: ${KBUSER} <${KBUSER}@${KBHOST}.com>" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+	echo "Description: Das U-Boot ${SERIES} for the ${DEFAULT_MOTD}" >> "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/control"
+fi
+
+# preinst script
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
+	cat <<EOF > "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/preinst"
+#!/bin/bash
+set -e
+
+# clean
+rm -fdr /usr/lib/u-boot
+if [ -d /usr/lib/${PKGNAME} ]; then
+	rm -fr /usr/lib/${PKGNAME}/*
+fi
+
+exit 0
+EOF
+	chmod 755 "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/preinst"
+fi
+
+# postinst script
+if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
+	cat <<EOF > "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/postinst"
+#!/bin/bash
+set -e
+
+# symlink
+if [ -d /usr/lib/${PKGNAME} ]; then
+	ln -s /usr/lib/${PKGNAME} /usr/lib/u-boot
+fi
+
+exit 0
+EOF
+	chmod 755 "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN/postinst"
+fi
+
+# build deb package
+if [[ `ls ${PKGNAME}_*.deb` ]] > /dev/null 2>&1; then
+	mkdir -p tmp/
+	mv -f ${PKGNAME}_*.deb tmp/
+fi
+dpkg-deb -Z${COMPRESSION} --build --root-owner-group ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}
+if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
+	rm -fdr ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}
+	ls -ls {*.bin,${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb};
+fi
+}
