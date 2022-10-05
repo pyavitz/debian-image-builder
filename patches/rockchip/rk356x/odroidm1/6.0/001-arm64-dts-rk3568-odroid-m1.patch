@@ -13,18 +13,19 @@ diff -Naur a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation
  additionalProperties: true
  
  ...
+
 diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
---- a/arch/arm64/boot/dts/rockchip/Makefile	2022-09-23 08:14:07.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-09-28 04:28:33.690514827 -0400
+--- a/arch/arm64/boot/dts/rockchip/Makefile	2022-10-05 04:40:55.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-10-05 18:51:08.672472772 -0400
 @@ -64,4 +64,5 @@
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-soquartz-cm4.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-bpi-r2-pro.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-evb1-v10.dtb
 +dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-odroid-m1.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-rock-3a.dtb
---- /dev/null	2022-09-28 03:52:19.326553765 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts	2022-09-28 04:27:20.106516144 -0400
-@@ -0,0 +1,727 @@
+--- /dev/null	2022-10-04 16:07:16.550507162 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts	2022-10-05 18:51:08.822470736 -0400
+@@ -0,0 +1,744 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2022 Hardkernel Co., Ltd.
@@ -539,11 +540,27 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +};
 +
 +&pinctrl {
++	fspi {
++		fspi_dual_io_pins: fspi-dual-io-pins {
++			rockchip,pins =
++				/* fspi_clk */
++				<1 RK_PD0 1 &pcfg_pull_none>,
++				/* fspi_cs0n */
++				<1 RK_PD3 1 &pcfg_pull_none>,
++				/* fspi_d0 */
++				<1 RK_PD1 1 &pcfg_pull_none>,
++				/* fspi_d1 */
++				<1 RK_PD2 1 &pcfg_pull_none>;
++		};
++	};
++
 +	ir-receiver {
 +		ir_receiver_pin: ir-receiver-pin {
++			/* external pullup to VCC3V3_SYS */
 +			rockchip,pins = <0 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
 +	};
++
 +	leds {
 +		led_power_pin: led-power-pin {
 +			rockchip,pins = <0 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>;
@@ -631,7 +648,8 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +};
 +
 +&sfc {
-+	pinctrl-0 = <&fspi_pins>;
++	/* Dual I/O mode as the D2 pin conflicts with the eMMC */
++	pinctrl-0 = <&fspi_dual_io_pins>;
 +	pinctrl-names = "default";
 +	#address-cells = <1>;
 +	#size-cells = <0>;
@@ -640,8 +658,8 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +	flash@0 {
 +		compatible = "jedec,spi-nor";
 +		reg = <0>;
-+		spi-max-frequency = <24000000>;
-+		spi-rx-bus-width = <4>;
++		spi-max-frequency = <100000000>;
++		spi-rx-bus-width = <2>;
 +		spi-tx-bus-width = <1>;
 +
 +		partitions {
