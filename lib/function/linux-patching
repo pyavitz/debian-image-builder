@@ -1,30 +1,6 @@
 #!/bin/bash
 
 # PATCHING
-linux_packaging(){
-echo device_tree='"'$DEVICETREE'"' > "scripts/package/pkgvars"
-echo device_tree_2='"'$DEVICETREE2'"' >> "scripts/package/pkgvars"
-echo platform='"'$PLATFORM'"' >> "scripts/package/pkgvars"
-if [ $standard_packaging -eq 1 ]; then
-	echo series_name='"'$SERIES'"' >> "scripts/package/pkgvars"
-	echo linux_name='"'$LINUX_IMAGE'"' >> "scripts/package/pkgvars"
-	echo headers_name='"'$LINUX_HEADERS'"' >> "scripts/package/pkgvars"
-	echo linux_path='"'$LINUX_PATH'"' >> "scripts/package/pkgvars"
-	echo dtb_path='"'$LINUX_DTREE'"' >> "scripts/package/pkgvars"
-	echo overlays_path='"'$LINUX_OLYS'"' >> "scripts/package/pkgvars"
-else
-	echo series_name='"'$LEGACY_SERIES'"' >> "scripts/package/pkgvars"
-	echo linux_name='"'$LEGACY_IMAGE'"' >> "scripts/package/pkgvars"
-	echo headers_name='"'$LEGACY_HEADERS'"' >> "scripts/package/pkgvars"
-	echo linux_path='"'$LEGACY_PATH'"' >> "scripts/package/pkgvars"
-	echo dtb_path='"'$LEGACY_DTREE'"' >> "scripts/package/pkgvars"
-	echo overlays_path='"'$LEGACY_OLYS'"' >> "scripts/package/pkgvars"
-fi
-echo boot_path='"'$INSTALL_OLYS'"' >> "scripts/package/pkgvars"
-echo install_devicetree='"'$INSTALL_DTB'"' >> "scripts/package/pkgvars"
-echo install_overlays='"'$INSTALL_OLYS'"' >> "scripts/package/pkgvars"
-}
-
 user_patches(){
 if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
 	echo ""
@@ -180,7 +156,7 @@ if [[ ! -z $REPO_KERNEL ]]; then
 else
 	dryrun; check; apply; user_patches;
 fi
-cp -f ../../${PACKAGING}/headers-byteshift.patch headers-byteshift.patch
+cp -f ../../packaging/headers-byteshift.patch headers-byteshift.patch
 if [[ "$BOARD" == "odroidxu4" ]] && [[ -e "../../files/firmware/edid" ]]; then
 	mkdir -p firmware
 	cp -fr ../../files/firmware/edid firmware/;

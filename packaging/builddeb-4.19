@@ -2,18 +2,6 @@
 
 set -e
 
-is_enabled() {
-	grep -q "^$1=y" include/config/auto.conf
-}
-
-if_enabled_echo() {
-	if is_enabled "$1"; then
-		echo -n "$2"
-	elif [ $# -ge 3 ]; then
-		echo -n "$3"
-	fi
-}
-
 create_package() {
 	local pname="$1" pdir="$2"
 
@@ -33,7 +21,7 @@ create_package() {
 
 	# Create the package
 	dpkg-gencontrol -p$pname -P"$pdir"
-	dpkg-deb -Zxz --build "$pdir" ..
+	dpkg-deb -Z$compression --build "$pdir" ..
 }
 
 if [ -f scripts/package/pkgvars ]; then
@@ -74,7 +62,7 @@ parisc|mips|powerpc)
 	installed_image_path="boot/vmlinuz-$version"
 esac
 
-BUILD_DEBUG=$(if_enabled_echo CONFIG_DEBUG_INFO Yes)
+BUILD_DEBUG="$(grep -s '^CONFIG_DEBUG_INFO=y' $KCONFIG_CONFIG || true)"
 
 # Setup the directory structure
 rm -rf "$tmpdir" "$kernel_headers_dir" "$libc_headers_dir" "$dbg_dir" $objtree/debian/files
@@ -92,51 +80,21 @@ if [ "$ARCH" = "um" ] ; then
 else
 	cp System.map "$tmpdir/boot/System.map-$version"
 	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
-	if [ -f arch/arm/boot/zImage ]; then
-		cp arch/arm/boot/zImage "$tmpdir/boot/Image";
-	fi
 	if [ -f arch/arm64/boot/Image ]; then
 		cp arch/arm64/boot/Image "$tmpdir/boot/Image";
-	fi
-	if [ "$platform" = "broadcom" ]; then
-		mkdir -p "$tmpdir/boot/$platform"
-		if [ -f arch/arm64/boot/Image ]; then
-			cp arch/arm64/boot/Image "$tmpdir/boot/$platform/Image";
-		fi
-		if [ -f firmware/bootcode.bin ]; then
-			install -m 0644 firmware/bootcode.bin "$tmpdir/boot/$platform";
-		fi
-		if [ -f firmware/fixup.dat ]; then
-			install -m 0644 firmware/fixup*.dat "$tmpdir/boot/$platform";
-		fi
-		if [ -f firmware/start.elf ]; then
-			install -m 0644 firmware/start*.elf "$tmpdir/boot/$platform";
-		fi
-		if [ -f firmware/fixup4.dat ]; then
-			install -m 0644 firmware/fixup4*.dat "$tmpdir/boot/$platform";
-		fi
-		if [ -f firmware/start4.elf ]; then
-			install -m 0644 firmware/start4*.elf "$tmpdir/boot/$platform";
-		fi
-		if [ -f firmware/LICENCE.broadcom ]; then
-			install -m 0644 firmware/LICENCE.broadcom "$tmpdir/boot/$platform";
-		fi
-		if [ -f firmware/COPYING.linux ]; then
-			install -m 0644 firmware/COPYING.linux "$tmpdir/boot/$platform";
-		fi
 	fi
 fi
 cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
 
-if is_enabled CONFIG_OF_EARLY_FLATTREE; then
+if grep -q "^CONFIG_OF=y" $KCONFIG_CONFIG ; then
 	# Only some architectures with OF support have this target
-	if [ -d "${srctree}/arch/$SRCARCH/boot/dts" ]; then
-		$MAKE -f $srctree/Makefile INSTALL_DTBS_PATH="$tmpdir/usr/lib/$packagename" dtbs_install
+	if grep -q dtbs_install "${srctree}/arch/$SRCARCH/Makefile"; then
+		$MAKE KBUILD_SRC= INSTALL_DTBS_PATH="$tmpdir/usr/lib/$packagename" dtbs_install
 	fi
 fi
 
-if is_enabled CONFIG_MODULES; then
-	INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_install
+if grep -q '^CONFIG_MODULES=y' $KCONFIG_CONFIG ; then
+	INSTALL_MOD_PATH="$tmpdir" $MAKE KBUILD_SRC= modules_install
 	rm -f "$tmpdir/lib/modules/$version/build"
 	rm -f "$tmpdir/lib/modules/$version/source"
 	if [ "$ARCH" = "um" ] ; then
@@ -156,20 +114,16 @@ if is_enabled CONFIG_MODULES; then
 		done
 
 		# resign stripped modules
-		if is_enabled CONFIG_MODULE_SIG_ALL; then
-			INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_sign
+		MODULE_SIG_ALL="$(grep -s '^CONFIG_MODULE_SIG_ALL=y' $KCONFIG_CONFIG || true)"
+		if [ -n "$MODULE_SIG_ALL" ]; then
+			INSTALL_MOD_PATH="$tmpdir" $MAKE KBUILD_SRC= modules_sign
 		fi
 	fi
 fi
 
 if [ "$ARCH" != "um" ]; then
-	$MAKE -f $srctree/Makefile headers
-	$MAKE -f $srctree/Makefile headers_install INSTALL_HDR_PATH="$libc_headers_dir/usr"
-	# move asm headers to /usr/include/<libc-machine>/asm to match the structure
-	# used by Debian-based distros (to support multi-arch)
-	host_arch=$(dpkg-architecture -a$(cat debian/arch) -qDEB_HOST_MULTIARCH)
-	mkdir $libc_headers_dir/usr/include/$host_arch
-	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
+	$MAKE headers_check KBUILD_SRC=
+	$MAKE headers_install KBUILD_SRC= INSTALL_HDR_PATH="$libc_headers_dir/usr"
 fi
 
 # variables set by pkgvars
@@ -196,6 +150,11 @@ fi
 
 # Install the maintainer scripts
 debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
+if grep -q '^CONFIG_BLK_DEV_INITRD=y' $KCONFIG_CONFIG; then
+	want_initrd=Yes
+else
+	want_initrd=No
+fi
 for script in postinst postrm preinst prerm ; do
 	mkdir -p "$tmpdir$debhookdir/$script.d"
 	cat <<EOF > "$tmpdir/DEBIAN/$script"
@@ -207,7 +166,7 @@ set -e
 export DEB_MAINT_PARAMS="\$*"
 
 # Tell initramfs builder whether it's wanted
-export INITRD=$(if_enabled_echo CONFIG_BLK_DEV_INITRD Yes No)
+export INITRD=$want_initrd
 
 test -d $debhookdir/$script.d && run-parts --arg="$version" --arg="/$installed_image_path" $debhookdir/$script.d
 exit 0
@@ -215,71 +174,27 @@ EOF
 	chmod 755 "$tmpdir/DEBIAN/$script"
 done
 
-if [ "$platform" = "broadcom" ]; then
-	cat <<EOF > "$tmpdir/DEBIAN/preinst"
+	cat > $tmpdir/DEBIAN/preinst <<EOT
 #!/bin/bash
+# remove initrd
+
 set -e
 
-# clean boot directory
-if [ -f /boot/Image ]; then
-	rm -f /boot/{Image,vmlinuz-*,System.map-*,config-*};
-fi
-if [ -f /boot/initrd.gz ]; then
-	rm -f /boot/{initrd.gz,uInitrd,initrd.img-*};
-fi
-if [ -f /boot/$platform/Image ]; then
-	rm -f /boot/$platform/Image;
-fi
-if [ -f /boot/$platform/initrd.gz ]; then
-	rm -f /boot/$platform/initrd.gz;
-fi
-if [ -f /boot/$platform/$device_tree ]; then
-	rm -f /boot/$platform/{*.dtb,bootcode.bin,fixup*.dat,start*.elf,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux};
-	if [ -d /boot/$platform/overlays ]; then
-		rm -fdr /boot/$platform/overlays;
-	fi
-fi
-
+rm -f /boot/{initrd.img*,uInitrd} 2>/dev/null
 exit 0
-EOF
-	chmod 755 "$tmpdir/DEBIAN/preinst"
-else
-	cat <<EOF > "$tmpdir/DEBIAN/preinst"
-#!/bin/bash
-set -e
-
-# clean boot directory
-if [ -f /boot/Image ]; then
-	rm -f /boot/{Image,vmlinuz-*,System.map-*,config-*};
-fi
-if [ -f /boot/uInitrd ]; then
-	rm -f /boot/{uInitrd,initrd.img-*};
-fi
-if [ -f /boot/initrd.gz ]; then
-	rm -f /boot/{initrd.gz,initrd.img-*};
-fi
-if [ -f /boot/$device_tree ]; then
-	rm -f /boot/*.dtb;
-	if [ -d /boot/overlays ]; then
-		rm -fdr /boot/overlays;
-	fi
-fi
-
-exit 0
-EOF
-	chmod 755 "$tmpdir/DEBIAN/preinst"
-fi
+EOT
+        chmod 755 $tmpdir/DEBIAN/preinst
 
 # Build kernel header package
 (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
 (cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
 (cd $srctree; find arch/$SRCARCH -name module.lds -o -name Kbuild.platforms -o -name Platform) >> "$objtree/debian/hdrsrcfiles"
 (cd $srctree; find $(find arch/$SRCARCH -name include -o -name scripts -type d) -type f) >> "$objtree/debian/hdrsrcfiles"
-if is_enabled CONFIG_STACK_VALIDATION; then
+if grep -q '^CONFIG_STACK_VALIDATION=y' $KCONFIG_CONFIG ; then
 	(cd $objtree; find tools/objtool -type f -executable) >> "$objtree/debian/hdrobjfiles"
 fi
 (cd $objtree; find arch/$SRCARCH/include Module.symvers include scripts -type f) >> "$objtree/debian/hdrobjfiles"
-if is_enabled CONFIG_GCC_PLUGINS; then
+if grep -q '^CONFIG_GCC_PLUGINS=y' $KCONFIG_CONFIG ; then
 	(cd $objtree; find scripts/gcc-plugins -name \*.so -o -name gcc-common.h) >> "$objtree/debian/hdrobjfiles"
 fi
 destdir=$kernel_headers_dir/usr/src/linux-headers-$version
@@ -289,57 +204,45 @@ mkdir -p "$destdir"
 (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
 ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
 rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
-
-# kernel headers postinst and preinst script
 if [ -f headers-byteshift.patch ]; then
-	cp -f "headers-byteshift.patch" "$destdir/"
-	cp -f "$srctree/scripts/module.lds" "$destdir/"
-	mkdir -p "$kernel_headers_dir/DEBIAN"
-	cat <<EOF > "$kernel_headers_dir/DEBIAN/postinst"
+	cp headers-byteshift.patch $destdir/
+	mkdir -p $kernel_headers_dir/DEBIAN
+	cat > $kernel_headers_dir/DEBIAN/postinst <<EOT
 #!/bin/bash
+# compile headers
+
 set -e
 
 clean_headers(){
 find -type f -exec touch {} +
-if grep -w "Linux/arm" ".config"; then
-	echo 'y' | make ARCH=arm M=scripts clean;
-else
-	echo 'y' | make M=scripts clean;
-fi
+echo 'y' | make ARCH=arm64 M=scripts clean
 patch -p1 < headers-byteshift.patch
-if [ -f scripts/module.lds ]; then :; else install -m 0644 module.lds scripts/; fi
-rm -f {headers-byteshift.patch,module.lds}
-if grep -w "Linux/arm" ".config"; then
-	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
-	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
-else
-	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
-	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
+rm -f headers-byteshift.patch
+echo 'y' | make ARCH=arm64 -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts
+echo 'y' | make ARCH=arm64 -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/
+if [ -e .config.old ]; then
+	rm -f .config.old;
 fi
-if [ -f .config.old ]; then rm -f .config.old; fi
 }
 
-# compile headers
 cd /usr/src/linux-headers-$version
 echo -e "Compiling headers ..."
 clean_headers > /dev/null 2>&1;
-
 exit 0
-EOF
-	chmod 755 "$kernel_headers_dir/DEBIAN/postinst"
+EOT
+	chmod 755 $kernel_headers_dir/DEBIAN/postinst
 fi
-
-mkdir -p $kernel_headers_dir/DEBIAN
-cat <<EOF > "$kernel_headers_dir/DEBIAN/preinst"
+	mkdir -p $kernel_headers_dir/DEBIAN
+	cat > $kernel_headers_dir/DEBIAN/preinst <<EOT
 #!/bin/sh
+# remove old linux headers
+
 set -e
 
-# remove old linux headers
 rm -fdr /usr/src/linux-headers-* > /dev/null 2>&1
-
 exit 0
-EOF
-chmod 755 "$kernel_headers_dir/DEBIAN/preinst"
+EOT
+        chmod 755 $kernel_headers_dir/DEBIAN/preinst
 
 if [ "$ARCH" != "um" ]; then
 	create_package "$kernel_headers_packagename" "$kernel_headers_dir"
