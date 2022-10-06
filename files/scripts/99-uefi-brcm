@@ -2,7 +2,7 @@
 # UEFI/GRUB post update file management
 
 if [[ -f "/etc/opt/board.txt" ]]; then
-	source /etc/opt/board.txt
+	. /etc/opt/board.txt
 else
 	exit 0
 fi
@@ -18,11 +18,11 @@ menuentry "${DEFAULT_MOTD}" {
 	insmod ext2
 	set root=hd0,${PTYPE}1
 	echo "Loading kernel ..."
-	linux /Image root=LABEL=ROOTFS ${CONSOLE} rw rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA}
+	linux /Image ${CONSOLE} rw root=LABEL=ROOTFS rootfstype=ext4 fsck.repair=yes ${EXTRA} loglevel=1 rootwait
 	echo "Loading ramdisk ..."
 	initrd /initrd.gz
-	echo "Loading devicetree ..."
-	devicetree /${DTB}.dtb
+	#echo "Loading devicetree ..."
+	#devicetree /${DTB}.dtb
 }
 EOF
 }
