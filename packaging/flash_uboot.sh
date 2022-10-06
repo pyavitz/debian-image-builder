@@ -103,4 +103,31 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${
 	echo -e "You may now reboot."
 fi
 
+# samsung / odroid xu4
+if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
+	if [ $EMMC -eq 1 ] && [[ -f "${DIR}/bl1.bin" ]] && [[ -f "${DIR}/bl2.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]] && [[ "${DIR}/tzsw.bin" ]]; then
+		DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
+		echo 0 > /sys/block/${DEVICE}/force_ro
+		target_device
+		sleep .50
+		# flash binaries
+		dd if="${DIR}/bl1.bin" of="/dev/${DEVICE}" seek=0 conv=fsync
+		dd if="${DIR}/bl2.bin" of="/dev/${DEVICE}" seek=30 conv=fsync
+		dd if="${DIR}/u-boot.bin" of="/dev/${DEVICE}" seek=62 conv=fsync
+		dd if="${DIR}/tzsw.bin" of="/dev/${DEVICE}" seek=1502 conv=fsync
+		dd if="/dev/zero" of="/dev/${DEVICE}" seek=2015 bs=512 count=32 conv=fsync
+	fi
+else
+	if [ $EMMC -eq 0 ] && [[ -f "${DIR}/bl1.bin" ]] && [[ -f "${DIR}/bl2.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]] && [[ "${DIR}/tzsw.bin" ]]; then
+		target_device
+		sleep .50
+		# flash binaries
+		dd if="${DIR}/bl1.bin" of="${MMC}" seek=1 conv=fsync
+		dd if="${DIR}/bl2.bin" of="${MMC}" seek=31 conv=fsync
+		dd if="${DIR}/u-boot.bin" of="${MMC}" seek=63 conv=fsync
+		dd if="${DIR}/tzsw.bin" of="${MMC}" seek=1503 conv=fsync
+		dd if="/dev/zero" of="${MMC}" seek=2015 bs=512 count=32 conv=fsync
+	fi
+fi
+
 exit 0
