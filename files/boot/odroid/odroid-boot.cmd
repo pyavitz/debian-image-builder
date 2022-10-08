@@ -21,7 +21,7 @@ if test "x${overlay_profile}" != "x"; then
 	ini overlay_${overlay_profile} ${loadaddr}
 fi
 
-setenv bootargs "${console} ro root=${uuid} net.ifnames=0 rootfstype=${rootfstype} fsck.repair=yes loglevel=${verbose} ${extra} ${usbquirks} rootwait"
+setenv bootargs "${console} ro root=${uuid} net.ifnames=0 ${rootfstype} fsck.repair=yes loglevel=${verbose} ${extra} ${usbquirks} rootwait"
 
 if test -z "${distro_bootpart}"; then
 	setenv partition ${bootpart}
