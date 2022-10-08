@@ -7,6 +7,7 @@ if [[ -f "/etc/opt/board.txt" ]]; then
 fi
 
 ROOTFS=`findmnt -v -n -o SOURCE /`
+FSTYPE=`findmnt -v -n -o FSTYPE /`
 
 # Functions
 partition_uuid(){
@@ -15,9 +16,18 @@ echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > /etc/opt/part-uuid.txt
 }
 
 extlinux_conf(){
+if [[ "$FSTYPE" == "ext4" ]]; then
+	ROOT_FSTYPE="rootfstype=ext4"
+fi
+if [[ "$FSTYPE" == "btrfs" ]]; then
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"	
+fi
+if [[ "$FSTYPE" == "xfs" ]]; then
+	ROOT_FSTYPE="rootfstype=xfs"
+fi
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
 rm -f /boot/extlinux/extlinux.conf
 tee /boot/extlinux/extlinux.conf <<EOF
 label default
@@ -47,8 +57,16 @@ if [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
 	GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
 	bash growpart $GROW > /dev/null 2>&1
 fi
-sleep 1s
-resize2fs $ROOTFS > /dev/null 2>&1
+sleep .50
+if [[ "$FSTYPE" == "ext4" ]]; then
+	resize2fs $ROOTFS > /dev/null 2>&1
+fi
+if [[ "$FSTYPE" == "btrfs" ]]; then
+	btrfs filesystem resize max / > /dev/null 2>&1	
+fi
+if [[ "$FSTYPE" == "xfs" ]]; then
+	xfs_growfs -d / > /dev/null 2>&1
+fi
 
 # Fix PARTUUID
 if [[ -f "/etc/opt/board.txt" ]] && [[ "$ARCH" == "arm" ]]; then

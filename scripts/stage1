@@ -2,6 +2,7 @@
 source lib/function/echoes
 source lib/source
 validation
+if [[ -f "fstype.txt" ]]; then . fstype.txt; else FSTYPE="ext4"; fi
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
@@ -10,20 +11,17 @@ source userdata.txt
 if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
 	if [ $petitboot -eq 1 ]; then
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
+		sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt;
+		sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt;
 	fi
 fi
 # user scripts pre-stage1
-if [ $uscripts -eq 1 ]; then
-	uscripts_pre-stage1;
-fi
+if [ $uscripts -eq 1 ]; then uscripts_pre-stage1; fi
 # source board and family
 source board.txt
 source lib/function/${FAMILY}
 # clean area if found
-if [[ -d "p1" ]]; then
-	make cleanup;
-	clear -x;
-fi
+if [[ -d "p1" ]]; then make cleanup; clear -x; fi
 # check output
 if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/{*linux-*.deb,u-boot-*.deb}` ]]; then
 	:;
@@ -36,6 +34,10 @@ if [ $verbose -eq 1 ]; then
 	set -eux -o pipefail;
 else
 	set -eu -o pipefail;
+fi
+if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
+	echo "The $FSTYPE filesystem requires a boot partition."
+	exit 0
 fi
 # start
 CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
@@ -56,13 +58,13 @@ if [ $RAM -ne 0 ]; then
 fi
 if [[ ! -z $P_VALUE ]]; then
 	RELEASE="${P_VALUE}/etc/apt/sources.list"
-	${P_VALUE}_setup;
+	setup;
 fi
 # setup stage2
 if [[ ! -z $FAMILY ]]; then
 	cp scripts/stage2 ${P_VALUE}/root;
 	cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt;
-	${P_VALUE}_files;
+	files;
 	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root;
 	if [[ "$BOARD" == "cuboxi" ]]; then
 		mkdir -p ${P_VALUE}/lib/firmware/{qcom,vpu}
@@ -107,7 +109,11 @@ if [[ "$P_VALUE" == "p1" ]]; then
 		rm p1/etc/apt/apt.conf.d/30proxy;
 	fi
 	rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
-	e4defrag -c p1;
+	if [[ -f "kernel.txt" ]]; then source kernel.txt; fi
+	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
+	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
+		extlinux > /dev/null 2>&1
+	fi
 	umount p1;
 	echo ""
 	# finish
@@ -118,7 +124,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	fi
 	rmdir "${IMAGE_FOLDER}";
 	rmdir p1;
-	if [[ "$GPT" == "true" ]]; then :; else shrink; fi
+	if [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
 	finish_image;
 	rm -f {part-uuid.txt,board.txt,kernel.txt};
 	exit 0;
@@ -168,7 +174,24 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		rm p2/etc/apt/apt.conf.d/30proxy;
 	fi
 	rm p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
-	e4defrag -c p2;
+	if [[ -f "kernel.txt" ]]; then source kernel.txt; fi
+	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
+	if [[ "$FSTYPE" == "btrfs" ]]; then btrfs filesystem defragment -f -r ${P_VALUE}; fi
+	if [[ "$FSTYPE" == "xfs" ]]; then xfs_fsr ${P_VALUE}; fi
+	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
+		if [[ "$FAMILY" == "broadcom" ]]; then
+			brcm_extlinux > /dev/null 2>&1
+			brcm_config > /dev/null 2>&1
+		else
+			extlinux > /dev/null 2>&1
+		fi
+	fi
+	if [[ "$PETITBOOT" == "true" ]]; then
+		odroid_bootcmd > /dev/null 2>&1
+	fi
+	if [[ "$BOOTINI" == "true" ]] && [[ "$BOARD" == "odroidc1" ]]; then
+		odroid_bootini > /dev/null 2>&1
+	fi
 	umount p2;
 	umount p1;
 	echo ""
@@ -180,7 +203,7 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	fi
 	rmdir "${IMAGE_FOLDER}";
 	rmdir p1 p2;
-	if [[ "$GPT" == "true" ]]; then :; else shrink; fi
+	if [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
 	finish_image;
 	rm -f {part-uuid.txt,board.txt,kernel.txt};
 	exit 0;

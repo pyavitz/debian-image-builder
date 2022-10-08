@@ -1,7 +1,12 @@
 #!/bin/bash
 
+
+flash_uboot(){ # place holder
+echo -e "Broadcom: place holder"
+}
+
 # /boot/config.txt
-config-txt(){
+brcm_config(){
 if [[ -f "p1/config.txt" ]]; then
 	rm -f p1/config.txt;
 fi
@@ -33,21 +38,18 @@ EOF
 }
 
 # /boot/extlinux/extlinux.conf
-extlinux-conf(){
-CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 fsck.repair=yes ${EXTRA} loglevel=1 rootwait"
-if [[ "$EFI" == "false" ]]; then
-	if [[ -f "p1/extlinux/extlinux.conf" ]]; then
-		rm -f p1/extlinux/extlinux.conf;
-	fi
-	mkdir -p p1/extlinux
-	tee p1/extlinux/extlinux.conf <<EOF
+brcm_extlinux(){
+CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 rootwait"
+if [[ -f "p1/extlinux/extlinux.conf" ]]; then rm -f p1/extlinux/extlinux.conf; fi
+mkdir -p p1/extlinux
+tee p1/extlinux/extlinux.conf <<EOF
 label default
 	kernel ../Image
 	initrd ../initrd.gz
 	#fdt ../${DTB}.dtb
 	${CMDLINE}
 EOF
-fi
+if [[ -f "p1/cmdline.txt" ]]; then rm -f p1/cmdline.txt; fi
 tee p1/cmdline.txt <<EOF
 ${CMDLINE}
 EOF

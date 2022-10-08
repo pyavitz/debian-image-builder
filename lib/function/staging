@@ -1,7 +1,30 @@
 #!/bin/bash
 
-p1_partition(){
-P_ROOTFS="p1"
+filesystem(){
+if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs.vfat -n"; else BOOTFS="mkfs.ext2 -L"; fi
+if [[ "$EFI" == "true" ]]; then BOOT_LABEL="EFI"; else BOOT_LABEL="BOOT"; fi
+if [[ "$P_VALUE" == "p2" ]]; then MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${IMAGE_LOOP_DEV_BOOT}"; fi
+if [[ "$FSTYPE" == "ext4" ]]; then
+	MAKE_ROOTFS="mkfs.ext4 -L ROOTFS ${IMAGE_LOOP_DEV_ROOTFS}"
+	MOUNT_ROOTFS="mount -o defaults,noatime ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
+	ROOTFS_TABLE="ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1"
+	ROOT_FSTYPE="rootfstype=ext4"
+fi
+if [[ "$FSTYPE" == "btrfs" ]]; then
+	MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${IMAGE_LOOP_DEV_ROOTFS}"
+	MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
+	ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"	
+fi
+if [[ "$FSTYPE" == "xfs" ]]; then
+	MAKE_ROOTFS="mkfs.xfs -f -L ROOTFS ${IMAGE_LOOP_DEV_ROOTFS}"
+	MOUNT_ROOTFS="mount -o defaults,noatime ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
+	ROOTFS_TABLE="xfs	defaults,noatime 0 1"
+	ROOT_FSTYPE="rootfstype=xfs"
+fi
+}
+
+single_partition(){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$GPT" == "true" ]]; then
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
@@ -30,18 +53,20 @@ fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p1
+mkdir -p ${P_ROOTFS}
+filesystem
+$MAKE_ROOTFS
+mount "${IMAGE_LOOP_DEV_ROOTFS}" ${P_ROOTFS}
+if [[ "$FSTYPE" == "btrfs" ]]; then
+	btrfs subvolume create ${P_ROOTFS}/@
+fi
 flash_uboot
 sync
-umount p1
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p1
+umount ${P_ROOTFS}
+$MOUNT_ROOTFS
 }
 
-p2_partition(){
-P_BOOT="p1"
-P_ROOTFS="p2"
+dual_partition(){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$VFAT" == "true" ]]; then
 	if [[ "$GPT" == "true" ]]; then
@@ -88,305 +113,213 @@ IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
-if [[ "$VFAT" == "true" ]]; then
-	if [[ "$EFI" == "true" ]]; then
-		mkfs.vfat -n EFI "${IMAGE_LOOP_DEV_BOOT}";
-	else
-		mkfs.vfat -n BOOT "${IMAGE_LOOP_DEV_BOOT}";
-	fi
+mkdir -p ${P_BOOT} ${P_ROOTFS}
+filesystem
+$MAKE_BOOTFS
+$MAKE_ROOTFS
+mount "${IMAGE_LOOP_DEV_BOOT}" ${P_BOOT}
+mount "${IMAGE_LOOP_DEV_ROOTFS}" ${P_ROOTFS}
+if [[ "$FSTYPE" == "btrfs" ]]; then
+	btrfs subvolume create ${P_ROOTFS}/@
+fi
+if [[ "PETITBOOT" == "true" || "BOOTINI" == "true" ]] && [[ "$FAMILY_EXT" == "odroid" || "$BOARD" == "odroidc1" ]] ; then
+	flash_vendor-uboot
 else
-	mkfs.ext2 -L BOOT "${IMAGE_LOOP_DEV_BOOT}";
-fi
-mkfs.ext4 -L ROOTFS "${IMAGE_LOOP_DEV_ROOTFS}"
-mkdir -p p1 p2
-mount "${IMAGE_LOOP_DEV_BOOT}" p1
-mount "${IMAGE_LOOP_DEV_ROOTFS}" p2
-if [[ "$EFI" == "true" ]]; then
-	if [[ "$FAMILY" == "broadcom" ]]; then
-		:;
-	else
-		flash_uboot;
-	fi
-fi
-if [[ "$EFI" == "false" ]]; then
-	if [[ "$FAMILY_EXT" == "odroid" || "$BOARD" == "odroidc1" ]]; then
-		flash_vendor-uboot;
-	fi
+	flash_uboot
 fi
 sync
-umount p2
-mount -o defaults,noatime "${IMAGE_LOOP_DEV_ROOTFS}" p2
+umount ${P_ROOTFS}
+$MOUNT_ROOTFS
 }
 
-p1_uuid(){
-ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-if [[ "$GPT" == "true" ]]; then
+partition(){
+if [[ "$P_VALUE" == "p1" ]]; then
+	P_ROOTFS="p1"
+	single_partition
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	P_BOOT="p1"
+	P_ROOTFS="p2"
+	dual_partition
+fi
+}
+
+uuid(){
+if [[ "$P_VALUE" == "p1" ]]; then
+	ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 	ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
+	echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
+	echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
+else
+	BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
+	ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
+	ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
+	echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
+	echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
 	echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 fi
 source part-uuid.txt
 }
 
-p2_uuid(){
-BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
-ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
-echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
-echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-source part-uuid.txt
-}
-
 p1_fstab(){
 tee p1/etc/fstab <<EOF
-UUID=${ROOT_UUID}	/	ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
 tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
 EOF
 }
 
 p2_fstab(){
-if [[ "$EFI" == "true" ]]; then
-	if [[ "$FAMILY" == "broadcom" ]]; then
-		BMP="/boot/${FAMILY}"
-	else
-		BMP="/boot/efi"
-	fi
-else
-	if [[ "$FAMILY" == "broadcom" ]]; then
-		BMP="/boot/${FAMILY}"
-	else
-		BMP="/boot"
-	fi
+if [[ "$VFAT" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	BOOTFS_TABLE="/boot	vfat	defaults 0 2"
 fi
-if [[ "$VFAT" == "true" ]]; then
-	FSTYPE="vfat	defaults 0 2"
-else
-	FSTYPE="ext2	rw,relatime,errors=continue 0 2"
+if [[ "$VFAT" == "true" ]] && [[ "$EFI" == "true" ]]; then
+	BOOTFS_TABLE="/boot/efi	vfat	defaults 0 2"
+fi
+if [[ "$VFAT" == "false" ]] && [[ "$EFI" == "false" ]]; then
+	BOOTFS_TABLE="/boot	ext2	rw,relatime,errors=continue 0 2"
 fi
 tee p2/etc/fstab <<EOF
-UUID=${BOOT_UUID}	${BMP}	${FSTYPE}
-UUID=${ROOT_UUID}	/	ext4	defaults,noatime,nodiratime,commit=600,errors=remount-ro 0 1
+UUID=${BOOT_UUID}	${BOOTFS_TABLE}
+UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
 tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
+if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]] && [[ "$VFAT" == "true" ]]; then
+	sed -i 's/boot/boot\/broadcom/g' p2/etc/fstab
+fi
+if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "true" ]] && [[ "$VFAT" == "true" ]]; then
+	sed -i 's/boot\/efi/boot\/broadcom/g' p2/etc/fstab
+fi
 }
 
-p1_setup(){
+setup(){
 if [ $verbose -eq 1 ]; then
-	p1_partition;
+	partition;
 else
-	p1_partition > /dev/null 2>&1;
+	partition > /dev/null 2>&1;
 fi
 if [ $verbose -eq 1 ]; then
-	p1_uuid;
+	uuid;
 else
-	p1_uuid > /dev/null 2>&1;
+	uuid > /dev/null 2>&1;
 fi
 if [[ -f "${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz" ]]; then
 	echo -en "${WHT}Extracting rootfs${FIN} ";
-	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p1/;
+	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C ${P_VALUE}/;
 	echo_bdone;
 else
 	echo -e "${YLW}Missing rootfs tarball${FIN}?";
 	make cleanup > /dev/null 2>&1;
 	exit;
 fi
-mkdir -p p1/etc/apt/apt.conf.d p1/etc/dpkg/dpkg.cfg.d
-echo "force-unsafe-io" > "p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
-mkdir -p p1/usr/bin
-cp $(command -v "${STATIC}") p1/usr/bin;
+mkdir -p ${P_VALUE}/etc/apt/apt.conf.d ${P_VALUE}/etc/dpkg/dpkg.cfg.d
+echo "force-unsafe-io" > "${P_VALUE}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
+mkdir -p ${P_VALUE}/usr/bin
+cp $(command -v "${STATIC}") ${P_VALUE}/usr/bin
 if [ $verbose -eq 1 ]; then
 	choose_release;
 else
 	choose_release > /dev/null 2>&1;
 fi
 if [ $verbose -eq 1 ]; then
-	p1_fstab;
+	${P_VALUE}_fstab;
 else
-	p1_fstab > /dev/null 2>&1;
-fi
-if [[ "$GPT" == "true" ]]; then
-	if [ $verbose -eq 1 ]; then
-		p1_extlinux;
-	else
-		p1_extlinux > /dev/null 2>&1;
-	fi
+	${P_VALUE}_fstab > /dev/null 2>&1;
 fi
 if [ -n "$PROXY" ]; then
-	tee "p1/etc/apt/apt.conf.d/30proxy" <<EOF
+	tee "${P_VALUE}/etc/apt/apt.conf.d/30proxy" <<EOF
 Acquire::http::proxy "http://127.0.0.1:3142";
 EOF
 fi
 }
 
-p2_setup(){
-if [ $verbose -eq 1 ]; then
-	p2_partition;
-else
-	p2_partition > /dev/null 2>&1;
-fi
-if [ $verbose -eq 1 ]; then
-	p2_uuid;
-else
-	p2_uuid > /dev/null 2>&1;
-fi
-if [[ -f "${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz" ]]; then
-	echo -en "${WHT}Extracting rootfs${FIN} ";
-	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C p2/;
-	echo_bdone;
-else
-	echo -e "${YLW}Missing rootfs tarball${FIN}?";
-	make cleanup > /dev/null 2>&1;
-	exit 0;
-fi
-mkdir -p p2/etc/apt/apt.conf.d p2/etc/dpkg/dpkg.cfg.d
-echo "force-unsafe-io" > "p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
-mkdir -p p2/usr/bin
-cp $(command -v "${STATIC}") p2/usr/bin
-if [ $verbose -eq 1 ]; then
-	choose_release;
-else
-	choose_release > /dev/null 2>&1;
-fi
-if [ $verbose -eq 1 ]; then
-	p2_fstab;
-else
-	p2_fstab > /dev/null 2>&1;
-fi
-if [ -n "$PROXY" ]; then
-	tee "p2/etc/apt/apt.conf.d/30proxy" <<EOF
-Acquire::http::proxy "http://127.0.0.1:3142";
-EOF
-fi
-}
-
-p1_files(){
-cp lib/function/networking p1/root/networking.txt
-cp lib/function/services p1/root/services.txt
-cp lib/source p1/root/source.txt
-cp userdata.txt p1/root
-cp board.txt p1/root
-cp files/scripts/* p1/root
-cp files/users/* p1/root
-cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p1/root
+files(){
+cp lib/function/networking ${P_VALUE}/root/networking.txt
+cp lib/function/services ${P_VALUE}/root/services.txt
+cp lib/source ${P_VALUE}/root/source.txt
+cp userdata.txt ${P_VALUE}/root
+cp board.txt ${P_VALUE}/root
+cp files/scripts/* ${P_VALUE}/root
+cp files/users/* ${P_VALUE}/root
+cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} ${P_VALUE}/root
 if [[ "$DISTRO" == "devuan" ]]; then
-	cp files/inits/*.init p1/root;
+	cp files/inits/*.init ${P_VALUE}/root;
 fi
-}
-
-p2_files(){
-cp lib/function/networking p2/root/networking.txt
-cp lib/function/services p2/root/services.txt
-cp lib/source p2/root/source.txt
-cp userdata.txt p2/root
-cp board.txt p2/root
-cp files/scripts/* p2/root
-cp files/users/* p2/root
-cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} p2/root
 if [[ "$FAMILY" == "broadcom" ]]; then
-	cp files/raspberrypi/* p2/root;
+	cp files/raspberrypi/* ${P_VALUE}/root;
 fi
-if [[ "$DISTRO" == "devuan" ]]; then
-	cp files/inits/*.init p2/root;
-fi
+echo "" >> ${P_VALUE}/root/board.txt
+echo "# filesystem" >> ${P_VALUE}/root/board.txt
+echo FSTYPE='"'$FSTYPE'"' >> ${P_VALUE}/root/board.txt
 }
 
 # rename and check for compression
 finish_image(){
-if [[ -f "kernel.txt" ]]; then source kernel.txt; fi
 if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img" ]]; then
 	mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img \
-	${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
+	${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}.img
 	if [ $compress_img -eq 1 ]; then
 		echo_compress
-		xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img
+		xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}.img
 	fi
 fi
-if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz" ]]; then
-	sha256sum ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz \
-	> ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz.sha256
-	sha256sum --check ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${IMAGE_DATE}.img.xz.sha256
+if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}.img.xz" ]]; then
+	sha256sum ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}.img.xz \
+	> ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}.img.xz.sha256
+	sha256sum --check ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}.img.xz.sha256
 fi
 }
 
-# boot.cmd
-default_bootcmd(){
-if [[ "$P_VALUE" == "p1" ]]; then
-	P_BOOTCMD="p1/boot/boot.cmd"
-	P_BOOTSCR="p1/boot/boot.scr"
-fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	P_BOOTCMD="p1/boot.cmd"
-	P_BOOTSCR="p1/boot.scr"
-fi
-if [[ -f "files/boot/boot.cmd" ]]; then
-	cp files/boot/boot.cmd $P_BOOTCMD
-	if [[ -f "$P_BOOTCMD" ]]; then
-		CAP_FAMILY=`echo "$FAMILY" | sed -e "s/\b\(.\)/\u\1/g"`
-		sed -i '1s/.*/setenv bootlabel "'"$CAP_FAMILY"'"/' $P_BOOTCMD;
-		sed -i '2s/.*/setenv uuid "'"PARTUUID=$ROOT_PARTUUID"'"/' $P_BOOTCMD;
-		if [[ "$P_VALUE" == "p1" ]]; then
-			sed -i '10s/.*/setenv fk_kvers "'"boot\/Image"'"/' $P_BOOTCMD;
-			sed -i '11s/.*/setenv initrd "'"boot\/initrd.gz"'"/' $P_BOOTCMD;
-		fi
-		if [[ "$P_VALUE" == "p2" ]]; then
-			sed -i '10s/.*/setenv fk_kvers "'"Image"'"/' $P_BOOTCMD;
-			sed -i '11s/.*/setenv initrd "'"initrd.gz"'"/' $P_BOOTCMD;
-		fi
-		sed -i '6s/.*/setenv extra "'"$EXTRA"'"/' $P_BOOTCMD;
-		sed -i '7s/.*/setenv console "'"$CONSOLE"'"/' $P_BOOTCMD;
-		if [[ "$P_VALUE" == "p1" ]]; then
-			sed -i '14s/.*/setenv fdtdir "'"boot\/$FAMILY"'"/' $P_BOOTCMD;
-		fi
-		if [[ "$P_VALUE" == "p2" ]]; then
-			sed -i '14s/.*/setenv fdtdir "'"$FAMILY"'"/' $P_BOOTCMD;
-		fi
-		sed -i '15s/.*/setenv fdtfile "'"$DTB.dtb"'"/' $P_BOOTCMD;
-		mkimage -C none -A arm -T script -d $P_BOOTCMD $P_BOOTSCR;
-	fi
-fi
-}
-
-# vendor boot.cmd
+# odroid boot.cmd
 odroid_bootcmd(){
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^...'`
-	if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
-		cp files/boot/odroid/${FAMILY_EXT}-vendor-boot.cmd p1/boot.cmd;
-		cp files/boot/odroid/${FAMILY_EXT}-vendor-config.ini p1/config.ini;
-	else
-		cp files/boot/odroid/${FAMILY_EXT}-boot.cmd p1/boot.cmd;
-		cp files/boot/odroid/${FAMILY_EXT}-config.ini p1/config.ini;
+rm -f p1/{boot.cmd,config.ini}
+VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.txt | grep -o '^...'`
+if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
+	cp files/boot/odroid/${FAMILY_EXT}-vendor-boot.cmd p1/boot.cmd;
+	cp files/boot/odroid/${FAMILY_EXT}-vendor-config.ini p1/config.ini;
+else
+	cp files/boot/odroid/${FAMILY_EXT}-boot.cmd p1/boot.cmd;
+	cp files/boot/odroid/${FAMILY_EXT}-config.ini p1/config.ini;
+fi
+if [[ -f "files/boot/odroid/odroid-boot-logo.bmp.gz" ]]; then
+	cp files/boot/odroid/odroid-boot-logo.bmp.gz p1/boot-logo.bmp.gz;
+fi
+if [[ -f "p1/config.ini" ]]; then
+	sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
+	if [[ "$FSTYPE" == "ext4" || "$FSTYPE" == "xfs" ]]; then
+		sed -i "s/rootfstype=/rootfstype=${ROOT_FSTYPE}/g" p1/config.ini;
 	fi
-	if [[ -f "files/boot/odroid/odroid-boot-logo.bmp.gz" ]]; then
-		cp files/boot/odroid/odroid-boot-logo.bmp.gz p1/boot-logo.bmp.gz;
+	if [[ "$FSTYPE" == "btrfs" ]]; then
+		sed -i 's/rootfstype=/rootfstype="'"${ROOT_FSTYPE}"'"/g' p1/config.ini;
 	fi
-	if [[ -f "p1/boot.cmd" ]]; then
-		sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
-		sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
-		mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
-	fi
+	sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
+	mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr;
 fi
 }
 
 odroid_bootini(){
+rm -f p1/boot.ini
 if [[ -f "files/boot/odroid/${BOARD}-boot.ini" ]]; then
 	cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini;
 	sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini;
-fi
-if [[ -f "files/boot/odroid/${BOARD}-config.ini" ]]; then
-	cp -f files/boot/odroid/${BOARD}-config.ini p1/config.ini;
+	if [[ "$FSTYPE" == "ext4" || "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
+		sed -i "s/rootfstype=/rootfstype=${ROOT_FSTYPE}/g" p1/boot.ini;
+	fi
 fi
 }
 
-# create extlinux file (p1)
-p1_extlinux(){
+extlinux(){
+if [[ "$P_VALUE" == "p1" ]]; then
+	BOOT_PATH="p1/boot"
+else
+	BOOT_PATH="p1"
+fi
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
-CHECK=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g'`
-mkdir -p p1/boot/extlinux
-tee p1/boot/extlinux/extlinux.conf <<EOF
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
+CHECK=`echo "$INSTALLED_KERNEL" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g'`
+mkdir -p ${BOOT_PATH}/extlinux
+if [[ -f "${BOOT_PATH}/extlinux/extlinux.conf" ]]; then rm -f ${BOOT_PATH}/extlinux/extlinux.conf; fi
+tee ${BOOT_PATH}/extlinux/extlinux.conf <<EOF
 label default
 	kernel ../Image
 	initrd ../uInitrd
@@ -396,7 +329,7 @@ label default
 	${CMDLINE}
 EOF
 if [[ "$BOARD" == "radxazero" ]]; then
-	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' p1/boot/extlinux/extlinux.conf;
+	sed -i 's/#fdtoverlays/fdtoverlays ..\/amlogic\/overlays\/meson-g12a-opp-2ghz.dtbo/g' ${BOOT_PATH}/extlinux/extlinux.conf;
 fi
 if [[ "$CHECK" == "5.15" ]]; then
 	:;

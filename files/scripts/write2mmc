@@ -4,6 +4,7 @@
 
 if [[ -f "/etc/opt/board.txt" ]]; then
 	DIR="/usr/lib/u-boot"
+	FSTYPE=`findmnt -v -n -o FSTYPE /`
 	MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
 	source /etc/opt/board.txt
 else
@@ -21,6 +22,13 @@ fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Partition scheme is not supported." 0 0
+	exit 0
+fi
+if [[ "$FSTYPE" == "ext4" ]]; then
+	:;
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    The $FSTYPE filesystem is not supported." 0 0
 	exit 0
 fi
 

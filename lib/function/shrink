@@ -2,23 +2,18 @@
 
 # shrink image
 shrink(){
-if [[ "$GPT" == "false" ]]; then
+if [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then
 	chmod +x scripts/shrink;
 	scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img;
 fi
 if [[ "$P_VALUE" == "p1" ]]; then
-	p1_kpartx;
-fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	if [[ "$EFI" == "true" ]]; then
-		:;
-	else
-		p2_kpartx;
-	fi
+	kpartx_p1;
+else
+	if [[ "$EFI" == "true" ]]; then :; else kpartx_p2; fi
 fi
 }
 
-find_p1_partuuid(){
+p1_uuid(){
 if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
 ROOTFS="${ROOTFS_LOOP}"
 ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
@@ -26,7 +21,7 @@ echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
 source part-uuid.txt
 }
 
-p1_kpartx(){
+kpartx_p1(){
 if [[ "$P_ROOTFS" == "p1" ]]; then
 	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1;
 	echo '"' > kpart3;
@@ -53,10 +48,9 @@ ROOTFS="${ROOTFS_LOOP}"
 mkdir -p p1
 sleep 1s
 mount "${ROOTFS}" p1
-find_p1_partuuid
+p1_uuid
 echo ""
-p1_extlinux
-# default_bootcmd
+extlinux
 sleep 1s
 echo ""
 umount p1
@@ -65,7 +59,7 @@ kpartx -d ${IMAGE_FILE}
 rm -f kpart.txt
 }
 
-find_p2_partuuid(){
+p2_uuid(){
 if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
 ROOTFS="${ROOTFS_LOOP}"
 ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
@@ -75,7 +69,7 @@ echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 source part-uuid.txt
 }
 
-p2_kpartx(){
+kpartx_p2(){
 echo 'BOOT_LOOP="/dev/mapper/' > kpart1
 echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
@@ -96,17 +90,21 @@ BOOT="${BOOT_LOOP}"
 mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1
-find_p2_partuuid
+p2_uuid
 echo ""
-if [ $petitboot -eq 1 ]; then
-	odroid_bootcmd;
+if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	if [[ "$FAMILY" == "broadcom" ]]; then
+		brcm_extlinux
+		brcm_config
+	else
+		extlinux
+	fi
 fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	extlinux-conf > /dev/null 2>&1;
-	config-txt > /dev/null 2>&1;
+if [[ "$PETITBOOT" == "true" ]]; then
+	odroid_bootcmd
 fi
-if [[ "$BOARD" == "odroidc1" ]]; then
-	odroid_bootini;
+if [[ "$BOOTINI" == "true" ]] && [[ "$BOARD" == "odroidc1" ]]; then
+	odroid_bootini
 fi
 echo ""
 sleep 1s
