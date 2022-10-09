@@ -213,10 +213,16 @@ if [[ "$BOARD" == "cubietruck" ]]; then
 	ct_blacklist;
 fi
 
+# Board information
+if [[ -f "/etc/opt/board.txt" ]]; then
+	:;
+else
+	mkdir -p /etc/opt
+	cp /root/board.txt /etc/opt/
+fi
+
 # eMMC flash tools
 cd ~
-mkdir -p /etc/opt
-cp board.txt /etc/opt/
 mv -f write2mmc /usr/local/bin/
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
@@ -502,7 +508,7 @@ echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.txt
 if [[ "$EFI" == "true" ]]; then
 	# 99-uefi uses /etc/opt/board.txt, this script does not.
 	# re-source /root/board.txt to ensure no confusion.
-	source /root/board.txt
+	. /root/board.txt
 fi
 
 # system.journal corrupted or uncleanly shut down, renaming and replacing
