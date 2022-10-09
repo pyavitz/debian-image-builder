@@ -1,6 +1,6 @@
 diff -Naur a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt
 --- a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	1969-12-31 19:00:00.000000000 -0500
-+++ b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	2022-08-18 21:44:58.000000000 -0400
++++ b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	2022-10-03 22:33:59.000000000 -0400
 @@ -0,0 +1,18 @@
 +Generic GPIO bit-banged PWM driver
 +
@@ -21,9 +21,9 @@ diff -Naur a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt b/Documentation/
 +		pwm-gpios = <&pio 7 2 GPIO_ACTIVE_LOW>;
 +	};
 diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv.c
---- a/drivers/gpu/drm/meson/meson_drv.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_drv.c	2022-08-18 21:44:58.000000000 -0400
-@@ -425,15 +425,12 @@
+--- a/drivers/gpu/drm/meson/meson_drv.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_drv.c	2022-10-03 22:33:59.000000000 -0400
+@@ -428,15 +428,12 @@
  	return drm_mode_config_helper_resume(priv->drm);
  }
  
@@ -43,7 +43,7 @@ diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv
  }
  
  /* Possible connectors nodes to ignore */
-@@ -527,7 +524,6 @@
+@@ -530,7 +527,6 @@
  
  static struct platform_driver meson_drm_platform_driver = {
  	.probe      = meson_drv_probe,
@@ -52,8 +52,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv
  		.name	= "meson-drm",
  		.of_match_table = dt_match,
 diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
---- a/drivers/gpu/drm/meson/meson_vclk.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_vclk.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_vclk.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_vclk.c	2022-10-03 22:33:59.000000000 -0400
 @@ -357,6 +357,8 @@
  	MESON_VCLK_HDMI_594000,
  /* 2970 /1 /1 /1 /5 /1  => /1 /2 */
@@ -94,8 +94,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vc
  
  		meson_hdmi_pll_set_params(priv, m, frac, od1, od2, od3);
 diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
---- a/drivers/gpu/drm/meson/meson_venc.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_venc.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_venc.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_venc.c	2022-10-03 22:33:59.000000000 -0400
 @@ -866,10 +866,11 @@
  			    DRM_MODE_FLAG_PVSYNC | DRM_MODE_FLAG_NVSYNC))
  		return MODE_BAD;
@@ -111,8 +111,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_ve
  
  	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu.c
---- a/drivers/gpu/drm/meson/meson_viu.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_viu.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_viu.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_viu.c	2022-10-03 22:33:59.000000000 -0400
 @@ -425,6 +425,7 @@
  	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXM) ||
  	    meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXL))
@@ -129,27 +129,9 @@ diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu
  
  	/* Initialize OSD1 fifo control register */
  	reg = VIU_OSD_DDR_PRIORITY_URGENT |
-diff -Naur a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
---- a/drivers/gpu/drm/tiny/ili9341.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/tiny/ili9341.c	2022-08-18 21:44:58.000000000 -0400
-@@ -162,12 +162,14 @@
- 
- static const struct of_device_id ili9341_of_match[] = {
- 	{ .compatible = "adafruit,yx240qv29" },
-+	{ .compatible = "hardkernel,hktft32" },
- 	{ }
- };
- MODULE_DEVICE_TABLE(of, ili9341_of_match);
- 
- static const struct spi_device_id ili9341_id[] = {
- 	{ "yx240qv29", 0 },
-+	{ "hktft32", 0 },
- 	{ }
- };
- MODULE_DEVICE_TABLE(spi, ili9341_id);
 diff -Naur a/drivers/gpu/drm/tiny/ili9488_pio.c b/drivers/gpu/drm/tiny/ili9488_pio.c
 --- a/drivers/gpu/drm/tiny/ili9488_pio.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/tiny/ili9488_pio.c	2022-08-18 21:44:58.000000000 -0400
++++ b/drivers/gpu/drm/tiny/ili9488_pio.c	2022-10-03 22:33:59.000000000 -0400
 @@ -0,0 +1,366 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -518,9 +500,9 @@ diff -Naur a/drivers/gpu/drm/tiny/ili9488_pio.c b/drivers/gpu/drm/tiny/ili9488_p
 +MODULE_AUTHOR("Dongjin Kim <tobetter@gmail.com>");
 +MODULE_LICENSE("GPL");
 diff -Naur a/drivers/gpu/drm/tiny/Kconfig b/drivers/gpu/drm/tiny/Kconfig
---- a/drivers/gpu/drm/tiny/Kconfig	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/tiny/Kconfig	2022-08-18 21:44:58.000000000 -0400
-@@ -147,6 +147,19 @@
+--- a/drivers/gpu/drm/tiny/Kconfig	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/gpu/drm/tiny/Kconfig	2022-10-03 22:33:59.000000000 -0400
+@@ -148,6 +148,19 @@
  
  	  If M is selected the module will be called ili9486.
  
@@ -541,8 +523,8 @@ diff -Naur a/drivers/gpu/drm/tiny/Kconfig b/drivers/gpu/drm/tiny/Kconfig
  	tristate "DRM support for MI0283QT"
  	depends on DRM && SPI
 diff -Naur a/drivers/gpu/drm/tiny/Makefile b/drivers/gpu/drm/tiny/Makefile
---- a/drivers/gpu/drm/tiny/Makefile	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/tiny/Makefile	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/gpu/drm/tiny/Makefile	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/gpu/drm/tiny/Makefile	2022-10-03 22:33:59.000000000 -0400
 @@ -11,6 +11,7 @@
  obj-$(CONFIG_TINYDRM_ILI9225)		+= ili9225.o
  obj-$(CONFIG_TINYDRM_ILI9341)		+= ili9341.o
@@ -552,9 +534,9 @@ diff -Naur a/drivers/gpu/drm/tiny/Makefile b/drivers/gpu/drm/tiny/Makefile
  obj-$(CONFIG_TINYDRM_REPAPER)		+= repaper.o
  obj-$(CONFIG_TINYDRM_ST7586)		+= st7586.o
 diff -Naur a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
---- a/drivers/hid/hid-ids.h	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/hid/hid-ids.h	2022-08-18 21:44:58.000000000 -0400
-@@ -1398,4 +1398,10 @@
+--- a/drivers/hid/hid-ids.h	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/hid/hid-ids.h	2022-10-03 22:33:59.000000000 -0400
+@@ -1402,4 +1402,10 @@
  #define USB_VENDOR_ID_SIGNOTEC			0x2133
  #define USB_DEVICE_ID_SIGNOTEC_VIEWSONIC_PD1011	0x0018
  
@@ -566,9 +548,9 @@ diff -Naur a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
 +
  #endif
 diff -Naur a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
---- a/drivers/hid/hid-quirks.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/hid/hid-quirks.c	2022-08-18 21:44:58.000000000 -0400
-@@ -873,6 +873,9 @@
+--- a/drivers/hid/hid-quirks.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/hid/hid-quirks.c	2022-10-03 22:33:59.000000000 -0400
+@@ -875,6 +875,9 @@
  	{ HID_USB_DEVICE(USB_VENDOR_ID_SYNAPTICS, USB_DEVICE_ID_SYNAPTICS_DPAD) },
  #endif
  	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
@@ -579,8 +561,8 @@ diff -Naur a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
  };
  
 diff -Naur a/drivers/hwmon/pwm-fan.c b/drivers/hwmon/pwm-fan.c
---- a/drivers/hwmon/pwm-fan.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/hwmon/pwm-fan.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/hwmon/pwm-fan.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/hwmon/pwm-fan.c	2022-10-03 22:33:59.000000000 -0400
 @@ -8,6 +8,7 @@
   */
  
@@ -706,7 +688,7 @@ diff -Naur a/drivers/hwmon/pwm-fan.c b/drivers/hwmon/pwm-fan.c
  		return PTR_ERR(hwmon);
 diff -Naur a/drivers/input/touchscreen/dwav-usb-mt.c b/drivers/input/touchscreen/dwav-usb-mt.c
 --- a/drivers/input/touchscreen/dwav-usb-mt.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/input/touchscreen/dwav-usb-mt.c	2022-08-18 21:44:58.000000000 -0400
++++ b/drivers/input/touchscreen/dwav-usb-mt.c	2022-10-03 22:33:59.000000000 -0400
 @@ -0,0 +1,554 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
@@ -1264,9 +1246,9 @@ diff -Naur a/drivers/input/touchscreen/dwav-usb-mt.c b/drivers/input/touchscreen
 +MODULE_ALIAS("dwav_usb_mt");
 \ No newline at end of file
 diff -Naur a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
---- a/drivers/input/touchscreen/goodix.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/input/touchscreen/goodix.c	2022-08-18 21:44:58.000000000 -0400
-@@ -1334,6 +1334,10 @@
+--- a/drivers/input/touchscreen/goodix.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/input/touchscreen/goodix.c	2022-10-03 22:33:59.000000000 -0400
+@@ -1329,6 +1329,10 @@
  			return error;
  	}
  
@@ -1278,8 +1260,8 @@ diff -Naur a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/good
  	if (error) {
  		if (!ts->reset_controller_at_probe &&
 diff -Naur a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
---- a/drivers/input/touchscreen/Kconfig	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/input/touchscreen/Kconfig	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/input/touchscreen/Kconfig	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/input/touchscreen/Kconfig	2022-10-03 22:33:59.000000000 -0400
 @@ -1379,4 +1379,14 @@
  	  To compile this driver as a module, choose M here: the
  	  module will be called zinitix.
@@ -1296,16 +1278,16 @@ diff -Naur a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconf
 +
  endif
 diff -Naur a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
---- a/drivers/input/touchscreen/Makefile	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/input/touchscreen/Makefile	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/input/touchscreen/Makefile	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/input/touchscreen/Makefile	2022-10-03 22:33:59.000000000 -0400
 @@ -116,3 +116,4 @@
  obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
  obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
  obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
 +obj-$(CONFIG_TOUCHSCREEN_DWAV_USB_MT)	+= dwav-usb-mt.o
 diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
---- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2022-10-03 22:33:59.000000000 -0400
 @@ -761,16 +761,23 @@
  	if (wol->wolopts) {
  		pr_info("stmmac: wakeup enable\n");
@@ -1333,9 +1315,9 @@ diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/
  }
  
 diff -Naur a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
---- a/drivers/net/phy/phy_device.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/net/phy/phy_device.c	2022-08-18 21:44:58.000000000 -0400
-@@ -1769,8 +1769,10 @@
+--- a/drivers/net/phy/phy_device.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/net/phy/phy_device.c	2022-10-03 22:33:59.000000000 -0400
+@@ -1777,8 +1777,10 @@
  	    phy_driver_is_genphy_10g(phydev))
  		device_release_driver(&phydev->mdio.dev);
  
@@ -1349,8 +1331,8 @@ diff -Naur a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
  	/*
  	 * The phydev might go away on the put_device() below, so avoid
 diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
---- a/drivers/net/phy/realtek.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/net/phy/realtek.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/net/phy/realtek.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/net/phy/realtek.c	2022-10-03 22:33:59.000000000 -0400
 @@ -12,6 +12,7 @@
  #include <linux/phy.h>
  #include <linux/module.h>
@@ -1417,8 +1399,8 @@ diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
  		.write_page	= rtl821x_write_page,
  	}, {
 diff -Naur a/drivers/pinctrl/meson/pinctrl-meson.c b/drivers/pinctrl/meson/pinctrl-meson.c
---- a/drivers/pinctrl/meson/pinctrl-meson.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/pinctrl/meson/pinctrl-meson.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/pinctrl/meson/pinctrl-meson.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/pinctrl/meson/pinctrl-meson.c	2022-10-03 22:33:59.000000000 -0400
 @@ -52,6 +52,7 @@
  #include <linux/property.h>
  #include <linux/regmap.h>
@@ -1484,8 +1466,8 @@ diff -Naur a/drivers/pinctrl/meson/pinctrl-meson.c b/drivers/pinctrl/meson/pinct
  	if (IS_ERR_OR_NULL(pc->reg_mux)) {
  		dev_err(pc->dev, "mux registers not found\n");
 diff -Naur a/drivers/pinctrl/meson/pinctrl-meson.h b/drivers/pinctrl/meson/pinctrl-meson.h
---- a/drivers/pinctrl/meson/pinctrl-meson.h	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/pinctrl/meson/pinctrl-meson.h	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/pinctrl/meson/pinctrl-meson.h	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/pinctrl/meson/pinctrl-meson.h	2022-10-03 22:33:59.000000000 -0400
 @@ -132,6 +132,7 @@
  	struct regmap *reg_ds;
  	struct gpio_chip chip;
@@ -1495,8 +1477,8 @@ diff -Naur a/drivers/pinctrl/meson/pinctrl-meson.h b/drivers/pinctrl/meson/pinct
  
  #define FUNCTION(fn)							\
 diff -Naur a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
---- a/drivers/power/reset/Kconfig	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/power/reset/Kconfig	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/power/reset/Kconfig	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/power/reset/Kconfig	2022-10-03 22:33:59.000000000 -0400
 @@ -9,6 +9,13 @@
  
  if POWER_RESET
@@ -1512,8 +1494,8 @@ diff -Naur a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
  	bool "ams AS3722 power-off driver"
  	depends on MFD_AS3722
 diff -Naur a/drivers/power/reset/Makefile b/drivers/power/reset/Makefile
---- a/drivers/power/reset/Makefile	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/power/reset/Makefile	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/power/reset/Makefile	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/power/reset/Makefile	2022-10-03 22:33:59.000000000 -0400
 @@ -1,4 +1,5 @@
  # SPDX-License-Identifier: GPL-2.0
 +obj-$(CONFIG_POWER_RESET_ODROID) += odroid-reboot.o
@@ -1522,7 +1504,7 @@ diff -Naur a/drivers/power/reset/Makefile b/drivers/power/reset/Makefile
  obj-$(CONFIG_POWER_RESET_AT91_RESET) += at91-reset.o
 diff -Naur a/drivers/power/reset/odroid-reboot.c b/drivers/power/reset/odroid-reboot.c
 --- a/drivers/power/reset/odroid-reboot.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/power/reset/odroid-reboot.c	2022-08-18 21:44:58.000000000 -0400
++++ b/drivers/power/reset/odroid-reboot.c	2022-10-03 22:33:59.000000000 -0400
 @@ -0,0 +1,181 @@
 +/*
 + * drivers/power/reset/odroid-reboot.c
@@ -1706,9 +1688,9 @@ diff -Naur a/drivers/power/reset/odroid-reboot.c b/drivers/power/reset/odroid-re
 +}
 +device_initcall(odroid_restart_init);
 diff -Naur a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
---- a/drivers/pwm/Kconfig	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/pwm/Kconfig	2022-08-18 21:44:58.000000000 -0400
-@@ -195,6 +195,21 @@
+--- a/drivers/pwm/Kconfig	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/pwm/Kconfig	2022-10-03 22:33:59.000000000 -0400
+@@ -205,6 +205,21 @@
  	  To compile this driver as a module, choose M here: the module
  	  will be called pwm-fsl-ftm.
  
@@ -1731,9 +1713,9 @@ diff -Naur a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
  	tristate "HiSilicon BVT PWM support"
  	depends on ARCH_HISI || COMPILE_TEST
 diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
---- a/drivers/pwm/Makefile	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/pwm/Makefile	2022-08-18 21:44:58.000000000 -0400
-@@ -16,6 +16,7 @@
+--- a/drivers/pwm/Makefile	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/pwm/Makefile	2022-10-03 22:33:59.000000000 -0400
+@@ -17,6 +17,7 @@
  obj-$(CONFIG_PWM_DWC)		+= pwm-dwc.o
  obj-$(CONFIG_PWM_EP93XX)	+= pwm-ep93xx.o
  obj-$(CONFIG_PWM_FSL_FTM)	+= pwm-fsl-ftm.o
@@ -1743,7 +1725,7 @@ diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
  obj-$(CONFIG_PWM_IMX1)		+= pwm-imx1.o
 diff -Naur a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
 --- a/drivers/pwm/pwm-gpio.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/pwm/pwm-gpio.c	2022-08-18 21:44:58.000000000 -0400
++++ b/drivers/pwm/pwm-gpio.c	2022-10-03 22:33:59.000000000 -0400
 @@ -0,0 +1,255 @@
 +/*
 + * Copyright (c) 2015 Olliver Schinagl <oliver@schinagl.nl>
@@ -2001,8 +1983,8 @@ diff -Naur a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
 +MODULE_DESCRIPTION("Generic GPIO bit-banged PWM driver");
 +MODULE_LICENSE("GPL");
 diff -Naur a/drivers/spi/spidev.c b/drivers/spi/spidev.c
---- a/drivers/spi/spidev.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/spi/spidev.c	2022-08-18 21:44:58.000000000 -0400
+--- a/drivers/spi/spidev.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/spi/spidev.c	2022-10-03 22:33:59.000000000 -0400
 @@ -691,6 +691,7 @@
  	{ .name = "m53cpld" },
  	{ .name = "spi-petra" },
@@ -2019,9 +2001,82 @@ diff -Naur a/drivers/spi/spidev.c b/drivers/spi/spidev.c
  	{},
  };
  MODULE_DEVICE_TABLE(of, spidev_dt_ids);
+diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple.c
+--- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-10-02 17:09:07.000000000 -0400
++++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-10-03 22:33:59.000000000 -0400
+@@ -30,12 +30,16 @@
+ 	bool			need_reset;
+ };
+ 
++struct dwc3_of_simple_data {
++	bool			need_reset;
++};
++
+ static int dwc3_of_simple_probe(struct platform_device *pdev)
+ {
+ 	struct dwc3_of_simple	*simple;
+ 	struct device		*dev = &pdev->dev;
+ 	struct device_node	*np = dev->of_node;
+-
++	const struct dwc3_of_simple_data *data = of_device_get_match_data(dev);
+ 	int			ret;
+ 
+ 	simple = devm_kzalloc(dev, sizeof(*simple), GFP_KERNEL);
+@@ -49,8 +53,8 @@
+ 	 * Some controllers need to toggle the usb3-otg reset before trying to
+ 	 * initialize the PHY, otherwise the PHY times out.
+ 	 */
+-	if (of_device_is_compatible(np, "rockchip,rk3399-dwc3"))
+-		simple->need_reset = true;
++	if (data->need_reset)
++		simple->need_reset = data->need_reset;
+ 
+ 	simple->resets = of_reset_control_array_get(np, false, true,
+ 						    true);
+@@ -170,13 +174,34 @@
+ 			dwc3_of_simple_runtime_resume, NULL)
+ };
+ 
++static const struct dwc3_of_simple_data dwc3_of_simple_data_rk3399 = {
++	.need_reset = true,
++};
++
+ static const struct of_device_id of_dwc3_simple_match[] = {
+-	{ .compatible = "rockchip,rk3399-dwc3" },
+-	{ .compatible = "cavium,octeon-7130-usb-uctl" },
+-	{ .compatible = "sprd,sc9860-dwc3" },
+-	{ .compatible = "allwinner,sun50i-h6-dwc3" },
+-	{ .compatible = "hisilicon,hi3670-dwc3" },
+-	{ .compatible = "intel,keembay-dwc3" },
++	{
++		.compatible = "allwinner,sun50i-h6-dwc3",
++	},
++	{
++		.compatible = "cavium,octeon-7130-usb-uctl",
++	},
++	{
++		.compatible = "hisilicon,hi3670-dwc3",
++	},
++	{
++		.compatible = "intel,keembay-dwc3",
++	},
++	{
++		.compatible = "rockchip,rk3399-dwc3",
++		.data = &dwc3_of_simple_data_rk3399,
++	},
++	{
++		.compatible = "rockchip,rk3568-dwc3",
++		.data = &dwc3_of_simple_data_rk3399,
++	},
++	{
++		.compatible = "sprd,sc9860-dwc3",
++	},
+ 	{ /* Sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, of_dwc3_simple_match);
 diff -Naur a/include/drm/drm_mipi_dbi.h b/include/drm/drm_mipi_dbi.h
---- a/include/drm/drm_mipi_dbi.h	2022-08-17 09:16:21.000000000 -0400
-+++ b/include/drm/drm_mipi_dbi.h	2022-08-18 21:44:58.000000000 -0400
+--- a/include/drm/drm_mipi_dbi.h	2022-10-02 17:09:07.000000000 -0400
++++ b/include/drm/drm_mipi_dbi.h	2022-10-03 22:33:59.000000000 -0400
 @@ -191,12 +191,7 @@
  #define mipi_dbi_command(dbi, cmd, seq...) \
  ({ \
@@ -2037,9 +2092,9 @@ diff -Naur a/include/drm/drm_mipi_dbi.h b/include/drm/drm_mipi_dbi.h
  
  #ifdef CONFIG_DEBUG_FS
 diff -Naur a/MAINTAINERS b/MAINTAINERS
---- a/MAINTAINERS	2022-08-17 09:16:21.000000000 -0400
-+++ b/MAINTAINERS	2022-08-18 21:44:58.000000000 -0400
-@@ -8375,6 +8375,11 @@
+--- a/MAINTAINERS	2022-10-02 17:09:07.000000000 -0400
++++ b/MAINTAINERS	2022-10-03 22:33:59.000000000 -0400
+@@ -8522,6 +8522,11 @@
  F:	drivers/i2c/muxes/i2c-mux-gpio.c
  F:	include/linux/platform_data/i2c-mux-gpio.h
  
@@ -2052,8 +2107,8 @@ diff -Naur a/MAINTAINERS b/MAINTAINERS
  M:	Krzysztof Halasa <khc@pm.waw.pl>
  S:	Maintained
 diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
---- a/scripts/Makefile.dtbinst	2022-08-17 09:16:21.000000000 -0400
-+++ b/scripts/Makefile.dtbinst	2022-08-18 21:44:58.000000000 -0400
+--- a/scripts/Makefile.dtbinst	2022-10-02 17:09:07.000000000 -0400
++++ b/scripts/Makefile.dtbinst	2022-10-03 22:33:59.000000000 -0400
 @@ -18,9 +18,10 @@
  include $(src)/Makefile
  
@@ -2067,8 +2122,8 @@ diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
  
  quiet_cmd_dtb_install = INSTALL $@
 diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
---- a/scripts/Makefile.lib	2022-08-17 09:16:21.000000000 -0400
-+++ b/scripts/Makefile.lib	2022-08-18 21:44:58.000000000 -0400
+--- a/scripts/Makefile.lib	2022-10-02 17:09:07.000000000 -0400
++++ b/scripts/Makefile.lib	2022-10-03 22:33:59.000000000 -0400
 @@ -310,7 +310,7 @@
  # DTC
  # ---------------------------------------------------------------------------
@@ -2079,8 +2134,8 @@ diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
  # Disable noisy checks by default
  ifeq ($(findstring 1,$(KBUILD_EXTRA_WARN)),)
 diff -Naur a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
---- a/sound/soc/meson/axg-frddr.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/sound/soc/meson/axg-frddr.c	2022-08-18 21:44:58.000000000 -0400
+--- a/sound/soc/meson/axg-frddr.c	2022-10-02 17:09:07.000000000 -0400
++++ b/sound/soc/meson/axg-frddr.c	2022-10-03 22:33:59.000000000 -0400
 @@ -106,7 +106,7 @@
  	.name = "FRDDR",
  	.playback = {
@@ -2090,7 +2145,7 @@ diff -Naur a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
  		.channels_max	= AXG_FIFO_CH_MAX,
  		.rates		= AXG_FIFO_RATES,
  		.formats	= AXG_FIFO_FORMATS,
-@@ -180,7 +180,7 @@
+@@ -181,7 +181,7 @@
  	.name = "FRDDR",
  	.playback = {
  		.stream_name	= "Playback",
@@ -2100,8 +2155,8 @@ diff -Naur a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
  		.rates		= AXG_FIFO_RATES,
  		.formats	= AXG_FIFO_FORMATS,
 diff -Naur a/sound/soc/meson/Kconfig b/sound/soc/meson/Kconfig
---- a/sound/soc/meson/Kconfig	2022-08-17 09:16:21.000000000 -0400
-+++ b/sound/soc/meson/Kconfig	2022-08-18 21:44:58.000000000 -0400
+--- a/sound/soc/meson/Kconfig	2022-10-02 17:09:07.000000000 -0400
++++ b/sound/soc/meson/Kconfig	2022-10-03 22:33:59.000000000 -0400
 @@ -70,6 +70,9 @@
  	imply SND_MESON_AXG_PDM
  	imply SND_MESON_G12A_TOACODEC
