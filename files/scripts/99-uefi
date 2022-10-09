@@ -10,14 +10,23 @@ fi
 if [[ "$FSTYPE" == "ext4" ]]; then
 	FSMOD="ext2"
 	ROOT_FSTYPE="rootfstype=ext4"
+	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	INITRD="initrd (hd0,2)/boot/initrd.gz"
+	DEVICETREE="devicetree (hd0,2)/boot/${FAMILY}/${DTB}.dtb"
 fi
 if [[ "$FSTYPE" == "btrfs" ]]; then
 	FSMOD="btrfs"
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"	
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+	LINUX="linux (hd0,2)/@/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	INITRD="initrd (hd0,2)/@/boot/initrd.gz"
+	DEVICETREE="devicetree (hd0,2)/@/boot/${FAMILY}/${DTB}.dtb"
 fi
 if [[ "$FSTYPE" == "xfs" ]]; then
 	FSMOD="xfs"
 	ROOT_FSTYPE="rootfstype=xfs"
+	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	INITRD="initrd (hd0,2)/boot/initrd.gz"
+	DEVICETREE="devicetree (hd0,2)/boot/${FAMILY}/${DTB}.dtb"
 fi
 
 default_cfg(){
@@ -31,11 +40,11 @@ menuentry "${DEFAULT_MOTD}" {
 	insmod ${FSMOD}
 	set root=hd0,${PTYPE}1
 	echo "Loading kernel ..."
-	linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}
+	${LINUX}
 	echo "Loading ramdisk ..."
-	initrd (hd0,2)/boot/initrd.gz
+	${INITRD}
 	echo "Loading devicetree ..."
-	devicetree (hd0,2)/boot/${FAMILY}/${DTB}.dtb
+	${DEVICETREE}
 }
 EOF
 }
