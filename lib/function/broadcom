@@ -10,6 +10,8 @@ brcm_config(){
 if [[ -f "p1/config.txt" ]]; then
 	rm -f p1/config.txt;
 fi
+echo ""
+echo -en "$BOARD: "; echo -e "config.txt"
 tee p1/config.txt <<EOF
 arm_64bit=1
 #kernel=Image
@@ -35,10 +37,14 @@ disable_splash=1
 #gpu_freq=
 #over_voltage=
 EOF
+if [[ "$ARCH" == "arm" ]] && [[ -f "p1/config.txt" ]]; then
+	sed -i 's/arm_64bit=1/#arm_64bit=1/g' p1/config.txt
+fi
 }
 
 # /boot/extlinux/extlinux.conf
 brcm_extlinux(){
+echo -en "$BOARD: "; echo -e "extlinux.conf"
 CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 rootwait"
 if [[ -f "p1/extlinux/extlinux.conf" ]]; then rm -f p1/extlinux/extlinux.conf; fi
 mkdir -p p1/extlinux
@@ -50,6 +56,8 @@ label default
 	${CMDLINE}
 EOF
 if [[ -f "p1/cmdline.txt" ]]; then rm -f p1/cmdline.txt; fi
+echo ""
+echo -en "$BOARD: "; echo -e "cmdline.txt"
 tee p1/cmdline.txt <<EOF
 ${CMDLINE}
 EOF
@@ -139,7 +147,13 @@ mv -f userland-remove-hi-pi.patch /root/userland/
 cd userland
 patch -p1 < userland-remove-hi-pi.patch
 rm -f userland-remove-hi-pi.patch
-./buildme --aarch64
+if [[ "$ARCH" == "arm64" ]]; then
+	echo "== ARM64"
+	./buildme --aarch64
+else
+	echo "== ARM"
+	./buildme
+fi
 cd ~
 rm -fdr userland
 ldconfig
