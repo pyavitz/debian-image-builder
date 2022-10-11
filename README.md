@@ -2,7 +2,7 @@
 ```sh
 Allwinner:      # NanoPi M1/NEO/Plus2, OrangePi One/PC/R1 & Tritium
 Amlogic:        # Le Potato, Odroid C4/HC4/N2/N2+ & Radxa Zero
-Broadcom:       # Raspberry Pi 3B+/4B
+Broadcom:       # Raspberry Pi 0W/3B+/4B
 Rockchip:       # NanoPC-T4, Renegade, ROCK64 & ROCKPro64
 Samsung:        # Odroid XU4
 
