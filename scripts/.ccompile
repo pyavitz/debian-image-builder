@@ -1,7 +1,6 @@
 #!/bin/bash
 
-TXT="\033[0m"
-FIN="\e[0m"
+ARCH=`uname -m`
 
 ubuntu-ccompile(){
 sudo debconf-apt-progress -- apt install -y \
@@ -31,25 +30,23 @@ sudo debconf-apt-progress -- apt install -y \
 	colorized-logs gdisk wget btrfs-progs xfsprogs gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi
 }
 
-if [[ `uname -m | grep -w aarch64` ]]; then
+if [[ "$ARCH" == "aarch64" ]]; then
 	echo ""
-	echo -e "${TXT}You are running aarch64?${FIN}"
-	echo -e "${TXT}Please run:${FIN} make ncompile"
-	echo ""
-	exit 0;
+	echo -e "You are running: $ARCH"
+	echo -e "Please run: make ncompile"
+	exit 0
 fi
 
 if [[ `grep -w "jammy" "/etc/os-release"` ]] || [[ `grep -w "kinetic" "/etc/os-release"` ]]; then
 	echo ""
-	ubuntu-ccompile;
+	ubuntu-ccompile
 else
 	if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
 		echo ""
-		bullseye-ccompile;
+		bullseye-ccompile
 	else
 		echo ""
-		echo -e "${TXT}What OS are you running?${FIN}"
-		echo ""
-		exit 0;
+		echo -e "What OS are you running?"
+		exit 0
 	fi
 fi

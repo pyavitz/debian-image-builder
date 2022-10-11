@@ -6,6 +6,7 @@ PNK="\e[0;35m"
 TXT="\033[0m"
 YLW="\e[0;33m"
 FIN="\e[0m"
+ARCH=`uname -m`
 
 echo ""
 echo -en "${TXT}Checking Internet Connection:${FIN} "
@@ -44,8 +45,13 @@ else
 fi
 echo ""
 echo -e "${TXT}Starting install${FIN} ..."
+if [[ "$ARCH" == "x86_64" ]] || [[ "$ARCH" == "aarch64" ]]; then
+	:;
+else
+	echo -e "ARCH: $ARCH is not supported by this script."
+fi
 sleep 1s
-if [[ `uname -m | grep x86_64` ]]; then
+if [[ "$ARCH" == "x86_64" ]]; then
 	if [[ `command -v make` ]]; then
 		sudo apt update;
 		sudo apt upgrade -y;
@@ -57,7 +63,7 @@ if [[ `uname -m | grep x86_64` ]]; then
 		make ccompile;
 	fi
 fi
-if [[ `uname -m | grep aarch64` ]]; then
+if [[ "$ARCH" == "aarch64" ]]; then
 	if [[ `command -v make` ]]; then
 		sudo apt update;
 		sudo apt upgrade -y;
@@ -69,9 +75,14 @@ if [[ `uname -m | grep aarch64` ]]; then
 		make ncompile;
 	fi
 fi
-make dialogrc > /dev/null 2>&1
-echo ""
+
+# install builder theme
+make dialogrc
+
+# clear
 clear -x
-make
+
+# builder options
+make help
 
 exit 0

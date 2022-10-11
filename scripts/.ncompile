@@ -1,7 +1,6 @@
 #!/bin/bash
 
-TXT="\033[0m"
-FIN="\e[0m"
+ARCH=`uname -m`
 
 ubuntu-ncompile(){
 sudo debconf-apt-progress -- apt install -y \
@@ -31,25 +30,23 @@ sudo debconf-apt-progress -- apt install -y \
 	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi
 }
 
-if [[ `uname -m | grep -w x86_64` ]]; then
+if [[ "$ARCH" == "x86_64" ]]; then
 	echo ""
-	echo -e "${TXT}You are running x86_64?${FIN}"
-	echo -e "${TXT}Please run:${FIN} make ccompile"
-	echo ""
-	exit 0;
+	echo -e "You are running: $ARCH"
+	echo -e "Please run: make ccompile"
+	exit 0
 fi
 
 if [[ `grep -w "jammy" "/etc/os-release"` ]] || [[ `grep -w "kinetic" "/etc/os-release"` ]]; then
 	echo ""
-	ubuntu-ncompile;
+	ubuntu-ncompile
 else
 	if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
 		echo ""
-		bullseye-ncompile;
+		bullseye-ncompile
 	else
 		echo ""
-		echo -e "${TXT}What OS are you running?${FIN}"
-		echo ""
-		exit 0;
+		echo -e "What OS are you running?"
+		exit 0
 	fi
 fi

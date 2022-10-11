@@ -14,7 +14,7 @@ WIP:		# Cubietruck, Cubox-i, Banana Pi M5, NanoPi R4S/R4SE/R5S
 * **Recommended host:** Debian Bullseye
 
 **Install options:**
-* Run the `./install` script ***(recommended)***
+* Run the `./install.sh` script ***(recommended)***
 * Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies) (dependency: make)
 * Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
