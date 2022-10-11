@@ -215,9 +215,9 @@ cconfig(){
 echo_cconfig
 cp -f ../${DEF}/${MYCONFIG} arch/${ARCH}/configs/
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG};
 else
-	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG};
 fi
 echo_done
 }
@@ -231,9 +231,9 @@ rtl8811cu_module
 rtl8188eu_module
 rtl8189es_module
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
 else
-	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
 fi
 echo_done
 }
@@ -255,9 +255,9 @@ rtl8812au_module
 rtl88x2bu_module
 rtl8811cu_module
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
 else
-	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
 fi
 echo_done
 }
@@ -267,9 +267,9 @@ echo ""
 echo_menuconfig
 sleep 1s
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig;
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig;
 else
-	make -j${CORES} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" menuconfig;
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" menuconfig;
 fi
 }
 
@@ -277,12 +277,12 @@ ccompile(){
 echo -e "-- ${GRN}CC${FIN}"
 echo_build
 echo ${BUILD_VERSION} > .version
-echo 'y' | make -j${CORES} ARCH=${ARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} bindeb-pkg
+echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} bindeb-pkg
 }
 
 ncompile(){
 echo -e "-- ${GRN}NC${FIN}"
 echo_build
 echo ${BUILD_VERSION} > .version
-echo 'y' | make -j${CORES} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" bindeb-pkg
+echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" bindeb-pkg
 }

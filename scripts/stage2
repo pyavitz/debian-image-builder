@@ -543,6 +543,16 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged;
 	fi
 fi
+# bcm2835 hack
+if [[ "$SERIES" == "bcm2835" ]] && [[ -f "/lib/ld-linux.so.3" ]]; then
+	ln -s /lib/ld-linux.so.3 /lib/ld-linux-armhf.so.3
+fi
+if [[ "$SERIES" == "bcm2835" ]] && [[ "$DISTRO" == "debian" ]] && [[ -f "/etc/default/haveged" ]]; then
+	mkdir -p /etc/systemd/system/haveged.service.d
+	echo -e '[Service]\nSystemCallFilter=uname' > /etc/systemd/system/haveged.service.d/fix.conf
+	systemctl daemon-reload > /dev/null 2>&1
+	systemctl restart haveged > /dev/null 2>&1
+fi
 echo ""
 echo "Enabling Services ..."
 if [[ "$DISTRO" == "kali" ]]; then

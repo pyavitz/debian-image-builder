@@ -1,20 +1,21 @@
 # architecture
-ARCH="arm64"
-ARCH_EXT="arm64"
-DEBARCH=""
-CROSS_COMPILE="aarch64-linux-gnu-"
+ARCH="arm"
+ARCH_EXT="armel"
+DEBARCH="${ARCH_EXT}"
+CROSS_COMPILE="arm-linux-gnueabi-"
 ROOTFS_ARCH="rootfs-${ARCH_EXT}"
-STATIC="qemu-aarch64-static"
+STATIC="qemu-arm-static"
 
 # device information
-SERIES="bcm2711"
+SERIES="bcm2835" # mainline
+#SERIES="bcm2708" # foundation
 FAMILY="broadcom"
 FAMILY_EXT="${SERIES}"
-DTB="${SERIES}-rpi-4-b"
+DTB="${SERIES}-rpi-zero-w"
 
 # default config
-LINUX_DEFCONFIG="bcm2711_defconfig"
-UBOOT_DEFCONFIG="rpi_4_defconfig"
+LINUX_DEFCONFIG="bcmrpi_defconfig"
+UBOOT_DEFCONFIG="rpi_0_w_defconfig"
 
 # partition scheme
 GPT="false"
@@ -29,15 +30,15 @@ PETITBOOT="false"
 BOOTINI="false"
 
 # output
-BOARD="raspi4"
+BOARD="raspi"
 OUTPUT="output/${BOARD}"
 
 # cmdline
 CONSOLE="console=tty1 console=ttyS0,115200 console=both 8250.nr_uarts=1"
-EXTRA="logo.nologo net.ifnames=0 cma=320M firmware_class.path=/lib/firmware/updates/brcm"
+EXTRA="logo.nologo net.ifnames=0 firmware_class.path=/lib/firmware/updates/brcm"
 
 # motd
-DEFAULT_MOTD="Raspberry Pi 4B"
+DEFAULT_MOTD="Raspberry Pi Zero"
 
 # patches
 UBOOT_PATCHDIR="patches/uboot"
@@ -55,22 +56,22 @@ GITHUB="linux"
 
 # linux packaging
 DEVICETREE="${DTB}.dtb"
-DEVICETREE2="bcm2711-rpi-400.dtb"
+DEVICETREE2="${SERIES}-rpi-zero.dtb"
 PLATFORM="${FAMILY}"
 
 # standard
 LINUX_IMAGE="linux-image-${SERIES}"
 LINUX_HEADERS="linux-headers-${SERIES}"
-LINUX_PATH="usr/lib/${LINUX_IMAGE}/${PLATFORM}"
-LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${PLATFORM}/${DEVICETREE}"
+LINUX_PATH="usr/lib/${LINUX_IMAGE}"
+LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
 LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
 
 # legacy
 LEGACY_SERIES="raspberrypi"
 LEGACY_IMAGE="${LEGACY_SERIES}-linux-image"
 LEGACY_HEADERS="${LEGACY_SERIES}-linux-headers"
-LEGACY_PATH="usr/lib/${LEGACY_IMAGE}/${PLATFORM}"
-LEGACY_DTREE="usr/lib/${LEGACY_IMAGE}/${PLATFORM}/${DEVICETREE}"
+LEGACY_PATH="usr/lib/${LEGACY_IMAGE}"
+LEGACY_DTREE="usr/lib/${LEGACY_IMAGE}/${DEVICETREE}"
 LEGACY_OLYS="usr/lib/${LEGACY_IMAGE}/overlays"
 
 # install
