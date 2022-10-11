@@ -67,6 +67,15 @@ fi
 if [[ "$FSTYPE" == "xfs" ]]; then
 	xfs_growfs -d / > /dev/null 2>&1
 fi
+# reboot if read-only root partition detected
+if [[ ! -z `mount | grep "on / type ext4 (ro,"` ]]; then
+	echo ""
+	echo -e "WARNING: The ROOT partition went into read-only mode."
+	sleep 2.25
+	echo -e "Rebooting ..."
+	sleep 2.25
+	reboot
+fi
 
 # Fix PARTUUID
 if [[ -f "/etc/opt/board.txt" ]] && [[ "$ARCH" == "arm" ]]; then
