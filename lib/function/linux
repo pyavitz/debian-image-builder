@@ -2,8 +2,6 @@
 
 # LINUX KERNEL VARIABLES
 DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
-STBURL="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
-MLURL="https://git.kernel.org/torvalds/t/"
 
 kernel_source(){
 mkdir -p ${SRC}
@@ -59,6 +57,7 @@ fi
 
 # mainline
 download(){
+MLURL="https://git.kernel.org/torvalds/t/"
 if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	mainline_download;
 	mainline_extract;
@@ -69,6 +68,8 @@ fi
 
 # lts / stable
 check_stable(){
+RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
+STBURL="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
 if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	stable_download;
 	stable_extract;
