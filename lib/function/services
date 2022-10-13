@@ -356,10 +356,10 @@ systemctl enable credentials
 firstboot_service(){
 tee /etc/systemd/system/firstboot.service <<EOF
 [Unit]
-Description=First Boot
-After=systemd-remount-fs.service sysinit.target local-fs.target
-Before=credentials.service
+Description=Resize ROOTFS partition
+Before=local-fs-pre.target
 ConditionPathExists=/usr/local/sbin/firstboot
+DefaultDependencies=no
 
 [Service]
 ExecStart=/usr/local/sbin/firstboot
@@ -369,7 +369,7 @@ StandardOutput=journal+console
 StandardError=journal+console
 
 [Install]
-WantedBy=multi-user.target
+RequiredBy=local-fs-pre.target
 EOF
 }
 
