@@ -7,6 +7,8 @@ if [[ -f "/etc/opt/board.txt" ]]; then
 fi
 
 ROOTFS=`findmnt -v -n -o SOURCE /`
+BLOCK=`findmnt -v -n -o SOURCE / | sed 's/\/dev\///' | sed 's/..$//'`
+PART=`findmnt -v -n -o SOURCE / | sed 's/.*\(.\)/\1/'`
 FSTYPE=`findmnt -v -n -o FSTYPE /`
 
 # Functions
@@ -20,7 +22,7 @@ if [[ "$FSTYPE" == "ext4" ]]; then
 	ROOT_FSTYPE="rootfstype=ext4"
 fi
 if [[ "$FSTYPE" == "btrfs" ]]; then
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"	
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
 fi
 if [[ "$FSTYPE" == "xfs" ]]; then
 	ROOT_FSTYPE="rootfstype=xfs"
@@ -46,26 +48,24 @@ if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 	echo -e " \033[1mExpanding root filesystem\033[0m ..."
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]]; then
-	GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
-	bash growpart $GROW > /dev/null 2>&1
+	NODE=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
-	GROW=`findmnt -v -n -o SOURCE / | sed 's/./& /8'`
-	bash growpart $GROW > /dev/null 2>&1
+	NODE=`findmnt -v -n -o SOURCE / | sed 's/.$//'`
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
-	GROW=`findmnt -v -n -o SOURCE / | sed 's/p/ /'`
-	bash growpart $GROW > /dev/null 2>&1
+	NODE=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 fi
+bash growpart $NODE $PART
 sleep .50
 if [[ "$FSTYPE" == "ext4" ]]; then
-	resize2fs $ROOTFS > /dev/null 2>&1
+	resize2fs $ROOTFS
 fi
 if [[ "$FSTYPE" == "btrfs" ]]; then
-	btrfs filesystem resize max / > /dev/null 2>&1
+	btrfs filesystem resize max /
 fi
 if [[ "$FSTYPE" == "xfs" ]]; then
-	xfs_growfs -d / > /dev/null 2>&1
+	xfs_growfs -d /
 fi
 # reboot if read-only root partition detected
 if [[ ! -z `mount | grep "on / type ext4 (ro,"` ]]; then
@@ -92,27 +92,27 @@ fi
 
 # Fsck fat partition
 if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
-	BOOT=`findmnt -v -n /boot | grep -w "vfat"`
+	BOOT=`findmnt -v -n -o SOURCE /boot`
 	umount /boot
-	sleep 1s
+	sleep .50
 	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
-	sleep 1s
+	sleep .50
 	mount /boot
 fi
 if [[ `findmnt -v -n /boot/efi | grep -w "vfat"` ]]; then
-	BOOT=`findmnt -v -n /boot/efi | grep -w "vfat"`
+	BOOT=`findmnt -v -n -o SOURCE /boot/efi`
 	umount /boot/efi
-	sleep 1s
+	sleep .50
 	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
-	sleep 1s
+	sleep .50
 	mount /boot/efi
 fi
 if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
-	BOOT=`findmnt -v -n /boot/broadcom | grep -w "vfat"`
+	BOOT=`findmnt -v -n -o SOURCE /boot/broadcom`
 	umount /boot/broadcom
-	sleep 1s
+	sleep .50
 	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
-	sleep 1s
+	sleep .50
 	mount /boot/broadcom
 fi
 
