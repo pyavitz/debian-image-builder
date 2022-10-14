@@ -47,14 +47,11 @@ if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
 	echo ""
 	echo -e " \033[1mExpanding root filesystem\033[0m ..."
 fi
-if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]]; then
+if [[ `findmnt -v -n -o SOURCE / | grep "mmc"` ]] || [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
 	NODE=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 fi
 if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
 	NODE=`findmnt -v -n -o SOURCE / | sed 's/.$//'`
-fi
-if [[ `findmnt -v -n -o SOURCE / | grep "nvme"` ]]; then
-	NODE=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 fi
 bash growpart $NODE $PART
 sleep .50
