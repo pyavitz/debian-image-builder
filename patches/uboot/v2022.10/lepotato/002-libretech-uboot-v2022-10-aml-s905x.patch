@@ -1,0 +1,129 @@
+--- /dev/null	2022-10-10 03:58:30.532852754 -0400
++++ b/board/libre-computer/aml-s905x-cc/aml-s905x-cc.c	2022-10-14 13:18:49.486798502 -0400
+@@ -0,0 +1,66 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2016 BayLibre, SAS
++ * Author: Neil Armstrong <narmstrong@baylibre.com>
++ */
++
++#include <common.h>
++#include <dm.h>
++#include <env.h>
++#include <init.h>
++#include <net.h>
++#include <asm/io.h>
++#include <asm/arch/gx.h>
++#include <asm/arch/sm.h>
++#include <asm/arch/eth.h>
++#include <asm/arch/mem.h>
++#include <splash.h>
++
++#define EFUSE_SN_OFFSET		20
++#define EFUSE_SN_SIZE		16
++#define EFUSE_MAC_OFFSET	52
++#define EFUSE_MAC_SIZE		6
++
++int misc_init_r(void)
++{
++	u8 mac_addr[EFUSE_MAC_SIZE];
++	char serial[EFUSE_SN_SIZE];
++	ssize_t len;
++
++	if (!eth_env_get_enetaddr("ethaddr", mac_addr)) {
++		len = meson_sm_read_efuse(EFUSE_MAC_OFFSET,
++					  mac_addr, EFUSE_MAC_SIZE);
++		if (len == EFUSE_MAC_SIZE && is_valid_ethaddr(mac_addr))
++			eth_env_set_enetaddr("ethaddr", mac_addr);
++		else
++			meson_generate_serial_ethaddr();
++	}
++
++	if (!env_get("serial#")) {
++		len = meson_sm_read_efuse(EFUSE_SN_OFFSET, serial,
++			EFUSE_SN_SIZE);
++		if (len == EFUSE_SN_SIZE)
++			env_set("serial#", serial);
++	}
++
++	return 0;
++}
++
++#ifdef CONFIG_SPLASH_SCREEN
++static struct splash_location splash_locations[] = {
++        {
++                .name = "mmc_fs",
++                .storage = SPLASH_STORAGE_MMC,
++                .flags = SPLASH_STORAGE_FS,
++                .devpart = "0:1",
++        }
++};
++
++int splash_screen_prepare(void)
++{
++        if (CONFIG_IS_ENABLED(SPLASH_SOURCE))
++                return splash_source_load(splash_locations,
++                        ARRAY_SIZE(splash_locations)) && splash_video_logo_load();
++        return splash_video_logo_load();
++}
++#endif
+--- /dev/null	2022-10-10 03:58:30.532852754 -0400
++++ b/board/libre-computer/aml-s905x-cc/Makefile	2022-10-14 13:18:49.486798502 -0400
+@@ -0,0 +1,7 @@
++#
++## (C) Copyright 2022 Da Xue
++#
++## SPDX-License-Identifier:     GPL-2.0+
++#
++#
++obj-y	+= aml-s905x-cc.o
+--- /dev/null	2022-10-10 03:58:30.532852754 -0400
++++ b/include/configs/libretech-cc.h	2022-10-14 13:18:49.489798461 -0400
+@@ -0,0 +1,19 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * Configuration for LibreTech CC
++ *
++ * Copyright (C) 2022 Da Xue
++ * Author: Da Xue <da@libre.computer>
++ */
++
++#ifndef __CONFIG_H
++#define __CONFIG_H
++
++#include <configs/libretech.h>
++
++#define MESON_DEVICE_SETTINGS \
++	SPLASH_ENV
++
++#include <configs/meson64.h>
++
++#endif /* __CONFIG_H */
+--- /dev/null	2022-10-10 03:58:30.532852754 -0400
++++ b/include/configs/libretech.h	2022-10-14 13:18:49.489798461 -0400
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * Configuration for Libre Computer boards
++ * (C) Copyright 2021 Da Xue <da@libre.computer>
++ */
++
++#ifndef __LIBRETECH_CONFIG_H
++#define __LIBRETECH_CONFIG_H
++
++#ifdef CONFIG_DM_VIDEO
++#define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE (512*512*4)
++#endif
++
++#ifdef CONFIG_SPLASH_SCREEN
++#define SPLASH_ENV \
++	"splashimage=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
++	"splashpos=m,m\0" \
++	"splashfile=boot.bmp\0" \
++	"splashsource=mmc_fs\0"
++#else
++#define SPLASH_ENV
++#endif
++
++
++#endif /* __LIBRETECH_CONFIG_H */
