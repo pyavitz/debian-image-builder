@@ -2,70 +2,75 @@
 
 uboot-source(){
 mkdir -p ${SRC}
-cp -f board.txt ${SRC}/
+if [[ -f "board.txt" ]]; then
+	# I don't think this is needed
+	cp -f board.txt ${SRC}/
+fi
 cd ${SRC}
+if [[ -d "u-boot-${UBOOT_VERSION}" ]]; then
+	rm -fdr u-boot-${UBOOT_VERSION}
+fi
 rm -fdr {amlogic-boot-fip-master,rkbin-master,blobs/amlogic-u-boot,u-boot}
 }
 
 uboot_search(){
 if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} ";
-	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz;
-	echo_bdone;
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz
+	echo_bdone
 else
-	uboot_searching;
+	uboot_searching
 fi
 }
 
 uboot_searching(){
 if [[ `wget -S --spider https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} ";
-	aria2c -q https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz;
-	echo_bdone;
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	aria2c -q https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
+	echo_bdone
 else
 	echo ""
 	echo -e "${WHT}Version selected is not available.${FIN}"
-	exit;
+	exit 0
 fi
 }
 
 u-boot(){
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
-	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} ";
-	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}";
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
+	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
 else
-	uboot_search;
+	uboot_search
 fi
 # extract
 echo ""
 echo_extract
-if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then
-		pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .;
-	fi
+if [[ "$FAMILY" == "amlogic" ]] && [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then
+	pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .
 fi
-if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-	if [[ -f rkbin-master.tar.gz ]]; then
-		pv rkbin-master.tar.gz | tar -xzf - -C .;
-	fi
+if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ -f "rkbin-master.tar.gz" ]]; then
+	pv rkbin-master.tar.gz | tar -xzf - -C .
 fi
-pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
-mv -f u-boot-${UBOOT_VERSION} u-boot
+if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
+	pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
+	mv -f u-boot-${UBOOT_VERSION} u-boot
+else
+	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
+	exit 0
+fi
 # arm trusted firmware
-if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$ARCH" == "arm64" ]]; then
-		cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin;
-	fi
+if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
+	cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-		cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf;
+		cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-		cp -f ${RKBIN_ELF} u-boot/bl31.elf;
-		cp -f ${RKBIN_RAM} u-boot/ram_init.bin;
+		cp -f ${RKBIN_ELF} u-boot/bl31.elf
+		cp -f ${RKBIN_RAM} u-boot/ram_init.bin
 	fi
 fi
 # patching
@@ -78,19 +83,19 @@ export ARCH=${ARCH}
 uboot_configs
 if [ $crosscompile -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG};
+	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
 else
 	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG};
+	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG}
 fi
 # menuconfig
 if [ $menuconfig -eq 1 ]; then
 	if [ $crosscompile -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig;
+		make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
 	else
 		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} menuconfig;
+		make -j${CORES} CC=${NATIVE} menuconfig
 	fi
 fi
 # compile
@@ -98,10 +103,10 @@ echo
 echo_cuboot
 if [ $crosscompile -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE};
+	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE}
 else
 	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC=${NATIVE};
+	make -j${CORES} CC=${NATIVE}
 fi
 }
 
@@ -109,7 +114,7 @@ fi
 allwinner-uboot-string(){
 uboot-source
 if [[ "$ARCH" == "arm64" ]]; then
-	arm-trusted-firmware;
+	arm-trusted-firmware
 fi
 u-boot
 if [[ -f "u-boot-sunxi-with-spl.bin" ]]; then
@@ -117,11 +122,10 @@ if [[ -f "u-boot-sunxi-with-spl.bin" ]]; then
 	cp -f u-boot-sunxi-with-spl.bin ../../${OUTPUT}/
 	uboot_packaging
 	echo_done
-	echo "";
+	echo ""
 else
 	echo "Something went wrong? Please report."
-	echo ""
-	exit 1;
+	exit 0
 fi
 }
 
@@ -132,7 +136,7 @@ amlogic-boot-fips
 u-boot
 if [[ ! -z $RUN_FIP ]]; then
 	echo "$DEFAULT_MOTD : Firmware Image Package" | sed 's/ :/:/g'
-	${RUN_FIP};
+	${RUN_FIP}
 fi
 if [[ -f "fip/u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
@@ -140,11 +144,11 @@ if [[ -f "fip/u-boot.bin" ]]; then
 	cp -f fip/u-boot.bin.sd.bin ../../${OUTPUT}
 	uboot_packaging
 	echo_done
-	echo "";
+	echo ""
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit 1;
+	exit 0
 fi
 }
 
@@ -157,11 +161,11 @@ if [[ -f "u-boot.bin" ]]; then
 	cp -f u-boot.bin ../../${OUTPUT}/
 	uboot_packaging
 	echo_done
-	echo "";
+	echo ""
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit 1;
+	exit 0
 fi
 }
 
@@ -175,11 +179,11 @@ if [[ -f "u-boot.img" ]]; then
 	cp -f u-boot.img ../../${OUTPUT}/u-boot.bin
 	uboot_packaging
 	echo_done
-	echo "";
+	echo ""
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit 1;
+	exit 0
 fi
 }
 
@@ -187,10 +191,10 @@ fi
 rockchip-uboot-string(){
 uboot-source
 if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-	arm-trusted-firmware;
+	arm-trusted-firmware
 fi
 if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-	rkbin;
+	rkbin
 fi
 u-boot
 if [[ -f "idbloader.img" ]]; then
@@ -199,11 +203,11 @@ if [[ -f "idbloader.img" ]]; then
 	cp -f u-boot.itb ../../${OUTPUT}/
 	uboot_packaging
 	echo_done
-	echo "";
+	echo ""
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit 1;
+	exit 0
 fi
 }
 
@@ -219,10 +223,10 @@ if [[ -f "u-boot.bin" ]]; then
 	cp -f ../../${CUBOOT}/tzsw.bin ../../${OUTPUT}/
 	uboot_packaging
 	echo_done
-	echo "";
+	echo ""
 else
 	echo "Something went wrong? Please report."
 	echo ""
-	exit 1;
+	exit 0
 fi
 }
