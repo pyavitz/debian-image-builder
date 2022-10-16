@@ -233,11 +233,7 @@ echo "Moving scripts ..."
 sleep 1s
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
-mv -f setup /usr/local/bin/
-mv -f sysinfo /usr/local/bin/
-mv -f bootcmd /usr/local/bin/
-mv -f menu-config /usr/local/bin
-mv -f menu-config-update /usr/local/bin
+mv -f {add-overlay,bootcmd,menu-config,menu-config-update,setup,smon,sysinfo} /usr/local/bin/
 # Allwinner tweaks
 if [[ "$FAMILY" == "allwinner" ]]; then
 	if [[ "$BOARD" == "cubietruck" ]]; then
@@ -262,7 +258,6 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		tweaks_service > /dev/null 2>&1;
 	fi
 fi
-mv -f smon /usr/local/bin/
 if [ $networkmanager -eq 0 ]; then
 	wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/;
 fi
@@ -336,7 +331,7 @@ echo "" > /etc/motd
 chown root:root /etc/motd
 
 # Clean
-rm -f {*-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,boot-cmd}
+rm -f {*-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,bootcmd,add-overlay,smon}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins

@@ -1,0 +1,46 @@
+#!/bin/bash
+# Description: Install a custom overlay
+# Destination: /usr/local/bin/add-overlay
+
+# depends
+if [[ `command -v dtc` ]]; then
+	:;
+else
+	echo -e "Installing: device-tree-compiler"
+	sudo apt update; sudo apt install -y device-tree-compiler
+fi
+if [[ -f "/etc/opt/board.txt" ]]; then
+	# currently not used
+	. /etc/opt/board.txt
+fi
+
+# variables
+if [[ -d "/boot" ]]; then
+	USER_OLDIR="/boot/user-overlays"
+else
+	echo "A boot directory is required."
+	exit 1
+fi
+DTS=`echo $1`
+DTBO=`echo $1 | sed 's/dts/dtbo/g'`
+
+# execute
+if [[ -z "$DTS" ]]; then
+	echo -e "A dts file is required."
+else
+	dtc -I dts -O dtb ${DTS} -o ${DTBO}
+	if [[ "$DTS" ]] && [[ "$DTBO" ]]; then
+		sudo mkdir -p $USER_OLDIR/dts
+	fi
+	if [[ -f "$DTS" ]]; then
+		sudo mv -f ${DTS} $USER_OLDIR/dts
+	fi
+	if [[ -f "$DTBO" ]]; then
+		sudo mv -f $DTBO $USER_OLDIR
+	fi
+	echo -en "Overlay installed: "
+	ls ${USER_OLDIR}/${DTBO}
+	exit 0
+fi
+
+exit 0
