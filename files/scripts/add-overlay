@@ -10,16 +10,14 @@ else
 	sudo apt update; sudo apt install -y device-tree-compiler
 fi
 if [[ -f "/etc/opt/board.txt" ]]; then
-	# currently not used
 	. /etc/opt/board.txt
 fi
 
 # variables
-if [[ -d "/boot" ]]; then
-	USER_OLDIR="/boot/user-overlays"
+if [[ "$FAMILY" == "broadcom" ]]; then
+	USER_OLDIR="/boot/${FAMILY}/user-overlays"
 else
-	echo "A boot directory is required."
-	exit 1
+	USER_OLDIR="/boot/user-overlays"
 fi
 DTS=`echo $1`
 DTBO=`echo $1 | sed 's/dts/dtbo/g'`
