@@ -316,16 +316,13 @@ fi
 mv -f {00-header,15-brand,20-sysinfo,90-dynamic-motd} /etc/update-motd.d/
 chmod +x /etc/update-motd.d/*
 echo "# DYNAMIC MOTD VARIABLES" > /etc/default/dynamic-motd
-echo "H_POS=-c" >> /etc/default/dynamic-motd
-echo "B_POS=-r" >> /etc/default/dynamic-motd
-echo "BRANDING=false" >> /etc/default/dynamic-motd
-echo "T_FONT=small" >> /etc/default/dynamic-motd
-echo "T_FILTER=metal" >> /etc/default/dynamic-motd
-echo "MENUCONFIG=true" >> /etc/default/dynamic-motd
-chown root:root /etc/update-motd.d/00-header
-chown root:root /etc/update-motd.d/15-brand
-chown root:root /etc/update-motd.d/20-sysinfo
-chown root:root /etc/update-motd.d/90-dynamic-motd
+echo H_POS='"'-c'"' >> /etc/default/dynamic-motd
+echo B_POS='"'-r'"' >> /etc/default/dynamic-motd
+echo BRANDING='"'false'"' >> /etc/default/dynamic-motd
+echo T_FONT='"'small'"' >> /etc/default/dynamic-motd
+echo T_FILTER='"'metal'"' >> /etc/default/dynamic-motd
+echo MENUCONFIG='"'true'"' >> /etc/default/dynamic-motd
+chown -R root:root /etc/update-motd.d/{00-header,15-brand,20-sysinfo,90-dynamic-motd}
 rm -f /etc/motd
 echo "" > /etc/motd
 chown root:root /etc/motd
@@ -454,7 +451,7 @@ fi
 
 # Sudoers file
 if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then
-	rm -f /etc/sudoers.d/010_pi-nopasswd;
+	rm -f /etc/sudoers.d/010_pi-nopasswd
 fi
 if [ $useracct -eq 0 ]; then
 	echo "";
@@ -464,17 +461,15 @@ EOF
 fi
 
 # Remove zstd compression (not supported by vednor kernels)
-if [[ "$DISTRO" == "ubuntu" ]]; then
-	if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
-		if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
-			sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf;
-		fi
+if [[ "$DISTRO" == "ubuntu" ]] && [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
+	if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
+		sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf
 	fi
 fi
 
 # uImage
 if [[ "$BOARD" == "odroidc1" ]]; then
-	make_uimage > /dev/null 2>&1;
+	make_uimage > /dev/null 2>&1
 fi
 
 # Kernel
@@ -483,7 +478,7 @@ echo "Installing linux kernel and u-boot package ..."
 apt update
 apt upgrade -y
 if [[ "$EFI" == "true" ]]; then
-	apt install -y grub-efi;
+	apt install -y grub-efi
 fi
 apt -y clean
 apt -y autoclean
@@ -508,36 +503,35 @@ fi
 
 # system.journal corrupted or uncleanly shut down, renaming and replacing
 if [[ -f "/etc/systemd/journald.conf" ]]; then
-	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf;
-	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf;
-	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf;
+	sed -i 's/#Storage=auto/Storage=volatile/g' /etc/systemd/journald.conf
+	sed -i 's/#SystemMaxFileSize=/SystemMaxFileSize=50M/g' /etc/systemd/journald.conf
+	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf
 fi
 
 # Whiptail color palette
 if [[ "$DISTRO" == "ubuntu" ]]; then
-	mkdir -p /etc/newt;
-	palette-dark > /dev/null 2>&1;
-	ln -sf /etc/newt/palette.dark  /etc/alternatives/newt-palette;
+	mkdir -p /etc/newt
+	palette-dark > /dev/null 2>&1
+	ln -sf /etc/newt/palette.dark  /etc/alternatives/newt-palette
 fi
 
 # udev rules
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	odroid_udev_rules > /dev/null 2>&1;
+	odroid_udev_rules > /dev/null 2>&1
 fi
 if [[ "$FAMILY_EXT" == "exynos" ]]; then
-	mkdir -p /etc/modprobe.d/;
-	echo "blacklist ina231_sensor" > /etc/modprobe.d/blacklist-odroid.conf;
+	mkdir -p /etc/modprobe.d/
+	echo "blacklist ina231_sensor" > /etc/modprobe.d/blacklist-odroid.conf
 fi
 if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5s" ]]; then
-	router_udev_rules;
+	router_udev_rules
 fi
 
 # Services
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ -f "/etc/default/haveged" ]]; then
-		sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged;
-	fi
+if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
+	sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged
 fi
+
 # bcm2835 hack
 if [[ "$SERIES" == "bcm2835" ]] && [[ -f "/lib/ld-linux.so.3" ]]; then
 	ln -s /lib/ld-linux.so.3 /lib/ld-linux-armhf.so.3
@@ -553,12 +547,10 @@ echo "Enabling Services ..."
 if [[ "$DISTRO" == "kali" ]]; then
 	kali_hack > /dev/null 2>&1;
 fi
-if [[ "$BOARD" == "nanopi" ]]; then
-	if [[ "$DISTRO" == "devuan" ]]; then
-		:;
-	else
-		nanopi_bt_service > /dev/null 2>&1;
-	fi
+if [[ "$BOARD" == "nanopi" ]] && [[ "$DISTRO" == "devuan" ]]; then
+	:;
+else
+	nanopi_bt_service > /dev/null 2>&1;
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	echo "== Sysvinit"
@@ -591,6 +583,6 @@ chown -R root:root /usr/local/sbin/
 echo ""
 echo "Finalizing ..."
 echo ""
-sleep 1s
+sleep .75
 
 umount /proc /sys
