@@ -63,26 +63,24 @@ if [[ "$FAMILY" == "allwinner" ]] && [[ -f "${DIR}/u-boot-sunxi-with-spl.bin" ]]
 	echo -e "You may now reboot."
 fi
 
-# amlogic
-if [[ "$FAMILY" == "amlogic" ]]; then
-	if [ $EMMC -eq 1 ] && [[ -f "${DIR}/u-boot.bin" ]]; then
-		target_device
-		sleep .50
-		# flash binary
-		dd if="${DIR}/u-boot.bin" of="${MMC}" bs=512 seek=1
-		echo -e "You may now reboot."
-	fi
-else
-	if [ $EMMC -eq 0 ] && [[ -f "${DIR}/u-boot.bin.sd.bin" ]]; then
-		target_device
-		sleep .50
-		# flash binary
-		dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=1 count=442
-		dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
-		echo -e "You may now reboot."
-	fi
+# amlogic / emmc
+if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 1 ] && [[ -f "${DIR}/u-boot.bin" ]]; then
+	target_device
+	sleep .50
+	# flash binary
+	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=512 seek=1
+	echo -e "You may now reboot."
 fi
-	
+# amlogic / sdcard
+if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 0 ] && [[ -f "${DIR}/u-boot.bin.sd.bin" ]]; then
+	target_device
+	sleep .50
+	# flash binary
+	dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=1 count=442
+	dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
+	echo -e "You may now reboot."
+fi
+
 # freescale
 if [[ "$FAMILY" == "freescale" ]] && [[ -f "${DIR}/sploader.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
 	target_device
@@ -103,7 +101,7 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${
 	echo -e "You may now reboot."
 fi
 
-# samsung / odroid xu4
+# samsung / odroid xu4 / emmc
 if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 	if [ $EMMC -eq 1 ] && [[ -f "${DIR}/bl1.bin" ]] && [[ -f "${DIR}/bl2.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]] && [[ "${DIR}/tzsw.bin" ]]; then
 		DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
@@ -117,7 +115,9 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 		dd if="${DIR}/tzsw.bin" of="/dev/${DEVICE}" seek=1502 conv=fsync
 		dd if="/dev/zero" of="/dev/${DEVICE}" seek=2015 bs=512 count=32 conv=fsync
 	fi
-else
+fi
+# samsung / odroid xu4 / sdcard
+if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 	if [ $EMMC -eq 0 ] && [[ -f "${DIR}/bl1.bin" ]] && [[ -f "${DIR}/bl2.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]] && [[ "${DIR}/tzsw.bin" ]]; then
 		target_device
 		sleep .50
