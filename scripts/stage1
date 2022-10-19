@@ -10,9 +10,15 @@ source userdata.txt
 # hack board-txt
 if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
 	if [ $petitboot -eq 1 ]; then
-		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt;
-		sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt;
-		sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt;
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
+		sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
+		sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
+	fi
+fi
+if [[ -f "fstype.txt" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
+		# u-boot doesn't support booting directly from this fstype so force a boot partition
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
 	fi
 fi
 # user scripts pre-stage1
