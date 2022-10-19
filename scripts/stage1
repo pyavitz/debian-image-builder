@@ -21,6 +21,15 @@ if [[ -f "fstype.txt" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; th
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
 	fi
 fi
+if [[ -f "fstype.txt" ]] && [[ `grep -w 'EFI="true"' "fstype.txt"` ]]; then
+	sed -i 's/EFI="false"/EFI="true"/g' board.txt
+	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then
+		sed -i 's/VFAT="false"/VFAT="true"/g' board.txt
+	fi
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
+	fi
+fi
 # user scripts pre-stage1
 if [ $uscripts -eq 1 ]; then uscripts_pre-stage1; fi
 # source board and family
