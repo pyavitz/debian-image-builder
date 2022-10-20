@@ -39,6 +39,16 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 		echo "";
 	fi
 fi
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	# remove ubuntu pro advert
+	HOOK_SIZE=`wc -c /etc/apt/apt.conf.d/20apt-esm-hook.conf`
+	if [[ -f "/etc/apt/apt.conf.d/20apt-esm-hook.conf" ]] && [[ "$HOOK_SIZE" == "0" ]]; then
+		:;
+	else
+		mv /etc/apt/apt.conf.d/20apt-esm-hook.conf /etc/apt/apt.conf.d/20apt-esm-hook.conf.bak
+		touch /etc/apt/apt.conf.d/20apt-esm-hook.conf
+	fi
+fi
 apt-get update
 apt-get install -y apt-utils
 
