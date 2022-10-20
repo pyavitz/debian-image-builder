@@ -376,3 +376,29 @@ else
 	fi
 fi
 }
+
+customize_image(){
+# edit board.txt variables before the file gets sourced
+if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
+	if [ $petitboot -eq 1 ]; then
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
+		sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
+		sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
+	fi
+fi
+if [[ -f "custom.txt" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
+		# u-boot doesn't support booting directly from this fstype so force a boot partition
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
+	fi
+fi
+if [[ -f "custom.txt" ]] && [[ "$ENABLE_EFI" == "true" ]]; then
+	sed -i 's/EFI="false"/EFI="true"/g' board.txt
+	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then
+		sed -i 's/VFAT="false"/VFAT="true"/g' board.txt
+	fi
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
+		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
+	fi
+fi
+}

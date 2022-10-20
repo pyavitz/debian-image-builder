@@ -2,34 +2,13 @@
 source lib/function/echoes
 source lib/source
 validation
-if [[ -f "fstype.txt" ]]; then . fstype.txt; else FSTYPE="ext4"; fi
+if [[ -f "custom.txt" ]]; then . custom.txt; else FSTYPE="ext4"; fi
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
 source userdata.txt
-# hack board-txt
-if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
-	if [ $petitboot -eq 1 ]; then
-		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
-		sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
-		sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
-	fi
-fi
-if [[ -f "fstype.txt" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
-	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
-		# u-boot doesn't support booting directly from this fstype so force a boot partition
-		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
-	fi
-fi
-if [[ -f "fstype.txt" ]] && [[ `grep -w 'EFI="true"' "fstype.txt"` ]]; then
-	sed -i 's/EFI="false"/EFI="true"/g' board.txt
-	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then
-		sed -i 's/VFAT="false"/VFAT="true"/g' board.txt
-	fi
-	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then
-		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
-	fi
-fi
+# customize image
+customize_image > /dev/null 2>&1
 # user scripts pre-stage1
 if [ $uscripts -eq 1 ]; then uscripts_pre-stage1; fi
 # source board and family
