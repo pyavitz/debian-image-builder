@@ -7,8 +7,8 @@ source lib/function/linux
 source lib/function/linux-patching
 source lib/function/compiler
 source lib/function/wireless
-source board.txt > /dev/null 2>&1
-source userdata.txt > /dev/null 2>&1
+source board.txt
+source userdata.txt
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 
 if [ $verbose -eq 1 ]; then
@@ -72,7 +72,6 @@ fi
 if [ $menuconfig -eq 1 ]; then
 	menuconfig;
 fi
-
 # builddeb
 if [ $crosscompile -eq 1 ]; then
 	ccompile;
@@ -89,7 +88,7 @@ if [[ `ls ../${OUTPUT}/*linux*.deb` ]] > /dev/null 2>&1; then
 fi
 mkdir -p ../${OUTPUT}
 mv -f *.deb ../${OUTPUT}/
-if [ -f ../github.txt ]; then
+if [[ -f "../github.txt" ]]; then
 	rm -f ../github.txt;
 fi
 echo_done

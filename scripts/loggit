@@ -1,17 +1,19 @@
 #!/bin/bash
 source logger.txt
-if [ -e output/logs ]; then
+if [[ -d "output/logs" ]]; then
 	:;
 else
 	sudo mkdir -p output/logs;
 fi
-if [ -e output/logs/$LOGFILE.log ]; then
+if [[ -f "output/logs/$LOGFILE.log" ]]; then
 	sudo mv -f output/logs/$LOGFILE.log output/logs/$LOGFILE.log.1;
 fi
 sudo rm -f {screen.out,screen.in}
 script -O screen.out -I screen.in -f -c /bin/bash -c "./scripts/runit $1 $2 $3 $4 $5"
 ansi2txt < screen.out | col -b | awk '{gsub(/[[:cntrl:]]/,x)}1' | strings > /tmp/$LOGFILE.log
 sudo rm -f {screen.out,screen.in,logger.txt}
-if [ -e /tmp/$LOGFILE.log ]; then
+if [[ -f "/tmp/$LOGFILE.log" ]]; then
 	sudo mv -f /tmp/$LOGFILE.log output/logs/;
 fi
+
+exit 0
