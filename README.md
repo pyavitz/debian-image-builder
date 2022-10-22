@@ -90,6 +90,15 @@ Odroids
 petitboot:		# Enable boot option
 ```
 
+#### Customize image
+* custom.txt
+```sh
+# filesystem types: ext4 btrfs xfs
+FSTYPE="ext4"
+# options: true false
+ENABLE_EFI="false"
+```
+
 #### User defconfig
 
 ```sh
