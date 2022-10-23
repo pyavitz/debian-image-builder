@@ -3,14 +3,23 @@
 # Destination: /usr/local/bin/add-overlay
 
 # depends
-if [[ `command -v dtc` ]]; then
-	:;
-else
-	echo -e "Installing: device-tree-compiler"
-	sudo apt update; sudo apt install -y device-tree-compiler
-fi
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
+fi
+if [[ `command -v dtc` ]] && [[ `command -v whiptail` ]]; then
+	:;
+else
+	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+		echo -e "You are missing dependencies ..."
+		sudo apt update; sudo apt install -y device-tree-compiler whiptail
+	else
+		echo -e "You are missing dependencies?"
+		exit 0
+	fi
 fi
 
 # variables
