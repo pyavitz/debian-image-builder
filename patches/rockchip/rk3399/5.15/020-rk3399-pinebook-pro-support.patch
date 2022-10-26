@@ -178,51 +178,6 @@ diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/rockchip-pm-config.t
 +		>;
 +	};
 + 
-diff -Naur a/drivers/bluetooth/hci_bcm.c b/drivers/bluetooth/hci_bcm.c
---- a/drivers/bluetooth/hci_bcm.c	2022-08-03 06:03:56.000000000 -0400
-+++ b/drivers/bluetooth/hci_bcm.c	2022-08-09 18:45:46.915891395 -0400
-@@ -1498,6 +1498,22 @@
- 	hci_uart_unregister_device(&bcmdev->serdev_hu);
- }
- 
-+static void bcm_serdev_shutdown(struct serdev_device *serdev)
-+{
-+	struct bcm_device *bcmdev = serdev_device_get_drvdata(serdev);
-+
-+/*
-+	if (test_bit(HCI_UART_REGISTERED, &bcmdev->hu->flags)) {
-+		hci_uart_unregister_device(&bcmdev->serdev_hu);
-+	}
-+*/
-+	dev_info(bcmdev->dev, "Cutting power to bluetooth module\n");
-+	if (bcm_gpio_set_power(bcmdev, false)) {
-+		dev_err(bcmdev->dev, "Failed to power down\n");
-+	}
-+	usleep_range(500000, 1000000);
-+}
-+
- #ifdef CONFIG_OF
- static struct bcm_device_data bcm4354_device_data = {
- 	.no_early_set_baudrate = true,
-@@ -1525,6 +1541,7 @@
- static struct serdev_device_driver bcm_serdev_driver = {
- 	.probe = bcm_serdev_probe,
- 	.remove = bcm_serdev_remove,
-+    .shutdown = bcm_serdev_shutdown,
- 	.driver = {
- 		.name = "hci_uart_bcm",
- 		.of_match_table = of_match_ptr(bcm_bluetooth_of_match),
-diff -Naur a/drivers/bluetooth/hci_serdev.c b/drivers/bluetooth/hci_serdev.c
---- a/drivers/bluetooth/hci_serdev.c	2022-08-03 06:03:56.000000000 -0400
-+++ b/drivers/bluetooth/hci_serdev.c	2022-08-09 18:45:46.915891395 -0400
-@@ -399,5 +399,7 @@
- 		clear_bit(HCI_UART_PROTO_READY, &hu->flags);
- 		serdev_device_close(hu->serdev);
- 	}
-+
-+clear_bit(HCI_UART_REGISTERED, &hu->flags);
- }
- EXPORT_SYMBOL_GPL(hci_uart_unregister_device);
 diff -Naur a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
 --- a/drivers/firmware/Kconfig	2022-08-03 06:03:56.000000000 -0400
 +++ b/drivers/firmware/Kconfig	2022-08-09 18:45:31.356194577 -0400
