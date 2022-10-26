@@ -485,6 +485,104 @@ diff -Naur a/drivers/gpu/drm/meson/meson_cursor.h b/drivers/gpu/drm/meson/meson_
 +int meson_cursor_create(struct meson_drm *priv);
 +
 +#endif /* __MESON_CURSOR_H */
+diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv.c
+--- a/drivers/gpu/drm/meson/meson_drv.c	2022-10-26 06:35:57.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_drv.c	2022-10-26 10:57:39.820573081 -0400
+@@ -29,6 +29,7 @@
+ #include "meson_drv.h"
+ #include "meson_overlay.h"
+ #include "meson_plane.h"
++#include "meson_cursor.h"
+ #include "meson_osd_afbcd.h"
+ #include "meson_registers.h"
+ #include "meson_venc_cvbs.h"
+@@ -247,6 +248,9 @@
+ 	ret = meson_canvas_alloc(priv->canvas, &priv->canvas_id_osd1);
+ 	if (ret)
+ 		goto free_drm;
++	ret = meson_canvas_alloc(priv->canvas, &priv->canvas_id_osd2);
++	if (ret)
++		goto free_drm;
+ 	ret = meson_canvas_alloc(priv->canvas, &priv->canvas_id_vd1_0);
+ 	if (ret) {
+ 		meson_canvas_free(priv->canvas, priv->canvas_id_osd1);
+@@ -326,6 +330,10 @@
+ 	if (ret)
+ 		goto exit_afbcd;
+ 
++	ret = meson_cursor_create(priv);
++	if (ret)
++		goto free_drm;
++
+ 	ret = meson_plane_create(priv);
+ 	if (ret)
+ 		goto exit_afbcd;
+@@ -475,17 +483,6 @@
+ 	return count;
+ }
+ 
+-static void meson_drv_shutdown(struct platform_device *pdev)
+-{
+-	struct meson_drm *priv = dev_get_drvdata(&pdev->dev);
+-
+-	if (!priv)
+-		return;
+-
+-	drm_kms_helper_poll_fini(priv->drm);
+-	drm_atomic_helper_shutdown(priv->drm);
+-}
+-
+ static int meson_drv_probe(struct platform_device *pdev)
+ {
+ 	struct component_match *match = NULL;
+@@ -565,7 +562,6 @@
+ static struct platform_driver meson_drm_platform_driver = {
+ 	.probe      = meson_drv_probe,
+ 	.remove     = meson_drv_remove,
+-	.shutdown   = meson_drv_shutdown,
+ 	.driver     = {
+ 		.name	= "meson-drm",
+ 		.of_match_table = dt_match,
+diff -Naur a/drivers/gpu/drm/meson/meson_drv.h b/drivers/gpu/drm/meson/meson_drv.h
+--- a/drivers/gpu/drm/meson/meson_drv.h	2021-10-18 02:00:13.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_drv.h	2021-10-19 00:24:08.000000000 -0400
+@@ -43,12 +43,14 @@
+ 
+ 	struct meson_canvas *canvas;
+ 	u8 canvas_id_osd1;
++	u8 canvas_id_osd2;
+ 	u8 canvas_id_vd1_0;
+ 	u8 canvas_id_vd1_1;
+ 	u8 canvas_id_vd1_2;
+ 
+ 	struct drm_device *drm;
+ 	struct drm_crtc *crtc;
++	struct drm_plane *cursor_plane;
+ 	struct drm_plane *primary_plane;
+ 	struct drm_plane *overlay_plane;
+ 
+@@ -82,6 +84,21 @@
+ 		uint32_t osd_blend_din0_scope_h;
+ 		uint32_t osd_blend_din0_scope_v;
+ 		uint32_t osb_blend0_size;
++
++		bool osd2_enabled;
++		bool osd2_interlace;
++		bool osd2_commit;
++		uint32_t osd2_ctrl_stat;
++		uint32_t osd2_ctrl_stat2;
++		uint32_t osd2_blk0_cfg[5];
++		uint32_t osd2_blk1_cfg4;
++		uint32_t osd2_blk2_cfg4;
++		uint32_t osd2_addr;
++		uint32_t osd2_stride;
++		uint32_t osd2_height;
++		uint32_t osd2_width;
++		uint32_t osd_blend_din3_scope_h;
++		uint32_t osd_blend_din3_scope_v;
+ 		uint32_t osb_blend1_size;
+ 
+ 		bool vd1_enabled;
 diff -Naur a/drivers/gpu/drm/meson/meson_plane.c b/drivers/gpu/drm/meson/meson_plane.c
 --- a/drivers/gpu/drm/meson/meson_plane.c	2021-10-18 02:00:13.000000000 -0400
 +++ b/drivers/gpu/drm/meson/meson_plane.c	2021-10-19 00:24:08.000000000 -0400
