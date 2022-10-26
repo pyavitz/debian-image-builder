@@ -82,7 +82,11 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} openresolv haveged ${NETWORKING} ${NETWORKING_EXTRA};
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
+	if [[ "$DISTRO_VERSION" == "kinetic" ]]; then
+		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5 ${NETWORKING};
+	else
+		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
+	fi
 	if [ $networkmanager -eq 0 ]; then
 		if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
 			# disable systemd-networkd and mask systemd-networkd-wait-online
