@@ -16,18 +16,6 @@ diff -Naur a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/adm
  	pcmv=		[HW,PCMCIA] BadgePAD 4
  
  	pd_ignore_unused
-diff -Naur a/drivers/media/platform/rockchip/rga/rga.c b/drivers/media/platform/rockchip/rga/rga.c
---- a/drivers/media/platform/rockchip/rga/rga.c	2022-02-16 19:38:18.686619168 -0500
-+++ b/drivers/media/platform/rockchip/rga/rga.c	2022-02-16 20:29:44.463903170 -0500
-@@ -892,7 +892,7 @@
- 	}
- 	rga->dst_mmu_pages =
- 		(unsigned int *)__get_free_pages(GFP_KERNEL | __GFP_ZERO, 3);
--	if (rga->dst_mmu_pages) {
-+	if (!rga->dst_mmu_pages) {
- 		ret = -ENOMEM;
- 		goto free_src_pages;
- 	}
 diff -Naur a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
 --- a/drivers/pci/controller/pcie-rockchip-host.c	2022-02-16 19:38:19.354610817 -0500
 +++ b/drivers/pci/controller/pcie-rockchip-host.c	2022-02-16 20:29:44.471903136 -0500
