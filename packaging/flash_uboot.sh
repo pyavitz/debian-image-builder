@@ -29,7 +29,7 @@ if [[ -f "/etc/opt/board.txt" ]]; then
 		REPORT="Could not find u-boot directory."
 		error_prompt
 	fi
-	MMC=`findmnt -v -n -o SOURCE / | sed 's/p1//g' | sed 's/p2//g'`
+	MMC=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 	. /etc/opt/board.txt
 else
 	REPORT="Your board is not supported."
