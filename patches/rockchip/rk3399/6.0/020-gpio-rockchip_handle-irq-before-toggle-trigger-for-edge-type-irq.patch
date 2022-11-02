@@ -1,0 +1,23 @@
+diff --git a/drivers/gpio/gpio-rockchip.c b/drivers/gpio/gpio-rockchip.c
+index f91e876fd969..952d628a6f7e 100644
+--- a/drivers/gpio/gpio-rockchip.c
++++ b/drivers/gpio/gpio-rockchip.c
+@@ -346,6 +346,7 @@ static void rockchip_irq_demux(struct irq_desc *desc)
+ 		}
+ 
+ 		dev_dbg(bank->dev, "handling irq %d\n", irq);
++		generic_handle_irq(virq);
+ 
+ 		/*
+ 		 * Triggering IRQ on both rising and falling edge
+@@ -377,8 +378,6 @@ static void rockchip_irq_demux(struct irq_desc *desc)
+ 						     bank->gpio_regs->ext_port);
+ 			} while ((data & BIT(irq)) != (data_old & BIT(irq)));
+ 		}
+-
+-		generic_handle_irq(virq);
+ 	}
+ 
+ 	chained_irq_exit(chip, desc);
+-- 
+2.25.1
