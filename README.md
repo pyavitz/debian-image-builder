@@ -59,7 +59,7 @@ Release:		# Debian: bullseye, bookworm, testing, unstable and sid
 Network Manager		# Enable nmtui (default: ifupdown)
 
 U-Boot and Linux
-U-Boot:			# Supported: v2022.07
+U-Boot:			# Supported: v2022.10
 Branch:			# Supported: 5.15 and current stable
 Build:			# Kernel build version number
 Menuconfig:		# Run uboot and kernel menuconfig
