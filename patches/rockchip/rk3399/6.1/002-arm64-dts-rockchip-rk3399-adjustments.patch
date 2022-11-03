@@ -1,0 +1,158 @@
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3399.dtsi b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi	2022-10-26 06:53:32.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi	2022-10-29 10:36:34.064806659 -0400
+@@ -75,6 +75,7 @@
+ 			clocks = <&cru ARMCLKL>;
+ 			#cooling-cells = <2>; /* min followed by max */
+ 			dynamic-power-coefficient = <100>;
++			next-level-cache = <&l2>;
+ 			cpu-idle-states = <&CPU_SLEEP &CLUSTER_SLEEP>;
+ 		};
+ 
+@@ -87,6 +88,7 @@
+ 			clocks = <&cru ARMCLKL>;
+ 			#cooling-cells = <2>; /* min followed by max */
+ 			dynamic-power-coefficient = <100>;
++			next-level-cache = <&l2>;
+ 			cpu-idle-states = <&CPU_SLEEP &CLUSTER_SLEEP>;
+ 		};
+ 
+@@ -99,6 +101,7 @@
+ 			clocks = <&cru ARMCLKL>;
+ 			#cooling-cells = <2>; /* min followed by max */
+ 			dynamic-power-coefficient = <100>;
++			next-level-cache = <&l2>;
+ 			cpu-idle-states = <&CPU_SLEEP &CLUSTER_SLEEP>;
+ 		};
+ 
+@@ -111,6 +114,7 @@
+ 			clocks = <&cru ARMCLKL>;
+ 			#cooling-cells = <2>; /* min followed by max */
+ 			dynamic-power-coefficient = <100>;
++			next-level-cache = <&l2>;
+ 			cpu-idle-states = <&CPU_SLEEP &CLUSTER_SLEEP>;
+ 		};
+ 
+@@ -123,6 +127,7 @@
+ 			clocks = <&cru ARMCLKB>;
+ 			#cooling-cells = <2>; /* min followed by max */
+ 			dynamic-power-coefficient = <436>;
++			next-level-cache = <&l2>;
+ 			cpu-idle-states = <&CPU_SLEEP &CLUSTER_SLEEP>;
+ 
+ 			thermal-idle {
+@@ -141,6 +146,7 @@
+ 			clocks = <&cru ARMCLKB>;
+ 			#cooling-cells = <2>; /* min followed by max */
+ 			dynamic-power-coefficient = <436>;
++			next-level-cache = <&l2>;
+ 			cpu-idle-states = <&CPU_SLEEP &CLUSTER_SLEEP>;
+ 
+ 			thermal-idle {
+@@ -148,6 +154,10 @@
+ 				duration-us = <10000>;
+ 				exit-latency-us = <500>;
+ 			};
++
++			l2: l2-cache0 {
++				compatible = "cache";
++			};
+ 		};
+ 
+ 		idle-states {
+@@ -461,6 +471,7 @@
+ 			snps,dis_u2_susphy_quirk;
+ 			snps,dis-del-phy-power-chg-quirk;
+ 			snps,dis-tx-ipgap-linecheck-quirk;
++			snps,xhci-trb-ent-quirk;
+ 			power-domains = <&power RK3399_PD_USB3>;
+ 			status = "disabled";
+ 		};
+@@ -497,6 +508,7 @@
+ 			snps,dis_u2_susphy_quirk;
+ 			snps,dis-del-phy-power-chg-quirk;
+ 			snps,dis-tx-ipgap-linecheck-quirk;
++			snps,xhci-trb-ent-quirk;
+ 			power-domains = <&power RK3399_PD_USB3>;
+ 			status = "disabled";
+ 		};
+@@ -809,17 +821,17 @@
+ 
+ 			trips {
+ 				cpu_alert0: cpu_alert0 {
+-					temperature = <70000>;
++					temperature = <85000>;
+ 					hysteresis = <2000>;
+ 					type = "passive";
+ 				};
+ 				cpu_alert1: cpu_alert1 {
+-					temperature = <75000>;
++					temperature = <95000>;
+ 					hysteresis = <2000>;
+ 					type = "passive";
+ 				};
+ 				cpu_crit: cpu_crit {
+-					temperature = <95000>;
++					temperature = <100000>;
+ 					hysteresis = <2000>;
+ 					type = "critical";
+ 				};
+@@ -2041,6 +2053,16 @@
+ 			};
+ 		};
+ 	};
++	
++	rng: rng@ff8b8000 {
++		compatible = "rockchip,cryptov1-rng";
++		reg = <0x0 0xff8b8000 0x0 0x1000>;
++		clocks = <&cru SCLK_CRYPTO1>, <&cru HCLK_S_CRYPTO1>;
++		clock-names = "clk_crypto", "hclk_crypto";
++		assigned-clocks = <&cru SCLK_CRYPTO1>, <&cru HCLK_S_CRYPTO1>;
++		assigned-clock-rates = <150000000>, <100000000>;
++		status = "okay";
++	};
+ 
+ 	gpu: gpu@ff9a0000 {
+ 		compatible = "rockchip,rk3399-mali", "arm,mali-t860";
+@@ -2475,25 +2497,25 @@
+ 		sdmmc {
+ 			sdmmc_bus1: sdmmc-bus1 {
+ 				rockchip,pins =
+-					<4 RK_PB0 1 &pcfg_pull_up>;
++					<4 RK_PB0 1 &pcfg_pull_up_8ma>;
+ 			};
+ 
+ 			sdmmc_bus4: sdmmc-bus4 {
+ 				rockchip,pins =
+-					<4 RK_PB0 1 &pcfg_pull_up>,
+-					<4 RK_PB1 1 &pcfg_pull_up>,
+-					<4 RK_PB2 1 &pcfg_pull_up>,
+-					<4 RK_PB3 1 &pcfg_pull_up>;
++					<4 RK_PB0 1 &pcfg_pull_up_8ma>,
++					<4 RK_PB1 1 &pcfg_pull_up_8ma>,
++					<4 RK_PB2 1 &pcfg_pull_up_8ma>,
++					<4 RK_PB3 1 &pcfg_pull_up_8ma>;
+ 			};
+ 
+ 			sdmmc_clk: sdmmc-clk {
+ 				rockchip,pins =
+-					<4 RK_PB4 1 &pcfg_pull_none>;
++					<4 RK_PB4 1 &pcfg_pull_none_12ma>;
+ 			};
+ 
+ 			sdmmc_cmd: sdmmc-cmd {
+ 				rockchip,pins =
+-					<4 RK_PB5 1 &pcfg_pull_up>;
++					<4 RK_PB5 1 &pcfg_pull_up_8ma>;
+ 			};
+ 
+ 			sdmmc_cd: sdmmc-cd {
+@@ -2503,7 +2525,7 @@
+ 
+ 			sdmmc_wp: sdmmc-wp {
+ 				rockchip,pins =
+-					<0 RK_PB0 1 &pcfg_pull_up>;
++					<0 RK_PB0 1 &pcfg_pull_up_8ma>;
+ 			};
+ 		};
+ 
