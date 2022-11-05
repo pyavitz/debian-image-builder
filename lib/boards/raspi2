@@ -1,0 +1,79 @@
+# architecture
+ARCH="arm"
+ARCH_EXT="armhf"
+DEBARCH=""
+CROSS_COMPILE="arm-linux-gnueabihf-"
+ROOTFS_ARCH="rootfs-${ARCH_EXT}"
+STATIC="qemu-arm-static"
+
+# device information
+SERIES="bcm2836" # mainline
+#SERIES="bcm2709" # foundation
+FAMILY="broadcom"
+FAMILY_EXT="${SERIES}"
+DTB="${SERIES}-rpi-2-b"
+
+# default config
+LINUX_DEFCONFIG="bcm2709_defconfig"
+UBOOT_DEFCONFIG="rpi_2_defconfig"
+
+# partition scheme
+GPT="false"
+EFI="false"
+VFAT="true"
+P_VALUE="p2"
+OFFSET="8192"
+
+# boot config
+EXTLINUX="true"
+PETITBOOT="false"
+BOOTINI="false"
+
+# output
+BOARD="raspi2"
+OUTPUT="output/${BOARD}"
+
+# cmdline
+CONSOLE="console=tty1 console=ttyS0,115200 console=both 8250.nr_uarts=1"
+EXTRA="logo.nologo net.ifnames=0 firmware_class.path=/lib/firmware/updates/brcm"
+
+# motd
+DEFAULT_MOTD="Raspberry Pi 2B"
+
+# patches
+UBOOT_PATCHDIR="patches/uboot"
+LINUX_PATCHDIR="patches/${FAMILY}"
+
+# image
+IMGSIZE="3072MB"
+IMG_EXP="${DTB}-*.img*"
+
+# precompiled
+CUBOOT=""
+
+# github marker
+GITHUB="linux"
+
+# linux packaging
+DEVICETREE="${DTB}.dtb"
+DEVICETREE2="bcm2837-rpi-3-b.dtb"
+PLATFORM="${FAMILY}"
+
+# standard
+LINUX_IMAGE="linux-image-${SERIES}"
+LINUX_HEADERS="linux-headers-${SERIES}"
+LINUX_PATH="usr/lib/${LINUX_IMAGE}"
+LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
+LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
+
+# legacy
+LEGACY_SERIES="raspberrypi"
+LEGACY_IMAGE="${LEGACY_SERIES}-linux-image"
+LEGACY_HEADERS="${LEGACY_SERIES}-linux-headers"
+LEGACY_PATH="usr/lib/${LEGACY_IMAGE}"
+LEGACY_DTREE="usr/lib/${LEGACY_IMAGE}/${DEVICETREE}"
+LEGACY_OLYS="usr/lib/${LEGACY_IMAGE}/overlays"
+
+# install
+INSTALL_DTB="boot/${PLATFORM}/${DEVICETREE}"
+INSTALL_OLYS="boot/${PLATFORM}/"
