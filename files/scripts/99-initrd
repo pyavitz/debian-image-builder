@@ -15,7 +15,7 @@ exit 1
 
 # uinitrd
 if [ -f ${uInitrd} ]; then
-	rm -f ${uInitrd};
+	rm -f ${uInitrd}
 fi
 
 echo "Generating uInitrd for U-Boot:"
@@ -23,12 +23,12 @@ if [ "$#" -eq 2 ]; then
 	if [ ! -z "$1" ] && [ -f "$2" ]; then
 		name="initramfs-$1"
 		file="$2"
-		mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${uInitrd};
+		mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${uInitrd}
 	else
-		failed;
+		failed
 	fi
 else
-	failed;
+	failed
 fi
 
 # initrd.gz
@@ -38,5 +38,8 @@ cp -f /boot/initrd.img-* ${initrd}
 
 # raspberry pi
 if [ -d ${brcmdir} ]; then
-	cp -f ${initrd} ${brcmdir}/;
+	if [ -f ${brcmdir}/initrd.gz ]; then
+		rm -f ${brcmdir}/initrd.gz
+	fi
+	cp -f ${initrd} ${brcmdir}/
 fi
