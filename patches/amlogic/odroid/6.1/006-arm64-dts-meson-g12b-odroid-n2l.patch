@@ -63,3 +63,146 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +
 +	pwms = <&pwm_AO_cd 1 1500 0>;
 +};
+--- /dev/null	2022-11-08 09:01:34.417341746 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts	2022-11-08 09:12:10.025330000 -0500
+@@ -0,0 +1,140 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
++ *
++ */
++
++/dts-v1/;
++
++#include "meson-g12b-odroid-n2l.dts"
++#include "meson64_odroidn2.dtsi"
++
++/ {
++	aliases {
++		mmc0 = &sd_emmc_c; /* eMMC */
++		mmc1 = &sd_emmc_b; /* SD card */
++		mmc2 = &sd_emmc_a; /* SDIO */
++	};
++
++	pwmgpio {
++		compatible = "pwm-gpio";
++		#pwm-cells = <3>;
++		pwm-gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++	};
++
++	pwm-fan {
++		compatible = "pwm-fan";
++		pwms = <&pwmgpio 0 40000 PWM_POLARITY_INVERTED>;
++		cooling-min-state = <0>;
++		cooling-max-state = <3>;
++		#cooling-cells = <2>;
++		cooling-levels = <0 120 170 220>;
++	};
++};
++
++&reboot {
++	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++};
++
++&cpu_opp_table_0 {
++	/delete-node/ opp-100000000;
++	/delete-node/ opp-250000000;
++	/delete-node/ opp-500000000;
++	/delete-node/ opp-667000000;
++	opp-1000000000 {
++		opp-hz = /bits/ 64 <1000000000>;
++		opp-microvolt = <760000>;
++	};
++	opp-1200000000 {
++		opp-hz = /bits/ 64 <1200000000>;
++		opp-microvolt = <780000>;
++	};
++	opp-1398000000 {
++		opp-hz = /bits/ 64 <1398000000>;
++		opp-microvolt = <810000>;
++	};
++	opp-1512000000 {
++		opp-hz = /bits/ 64 <1512000000>;
++		opp-microvolt = <860000>;
++	};
++	opp-1608000000 {
++		opp-hz = /bits/ 64 <1608000000>;
++		opp-microvolt = <900000>;
++	};
++	opp-1704000000 {
++		opp-hz = /bits/ 64 <1704000000>;
++		opp-microvolt = <960000>;
++	};
++	opp-1800000000 {
++		opp-hz = /bits/ 64 <1800000000>;
++		opp-microvolt = <1020000>;
++	};
++	opp-1908000000 {
++		opp-hz = /bits/ 64 <1908000000>;
++		opp-microvolt = <1030000>;
++	};
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <1040000>;
++	};
++};
++
++&cpub_opp_table_1 {
++	/delete-node/ opp-100000000;
++	/delete-node/ opp-250000000;
++	/delete-node/ opp-500000000;
++	/delete-node/ opp-667000000;
++	opp-1000000000 {
++		opp-hz = /bits/ 64 <1000000000>;
++		opp-microvolt = <730000>;
++	};
++	opp-1200000000 {
++		opp-hz = /bits/ 64 <1200000000>;
++		opp-microvolt = <750000>;
++	};
++	opp-1398000000 {
++		opp-hz = /bits/ 64 <1398000000>;
++		opp-microvolt = <770000>;
++	};
++	opp-1512000000 {
++		opp-hz = /bits/ 64 <1512000000>;
++		opp-microvolt = <770000>;
++	};
++	opp-1608000000 {
++		opp-hz = /bits/ 64 <1608000000>;
++		opp-microvolt = <780000>;
++	};
++	opp-1704000000 {
++		opp-hz = /bits/ 64 <1704000000>;
++		opp-microvolt = <790000>;
++	};
++	opp-1800000000 {
++		opp-hz = /bits/ 64 <1800000000>;
++		opp-microvolt = <830000>;
++	};
++	opp-1908000000 {
++		opp-hz = /bits/ 64 <1908000000>;
++		opp-microvolt = <860000>;
++	};
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <910000>;
++	};
++	opp-2100000000 {
++		opp-hz = /bits/ 64 <2100000000>;
++		opp-microvolt = <960000>;
++	};
++	opp-2208000000 {
++		opp-hz = /bits/ 64 <2208000000>;
++		opp-microvolt = <1030000>;
++	};
++	opp-2304000000 {
++		opp-hz = /bits/ 64 <2304000000>;
++		opp-microvolt = <1030000>;
++	};
++	opp-2400000000 {
++		opp-hz = /bits/ 64 <2400000000>;
++		opp-microvolt = <1040000>;
++	};
++};
