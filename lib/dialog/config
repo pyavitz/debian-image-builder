@@ -14,21 +14,20 @@ else
 fi
 LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LINE | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
 LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
-COL="\e[0;37m"
-FIN="\e[0m"
-if [ -f profile.txt ]; then
+
+NAME=""
+USERNAME=""
+PASSWORD=""
+VERSION="$LATEST_LTS"
+standard_packaging="1"
+useracct="0"
+LOCALE="en_US.UTF-8"
+TIMEZONE="America/New_York"
+USER_NAMESERVER1="8.8.8.8"
+USER_NAMESERVER2="8.8.4.4"
+if [[ -f "profile.txt" ]]; then
+	# source user profile
 	. profile.txt
-else
-	NAME=""
-	USERNAME=""
-	PASSWORD=""
-	VERSION="$LATEST_LTS"
-	standard_packaging="1"
-	useracct="0"
-	LOCALE="en_US.UTF-8"
-	TIMEZONE="America/New_York"
-	USER_NAMESERVER1="8.8.8.8"
-	USER_NAMESERVER2="8.8.4.4"
 fi
 HOSTNAME="default"
 DISTRO="debian"
@@ -214,6 +213,6 @@ clear -x
 
 # userdata-txt
 if [[ -f "userdata.txt" ]]; then
-	echo -e "${COL}userdata file created${FIN}."
+	echo -e "userdata file created."
 	exit 0
 fi
