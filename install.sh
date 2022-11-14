@@ -8,6 +8,14 @@ YLW="\e[0;33m"
 FIN="\e[0m"
 ARCH=`uname -m`
 
+if [[ `command -v curl` ]]; then
+	:;
+else
+	echo ""
+	echo -e "Missing dependency: curl"
+	exit 0
+fi
+
 echo ""
 echo -en "${TXT}Checking Internet Connection:${FIN} "
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
@@ -20,7 +28,7 @@ else
 	exit 0;
 fi
 echo -en "${TXT}Checking Host Machine:${FIN} "
-sleep 1s
+sleep .50
 if [[ `grep -w "jammy" "/etc/os-release"` ]]; then
 	echo -en "${PNK}[${FIN}${GRN}Ubuntu Jammy Jellyfish${FIN}${PNK}]${FIN}";
 	echo "";
