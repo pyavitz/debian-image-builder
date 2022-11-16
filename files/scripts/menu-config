@@ -308,11 +308,13 @@ if [[ -f "/boot/${FAMILY}/extlinux/extlinux.conf" ]]; then
 fi
 
 # grab the HA supervisor package which will install HA
+sudo apt install -y systemd-journal-remote
 wget -cq --show-progress https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
 sudo dpkg -i homeassistant-supervised.deb
 
 # clean
 sleep 2s
+sudo apt autoremove -y
 if [ -f os-agent_1.2.2_linux_aarch64.deb ]; then rm -f os-agent_1.2.2_linux_aarch64.deb; fi
 if [ -f homeassistant-supervised.deb ]; then rm -f homeassistant-supervised.deb; fi
 
