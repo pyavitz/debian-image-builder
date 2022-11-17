@@ -39,16 +39,6 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 		echo "";
 	fi
 fi
-if [[ "$DISTRO" == "ubuntu" ]]; then
-	# remove ubuntu pro advert
-	HOOK_SIZE=`wc -c /etc/apt/apt.conf.d/20apt-esm-hook.conf | sed 's/[a-z]*/ /g' | sed 's/ //g' | sed 's/\/\/\/..\/20--.//g'`
-	if [[ -f "/etc/apt/apt.conf.d/20apt-esm-hook.conf" ]] && [[ "$HOOK_SIZE" == "0" ]]; then
-		:;
-	else
-		mv /etc/apt/apt.conf.d/20apt-esm-hook.conf /etc/apt/apt.conf.d/20apt-esm-hook.conf.bak
-		touch /etc/apt/apt.conf.d/20apt-esm-hook.conf
-	fi
-fi
 apt-get update
 apt-get install -y apt-utils
 
@@ -102,6 +92,16 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	apt install -y ${RPI};
 fi
 # apt clean
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	# remove ubuntu pro advert
+	HOOK_SIZE=`wc -c /etc/apt/apt.conf.d/20apt-esm-hook.conf | sed 's/[a-z]*/ /g' | sed 's/ //g' | sed 's/\/\/\/..\/20--.//g'`
+	if [[ -f "/etc/apt/apt.conf.d/20apt-esm-hook.conf" ]] && [[ "$HOOK_SIZE" == "0" ]]; then
+		:;
+	else
+		mv /etc/apt/apt.conf.d/20apt-esm-hook.conf /etc/apt/apt.conf.d/20apt-esm-hook.conf.bak
+		touch /etc/apt/apt.conf.d/20apt-esm-hook.conf
+	fi
+fi
 apt -y clean
 apt -y autoclean
 # User scripts stage2
