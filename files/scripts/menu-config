@@ -267,8 +267,7 @@ sudo apt-get update; sudo apt-get -y upgrade
 sudo apt-get -y install docker-ce docker-ce-cli containerd.io
 
 # install HA required packages
-sudo apt -y install jq libglib2.0-bin udisks2
-sudo apt -y install network-manager
+sudo apt -y install jq libglib2.0-bin udisks2 network-manager
 
 # install agent required by ha
 wget -cq --show-progress \
@@ -282,13 +281,13 @@ sudo systemctl start systemd-resolved.service
 # need to fake grub so HA will install
 sudo touch /etc/default/grub
 echo '#!/bin/bash' | sudo tee /usr/bin/update-grub
-echo 'echo got it'  |sudo tee -a /usr/bin/update-grub
+echo 'echo got it' | sudo tee -a /usr/bin/update-grub
 sudo chmod 755 /usr/bin/update-grub
 
 # enable use of GPIO pins
 sudo apt install -y gpiod python3-libgpiod
-echo 'KERNEL=="gpiochip0", MODE="0666"' |sudo tee -a /etc/udev/rules.d/99-perm.rules 
-echo 'KERNEL=="gpiochip1", MODE="0666"' |sudo tee -a /etc/udev/rules.d/99-perm.rules 
+echo 'KERNEL=="gpiochip0", MODE="0666"' | sudo tee -a /etc/udev/rules.d/99-perm.rules 
+echo 'KERNEL=="gpiochip1", MODE="0666"' | sudo tee -a /etc/udev/rules.d/99-perm.rules 
 
 # install tools useful for sensor scripts that communicate with HA mosquitto broker
 sudo apt -y install netcat mosquitto-clients
@@ -301,10 +300,10 @@ sudo apt -y remove --purge avahi-daemon
 
 # add some kernel arguments, some that are required, some that look to make system more stable
 if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
-	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused  cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/extlinux/extlinux.conf;
+	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/extlinux/extlinux.conf;
 fi
 if [[ -f "/boot/${FAMILY}/extlinux/extlinux.conf" ]]; then
-	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused  cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/${FAMILY}/extlinux/extlinux.conf;
+	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/${FAMILY}/extlinux/extlinux.conf;
 fi
 
 # grab the HA supervisor package which will install HA
@@ -320,10 +319,11 @@ if [ -f homeassistant-supervised.deb ]; then rm -f homeassistant-supervised.deb;
 
 # finish
 echo ""
-if [[ -f "/boot/config.ini" ]]; then
-	echo "Petitboot detected. You may need to add the following kernel params to the /boot/config.ini"
-	echo "systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor"
-	echo ""
+if [[ "$PETITBOOT" == "true" ]]; then
+	echo -e "You need to add the following kernel params to: /boot/config.ini"
+	echo -e ""
+	echo -e "systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor"
+	echo -e ""
 fi
 read -p "Press enter to continue."
 }
