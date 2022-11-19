@@ -8,6 +8,12 @@ YLW="\e[0;33m"
 FIN="\e[0m"
 ARCH=`uname -m`
 
+if [[ -e "/etc/os-release" ]]; then
+	RELEASE=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
+else
+	RELEASE="none"
+fi
+
 if [[ `command -v curl` ]]; then
 	:;
 else
@@ -19,36 +25,28 @@ fi
 echo ""
 echo -en "${TXT}Checking Internet Connection:${FIN} "
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-	echo -en "${PNK}[${FIN}${GRN}OK${FIN}${PNK}]${FIN}";
-	echo "";
+	echo -en "${PNK}[${FIN}${GRN}OK${FIN}${PNK}]${FIN}"
+	echo ""
 else
-	echo -en "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}";
-	echo "";
-	echo -e "${TXT}Please check your internet connection and try again${FIN}.";
-	exit 0;
+	echo -en "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+	echo ""
+	echo -e "${TXT}Please check your internet connection and try again${FIN}."
+	exit 0
 fi
 echo -en "${TXT}Checking Host Machine:${FIN} "
 sleep .50
-if [[ `grep -w "jammy" "/etc/os-release"` ]]; then
-	echo -en "${PNK}[${FIN}${GRN}Ubuntu Jammy Jellyfish${FIN}${PNK}]${FIN}";
-	echo "";
+if [[ "$RELEASE" == "jammy" ]]; then
+	echo -en "${PNK}[${FIN}${GRN}Ubuntu Jammy Jellyfish${FIN}${PNK}]${FIN}"
+	echo ""
 else
-	if [[ `grep -w "kinetic" "/etc/os-release"` ]]; then
-		echo "";
-		echo -e "${TXT}The OS you are running is not supported${FIN}.";
-		exit 0;
-		#echo -en "${PNK}[${FIN}${GRN}Ubuntu Kinetic Kudu${FIN}${PNK}]${FIN}";
-		#echo "";
+	if [[ "$RELEASE" == "bullseye" ]]; then
+		echo -en "${PNK}[${FIN}${GRN}Debian Bullseye${FIN}${PNK}]${FIN}"
+		echo ""
 	else
-		if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
-			echo -en "${PNK}[${FIN}${GRN}Debian Bullseye${FIN}${PNK}]${FIN}";
-			echo "";
-		else
-			echo -ne "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}";
-			echo "";
-			echo -e "${TXT}The OS you are running is not supported${FIN}.";
-			exit 0;
-		fi
+		echo -ne "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+		echo ""
+		echo -e "${TXT}The OS you are running is not supported${FIN}."
+		exit 0
 	fi
 fi
 echo ""
@@ -61,26 +59,26 @@ fi
 sleep 1s
 if [[ "$ARCH" == "x86_64" ]]; then
 	if [[ `command -v make` ]]; then
-		sudo apt update;
-		sudo apt upgrade -y;
-		make ccompile;
+		sudo apt update
+		sudo apt upgrade -y
+		make ccompile
 	else
-		sudo apt update;
-		sudo apt upgrade -y;
-		sudo apt install -y make;
-		make ccompile;
+		sudo apt update
+		sudo apt upgrade -y
+		sudo apt install -y make
+		make ccompile
 	fi
 fi
 if [[ "$ARCH" == "aarch64" ]]; then
 	if [[ `command -v make` ]]; then
-		sudo apt update;
-		sudo apt upgrade -y;
-		make ncompile;
+		sudo apt update
+		sudo apt upgrade -y
+		make ncompile
 	else
-		sudo apt update;
-		sudo apt upgrade -y;
-		sudo apt install -y make;
-		make ncompile;
+		sudo apt update
+		sudo apt upgrade -y
+		sudo apt install -y make
+		make ncompile
 	fi
 fi
 
