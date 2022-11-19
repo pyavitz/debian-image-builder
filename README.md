@@ -66,7 +66,6 @@ Menuconfig:		# Run uboot and kernel menuconfig
 Compiler:		# Defaults at gcc-10 
 Crosscompile:		# 1 cross compile | 0 native compile
 Caching on:		# Ccache
-Standard packaging:	# If unsure, leave enabled (Review wiki for difference)
 
 Extra wireless support
 rtl88XXau:		# Realtek 8812AU/21AU wireless support
