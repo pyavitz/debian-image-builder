@@ -124,14 +124,25 @@ if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
 fi
 }
 
-uboot_odroidc1_packaging(){
+uboot_precompiled_packaging(){
 PKGNAME="u-boot-${SERIES}"
-PKGVERSION="2011.03"
+if [[ "$BOARD" == "odroidc1" ]]; then
+	PKGVERSION="2011.03"
+fi
+if [[ "$BOARD" == "rock5b" ]]; then
+	PKGVERSION="2017.09"
+fi
 BV="${BUILD_VERSION}"
 mkdir -p ${OUTPUT}/
 echo -e "Using precompiled binaries."
-cp -f ${CUBOOT}/bl1.bin ${OUTPUT}/
-cp -f ${CUBOOT}/u-boot.bin ${OUTPUT}/
+if [[ "$BOARD" == "odroidc1" ]]; then
+	cp -f ${CUBOOT}/bl1.bin ${OUTPUT}/
+	cp -f ${CUBOOT}/u-boot.bin ${OUTPUT}/
+fi
+if [[ "$BOARD" == "rock5b" ]]; then
+	cp -f ${CUBOOT}/idbloader.bin ${OUTPUT}/
+	cp -f ${CUBOOT}/u-boot.itb ${OUTPUT}/
+fi
 cd ${OUTPUT}/
 if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}" ]]; then
 	rm -fdr "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}"
@@ -141,8 +152,14 @@ if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
 fi
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-cp -f bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+if [[ "$BOARD" == "odroidc1" ]]; then
+	cp -f bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+if [[ "$BOARD" == "rock5b" ]]; then
+	cp -f idbloader.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
 
 # control file
 if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN" ]]; then
