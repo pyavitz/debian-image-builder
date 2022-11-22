@@ -214,7 +214,16 @@ fi
 
 cconfig(){
 echo_cconfig
-cp -f ../${DEF}/${MYCONFIG} arch/${ARCH}/configs/
+if [[ -f "../${DEF}/${MYCONFIG}" ]]; then
+	cp -f ../${DEF}/${MYCONFIG} arch/${ARCH}/configs/
+else
+	echo ""
+	echo -e "${MYCONFIG} was not found."
+	echo -e "Check that the name is correct and in the correct location"
+	echo -e "If you believe you are receiving this in error, please report it."
+	read -p "Press enter to continue."
+	exit 1
+fi
 if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG};
 else
@@ -225,7 +234,16 @@ echo_done
 
 bconfig(){
 echo_defconfig
-cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
+if [[ -f "../${DEF}/${LINUX_DEFCONFIG}" ]]; then
+	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
+else
+	echo ""
+	echo -e "${LINUX_DEFCONFIG} was not found."
+	echo -e "Check that the name is correct and in the correct location"
+	echo -e "If you believe you are receiving this in error, please report it."
+	read -p "Press enter to continue."
+	exit 1
+fi
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
 	rm -f arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 	cp -f ../${DEF}/odroid-lts_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}

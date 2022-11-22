@@ -40,15 +40,19 @@ fi
 # boards
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "odroidc1" ]]; then
-		uboot_odroidc1_packaging
+		uboot_precompiled_packaging
 	else
 		source lib/function/fip
 		${FAMILY}-uboot-string
 	fi
 fi
 if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "rockchip" ]]; then
-	source lib/function/atf
-	${FAMILY}-uboot-string
+	if [[ "$BOARD" == "rock5b" ]]; then
+		uboot_precompiled_packaging
+	else
+		source lib/function/atf
+		${FAMILY}-uboot-string
+	fi
 fi
 if [[ "$FAMILY" == "broadcom" || "$FAMILY" == "freescale" || "$FAMILY" == "samsung" ]]; then
 	${FAMILY}-uboot-string
