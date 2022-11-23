@@ -240,7 +240,13 @@ runs and you are asked to select the platform."
 homeAssistant(){
 clear -x
 echo "Installing Home Assistant ..."
-set -x
+
+# developer debug switch
+VERBOSITY="0"
+if [ $VERBOSITY -eq 1 ]; then
+	set -x
+fi
+
 if [[ "$FAMILY" == "amlogic" ]]; then
 	# Make sure sound is enabled on N2+
 	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
@@ -322,7 +328,7 @@ echo ""
 if [[ "$PETITBOOT" == "true" ]]; then
 	echo -e "You need to add the following kernel params to: /boot/config.ini"
 	echo -e ""
-	echo -e "systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor"
+	echo -e "systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor"
 	echo -e ""
 fi
 read -p "Press enter to continue."
