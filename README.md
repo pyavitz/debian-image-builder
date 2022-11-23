@@ -4,4 +4,5 @@
 Petitboot (Odroid N2/+) ^*
 Cap SDIO Speed (Radxa Zero)
 User Account ^*
+util-linux 2.38 (Debian Bullseye)
 ```

@@ -1,0 +1,20 @@
+#!/bin/bash
+# Debian Bullseye
+# A bug in util-linux 2.36 prevents lscpu from listing properly, this script will upgrade util-linux to 2.38
+
+run_function2 (){
+if [[ "$DISTRO" == "debian" ]] && [[ "$DISTRO_VERSION" == "bullseye" ]]; then
+	wget --show-progress -cq https://github.com/pyavitz/debian-image-builder/releases/download/util-linux/util-linux_2.38.1.tar.xz
+	if [[ -f "util-linux_2.38.1.tar.xz" ]]; then
+		echo -e "util-linux_2.38.1.tar.xz found"
+		tar xf util-linux_2.38.1.tar.xz
+		rm -f util-linux_2.38.1.tar.xz
+		cd util-linux_2.38.1
+		apt install -y ./*.deb
+		cd ..
+		rm -fdr util-linux_2.38.1
+	else
+		read -p "Install failed :("
+	fi
+fi
+}
