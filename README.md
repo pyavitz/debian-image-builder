@@ -1,3 +1,6 @@
+## Notice
+* Miscellaneous test [images](https://github.com/pyavitz/binary/releases/tag/images)
+
 ## Boards
 ```sh
 Allwinner:      # NanoPi M1/NEO/Plus2, OrangePi One/PC/R1 & Tritium
