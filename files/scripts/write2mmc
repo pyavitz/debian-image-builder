@@ -5,7 +5,9 @@
 if [[ -f "/etc/opt/board.txt" ]]; then
 	DIR="/usr/lib/u-boot"
 	FSTYPE=`findmnt -v -n -o FSTYPE /`
-	MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
+	if [[ `lsblk | grep boot0` ]]; then
+		MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
+	fi
 	source /etc/opt/board.txt
 else
 	export NEWT_COLORS='root=,black'
