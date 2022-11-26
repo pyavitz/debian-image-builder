@@ -42,21 +42,17 @@ fi
 # download and extract
 download
 # setup
-if [[ "$SETUP" == "vendor" ]]; then
-	if [[ "$VERSION" == "4.9.y" || "$VERSION" == "4.19.y" ]]; then
-		vendor_setup;
-	else
-		setup;
-	fi
+if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]] && [[ "$VERSION" == "4.9.y" || "$VERSION" == "4.19.y" ]]; then
+	vendor_setup
 else
-	setup;
+	setup
 fi
 # patching
 if [[ ! -z $FAMILY ]]; then
 	linux_patching;
 fi
 # defconfig
-if [[ "$SETUP" == "vendor" ]]; then
+if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
 	if [ $custom_defconfig -eq 1 ]; then
 		cconfig;
 	else
