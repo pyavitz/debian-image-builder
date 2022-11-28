@@ -7,7 +7,7 @@ dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1
 
 # STAGE2
 alt_firmware(){
-echo ""
+echo -e ""
 if [[ "$BOARD" == "nanopi" ]]; then
 	echo "Adding NanoPi NEO Plus2 firmware ..."
 	cd ~
@@ -20,13 +20,16 @@ if [[ "$BOARD" == "cubietruck" ]]; then
 fi
 if [[ -f "firmware/README.md" ]]; then rm -f firmware/README.md; fi
 cp -fr firmware/* /lib/firmware
-if [ -f fw-0a5c_21e8.hcd ]; then 
+if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.bin" ]]; then
+	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin brcmfmac43430-sdio.friendlyarm,nanopi-neo-plus2.bin
+fi
+if [[ -f "fw-0a5c_21e8.hcd" ]]; then 
 	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
 	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd;
 	chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd;
 	chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
 fi
-if [ -f UPDATE.mem ]; then
+if [[ -f "UPDATE.mem" ]]; then
 	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem;
 	rm -f UPDATE.mem;
 fi
@@ -37,7 +40,7 @@ if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
 	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz;
 fi
 rm -fdr firmware
-echo "Done."
+echo -e "[done]"
 }
 
 pine64_bthelper(){
@@ -57,9 +60,9 @@ fi
 }
 
 pine64_bthelper2(){
-echo
-echo "Installing bluetooth helper ..."
-sleep 1s
+echo  ""
+echo -e "Installing bluetooth helper ..."
+sleep .50
 git clone https://github.com/lwfinger/rtl8723bs_bt.git
 cd rtl8723bs_bt
 make
@@ -72,7 +75,7 @@ echo "r8723bs" > /etc/modules-load.d/pine64.conf
 echo "hci_uart" >> /etc/modules-load.d/pine64.conf
 mkdir -p /etc/modprobe.d/
 echo "options r8723bs rtw_power_mgnt=0" > /etc/modprobe.d/wifi-pwrmgnt.conf
-echo "Done."
+echo -e "[done]"
 }
 
 ct_blacklist(){
