@@ -81,7 +81,7 @@ fi
 # github
 broadcom_bsp(){
 if [[ "$BOARD" == "raspi2" || "$BOARD" == "raspi3" || "$BOARD" == "raspi-32b" || "$BOARD" == "raspi4" || "$BOARD" == "raspizero" ]]; then
-	if [[ "$GIT_FORCE" == "true" ]]; then
+	if [[ "$FORCE_GITHUB" == "true" ]]; then
 		# force pulling from https://github.com/raspberrypi/
 		echo "raspberrypi" > github.txt
 		echo "rpi" >> github.txt
@@ -91,13 +91,20 @@ fi
 
 rockchip_bsp(){
 if [[ "$BOARD" == "rock5b" ]]; then
-	if [[ "$GIT_FORCE" == "true" ]]; then
+	if [[ "$FORCE_GITHUB" == "true" ]]; then
 		# force pulling from https://github.com/radxa/
 		sed -i "12s/.*/VERSION="'"5.10-gen-rkr3.4"'"/" userdata.txt
 		echo "radxa" > github.txt
 		echo "linux" >> github.txt
 	fi
 fi
+if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
+	JSON_FILE="https://kernel.org/releases.json"
+	STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
+	if [[ "$FORCE_VERSION" == "true" ]]; then
+		sed -i '12s/.*/VERSION="'"${STABLE}"'"/' userdata.txt
+	fi
+fi	
 }
 
 check_github(){
