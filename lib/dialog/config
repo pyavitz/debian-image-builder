@@ -14,6 +14,7 @@ else
 fi
 LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LINE | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
 LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
+GCC=`ls -ls /usr/bin/gcc | sed 's/.*\(..\)/\1/' | sed 's/ //g'`
 
 NAME=""
 USERNAME=""
@@ -35,7 +36,7 @@ networkmanager="0"
 UBOOT_VERSION="v2022.10"
 BUILD_VERSION="1"
 menuconfig="0"
-COMPILER="gcc-10"
+COMPILER="gcc-$GCC"
 if [[ `uname -m | grep aarch64` ]]; then
 	crosscompile="0"
 else

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# variables
+SRC="sources"
+DEF="../defconfig"
+LPATCHESALL="patches/all"
+UPATCHESALL="patches/uboot/all"
+USERPATCHES="patches/userpatches"
+KERNEL="linux"
+BUILDER=`grep "builder=" "userdata.txt" | sed 's/builder=//g'`
+
 # validate
 validation(){
 UD="userdata.txt"
@@ -15,21 +24,13 @@ else
 		fi
 	done
 fi
-if [[ `grep -w "builder=5.1" "userdata.txt"` ]]; then
+if [[ "$BUILDER" == "5.1" ]]; then
 	:;
 else
-	echo -e "The ${WHT}$UD${FIN} file has expired. Create a new one."
-	exit;
+	echo -e "The ${WHT}$UD${FIN} file has expired. Please create a new one."
+	exit 0;
 fi
 }
-
-# variables
-SRC="sources"
-DEF="../defconfig"
-LPATCHESALL="patches/all"
-UPATCHESALL="patches/uboot/all"
-USERPATCHES="patches/userpatches"
-KERNEL="linux"
 
 # base packages
 PKGS="tzdata keyboard-configuration sudo man-db dbus initramfs-tools zip unzip \
