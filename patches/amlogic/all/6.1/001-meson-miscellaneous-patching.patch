@@ -1,0 +1,134 @@
+diff -Naur a/crypto/aegis128-neon-inner.c b/crypto/aegis128-neon-inner.c
+--- a/crypto/aegis128-neon-inner.c	2022-12-04 17:48:12.000000000 -0500
++++ b/crypto/aegis128-neon-inner.c	2022-12-05 23:57:43.472348476 -0500
+@@ -147,8 +147,8 @@
+ 		kiv,
+ 		vld1q_u8(const1),
+ 		vld1q_u8(const0),
+-		k ^ vld1q_u8(const0),
+-		k ^ vld1q_u8(const1),
++		(uint8x16_t) (k ^ vld1q_u8(const0)),
++		(uint8x16_t) (k ^ vld1q_u8(const1)),
+ 	}};
+ 	int i;
+ 
+diff -Naur a/drivers/clk/meson/g12a.c b/drivers/clk/meson/g12a.c
+--- a/drivers/clk/meson/g12a.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/clk/meson/g12a.c	2022-12-05 23:57:43.464348476 -0500
+@@ -1783,7 +1783,7 @@
+ 		},
+ 		.l = {
+ 			.reg_off = HHI_HIFI_PLL_CNTL0,
+-			.shift   = 31,
++			.shift   = 30,
+ 			.width   = 1,
+ 		},
+ 		.rst = {
+diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-12-05 23:57:43.508348475 -0500
+@@ -782,6 +782,11 @@
+ 	else
+ 		hdmi->mc_clkdis |= HDMI_MC_CLKDIS_AUDCLK_DISABLE;
+ 	hdmi_writeb(hdmi, hdmi->mc_clkdis, HDMI_MC_CLKDIS);
++
++	if (enable) {
++		hdmi_set_cts_n(hdmi, hdmi->audio_cts, 0);
++		hdmi_set_cts_n(hdmi, hdmi->audio_cts, hdmi->audio_n);
++	}
+ }
+ 
+ static u8 *hdmi_audio_get_eld(struct dw_hdmi *hdmi)
+@@ -2720,6 +2725,9 @@
+ 	 * if supported. In any case the default RGB888 format is added
+ 	 */
+ 
++	/* Default 8bit RGB fallback */
++	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
++
+ 	if (max_bpc >= 16 && info->bpc == 16) {
+ 		if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
+ 			output_fmts[i++] = MEDIA_BUS_FMT_YUV16_1X48;
+@@ -2753,9 +2761,6 @@
+ 	if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
+ 		output_fmts[i++] = MEDIA_BUS_FMT_YUV8_1X24;
+ 
+-	/* Default 8bit RGB fallback */
+-	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
+-
+ 	*num_output_fmts = i;
+ 
+ 	return output_fmts;
+diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/panfrost_job.c
+--- a/drivers/gpu/drm/panfrost/panfrost_job.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/gpu/drm/panfrost/panfrost_job.c	2022-12-05 23:57:43.484348476 -0500
+@@ -194,7 +194,7 @@
+ 
+ 	panfrost_devfreq_record_busy(&pfdev->pfdevfreq);
+ 
+-	ret = pm_runtime_get_sync(pfdev->dev);
++	ret = pm_runtime_resume_and_get(pfdev->dev);
+ 	if (ret < 0)
+ 		return;
+ 
+diff -Naur a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
+--- a/drivers/mmc/host/meson-gx-mmc.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/mmc/host/meson-gx-mmc.c	2022-12-05 23:57:43.476348476 -0500
+@@ -1225,8 +1225,8 @@
+ 	}
+ 
+ 	host->irq = platform_get_irq(pdev, 0);
+-	if (host->irq <= 0) {
+-		ret = -EINVAL;
++	if (host->irq < 0) {
++		ret = host->irq;
+ 		goto free_host;
+ 	}
+ 
+diff -Naur a/drivers/of/fdt.c b/drivers/of/fdt.c
+--- a/drivers/of/fdt.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/of/fdt.c	2022-12-05 23:57:43.476348476 -0500
+@@ -481,15 +481,6 @@
+ 					       phys_addr_t size, bool nomap)
+ {
+ 	if (nomap) {
+-		/*
+-		 * If the memory is already reserved (by another region), we
+-		 * should not allow it to be marked nomap, but don't worry
+-		 * if the region isn't memory as it won't be mapped.
+-		 */
+-		if (memblock_overlaps_region(&memblock.memory, base, size) &&
+-		    memblock_is_region_reserved(base, size))
+-			return -EBUSY;
+-
+ 		return memblock_mark_nomap(base, size);
+ 	}
+ 	return memblock_reserve(base, size);
+diff -Naur a/drivers/staging/media/meson/vdec/esparser.c b/drivers/staging/media/meson/vdec/esparser.c
+--- a/drivers/staging/media/meson/vdec/esparser.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/staging/media/meson/vdec/esparser.c	2022-12-05 23:57:43.500348476 -0500
+@@ -314,8 +314,7 @@
+ 			num_dst_bufs = codec_ops->num_pending_bufs(sess);
+ 
+ 		num_dst_bufs += v4l2_m2m_num_dst_bufs_ready(sess->m2m_ctx);
+-		if (sess->fmt_out->pixfmt == V4L2_PIX_FMT_VP9)
+-			num_dst_bufs -= 3;
++		num_dst_bufs -= 3;
+ 
+ 		if (esparser_vififo_get_free_space(sess) < payload_size ||
+ 		    atomic_read(&sess->esparser_queued_bufs) >= num_dst_bufs)
+diff -Naur a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+--- a/drivers/usb/core/hub.c	2022-12-04 17:48:12.000000000 -0500
++++ b/drivers/usb/core/hub.c	2022-12-05 23:57:43.488348476 -0500
+@@ -1424,9 +1424,8 @@
+ 		ret = -ENODEV;
+ 		goto fail;
+ 	} else if (hub->descriptor->bNbrPorts == 0) {
+-		message = "hub doesn't have any ports!";
+-		ret = -ENODEV;
+-		goto fail;
++		dev_info(hub_dev, "hub has no ports, exiting\n");
++		return -ENODEV;
+ 	}
+ 
+ 	/*
