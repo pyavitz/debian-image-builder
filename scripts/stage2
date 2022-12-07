@@ -86,7 +86,7 @@ if [[ "$DISTRO" == "ubuntu" ]]; then
 	fi
 fi
 if [[ "$DISTRO" == "kali" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} dbus-user-session libical3 resolvconf haveged ${NETWORKING};
+	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} dbus-user-session libical3 resolvconf haveged ntpdate ${NETWORKING};
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
 	apt install -y ${RPI};
@@ -555,8 +555,12 @@ if [[ "$SERIES" == "bcm2835" ]] && [[ "$DISTRO" == "debian" ]] && [[ -f "/etc/de
 fi
 echo ""
 echo "Enabling Services ..."
-if [[ "$DISTRO" == "kali" ]]; then
-	kali_hack > /dev/null 2>&1;
+if [[ "$DISTRO" == "kali" ]] && [[ -f "/root/kali-tweaks" ]]; then
+	mv -f /root/kali-tweaks /usr/local/sbin/kali-tweaks
+	chmod +x /usr/local/sbin/kali-tweaks
+	kali_tweaks > /dev/null 2>&1
+else
+	rm -f /root/kali-tweaks
 fi
 if [[ "$BOARD" == "nanopi" ]]; then
 	if [[ "$DISTRO" == "devuan" ]]; then

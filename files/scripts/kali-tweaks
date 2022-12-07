@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ `command -v ssh` ]]; then
+	service ssh start
+	sleep 1.75
+fi
+if [[ `command -v avahi-browse` ]]; then
+	service avahi-daemon start
+	sleep 1.75
+fi
+if [[ `command -v bluetoothctl` ]]; then
+	service bluetooth start
+	sleep 1.75
+fi
+if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+	ntpdate pool.ntp.org 1>/dev/null &
+fi
+
+exit 0

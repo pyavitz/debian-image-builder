@@ -373,36 +373,23 @@ RequiredBy=local-fs-pre.target
 EOF
 }
 
-# kali force start service
-kali_hack(){
-tee /etc/systemd/system/kali-hack.service <<EOF
+# kali force start services
+kali_tweaks(){
+tee /etc/systemd/system/kali-tweaks.service <<EOF
 [Unit]
-Description=Kali hack
+Description=Kali Tweaks
 After=rc-local.service
-ConditionPathExists=/usr/local/sbin/kali-hack
+ConditionPathExists=/usr/local/sbin/kali-tweaks
 
 [Service]
-ExecStart=/usr/local/sbin/kali-hack > /dev/null 2>&1
+ExecStart=/usr/local/sbin/kali-tweaks > /dev/null 2>&1
 Type=oneshot
 RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
 EOF
-
-tee /usr/local/sbin/kali-hack <<EOF
-#!/bin/bash
-
-service ssh start
-sleep 3s
-service avahi-daemon start
-sleep 2s
-service bluetooth start
-sleep 10s
-service ntp start
-EOF
-chmod +x /usr/local/sbin/kali-hack
-systemctl enable kali-hack
+systemctl enable kali-tweaks
 }
 
 enable_sysvinit(){
