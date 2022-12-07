@@ -2,6 +2,7 @@
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+RELEASE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
 fi
@@ -43,7 +44,7 @@ EOF
 }
 
 # Expand root filesystem
-if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
+if [[ "$RELEASE" == "Devuan" ]]; then
 	echo ""
 	echo -e " \033[1mExpanding root filesystem\033[0m ..."
 fi
@@ -114,7 +115,7 @@ if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
 fi
 
 ### Clean up
-if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
+if [[ "$RELEASE" == "Devuan" ]]; then
 	update-rc.d firstboot remove
 	rm -f /etc/init.d/firstboot
 else

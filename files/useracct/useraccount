@@ -1,5 +1,7 @@
 #!/bin/bash
+
 source /etc/opt/board.txt
+RELEASE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 create_user(){
 adduser ${USERNAME} --gecos ${NAME} --disabled-password
@@ -88,12 +90,11 @@ else
 	echo "Almost done ..."
 	sleep 1
 fi
-if [[ -f "/etc/os-release" ]] && [[ `grep -w "Debian" "/etc/os-release"` || `grep -w "Ubuntu" "/etc/os-release"` ]]; then
-	systemctl disable useraccount
+
+if [[ "$RELEASE" == "Devuan" ]]; then
+	update-rc.d useraccount remove
 else
-	if [[ -f "/etc/os-release" ]] && [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-		update-rc.d useraccount remove
-	fi
+	systemctl disable useraccount
 fi
 sleep .75
 if [[ -d "/home/${USERNAME}" ]]; then
@@ -104,8 +105,8 @@ if [[ -d "/home/${USERNAME}" ]]; then
 	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 	rm -f /etc/opt/{nanorc-user,user-ini}
 fi
-if [[ -f "/etc/os-release" ]] && [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-	clear -x;
+if [[ "$RELEASE" == "Devuan" ]]; then
+	clear -x
 fi
 
 exit 0
