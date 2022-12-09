@@ -59,7 +59,7 @@ Distro:			# Supported: debian, devuan and ubuntu
 Release:		# Debian: bullseye, bookworm, testing, unstable and sid
 			# Devuan: chimaera, daedalus, testing, unstable and ceres
 			# Ubuntu: focal and jammy
-Network Manager		# Enable nmtui (default: ifupdown)
+Network Manager		# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
 U-Boot:			# Supported: v2022.10
