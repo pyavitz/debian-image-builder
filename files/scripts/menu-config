@@ -54,7 +54,14 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	fan_ctrl=0
 	supported_ha=0
 fi
-if [[ "$BOARD" == "nanopct4" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "rockpro64" ]]; then
+if [[ "$BOARD" == "nanopct4" ]]; then
+	BOARD_PN="NanoPC-T4"
+	supported_oc=1
+	supported_mixer=0
+	fan_ctrl=1
+	supported_ha=0
+fi
+if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "rockpro64" ]]; then
 	BOARD_PN="RK3399"
 	supported_oc=1
 	supported_mixer=0
@@ -198,12 +205,12 @@ fi
 }
 
 systemd_fanctrl(){
-if [[ -f "/etc/systemd/system/odroid-fan-ctrl.service" ]]; then
+if [[ -f "/etc/systemd/system/fan-ctrl.service" ]]; then
 	:;
 else
-	sudo tee /etc/systemd/system/odroid-fan-ctrl.service <<EOF
+	sudo tee /etc/systemd/system/fan-ctrl.service <<EOF
 [Unit]
-Description=Odroid Fan Control
+Description=Fan Control
 ConditionPathExists=/usr/local/bin/fan-ctrl
 
 [Service]
@@ -214,7 +221,7 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-	sudo systemctl enable odroid-fan-ctrl;
+	sudo systemctl enable fan-ctrl;
 fi
 }
 
@@ -434,7 +441,7 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
-			"FC)" "Fan Control              Set Odroid trip point" \
+			"FC)" "Fan Control              Set trip point" \
 			"ST)" "Setup Tasksel            Tool for selecting tasks for installation" \
 			"RZ)" "Radxa Zero Rev 1.5       Wifi (cap SDIO speed)" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
