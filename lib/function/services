@@ -92,7 +92,6 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-
 systemctl enable nanopi-bthelper
 }
 
@@ -396,29 +395,29 @@ enable_sysvinit(){
 chmod +x /etc/init.d/governor
 chmod +x /etc/init.d/firstboot
 if [ -f /usr/local/sbin/led-trigger ]; then
-	chmod +x /etc/init.d/leds;
-	update-rc.d leds defaults 2;
+	chmod +x /etc/init.d/leds
+	update-rc.d leds defaults 2
 fi
-if [[ "$BOARD" == "pine64" || "$BOARD" == "nanopi" ]]; then
-	chmod +x /etc/init.d/bthelper;
-	update-rc.d bthelper defaults 2;
+if [[ "$BOARD" == "pinea64plus" || "$BOARD" == "nanopineoplus2" ]]; then
+	chmod +x /etc/init.d/bthelper
+	update-rc.d bthelper defaults 2
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$FAMILY_EXT" == "meson8b" || "$BOARD" == "bananapim5" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" ]]; then
 		:;
 	else
-		chmod +x /etc/init.d/tweaks;
-		update-rc.d tweaks defaults 2;
+		chmod +x /etc/init.d/tweaks
+		update-rc.d tweaks defaults 2
 	fi
 fi
 if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$BOARD" == "nanopir5s" ]]; then
-	chmod +x /etc/init.d/tweaks;
-	update-rc.d tweaks defaults 2;
+	chmod +x /etc/init.d/tweaks
+	update-rc.d tweaks defaults 2
 fi
 chmod +x /etc/init.d/zramswap
 if [ $networkmanager -eq 0 ]; then
-	chmod +x /etc/init.d/network;
-	update-rc.d -f networking remove;
+	chmod +x /etc/init.d/network
+	update-rc.d -f networking remove
 fi
 chmod +x /etc/init.d/credentials
 update-rc.d -f hwclock.sh remove
@@ -432,13 +431,13 @@ enable_systemd(){
 systemctl enable rc-local
 systemctl enable ifplugd
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" ]]; then
-	systemctl enable resolvconf;
+	systemctl enable resolvconf
 fi
 systemctl enable zramswap
 systemctl enable firstboot
 systemctl enable governor
-if [ -e /etc/systemd/system/multi-user.target.wants/ondemand.service ]; then
-	systemctl disable ondemand;
+if [[ -f "/etc/systemd/system/multi-user.target.wants/ondemand.service" ]]; then
+	systemctl disable ondemand
 fi
 #systemctl enable serial-getty@ttyUSB0.service
 }

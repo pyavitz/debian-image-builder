@@ -194,7 +194,7 @@ if [[ -f "/root/led-trigger" ]]; then
 fi
 
 # Bluetooth helper
-if [[ "$BOARD" == "pine64" ]]; then
+if [[ "$BOARD" == "pinea64plus" ]]; then
 	pine64_bthelper > /dev/null 2>&1;
 	if [[ "$DISTRO" == "devuan" ]]; then
 		:;
@@ -204,7 +204,7 @@ if [[ "$BOARD" == "pine64" ]]; then
 fi
 
 # Brcm patchram
-if [[ "$BOARD" == "nanopi" ]]; then
+if [[ "$BOARD" == "nanopineoplus2" ]]; then
 	echo ""
 	echo "Installing brcm patchram plus ..."
 	cd ~
@@ -289,9 +289,9 @@ chmod +x /usr/bin/growpart
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-if [[ "$BOARD" == "nanopi" ]]; then
-	mv -f nanopi-bthelper /usr/local/sbin/;
-	chmod +x /usr/local/sbin/nanopi-bthelper;
+if [[ "$BOARD" == "nanopineoplus2" ]]; then
+	mv -f nanopineoplus2-bthelper /usr/local/sbin/;
+	chmod +x /usr/local/sbin/nanopineoplus2-bthelper;
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	mkdir -p /etc/init.d;
@@ -305,11 +305,11 @@ if [[ "$DISTRO" == "devuan" ]]; then
 		mv -f network.init /etc/init.d/network;
 	fi
 	mv -f zramswap.init /etc/init.d/zramswap;
-	if [[ "$BOARD" == "pine64" ]]; then
+	if [[ "$BOARD" == "pinea64plus" ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper;
 		rm -f /etc/init.d/leds;
 	fi
-	if [[ "$BOARD" == "nanopi" ]]; then
+	if [[ "$BOARD" == "nanopineoplus2" ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper;
 	fi
 fi
@@ -347,7 +347,7 @@ if [[ "$DISTRO" == "kali" ]] && [[ -f "/root/kali-tweaks" ]]; then
 fi
 
 # Clean
-rm -f {*-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,bootcmd,add-overlay,smon}
+rm -f {*-tweaks,nanopineoplus2-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,bootcmd,add-overlay,smon}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins
@@ -366,7 +366,7 @@ fi
 
 # Firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopi" || "$BOARD" == "cubietruck" ]]; then
+	if [[ "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" || "$BOARD" == "cubietruck" ]]; then
 		alt_firmware;
 	else
 		extra_firmware;
@@ -393,7 +393,7 @@ if [ $networkmanager -eq 1 ]; then
 else
 	ifupdown-setup > /dev/null 2>&1;
 	ifupdown-credentials > /dev/null 2>&1;
-	if [[ "$BOARD" == "opir1" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5s" ]]; then
+	if [[ "$BOARD" == "orangepir1" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5s" ]]; then
 		router_ifupdown;
 	fi
 fi
@@ -414,7 +414,7 @@ fi
 wireless_regdb
 
 # Bluetooth helper install
-if [[ "$BOARD" == "pine64" ]]; then
+if [[ "$BOARD" == "pinea64plus" ]]; then
 	pine64_bthelper2;
 fi
 
@@ -562,7 +562,7 @@ if [[ "$SERIES" == "bcm2835" ]] && [[ "$DISTRO" == "debian" ]] && [[ -f "/etc/de
 fi
 echo ""
 echo "Enabling Services ..."
-if [[ "$BOARD" == "nanopi" ]]; then
+if [[ "$BOARD" == "nanopineoplus2" ]]; then
 	if [[ "$DISTRO" == "devuan" ]]; then
 		:;
 	else

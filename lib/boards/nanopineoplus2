@@ -1,20 +1,20 @@
 # architecture
-ARCH="arm"
-ARCH_EXT="armhf"
+ARCH="arm64"
+ARCH_EXT="arm64"
 DEBARCH=""
-CROSS_COMPILE="arm-linux-gnueabihf-"
+CROSS_COMPILE="aarch64-linux-gnu-"
 ROOTFS_ARCH="rootfs-${ARCH_EXT}"
-STATIC="qemu-arm-static"
+STATIC="qemu-aarch64-static"
 
 # device information
-SERIES="sun8i-h3"
+SERIES="sun50i-h5"
 FAMILY="allwinner"
-FAMILY_EXT="sun8i"
-DTB="${SERIES}-orangepi-one"
+FAMILY_EXT="sun50i"
+DTB="${SERIES}-nanopi-neo-plus2"
 
 # default config
-LINUX_DEFCONFIG="sun8i_defconfig"
-UBOOT_DEFCONFIG="orangepi_one_defconfig"
+LINUX_DEFCONFIG="sun50i_defconfig"
+UBOOT_DEFCONFIG="nanopi_neo_plus2_defconfig"
 
 # partition scheme
 GPT="false"
@@ -28,8 +28,12 @@ EXTLINUX="true"
 PETITBOOT="false"
 BOOTINI="false"
 
+# arm trusted firmware
+ATF_PLAT="sun50i_a64"
+ATF_EXT="PLAT=${ATF_PLAT} DEBUG=1 bl31"
+
 # output
-BOARD="opione"
+BOARD="nanopineoplus2"
 OUTPUT="output/${BOARD}"
 
 # cmdline
@@ -37,7 +41,7 @@ CONSOLE="console=tty1 console=ttyS0,115200n8 console=both"
 EXTRA="net.ifnames=0"
 
 # motd
-DEFAULT_MOTD="OrangePi One"
+DEFAULT_MOTD="NanoPi NEO Plus2"
 
 # patches
 UBOOT_PATCHDIR="patches/uboot"
@@ -61,9 +65,9 @@ PLATFORM="${FAMILY}"
 # standard
 LINUX_IMAGE="linux-image-${SERIES}"
 LINUX_HEADERS="linux-headers-${SERIES}"
-LINUX_PATH="usr/lib/${LINUX_IMAGE}"
-LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
-LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
+LINUX_PATH="usr/lib/${LINUX_IMAGE}/${PLATFORM}"
+LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${PLATFORM}/${DEVICETREE}"
+LINUX_OLYS="usr/lib/${LINUX_IMAGE}/${PLATFORM}/overlays"
 
 # install
 INSTALL_DTB="boot/${PLATFORM}/${DEVICETREE}"
