@@ -25,8 +25,8 @@ diff -Naur a/drivers/clk/meson/g12a.c b/drivers/clk/meson/g12a.c
  		},
  		.rst = {
 diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
---- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-12-04 17:48:12.000000000 -0500
-+++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-12-05 23:57:43.508348475 -0500
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-12-11 17:15:18.000000000 -0500
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c	2022-12-12 03:50:42.174712562 -0500
 @@ -782,6 +782,11 @@
  	else
  		hdmi->mc_clkdis |= HDMI_MC_CLKDIS_AUDCLK_DISABLE;
@@ -39,26 +39,6 @@ diff -Naur a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c b/drivers/gpu/drm/bridge/
  }
  
  static u8 *hdmi_audio_get_eld(struct dw_hdmi *hdmi)
-@@ -2720,6 +2725,9 @@
- 	 * if supported. In any case the default RGB888 format is added
- 	 */
- 
-+	/* Default 8bit RGB fallback */
-+	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
-+
- 	if (max_bpc >= 16 && info->bpc == 16) {
- 		if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
- 			output_fmts[i++] = MEDIA_BUS_FMT_YUV16_1X48;
-@@ -2753,9 +2761,6 @@
- 	if (info->color_formats & DRM_COLOR_FORMAT_YCBCR444)
- 		output_fmts[i++] = MEDIA_BUS_FMT_YUV8_1X24;
- 
--	/* Default 8bit RGB fallback */
--	output_fmts[i++] = MEDIA_BUS_FMT_RGB888_1X24;
--
- 	*num_output_fmts = i;
- 
- 	return output_fmts;
 diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/panfrost_job.c
 --- a/drivers/gpu/drm/panfrost/panfrost_job.c	2022-12-04 17:48:12.000000000 -0500
 +++ b/drivers/gpu/drm/panfrost/panfrost_job.c	2022-12-05 23:57:43.484348476 -0500
