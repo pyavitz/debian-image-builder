@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# builder version
+BUILDER="5.1"
+
+# script
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	:;
 else
@@ -158,7 +163,7 @@ echo "echo -n '${TIMEZONE}' > /etc/timezone" >> tmp0
 echo "}" >> tmp0
 echo NAMESERVER1='"'${USER_NAMESERVER1}'"' >> tmp0
 echo NAMESERVER2='"'${USER_NAMESERVER2}'"' >> tmp0
-echo builder=5.1 >> tmp0
+echo builder=${BUILDER} >> tmp0
 echo '"' > tmp2
 echo '"' >> tmp2
 echo '"' >> tmp2
@@ -196,13 +201,27 @@ sed -i '56i### NAME SERVER' userdata.txt
 sed -i '59i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # customize your image
+custom_txt(){
+echo "# Boot Partition: true false" > custom.txt
+echo 'ENABLE_VFAT="false"' >> custom.txt
+echo "" >> custom.txt
+echo "# Root Filesystem Types: ext4 btrfs xfs" >> custom.txt
+echo 'FSTYPE="ext4"' >> custom.txt
+echo "" >> custom.txt
+echo "# UEFI Options: true false" >> custom.txt
+echo 'ENABLE_EFI="false"' >> custom.txt
+echo "" >> custom.txt
+echo "### DO NOT EDIT BELOW THIS LINE" >> custom.txt
+echo "# CUSTOM=${BUILDER}" >> custom.txt
+}
 if [[ -f "custom.txt" ]]; then
-	:;
+	if [[ `grep -w "CUSTOM=${BUILDER}" "custom.txt"` ]]; then
+		:;
+	else
+		custom_txt
+	fi
 else
-	echo "# filesystem types: ext4 btrfs xfs" > custom.txt
-	echo 'FSTYPE="ext4"' >> custom.txt
-	echo "# options: true false" >> custom.txt
-	echo 'ENABLE_EFI="false"' >> custom.txt
+	custom_txt
 fi
 
 # clear screen
