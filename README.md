@@ -95,9 +95,13 @@ petitboot:		# Enable boot option
 #### Customize image
 * custom.txt
 ```sh
-# filesystem types: ext4 btrfs xfs
+# Boot Partition: true false
+ENABLE_VFAT="false"
+
+# Root Filesystem Types: ext4 btrfs xfs
 FSTYPE="ext4"
-# options: true false
+
+# UEFI Options: true false
 ENABLE_EFI="false"
 ```
 
