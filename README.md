@@ -66,7 +66,7 @@ U-Boot:			# Supported: v2022.10
 Branch:			# Supported: 5.15 and current stable
 Build:			# Kernel build version number
 Menuconfig:		# Run uboot and kernel menuconfig
-Compiler:		# Defaults at gcc-10 
+Compiler:		# GNU Compiler Collection
 Crosscompile:		# 1 cross compile | 0 native compile
 Caching on:		# Ccache
 
