@@ -15,7 +15,7 @@ set -o pipefail
 set -o nounset
 
 if [ $networkmanager -eq 0 ]; then
-	if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
+	if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
 		# systemd-resolved breaks static ip when using ifupdown
 		# it will be disabled on jammy jellyfish
 		unlink /etc/resolv.conf;
@@ -72,13 +72,13 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} openresolv haveged ${NETWORKING} ${NETWORKING_EXTRA};
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
-	if [[ "$DISTRO_VERSION" == "kinetic" ]]; then
+	if [[ "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
 		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5 ${NETWORKING};
 	else
 		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
 	fi
 	if [ $networkmanager -eq 0 ]; then
-		if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
+		if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
 			# disable systemd-networkd and mask systemd-networkd-wait-online
 			systemctl disable systemd-networkd;
 			systemctl mask systemd-networkd-wait-online;
@@ -480,7 +480,7 @@ EOF
 fi
 
 # Remove zstd compression (not supported by vednor kernels)
-if [[ "$DISTRO" == "ubuntu" ]] && [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" ]]; then
+if [[ "$DISTRO" == "ubuntu" ]] && [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
 	if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
 		sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf
 	fi
