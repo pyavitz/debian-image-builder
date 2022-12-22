@@ -5,6 +5,7 @@ validation
 source lib/function/rootfs
 source board.txt > /dev/null 2>&1
 source userdata.txt > /dev/null 2>&1
+HOST_MACHINE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 if [[ -d "sysroot" ]]; then
 	make cleanup;
@@ -18,7 +19,7 @@ fi
 if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" ]]; then
 	${DISTRO}_keyring;
 fi
-if [[ `grep -w "Ubuntu" "/etc/os-release"` ]]; then
+if [[ "$HOST_MACHINE" == "Ubuntu" ]]; then
 	:;
 else
 	if [[ "$DISTRO" == "ubuntu" ]]; then
@@ -105,12 +106,15 @@ if [[ -d "${ROOT}" ]]; then
 	rm -fdr ${ROOT}
 fi
 
-if [[ -f "/usr/share/debootstrap/scripts/chimaera" ]]; then
-	rm -f /usr/share/debootstrap/scripts/chimaera;
-fi
-if [[ -f "/usr/share/debootstrap/scripts/daedalus" ]]; then
-	rm -f /usr/share/debootstrap/scripts/daedalus;
+if [[ "$HOST_MACHINE" == "Debian" || "$HOST_MACHINE" == "Ubuntu" ]]; then
+	if [[ -f "/usr/share/debootstrap/scripts/chimaera" ]]; then
+		rm -f /usr/share/debootstrap/scripts/chimaera;
+	fi
+	if [[ -f "/usr/share/debootstrap/scripts/daedalus" ]]; then
+		rm -f /usr/share/debootstrap/scripts/daedalus;
+	fi
 fi
 
 clear -x
+
 exit 0
