@@ -356,7 +356,7 @@ firstboot_service(){
 tee /etc/systemd/system/firstboot.service <<EOF
 [Unit]
 Description=Resize ROOTFS partition
-Before=local-fs-pre.target
+After=systemd-remount-fs.service sysinit.target local-fs.target
 ConditionPathExists=/usr/local/sbin/firstboot
 DefaultDependencies=no
 
@@ -368,7 +368,7 @@ StandardOutput=journal+console
 StandardError=journal+console
 
 [Install]
-RequiredBy=local-fs-pre.target
+WantedBy=multi-user.target
 EOF
 }
 
