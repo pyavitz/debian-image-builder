@@ -98,6 +98,14 @@ if [[ "$BOARD" == "rock5b" ]]; then
 		echo "linux" >> github.txt
 	fi
 fi
+if [[ "$BOARD" == "khadasedge2" ]]; then
+	if [[ "$FORCE_GITHUB" == "true" ]]; then
+		# force pulling from https://github.com/khadas/linux/
+		sed -i "12s/.*/VERSION="'"5.10.y-release-v1.0.0"'"/" userdata.txt
+		echo "khadas" > github.txt
+		echo "khadas-edges" >> github.txt
+	fi
+fi
 if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
 	JSON_FILE="https://kernel.org/releases.json"
 	STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
