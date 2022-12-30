@@ -9,8 +9,8 @@ Broadcom:       # Raspberry Pi 0W/2B/3B+/4B
 Rockchip:       # NanoPC-T4, Renegade, ROCK64 & ROCKPro64
 Samsung:        # Odroid XU4
 
-WIP:		# Cubietruck, Cubox-i, Banana Pi M5/P2 Zero, NanoPi R4S/R4SE/R5S
-		# Odroid C1/M1, Pinebook Pro & Radxa Rock5b
+WIP:		# Cubietruck, Cubox-i, Banana Pi M5/P2 Zero, Khadas Edge2
+		# NanoPi R4S/R4SE/R5S, Odroid C1/M1, Pinebook Pro & Radxa Rock5b
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Jammy Jellyfish
