@@ -2,6 +2,7 @@
 # DEBIAN IMAGE BUILDER: SYSTEM MENU INTERFACE
 # Description: SYSTEM MENU INTERFACE
 # Destination: /usr/local/bin/menu-config
+RELEASE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt;
 else
@@ -12,19 +13,16 @@ fi
 
 # functions
 supported_list(){
-if [[ "$BOARD" == "raspizero" || "$BOARD" == "raspi2" || "$BOARD" == "raspi3-32b" ]]; then
+if [[ "$BOARD" == "raspizero" || "$BOARD" == "raspi2" || "$BOARD" == "raspi3-32b" || "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
 	BOARD_PN="Raspberry Pi"
 	supported_oc=0
 	supported_mixer=0
 	fan_ctrl=0
-	supported_ha=0
-fi
-if [[ "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
-	BOARD_PN="Raspberry Pi"
-	supported_oc=0
-	supported_mixer=0
-	fan_ctrl=0
-	supported_ha=1
+	if [[ "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
+		supported_ha=1
+	else
+		supported_ha=0
+	fi
 fi
 if [[ "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" || "$BOARD" == "bananapim5" ]]; then
 	BOARD_PN="Meson SM1"
@@ -54,18 +52,15 @@ if [[ "$BOARD" == "radxazero" ]]; then
 	fan_ctrl=0
 	supported_ha=0
 fi
-if [[ "$BOARD" == "nanopct4" ]]; then
-	BOARD_PN="NanoPC-T4"
-	supported_oc=1
-	supported_mixer=0
-	fan_ctrl=1
-	supported_ha=0
-fi
-if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "rockpro64" ]]; then
+if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopct4" || "$BOARD" == "rockpro64" ]]; then
 	BOARD_PN="RK3399"
 	supported_oc=1
 	supported_mixer=0
-	fan_ctrl=0
+	if [[ "$BOARD" == "nanopct4" ]]; then
+		fan_ctrl=1
+	else
+		fan_ctrl=0
+	fi
 	supported_ha=0
 fi
 if [[ "$BOARD" == "renegade" || "$BOARD" == "rock64" ]]; then
@@ -89,7 +84,7 @@ if [[ "$BOARD" == "cuboxi" ]]; then
 	fan_ctrl=0
 	supported_ha=0
 fi
-if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" || "$BOARD" == "rock5b" ]]; then
+if [[ "$BOARD" == "khadasedge2" || "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" || "$BOARD" == "rock5b" ]]; then
 	BOARD_PN="RK35XX"
 	supported_oc=0
 	supported_mixer=0
@@ -346,11 +341,11 @@ while [ 1 ]
 do
 CHOICE=$(
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-whiptail --backtitle "Menu Interface: System Settings" --title "System Menu Config" --menu "" --nocancel 0 25 0 \
+whiptail --backtitle "${RELEASE}: System Settings" --title "System Menu Config" --menu "" --nocancel 0 25 0 \
 	"W)" "Wireless          Configure wireless network interface" \
 	"" "" \
-	"1)" "Password          Change the default password" \
-	"2)" "Hostname          Change the default hostname" \
+	"1)" "Password          Change user password" \
+	"2)" "Hostname          Change system hostname" \
 	"3)" "Keyboard          Change keyboard layout" \
 	"4)" "Locales           Change language settings" \
 	"5)" "Timezone          Change regional settings" \
@@ -369,9 +364,9 @@ case $CHOICE in
 	"W)")
 		clear -x
 		if [[ `command -v nmtui` ]]; then
-			sudo nmtui;
+			sudo nmtui
 		else
-			swh -m;
+			swh -m
 		fi
 		;;
 	"")
@@ -422,9 +417,9 @@ case $CHOICE in
 				if [[ $supported_ha -ne 1 ]]; then
 					whiptail --msgbox "    HA install not currently supported on this platform." 0 0;
 				elif (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
-					homeAssistant;
+					homeAssistant
 				else
-					whiptail --msgbox "    Hit enter to return to menu." 0 0;
+					whiptail --msgbox "    Hit enter to return to menu." 0 0
 				fi
 				;;
 			"E)")
@@ -442,7 +437,7 @@ case $CHOICE in
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
 			"FC)" "Fan Control              Set trip point" \
-			"ST)" "Setup Tasksel            Tool for selecting tasks for installation" \
+			"ST)" "Debconf                  Reconfigure ${RELEASE} configuration system" \
 			"RZ)" "Radxa Zero Rev 1.5       Wifi (cap SDIO speed)" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
@@ -457,52 +452,47 @@ case $CHOICE in
 					clear -x
 					supported_list
 					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
-						if [[ `grep -w "ID=debian" "/etc/os-release"` ]]; then
-							systemd_fanctrl > /dev/null 2>&1;
-							install_fanctrl > /dev/null 2>&1;
-							fan-ctrl -m;
+						if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
+							systemd_fanctrl > /dev/null 2>&1
+							install_fanctrl > /dev/null 2>&1
+							fan-ctrl -m
 						fi
-						if [[ `grep -w "ID=devuan" "/etc/os-release"` ]]; then
-							sysvinit_fanctrl > /dev/null 2>&1;
-							install_fanctrl > /dev/null 2>&1;
-							fan-ctrl -m;
-						fi
-						if [[ `grep -w "ID=ubuntu" "/etc/os-release"` ]]; then
-							systemd_fanctrl > /dev/null 2>&1;
-							install_fanctrl > /dev/null 2>&1;
-							fan-ctrl -m;
+						if [[ "$RELEASE" == "Devuan" ]]; then
+							sysvinit_fanctrl > /dev/null 2>&1
+							install_fanctrl > /dev/null 2>&1
+							fan-ctrl -m
 						fi
 					else
 						export NEWT_COLORS='root=,black'
-						whiptail --msgbox "    Your board is not supported." 0 0;
+						whiptail --msgbox "    Your board is not supported." 0 0
 					fi
 				else
 					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0;
+					whiptail --msgbox "    This requires a internet connection." 0 0
 				fi
 				;;
 			"ST)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					clear -x
-					echo -e "Running setup ...";
+					echo -e "Reconfiguring ...";
 					if [[ `command -v tasksel` ]]; then
 						:;
 					else
-						sudo apt update;
-						sudo apt install -y tasksel;
+						sudo apt update
+						sudo apt install -y tasksel
 					fi
-					sleep 1s;
-					sudo apt-get update;
-					sudo apt-get install --reinstall debconf;
-					sudo dpkg-reconfigure tasksel;
-					echo "";
-					echo -e "To use, run 'sudo tasksel --new-install' in a terminal";
+					sleep .75
+					sudo apt-get update
+					sudo apt-get install --reinstall debconf
+					sudo dpkg-reconfigure tasksel
 					echo ""
-					read -p "Press enter to continue.";
-					clear -x;
+					echo -e "To use tasksel, run 'sudo tasksel --new-install' in a terminal"
+					echo ""
+					read -p "Press enter to continue."
+					clear -x
 				else
 					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0;
+					whiptail --msgbox "    This requires a internet connection." 0 0
 				fi
 				;;
 			"RZ)")
@@ -550,18 +540,18 @@ case $CHOICE in
 	"")
 		;;
 	"U)")
-		MCU=`command -v menu-config-update`
 		MENUDIR="/usr/local/bin/"
-		if [ -f $MCU ]; then
-			sudo mv -f $MCU $MCU.orig > /dev/null 2>&1;
+		MCU="${MENUDIR}menu-config-update"
+		if [[ -f "$MCU" ]]; then
+			sudo mv -f $MCU $MCU.orig
 		fi
 		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config-update -P $MENUDIR
-		sleep 1s
+		sleep .75
 		sudo chmod +x $(command -v menu-config-update)
-		if [ -f $MCU ]; then
-			sudo rm -f $MCU.orig;
+		if [[ -f "$MCU" ]]; then
+			sudo rm -f $MCU.orig
 		else
-			sudo mv -f $MCU.orig $MCU > /dev/null 2>&1;
+			sudo mv -f $MCU.orig $MCU > /dev/null 2>&1
 		fi
 		menu-config-update
 		exec menu-config
