@@ -13,83 +13,28 @@ fi
 
 # functions
 supported_list(){
-if [[ "$BOARD" == "raspizero" || "$BOARD" == "raspi2" || "$BOARD" == "raspi3-32b" || "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
-	BOARD_PN="Raspberry Pi"
-	supported_oc=0
-	supported_mixer=0
-	fan_ctrl=0
-	if [[ "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
-		supported_ha=1
+DISCOVER=`echo $BOARD`
+if [[ "$DISCOVER" == "$BOARD" ]]; then
+	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk3328" ]]; then
+		supported_oc=1
 	else
-		supported_ha=0
+		supported_oc=0
 	fi
-fi
-if [[ "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" || "$BOARD" == "bananapim5" ]]; then
-	BOARD_PN="Meson SM1"
-	supported_oc=0
-	supported_mixer=1
-	fan_ctrl=0
-	supported_ha=1
-fi
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" ]]; then
-	BOARD_PN="Meson G12B"
-	supported_oc=1
-	supported_mixer=1
-	fan_ctrl=1
-	supported_ha=1
-fi
-if [[ "$BOARD" == "odroidxu4" ]]; then
-	BOARD_PN="Odroid XU4"
-	supported_oc=0
-	supported_mixer=0
-	fan_ctrl=1
-	supported_ha=1
-fi
-if [[ "$BOARD" == "radxazero" ]]; then
-	BOARD_PN="Radxa Zero"
-	supported_oc=1
-	supported_mixer=1
-	fan_ctrl=0
-	supported_ha=0
-fi
-if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopct4" || "$BOARD" == "rockpro64" ]]; then
-	BOARD_PN="RK3399"
-	supported_oc=1
-	supported_mixer=0
-	if [[ "$BOARD" == "nanopct4" ]]; then
+	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" || "$BOARD" == "bananapim5" || "$BOARD" == "radxazero" ]]; then
+		supported_mixer=1
+	else
+		supported_mixer=0
+	fi
+	if [[ "$BOARD" == "nanopct4" || "$BOARD" == "odroidxu4" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" ]]; then
 		fan_ctrl=1
 	else
 		fan_ctrl=0
 	fi
-	supported_ha=0
-fi
-if [[ "$BOARD" == "renegade" || "$BOARD" == "rock64" ]]; then
-	BOARD_PN="RK3328"
-	supported_oc=1
-	supported_mixer=0
-	fan_ctrl=0
-	supported_ha=0
-fi
-if [[ "$BOARD" == "cubietruck" ]]; then
-	BOARD_PN="Cubietruck"
-	supported_oc=1
-	supported_mixer=0
-	fan_ctrl=0
-	supported_ha=0
-fi
-if [[ "$BOARD" == "cuboxi" ]]; then
-	BOARD_PN="Cubox-i"
-	supported_oc=1
-	supported_mixer=0
-	fan_ctrl=0
-	supported_ha=0
-fi
-if [[ "$BOARD" == "khadasedge2" || "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" || "$BOARD" == "rock5b" ]]; then
-	BOARD_PN="RK35XX"
-	supported_oc=0
-	supported_mixer=0
-	fan_ctrl=0
-	supported_ha=0
+	if [[ "$BOARD" == "odroidxu4" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" || "$BOARD" == "bananapim5" || "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
+		supported_ha=1
+	else
+		supported_ha=0
+	fi
 fi
 }
 
@@ -124,9 +69,9 @@ sudo service tweaks restart
 
 overclocking(){
 if [ $supported_oc -eq 1 ] > /dev/null 2>&1; then
-	if (whiptail --backtitle "Board: $BOARD_PN" --title "$BOARD_PN" --yesno "   Overclock?" 0 0); then
+	if (whiptail --backtitle "Board: $DEFAULT_MOTD" --title "$DEFAULT_MOTD" --yesno "   Overclock?" 0 0); then
 		echo ""
-		echo -e "Overclocking: $BOARD_PN ";
+		echo -e "Overclocking: $DEFAULT_MOTD ";
 		echo "";
 		echo -en "Running service: "
 		overclock > /dev/null 2>&1;
