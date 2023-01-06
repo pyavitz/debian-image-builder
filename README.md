@@ -163,7 +163,7 @@ DNS=""				# Your preferred dns
 For headless use: ssh user@ipaddress
 ```
 #### System menu config (`menu-config`)
-<img src="https://i.imgur.com/xLdvDCV.png" alt="Menu Interface: System Settings" />
+<img src="https://i.imgur.com/A3rlsD2.png" alt="Menu Interface: System Settings" />
 
 ---
 
