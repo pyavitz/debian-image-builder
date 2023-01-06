@@ -50,7 +50,7 @@ sleep 1s
 mount "${ROOTFS}" p1
 p1_uuid
 echo ""
-extlinux
+extlinux > /dev/null 2>&1
 sleep 3s
 echo ""
 umount p1
@@ -94,17 +94,19 @@ p2_uuid
 echo ""
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	if [[ "$FAMILY" == "broadcom" ]]; then
-		brcm_extlinux
-		brcm_config
+		brcm_extlinux > /dev/null 2>&1
 	else
-		extlinux
+		extlinux > /dev/null 2>&1
 	fi
 fi
+if [[ "$FAMILY" == "broadcom" ]]; then
+	brcm_config > /dev/null 2>&1
+fi
 if [[ "$PETITBOOT" == "true" ]]; then
-	odroid_bootcmd
+	odroid_bootcmd > /dev/null 2>&1
 fi
 if [[ "$BOOTINI" == "true" ]] && [[ "$BOARD" == "odroidc1" ]]; then
-	odroid_bootini
+	odroid_bootini > /dev/null 2>&1
 fi
 echo ""
 sleep 3s
