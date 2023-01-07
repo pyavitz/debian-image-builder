@@ -1,6 +1,11 @@
 #!/bin/bash
 
-source /etc/opt/board.txt
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+fi
+if [[ -f "/boot/useraccount.txt" ]]; then
+	. /boot/useraccount.txt
+fi
 RELEASE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 create_user(){
@@ -69,9 +74,8 @@ while true; do
 done
 }
 
-if [[ -f "/boot/useraccount.txt" ]]; then
+if [[ "$ENABLE" == "true" ]]; then
 	# headless
-	source /boot/useraccount.txt
 	echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 	echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 	echo ""

@@ -130,18 +130,20 @@ emmc=0
 ```
 ## Usage
 * Review the [Wiki](https://github.com/pyavitz/debian-image-builder/wiki)
-#### /boot/rename_to_useraccount.txt
-* Headless: rename file to useraccount.txt and fill in the variables
-* Headful: don't rename file & get prompted to create a user account
+#### /boot/useraccount.txt
+* Headless: ENABLE="true" and fill in the variables (recommended)
+* Headful: ENABLE="false" and get prompted to create a user account
 ```sh
-NAME=""
-USERNAME=""
-PASSWORD=""
+ENABLE="false"			# Enable service
+NAME=""				# Your name
+USERNAME=""			# Username
+PASSWORD=""			# Password
 ```
 
-#### /boot/rename_to_credentials.txt
+#### /boot/credentials.txt
 ```sh
-Rename file to credentials.txt and input your wifi information.
+Set to ENABLE="true" and input your wifi information.
+ENABLE="false"			# Enable service
 
 SSID=""				# Service set identifier
 PASSKEY=""			# Wifi password
