@@ -98,6 +98,7 @@ fi
 }
 
 rockchip_bsp(){
+# RK3588
 if [[ "$BOARD" == "khadasedge2" ]]; then
 	if [[ "$FORCE_GITHUB" == "true" ]]; then
 		# force pulling from https://github.com/khadas/linux/
@@ -120,6 +121,16 @@ if [[ "$BOARD" == "rock5b" ]]; then
 		sed -i "12s/.*/VERSION="'"5.10-gen-rkr3.4"'"/" userdata.txt
 		echo "radxa" > github.txt
 		echo "linux" >> github.txt
+	fi
+fi
+# RK3568
+if [[ "$BOARD" == "nanopir5s" ]]; then
+	if [[ "$FORCE_GITHUB" == "true" ]]; then
+		# force pulling https://github.com/friendlyarm/kernel-rockchip/
+		LINUX_DEFCONFIG="nanopi-r5s_defconfig" # vendor
+		sed -i "12s/.*/VERSION="'"v5.10.y_opt"'"/" userdata.txt
+		echo "friendlyarm" > github.txt
+		echo "nanopi5" >> github.txt
 	fi
 fi
 if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
