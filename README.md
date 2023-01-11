@@ -11,7 +11,7 @@ Samsung:        # Odroid XU4
 
 WIP:		# Cubietruck, Cubox-i, Banana Pi M5/P2 Zero, Khadas Edge2
 		# NanoPi R4S/R4SE/R5S, Odroid C1/M1, OrangePi 5, Pinebook Pro
-		# and Radxa Rock5b
+		# Radxa Rock5b and X96 Air
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Jammy Jellyfish

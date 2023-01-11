@@ -101,6 +101,45 @@ if [ $rtl8811cu -eq 1 ]; then
 fi
 }
 
+# RTL88X2CS
+rtl88x2cs_download(){
+if [[ -d "rtl88x2cs" ]]; then
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} ";
+	cd rtl88x2cs;
+	git config pull.rebase false;
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} ";
+	git pull -q;
+	cd ..;
+else
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} ";
+	git clone -q https://github.com/jethome-ru/rtl88x2cs.git rtl88x2cs;
+fi
+}
+
+rtl88x2cs(){
+rm -fdr drivers/net/wireless/rtl88x2cs
+mkdir -p drivers/net/wireless/rtl88x2cs
+cp -R ../rtl88x2cs/{core,hal,include,os_dep,platform,halmac.mk,ifcfg-wlan0,rtl8822c.mk,runwpa,wlan0dhcp} drivers/net/wireless/rtl88x2cs
+cp -R ../rtl88x2cs/Makefile drivers/net/wireless/rtl88x2cs/Makefile
+cp -R ../rtl88x2cs/Kconfig drivers/net/wireless/rtl88x2cs/Kconfig
+sed -i 's/---help---/help/g' drivers/net/wireless/rtl88x2cs/Kconfig
+sed -i "s/include \/rtl8822c.mk/include \/drivers\/net\/wireless\/rtl88x2cs\/rtl8822c.mk/" drivers/net/wireless/rtl88x2cs/Makefile
+sed -i "s/^CONFIG_RTW_DEBUG.*/CONFIG_RTW_DEBUG = n/" drivers/net/wireless/rtl88x2cs/Makefile
+echo "obj-\$(CONFIG_RTL8822CS) += rtl88x2cs/" >> drivers/net/wireless/Makefile
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl88x2cs\/Kconfig"' drivers/net/wireless/Kconfig
+}
+
+rtl88x2cs_select(){
+if [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	echo "CONFIG_RTL8822CS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG};
+fi
+}
+
+rtl88x2cs_module(){
+if [[ "$BOARD" == "x96air" ]]; then
+	rtl88x2cs_select;
+fi
+}
 
 # RTL88X2BU
 # Other sources
@@ -220,13 +259,13 @@ fi
 }
 
 rtl8189es_module(){
-if [[ "$BOARD" == "opir1" ]]; then
+if [[ "$BOARD" == "orangepir1" ]]; then
 	rtl8189es_select;
 fi
 }
 
 extra_wireless(){
-if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rtl8188eu -eq 1 ] || [[ "$BOARD" == "opir1" ]]; then
+if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rtl8188eu -eq 1 ] || [[ "$BOARD" == "orangepir1" ]] || [[ "$BOARD" == "x96air" ]]; then
 	echo ""
 	if [ $rtl8812au -eq 1 ]; then
 		echo -en "${WHT}Realtek 88XXAU${FIN} ";
@@ -248,9 +287,14 @@ if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rt
 		rtl8188eu_download;
 		echo_bdone;
 	fi
-	if [[ "$BOARD" == "opir1" ]]; then
+	if [[ "$BOARD" == "orangepir1" ]]; then
 		echo -en "${WHT}Realtek 8189ES${FIN} ";
 		rtl8189es_download;
+		echo_bdone;
+	fi
+	if [[ "$BOARD" == "x96air" ]]; then
+		echo -en "${WHT}Realtek 88X2CS${FIN} ";
+		rtl88x2cs_download;
 		echo_bdone;
 	fi
 fi
