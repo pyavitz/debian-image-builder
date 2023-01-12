@@ -151,14 +151,14 @@ PASSKEY=""			# Wifi password
 COUNTRYCODE=""			# Your country code
 
 # set static ip (ifupdown)
-MANUAL="n"			# Set to y to enable a static ip
+MANUAL="false"			# Set to true to enable a static ip
 IPADDR=""			# Static ip address
 NETMASK=""			# Your Netmask
 GATEWAY=""			# Your Gateway
 NAMESERVERS=""			# Your preferred dns
 
 # set static ip (network-manager)
-MANUAL="n"			# Set to y to enable a static ip
+MANUAL="false"			# Set to true to enable a static ip
 IPADDR=""			# Static ip address
 GATEWAY=""			# Your Gateway
 DNS=""				# Your preferred dns
