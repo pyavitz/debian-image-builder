@@ -186,6 +186,12 @@ else
 	rm -f /root/{99-uefi,99-uefi-brcm};
 fi
 
+# Alsa asound.state file
+if [[ -f "/root/asound.state" ]]; then
+	mkdir -p /var/lib/alsa
+	mv -f /root/asound.state /var/lib/alsa/asound.state
+fi
+
 # LED triggers
 if [[ -f "/root/led-trigger" ]]; then
 	mv -f /root/led-trigger /usr/local/sbin/led-trigger;
@@ -347,7 +353,7 @@ if [[ "$DISTRO" == "kali" ]] && [[ -f "/root/kali-tweaks" ]]; then
 fi
 
 # Clean
-rm -f {*-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,bootcmd,add-overlay,smon}
+rm -f {asound.state,*-tweaks,nanopi-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,bootcmd,add-overlay,smon}
 
 # Move mc skins
 mkdir -p /usr/share/mc/skins
