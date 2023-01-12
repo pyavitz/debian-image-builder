@@ -284,6 +284,7 @@ rtl8821cu_conf
 
 ifupdown-credentials(){
 if [ -f /root/ifupdown.credentials ]; then
+	CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 	mv -f /root/ifupdown.credentials /usr/local/bin/credentials
 	chmod +x /usr/local/bin/credentials
 	chown root:root /usr/local/bin/credentials
@@ -301,11 +302,16 @@ if [ -f /root/ifupdown.credentials ]; then
 	echo 'NETMASK=""' >> /boot/credentials.txt
 	echo 'GATEWAY=""' >> /boot/credentials.txt
 	echo 'NAMESERVERS=""' >> /boot/credentials.txt
+	echo "" >> /boot/credentials.txt
+	echo "# change hostname" >> /boot/credentials.txt
+	echo 'CHANGE="false"' >> /boot/credentials.txt
+	echo HOSTNAME='"'$CURRENT_HOSTNAME'"' >> /boot/credentials.txt
 fi
 }
 
 networkmanager-credentials(){
 if [ -f /root/networkmanager.credentials ]; then
+	CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 	mv -f /root/networkmanager.credentials /usr/local/bin/credentials
 	chmod +x /usr/local/bin/credentials
 	chown root:root /usr/local/bin/credentials
@@ -322,5 +328,9 @@ if [ -f /root/networkmanager.credentials ]; then
 	echo 'IPADDR=""' >> /boot/credentials.txt
 	echo 'GATEWAY=""' >> /boot/credentials.txt
 	echo 'DNS=""' >> /boot/credentials.txt
+	echo "" >> /boot/credentials.txt
+	echo "# change hostname" >> /boot/credentials.txt
+	echo 'CHANGE="false"' >> /boot/credentials.txt
+	echo HOSTNAME='"'$CURRENT_HOSTNAME'"' >> /boot/credentials.txt
 fi
 }
