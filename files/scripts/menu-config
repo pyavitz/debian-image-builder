@@ -11,6 +11,9 @@ else
 	exit 0
 fi
 
+# developer debug switch
+VERBOSITY="0"
+
 # functions
 supported_list(){
 DISCOVER=`echo $BOARD`
@@ -56,9 +59,10 @@ if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "banan
 fi
 # Save
 sudo alsactl store
-# Uncomment to debug
-#echo ""
-#read -p "Press enter to continue."
+if [ $VERBOSITY -eq 1 ]; then
+	echo ""
+	read -p "Press enter to continue."
+fi
 }
 
 amlogic_analog(){
@@ -72,9 +76,10 @@ sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
 sudo amixer -c 0 set 'ACODEC' '85%'
 # Save
 sudo alsactl store
-# Uncomment to debug
-#echo ""
-#read -p "Press enter to continue."
+if [ $VERBOSITY -eq 1 ]; then
+	echo ""
+	read -p "Press enter to continue."
+fi
 }
 
 amlogic_audio(){
@@ -252,8 +257,6 @@ homeAssistant(){
 clear -x
 echo "Installing Home Assistant ..."
 
-# developer debug switch
-VERBOSITY="0"
 if [ $VERBOSITY -eq 1 ]; then
 	set -x
 fi
