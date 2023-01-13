@@ -21,9 +21,14 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 		supported_oc=0
 	fi
 	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" || "$BOARD" == "bananapim5" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
-		supported_mixer=1
+		hdmi_audio=1
 	else
-		supported_mixer=0
+		hdmi_audio=0
+	fi
+	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+		jack_audio=1
+	else
+		jack_audio=0
 	fi
 	if [[ "$BOARD" == "nanopct4" || "$BOARD" == "odroidxu4" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" ]]; then
 		fan_ctrl=1
@@ -38,28 +43,87 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 fi
 }
 
-amlogic_audio(){
-if [ $supported_mixer -eq 1 ] > /dev/null 2>&1; then
-	echo "";
-	echo "Running audio setup ...";
-	sleep 1s;
-	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1';
-	sudo amixer sset 'FRDDR_A SRC 1 EN' 'on';
-	sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0';
-	sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B';
-	sudo amixer sset 'TOHDMITX' 'on';
-	sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2';
-	sudo amixer sset 'FRDDR_B SRC 1 EN' 'on';
-	sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3';
-	sudo amixer sset 'FRDDR_C SRC 1 EN' 'on';
-	sudo alsactl store;
-	echo "Done.";
-	echo "";
-	read -p "Press enter to continue.";
-else
-	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
-	whiptail --msgbox "    Your board is not supported." 0 0;
+amlogic_hdmi(){
+sudo amixer -c 0 set 'TOHDMITX' 'on'
+sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
+sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
+sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
+sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
+sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+	sudo amixer -c 0 set 'ACODEC' '85%'
 fi
+# Save
+sudo alsactl store
+# Uncomment to debug
+#echo ""
+#read -p "Press enter to continue."
+}
+
+amlogic_analog(){
+sudo amixer -c 0 set 'TOACODEC OUT EN' 'on'
+sudo amixer -c 0 set 'TOACODEC SRC' 'I2S B'
+sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
+sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
+sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
+sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
+sudo amixer -c 0 set 'ACODEC' '85%'
+# Save
+sudo alsactl store
+# Uncomment to debug
+#echo ""
+#read -p "Press enter to continue."
+}
+
+amlogic_audio(){
+while [ 1 ]
+do
+SOUND_MIXER=$(
+export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+whiptail --backtitle "AMLOGIC: Audio Output" --title "Choose" --menu "" --nocancel 0 0 0 \
+	"1)" "HDMI                      HDMI Audio" \
+	"2)" "Analog                    3.5mm Jack Audio" \
+	"E)" "Exit .." 3>&2 2>&1 1>&3
+)
+case $SOUND_MIXER in
+	"1)")
+		supported_list
+		if [ $hdmi_audio -eq 1 ]; then
+			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+			if (whiptail --backtitle "HDMI AUDIO" --title "Confirm" --yesno "    Apply HDMI Audio Settings?" 0 0); then
+				amlogic_hdmi
+				whiptail --backtitle "HDMI AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0;
+			else
+				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+			fi
+		else
+			export NEWT_COLORS='root=,black'
+			whiptail --msgbox "    Your board is not supported." 0 0
+		fi
+		;;
+	"2)")
+		supported_list
+		if [ $jack_audio -eq 1 ]; then
+			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+			if (whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirm" --yesno "    Apply Analog Audio Settings?" 0 0); then
+				amlogic_analog
+				whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0;
+			else
+				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+			fi
+		else
+			export NEWT_COLORS='root=,black'
+			whiptail --msgbox "    Your board is not supported." 0 0
+		fi
+		;;
+	"E)")
+		clear -x
+		break
+		;;
+	esac
+done
 }
 
 overclock(){
@@ -194,19 +258,23 @@ if [ $VERBOSITY -eq 1 ]; then
 	set -x
 fi
 
-if [[ "$FAMILY" == "amlogic" ]]; then
-	# Make sure sound is enabled on N2+
-	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
-	sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
-	sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
-	sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
-	sudo amixer sset 'TOHDMITX' 'on'
-	sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
-	sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
-	sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
-	sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
-	sudo alsactl store
+if [ $hdmi_audio -eq 1 ]; then
+	amlogic_hdmi
 fi
+
+#if [[ "$FAMILY" == "amlogic" ]]; then
+#	# Make sure sound is enabled on N2+
+#	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
+#	sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
+#	sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
+#	sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
+#	sudo amixer sset 'TOHDMITX' 'on'
+#	sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
+#	sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
+#	sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
+#	sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
+#	sudo alsactl store
+#fi
 
 # install docker
 curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg

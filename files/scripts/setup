@@ -9,15 +9,17 @@ else
 fi
 
 audio_mixer(){
-sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
-sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
-sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
-sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
-sudo amixer sset 'TOHDMITX' 'on'
-sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
-sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
-sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
-sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
+sudo amixer -c 0 set 'TOHDMITX' 'on'
+sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
+sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
+sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
+sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
+sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+	sudo amixer -c 0 set 'ACODEC' '85%'
+fi
+# Save
 sudo alsactl store
 echo "Done."
 echo ""
