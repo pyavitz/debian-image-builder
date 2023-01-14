@@ -208,6 +208,9 @@ fi
 if [[ `ls ../../${UPATCHESALL}/*.patch` ]] > /dev/null 2>&1; then
 	for i in ../../${UPATCHESALL}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
 fi
+# clean
+if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
+if [[ `find . -name '*.rej'` ]]; then 	find . -name '*.rej' -delete; fi
 }
 
 linux_patching(){
@@ -224,7 +227,12 @@ if [[ ! -z $REPO_KERNEL ]]; then
 else
 	dryrun; check; apply; user_patches;
 fi
+# clean
+if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
+if [[ `find . -name '*.rej'` ]]; then 	find . -name '*.rej' -delete; fi
+# change some of the data types to userspace patch
 cp -f ../../packaging/headers-byteshift.patch headers-byteshift.patch
+# firmware
 if [[ "$BOARD" == "odroidxu4" ]] && [[ -e "../../files/firmware/edid" ]]; then
 	mkdir -p firmware
 	cp -fr ../../files/firmware/edid firmware/;
