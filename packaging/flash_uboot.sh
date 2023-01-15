@@ -9,6 +9,15 @@ if [ $VERBOSITY -eq 1 ]; then
 	set -x
 fi
 
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+fi
+
+if [[ "$PETITBOOT" == "true" ]]; then
+	echo -e "Petitboot is not supported by this script"
+	exit 0
+fi
+
 # check privilege
 if [ "$USER" != "root" ]; then
 	echo -e "Please run this as root or with sudo privileges."
