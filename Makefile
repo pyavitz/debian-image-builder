@@ -81,7 +81,7 @@ help:
 	@echo ""
 	@echo "  WIP:        cubietruck cuboxi bananapim5 bananapip2zero khadasedge2"
 	@echo "              nanopir4s nanopir4se nanopir5s odroidc1 odroidm1 orangepi5"
-	@echo "              pinebookpro rock5b x96air"
+	@echo "              pinebookpro rock5b"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install x86_64 dependencies"

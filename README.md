@@ -3,15 +3,15 @@
 
 ## Boards
 ```sh
-Allwinner:      # NanoPi M1/NEO/Plus2, OrangePi One/PC/R1 & Tritium
-Amlogic:        # Le Potato, Odroid C4/HC4/N2/N2+ & Radxa Zero
+Allwinner:      # NanoPi M1/NEO/Plus2, OrangePi One/PC/R1 and Tritium
+Amlogic:        # Le Potato, Odroid C4/HC4/N2/N2+ and Radxa Zero
 Broadcom:       # Raspberry Pi 0W/2B/3B+/4B
-Rockchip:       # NanoPC-T4, Renegade, ROCK64 & ROCKPro64
+Rockchip:       # NanoPC-T4, Renegade, ROCK64 and ROCKPro64
 Samsung:        # Odroid XU4
 
 WIP:		# Cubietruck, Cubox-i, Banana Pi M5/P2 Zero, Khadas Edge2
 		# NanoPi R4S/R4SE/R5S, Odroid C1/M1, OrangePi 5, Pinebook Pro
-		# Radxa Rock5b and X96 Air
+		# and Radxa Rock5b
 ```
 
 ### Dependencies for Debian Bullseye and Ubuntu Jammy Jellyfish
