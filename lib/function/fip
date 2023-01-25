@@ -3,14 +3,19 @@
 # DOWNLOAD
 amlogic-boot-fips(){
 FIPURL="https://github.com/pyavitz/debian-image-builder/releases/download/amlogic-boot-fip"
+if [[ -f "amlogic-boot-fip-master.sha256" ]]; then
+	rm -f amlogic-boot-fip-master.sha256
+	wget -cq ${FIPURL}/amlogic-boot-fip-master.sha256
+else
+	wget -cq ${FIPURL}/amlogic-boot-fip-master.sha256
+fi
 if [[ -f "amlogic-boot-fip-master.tar.gz" ]] && [[ -f "amlogic-boot-fip-master.sha256" ]] && [[ `sha256sum --check amlogic-boot-fip-master.sha256 | grep "OK"` ]]; then
 	echo -en "${WHT}amlogic-boot-fip-master${FIN} "
 	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
 else
-	rm -f {amlogic-boot-fip-master.sha256,amlogic-boot-fip-master.tar.gz}
+	rm -f amlogic-boot-fip-master.tar.gz
 	echo -en "${WHT}amlogic-boot-fip-master${FIN} "
 	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-	wget -cq ${FIPURL}/amlogic-boot-fip-master.sha256
 	aria2c -q ${FIPURL}/amlogic-boot-fip-master.tar.gz
 	echo_bdone
 fi
