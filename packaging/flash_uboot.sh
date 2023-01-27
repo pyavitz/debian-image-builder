@@ -13,6 +13,11 @@ if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
 fi
 
+# unsupported
+if [[ "$BOARD" == "odroidc1" || "$BOARD" == "x96air" ]]; then
+	echo -e "The ${DEFAULT_MOTD} is not supported by this script"
+	exit 0
+fi
 if [[ "$PETITBOOT" == "true" ]]; then
 	echo -e "Petitboot is not supported by this script"
 	exit 0
