@@ -28,6 +28,8 @@ KERNEL=sudo ./scripts/linux
 IMG=./scripts/stage1
 IMAGE=sudo ./scripts/stage1
 STG2=./scripts/stage2
+XUSB=./scripts/usbboot
+USBBOOT=sudo ./scripts/usbboot
 
 # dependencies
 CCOMPILE=./scripts/.ccompile
@@ -65,6 +67,12 @@ define create_rootfs
 	@chmod +x ${RFSX}
 	@${ROOTFS}
 endef 
+
+define build_usbboot
+	@${BOARDS}
+	@chmod +x ${XUSB}
+	@${USBBOOT}
+endef
 
 # USAGE
 help:
@@ -153,6 +161,10 @@ all:
 	$(call create_rootfs)
 	# Creating image
 	$(call build_image)
+
+usbboot:
+	# Creating image
+	$(call build_usbboot)
 
 # MISCELLANEOUS
 menu: 

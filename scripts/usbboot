@@ -1,0 +1,74 @@
+#!/bin/bash
+source lib/source
+validation
+source board.txt
+source userdata.txt
+source lib/function/${FAMILY}
+
+if [[ "$PLATFORM" == "amlogic" ]]; then
+	:;
+else
+	echo "${PLATFORM} is not supported."
+	exit 0
+fi
+
+if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
+	:;
+else
+	echo -e "Missing u-boot package"
+	exit 0
+fi
+
+P_BOOT="p1"
+IMAGE_FOLDER="img/"
+USB_BOOT_IMAGE="${BOARD}-usb-boot.img"
+BOOT_LABEL="BOOT"
+BOOTFS="mkfs.vfat -n"
+if [[ -f "$USB_BOOT_IMAGE" ]]; then
+	rm -f $USB_BOOT_IMAGE
+fi
+echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
+echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
+mkdir -p "$IMAGE_FOLDER"
+
+run_usbboot(){
+truncate -s 48MB "${IMAGE_FOLDER}${USB_BOOT_IMAGE}"
+echo -e "o
+n
+p
+1
+${OFFSET}
+a
+t
+b
+93749
+
+p
+w" | fdisk "${IMAGE_FOLDER}${USB_BOOT_IMAGE}"
+IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${USB_BOOT_IMAGE})"
+IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
+MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${IMAGE_LOOP_DEV_BOOT}"
+partprobe "${IMAGE_LOOP_DEV}"
+mkdir -p ${P_BOOT}
+$MAKE_BOOTFS
+mount "${IMAGE_LOOP_DEV_BOOT}" ${P_BOOT}
+flash_uboot
+sync
+cp -f files/boot/usbboot.cmd p1/boot.cmd
+mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr
+umount ${P_BOOT}
+losetup -d "${IMAGE_LOOP_DEV}"
+mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}";
+rmdir "${IMAGE_FOLDER}";
+rmdir p1
+echo ""
+}
+
+if [ $verbose -eq 1 ]; then
+	run_usbboot
+else
+	run_usbboot > /dev/null 2>&1
+fi
+
+ls -ls $USB_BOOT_IMAGE
+exit 0
