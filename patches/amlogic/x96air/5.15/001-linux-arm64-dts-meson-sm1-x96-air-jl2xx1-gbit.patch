@@ -25,8 +25,8 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
 --- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-27 13:40:36.663725918 -0500
-@@ -0,0 +1,224 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-30 07:06:23.927634676 -0500
+@@ -0,0 +1,251 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -151,6 +151,27 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +			};
 +		};
 +	};
++
++	vddgpu: regulator-vddgpu {
++		compatible = "regulator-fixed";
++		regulator-name = "mali";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		vin-supply = <&ao_5v>;
++		regulator-always-on;
++	};
++
++	openvfd {
++		compatible = "open,vfd";
++		dev_name = "openvfd";
++		status = "okay";
++ 	};
++};
++
++&vddcpu {
++	regulator-min-microvolt = <721000>;
++	regulator-max-microvolt = <1022000>;
++	pwms = <&pwm_AO_cd 1 1250 0>;
 +};
 +
 +&acodec {
@@ -244,16 +265,22 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +
 +	bluetooth {
 +		compatible = "realtek,rtl8822cs-bt";
-+		max-speed = <2000000>;
++		max-speed = <1500000>;
 +		clocks = <&wifi32k>;
 +		clock-names = "lpo";
 +		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
 +		host-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
 +	};
 +};
++
++&mali {
++	mali-supply=<&vddgpu>;
++};
 --- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-27 13:26:03.099265527 -0500
-@@ -0,0 +1,245 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-30 07:04:54.255417887 -0500
+@@ -0,0 +1,272 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -378,6 +405,27 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +			};
 +		};
 +	};
++
++	vddgpu: regulator-vddgpu {
++		compatible = "regulator-fixed";
++		regulator-name = "mali";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		vin-supply = <&ao_5v>;
++		regulator-always-on;
++	};
++
++	openvfd {
++		compatible = "open,vfd";
++		dev_name = "openvfd";
++		status = "okay";
++ 	};
++};
++
++&vddcpu {
++	regulator-min-microvolt = <721000>;
++	regulator-max-microvolt = <1022000>;
++	pwms = <&pwm_AO_cd 1 1250 0>;
 +};
 +
 +&acodec {
@@ -492,12 +540,18 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +
 +	bluetooth {
 +		compatible = "realtek,rtl8822cs-bt";
-+		max-speed = <2000000>;
++		max-speed = <1500000>;
 +		clocks = <&wifi32k>;
 +		clock-names = "lpo";
 +		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
 +		host-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
 +	};
++};
++
++&mali {
++	mali-supply=<&vddgpu>;
 +};
 --- /dev/null	2023-01-12 15:04:20.932940098 -0500
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-15 08:50:43.052517162 -0500

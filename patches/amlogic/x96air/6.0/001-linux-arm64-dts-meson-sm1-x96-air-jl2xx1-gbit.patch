@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
 --- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2022-12-31 07:33:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-19 22:12:19.567341626 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-30 07:02:02.300696612 -0500
 @@ -171,16 +171,15 @@
  				     "snps,dwmac";
  			reg = <0x0 0xff3f0000 0x0 0x10000>,
@@ -22,8 +22,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot
  
  			mdio0: mdio {
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-12 06:00:49.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-27 07:26:17.236282364 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2022-12-31 07:33:12.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-30 07:02:02.301696606 -0500
 @@ -80,6 +80,15 @@
  		regulator-always-on;
  	};
@@ -50,8 +50,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/
  
  	non-removable;
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-12 06:00:49.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-27 13:40:36.663725918 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2022-12-31 07:33:12.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-30 07:06:23.927634676 -0500
 @@ -7,20 +7,34 @@
  /dts-v1/;
  
@@ -111,7 +111,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,22 +79,56 @@
+@@ -53,20 +79,75 @@
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -159,18 +159,37 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +				sound-dai = <&acodec>;
 +			};
 +		};
++	};
++
++	vddgpu: regulator-vddgpu {
++		compatible = "regulator-fixed";
++		regulator-name = "mali";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		vin-supply = <&ao_5v>;
++		regulator-always-on;
  	};
- };
- 
++
++	openvfd {
++		compatible = "open,vfd";
++		dev_name = "openvfd";
++		status = "okay";
++ 	};
++};
++
++&vddcpu {
++	regulator-min-microvolt = <721000>;
++	regulator-max-microvolt = <1022000>;
++	pwms = <&pwm_AO_cd 1 1250 0>;
++};
++
 +&acodec {
 +	AVDD-supply = <&vddao_1v8>;
 +	status = "okay";
-+};
-+
- &arb {
- 	status = "okay";
  };
-@@ -103,10 +163,62 @@
+ 
+ &arb {
+@@ -103,10 +184,68 @@
  	status = "okay";
  };
  
@@ -226,16 +245,22 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +
 +	bluetooth {
 +		compatible = "realtek,rtl8822cs-bt";
-+		max-speed = <2000000>;
++		max-speed = <1500000>;
 +		clocks = <&wifi32k>;
 +		clock-names = "lpo";
 +		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
 +		host-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
 +	};
 +};
++
++&mali {
++	mali-supply=<&vddgpu>;
++};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-12 06:00:49.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-27 13:26:03.099265527 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2022-12-31 07:33:12.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-30 07:04:54.255417887 -0500
 @@ -7,20 +7,34 @@
  /dts-v1/;
  
@@ -295,7 +320,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,22 +79,56 @@
+@@ -53,20 +79,75 @@
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -344,17 +369,36 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +			};
 +		};
  	};
- };
- 
++
++	vddgpu: regulator-vddgpu {
++		compatible = "regulator-fixed";
++		regulator-name = "mali";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		vin-supply = <&ao_5v>;
++		regulator-always-on;
++	};
++
++	openvfd {
++		compatible = "open,vfd";
++		dev_name = "openvfd";
++		status = "okay";
++ 	};
++};
++
++&vddcpu {
++	regulator-min-microvolt = <721000>;
++	regulator-max-microvolt = <1022000>;
++	pwms = <&pwm_AO_cd 1 1250 0>;
++};
++
 +&acodec {
 +	AVDD-supply = <&vddao_1v8>;
 +	status = "okay";
-+};
-+
- &arb {
- 	status = "okay";
  };
-@@ -82,7 +142,7 @@
+ 
+ &arb {
+@@ -82,7 +163,7 @@
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
@@ -363,7 +407,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  	phy-handle = <&external_phy>;
  
  	rx-internal-delay-ps = <800>;
-@@ -90,7 +150,6 @@
+@@ -90,7 +171,6 @@
  
  &ext_mdio {
  	external_phy: ethernet-phy@0 {
@@ -371,7 +415,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  		reg = <0>;
  		max-speed = <1000>;
  
-@@ -104,6 +163,7 @@
+@@ -104,6 +184,7 @@
  	};
  };
  
@@ -379,7 +423,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  &frddr_a {
  	status = "okay";
  };
-@@ -124,10 +184,62 @@
+@@ -124,10 +205,68 @@
  	status = "okay";
  };
  
@@ -435,10 +479,16 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +
 +	bluetooth {
 +		compatible = "realtek,rtl8822cs-bt";
-+		max-speed = <2000000>;
++		max-speed = <1600000>;
 +		clocks = <&wifi32k>;
 +		clock-names = "lpo";
 +		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
 +		host-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
 +	};
++};
++
++&mali {
++	mali-supply=<&vddgpu>;
 +};
