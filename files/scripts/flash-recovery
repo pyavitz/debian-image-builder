@@ -12,6 +12,18 @@ else
 	echo "This script is not supported."
 	exit 0
 fi
+if [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; then
+	V_UBOOT="/usr/lib/u-boot/vendor-u-boot.bin"
+else
+	echo "No vendor u-boot binary available."
+	exit 0
+fi
+if [[ `lsblk | grep boot0` ]]; then
+	MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
+else
+	echo "Did not detect an eMMC."
+	exit 0
+fi
 
 STORE="/etc/opt"
 ROOTFS=`findmnt -v -n -o SOURCE /`
@@ -47,8 +59,8 @@ if [[ "$BOARD" == "x96air" ]] && [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; t
 	echo OLD_PARTUUID='"'$CUR_PARTUUID'"' > ${STORE}/part-uuid.txt
 	echo ""
 	echo "Flashing Vendor U-Boot ..."
-	dd if=/usr/lib/u-boot/vendor-u-boot.bin of=/dev/mmcblk1 conv=fsync bs=1 count=442
-	dd if=/usr/lib/u-boot/vendor-u-boot.bin of=/dev/mmcblk1 conv=fsync bs=512 skip=1 seek=1
+	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=1 count=442
+	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
 	echo "Done."
 	echo NEW_PARTUUID='"'$CHK_PARTUUID'"' >> ${STORE}/part-uuid.txt
 	source ${STORE}/part-uuid.txt
