@@ -32,7 +32,7 @@ echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 mkdir -p "$IMAGE_FOLDER"
 
 run_usbboot(){
-truncate -s 48MB "${IMAGE_FOLDER}${USB_BOOT_IMAGE}"
+truncate -s 24MB "${IMAGE_FOLDER}${USB_BOOT_IMAGE}"
 echo -e "o
 n
 p
@@ -41,7 +41,7 @@ ${OFFSET}
 a
 t
 b
-93749
+46874
 
 p
 w" | fdisk "${IMAGE_FOLDER}${USB_BOOT_IMAGE}"
@@ -58,8 +58,8 @@ cp -f files/boot/usbboot.cmd p1/boot.cmd
 mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr
 umount ${P_BOOT}
 losetup -d "${IMAGE_LOOP_DEV}"
-mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}";
-rmdir "${IMAGE_FOLDER}";
+mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
+rmdir "${IMAGE_FOLDER}"
 rmdir p1
 echo ""
 }
