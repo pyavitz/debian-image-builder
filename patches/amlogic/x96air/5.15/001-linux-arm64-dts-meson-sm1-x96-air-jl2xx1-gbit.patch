@@ -25,8 +25,8 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
 --- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-30 07:06:23.927634676 -0500
-@@ -0,0 +1,251 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-02-01 05:41:01.670634775 -0500
+@@ -0,0 +1,267 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -45,7 +45,7 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +
 +	aliases {
 +		ethernet0 = &ethmac;
-+		// rtc0 = &rtc;
++		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
 +
@@ -278,9 +278,25 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
++
++&i2c1 {
++	status = "okay";
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++
++	rtc: rtc@51 {
++		compatible = "haoyu,hym8563";
++		reg = <0x51>;
++		wakeup-source;
++		init_date = "2022/06/01";
++		#clock-cells = <0x00>;
++		clock-frequency = <32768>;
++		clock-output-names = "xin32k";
++	};
++};
 --- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-30 07:04:54.255417887 -0500
-@@ -0,0 +1,272 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-02-01 05:28:04.951482164 -0500
+@@ -0,0 +1,288 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -299,7 +315,7 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +
 +	aliases {
 +		ethernet0 = &ethmac;
-+		// rtc0 = &rtc;
++		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
 +	
@@ -552,6 +568,22 @@ index 5148cd9e5146..1c0e554f54fc 100644
 +
 +&mali {
 +	mali-supply=<&vddgpu>;
++};
++
++&i2c1 {
++	status = "okay";
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++
++	rtc: rtc@51 {
++		compatible = "haoyu,hym8563";
++		reg = <0x51>;
++		wakeup-source;
++		init_date = "2022/06/01";
++		#clock-cells = <0x00>;
++		clock-frequency = <32768>;
++		clock-output-names = "xin32k";
++	};
 +};
 --- /dev/null	2023-01-12 15:04:20.932940098 -0500
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-15 08:50:43.052517162 -0500

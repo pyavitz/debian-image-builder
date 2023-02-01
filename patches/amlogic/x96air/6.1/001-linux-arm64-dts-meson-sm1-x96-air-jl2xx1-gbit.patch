@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2022-12-31 07:33:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-30 07:02:02.300696612 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-12 06:00:49.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-31 22:07:58.936101914 -0500
 @@ -171,16 +171,15 @@
  				     "snps,dwmac";
  			reg = <0x0 0xff3f0000 0x0 0x10000>,
@@ -22,8 +22,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot
  
  			mdio0: mdio {
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2022-12-31 07:33:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-30 07:02:02.301696606 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-12 06:00:49.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-01-31 22:07:58.938101883 -0500
 @@ -80,6 +80,15 @@
  		regulator-always-on;
  	};
@@ -50,8 +50,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/
  
  	non-removable;
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2022-12-31 07:33:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-30 07:06:23.927634676 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-01-12 06:00:49.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-02-01 05:41:01.670634775 -0500
 @@ -7,20 +7,34 @@
  /dts-v1/;
  
@@ -65,7 +65,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  
 +	aliases {
 +		ethernet0 = &ethmac;
-+		// rtc0 = &rtc;
++		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
 +
@@ -159,7 +159,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +				sound-dai = <&acodec>;
 +			};
 +		};
-+	};
+ 	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -168,7 +168,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
- 	};
++	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -189,7 +189,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  };
  
  &arb {
-@@ -103,10 +184,68 @@
+@@ -103,10 +184,84 @@
  	status = "okay";
  };
  
@@ -258,9 +258,25 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
++
++&i2c1 {
++	status = "okay";
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++
++	rtc: rtc@51 {
++		compatible = "haoyu,hym8563";
++		reg = <0x51>;
++		wakeup-source;
++		init_date = "2022/06/01";
++		#clock-cells = <0x00>;
++		clock-frequency = <32768>;
++		clock-output-names = "xin32k";
++	};
++};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2022-12-31 07:33:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-30 07:04:54.255417887 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-01-12 06:00:49.000000000 -0500
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-02-01 05:28:04.951482164 -0500
 @@ -7,20 +7,34 @@
  /dts-v1/;
  
@@ -274,7 +290,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  
 +	aliases {
 +		ethernet0 = &ethmac;
-+		// rtc0 = &rtc;
++		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
 +	
@@ -423,7 +439,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  &frddr_a {
  	status = "okay";
  };
-@@ -124,10 +205,68 @@
+@@ -124,10 +205,84 @@
  	status = "okay";
  };
  
@@ -491,4 +507,20 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +
 +&mali {
 +	mali-supply=<&vddgpu>;
++};
++
++&i2c1 {
++	status = "okay";
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++
++	rtc: rtc@51 {
++		compatible = "haoyu,hym8563";
++		reg = <0x51>;
++		wakeup-source;
++		init_date = "2022/06/01";
++		#clock-cells = <0x00>;
++		clock-frequency = <32768>;
++		clock-output-names = "xin32k";
++	};
 +};
