@@ -14,7 +14,7 @@ if [[ -f "/etc/opt/board.txt" ]]; then
 fi
 
 # unsupported
-if [[ "$BOARD" == "odroidc1" || "$BOARD" == "x96air" ]]; then
+if [[ "$BOARD" == "odroidc1" ]]; then
 	echo -e "The ${DEFAULT_MOTD} is not supported by this script"
 	exit 0
 fi
@@ -66,6 +66,34 @@ else
 	echo -en "== SDCARD: "
 fi
 echo -e "$MMC"
+}
+
+extlinux_conf () {
+ROOTFS=`findmnt -v -n -o SOURCE /`
+FSTYPE=`findmnt -v -n -o FSTYPE /`
+ROOT_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
+if [[ "$FSTYPE" == "ext4" ]]; then
+	ROOT_FSTYPE="rootfstype=ext4"
+fi
+if [[ "$FSTYPE" == "btrfs" ]]; then
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+fi
+if [[ "$FSTYPE" == "xfs" ]]; then
+	ROOT_FSTYPE="rootfstype=xfs"
+fi
+FDT="../${FAMILY}/${DTB}.dtb"
+FDTDIR="../${FAMILY}/"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
+rm -f /boot/extlinux/extlinux.conf
+tee /boot/extlinux/extlinux.conf <<EOF
+label default
+	kernel ../Image
+	initrd ../uInitrd
+	fdtdir ${FDTDIR}
+	fdt ${FDT}
+	#fdtoverlays
+	${CMDLINE}
+EOF
 }
 
 # allwinner
@@ -141,6 +169,14 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 		dd if="${DIR}/u-boot.bin" of="${MMC}" seek=63 conv=fsync
 		dd if="${DIR}/tzsw.bin" of="${MMC}" seek=1503 conv=fsync
 		dd if="/dev/zero" of="${MMC}" seek=2015 bs=512 count=32 conv=fsync
+	fi
+fi
+
+if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
+	if [ $VERBOSITY -eq 1 ]; then
+		extlinux_conf
+	else
+		extlinux_conf > /dev/null 2>&1
 	fi
 fi
 
