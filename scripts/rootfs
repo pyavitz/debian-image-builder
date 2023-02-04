@@ -62,17 +62,16 @@ fi
 
 # creating developer tarball
 if [ $devrootfs -eq 1 ]; then
-	sysroot_setup;
-	mount -o bind /dev ${ROOT}/dev;
-	mount -o bind /dev/pts ${ROOT}/dev/pts;
-	cp -f lib/source ${ROOT}/root/source.txt;
-	cp -f {scripts/rootfs-extra,userdata.txt,board.txt} ${ROOT}/root/;
-	chroot ${ROOT} /root/rootfs-extra;
-	umount ${ROOT}/dev/pts;
-	umount ${ROOT}/dev;
-	rm -f ${ROOT}/root/rootfs-extra;
-	rm -f ${ROOT}/root/*.txt;
-	rm -f ${ROOT}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
+	sysroot_setup
+	mount -o bind /dev ${ROOT}/dev
+	mount -o bind /dev/pts ${ROOT}/dev/pts
+	cp -f lib/source ${ROOT}/root/source.txt
+	cp -f {scripts/rootfs-extra,userdata.txt,board.txt} ${ROOT}/root/
+	chroot ${ROOT} /root/rootfs-extra
+	umount ${ROOT}/dev/pts
+	umount ${ROOT}/dev
+	rm -fr ${ROOT}/root/{rootfs-extra,*.txt}
+	rm -f ${ROOT}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 	rm -f ${ROOT}/etc/apt/sources.list
 fi
 # clean up
@@ -82,7 +81,7 @@ fi
 if [[ -f "${ROOT}/usr/bin/qemu-arm-static" ]]; then
 	rm -f ${ROOT}/usr/bin/qemu-arm-static
 fi
-rm -f ${ROOT}/var/cache/debconf/*
+rm -fdr ${ROOT}/var/cache/debconf/*
 
 # finish
 echo
