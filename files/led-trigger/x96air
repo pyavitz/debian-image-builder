@@ -8,7 +8,7 @@ vfd_gpio_dat='0,63,0'
 vfd_gpio_stb='1,10,0'
 vfd_chars='4,0,1,2,3'
 vfd_dot_bits='0,1,2,3,4,5,6'
-vfd_display_type='0x02,0x00,0x01,0x00'  # ok
+vfd_display_type='0x02,0x00,0x01,0x00'
 functions='usb apps setup sd hdmi cvbs'
 
 if [[ `command -v vfdservice` ]]; then
@@ -26,8 +26,18 @@ if [[ `command -v vfdservice` ]]; then
 	trap "killall vfdservice; rmmod openvfd; exit" 2 3 15
 	if [[ -n "${functions}" ]]; then
 		for func in ${functions}; do
-		echo "${func}" >/sys/class/leds/openvfd/led_on 2>/dev/null
+		echo "${func}" > /sys/class/leds/openvfd/led_off 2>/dev/null
 		done
+	fi
+	# trigger if detected at boot
+	if [[ -e "/dev/mmcblk0" ]]; then
+		echo "sd" > /sys/class/leds/openvfd/led_on
+	fi
+	if [[ `ls /dev/sd*[!0-9]` ]] > /dev/null 2>&1; then
+		echo "usb" > /sys/class/leds/openvfd/led_on
+	fi
+	if [[ `grep -w "connected" "/sys/class/drm/card0-HDMI-A-1/status"` ]] > /dev/null 2>&1; then
+		echo "hdmi" > /sys/class/leds/openvfd/led_on
 	fi
 fi
 
