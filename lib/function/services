@@ -139,7 +139,7 @@ if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	chmod +x /usr/bin/rk-tweaks;
 	chown root:root /usr/bin/rk-tweaks;
 fi
-if [[ "$BOARD" == "nanopir5s" ]]; then
+if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "x96air" ]]; then
 	mv -f ${BOARD}-tweaks /usr/bin/${BOARD}-tweaks;
 	chmod +x /usr/bin/${BOARD}-tweaks;
 	chown root:root /usr/bin/${BOARD}-tweaks;
@@ -313,12 +313,33 @@ EOF
 systemctl enable tweaks
 }
 
+x96air_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=X96-AIR Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/x96air-tweaks
+After=network.target network-online.target ifup@.service leds.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/x96air-tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 if [[ "$DISTRO" == "devuan" ]]; then
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
 	chown root:root /etc/init.d/tweaks;
 else
-	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "nanopir5s" || "$BOARD" == "radxazero" ]]; then
+	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "nanopir5s" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
 		${BOARD}_systemd;
 	fi
 	if [[ "$FAMILY_EXT" == "odroid" ]]; then
@@ -403,7 +424,7 @@ if [[ "$BOARD" == "pinea64plus" || "$BOARD" == "nanopineoplus2" ]]; then
 	update-rc.d bthelper defaults 2
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ "$FAMILY_EXT" == "meson8b" || "$BOARD" == "bananapim5" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" || "$BOARD" == "x96air" ]]; then
+	if [[ "$FAMILY_EXT" == "meson8b" || "$BOARD" == "bananapim5" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" ]]; then
 		:;
 	else
 		chmod +x /etc/init.d/tweaks
