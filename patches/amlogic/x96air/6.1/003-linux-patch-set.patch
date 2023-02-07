@@ -132,7 +132,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  
 diff -Naur a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
 --- a/drivers/mmc/host/meson-gx-mmc.c	2023-02-06 02:06:34.000000000 -0500
-+++ b/drivers/mmc/host/meson-gx-mmc.c	2023-02-06 16:43:45.623113747 -0500
++++ b/drivers/mmc/host/meson-gx-mmc.c	2023-02-06 19:05:43.545169803 -0500
 @@ -38,20 +38,18 @@
  #define   CLK_RX_PHASE_MASK GENMASK(13, 12)
  #define   CLK_PHASE_0 0
@@ -290,17 +290,6 @@ diff -Naur a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
  };
  
  static int meson_mmc_probe(struct platform_device *pdev)
-@@ -1225,8 +1185,8 @@
- 	}
- 
- 	host->irq = platform_get_irq(pdev, 0);
--	if (host->irq <= 0) {
--		ret = -EINVAL;
-+	if (host->irq < 0) {
-+		ret = host->irq;
- 		goto free_host;
- 	}
- 
 @@ -1275,13 +1235,7 @@
  	if (ret)
  		goto err_init_clk;
