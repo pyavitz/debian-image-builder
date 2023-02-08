@@ -80,16 +80,34 @@ EOF
 }
 
 ac2xx_udev_rules(){
-echo "# SDCARD" > /etc/udev/rules.d/99-storage-led.rules
-echo 'ACTION=="add", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/99-storage-led.rules
-echo 'ACTION=="remove", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/99-storage-led.rules
-echo "# USB" >> /etc/udev/rules.d/99-storage-led.rules
-echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/99-storage-led.rules
-echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/99-storage-led.rules
-sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_on/'echo sd > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/99-storage-led.rules
-sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_off/'echo sd > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/99-storage-led.rules
-sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_on/'echo usb > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/99-storage-led.rules
-sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_off/'echo usb > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/99-storage-led.rules
+# udev rules
+echo "# SDCARD" > /etc/udev/rules.d/10-openvfd-led.rules
+echo 'ACTION=="add", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
+echo 'ACTION=="remove", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/10-openvfd-led.rules
+echo "# USB" >> /etc/udev/rules.d/10-openvfd-led.rules
+echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
+echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/10-openvfd-led.rules
+sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_on/'echo sd > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/10-openvfd-led.rules
+sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_off/'echo sd > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/10-openvfd-led.rules
+sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_on/'echo usb > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/10-openvfd-led.rules
+sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_off/'echo usb > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/10-openvfd-led.rules
+echo "# HDMI" >> /etc/udev/rules.d/10-openvfd-led.rules
+echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DEVNAME}=="/dev/dri/card0", RUN+="/usr/local/sbin/hdmi-led-trigger"' >> /etc/udev/rules.d/10-openvfd-led.rules
+# hdmi helper script
+cat <<EOF > /usr/local/sbin/hdmi-led-trigger
+#!/bin/bash
+
+sleep .90
+if [[ grep -w "enabled" "/sys/class/drm/card0-HDMI-A-1/enabled" ]] > /dev/null 2>&1; then
+	echo "hdmi" > /sys/class/leds/openvfd/led_on
+else
+	echo "hdmi" > /sys/class/leds/openvfd/led_off
+fi
+
+exit 0
+EOF
+sed -i 's/grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"/`grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"`/g' /usr/local/sbin/hdmi-led-trigger
+chmod +x /usr/local/sbin/hdmi-led-trigger
 }
 
 make_uimage(){
