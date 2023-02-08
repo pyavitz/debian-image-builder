@@ -79,6 +79,19 @@ ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}=="0",ATTR{qu
 EOF
 }
 
+ac2xx_udev_rules(){
+echo "# SDCARD" > /etc/udev/rules.d/99-storage-led.rules
+echo 'ACTION=="add", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/99-storage-led.rules
+echo 'ACTION=="remove", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/99-storage-led.rules
+echo "# USB" >> /etc/udev/rules.d/99-storage-led.rules
+echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{PRODUCT}=="90c/1000/1100", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/99-storage-led.rules
+echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="90c/1000/1100", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/99-storage-led.rules
+sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_on/'echo sd > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/99-storage-led.rules
+sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_off/'echo sd > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/99-storage-led.rules
+sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_on/'echo usb > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/99-storage-led.rules
+sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_off/'echo usb > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/99-storage-led.rules
+}
+
 make_uimage(){
 mkdir -p /etc/initramfs/post-update.d/
 tee /etc/initramfs/post-update.d/99-uimage <<EOF
