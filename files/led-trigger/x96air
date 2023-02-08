@@ -29,6 +29,12 @@ if [[ `command -v vfdservice` ]]; then
 		echo "${func}" > /sys/class/leds/openvfd/led_off 2>/dev/null
 		done
 	fi
+	# check for usb storage
+	if [[ `ls /dev/sd*[!0-9]` ]] > /dev/null 2>&1; then
+		:;
+	else
+        	sleep 1.45; echo "usb" > /sys/class/leds/openvfd/led_off
+	fi
 fi
 
 exit 0
