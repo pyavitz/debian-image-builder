@@ -1,6 +1,10 @@
 #!/bin/bash
 
-source /etc/opt/board.txt
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+else
+	exit 0
+fi
 if [[ -f "/etc/opt/overclock.txt" ]]; then
 	. /etc/opt/overclock.txt
 else
@@ -8,7 +12,6 @@ else
 	. /etc/opt/overclock.txt
 fi
 
-# Odroid N2
 cpu_freq_n2_safe(){
 echo 1992000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 1800000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
@@ -19,7 +22,6 @@ echo 1992000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 1908000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
 }
 
-# Odroid N2+
 cpu_freq_n2plus_safe(){
 echo 1908000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 2208000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
@@ -30,19 +32,22 @@ echo 2016000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 echo 2400000 > /sys/devices/system/cpu/cpufreq/policy2/scaling_max_freq
 }
 
-if [[ "$BOARD" == "odroidn2" ]]; then
-	if [ $overclock -eq 1 ]; then
-		cpu_freq_n2_stock;
-	else
-		cpu_freq_n2_safe;
-	fi
+if [[ "$BOARD" == "odroidn2" ]] && [ $overclock -eq 1 ]; then
+	cpu_freq_n2_stock
+else
+	cpu_freq_n2_safe
 fi
 
-if [[ "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
-	if [ $overclock -eq 1 ]; then
- 		cpu_freq_n2plus_stock;
-	else
-		cpu_freq_n2plus_safe;
+if [[ "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]] && [ $overclock -eq 1 ]; then
+	cpu_freq_n2plus_stock
+else
+	cpu_freq_n2plus_safe
+fi
+
+if [[ "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" ]]; then
+	if [ $overclock -eq 1 ] && [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
+		echo "1" > /sys/devices/system/cpu/cpufreq/boost
+		governor -r
 	fi
 fi
 
