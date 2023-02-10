@@ -1,566 +1,38 @@
-diff -Naur a/drivers/gpu/drm/meson/Makefile b/drivers/gpu/drm/meson/Makefile
---- a/drivers/gpu/drm/meson/Makefile	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/Makefile	2021-10-19 00:24:08.000000000 -0400
-@@ -1,5 +1,5 @@
- # SPDX-License-Identifier: GPL-2.0-only
--meson-drm-y := meson_drv.o meson_plane.o meson_crtc.o meson_venc_cvbs.o
-+meson-drm-y := meson_drv.o meson_plane.o meson_cursor.o meson_crtc.o meson_venc_cvbs.o
- meson-drm-y += meson_viu.o meson_vpp.o meson_venc.o meson_vclk.o meson_overlay.o
- meson-drm-y += meson_rdma.o meson_osd_afbcd.o
+diff -Naur a/drivers/gpu/drm/meson/meson_encoder_hdmi.c b/drivers/gpu/drm/meson/meson_encoder_hdmi.c
+--- a/drivers/gpu/drm/meson/meson_encoder_hdmi.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/gpu/drm/meson/meson_encoder_hdmi.c	2023-02-02 02:45:41.000000000 -0500
+@@ -218,7 +218,8 @@
+ 	if (encoder_hdmi->output_bus_fmt == MEDIA_BUS_FMT_UYYVYY8_0_5X24) {
+ 		ycrcb_map = VPU_HDMI_OUTPUT_CRYCB;
+ 		yuv420_mode = true;
+-	}
++	} else if (encoder_hdmi->output_bus_fmt == MEDIA_BUS_FMT_UYVY8_1X16)
++		ycrcb_map = VPU_HDMI_OUTPUT_CRYCB;
  
-diff -Naur a/drivers/gpu/drm/meson/meson_crtc.c b/drivers/gpu/drm/meson/meson_crtc.c
---- a/drivers/gpu/drm/meson/meson_crtc.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_crtc.c	2021-10-19 00:24:08.000000000 -0400
-@@ -36,6 +36,7 @@
- 	struct drm_pending_vblank_event *event;
- 	struct meson_drm *priv;
- 	void (*enable_osd1)(struct meson_drm *priv);
-+	void (*enable_osd2)(struct meson_drm *priv);
- 	void (*enable_vd1)(struct meson_drm *priv);
- 	void (*enable_osd1_afbc)(struct meson_drm *priv);
- 	void (*disable_osd1_afbc)(struct meson_drm *priv);
-@@ -110,6 +111,20 @@
- 	writel_relaxed(0 << 16 |
- 			(crtc_state->mode.vdisplay - 1),
- 			priv->io_base + _REG(VPP_OSD1_BLD_V_SCOPE));
-+	writel_relaxed(0 << 16 |
-+			(crtc_state->mode.hdisplay - 1),
-+			priv->io_base + _REG(VPP_OSD2_BLD_H_SCOPE));
-+	writel_relaxed(0 << 16 |
-+			(crtc_state->mode.vdisplay - 1),
-+			priv->io_base + _REG(VPP_OSD2_BLD_V_SCOPE));
-+	writel_relaxed(crtc_state->mode.hdisplay |
-+			crtc_state->mode.vdisplay << 16,
-+		       priv->io_base +
-+		       _REG(VIU_OSD_BLEND_BLEND0_SIZE));
-+	writel_relaxed(crtc_state->mode.hdisplay |
-+			crtc_state->mode.vdisplay << 16,
-+		       priv->io_base +
-+		       _REG(VIU_OSD_BLEND_BLEND1_SIZE));
- 	writel_relaxed(crtc_state->mode.hdisplay << 16 |
- 			crtc_state->mode.vdisplay,
- 			priv->io_base + _REG(VPP_OUT_H_V_SIZE));
-@@ -158,6 +173,9 @@
- 	priv->viu.osd1_enabled = false;
- 	priv->viu.osd1_commit = false;
+ 	/* VENC + VENC-DVI Mode setup */
+ 	meson_venc_hdmi_mode_set(priv, vic, ycrcb_map, yuv420_mode, mode);
+@@ -230,6 +231,10 @@
+ 		/* Setup YUV420 to HDMI-TX, no 10bit diphering */
+ 		writel_relaxed(2 | (2 << 2),
+ 			       priv->io_base + _REG(VPU_HDMI_FMT_CTRL));
++	else if (encoder_hdmi->output_bus_fmt == MEDIA_BUS_FMT_UYVY8_1X16)
++		/* Setup YUV422 to HDMI-TX, no 10bit diphering */
++		writel_relaxed(1 | (2 << 2),
++				priv->io_base + _REG(VPU_HDMI_FMT_CTRL));
+ 	else
+ 		/* Setup YUV444 to HDMI-TX, no 10bit diphering */
+ 		writel_relaxed(0, priv->io_base + _REG(VPU_HDMI_FMT_CTRL));
+@@ -257,6 +262,7 @@
  
-+	priv->viu.osd2_enabled = false;
-+	priv->viu.osd2_commit = false;
-+
- 	priv->viu.vd1_enabled = false;
- 	priv->viu.vd1_commit = false;
+ static const u32 meson_encoder_hdmi_out_bus_fmts[] = {
+ 	MEDIA_BUS_FMT_YUV8_1X24,
++	MEDIA_BUS_FMT_UYVY8_1X16,
+ 	MEDIA_BUS_FMT_UYYVYY8_0_5X24,
+ };
  
-@@ -183,11 +201,14 @@
- 	priv->viu.osd1_enabled = false;
- 	priv->viu.osd1_commit = false;
- 
-+	priv->viu.osd2_enabled = false;
-+	priv->viu.osd2_commit = false;
-+
- 	priv->viu.vd1_enabled = false;
- 	priv->viu.vd1_commit = false;
- 
- 	/* Disable VPP Postblend */
--	writel_bits_relaxed(VPP_OSD1_POSTBLEND | VPP_VD1_POSTBLEND |
-+	writel_bits_relaxed(VPP_OSD1_POSTBLEND | VPP_OSD2_POSTBLEND | VPP_VD1_POSTBLEND |
- 			    VPP_VD1_PREBLEND | VPP_POSTBLEND_ENABLE, 0,
- 			    priv->io_base + _REG(VPP_MISC));
- 
-@@ -223,6 +244,7 @@
- 	struct meson_drm *priv = meson_crtc->priv;
- 
- 	priv->viu.osd1_commit = true;
-+	priv->viu.osd2_commit = true;
- 	priv->viu.vd1_commit = true;
- }
- 
-@@ -246,6 +268,12 @@
- 			    priv->io_base + _REG(VPP_MISC));
- }
- 
-+static void meson_crtc_enable_osd2(struct meson_drm *priv)
-+{
-+	writel_bits_relaxed(VPP_OSD2_POSTBLEND, VPP_OSD2_POSTBLEND,
-+			    priv->io_base + _REG(VPP_MISC));
-+}
-+
- static void meson_crtc_g12a_enable_osd1_afbc(struct meson_drm *priv)
- {
- 	writel_relaxed(priv->viu.osd1_blk2_cfg4,
-@@ -274,14 +302,20 @@
- 	writel_relaxed(priv->viu.osd_blend_din0_scope_v,
- 		       priv->io_base +
- 		       _REG(VIU_OSD_BLEND_DIN0_SCOPE_V));
--	writel_relaxed(priv->viu.osb_blend0_size,
-+	writel_bits_relaxed(OSD_BLEND_POSTBLD_SRC_OSD1, OSD_BLEND_POSTBLD_SRC_OSD1,
-+			    priv->io_base + _REG(OSD1_BLEND_SRC_CTRL));
-+}
-+
-+static void meson_g12a_crtc_enable_osd2(struct meson_drm *priv)
-+{
-+	writel_relaxed(priv->viu.osd_blend_din3_scope_h,
- 		       priv->io_base +
--		       _REG(VIU_OSD_BLEND_BLEND0_SIZE));
--	writel_relaxed(priv->viu.osb_blend1_size,
-+		       _REG(VIU_OSD_BLEND_DIN1_SCOPE_H));
-+	writel_relaxed(priv->viu.osd_blend_din3_scope_v,
- 		       priv->io_base +
--		       _REG(VIU_OSD_BLEND_BLEND1_SIZE));
--	writel_bits_relaxed(3 << 8, 3 << 8,
--			    priv->io_base + _REG(OSD1_BLEND_SRC_CTRL));
-+		       _REG(VIU_OSD_BLEND_DIN1_SCOPE_V));
-+	writel_bits_relaxed(OSD_BLEND_POSTBLD_SRC_OSD2, OSD_BLEND_POSTBLD_SRC_OSD2,
-+			    priv->io_base + _REG(OSD2_BLEND_SRC_CTRL));
- }
- 
- static void meson_crtc_enable_vd1(struct meson_drm *priv)
-@@ -388,6 +422,43 @@
- 		priv->viu.osd1_commit = false;
- 	}
- 
-+	if (priv->viu.osd2_enabled && priv->viu.osd2_commit) {
-+		writel_relaxed(priv->viu.osd2_ctrl_stat,
-+				priv->io_base + _REG(VIU_OSD2_CTRL_STAT));
-+		writel_relaxed(priv->viu.osd2_ctrl_stat2,
-+				priv->io_base + _REG(VIU_OSD2_CTRL_STAT2));
-+		writel_relaxed(priv->viu.osd2_blk0_cfg[0],
-+				priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W0));
-+		writel_relaxed(priv->viu.osd2_blk0_cfg[1],
-+				priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W1));
-+		writel_relaxed(priv->viu.osd2_blk0_cfg[2],
-+				priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W2));
-+		writel_relaxed(priv->viu.osd2_blk0_cfg[3],
-+				priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W3));
-+		writel_relaxed(priv->viu.osd2_blk0_cfg[4],
-+				priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W4));
-+
-+		/* vsync forced to update INTERLACE_SEL_ODD in interlace mode */
-+		meson_crtc->vsync_forced = priv->viu.osd2_interlace;
-+
-+		meson_canvas_config(priv->canvas, priv->canvas_id_osd2,
-+				priv->viu.osd2_addr,
-+				priv->viu.osd2_stride,
-+				priv->viu.osd2_height,
-+				MESON_CANVAS_WRAP_NONE,
-+				MESON_CANVAS_BLKMODE_LINEAR, 0);
-+
-+		/* Enable OSD2 */
-+		if (meson_crtc->enable_osd2)
-+			meson_crtc->enable_osd2(priv);
-+
-+		priv->viu.osd2_commit = false;
-+	} else if (priv->viu.osd2_enabled && priv->viu.osd2_interlace) {
-+		u32 reg = readl_relaxed(priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W0)) & ~BIT(0);
-+		writel_relaxed(reg | meson_venci_get_field(priv) ? 1 : 0,
-+				priv->io_base + _REG(VIU_OSD2_BLK0_CFG_W0));
-+	}
-+
- 	/* Update the VD1 registers */
- 	if (priv->viu.vd1_enabled && priv->viu.vd1_commit) {
- 
-@@ -685,7 +756,7 @@
- 	meson_crtc->priv = priv;
- 	crtc = &meson_crtc->base;
- 	ret = drm_crtc_init_with_planes(priv->drm, crtc,
--					priv->primary_plane, NULL,
-+					priv->primary_plane, priv->cursor_plane,
- 					&meson_crtc_funcs, "meson_crtc");
- 	if (ret) {
- 		dev_err(priv->drm->dev, "Failed to init CRTC\n");
-@@ -694,6 +765,7 @@
- 
- 	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
- 		meson_crtc->enable_osd1 = meson_g12a_crtc_enable_osd1;
-+		meson_crtc->enable_osd2 = meson_g12a_crtc_enable_osd2;
- 		meson_crtc->enable_vd1 = meson_g12a_crtc_enable_vd1;
- 		meson_crtc->viu_offset = MESON_G12A_VIU_OFFSET;
- 		meson_crtc->enable_osd1_afbc =
-@@ -703,6 +775,7 @@
- 		drm_crtc_helper_add(crtc, &meson_g12a_crtc_helper_funcs);
- 	} else {
- 		meson_crtc->enable_osd1 = meson_crtc_enable_osd1;
-+		meson_crtc->enable_osd2 = meson_crtc_enable_osd2;
- 		meson_crtc->enable_vd1 = meson_crtc_enable_vd1;
- 		if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXM)) {
- 			meson_crtc->enable_osd1_afbc =
-diff -Naur a/drivers/gpu/drm/meson/meson_cursor.c b/drivers/gpu/drm/meson/meson_cursor.c
---- a/drivers/gpu/drm/meson/meson_cursor.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/meson/meson_cursor.c	2021-10-19 00:24:08.000000000 -0400
-@@ -0,0 +1,244 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2021 BayLibre, SAS
-+ * Author: Neil Armstrong <narmstrong@baylibre.com>
-+ */
-+
-+#include <linux/bitfield.h>
-+
-+#include <drm/drm_atomic.h>
-+#include <drm/drm_atomic_helper.h>
-+#include <drm/drm_device.h>
-+#include <drm/drm_fb_cma_helper.h>
-+#include <drm/drm_fourcc.h>
-+#include <drm/drm_gem_atomic_helper.h>
-+#include <drm/drm_gem_cma_helper.h>
-+#include <drm/drm_plane_helper.h>
-+
-+#include "meson_cursor.h"
-+#include "meson_registers.h"
-+#include "meson_viu.h"
-+
-+struct meson_cursor {
-+	struct drm_plane base;
-+	struct meson_drm *priv;
-+};
-+#define to_meson_cursor(x) container_of(x, struct meson_cursor, base)
-+
-+static int meson_cursor_atomic_check(struct drm_plane *plane,
-+				    struct drm_atomic_state *state)
-+{
-+	struct drm_plane_state *new_plane_state = drm_atomic_get_new_plane_state(state,
-+										 plane);
-+	struct drm_crtc_state *crtc_state;
-+
-+	if (!new_plane_state->crtc)
-+		return 0;
-+
-+	crtc_state = drm_atomic_get_crtc_state(state,
-+					       new_plane_state->crtc);
-+	if (IS_ERR(crtc_state))
-+		return PTR_ERR(crtc_state);
-+
-+	return drm_atomic_helper_check_plane_state(new_plane_state,
-+						   crtc_state,
-+						   DRM_PLANE_HELPER_NO_SCALING,
-+						   DRM_PLANE_HELPER_NO_SCALING,
-+						   true, true);
-+}
-+
-+/* Takes a fixed 16.16 number and converts it to integer. */
-+static inline int64_t fixed16_to_int(int64_t value)
-+{
-+	return value >> 16;
-+}
-+
-+static void meson_cursor_atomic_update(struct drm_plane *plane,
-+				      struct drm_atomic_state *state)
-+{
-+	struct meson_cursor *meson_cursor = to_meson_cursor(plane);
-+	struct drm_plane_state *new_state = drm_atomic_get_new_plane_state(state,
-+									   plane);
-+	struct drm_rect dest = drm_plane_state_dest(new_state);
-+	struct meson_drm *priv = meson_cursor->priv;
-+	struct drm_framebuffer *fb = new_state->fb;
-+	struct drm_gem_cma_object *gem;
-+	unsigned long flags;
-+	int dst_w, dst_h;
-+
-+	/*
-+	 * Update Coordinates
-+	 * Update Formats
-+	 * Update Buffer
-+	 * Enable Plane
-+	 */
-+	spin_lock_irqsave(&priv->drm->event_lock, flags);
-+
-+	/* Enable OSD and BLK0, set max global alpha */
-+	priv->viu.osd2_ctrl_stat = OSD_ENABLE |
-+				   (0xFF << OSD_GLOBAL_ALPHA_SHIFT) |
-+				   OSD_BLK0_ENABLE;
-+
-+	priv->viu.osd2_ctrl_stat2 = readl(priv->io_base +
-+					  _REG(VIU_OSD2_CTRL_STAT2));
-+
-+	/* Set up BLK0 to point to the right canvas */
-+	priv->viu.osd2_blk0_cfg[0] = priv->canvas_id_osd2 << OSD_CANVAS_SEL;
-+	priv->viu.osd2_blk0_cfg[0] |= OSD_ENDIANNESS_LE;
-+
-+	/* On GXBB, Use the old non-HDR RGB2YUV converter */
-+	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXBB))
-+		priv->viu.osd2_blk0_cfg[0] |= OSD_OUTPUT_COLOR_RGB;
-+
-+	switch (fb->format->format) {
-+	case DRM_FORMAT_XRGB8888:
-+	case DRM_FORMAT_ARGB8888:
-+		priv->viu.osd2_blk0_cfg[0] |= OSD_BLK_MODE_32 |
-+			OSD_COLOR_MATRIX_32_ARGB;
-+		break;
-+	case DRM_FORMAT_XBGR8888:
-+	case DRM_FORMAT_ABGR8888:
-+		priv->viu.osd2_blk0_cfg[0] |= OSD_BLK_MODE_32 |
-+			OSD_COLOR_MATRIX_32_ABGR;
-+		break;
-+	case DRM_FORMAT_RGB888:
-+		priv->viu.osd2_blk0_cfg[0] |= OSD_BLK_MODE_24 |
-+			OSD_COLOR_MATRIX_24_RGB;
-+		break;
-+	case DRM_FORMAT_RGB565:
-+		priv->viu.osd2_blk0_cfg[0] |= OSD_BLK_MODE_16 |
-+			OSD_COLOR_MATRIX_16_RGB565;
-+		break;
-+	}
-+
-+	switch (fb->format->format) {
-+	case DRM_FORMAT_XRGB8888:
-+	case DRM_FORMAT_XBGR8888:
-+		/* For XRGB, replace the pixel's alpha by 0xFF */
-+		priv->viu.osd2_ctrl_stat2 |= OSD_REPLACE_EN;
-+		break;
-+	case DRM_FORMAT_ARGB8888:
-+	case DRM_FORMAT_ABGR8888:
-+		/* For ARGB, use the pixel's alpha */
-+		priv->viu.osd2_ctrl_stat2 &= ~OSD_REPLACE_EN;
-+		break;
-+	}
-+
-+	dst_w = new_state->crtc_w;
-+	dst_h = new_state->crtc_h;
-+
-+	if (new_state->crtc->mode.flags & DRM_MODE_FLAG_INTERLACE)
-+		priv->viu.osd2_interlace = true;
-+	else
-+		priv->viu.osd2_interlace = false;
-+
-+	/*
-+	 * The format of these registers is (x2 << 16 | x1),
-+	 * where x2 is exclusive.
-+	 * e.g. +30x1920 would be (1919 << 16) | 30
-+	 */
-+	priv->viu.osd2_blk0_cfg[1] =
-+				((fixed16_to_int(new_state->src.x2) - 1) << 16) |
-+				fixed16_to_int(new_state->src.x1);
-+	priv->viu.osd2_blk0_cfg[2] =
-+				((fixed16_to_int(new_state->src.y2) - 1) << 16) |
-+				fixed16_to_int(new_state->src.y1);
-+	priv->viu.osd2_blk0_cfg[3] = ((dest.x2 - 1) << 16) | dest.x1;
-+	priv->viu.osd2_blk0_cfg[4] = ((dest.y2 - 1) << 16) | dest.y1;
-+
-+	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
-+		priv->viu.osd_blend_din3_scope_h = ((dest.x2 - 1) << 16) | dest.x1;
-+		priv->viu.osd_blend_din3_scope_v = ((dest.y2 - 1) << 16) | dest.y1;
-+		priv->viu.osb_blend1_size = dst_h << 16 | dst_w;
-+	}
-+
-+	/* Update Canvas with buffer address */
-+	gem = drm_fb_cma_get_gem_obj(fb, 0);
-+
-+	priv->viu.osd2_addr = gem->paddr;
-+	priv->viu.osd2_stride = fb->pitches[0];
-+	priv->viu.osd2_height = fb->height;
-+	priv->viu.osd2_width = fb->width;
-+
-+	/* TOFIX: Reset OSD2 before enabling it on GXL+ SoCs ? */
-+
-+	priv->viu.osd2_enabled = true;
-+
-+	spin_unlock_irqrestore(&priv->drm->event_lock, flags);
-+}
-+
-+static void meson_cursor_atomic_disable(struct drm_plane *plane,
-+				       struct drm_atomic_state *state)
-+{
-+	struct meson_cursor *meson_cursor = to_meson_cursor(plane);
-+	struct meson_drm *priv = meson_cursor->priv;
-+
-+	/* Disable OSD2 */
-+	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A))
-+		writel_bits_relaxed(OSD_BLEND_POSTBLD_SRC_OSD2, 0,
-+				    priv->io_base + _REG(OSD2_BLEND_SRC_CTRL));
-+	else
-+		writel_bits_relaxed(VPP_OSD2_POSTBLEND, 0,
-+				    priv->io_base + _REG(VPP_MISC));
-+
-+	priv->viu.osd2_enabled = false;
-+}
-+
-+static const struct drm_plane_helper_funcs meson_cursor_helper_funcs = {
-+	.atomic_check	= meson_cursor_atomic_check,
-+	.atomic_disable	= meson_cursor_atomic_disable,
-+	.atomic_update	= meson_cursor_atomic_update,
-+};
-+
-+static const struct drm_plane_funcs meson_cursor_funcs = {
-+	.update_plane		= drm_atomic_helper_update_plane,
-+	.disable_plane		= drm_atomic_helper_disable_plane,
-+	.destroy		= drm_plane_cleanup,
-+	.reset			= drm_atomic_helper_plane_reset,
-+	.atomic_duplicate_state = drm_atomic_helper_plane_duplicate_state,
-+	.atomic_destroy_state	= drm_atomic_helper_plane_destroy_state,
-+};
-+
-+static const uint32_t supported_drm_formats[] = {
-+	DRM_FORMAT_ARGB8888,
-+	DRM_FORMAT_ABGR8888,
-+	DRM_FORMAT_XRGB8888,
-+	DRM_FORMAT_XBGR8888,
-+	DRM_FORMAT_RGB888,
-+	DRM_FORMAT_RGB565,
-+};
-+
-+static const uint64_t format_modifiers_default[] = {
-+	DRM_FORMAT_MOD_LINEAR,
-+	DRM_FORMAT_MOD_INVALID,
-+};
-+
-+int meson_cursor_create(struct meson_drm *priv)
-+{
-+	struct meson_cursor *meson_cursor;
-+	struct drm_plane *cursor;
-+
-+	meson_cursor = devm_kzalloc(priv->drm->dev, sizeof(*meson_cursor),
-+				   GFP_KERNEL);
-+	if (!meson_cursor)
-+		return -ENOMEM;
-+
-+	meson_cursor->priv = priv;
-+	cursor = &meson_cursor->base;
-+
-+	drm_universal_plane_init(priv->drm, cursor, 0xFF,
-+				 &meson_cursor_funcs,
-+				 supported_drm_formats,
-+				 ARRAY_SIZE(supported_drm_formats),
-+				 format_modifiers_default,
-+				 DRM_PLANE_TYPE_CURSOR, "meson_cursor_plane");
-+
-+	drm_plane_helper_add(cursor, &meson_cursor_helper_funcs);
-+
-+	/* For now, OSD Cursor is always on top of the primary plane */
-+	drm_plane_create_zpos_immutable_property(cursor, 2);
-+
-+	priv->cursor_plane = cursor;
-+
-+	return 0;
-+}
-diff -Naur a/drivers/gpu/drm/meson/meson_cursor.h b/drivers/gpu/drm/meson/meson_cursor.h
---- a/drivers/gpu/drm/meson/meson_cursor.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/gpu/drm/meson/meson_cursor.h	2021-10-19 00:24:08.000000000 -0400
-@@ -0,0 +1,14 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2021 BayLibre, SAS
-+ * Author: Neil Armstrong <narmstrong@baylibre.com>
-+ */
-+
-+#ifndef __MESON_CURSOR_H
-+#define __MESON_CURSOR_H
-+
-+#include "meson_drv.h"
-+
-+int meson_cursor_create(struct meson_drm *priv);
-+
-+#endif /* __MESON_CURSOR_H */
-diff -Naur a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv.c
---- a/drivers/gpu/drm/meson/meson_drv.c	2022-10-26 06:35:57.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_drv.c	2022-10-26 10:57:39.820573081 -0400
-@@ -29,6 +29,7 @@
- #include "meson_drv.h"
- #include "meson_overlay.h"
- #include "meson_plane.h"
-+#include "meson_cursor.h"
- #include "meson_osd_afbcd.h"
- #include "meson_registers.h"
- #include "meson_venc_cvbs.h"
-@@ -247,6 +248,9 @@
- 	ret = meson_canvas_alloc(priv->canvas, &priv->canvas_id_osd1);
- 	if (ret)
- 		goto free_drm;
-+	ret = meson_canvas_alloc(priv->canvas, &priv->canvas_id_osd2);
-+	if (ret)
-+		goto free_drm;
- 	ret = meson_canvas_alloc(priv->canvas, &priv->canvas_id_vd1_0);
- 	if (ret) {
- 		meson_canvas_free(priv->canvas, priv->canvas_id_osd1);
-@@ -326,6 +330,10 @@
- 	if (ret)
- 		goto exit_afbcd;
- 
-+	ret = meson_cursor_create(priv);
-+	if (ret)
-+		goto free_drm;
-+
- 	ret = meson_plane_create(priv);
- 	if (ret)
- 		goto exit_afbcd;
-@@ -475,17 +483,6 @@
- 	return count;
- }
- 
--static void meson_drv_shutdown(struct platform_device *pdev)
--{
--	struct meson_drm *priv = dev_get_drvdata(&pdev->dev);
--
--	if (!priv)
--		return;
--
--	drm_kms_helper_poll_fini(priv->drm);
--	drm_atomic_helper_shutdown(priv->drm);
--}
--
- static int meson_drv_probe(struct platform_device *pdev)
- {
- 	struct component_match *match = NULL;
-@@ -565,7 +562,6 @@
- static struct platform_driver meson_drm_platform_driver = {
- 	.probe      = meson_drv_probe,
- 	.remove     = meson_drv_remove,
--	.shutdown   = meson_drv_shutdown,
- 	.driver     = {
- 		.name	= "meson-drm",
- 		.of_match_table = dt_match,
-diff -Naur a/drivers/gpu/drm/meson/meson_drv.h b/drivers/gpu/drm/meson/meson_drv.h
---- a/drivers/gpu/drm/meson/meson_drv.h	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_drv.h	2021-10-19 00:24:08.000000000 -0400
-@@ -43,12 +43,14 @@
- 
- 	struct meson_canvas *canvas;
- 	u8 canvas_id_osd1;
-+	u8 canvas_id_osd2;
- 	u8 canvas_id_vd1_0;
- 	u8 canvas_id_vd1_1;
- 	u8 canvas_id_vd1_2;
- 
- 	struct drm_device *drm;
- 	struct drm_crtc *crtc;
-+	struct drm_plane *cursor_plane;
- 	struct drm_plane *primary_plane;
- 	struct drm_plane *overlay_plane;
- 
-@@ -82,6 +84,21 @@
- 		uint32_t osd_blend_din0_scope_h;
- 		uint32_t osd_blend_din0_scope_v;
- 		uint32_t osb_blend0_size;
-+
-+		bool osd2_enabled;
-+		bool osd2_interlace;
-+		bool osd2_commit;
-+		uint32_t osd2_ctrl_stat;
-+		uint32_t osd2_ctrl_stat2;
-+		uint32_t osd2_blk0_cfg[5];
-+		uint32_t osd2_blk1_cfg4;
-+		uint32_t osd2_blk2_cfg4;
-+		uint32_t osd2_addr;
-+		uint32_t osd2_stride;
-+		uint32_t osd2_height;
-+		uint32_t osd2_width;
-+		uint32_t osd_blend_din3_scope_h;
-+		uint32_t osd_blend_din3_scope_v;
- 		uint32_t osb_blend1_size;
- 
- 		bool vd1_enabled;
-diff -Naur a/drivers/gpu/drm/meson/meson_plane.c b/drivers/gpu/drm/meson/meson_plane.c
---- a/drivers/gpu/drm/meson/meson_plane.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_plane.c	2021-10-19 00:24:08.000000000 -0400
-@@ -360,7 +360,6 @@
- 		priv->viu.osd_blend_din0_scope_h = ((dest.x2 - 1) << 16) | dest.x1;
- 		priv->viu.osd_blend_din0_scope_v = ((dest.y2 - 1) << 16) | dest.y1;
- 		priv->viu.osb_blend0_size = dst_h << 16 | dst_w;
--		priv->viu.osb_blend1_size = dst_h << 16 | dst_w;
- 	}
- 
- 	/* Update Canvas with buffer address */
 diff -Naur a/drivers/gpu/drm/meson/meson_registers.h b/drivers/gpu/drm/meson/meson_registers.h
---- a/drivers/gpu/drm/meson/meson_registers.h	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_registers.h	2021-10-19 00:24:08.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_registers.h	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/gpu/drm/meson/meson_registers.h	2023-02-02 02:45:41.000000000 -0500
 @@ -634,11 +634,6 @@
  #define VPP_WRAP_OSD3_MATRIX_PRE_OFFSET2 0x3dbc
  #define VPP_WRAP_OSD3_MATRIX_EN_CTRL 0x3dbd
@@ -574,8 +46,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_registers.h b/drivers/gpu/drm/meson/mes
  #define OSD2_VSC_PHASE_STEP 0x3d00
  #define OSD2_VSC_INI_PHASE 0x3d01
 diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
---- a/drivers/gpu/drm/meson/meson_vclk.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_vclk.c	2021-10-19 00:24:08.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_vclk.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/gpu/drm/meson/meson_vclk.c	2023-02-02 02:45:41.000000000 -0500
 @@ -357,6 +357,8 @@
  	MESON_VCLK_HDMI_594000,
  /* 2970 /1 /1 /1 /5 /1  => /1 /2 */
@@ -616,8 +88,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vc
  
  		meson_hdmi_pll_set_params(priv, m, frac, od1, od2, od3);
 diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
---- a/drivers/gpu/drm/meson/meson_venc.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_venc.c	2021-10-19 00:24:08.000000000 -0400
+--- a/drivers/gpu/drm/meson/meson_venc.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/gpu/drm/meson/meson_venc.c	2023-02-02 02:45:41.000000000 -0500
 @@ -866,10 +866,11 @@
  			    DRM_MODE_FLAG_PVSYNC | DRM_MODE_FLAG_NVSYNC))
  		return MODE_BAD;
@@ -633,28 +105,31 @@ diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_ve
  
  	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/meson/meson_viu.c b/drivers/gpu/drm/meson/meson_viu.c
---- a/drivers/gpu/drm/meson/meson_viu.c	2022-08-17 09:16:21.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_viu.c	2022-08-18 21:44:58.000000000 -0400
-@@ -425,6 +425,7 @@
+--- a/drivers/gpu/drm/meson/meson_viu.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/gpu/drm/meson/meson_viu.c	2023-02-02 02:45:41.000000000 -0500
+@@ -425,14 +425,12 @@
  	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXM) ||
  	    meson_vpu_is_compatible(priv, VPU_COMPATIBLE_GXL))
  		meson_viu_load_matrix(priv);
+-	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
 +#if 0
- 	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
++	/* FIXME: */
++	else if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A))
  		meson_viu_set_g12a_osd1_matrix(priv, RGB709_to_YUV709l_coeff,
  					       true);
-@@ -433,6 +434,7 @@
- 				OSD1_HDR2_CTRL_VDIN0_HDR2_TOP_EN, 0,
- 				priv->io_base + _REG(OSD1_HDR2_CTRL));
- 	}
+-		/* fix green/pink color distortion from vendor u-boot */
+-		writel_bits_relaxed(OSD1_HDR2_CTRL_REG_ONLY_MAT |
+-				OSD1_HDR2_CTRL_VDIN0_HDR2_TOP_EN, 0,
+-				priv->io_base + _REG(OSD1_HDR2_CTRL));
+-	}
 +#endif
  
  	/* Initialize OSD1 fifo control register */
  	reg = VIU_OSD_DDR_PRIORITY_URGENT |
 diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
---- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2021-10-19 00:24:08.000000000 -0400
-@@ -743,12 +743,16 @@
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2023-02-02 02:45:41.000000000 -0500
+@@ -758,16 +758,23 @@
  	if (wol->wolopts) {
  		pr_info("stmmac: wakeup enable\n");
  		device_set_wakeup_enable(priv->device, 1);
@@ -668,131 +143,105 @@ diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/
 +			disable_irq_wake(priv->wol_irq);
  	}
  
-+	phylink_ethtool_set_wol(priv->phylink, wol);
-+
  	mutex_lock(&priv->lock);
  	priv->wolopts = wol->wolopts;
  	mutex_unlock(&priv->lock);
+ 
++	if (phy_ethtool_set_wol(dev->phydev, wol) == 0)
++		enable_irq_wake(dev->phydev->irq);
++	else
++		disable_irq_wake(dev->phydev->irq);
++
+ 	return 0;
+ }
+ 
+diff -Naur a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
+--- a/drivers/net/phy/phy_device.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/net/phy/phy_device.c	2023-02-02 02:45:41.000000000 -0500
+@@ -1779,8 +1779,10 @@
+ 	    phy_driver_is_genphy_10g(phydev))
+ 		device_release_driver(&phydev->mdio.dev);
+ 
+-	/* Assert the reset signal */
+-	phy_device_reset(phydev, 1);
++	if (!dev->wol_enabled) {
++		/* Assert the reset signal */
++		phy_device_reset(phydev, 1);
++	}
+ 
+ 	/*
+ 	 * The phydev might go away on the put_device() below, so avoid
 diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
---- a/drivers/net/phy/realtek.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/net/phy/realtek.c	2021-10-19 00:24:08.000000000 -0400
-@@ -12,6 +12,8 @@
+--- a/drivers/net/phy/realtek.c	2023-02-01 02:27:30.000000000 -0500
++++ b/drivers/net/phy/realtek.c	2023-02-02 02:45:41.000000000 -0500
+@@ -12,6 +12,7 @@
  #include <linux/phy.h>
  #include <linux/module.h>
  #include <linux/delay.h>
 +#include <linux/etherdevice.h>
-+#include <linux/netdevice.h>
  
  #define RTL821x_PHYSR				0x11
  #define RTL821x_PHYSR_DUPLEX			BIT(13)
-@@ -300,6 +302,51 @@
- 	return IRQ_HANDLED;
+@@ -228,7 +229,13 @@
+ 
+ 		val = RTL8211F_INER_LINK_STATUS;
+ 		err = phy_write_paged(phydev, 0xa42, RTL821x_INER, val);
++
++		// Pin 31 -> INTB
++		phy_modify_paged(phydev, 0xd40, 0x16, BIT(5), 0);
+ 	} else {
++		// Pin 31 -> PMEB
++		phy_modify_paged(phydev, 0xd40, 0x16, 0, BIT(5));
++
+ 		val = 0;
+ 		err = phy_write_paged(phydev, 0xa42, RTL821x_INER, val);
+ 		if (err)
+@@ -329,6 +336,34 @@
+ 			    CTL1000_ENABLE_MASTER | CTL1000_AS_MASTER);
  }
  
 +static int rtl8211f_set_wol(struct phy_device *phydev,
 +		struct ethtool_wolinfo *wol)
 +{
-+	struct net_device *ndev = phydev->attached_dev;
-+	const u8 *mac;
-+	int val;
++	struct net_device *netdev = phydev->attached_dev;
++	const u8 *mac = (const u8 *)netdev->dev_addr;
++
++	if (wol->wolopts & ~(WAKE_MAGIC | WAKE_UCAST))
++		return -EOPNOTSUPP;
++
++	if (wol->wolopts & WAKE_UCAST) {
++		phy_write_paged(phydev, 0xd8c, 0x10, (mac[1] << 8) | mac[0]);
++		phy_write_paged(phydev, 0xd8c, 0x11, (mac[3] << 8) | mac[2]);
++		phy_write_paged(phydev, 0xd8c, 0x12, (mac[5] << 8) | mac[4]);
++	}
 +
 +	if (wol->wolopts & WAKE_MAGIC) {
-+		mac = (const u8 *)ndev->dev_addr;
-+
-+		if (!is_valid_ether_addr(mac))
-+			return -EINVAL;
-+
-+		/* Set MAC address */
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd8c);
-+		phy_write(phydev, 0x10, (mac[1] << 8) | mac[0]);
-+		phy_write(phydev, 0x11, (mac[3] << 8) | mac[2]);
-+		phy_write(phydev, 0x12, (mac[5] << 8) | mac[4]);
-+
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd8a);
-+
-+		/* Set magic packet for WOL */
-+		phy_write(phydev, 0x10, 0x1000);
-+		phy_write(phydev, 0x11, 0x9fff);
-+
-+		/* PIN31 - pull high */
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd40);
-+		val = phy_read(phydev, 0x16);
-+		phy_write(phydev, 0x16, val | BIT(5));
-+
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0);
++		/* Set magic packet */
++		phy_write_paged(phydev, 0xd8a, 0x10, 0x1000);
++		phy_write_paged(phydev, 0xd8a, 0x11, 0x9fff);
 +	} else {
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd8a);
-+
-+		/* Reset magic packet for WOL */
-+		phy_write(phydev, 0x10, 0x0);
-+		val = phy_read(phydev, 0x11);
-+		phy_write(phydev, 0x11, val & ~BIT(15));
-+
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0);
++		/* Reset magic packet */
++		phy_write_paged(phydev, 0xd8a, 0x10, 0);
++		phy_modify_paged(phydev, 0xd8a, 0x11, BIT(15), 0);
 +	}
 +
 +	return 0;
 +}
 +
- static int rtl8211_config_aneg(struct phy_device *phydev)
+ static int rtl8211f_config_init(struct phy_device *phydev)
  {
- 	int ret;
-@@ -909,6 +956,7 @@
- 		.handle_interrupt = rtl821x_handle_interrupt,
+ 	struct rtl821x_priv *priv = phydev->priv;
+@@ -921,6 +956,7 @@
+ 		.handle_interrupt = rtl8211f_handle_interrupt,
  		.suspend	= genphy_suspend,
- 		.resume		= genphy_resume,
+ 		.resume		= rtl821x_resume,
 +		.set_wol	= rtl8211f_set_wol,
  		.read_page	= rtl821x_read_page,
  		.write_page	= rtl821x_write_page,
  	}, {
-diff -Naur a/drivers/thermal/thermal_helpers.c b/drivers/thermal/thermal_helpers.c
---- a/drivers/thermal/thermal_helpers.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/drivers/thermal/thermal_helpers.c	2021-10-19 00:24:08.000000000 -0400
-@@ -75,6 +75,10 @@
-  *
-  * Return: On success returns 0, an error code otherwise
-  */
-+
-+#define	CRITICAL_TEMP	120000
-+int thermal_zone_data[4] = { 0, };
-+
- int thermal_zone_get_temp(struct thermal_zone_device *tz, int *temp)
- {
- 	int ret = -EINVAL;
-@@ -108,6 +112,30 @@
- 			*temp = tz->emul_temperature;
- 	}
- 
-+	/* save thermal_zone data */
-+	if (!ret)
-+		thermal_zone_data[tz->id] = *temp;
-+	/*
-+	 * This case is that the thermal sensor is broken.
-+	 * That's not real temperature. Set the fake temperature value in order to
-+	 * avoid reaching the ciritical temperature.
-+	 */
-+	if ((thermal_zone_data[tz->id] > CRITICAL_TEMP) && (tz->id != 4)) {
-+		int i, broken_sensor = 0, correct_temp = 0;
-+		for (i = 0; i < 4; i++) {
-+			if ((thermal_zone_data[i] <= CRITICAL_TEMP) &&
-+			    (correct_temp <= thermal_zone_data[i]))
-+				correct_temp = thermal_zone_data[i];
-+			if (thermal_zone_data[i] > CRITICAL_TEMP)
-+				broken_sensor++;
-+		}
-+		/*
-+		 * if all thermal sensor broken then critical temperature data send
-+		 * for system poweroff.
-+		 */
-+		*temp = (broken_sensor == 4) ? CRITICAL_TEMP : correct_temp;
-+	}
-+
- 	mutex_unlock(&tz->lock);
- exit:
- 	return ret;
 diff -Naur a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
---- a/sound/soc/meson/axg-frddr.c	2021-10-18 02:00:13.000000000 -0400
-+++ b/sound/soc/meson/axg-frddr.c	2021-10-19 00:24:08.000000000 -0400
+--- a/sound/soc/meson/axg-frddr.c	2023-02-01 02:27:30.000000000 -0500
++++ b/sound/soc/meson/axg-frddr.c	2023-02-02 02:45:41.000000000 -0500
 @@ -106,7 +106,7 @@
  	.name = "FRDDR",
  	.playback = {
