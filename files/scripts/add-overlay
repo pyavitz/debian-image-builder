@@ -3,13 +3,6 @@
 # Destination: /usr/local/bin/add-overlay
 
 # depends
-if [[ -f "/etc/opt/board.txt" ]]; then
-	. /etc/opt/board.txt
-else
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Your board is not supported." 0 0
-	exit 0
-fi
 if [[ `command -v dtc` ]] && [[ `command -v whiptail` ]]; then
 	:;
 else
@@ -20,6 +13,13 @@ else
 		echo -e "You are missing dependencies?"
 		exit 0
 	fi
+fi
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
 fi
 
 # variables
