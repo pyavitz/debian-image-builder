@@ -29,11 +29,15 @@ if [[ `command -v vfdservice` ]]; then
 		echo "${func}" > /sys/class/leds/openvfd/led_off 2>/dev/null
 		done
 	fi
-	# check for usb storage
+	# check storage
 	if [[ `ls /dev/sd*[!0-9]` ]] > /dev/null 2>&1; then
 		:;
 	else
         	sleep 1.90; echo "usb" > /sys/class/leds/openvfd/led_off
+	fi
+	BLOCK=`findmnt -v -n -o SOURCE / | sed 's/\/dev\///' | sed 's/..$//'`
+	if [[ "$BLOCK" == "mmcblk0" ]]; then
+		sleep 1.90; echo "sd" > /sys/class/leds/openvfd/led_on
 	fi
 fi
 
