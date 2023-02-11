@@ -290,18 +290,23 @@ board_information
 # rename and check for compression
 finish_image(){
 IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
-if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img" ]]; then
-	mv -f ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img \
-	${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img
-	if [ $compress_img -eq 1 ]; then
-		echo_compress
-		xz -zev --threads=${CORES} ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img
+IMAGE_FILE_FIN="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
+if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; fi
+if [ $compress_img -eq 1 ] && [[ "$IMG_COMPRESSION" == "xz" ]]; then
+	echo_compress
+	xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}
+	if [[ -f "${IMAGE_FIN_NAME}.xz" ]]; then
+		sha256sum ${IMAGE_FIN_NAME}.xz > ${IMAGE_FIN_NAME}.xz.sha256
+		sha256sum --check ${IMAGE_FIN_NAME}.xz.sha256
 	fi
 fi
-if [[ -f "${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img.xz" ]]; then
-	sha256sum ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img.xz \
-	> ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img.xz.sha256
-	sha256sum --check ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img.xz.sha256
+if [ $compress_img -eq 1 ] && [[ "$IMG_COMPRESSION" == "zstd" ]]; then
+	echo_compress
+	zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}
+	if [[ -f "${IMAGE_FIN_NAME}.zst" ]]; then
+		sha256sum ${IMAGE_FIN_NAME}.zst > ${IMAGE_FIN_NAME}.zst.sha256
+		sha256sum --check ${IMAGE_FIN_NAME}.zst.sha256
+	fi
 fi
 }
 
