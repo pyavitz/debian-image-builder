@@ -139,6 +139,11 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
 		extlinux > /dev/null 2>&1
 	fi
+	if [[ "$FSTYPE" == "ext4" ]] && [[ "$ARCH" == "arm" ]]; then
+		# add removable 100mb file to ensure space on the img after shrinking
+		dd if="/dev/urandom" of="p1/block.img" bs=100MB count=1 > /dev/null 2>&1
+		sleep .75
+	fi
 	umount p1;
 	echo ""
 	# finish
@@ -224,6 +229,11 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	fi
 	if [[ "$BOOTINI" == "true" ]] && [[ "$BOARD" == "odroidc1" ]]; then
 		odroid_bootini > /dev/null 2>&1
+	fi
+	if [[ "$FSTYPE" == "ext4" ]] && [[ "$ARCH" == "arm" ]]; then
+		# add removable 100mb file to ensure space on the img after shrinking
+		dd if="/dev/urandom" of="p2/block.img" bs=100MB count=1 > /dev/null 2>&1
+		sleep .75
 	fi
 	umount p2;
 	umount p1;
