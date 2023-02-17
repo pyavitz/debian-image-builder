@@ -1,8 +1,17 @@
 #!/bin/bash
 # Tinker Board RK3288
 
+GREEN_LED="/sys/class/leds/led-0/trigger"
 ORANGE_LED="/sys/class/leds/led-1/trigger"
 RED_LED="/sys/class/leds/led-2/trigger"
+
+if [ -e $GREEN_LED ]; then
+	ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
+	ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
+	ROOT_DEVICE=${ROOT_DEVICE/mmcblk/mmc}
+	ROOT_DEVICE=${ROOT_DEVICE/p[0-9]/}
+	echo -n "$ROOT_DEVICE" > $GREEN_LED
+fi
 if [ -e $ORANGE_LED ]; then
 	if [[ `ls /dev/sd*[!0-9]` ]] > /dev/null 2>&1; then
 		:;
@@ -15,4 +24,3 @@ if [ -e $RED_LED ]; then
 fi
 
 exit 0
-
