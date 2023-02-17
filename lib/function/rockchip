@@ -5,3 +5,11 @@ flash_uboot(){
 dd if=${OUTPUT}/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
 dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
 }
+
+rk3288_udev_rules(){
+echo "# USB" > /etc/udev/rules.d/10-usb-led.rules
+echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo default-on > /sys/class/leds/led-1/trigger"' >> /etc/udev/rules.d/10-usb-led.rules
+echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo none > /sys/class/leds/led-1/trigger"' >> /etc/udev/rules.d/10-usb-led.rules
+sed -i "s/echo default-on > \/sys\/class\/leds\/led-1\/trigger/'echo default-on > \/sys\/class\/leds\/led-1\/trigger'/g" /etc/udev/rules.d/10-usb-led.rules
+sed -i "s/echo none > \/sys\/class\/leds\/led-1\/trigger/'echo none > \/sys\/class\/leds\/led-1\/trigger'/g" /etc/udev/rules.d/10-usb-led.rules
+}

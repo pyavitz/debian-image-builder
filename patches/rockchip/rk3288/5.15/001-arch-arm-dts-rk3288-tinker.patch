@@ -1,0 +1,286 @@
+diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
+--- a/arch/arm/boot/dts/rk3288.dtsi	2023-02-09 05:26:48.000000000 -0500
++++ b/arch/arm/boot/dts/rk3288.dtsi	2023-02-17 11:09:22.935967459 -0500
+@@ -311,7 +311,7 @@
+ 		dma-names = "tx", "rx";
+ 		interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
+ 		pinctrl-names = "default";
+-		pinctrl-0 = <&spi2_clk &spi2_tx &spi2_rx &spi2_cs0>;
++		pinctrl-0 = <&spi2_clk &spi2_tx &spi2_rx &spi2_cs0 &spi2_cs1>;
+ 		reg = <0x0 0xff130000 0x0 0x1000>;
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -378,8 +378,6 @@
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART0>, <&cru PCLK_UART0>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 1>, <&dmac_peri 2>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart0_xfer>;
+ 		status = "disabled";
+@@ -393,8 +391,6 @@
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART1>, <&cru PCLK_UART1>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 3>, <&dmac_peri 4>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart1_xfer>;
+ 		status = "disabled";
+@@ -421,8 +417,6 @@
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART3>, <&cru PCLK_UART3>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 7>, <&dmac_peri 8>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart3_xfer>;
+ 		status = "disabled";
+@@ -436,8 +430,6 @@
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART4>, <&cru PCLK_UART4>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 9>, <&dmac_peri 10>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart4_xfer>;
+ 		status = "disabled";
+@@ -456,13 +448,6 @@
+ 	};
+ 
+ 	thermal-zones {
+-		reserve_thermal: reserve-thermal {
+-			polling-delay-passive = <1000>; /* milliseconds */
+-			polling-delay = <5000>; /* milliseconds */
+-
+-			thermal-sensors = <&tsadc 0>;
+-		};
+-
+ 		cpu_thermal: cpu-thermal {
+ 			polling-delay-passive = <100>; /* milliseconds */
+ 			polling-delay = <5000>; /* milliseconds */
+@@ -534,6 +519,13 @@
+ 				};
+ 			};
+ 		};
++
++		reserve_thermal: reserve-thermal {
++			polling-delay-passive = <1000>; /* milliseconds */
++			polling-delay = <5000>; /* milliseconds */
++
++			thermal-sensors = <&tsadc 0>;
++		};
+ 	};
+ 
+ 	tsadc: tsadc@ff280000 {
+@@ -940,7 +932,7 @@
+ 		status = "disabled";
+ 	};
+ 
+-	spdif: sound@ff88b0000 {
++	spdif: sound@ff8b0000 {
+ 		compatible = "rockchip,rk3288-spdif", "rockchip,rk3066-spdif";
+ 		reg = <0x0 0xff8b0000 0x0 0x10000>;
+ 		#sound-dai-cells = <0>;
+@@ -989,8 +981,8 @@
+ 		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&cru ACLK_IEP>, <&cru HCLK_IEP>;
+ 		clock-names = "aclk", "iface";
++		power-domains = <&power RK3288_PD_VIO>;
+ 		#iommu-cells = <0>;
+-		status = "disabled";
+ 	};
+ 
+ 	isp_mmu: iommu@ff914000 {
+@@ -1178,6 +1170,7 @@
+ 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&cru SCLK_EDP>, <&cru PCLK_EDP_CTRL>;
+ 		clock-names = "dp", "pclk";
++		power-domains = <&power RK3288_PD_VIO>;
+ 		phys = <&edp_phy>;
+ 		phy-names = "dp";
+ 		resets = <&cru SRST_EDP>;
+@@ -1224,6 +1217,7 @@
+ 					reg = <0>;
+ 					remote-endpoint = <&vopb_out_hdmi>;
+ 				};
++
+ 				hdmi_in_vopl: endpoint@1 {
+ 					reg = <1>;
+ 					remote-endpoint = <&vopl_out_hdmi>;
+@@ -1297,6 +1291,10 @@
+ 			opp-hz = /bits/ 64 <400000000>;
+ 			opp-microvolt = <1100000>;
+ 		};
++		opp-500000000 {
++			opp-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <1200000>;
++		};
+ 		opp-600000000 {
+ 			opp-hz = /bits/ 64 <600000000>;
+ 			opp-microvolt = <1250000>;
+@@ -1414,6 +1412,12 @@
+ 		interrupts = <GIC_PPI 9 0xf04>;
+ 	};
+ 
++	gpiomem: rk3288-gpiomem@ff750000 {
++		compatible = "rockchip,rk3288-gpiomem";
++		reg = <0x0 0xff750000 0x0 0x1000>;
++		status = "disabled";
++	};
++
+ 	pinctrl: pinctrl {
+ 		compatible = "rockchip,rk3288-pinctrl";
+ 		rockchip,grf = <&grf>;
+diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dts b/arch/arm/boot/dts/rk3288-tinker.dts
+--- a/arch/arm/boot/dts/rk3288-tinker.dts	2023-02-09 05:26:48.000000000 -0500
++++ b/arch/arm/boot/dts/rk3288-tinker.dts	2023-02-17 11:08:57.106310069 -0500
+@@ -6,8 +6,88 @@
+ /dts-v1/;
+ 
+ #include "rk3288-tinker.dtsi"
++#include <dt-bindings/clock/rockchip,rk808.h>
+ 
+ / {
+ 	model = "Rockchip RK3288 Asus Tinker Board";
+ 	compatible = "asus,rk3288-tinker", "rockchip,rk3288";
++
++	/* This is essential to get SDIO devices working.
++	   The Wifi depends on SDIO ! */
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		clocks = <&rk808 RK808_CLKOUT1>;
++		clock-names = "ext_clock";
++		pinctrl-names = "default";
++		pinctrl-0 = <&chip_enable_h>, <&wifi_enable_h>;
++
++		/*
++		 * On the module itself this is one of these (depending
++		 * on the actual card populated):
++		 * - SDIO_RESET_L_WL_REG_ON
++		 * - PDN (power down when low)
++		 */
++		reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>, <&gpio4 27 GPIO_ACTIVE_LOW>;
++	};
++
++	wireless-wlan {
++		compatible = "wlan-platdata";
++		rockchip,grf = <&grf>;
++		sdio_vref = <1800>;
++		status = "okay";
++		wifi_chip_type = "8723bs";
++		WIFI,host_wake_irq = <&gpio4 30 GPIO_ACTIVE_HIGH>;
++	};
++};
++
++&i2c1 {
++	status = "okay";
+ };
++
++&i2c3 {
++	status = "okay";
++};
++
++&i2c4 {
++	status = "okay";
++};
++
++&io_domains {
++	wifi-supply = <&vcc_18>;
++};
++
++&pinctrl {
++	sdio-pwrseq {
++		wifi_enable_h: wifienable-h {
++			rockchip,pins = <4 28 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		chip_enable_h: chip-enable-h {
++			rockchip,pins = <4 27 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++};
++
++&sdio0 {
++	bus-width = <4>;
++	cap-sd-highspeed;
++	cap-sdio-irq;
++	clock-frequency = <50000000>;
++	clock-freq-min-max = <200000 50000000>;
++	disable-wp;
++	keep-power-in-suspend;
++	mmc-pwrseq = <&sdio_pwrseq>;
++	non-removable;
++	num-slots = <1>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
++	sd-uhs-sdr104;
++	status = "okay";
++	supports-sdio;
++};
++
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_xfer>, <&uart0_cts>, <&uart0_rts>;
++};
++
+diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dtsi b/arch/arm/boot/dts/rk3288-tinker.dtsi
+--- a/arch/arm/boot/dts/rk3288-tinker.dtsi	2023-02-09 05:26:48.000000000 -0500
++++ b/arch/arm/boot/dts/rk3288-tinker.dtsi	2023-02-17 11:08:57.107310056 -0500
+@@ -75,7 +75,7 @@
+ 	sound {
+ 		compatible = "simple-audio-card";
+ 		simple-audio-card,format = "i2s";
+-		simple-audio-card,name = "rockchip,tinker-codec";
++		simple-audio-card,name = "HDMI";
+ 		simple-audio-card,mclk-fs = <512>;
+ 
+ 		simple-audio-card,codec {
+@@ -186,7 +186,7 @@
+ 				regulator-always-on;
+ 				regulator-boot-on;
+ 				regulator-min-microvolt = <750000>;
+-				regulator-max-microvolt = <1400000>;
++				regulator-max-microvolt = <1450000>;
+ 				regulator-name = "vdd_arm";
+ 				regulator-ramp-delay = <6000>;
+ 				regulator-state-mem {
+@@ -462,7 +462,12 @@
+ 	disable-wp;			/* wp not hooked up */
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_cd &sdmmc_bus4>;
++	sd-uhs-sdr12;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
+ 	status = "okay";
++	supports-sd;
+ 	vmmc-supply = <&vcc33_sd>;
+ 	vqmmc-supply = <&vccio_sd>;
+ };
+@@ -493,6 +498,17 @@
+ 
+ &uart0 {
+ 	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_xfer &uart0_cts &uart0_rts>;
++	uart-has-rtscts;
++
++	bluetooth {
++		compatible = "realtek,rtl8723bs-bt";
++		enable-gpios = <&gpio4 RK_PD5 GPIO_ACTIVE_HIGH>;
++		device-wake-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
++		host-wake-gpios = <&gpio4 RK_PD7 GPIO_ACTIVE_HIGH>;
++	};
++
+ };
+ 
+ &uart1 {
+@@ -546,3 +562,6 @@
+ &wdt {
+ 	status = "okay";
+ };
++&gpiomem {
++    status = "okay";
++};

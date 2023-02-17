@@ -150,7 +150,7 @@ if [ -f ../github.txt ]; then
 	VKERNEL="${GITHUB}-${BRANCH}"
 fi
 if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y" ]]; then
-	SETUP="vendor";
+	SETUP="vendor"
 fi
 if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/${GITHUB}/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	vendor_download;
@@ -238,6 +238,9 @@ fi
 if [[ "$FAMILY" == "broadcom" ]]; then
 	rpi_firmware;
 fi
+if [[ "$BOARD" == "tinker" ]]; then
+	rtl8723ds;
+fi
 if [[ "$BOARD" == "x96air" ]]; then
 	rtl88x2cs;
 fi
@@ -319,6 +322,7 @@ rtl88x2bu_module
 rtl8811cu_module
 rtl8188eu_module
 rtl8189es_module
+rtl8723ds_module
 rtl88x2cs_module
 if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};

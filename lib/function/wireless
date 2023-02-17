@@ -194,6 +194,41 @@ if [ $rtl8188eu -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; t
 fi
 }
 
+# RTL8723DS
+rtl8723ds_download(){
+if [[ -d "rtl8723ds" ]]; then
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} ";
+	cd rtl8723ds;
+	git config pull.rebase false;
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} ";
+	git pull -q;
+	cd ..;
+else
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} ";
+	git clone -q https://github.com/lwfinger/rtl8723ds.git rtl8723ds;
+fi
+}
+
+rtl8723ds(){
+rm -fdr drivers/net/wireless/rtl8723ds
+mkdir -p drivers/net/wireless/rtl8723ds
+cp -R ../rtl8723ds/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8723ds
+cp -R ../rtl8723ds/Makefile drivers/net/wireless/rtl8723ds/Makefile
+echo "obj-\$(CONFIG_RTL8723DS) += rtl8723ds/" >> "drivers/net/wireless/Makefile"
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8723ds\/Kconfig"' drivers/net/wireless/Kconfig
+echo "config RTL8723DS" > drivers/net/wireless/rtl8723ds/Kconfig
+echo "	tristate "'"RTL8723DS USB WiFi"'"" >> drivers/net/wireless/rtl8723ds/Kconfig
+echo "	depends on USB" >> drivers/net/wireless/rtl8723ds/Kconfig
+echo "	help" >> drivers/net/wireless/rtl8723ds/Kconfig
+echo "	  Help message of RTL8723DS" >> drivers/net/wireless/rtl8723ds/Kconfig
+}
+
+rtl8723ds_module(){
+if [[ "$BOARD" == "tinker" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	echo "CONFIG_RTL8723DS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
+fi
+}
+
 # RTL8189ES
 rtl8189es_download(){
 if [[ -d "rtl8189es" ]]; then
@@ -226,8 +261,41 @@ if [[ "$BOARD" == "orangepir1" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONF
 fi
 }
 
+# RTL8189ES
+rtl8723bs_download(){
+if [[ -d "rtl8723bs" ]]; then
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} ";
+	cd rtl8723bs;
+	git config pull.rebase false;
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} ";
+	git pull -q;
+	cd ..;
+else
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} ";
+	git clone -q https://github.com/pyavitz/rtl8723bs.git rtl8723bs;
+fi
+}
+
+rtl8723bs(){
+rm -fdr drivers/net/wireless/rtl8723bs
+mkdir -p drivers/net/wireless/rtl8723bs
+cp -R ../rtl8723bs/{core,hal,include,os_dep,platform,ifcfg-wlan0,runwpa,wlan0dhcp} drivers/net/wireless/rtl8723bs
+cp -R ../rtl8723bs/Makefile drivers/net/wireless/rtl8723bs/Makefile
+cp -R ../rtl8723bs/Kconfig drivers/net/wireless/rtl8723bs/Kconfig
+echo "obj-\$(CONFIG_RTL8723BS) += rtl8723bs/" >> drivers/net/wireless/Makefile
+sed -i 's/---help---/help/g' drivers/net/wireless/rtl8723bs/Kconfig
+sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8723bs\/Kconfig"' drivers/net/wireless/Kconfig
+sed -i 's/export TopDIR ?= $(shell pwd)/export TopDIR ?= $(srctree)\/$(src)/g' drivers/net/wireless/rtl8723bs/Makefile
+}
+
+rtl8723bs_module(){
+if [[ "$BOARD" == "tinker" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	echo "CONFIG_RTL8723BS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
+fi
+}
+
 extra_wireless(){
-if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rtl8188eu -eq 1 ] || [[ "$BOARD" == "orangepir1" ]] || [[ "$BOARD" == "x96air" ]]; then
+if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rtl8188eu -eq 1 ] || [[ "$BOARD" == "orangepir1" || "$BOARD" == "tinker" || "$BOARD" == "x96air" ]]; then
 	echo ""
 	if [ $rtl8812au -eq 1 ]; then
 		echo -en "${WHT}Realtek 88XXAU${FIN} ";
@@ -252,6 +320,11 @@ if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rt
 	if [[ "$BOARD" == "orangepir1" ]]; then
 		echo -en "${WHT}Realtek 8189ES${FIN} ";
 		rtl8189es_download;
+		echo_bdone;
+	fi
+	if [[ "$BOARD" == "tinker" ]]; then
+		echo -en "${WHT}Realtek 8723DS${FIN} ";
+		rtl8723ds_download;
 		echo_bdone;
 	fi
 	if [[ "$BOARD" == "x96air" ]]; then

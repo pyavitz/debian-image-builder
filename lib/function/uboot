@@ -195,10 +195,18 @@ fi
 u-boot
 if [[ -f "idbloader.img" ]]; then
 	mkdir -p ../../${OUTPUT}
-	cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
-	cp -f u-boot.itb ../../${OUTPUT}/
-	uboot_packaging
-	echo ""
+	if [[ "$ARCH" == "arm" ]]; then
+		cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
+		cp -f u-boot.bin u-boot.itb
+		cp -f u-boot.itb ../../${OUTPUT}/
+		uboot_packaging
+		echo ""
+	else
+		cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
+		cp -f u-boot.itb ../../${OUTPUT}/
+		uboot_packaging
+		echo ""
+	fi
 else
 	echo "Something went wrong? Please report."
 	echo ""
