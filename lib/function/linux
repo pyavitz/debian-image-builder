@@ -30,10 +30,10 @@ if [[ "$SERIES" == "bcm2711" ]]; then
 	${DOWNLOAD} ${BINURL}start4x.elf
 	cd ..
 	if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo_bdone;
+		echo_bdone
 	else
-		echo_fail;
-		exit 0;
+		echo_fail
+		exit 0
 	fi
 else
 	${DOWNLOAD} ${BINURL}bootcode.bin
@@ -47,10 +47,10 @@ else
 	${DOWNLOAD} ${BINURL}start_x.elf
 	cd ..
 	if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo_bdone;
+		echo_bdone
 	else
-		echo_fail;
-		exit 0;
+		echo_fail
+		exit 0
 	fi
 fi
 }
@@ -59,10 +59,10 @@ fi
 download(){
 MLURL="https://git.kernel.org/torvalds/t/"
 if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	mainline_download;
-	mainline_extract;
+	mainline_download
+	mainline_extract
 else
-	check_stable;
+	check_stable
 fi
 }
 
@@ -71,10 +71,10 @@ check_stable(){
 RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
 STBURL="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
 if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	stable_download;
-	stable_extract;
+	stable_download
+	stable_extract
 else
-	check_github;
+	check_github
 fi
 }
 
@@ -153,12 +153,12 @@ if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y" ]]; then
 	SETUP="vendor"
 fi
 if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/${GITHUB}/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	vendor_download;
-	vendor_extract;
+	vendor_download
+	vendor_extract
 else
-	echo "";
-	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?";
-	exit;
+	echo ""
+	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?"
+	exit
 fi
 }
 
@@ -166,9 +166,9 @@ stable_download(){
 if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
 	:;
 else
-	echo_stable;
+	echo_stable
 	${DOWNLOAD} ${STBURL}${KERNEL}-${VERSION}.tar.xz
-	echo_bdone;
+	echo_bdone
 fi
 extra_wireless
 }
@@ -177,9 +177,9 @@ mainline_download(){
 if  [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
 	:;
 else
-	echo_mainline;
+	echo_mainline
 	${DOWNLOAD} ${MLURL}${KERNEL}-${VERSION}.tar.gz
-	echo_bdone;
+	echo_bdone
 fi
 extra_wireless
 }
@@ -188,9 +188,9 @@ vendor_download(){
 if [[ -f "${VKERNEL}-${VERSION}.tar.gz" ]]; then
 	:;
 else
-	echo_vendor;
+	echo_vendor
 	${DOWNLOAD} https://github.com/${REPO}/${GITHUB}/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
-	echo_bdone;
+	echo_bdone
 fi
 extra_wireless
 }
@@ -221,28 +221,29 @@ setup(){
 sleep 1s
 cd ${KERNEL}-${VERSION}
 if [ $rtl8812au -eq 1 ]; then
-	rtl8812au;
+	rtl8812au
 fi
 if [ $rtl88x2bu -eq 1 ]; then
-	rtl88x2bu;
+	rtl88x2bu
 fi
 if [ $rtl8811cu -eq 1 ]; then
-	rtl8811cu;
+	rtl8811cu
 fi
 if [ $rtl8188eu -eq 1 ]; then
-	rtl8188eu;
+	rtl8188eu
 fi
 if [[ "$BOARD" == "orangepir1" ]]; then
-	rtl8189es;
+	rtl8189es
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
-	rpi_firmware;
+	rpi_firmware
 fi
 if [[ "$BOARD" == "tinker" ]]; then
-	rtl8723ds;
+	rtl8723bs
+	rtl8723ds
 fi
 if [[ "$BOARD" == "x96air" ]]; then
-	rtl88x2cs;
+	rtl88x2cs
 fi
 export ARCH=${ARCH}
 # remove builddeb and mkdebian scripts
@@ -255,13 +256,13 @@ chmod +x scripts/package/{builddeb,mkdebian}
 vendor_setup(){
 cd ${KERNEL}-${VERSION}
 if [ $rtl8812au -eq 1 ]; then
-	rtl8812au;
+	rtl8812au
 fi
 if [ $rtl88x2bu -eq 1 ]; then
-	rtl88x2bu;
+	rtl88x2bu
 fi
 if [ $rtl8811cu -eq 1 ]; then
-	rtl8811cu;
+	rtl8811cu
 fi
 export ARCH=${ARCH}
 if [[ "$VERSION" == "4.9.y" ]]; then
@@ -294,9 +295,9 @@ else
 	exit 1
 fi
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG}
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG}
 fi
 echo_done
 }
@@ -322,12 +323,13 @@ rtl88x2bu_module
 rtl8811cu_module
 rtl8188eu_module
 rtl8189es_module
+rtl8723bs_module
 rtl8723ds_module
 rtl88x2cs_module
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG}
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG}
 fi
 echo_done
 }
@@ -335,23 +337,23 @@ echo_done
 vendor_config(){
 echo_defconfig
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$VERSION" == "4.9.y" ]]; then
-	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG};
+	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$VERSION" == "4.19.y" ]]; then
-	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG};
+	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
 	:;
 else
-	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/;
+	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
 fi
 rtl8812au_module
 rtl88x2bu_module
 rtl8811cu_module
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG}
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG};
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG}
 fi
 echo_done
 }
@@ -361,9 +363,9 @@ echo ""
 echo_menuconfig
 sleep 1s
 if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig;
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" menuconfig;
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" menuconfig
 fi
 }
 
