@@ -1,80 +1,17 @@
 #!/bin/bash
 
-# github / bsp
-amlogic_bsp(){
-if [[ "$BOARD" == "odroidc1" ]]; then
-	if [[ "$FORCE_VERSION" == "true" ]]; then
-		sed -i '12s/.*/VERSION="'"5.19.17"'"/' userdata.txt
-	fi
-fi
-}
-
-broadcom_bsp(){
-if [[ "$BOARD" == "raspi2" || "$BOARD" == "raspi3" || "$BOARD" == "raspi-32b" || "$BOARD" == "raspi4" || "$BOARD" == "raspizero" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/raspberrypi/linux/
-		echo "raspberrypi" > github.txt
-		echo "rpi" >> github.txt
-	fi
-fi
-}
-
-rockchip_bsp(){
-# RK3588
-if [[ "$BOARD" == "khadasedge2" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/khadas/linux/
-		sed -i "12s/.*/VERSION="'"5.10.y-release-v1.0.0"'"/" userdata.txt
-		echo "khadas" > github.txt
-		echo "khadas-edges" >> github.txt
-	fi
-fi
-if [[ "$BOARD" == "orangepi5" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/orangepi-xunlong/linux-orangepi/
-		sed -i "12s/.*/VERSION="'"5.10-rk3588"'"/" userdata.txt
-		echo "orangepi-xunlong" > github.txt
-		echo "orange-pi" >> github.txt
-	fi
-fi
-if [[ "$BOARD" == "rock5b" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/radxa/kernel/
-		sed -i "12s/.*/VERSION="'"5.10-gen-rkr3.4"'"/" userdata.txt
-		echo "radxa" > github.txt
-		echo "linux" >> github.txt
-	fi
-fi
-# RK3568
-if [[ "$BOARD" == "nanopir5s" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling https://github.com/friendlyarm/kernel-rockchip/
-		LINUX_DEFCONFIG="nanopi-r5s_defconfig" # vendor
-		sed -i "12s/.*/VERSION="'"v5.10.y_opt"'"/" userdata.txt
-		echo "friendlyarm" > github.txt
-		echo "nanopi5" >> github.txt
-	fi
-fi
-if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
-	JSON_FILE="https://kernel.org/releases.json"
-	STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
-	if [[ "$FORCE_VERSION" == "true" ]]; then
-		sed -i '12s/.*/VERSION="'"${STABLE}"'"/' userdata.txt
-	fi
-fi
-}
-
+# github
 check_github(){
-if [ -f ../github.txt ]; then
-	REPO=`sed 2d ../github.txt`
-	BRANCH=`sed 1d ../github.txt`
-	REPO_KERNEL=`sed 1d ../github.txt`
-	VKERNEL="${GITHUB}-${BRANCH}"
+if [[ -f "../github.txt" ]]; then
+	if [[ "$VERSION" == "4.9.y" || "$VERSION" == "4.19.y" ]]; then
+		SETUP="vendor" # avoid patching
+	fi
+	if [ -z "$GITHUB" ]; then GITHUB=`sed -n 1p ../github.txt`; fi
+	if [ -z "$GITHUB_REPO" ]; then GITHUB_REPO=`sed -n 2p ../github.txt`; fi	
+	if [ -z "$GITHUB_BRANCH" ]; then GITHUB_BRANCH=`sed -n 3p ../github.txt`; fi
+	VENDOR_KERNEL="${GITHUB_REPO}-${GITHUB_BRANCH}"
 fi
-if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y" ]]; then
-	SETUP="vendor"
-fi
-if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/${GITHUB}/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+if [[ `wget -S --spider https://raw.githubusercontent.com/${GITHUB}/${GITHUB_REPO}/${GITHUB_BRANCH}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	vendor_download
 	vendor_extract
 else
@@ -85,11 +22,11 @@ fi
 }
 
 vendor_download(){
-if [[ -f "${VKERNEL}-${VERSION}.tar.gz" ]]; then
+if [[ -f "${VENDOR_KERNEL}-${VERSION}.tar.gz" ]]; then
 	:;
 else
 	echo_vendor
-	${DOWNLOAD} https://github.com/${REPO}/${GITHUB}/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
+	${DOWNLOAD} https://github.com/${GITHUB}/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}-${VERSION}.tar.gz
 	echo_bdone
 fi
 extra_wireless
@@ -98,8 +35,8 @@ extra_wireless
 vendor_extract(){
 echo ""
 echo_extract
-pv ${VKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-mv -f ${VKERNEL}-${VERSION} linux-${VERSION}
+pv ${VENDOR_KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+mv -f ${VENDOR_KERNEL}-${VERSION} linux-${VERSION}
 if [[ -e "linux-${VERSION}/debian" ]]; then
 	rm -fdr linux-${VERSION}/debian;
 fi

@@ -138,8 +138,11 @@ ifdef myconfig
 endif
 
 # GITHUB
+ifdef github
+	@echo "$(github)" > github.txt
+endif
 ifdef repo
-	@echo "$(repo)" > github.txt
+	@echo "$(repo)" >> github.txt
 endif
 ifdef branch
 	@echo "$(branch)" >> github.txt

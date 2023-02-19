@@ -9,13 +9,33 @@ source lib/function/patching
 source lib/function/compiler
 source lib/function/wireless
 source board.txt
-if [[ "$FAMILY" == "amlogic" || "$FAMILY" == "broadcom" || "$FAMILY" == "rockchip" ]]; then ${FAMILY}_bsp; fi
 source userdata.txt
-LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 
 if [ $verbose -eq 1 ]; then
 	set -x;
 fi
+
+# override the userdata.txt file for best user experience
+if [[ "$FORCE_GITHUB" == "true" ]]; then
+	VERSION="${GITHUB_BRANCH_VERSION}"
+	echo "${GITHUB}" > github.txt
+	echo "${GITHUB_REPO}" >> github.txt
+	echo "${GITHUB_BRANCH}" >> github.txt
+fi
+if [[ "$FORCE_VERSION" == "true" ]]; then
+	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
+fi
+if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
+	JSON_FILE="https://kernel.org/releases.json"
+	STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
+	if [[ "$FORCE_VERSION" == "true" ]]; then
+		VERSION="${STABLE}"
+	fi
+fi
+# end override
+
+LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
+
 if [ $ccache -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		rm -f {ccache.txt,gcc.txt};
@@ -43,7 +63,7 @@ fi
 # download and extract
 download
 # setup
-if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]] && [[ "$VERSION" == "4.9.y" || "$VERSION" == "4.19.y" ]]; then
+if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
 	vendor_setup
 else
 	setup
