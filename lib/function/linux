@@ -78,90 +78,6 @@ else
 fi
 }
 
-# github
-amlogic_bsp(){
-if [[ "$BOARD" == "odroidc1" ]]; then
-	if [[ "$FORCE_VERSION" == "true" ]]; then
-		sed -i '12s/.*/VERSION="'"5.19.17"'"/' userdata.txt
-	fi
-fi
-}
-
-broadcom_bsp(){
-if [[ "$BOARD" == "raspi2" || "$BOARD" == "raspi3" || "$BOARD" == "raspi-32b" || "$BOARD" == "raspi4" || "$BOARD" == "raspizero" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/raspberrypi/linux/
-		echo "raspberrypi" > github.txt
-		echo "rpi" >> github.txt
-	fi
-fi
-}
-
-rockchip_bsp(){
-# RK3588
-if [[ "$BOARD" == "khadasedge2" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/khadas/linux/
-		sed -i "12s/.*/VERSION="'"5.10.y-release-v1.0.0"'"/" userdata.txt
-		echo "khadas" > github.txt
-		echo "khadas-edges" >> github.txt
-	fi
-fi
-if [[ "$BOARD" == "orangepi5" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/orangepi-xunlong/linux-orangepi/
-		sed -i "12s/.*/VERSION="'"5.10-rk3588"'"/" userdata.txt
-		echo "orangepi-xunlong" > github.txt
-		echo "orange-pi" >> github.txt
-	fi
-fi
-if [[ "$BOARD" == "rock5b" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling from https://github.com/radxa/kernel/
-		sed -i "12s/.*/VERSION="'"5.10-gen-rkr3.4"'"/" userdata.txt
-		echo "radxa" > github.txt
-		echo "linux" >> github.txt
-	fi
-fi
-# RK3568
-if [[ "$BOARD" == "nanopir5s" ]]; then
-	if [[ "$FORCE_GITHUB" == "true" ]]; then
-		# force pulling https://github.com/friendlyarm/kernel-rockchip/
-		LINUX_DEFCONFIG="nanopi-r5s_defconfig" # vendor
-		sed -i "12s/.*/VERSION="'"v5.10.y_opt"'"/" userdata.txt
-		echo "friendlyarm" > github.txt
-		echo "nanopi5" >> github.txt
-	fi
-fi
-if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm1" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
-	JSON_FILE="https://kernel.org/releases.json"
-	STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
-	if [[ "$FORCE_VERSION" == "true" ]]; then
-		sed -i '12s/.*/VERSION="'"${STABLE}"'"/' userdata.txt
-	fi
-fi
-}
-
-check_github(){
-if [ -f ../github.txt ]; then
-	REPO=`sed 2d ../github.txt`
-	BRANCH=`sed 1d ../github.txt`
-	REPO_KERNEL=`sed 1d ../github.txt`
-	VKERNEL="${GITHUB}-${BRANCH}"
-fi
-if [[ `echo $VERSION | sed 's/[0-9]*//g'` == "..y" ]]; then
-	SETUP="vendor"
-fi
-if [[ `wget -S --spider https://raw.githubusercontent.com/${REPO}/${GITHUB}/${REPO_KERNEL}-${VERSION}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	vendor_download
-	vendor_extract
-else
-	echo ""
-	echo -e "${WHT}It appears the kernel you selected is not available${FIN}?"
-	exit
-fi
-}
-
 stable_download(){
 if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
 	:;
@@ -184,17 +100,6 @@ fi
 extra_wireless
 }
 
-vendor_download(){
-if [[ -f "${VKERNEL}-${VERSION}.tar.gz" ]]; then
-	:;
-else
-	echo_vendor
-	${DOWNLOAD} https://github.com/${REPO}/${GITHUB}/archive/refs/heads/${REPO_KERNEL}-${VERSION}.tar.gz
-	echo_bdone
-fi
-extra_wireless
-}
-
 stable_extract(){
 echo ""
 echo_extract
@@ -205,16 +110,6 @@ mainline_extract(){
 echo ""
 echo_extract
 pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-}
-
-vendor_extract(){
-echo ""
-echo_extract
-pv ${VKERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-mv -f ${VKERNEL}-${VERSION} linux-${VERSION}
-if [[ -e "linux-${VERSION}/debian" ]]; then
-	rm -fdr linux-${VERSION}/debian;
-fi
 }
 
 setup(){
@@ -251,35 +146,6 @@ rm -f scripts/package/{builddeb,mkdebian}
 # add custom builddeb and mkdebian scripts
 cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 chmod +x scripts/package/{builddeb,mkdebian}
-}
-
-vendor_setup(){
-cd ${KERNEL}-${VERSION}
-if [ $rtl8812au -eq 1 ]; then
-	rtl8812au
-fi
-if [ $rtl88x2bu -eq 1 ]; then
-	rtl88x2bu
-fi
-if [ $rtl8811cu -eq 1 ]; then
-	rtl8811cu
-fi
-export ARCH=${ARCH}
-if [[ "$VERSION" == "4.9.y" ]]; then
-	# remove builddeb script
-	rm -f scripts/package/builddeb
-	# add custom builddeb script
-	cp -fr ../../packaging/builddeb-4.9 scripts/package/builddeb
-	chmod +x scripts/package/builddeb
-fi
-if [[ "$VERSION" == "4.19.y" ]]; then
-	# remove builddeb and mkdebian scripts
-	rm -f scripts/package/{builddeb,mkdebian}
-	# add custom builddeb and mkdebian scripts
-	cp -fr ../../packaging/builddeb-4.19 scripts/package/builddeb
-	cp -fr ../../packaging/mkdebian-4.19 scripts/package/mkdebian
-	chmod +x scripts/package/{builddeb,mkdebian}
-fi
 }
 
 cconfig(){
@@ -326,30 +192,6 @@ rtl8189es_module
 rtl8723bs_module
 rtl8723ds_module
 rtl88x2cs_module
-if [ $crosscompile -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG}
-else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG}
-fi
-echo_done
-}
-
-vendor_config(){
-echo_defconfig
-if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$VERSION" == "4.9.y" ]]; then
-	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$VERSION" == "4.19.y" ]]; then
-	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
-	:;
-else
-	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
-fi
-rtl8812au_module
-rtl88x2bu_module
-rtl8811cu_module
 if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG}
 else
