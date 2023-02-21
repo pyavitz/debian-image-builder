@@ -352,6 +352,64 @@ fi
 read -p "Press enter to continue."
 }
 
+tinker_rtc_ds1307(){
+if [[ `apt list fake-hwclock | grep "[installed]"` ]] &> /dev/null; then
+	sudo systemctl stop fake-hwclock
+	sudo systemctl disable fake-hwclock
+fi
+if [[ `grep -w "rtc-ds1307" "/etc/modules"` ]]; then
+	if [[ `lsmod | grep -w rtc_ds1307` || `lsmod | grep -w rtc-ds1307` ]]; then
+		:;
+	else
+		sudo modprobe rtc-ds1307
+	fi
+else
+	echo "rtc-ds1307" | sudo tee -a /etc/modules
+	if [[ `lsmod | grep -w rtc_ds1307` || `lsmod | grep -w rtc-ds1307` ]]; then
+		:;
+	else
+		sudo modprobe rtc-ds1307
+	fi
+fi
+if [[ -f "/lib/udev/rules.d/50-udev-default.rules" ]]; then
+	sudo sed -i 's/rtc0/rtc1/' /lib/udev/rules.d/50-udev-default.rules
+fi
+if [[ -f "/lib/udev/rules.d/85-hwclock.rules" ]]; then
+	sudo sed -i 's/rtc0/rtc1/' /lib/udev/rules.d/85-hwclock.rules
+fi
+if [[ -f "/etc/default/hwclock" ]]; then
+	sudo sed -i 's/rtc0/rtc1/' /etc/default/hwclock
+fi
+if [[ -f "/lib/udev/hwclock-set" ]]; then
+	sudo sed -i 's/rtc0/rtc1/' /lib/udev/hwclock-set
+fi
+if [[ -f "/usr/local/sbin/rtc-ds1307" ]]; then
+	sudo chmod +x /usr/local/sbin/rtc-ds1307
+else
+	sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/rtc-ds1307 -P /usr/local/sbin
+	sudo chmod +x /usr/local/sbin/rtc-ds1307
+fi
+
+if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
+	:;
+else
+	sudo tee /etc/systemd/system/rtc-ds1307.service <<EOF
+[Unit]
+Description=RTC DS1307
+Before=cloud-init-local.service
+Requires=systemd-modules-load.service
+After=systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rtc-ds1307
+
+[Install]
+WantedBy=multi-user.target
+EOF
+fi
+}
+
 # main menu
 while [ 1 ]
 do
@@ -453,8 +511,9 @@ case $CHOICE in
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
 			"FC)" "Fan Control              Set trip point" \
-			"ST)" "Debconf                  Reconfigure ${RELEASE} configuration system" \
+			"DC)" "Debconf                  Reconfigure ${RELEASE} configuration system" \
 			"RZ)" "Radxa Zero Rev 1.5       Wifi (cap SDIO speed)" \
+			"TB)" "Tinkerboard R2.0         Enable DS1307 RTC" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $MISC in
@@ -487,7 +546,7 @@ case $CHOICE in
 					whiptail --msgbox "    This requires a internet connection." 0 0
 				fi
 				;;
-			"ST)")
+			"DC)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					clear -x
 					echo -e "Reconfiguring ...";
@@ -537,6 +596,42 @@ case $CHOICE in
 						echo ""
 						read -p "Press enter to continue.";
 						clear -x;
+					else
+						export NEWT_COLORS='root=,black'
+						whiptail --msgbox "    Your board is not supported." 0 0;
+					fi
+				else
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    This requires a internet connection." 0 0;
+				fi
+				;;
+			"TB)")
+				if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    Service already installed." 0 0
+					break
+				fi
+				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					if [[ "$BOARD" == "tinker" ]]; then
+						tinker_rtc_ds1307
+						while true; do
+							export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+								if (whiptail --backtitle "Menu Interface: Sync Clock: Confirm" --title "Confirm" --yesno "    Keep System Time and RTC in sync?" 0 0); then
+									sudo sed -i 's/SYNC_CLK="false"/SYNC_CLK="true"/g' /usr/local/sbin/rtc-ds1307
+									sleep .50
+									sudo systemctl enable rtc-ds1307.service
+									sudo systemctl start rtc-ds1307.service
+									sudo systemctl set-default multi-user.target
+									whiptail --backtitle "Menu Interface: Sync Clock: Confirmation" --title "Confirmation" --msgbox "    Enabled." 0 0;
+								else
+									sleep .50
+									sudo systemctl enable rtc-ds1307.service
+									sudo systemctl start rtc-ds1307.service
+									sudo systemctl set-default multi-user.target
+									whiptail --title "Clock Not Synced" --msgbox "    Hit enter to return to menu." 0 0;
+								fi
+							break
+						done
 					else
 						export NEWT_COLORS='root=,black'
 						whiptail --msgbox "    Your board is not supported." 0 0;

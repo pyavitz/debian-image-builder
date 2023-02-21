@@ -1,0 +1,27 @@
+#!/bin/bash
+
+SYNC_CLK="false"
+
+if [[ -e "/sys/class/i2c-adapter/i2c-1/new_device" ]]; then
+	echo "ds1307 0x68" > /sys/class/i2c-adapter/i2c-1/new_device
+	hwclock -s
+	hwclock --rtc /dev/rtc1 --hctosys
+	hwclock -w
+fi
+
+if [[ "$SYNC_CLK" == "true" ]]; then
+	while ! [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]
+	do
+		sleep 1
+	done
+	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+		sleep 5
+		date -s "$(curl -s --head http://google.com | grep ^Date: | sed 's/Date: //g')"
+		# sink rtc clock with network
+		sleep 5
+		RTC_TIME=`date +%F_%T | sed 's/_/ /g'`
+		timedatectl set-time "$RTC_TIME"
+	fi
+fi
+
+exit 0
