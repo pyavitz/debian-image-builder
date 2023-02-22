@@ -90,7 +90,7 @@ help:
 	@echo ""
 	@echo "  WIP:        cubietruck cuboxi bananapim5 bananapip2zero khadasedge2"
 	@echo "              nanopir4s nanopir4se nanopir5c nanopir5s odroidc1 orangepi5"
-	@echo "              pinebookpro radxae25 rock5b"
+	@echo "              indiedroid-nova pinebookpro radxae25 rock5b"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install x86_64 dependencies"

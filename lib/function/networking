@@ -80,6 +80,24 @@ if [[ "$BOARD" == "tinker" ]] && [[ "$DISTRO" == "ubuntu" ]]; then
 	ln -s /lib/firmware /etc/firmware
 	git clone -b realtek https://github.com/pyavitz/firmware.git /lib/firmware/updates
 fi
+if [[ "$BOARD" == "indiedroid-nova" ]]; then
+    cd ~
+    echo ""
+    echo "Installing ${DEFAULT_MOTD} bluetooth support ..."
+    git clone https://github.com/stvhay/rkwifibt
+    # build the hci driver
+    cd rkwifibt
+    make -C realtek/rtk_hciattach
+    # Install the firmware and utility
+    mkdir -p /lib/firmware/rtl_bt
+    cp -fr realtek/RTL8821CS/* /lib/firmware/rtl_bt/
+    cp -f realtek/rtk_hciattach/rtk_hciattach /usr/bin/
+    cp -f bt_load_rtk_firmware                /usr/bin/
+    chmod +x /usr/bin/{rtk_hciattach,bt_load_rtk_firmware}
+	echo hci_uart >> /etc/modules
+    cd ~; rm -fdr rkwifibt
+fi
+
 echo ""
 }
 
