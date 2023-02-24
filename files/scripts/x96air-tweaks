@@ -9,4 +9,11 @@ if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	echo "setup" > /sys/class/leds/openvfd/led_on
 fi
 
+if [[ -e "/sys/bus/serial/drivers/hci_uart_h5/serial0-0" ]]; then
+	sleep .50
+	echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/unbind
+	sleep .50
+	echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/bind
+fi
+
 exit 0
