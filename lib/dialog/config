@@ -12,19 +12,25 @@ else
 fi
 JSON_FILE="https://kernel.org/releases.json"
 if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | grep -w 5.15` ]]; then
-	LINE="4p";
+	LTS1_L="4p";
 else
-	LINE="5p";
+	LTS1_L="5p";
 fi
-LATEST_LTS=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LINE | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
-LATEST_STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
+if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 3p | grep -w 6.1` ]]; then
+	LTS2_L="3p";
+else
+	LTS2_L="4p";
+fi
+LTS1=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LTS1_L | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
+LTS2=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LTS2_L | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
+STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 GCC=`ls -ls /usr/bin/gcc | sed 's/.*\(..\)/\1/' | sed 's/ //g'`
 ARCH=`uname -m`
 
 NAME=""
 USERNAME=""
 PASSWORD=""
-VERSION="$LATEST_LTS"
+VERSION="$LTS1"
 networkmanager="1"
 useracct="0"
 LOCALE="en_US.UTF-8"
