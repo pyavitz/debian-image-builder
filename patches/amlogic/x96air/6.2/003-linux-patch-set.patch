@@ -1,82 +1,3 @@
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-axg.dtsi b/arch/arm64/boot/dts/amlogic/meson-axg.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-axg.dtsi	2023-02-06 02:06:34.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-axg.dtsi	2023-02-06 16:43:45.618113825 -0500
-@@ -1885,7 +1885,7 @@
- 			sd_emmc_b: sd@5000 {
- 				compatible = "amlogic,meson-axg-mmc";
- 				reg = <0x0 0x5000 0x0 0x800>;
--				interrupts = <GIC_SPI 217 IRQ_TYPE_EDGE_RISING>;
-+				interrupts = <GIC_SPI 217 IRQ_TYPE_LEVEL_HIGH>;
- 				status = "disabled";
- 				clocks = <&clkc CLKID_SD_EMMC_B>,
- 					<&clkc CLKID_SD_EMMC_B_CLK0>,
-@@ -1897,7 +1897,7 @@
- 			sd_emmc_c: mmc@7000 {
- 				compatible = "amlogic,meson-axg-mmc";
- 				reg = <0x0 0x7000 0x0 0x800>;
--				interrupts = <GIC_SPI 218 IRQ_TYPE_EDGE_RISING>;
-+				interrupts = <GIC_SPI 218 IRQ_TYPE_LEVEL_HIGH>;
- 				status = "disabled";
- 				clocks = <&clkc CLKID_SD_EMMC_C>,
- 					<&clkc CLKID_SD_EMMC_C_CLK0>,
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-02-06 02:06:34.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-02-06 16:43:45.619113809 -0500
-@@ -2318,7 +2318,7 @@
- 		sd_emmc_a: sd@ffe03000 {
- 			compatible = "amlogic,meson-axg-mmc";
- 			reg = <0x0 0xffe03000 0x0 0x800>;
--			interrupts = <GIC_SPI 189 IRQ_TYPE_EDGE_RISING>;
-+			interrupts = <GIC_SPI 189 IRQ_TYPE_LEVEL_HIGH>;
- 			status = "disabled";
- 			clocks = <&clkc CLKID_SD_EMMC_A>,
- 				 <&clkc CLKID_SD_EMMC_A_CLK0>,
-@@ -2330,7 +2330,7 @@
- 		sd_emmc_b: sd@ffe05000 {
- 			compatible = "amlogic,meson-axg-mmc";
- 			reg = <0x0 0xffe05000 0x0 0x800>;
--			interrupts = <GIC_SPI 190 IRQ_TYPE_EDGE_RISING>;
-+			interrupts = <GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>;
- 			status = "disabled";
- 			clocks = <&clkc CLKID_SD_EMMC_B>,
- 				 <&clkc CLKID_SD_EMMC_B_CLK0>,
-@@ -2342,7 +2342,7 @@
- 		sd_emmc_c: mmc@ffe07000 {
- 			compatible = "amlogic,meson-axg-mmc";
- 			reg = <0x0 0xffe07000 0x0 0x800>;
--			interrupts = <GIC_SPI 191 IRQ_TYPE_EDGE_RISING>;
-+			interrupts = <GIC_SPI 191 IRQ_TYPE_LEVEL_HIGH>;
- 			status = "disabled";
- 			clocks = <&clkc CLKID_SD_EMMC_C>,
- 				 <&clkc CLKID_SD_EMMC_C_CLK0>,
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-gx.dtsi b/arch/arm64/boot/dts/amlogic/meson-gx.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-gx.dtsi	2023-02-06 02:06:34.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-gx.dtsi	2023-02-06 16:43:45.619113809 -0500
-@@ -602,21 +602,21 @@
- 			sd_emmc_a: mmc@70000 {
- 				compatible = "amlogic,meson-gx-mmc", "amlogic,meson-gxbb-mmc";
- 				reg = <0x0 0x70000 0x0 0x800>;
--				interrupts = <GIC_SPI 216 IRQ_TYPE_EDGE_RISING>;
-+				interrupts = <GIC_SPI 216 IRQ_TYPE_LEVEL_HIGH>;
- 				status = "disabled";
- 			};
- 
- 			sd_emmc_b: mmc@72000 {
- 				compatible = "amlogic,meson-gx-mmc", "amlogic,meson-gxbb-mmc";
- 				reg = <0x0 0x72000 0x0 0x800>;
--				interrupts = <GIC_SPI 217 IRQ_TYPE_EDGE_RISING>;
-+				interrupts = <GIC_SPI 217 IRQ_TYPE_LEVEL_HIGH>;
- 				status = "disabled";
- 			};
- 
- 			sd_emmc_c: mmc@74000 {
- 				compatible = "amlogic,meson-gx-mmc", "amlogic,meson-gxbb-mmc";
- 				reg = <0x0 0x74000 0x0 0x800>;
--				interrupts = <GIC_SPI 218 IRQ_TYPE_EDGE_RISING>;
-+				interrupts = <GIC_SPI 218 IRQ_TYPE_LEVEL_HIGH>;
- 				status = "disabled";
- 			};
- 		};
 diff -Naur a/crypto/aegis128-neon-inner.c b/crypto/aegis128-neon-inner.c
 --- a/crypto/aegis128-neon-inner.c	2023-02-06 02:06:34.000000000 -0500
 +++ b/crypto/aegis128-neon-inner.c	2023-02-06 16:43:45.607113995 -0500
@@ -131,9 +52,14 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		return;
  
 diff -Naur a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
---- a/drivers/mmc/host/meson-gx-mmc.c	2023-02-06 02:06:34.000000000 -0500
-+++ b/drivers/mmc/host/meson-gx-mmc.c	2023-02-06 19:05:43.545169803 -0500
-@@ -38,20 +38,18 @@
+--- a/drivers/mmc/host/meson-gx-mmc.c	2023-02-25 05:25:43.000000000 -0500
++++ b/drivers/mmc/host/meson-gx-mmc.c	2023-02-25 16:11:03.548144268 -0500
+@@ -1,3 +1,4 @@
++
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+  * Amlogic SD/eMMC driver for the GX/S905 family SoCs
+@@ -38,6 +39,7 @@
  #define   CLK_RX_PHASE_MASK GENMASK(13, 12)
  #define   CLK_PHASE_0 0
  #define   CLK_PHASE_180 2
@@ -141,38 +67,15 @@ diff -Naur a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
  #define   CLK_V2_TX_DELAY_MASK GENMASK(19, 16)
  #define   CLK_V2_RX_DELAY_MASK GENMASK(23, 20)
  #define   CLK_V2_ALWAYS_ON BIT(24)
--#define   CLK_V2_IRQ_SDIO_SLEEP BIT(25)
- 
- #define   CLK_V3_TX_DELAY_MASK GENMASK(21, 16)
- #define   CLK_V3_RX_DELAY_MASK GENMASK(27, 22)
- #define   CLK_V3_ALWAYS_ON BIT(28)
--#define   CLK_V3_IRQ_SDIO_SLEEP BIT(29)
- 
- #define   CLK_TX_DELAY_MASK(h)		(h->data->tx_delay_mask)
- #define   CLK_RX_DELAY_MASK(h)		(h->data->rx_delay_mask)
- #define   CLK_ALWAYS_ON(h)		(h->data->always_on)
--#define   CLK_IRQ_SDIO_SLEEP(h)		(h->data->irq_sdio_sleep)
- 
- #define SD_EMMC_DELAY 0x4
- #define SD_EMMC_ADJUST 0x8
-@@ -138,7 +136,7 @@
- 	unsigned int rx_delay_mask;
+@@ -139,6 +141,7 @@
  	unsigned int always_on;
  	unsigned int adjust;
--	unsigned int irq_sdio_sleep;
+ 	unsigned int irq_sdio_sleep;
 +	unsigned int clk_core_phase;
  };
  
  struct sd_emmc_desc {
-@@ -178,7 +176,6 @@
- 	bool vqmmc_enabled;
- 	bool needs_pre_post_req;
- 
--	spinlock_t lock;
- };
- 
- #define CMD_CFG_LENGTH_MASK GENMASK(8, 0)
-@@ -432,10 +429,9 @@
+@@ -432,7 +435,7 @@
  	/* init SD_EMMC_CLOCK to sane defaults w/min clock rate */
  	clk_reg = CLK_ALWAYS_ON(host);
  	clk_reg |= CLK_DIV_MASK;
@@ -180,144 +83,19 @@ diff -Naur a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
 +	clk_reg |= FIELD_PREP(CLK_CORE_PHASE_MASK, host->data->clk_core_phase);
  	clk_reg |= FIELD_PREP(CLK_TX_PHASE_MASK, CLK_PHASE_0);
  	clk_reg |= FIELD_PREP(CLK_RX_PHASE_MASK, CLK_PHASE_0);
--	clk_reg |= CLK_IRQ_SDIO_SLEEP(host);
- 	writel(clk_reg, host->regs + SD_EMMC_CLOCK);
- 
- 	/* get the mux parents */
-@@ -934,54 +930,32 @@
- 	}
- }
- 
--static void __meson_mmc_enable_sdio_irq(struct mmc_host *mmc, int enable)
--{
--	struct meson_host *host = mmc_priv(mmc);
--	u32 reg_irqen = IRQ_EN_MASK;
--
--	if (enable)
--		reg_irqen |= IRQ_SDIO;
--	writel(reg_irqen, host->regs + SD_EMMC_IRQ_EN);
--}
--
- static irqreturn_t meson_mmc_irq(int irq, void *dev_id)
- {
- 	struct meson_host *host = dev_id;
- 	struct mmc_command *cmd;
-+	struct mmc_data *data;
- 	u32 status, raw_status;
- 	irqreturn_t ret = IRQ_NONE;
- 
- 	raw_status = readl(host->regs + SD_EMMC_STATUS);
--	status = raw_status & (IRQ_EN_MASK | IRQ_SDIO);
-+	status = raw_status & IRQ_EN_MASK;
- 
- 	if (!status) {
- 		dev_dbg(host->dev,
- 			"Unexpected IRQ! irq_en 0x%08lx - status 0x%08x\n",
--			 IRQ_EN_MASK | IRQ_SDIO, raw_status);
-+			 IRQ_EN_MASK, raw_status);
- 		return IRQ_NONE;
- 	}
- 
--	if (WARN_ON(!host))
-+	if (WARN_ON(!host) || WARN_ON(!host->cmd))
- 		return IRQ_NONE;
- 
- 	/* ack all raised interrupts */
- 	writel(status, host->regs + SD_EMMC_STATUS);
- 
- 	cmd = host->cmd;
--
--	if (status & IRQ_SDIO) {
--		spin_lock(&host->lock);
--		__meson_mmc_enable_sdio_irq(host->mmc, 0);
--		sdio_signal_irq(host->mmc);
--		spin_unlock(&host->lock);
--		status &= ~IRQ_SDIO;
--		if (!status)
--			return IRQ_HANDLED;
--	}
--
--	if (WARN_ON(!cmd))
--		return IRQ_NONE;
--
-+	data = cmd->data;
- 	cmd->error = 0;
- 	if (status & IRQ_CRC_ERR) {
- 		dev_dbg(host->dev, "CRC Error - status 0x%08x\n", status);
-@@ -999,9 +973,12 @@
- 
- 	meson_mmc_read_resp(host->mmc, cmd);
- 
--	if (status & (IRQ_END_OF_CHAIN | IRQ_RESP_STATUS)) {
--		struct mmc_data *data = cmd->data;
-+	if (status & IRQ_SDIO) {
-+		dev_dbg(host->dev, "IRQ: SDIO TODO.\n");
-+		ret = IRQ_HANDLED;
-+	}
- 
-+	if (status & (IRQ_END_OF_CHAIN | IRQ_RESP_STATUS)) {
- 		if (data && !cmd->error)
- 			data->bytes_xfered = data->blksz * data->blocks;
- 		if (meson_mmc_bounce_buf_read(data) ||
-@@ -1144,21 +1121,6 @@
- 	return -EINVAL;
- }
- 
--static void meson_mmc_enable_sdio_irq(struct mmc_host *mmc, int enable)
--{
--	struct meson_host *host = mmc_priv(mmc);
--	unsigned long flags;
--
--	spin_lock_irqsave(&host->lock, flags);
--	__meson_mmc_enable_sdio_irq(mmc, enable);
--	spin_unlock_irqrestore(&host->lock, flags);
--}
--
--static void meson_mmc_ack_sdio_irq(struct mmc_host *mmc)
--{
--	meson_mmc_enable_sdio_irq(mmc, 1);
--}
--
- static const struct mmc_host_ops meson_mmc_ops = {
- 	.request	= meson_mmc_request,
- 	.set_ios	= meson_mmc_set_ios,
-@@ -1168,8 +1130,6 @@
- 	.execute_tuning = meson_mmc_resampling_tuning,
- 	.card_busy	= meson_mmc_card_busy,
- 	.start_signal_voltage_switch = meson_mmc_voltage_switch,
--	.enable_sdio_irq = meson_mmc_enable_sdio_irq,
--	.ack_sdio_irq	= meson_mmc_ack_sdio_irq,
- };
- 
- static int meson_mmc_probe(struct platform_device *pdev)
-@@ -1275,13 +1235,7 @@
- 	if (ret)
- 		goto err_init_clk;
- 
--	spin_lock_init(&host->lock);
--
- 	mmc->caps |= MMC_CAP_CMD23;
--
--	if (mmc->caps & MMC_CAP_SDIO_IRQ)
--		mmc->caps2 |= MMC_CAP2_SDIO_IRQ_NOTHREAD;
--
- 	if (host->dram_access_quirk) {
- 		/* Limit segments to 1 due to low available sram memory */
- 		mmc->max_segs = 1;
-@@ -1374,7 +1328,7 @@
- 	.rx_delay_mask	= CLK_V2_RX_DELAY_MASK,
+ 	if (host->mmc->caps & MMC_CAP_SDIO_IRQ)
+@@ -1378,6 +1381,7 @@
  	.always_on	= CLK_V2_ALWAYS_ON,
  	.adjust		= SD_EMMC_ADJUST,
--	.irq_sdio_sleep	= CLK_V2_IRQ_SDIO_SLEEP,
+ 	.irq_sdio_sleep	= CLK_V2_IRQ_SDIO_SLEEP,
 +	.clk_core_phase	= CLK_PHASE_180,
  };
  
  static const struct meson_mmc_data meson_axg_data = {
-@@ -1382,7 +1336,7 @@
- 	.rx_delay_mask	= CLK_V3_RX_DELAY_MASK,
+@@ -1386,6 +1390,7 @@
  	.always_on	= CLK_V3_ALWAYS_ON,
  	.adjust		= SD_EMMC_V3_ADJUST,
--	.irq_sdio_sleep	= CLK_V3_IRQ_SDIO_SLEEP,
+ 	.irq_sdio_sleep	= CLK_V3_IRQ_SDIO_SLEEP,
 +	.clk_core_phase	= CLK_PHASE_270,
  };
  
