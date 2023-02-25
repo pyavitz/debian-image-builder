@@ -9,7 +9,7 @@ else
 fi
 
 # Overclock
-if [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
+if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]] && [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
 	if [ $overclock -eq 1 ]; then
 		echo "1" > /sys/devices/system/cpu/cpufreq/boost
 		sleep .25
@@ -20,6 +20,20 @@ if [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
 		echo "0" > /sys/devices/system/cpu/cpufreq/boost
 		sleep .25
 		echo "1416000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+		sleep .25
+		governor -r
+	fi
+fi
+if [[ "$BOARD" == "tinker" ]] && [[ -f "/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq" ]]; then
+	if [ $overclock -eq 1 ]; then
+		sleep .25
+		echo "1800000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+		sleep .25
+		governor -r
+	else
+		echo "0" > /sys/devices/system/cpu/cpufreq/boost
+		sleep .25
+		echo "1608000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
 		sleep .25
 		governor -r
 	fi

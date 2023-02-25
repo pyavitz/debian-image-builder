@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
---- a/arch/arm/boot/dts/rk3288.dtsi	2023-02-09 05:26:48.000000000 -0500
-+++ b/arch/arm/boot/dts/rk3288.dtsi	2023-02-17 11:09:22.935967459 -0500
+--- a/arch/arm/boot/dts/rk3288.dtsi	2023-02-14 13:11:56.000000000 -0500
++++ b/arch/arm/boot/dts/rk3288.dtsi	2023-02-24 02:23:53.102687473 -0500
 @@ -311,7 +311,7 @@
  		dma-names = "tx", "rx";
  		interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
@@ -74,16 +74,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
  	};
  
  	tsadc: tsadc@ff280000 {
-@@ -940,7 +932,7 @@
- 		status = "disabled";
- 	};
- 
--	spdif: sound@ff88b0000 {
-+	spdif: sound@ff8b0000 {
- 		compatible = "rockchip,rk3288-spdif", "rockchip,rk3066-spdif";
- 		reg = <0x0 0xff8b0000 0x0 0x10000>;
- 		#sound-dai-cells = <0>;
-@@ -989,8 +981,8 @@
+@@ -990,8 +982,8 @@
  		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
  		clocks = <&cru ACLK_IEP>, <&cru HCLK_IEP>;
  		clock-names = "aclk", "iface";
@@ -93,7 +84,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
  	};
  
  	isp_mmu: iommu@ff914000 {
-@@ -1178,6 +1170,7 @@
+@@ -1179,6 +1171,7 @@
  		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
  		clocks = <&cru SCLK_EDP>, <&cru PCLK_EDP_CTRL>;
  		clock-names = "dp", "pclk";
@@ -101,7 +92,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
  		phys = <&edp_phy>;
  		phy-names = "dp";
  		resets = <&cru SRST_EDP>;
-@@ -1224,6 +1217,7 @@
+@@ -1225,6 +1218,7 @@
  					reg = <0>;
  					remote-endpoint = <&vopb_out_hdmi>;
  				};
@@ -109,7 +100,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
  				hdmi_in_vopl: endpoint@1 {
  					reg = <1>;
  					remote-endpoint = <&vopl_out_hdmi>;
-@@ -1297,6 +1291,10 @@
+@@ -1298,6 +1292,10 @@
  			opp-hz = /bits/ 64 <400000000>;
  			opp-microvolt = <1100000>;
  		};
@@ -120,7 +111,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
  		opp-600000000 {
  			opp-hz = /bits/ 64 <600000000>;
  			opp-microvolt = <1250000>;
-@@ -1414,6 +1412,12 @@
+@@ -1415,6 +1413,12 @@
  		interrupts = <GIC_PPI 9 0xf04>;
  	};
  
@@ -134,8 +125,8 @@ diff -Naur a/arch/arm/boot/dts/rk3288.dtsi b/arch/arm/boot/dts/rk3288.dtsi
  		compatible = "rockchip,rk3288-pinctrl";
  		rockchip,grf = <&grf>;
 diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dts b/arch/arm/boot/dts/rk3288-tinker.dts
---- a/arch/arm/boot/dts/rk3288-tinker.dts	2023-02-09 05:26:48.000000000 -0500
-+++ b/arch/arm/boot/dts/rk3288-tinker.dts	2023-02-17 11:08:57.106310069 -0500
+--- a/arch/arm/boot/dts/rk3288-tinker.dts	2023-02-14 13:11:56.000000000 -0500
++++ b/arch/arm/boot/dts/rk3288-tinker.dts	2023-02-24 02:20:48.873566946 -0500
 @@ -6,8 +6,88 @@
  /dts-v1/;
  
@@ -226,27 +217,20 @@ diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dts b/arch/arm/boot/dts/rk3288-tink
 +};
 +
 diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dtsi b/arch/arm/boot/dts/rk3288-tinker.dtsi
---- a/arch/arm/boot/dts/rk3288-tinker.dtsi	2023-02-09 05:26:48.000000000 -0500
-+++ b/arch/arm/boot/dts/rk3288-tinker.dtsi	2023-02-17 11:08:57.107310056 -0500
-@@ -75,7 +75,7 @@
+--- a/arch/arm/boot/dts/rk3288-tinker.dtsi	2023-02-14 13:11:56.000000000 -0500
++++ b/arch/arm/boot/dts/rk3288-tinker.dtsi	2023-02-24 02:27:17.520528728 -0500
+@@ -73,8 +73,8 @@
  	sound {
  		compatible = "simple-audio-card";
  		simple-audio-card,format = "i2s";
 -		simple-audio-card,name = "rockchip,tinker-codec";
+-		simple-audio-card,mclk-fs = <512>;
 +		simple-audio-card,name = "HDMI";
- 		simple-audio-card,mclk-fs = <512>;
++		simple-audio-card,mclk-fs = <1024>;
  
  		simple-audio-card,codec {
-@@ -186,7 +186,7 @@
- 				regulator-always-on;
- 				regulator-boot-on;
- 				regulator-min-microvolt = <750000>;
--				regulator-max-microvolt = <1400000>;
-+				regulator-max-microvolt = <1450000>;
- 				regulator-name = "vdd_arm";
- 				regulator-ramp-delay = <6000>;
- 				regulator-state-mem {
-@@ -462,7 +462,12 @@
+ 			sound-dai = <&hdmi>;
+@@ -460,7 +460,12 @@
  	disable-wp;			/* wp not hooked up */
  	pinctrl-names = "default";
  	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_cd &sdmmc_bus4>;
@@ -259,7 +243,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dtsi b/arch/arm/boot/dts/rk3288-tin
  	vmmc-supply = <&vcc33_sd>;
  	vqmmc-supply = <&vccio_sd>;
  };
-@@ -493,6 +498,17 @@
+@@ -491,6 +496,17 @@
  
  &uart0 {
  	status = "okay";
@@ -277,7 +261,7 @@ diff -Naur a/arch/arm/boot/dts/rk3288-tinker.dtsi b/arch/arm/boot/dts/rk3288-tin
  };
  
  &uart1 {
-@@ -546,3 +562,6 @@
+@@ -544,3 +560,6 @@
  &wdt {
  	status = "okay";
  };
