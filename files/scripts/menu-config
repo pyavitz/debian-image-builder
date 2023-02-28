@@ -354,8 +354,14 @@ read -p "Press enter to continue."
 
 tinker_rtc_ds1307(){
 if [[ `apt list fake-hwclock | grep "[installed]"` ]] &> /dev/null; then
-	sudo systemctl stop fake-hwclock
-	sudo systemctl disable fake-hwclock
+	if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
+		sudo systemctl stop fake-hwclock
+		sudo systemctl disable fake-hwclock
+	fi
+	if [[ "$RELEASE" == "Devuan" ]]; then
+		sudo service fake-hwclock stop
+		sudo update-rc.d -f fake-hwclock remove
+	fi
 fi
 if [[ `grep -w "rtc-ds1307" "/etc/modules"` ]]; then
 	if [[ `lsmod | grep -w rtc_ds1307` || `lsmod | grep -w rtc-ds1307` ]]; then
@@ -389,11 +395,11 @@ else
 	sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/rtc-ds1307 -P /usr/local/sbin
 	sudo chmod +x /usr/local/sbin/rtc-ds1307
 fi
-
-if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
-	:;
-else
-	sudo tee /etc/systemd/system/rtc-ds1307.service <<EOF
+if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
+	if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
+		:;
+	else
+		sudo tee /etc/systemd/system/rtc-ds1307.service <<EOF
 [Unit]
 Description=RTC DS1307
 Before=cloud-init-local.service
@@ -407,6 +413,56 @@ ExecStart=/usr/local/sbin/rtc-ds1307
 [Install]
 WantedBy=multi-user.target
 EOF
+	fi
+fi
+if [[ "$RELEASE" == "Devuan" ]]; then
+	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
+		:;
+	else
+		sudo cat <<EOF > /etc/init.d/rtc-ds1307
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: RTC DS1307
+# Required-Start: $all
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 6
+# Short-Description: Starts RTC DS1307
+# Description:
+### END INIT INFO
+
+# chmod +x /etc/init.d/rtc-ds1307
+# update-rc.d rtc-ds1307 defaults 5
+
+. /lib/lsb/init-functions
+
+case "$1" in
+	start)
+	if [ -f /usr/local/sbin/rtc-ds1307 ]; then
+		/usr/local/sbin/rtc-ds1307;
+	fi
+	exit 0
+	;;
+	*)
+	echo "Usage: $0 start" >&2
+	exit 3
+	;;
+esac
+EOF
+	fi
+	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
+		sudo sed -i 's/# Required-Start:/# Required-Start: $all/g' /etc/init.d/rtc-ds1307
+		sudo sed -i 's/case "" in/case "$1" in/g' /etc/init.d/rtc-ds1307
+		sleep .25
+		sudo chmod +x /etc/init.d/rtc-ds1307
+		sleep .25
+		sudo update-rc.d rtc-ds1307 defaults 5
+		sudo service rtc-ds1307 start
+	fi
+	if [[ -f "/etc/init.d/hwclock.sh" ]]; then
+		sudo update-rc.d hwclock.sh defaults S
+		sudo service hwclock.sh start
+	fi
 fi
 }
 
