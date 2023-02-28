@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SYNC_CLK="false"
+RELEASE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 if [[ -e "/sys/class/i2c-adapter/i2c-1/new_device" ]]; then
 	echo "ds1307 0x68" > /sys/class/i2c-adapter/i2c-1/new_device
@@ -9,7 +10,7 @@ if [[ -e "/sys/class/i2c-adapter/i2c-1/new_device" ]]; then
 	hwclock -w
 fi
 
-if [[ "$SYNC_CLK" == "true" ]]; then
+if [[ "$SYNC_CLK" == "true" ]] && [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
 	while ! [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]
 	do
 		sleep 1

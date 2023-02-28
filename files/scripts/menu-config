@@ -419,7 +419,7 @@ if [[ "$RELEASE" == "Devuan" ]]; then
 	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
 		:;
 	else
-		sudo cat <<EOF > /etc/init.d/rtc-ds1307
+		sudo tee /etc/init.d/rtc-ds1307 <<'EOF'
 #!/bin/bash
 ### BEGIN INIT INFO
 # Provides: RTC DS1307
@@ -451,8 +451,8 @@ esac
 EOF
 	fi
 	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
-		sudo sed -i 's/# Required-Start:/# Required-Start: $all/g' /etc/init.d/rtc-ds1307
-		sudo sed -i 's/case "" in/case "$1" in/g' /etc/init.d/rtc-ds1307
+		#sudo sed -i 's/# Required-Start:/# Required-Start: $all/g' /etc/init.d/rtc-ds1307
+		#sudo sed -i 's/case "" in/case "$1" in/g' /etc/init.d/rtc-ds1307
 		sleep .25
 		sudo chmod +x /etc/init.d/rtc-ds1307
 		sleep .25
