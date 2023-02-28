@@ -459,10 +459,12 @@ EOF
 		sudo update-rc.d rtc-ds1307 defaults 5
 		sudo service rtc-ds1307 start
 	fi
-	#if [[ -f "/etc/init.d/hwclock.sh" ]]; then
-	#	sudo update-rc.d hwclock.sh defaults S
-	#	sudo service hwclock.sh start
-	#fi
+	if [[ -f "/etc/init.d/hwclock.sh" ]]; then
+		sudo sed -i 's/rtc0/rtc1/g' /etc/init.d/hwclock.sh
+		sleep .25
+		sudo update-rc.d hwclock.sh defaults S
+		sudo service hwclock.sh start
+	fi
 fi
 }
 
