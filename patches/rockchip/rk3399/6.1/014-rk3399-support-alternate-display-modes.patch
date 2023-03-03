@@ -59,8 +59,8 @@ diff -Naur a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
  
  /**
 diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
---- a/drivers/usb/typec/altmodes/displayport.c	2022-08-11 07:22:05.000000000 -0400
-+++ b/drivers/usb/typec/altmodes/displayport.c	2022-08-11 15:28:33.883896736 -0400
+--- a/drivers/usb/typec/altmodes/displayport.c	2023-02-25 05:13:30.000000000 -0500
++++ b/drivers/usb/typec/altmodes/displayport.c	2023-03-03 05:20:58.068368833 -0500
 @@ -9,6 +9,8 @@
   */
  
@@ -139,11 +139,11 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  		break;
  	default:
  		break;
-@@ -532,8 +574,14 @@
- 	if (!(DP_CAP_DFP_D_PIN_ASSIGN(port->vdo) &
- 	      DP_CAP_UFP_D_PIN_ASSIGN(alt->vdo)) &&
- 	    !(DP_CAP_UFP_D_PIN_ASSIGN(port->vdo) &
--	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo)))
+@@ -538,8 +580,13 @@
+ 	if (!(DP_CAP_PIN_ASSIGN_DFP_D(port->vdo) &
+ 	      DP_CAP_PIN_ASSIGN_UFP_D(alt->vdo)) &&
+ 	    !(DP_CAP_PIN_ASSIGN_UFP_D(port->vdo) &
+-	      DP_CAP_PIN_ASSIGN_DFP_D(alt->vdo)))
 -		return -ENODEV;
 +	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo))) {
 +            dev_err(&alt->dev, "No compatible pin configuration found:"\
@@ -152,7 +152,6 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
 +                    DP_CAP_UFP_D_PIN_ASSIGN(port->vdo), DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo));
 +            return -ENODEV;
 +	}
-+
  
  	ret = sysfs_create_group(&alt->dev.kobj, &dp_altmode_group);
  	if (ret)
