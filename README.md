@@ -104,6 +104,9 @@ FSTYPE="ext4"
 
 # UEFI Options: true false
 ENABLE_EFI="false"
+
+# Compression Types: xz zstd
+IMG_COMPRESSION="xz"
 ```
 
 #### User defconfig
