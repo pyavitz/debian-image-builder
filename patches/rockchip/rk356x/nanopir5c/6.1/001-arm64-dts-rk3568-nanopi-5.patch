@@ -1,17 +1,20 @@
 diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
---- a/arch/arm64/boot/dts/rockchip/Makefile	2022-07-31 17:03:01.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-08-09 16:59:32.416618211 -0400
-@@ -64,4 +64,5 @@
+--- a/arch/arm64/boot/dts/rockchip/Makefile	2023-03-03 05:52:25.000000000 -0500
++++ b/arch/arm64/boot/dts/rockchip/Makefile	2023-03-05 07:06:12.173167239 -0500
+@@ -71,4 +71,6 @@
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-soquartz-cm4.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-bpi-r2-pro.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-evb1-v10.dtb
++dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-nanopi-r5c.dtb
 +dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-nanopi-r5s.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3568-rock-3a.dtb
---- /dev/null	2022-09-19 05:48:12.228480272 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2022-09-19 06:20:09.055498252 -0400
-@@ -0,0 +1,825 @@
+--- /dev/null	2023-03-01 05:01:29.249787939 -0500
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-common.dtsi	2023-03-05 07:49:55.161510929 -0500
+@@ -0,0 +1,643 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+
++/*
++ * Copyright (c) 2023 FriendlyElec Computer Tech. Co., Ltd.
++ */
 +
 +/dts-v1/;
 +#include <dt-bindings/gpio/gpio.h>
@@ -21,11 +24,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +#include "rk3568.dtsi"
 +
 +/ {
-+	model = "FriendlyElec NanoPi R5S";
-+	compatible = "friendlyelec,nanopi-r5s", "rockchip,rk3568";
-+
 +	aliases {
-+		ethernet0 = &gmac0;
 +		mmc0 = &sdmmc0;
 +		mmc1 = &sdhci;
 +		led-boot = &sys_led;
@@ -36,14 +35,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +
 +	chosen: chosen {
 +		stdout-path = "serial2:1500000n8";
-+	};
-+
-+	fan: pwm-fan {
-+		compatible = "pwm-fan";
-+		cooling-levels = <0 18 102 170 255>;
-+		#cooling-cells = <2>;
-+		fan-supply = <&vcc5v0_sysp>;
-+		pwms = <&pwm0 0 50000 0>;
 +	};
 +
 +	firmware {
@@ -59,51 +50,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +			<0x0 0xfd90d000 0x0 0x1000>,
 +			<0x0 0xfd90e000 0x0 0x1000>,
 +			<0x0 0xfd90f000 0x0 0x1000>;
-+	};
-+
-+	gpio-key {
-+		compatible = "gpio-key";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&key1_pin>;
-+
-+		button@1 {
-+			debounce-interval = <50>;
-+			gpios = <&gpio4 RK_PA0 GPIO_ACTIVE_LOW>;
-+			wakeup-source;
-+		};
-+	};
-+
-+	gpio-leds {
-+		compatible = "gpio-leds";
-+
-+		sys_led: led-sys {
-+			gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-+			label = "red:power";
-+			linux,default-trigger = "heartbeat";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&sys_led_pin>;
-+		};
-+
-+		wan_led: led-wan {
-+			gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
-+			label = "green:wan";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&wan_led_pin>;
-+		};
-+
-+		lan1_led: led-lan1 {
-+			gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
-+			label = "green:lan1";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&lan1_led_pin>;
-+		};
-+
-+		lan2_led: led-lan2 {
-+			gpios = <&gpio3 RK_PD7 GPIO_ACTIVE_HIGH>;
-+			label = "green:lan2";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&lan2_led_pin>;
-+		};
 +	};
 +
 +	hdmi-con {
@@ -221,16 +167,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +		vin-supply = <&vcc5v0_usb>;
 +	};
 +
-+	vcc5v0_sysp: vcc5v0-sysp {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc5v0_sysp";
-+		regulator-always-on;
-+		regulator-boot-on;
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&vcc3v3_sys>;
-+	};
-+
 +	vcc5v0_usb_otg: vcc5v0-usb-otg {
 +		compatible = "regulator-fixed";
 +		enable-active-high;
@@ -241,6 +177,16 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		vin-supply = <&vcc5v0_usb>;
++	};
++
++	vcc5v0_sysp: vcc5v0-sysp {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc5v0_sysp";
++		regulator-always-on;
++		regulator-boot-on;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&vcc3v3_sys>;
 +	};
 +};
 +
@@ -271,33 +217,6 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +&cpu3 {
 +	cpu-supply = <&vdd_cpu>;
 +};
-+
-+&gmac0 {
-+	phy-mode = "rgmii";
-+	clock_in_out = "output";
-+
-+	snps,reset-gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
-+	snps,reset-active-low;
-+	/* Reset time is 20ms, 100ms for rtl8211f */
-+	snps,reset-delays-us = <0 20000 100000>;
-+
-+	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>;
-+	assigned-clock-parents = <&cru SCLK_GMAC0_RGMII_SPEED>, <&cru CLK_MAC0_2TOP>;
-+
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&gmac0_miim
-+		     &gmac0_tx_bus2
-+		     &gmac0_rx_bus2
-+		     &gmac0_rgmii_clk
-+		     &gmac0_rgmii_bus>;
-+
-+	tx_delay = <0x3c>;
-+	rx_delay = <0x2f>;
-+
-+	phy-handle = <&rgmii_phy0>;
-+	status = "okay";
-+};
-+
 +
 +&gpu {
 +	mali-supply = <&vdd_gpu>;
@@ -435,8 +354,8 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +			vdda0v9_image: LDO_REG1 {
 +				regulator-name = "vdda0v9_image";
 +				regulator-always-on;
-+				regulator-min-microvolt = <900000>;
-+				regulator-max-microvolt = <900000>;
++				regulator-min-microvolt = <950000>;
++				regulator-max-microvolt = <950000>;
 +
 +				regulator-state-mem {
 +					regulator-off-in-suspend;
@@ -561,11 +480,10 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +	};
 +};
 +
-+
 +&i2c5 {
 +	status = "okay";
 +
-+	hym8563: hym8563@51 {
++	hym8563: rtc@51 {
 +		compatible = "haoyu,hym8563";
 +		reg = <0x51>;
 +		pinctrl-names = "default";
@@ -585,6 +503,395 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +	status = "okay";
 +};
 +
++&pcie30phy {
++	data-lanes = <1 2>;
++	status = "okay";
++};
++
++&pinctrl {
++
++	pmic {
++		pmic_int: pmic_int {
++			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	rtc {
++		rtc_int: rtc-int {
++			rockchip,pins = <0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	usb {
++		vcc5v0_usb_host_en: vcc5v0-usb-host-en {
++			rockchip,pins = <0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		vcc5v0_usb_otg_en: vcc5v0-usb-otg-en {
++			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++};
++
++&pmu_io_domains {
++	pmuio1-supply = <&vcc3v3_pmu>;
++	pmuio2-supply = <&vcc3v3_pmu>;
++	vccio1-supply = <&vccio_acodec>;
++	vccio3-supply = <&vccio_sd>;
++	vccio4-supply = <&vcc_1v8>;
++	vccio5-supply = <&vcc_3v3>;
++	vccio6-supply = <&vcc_1v8>;
++	vccio7-supply = <&vcc_3v3>;
++	status = "okay";
++};
++
++&rng {
++	status = "okay";
++};
++
++&saradc {
++	vref-supply = <&vcca_1v8>;
++	status = "okay";
++};
++
++&sdhci {
++	bus-width = <8>;
++	max-frequency = <200000000>;
++	non-removable;
++	pinctrl-names = "default";
++	pinctrl-0 = <&emmc_bus8 &emmc_clk &emmc_cmd>;
++	status = "okay";
++};
++
++&sdmmc0 {
++	bus-width = <4>;
++	cap-sd-highspeed;
++	cd-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
++	disable-wp;
++	pinctrl-names = "default";
++	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
++	sd-uhs-sdr104;
++	vmmc-supply = <&vcc3v3_sd>;
++	vqmmc-supply = <&vccio_sd>;
++	status = "okay";
++};
++
++&tsadc {
++	rockchip,hw-tshut-mode = <1>;
++	rockchip,hw-tshut-polarity = <0>;
++	status = "okay";
++};
++
++&uart2 {
++	status = "okay";
++};
++
++&usb_host0_ehci {
++	status = "okay";
++};
++
++&usb_host0_ohci {
++	status = "okay";
++};
++
++&usb_host0_xhci {
++	extcon = <&usb2phy0>;
++	dr_mode = "host";
++	status = "okay";
++};
++
++&usb_host1_ehci {
++	status = "okay";
++};
++
++&usb_host1_ohci {
++	status = "okay";
++};
++
++&usb_host1_xhci {
++	status = "okay";
++};
++
++&usb2phy0 {
++	status = "okay";
++};
++
++&usb2phy0_host {
++	phy-supply = <&vcc5v0_usb_host>;
++	status = "okay";
++};
++
++&usb2phy0_otg {
++	status = "okay";
++};
++
++&usb2phy1 {
++	status = "okay";
++};
++
++&usb2phy1_host {
++	phy-supply = <&vcc5v0_usb_otg>;
++	status = "okay";
++};
++
++&usb2phy1_otg {
++	status = "okay";
++};
++
++&vop {
++	assigned-clocks = <&cru DCLK_VOP0>, <&cru DCLK_VOP1>;
++	assigned-clock-parents = <&pmucru PLL_HPLL>, <&cru PLL_VPLL>;
++	status = "okay";
++};
++
++&vop_mmu {
++	status = "okay";
++};
++
++&vp0 {
++	vp0_out_hdmi: endpoint@ROCKCHIP_VOP2_EP_HDMI0 {
++		reg = <ROCKCHIP_VOP2_EP_HDMI0>;
++		remote-endpoint = <&hdmi_in_vp0>;
++	};
++};
+--- /dev/null	2023-03-01 05:01:29.249787939 -0500
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5c.dts	2023-03-05 07:50:04.917451797 -0500
+@@ -0,0 +1,140 @@
++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
++
++/dts-v1/;
++#include <dt-bindings/input/input.h>
++#include "rk3568-nanopi-common.dtsi"
++
++/ {
++	model = "FriendlyElec NanoPi R5C";
++	compatible = "friendlyarm,nanopi-r5c", "rockchip,rk3568";
++
++	aliases {
++		ethernet0 = &rtl8125_1;
++		ethernet1 = &rtl8125_2;
++	};
++
++	gpio-keys {
++		compatible = "gpio-keys";
++		pinctrl-names = "default";
++		pinctrl-0 = <&reset_button_pin>;
++
++		button-reset {
++			debounce-interval = <50>;
++			gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_LOW>;
++			label = "reset";
++			linux,code = <KEY_RESTART>;
++		};
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++
++		sys_led: led-sys {
++			gpios = <&gpio3 RK_PA2 GPIO_ACTIVE_HIGH>;
++			label = "red:power";
++			linux,default-trigger = "heartbeat";
++			pinctrl-names = "default";
++			pinctrl-0 = <&sys_led_pin>;
++		};
++
++		wan_led: led-wan {
++			gpios = <&gpio3 RK_PA4 GPIO_ACTIVE_HIGH>;
++			label = "green:wan";
++			pinctrl-names = "default";
++			pinctrl-0 = <&wan_led_pin>;
++		};
++
++		led_lan: led-lan {
++			gpios = <&gpio3 RK_PA3 GPIO_ACTIVE_HIGH>;
++			label = "green:lan";
++			pinctrl-names = "default";
++			pinctrl-0 = <&lan_led_pin>;
++		};
++
++		wlan_led: led-wlan {
++			gpios = <&gpio3 RK_PA5 GPIO_ACTIVE_HIGH>;
++			label = "green:wlan";
++			pinctrl-names = "default";
++			pinctrl-0 = <&wlan_led_pin>;
++		};
++	};
++};
++
++&pcie2x1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie20_reset_pin>;
++	reset-gpios = <&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&pcie3x1 {
++	num-lanes = <1>;
++	reset-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie>;
++	status = "okay";
++
++	pcie@10 {
++		reg = <0x00100000 0 0 0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		rtl8125_1: pcie-eth@10,0 {
++			compatible = "pci10ec,8125";
++			reg = <0x000000 0 0 0 0>;
++
++			realtek,led-data = <0x78>;
++		};
++	};
++};
++
++&pcie3x2 {
++	num-lanes = <1>;
++	reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie>;
++	status = "okay";
++
++	pcie@20 {
++		reg = <0x00200000 0 0 0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		rtl8125_2: pcie-eth@20,0 {
++			compatible = "pci10ec,8125";
++			reg = <0x000000 0 0 0 0>;
++
++			realtek,led-data = <0x78>;
++		};
++	};
++};
++
++&pinctrl {
++	gpio-leds {
++		sys_led_pin: sys-led-pin {
++			rockchip,pins = <3 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		wan_led_pin: wan-led-pin {
++			rockchip,pins = <3 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		lan_led_pin: lan-led-pin {
++			rockchip,pins = <3 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		wlan_led_pin: wlan-led-pin {
++			rockchip,pins = <3 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
++	pcie {
++		pcie20_reset_pin: pcie20-reset-pin {
++			rockchip,pins = <2 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	rockchip-key {
++		reset_button_pin: reset-button-pin {
++			rockchip,pins = <4 RK_PA0 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++};
+--- /dev/null	2023-03-01 05:01:29.249787939 -0500
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2023-03-05 07:01:57.807457000 -0500
+@@ -0,0 +1,161 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++
++/dts-v1/;
++#include "rk3568-nanopi-common.dtsi"
++
++/ {
++	model = "FriendlyElec NanoPi R5S";
++	compatible = "friendlyarm,nanopi-r5s", "rockchip,rk3568";
++
++	aliases {
++		ethernet0 = &gmac0;
++	};
++
++	fan: pwm-fan {
++		compatible = "pwm-fan";
++		cooling-levels = <0 18 102 170 255>;
++		#cooling-cells = <2>;
++		fan-supply = <&vcc5v0_sysp>;
++		pwms = <&pwm0 0 50000 0>;
++	};
++
++	gpio-key {
++		compatible = "gpio-key";
++		pinctrl-names = "default";
++		pinctrl-0 = <&key1_pin>;
++
++		button@1 {
++			debounce-interval = <50>;
++			gpios = <&gpio4 RK_PA0 GPIO_ACTIVE_LOW>;
++			wakeup-source;
++		};
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++
++		sys_led: led-sys {
++			gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
++			label = "red:power";
++			linux,default-trigger = "heartbeat";
++			pinctrl-names = "default";
++			pinctrl-0 = <&sys_led_pin>;
++		};
++
++		wan_led: led-wan {
++			gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
++			label = "green:wan";
++			pinctrl-names = "default";
++			pinctrl-0 = <&wan_led_pin>;
++		};
++
++		lan1_led: led-lan1 {
++			gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
++			label = "green:lan1";
++			pinctrl-names = "default";
++			pinctrl-0 = <&lan1_led_pin>;
++		};
++
++		lan2_led: led-lan2 {
++			gpios = <&gpio3 RK_PD7 GPIO_ACTIVE_HIGH>;
++			label = "green:lan2";
++			pinctrl-names = "default";
++			pinctrl-0 = <&lan2_led_pin>;
++		};
++	};
++};
++
++&gmac0 {
++	phy-mode = "rgmii";
++	clock_in_out = "output";
++
++	snps,reset-gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
++	snps,reset-active-low;
++	/* Reset time is 20ms, 100ms for rtl8211f */
++	snps,reset-delays-us = <0 20000 100000>;
++
++	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>;
++	assigned-clock-parents = <&cru SCLK_GMAC0_RGMII_SPEED>, <&cru CLK_MAC0_2TOP>;
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&gmac0_miim
++		     &gmac0_tx_bus2
++		     &gmac0_rx_bus2
++		     &gmac0_rgmii_clk
++		     &gmac0_rgmii_bus>;
++
++	tx_delay = <0x3c>;
++	rx_delay = <0x2f>;
++
++	phy-handle = <&rgmii_phy0>;
++	status = "okay";
++};
 +
 +&mdio0 {
 +	rgmii_phy0: ethernet-phy@1 {
@@ -597,13 +904,9 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +	};
 +};
 +
-+&pcie30phy {
-+	data-lanes = <1 2>;
-+	status = "okay";
-+};
-+
 +&pcie3x1 {
 +	num-lanes = <1>;
++	// reset-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
 +	reset-gpios = <&gpio3 RK_PA1 GPIO_ACTIVE_HIGH>;
 +	vpcie3v3-supply = <&vcc3v3_ngff>;
 +	status = "okay";
@@ -653,411 +956,8 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +			rockchip,pins = <4 RK_PA0 RK_FUNC_GPIO &pcfg_pull_up>;
 +		};
 +	};
-+
-+	pmic {
-+		pmic_int: pmic_int {
-+			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+
-+	rtc {
-+		rtc_int: rtc-int {
-+			rockchip,pins = <0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+
-+	usb {
-+		vcc5v0_usb_host_en: vcc5v0-usb-host-en {
-+			rockchip,pins = <0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		vcc5v0_usb_otg_en: vcc5v0-usb-otg-en {
-+			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+	};
-+};
-+
-+&pmu_io_domains {
-+	pmuio1-supply = <&vcc3v3_pmu>;
-+	pmuio2-supply = <&vcc3v3_pmu>;
-+	vccio1-supply = <&vccio_acodec>;
-+	vccio3-supply = <&vccio_sd>;
-+	vccio4-supply = <&vcc_1v8>;
-+	vccio5-supply = <&vcc_3v3>;
-+	vccio6-supply = <&vcc_1v8>;
-+	vccio7-supply = <&vcc_3v3>;
-+	status = "okay";
 +};
 +
 +&pwm0 {
 +	status = "okay";
 +};
-+
-+&pwm4 {
-+	status = "disabled";
-+};
-+
-+&pwm5 {
-+	status = "disabled";
-+};
-+
-+&pwm7 {
-+	status = "disabled";
-+};
-+
-+&saradc {
-+	vref-supply = <&vcca_1v8>;
-+	status = "okay";
-+};
-+
-+&sata2 {
-+	status = "disabled";
-+};
-+
-+&sdhci {
-+	bus-width = <8>;
-+	non-removable;
-+	max-frequency = <200000000>;
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&emmc_bus8 &emmc_clk &emmc_cmd>;
-+	status = "okay";
-+};
-+
-+&sdmmc0 {
-+	max-frequency = <150000000>;
-+	no-sdio;
-+	no-mmc;
-+	bus-width = <4>;
-+	cap-mmc-highspeed;
-+	cap-sd-highspeed;
-+	disable-wp;
-+	sd-uhs-sdr104;
-+	vmmc-supply = <&vcc3v3_sd>;
-+	vqmmc-supply = <&vccio_sd>;
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
-+	status = "okay";
-+};
-+
-+&spi3 {
-+	pinctrl-0 = <&spi3m1_pins>;
-+	status = "disabled";
-+};
-+
-+&tsadc {
-+	rockchip,hw-tshut-mode = <1>;
-+	rockchip,hw-tshut-polarity = <0>;
-+	status = "okay";
-+};
-+
-+&uart0 {
-+	status = "disabled";
-+};
-+
-+&uart2 {
-+	status = "okay";
-+};
-+
-+&uart7 {
-+	pinctrl-0 = <&uart7m1_xfer>;
-+	status = "disabled";
-+};
-+
-+&uart9 {
-+	pinctrl-0 = <&uart9m1_xfer>;
-+	status = "disabled";
-+};
-+
-+&usb_host0_ehci {
-+	status = "okay";
-+};
-+
-+&usb_host0_ohci {
-+	status = "okay";
-+};
-+
-+&usb_host0_xhci {
-+	dr_mode = "host";
-+	status = "okay";
-+};
-+
-+&usb_host1_ehci {
-+	status = "okay";
-+};
-+
-+&usb_host1_ohci {
-+	status = "okay";
-+};
-+
-+&usb_host1_xhci {
-+	status = "okay";
-+};
-+
-+&usb2phy0 {
-+	status = "okay";
-+};
-+
-+&usb2phy0_host {
-+	phy-supply = <&vcc5v0_usb_host>;
-+	status = "okay";
-+};
-+
-+&usb2phy0_otg {
-+	phy-supply = <&vcc5v0_usb_otg>;
-+	status = "okay";
-+};
-+
-+&usb2phy1 {
-+	status = "okay";
-+};
-+
-+&usb2phy1_host {
-+	status = "okay";
-+};
-+
-+&usb2phy1_otg {
-+	status = "okay";
-+};
-+
-+&vop {
-+	assigned-clocks = <&cru DCLK_VOP0>, <&cru DCLK_VOP1>;
-+	assigned-clock-parents = <&pmucru PLL_HPLL>, <&cru PLL_VPLL>;
-+	status = "okay";
-+};
-+
-+&vop_mmu {
-+	status = "okay";
-+};
-+
-+&vp0 {
-+	vp0_out_hdmi: endpoint@ROCKCHIP_VOP2_EP_HDMI0 {
-+		reg = <ROCKCHIP_VOP2_EP_HDMI0>;
-+		remote-endpoint = <&hdmi_in_vp0>;
-+	};
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk3566.dtsi b/arch/arm64/boot/dts/rockchip/rk3566.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-09-08 05:24:08.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3566.dtsi	2022-09-24 04:17:49.139462033 -0400
-@@ -29,3 +29,7 @@
- 	extcon = <&usb2phy0>;
- 	maximum-speed = "high-speed";
- };
-+
-+&vop {
-+	compatible = "rockchip,rk3566-vop";
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-09-08 05:24:08.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi	2022-09-24 04:06:26.580397310 -0400
-@@ -137,3 +137,7 @@
- 	phys = <&usb2phy0_otg>, <&combphy0 PHY_TYPE_USB3>;
- 	phy-names = "usb2-phy", "usb3-phy";
- };
-+
-+&vop {
-+	compatible = "rockchip,rk3568-vop";
-+};
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
---- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-09-08 05:24:08.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi	2022-09-24 04:14:47.547903417 -0400
-@@ -129,6 +129,11 @@
- 		};
- 	};
- 
-+	display_subsystem: display-subsystem {
-+		compatible = "rockchip,display-subsystem";
-+		ports = <&vop_out>;
-+	};
-+
- 	firmware {
- 		scmi: scmi {
- 			compatible = "arm,scmi-smc";
-@@ -144,6 +149,22 @@
- 		};
- 	};
- 
-+	hdmi_sound: hdmi-sound {
-+		compatible = "simple-audio-card";
-+		simple-audio-card,name = "HDMI";
-+		simple-audio-card,format = "i2s";
-+		simple-audio-card,mclk-fs = <256>;
-+		status = "disabled";
-+
-+		simple-audio-card,codec {
-+			sound-dai = <&hdmi>;
-+		};
-+
-+		simple-audio-card,cpu {
-+			sound-dai = <&i2s0_8ch>;
-+		};
-+	};
-+
- 	gpu_opp_table: opp-table-1 {
- 		compatible = "operating-points-v2";
- 
-@@ -632,6 +653,84 @@
- 		};
- 	};
- 
-+	vop: vop@fe040000 {
-+		reg = <0x0 0xfe040000 0x0 0x3000>, <0x0 0xfe044000 0x0 0x1000>;
-+		reg-names = "vop", "gamma-lut";
-+		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&cru ACLK_VOP>, <&cru HCLK_VOP>, <&cru DCLK_VOP0>,
-+			 <&cru DCLK_VOP1>, <&cru DCLK_VOP2>;
-+		clock-names = "aclk", "hclk", "dclk_vp0", "dclk_vp1", "dclk_vp2";
-+		iommus = <&vop_mmu>;
-+		power-domains = <&power RK3568_PD_VO>;
-+		rockchip,grf = <&grf>;
-+		status = "disabled";
-+
-+		vop_out: ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			vp0: port@0 {
-+				reg = <0>;
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+			};
-+
-+			vp1: port@1 {
-+				reg = <1>;
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+			};
-+
-+			vp2: port@2 {
-+				reg = <2>;
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+			};
-+		};
-+	};
-+
-+	vop_mmu: iommu@fe043e00 {
-+		compatible = "rockchip,rk3568-iommu";
-+		reg = <0x0 0xfe043e00 0x0 0x100>, <0x0 0xfe043f00 0x0 0x100>;
-+		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&cru ACLK_VOP>, <&cru HCLK_VOP>;
-+		clock-names = "aclk", "iface";
-+		#iommu-cells = <0>;
-+		status = "disabled";
-+	};
-+
-+	hdmi: hdmi@fe0a0000 {
-+		compatible = "rockchip,rk3568-dw-hdmi";
-+		reg = <0x0 0xfe0a0000 0x0 0x20000>;
-+		interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&cru PCLK_HDMI_HOST>,
-+			 <&cru CLK_HDMI_SFR>,
-+			 <&cru CLK_HDMI_CEC>,
-+			 <&pmucru CLK_HDMI_REF>,
-+			 <&cru HCLK_VO>;
-+		clock-names = "iahb", "isfr", "cec", "ref";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&hdmitx_scl &hdmitx_sda &hdmitxm0_cec>;
-+		power-domains = <&power RK3568_PD_VO>;
-+		reg-io-width = <4>;
-+		rockchip,grf = <&grf>;
-+		#sound-dai-cells = <0>;
-+		status = "disabled";
-+
-+		ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			hdmi_in: port@0 {
-+				reg = <0>;
-+			};
-+
-+			hdmi_out: port@1 {
-+				reg = <1>;
-+			};
-+		};
-+	};
-+
- 	qos_gpu: qos@fe128000 {
- 		compatible = "rockchip,rk3568-qos", "syscon";
- 		reg = <0x0 0xfe128000 0x0 0x20>;
-@@ -752,6 +851,56 @@
- 		reg = <0x0 0xfe1a8100 0x0 0x20>;
- 	};
- 
-+	pcie2x1: pcie@fe260000 {
-+		compatible = "rockchip,rk3568-pcie";
-+		reg = <0x3 0xc0000000 0x0 0x00400000>,
-+		      <0x0 0xfe260000 0x0 0x00010000>,
-+		      <0x3 0x3f000000 0x0 0x01000000>;
-+		reg-names = "dbi", "apb", "config";
-+		interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 74 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-names = "sys", "pmc", "msi", "legacy", "err";
-+		bus-range = <0x0 0xf>;
-+		clocks = <&cru ACLK_PCIE20_MST>, <&cru ACLK_PCIE20_SLV>,
-+			 <&cru ACLK_PCIE20_DBI>, <&cru PCLK_PCIE20>,
-+			 <&cru CLK_PCIE20_AUX_NDFT>;
-+		clock-names = "aclk_mst", "aclk_slv",
-+			      "aclk_dbi", "pclk", "aux";
-+		device_type = "pci";
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+				<0 0 0 2 &pcie_intc 1>,
-+				<0 0 0 3 &pcie_intc 2>,
-+				<0 0 0 4 &pcie_intc 3>;
-+		linux,pci-domain = <0>;
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		max-link-speed = <2>;
-+		msi-map = <0x0 &gic 0x0 0x1000>;
-+		num-lanes = <1>;
-+		phys = <&combphy2 PHY_TYPE_PCIE>;
-+		phy-names = "pcie-phy";
-+		power-domains = <&power RK3568_PD_PIPE>;
-+		ranges = <0x01000000 0x0 0x3ef00000 0x3 0x3ef00000 0x0 0x00100000
-+			  0x02000000 0x0 0x00000000 0x3 0x00000000 0x0 0x3ef00000>;
-+		resets = <&cru SRST_PCIE20_POWERUP>;
-+		reset-names = "pipe";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		status = "disabled";
-+
-+		pcie_intc: legacy-interrupt-controller {
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+			interrupt-controller;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 72 IRQ_TYPE_EDGE_RISING>;
-+		};
-+	};
-+
- 	sdmmc0: mmc@fe2b0000 {
- 		compatible = "rockchip,rk3568-dw-mshc", "rockchip,rk3288-dw-mshc";
- 		reg = <0x0 0xfe2b0000 0x0 0x4000>;
-@@ -817,6 +966,23 @@
- 		#sound-dai-cells = <0>;
- 		status = "disabled";
- 	};
-+
-+	i2s0_8ch: i2s@fe400000 {
-+		compatible = "rockchip,rk3568-i2s-tdm";
-+		reg = <0x0 0xfe400000 0x0 0x1000>;
-+		interrupts = <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
-+		assigned-clocks = <&cru CLK_I2S0_8CH_TX_SRC>, <&cru CLK_I2S0_8CH_RX_SRC>;
-+		assigned-clock-rates = <1188000000>, <1188000000>;
-+		clocks = <&cru MCLK_I2S0_8CH_TX>, <&cru MCLK_I2S0_8CH_RX>, <&cru HCLK_I2S0_8CH>;
-+		clock-names = "mclk_tx", "mclk_rx", "hclk";
-+		dmas = <&dmac1 0>;
-+		dma-names = "tx";
-+		resets = <&cru SRST_M_I2S0_8CH_TX>, <&cru SRST_M_I2S0_8CH_RX>;
-+		reset-names = "tx-m", "rx-m";
-+		rockchip,grf = <&grf>;
-+		#sound-dai-cells = <0>;
-+		status = "disabled";
-+	};
- 
- 	i2s1_8ch: i2s@fe410000 {
- 		compatible = "rockchip,rk3568-i2s-tdm";

@@ -10,17 +10,6 @@ diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-
  	struct clk_mux *mux = NULL;
  	struct clk_gate *gate = NULL;
  	struct clk_divider *div = NULL;
---- a/drivers/phy/rockchip/phy-rockchip-inno-usb2.c
-+++ b/drivers/phy/rockchip/phy-rockchip-inno-usb2.c
-@@ -1283,7 +1283,7 @@ static int rockchip_usb2phy_probe(struct
- 
- 		phy = devm_phy_create(dev, child_np, &rockchip_usb2phy_ops);
- 		if (IS_ERR(phy)) {
--			dev_err(dev, "failed to create phy\n");
-+			dev_err_probe(dev, PTR_ERR(phy), "failed to create phy\n");
- 			ret = PTR_ERR(phy);
- 			goto put_child;
- 		}
 diff -Naur a/drivers/usb/dwc3/dwc3-of-simple.c b/drivers/usb/dwc3/dwc3-of-simple.c
 --- a/drivers/usb/dwc3/dwc3-of-simple.c	2022-07-31 17:03:01.000000000 -0400
 +++ b/drivers/usb/dwc3/dwc3-of-simple.c	2022-08-09 17:00:56.994472344 -0400

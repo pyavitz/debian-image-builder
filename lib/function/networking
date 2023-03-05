@@ -132,19 +132,19 @@ chown root:root /usr/lib/NetworkManager/conf.d/rtl8821cu.conf
 
 router_udev_rules(){
 mkdir -p /etc/udev/rules.d
-if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" ]]; then
-	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-r4s-led.rules
-	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-r4s-led.rules
+if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" ]]; then
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-led.rules
 fi
 if [[ "$BOARD" == "nanopir5s" ]]; then
-	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-r5s-led.rules
-	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-r5s-led.rules
-	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-r5s-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-led.rules
+	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-led.rules
 fi
 }
 
 router_ifupdown(){
-if [[ "$BOARD" == "orangepir1" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" ]]; then
+if [[ "$BOARD" == "orangepir1" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" ]]; then
 	if [[ -f "/etc/network/interfaces" ]]; then
 		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/network/interfaces
 		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/network/interfaces
