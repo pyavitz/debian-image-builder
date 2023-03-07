@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # builder version
-BUILDER="5.2"
+BUILDER="5.3"
 
 # script
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
@@ -25,7 +25,6 @@ LTS1=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LTS1_L | sed -r 's/"ver
 LTS2=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LTS2_L | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
 STABLE=$(curl -s $JSON_FILE | jq '.latest_stable.version' -r)
 GCC=`ls -ls /usr/bin/gcc | sed 's/.*\(..\)/\1/' | sed 's/ //g'`
-ARCH=`uname -m`
 
 NAME=""
 USERNAME=""
@@ -48,11 +47,6 @@ UBOOT_VERSION="v2022.10"
 BUILD_VERSION="1"
 menuconfig="0"
 COMPILER="gcc-$GCC"
-if [[ "$ARCH" == "aarch64" ]]; then
-	crosscompile="0"
-else
-	crosscompile="1"
-fi
 ccache="0"
 rtl88XXau="0"
 rtl88X2bu="0"
@@ -91,29 +85,28 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
 	" Build:"   		13 1    "$BUILD_VERSION"	13 9 4 0 \
 	" Menuconfig:"		14 1	"$menuconfig"		14 14 2 0 \
 	" Compiler:"		15 1	"$COMPILER"		15 12 9 0 \
-	" Crosscompile:" 	16 1	"$crosscompile"		16 16 2 0 \
-	" Caching on:"		17 1	"$ccache"	 	17 14 2 0 \
-	" "			18 1	""			18 14 0 0 \
-	" Wireless"		19 1	""			19 14 0 0 \
-	" rtl88XXau:"		20 1	"$rtl88XXau"		20 13 2 0 \
-	" rtl88X2bu:"		21 1	"$rtl88X2bu"		21 13 2 0 \
-	" rtl88XXcu:"		22 1	"$rtl88XXcu"		22 13 2 0 \
-	" rtl8188eu:"		23 1	"$rtl8188eu"		23 13 2 0 \
-	" "			24 1	""			24 14 0 0 \
-	" Customize"		25 1	""			25 14 0 0 \
-	" Defconfig:"		26 1	"$custom_defconfig"	26 13 2 0 \
-	" Name:"		27 1	"$MYCONFIG"		27 8 26 0 \
-	" "			28 1	""			28 14 0 0 \
-	" User Options"		29 1	""			29 14 0 0 \
-	" Logging:"		30 1	"$logging"		30 11 2 0 \
-	" Verbosity:"		31 1	"$verbose"		31 13 2 0 \
-	" Devel Rootfs:"	32 1	"$devrootfs"		32 16 2 0 \
-	" Compress img:"	33 1	"$compress_img"		33 16 2 0 \
-	" User scripts:"	34 1	"$uscripts"		34 16 2 0 \
-	" User service:"	35 1	"$useracct"		35 16 2 0 \
-	" "			36 1	""			36 14 0 0 \
-	" Odroids"		37 1	""			37 14 0 0 \
-	" Petitboot:"		38 1	"$petitboot"		38 13 2 0 \
+	" Caching on:"		16 1	"$ccache"	 	16 14 2 0 \
+	" "			17 1	""			17 14 0 0 \
+	" Wireless"		18 1	""			18 14 0 0 \
+	" rtl88XXau:"		19 1	"$rtl88XXau"		19 13 2 0 \
+	" rtl88X2bu:"		20 1	"$rtl88X2bu"		20 13 2 0 \
+	" rtl88XXcu:"		21 1	"$rtl88XXcu"		21 13 2 0 \
+	" rtl8188eu:"		22 1	"$rtl8188eu"		22 13 2 0 \
+	" "			23 1	""			23 14 0 0 \
+	" Customize"		24 1	""			24 14 0 0 \
+	" Defconfig:"		25 1	"$custom_defconfig"	25 13 2 0 \
+	" Name:"		26 1	"$MYCONFIG"		26 8 26 0 \
+	" "			27 1	""			27 14 0 0 \
+	" User Options"		28 1	""			28 14 0 0 \
+	" Logging:"		29 1	"$logging"		29 11 2 0 \
+	" Verbosity:"		30 1	"$verbose"		30 13 2 0 \
+	" Devel Rootfs:"	31 1	"$devrootfs"		31 16 2 0 \
+	" Compress img:"	32 1	"$compress_img"		32 16 2 0 \
+	" User scripts:"	33 1	"$uscripts"		33 16 2 0 \
+	" User service:"	34 1	"$useracct"		34 16 2 0 \
+	" "			35 1	""			35 14 0 0 \
+	" Odroids"		36 1	""			36 14 0 0 \
+	" Petitboot:"		37 1	"$petitboot"		37 13 2 0 \
 2>&1 1>&3)
 
 # close fd
@@ -133,7 +126,6 @@ echo VERSION='"' >> tmp0
 echo BUILD_VERSION='"' >> tmp0
 echo menuconfig= >> tmp0
 echo COMPILER='"' >> tmp0
-echo crosscompile= >> tmp0
 echo ccache= >> tmp0
 echo rtl8812au= >> tmp0
 echo rtl88x2bu= >> tmp0
@@ -188,7 +180,6 @@ echo >> tmp2
 echo >> tmp2
 echo >> tmp2
 echo >> tmp2
-echo >> tmp2
 echo _defconfig'"' >> tmp2
 paste -d '\0' tmp0 tmp1 tmp2  > userdata.txt
 rm -f tmp0 tmp1 tmp2
@@ -197,14 +188,14 @@ rm -f tmp0 tmp1 tmp2
 sed -i '1i### USER INFORMATION' userdata.txt
 sed -i '6i### DISTRIBUTION AND RELEASE' userdata.txt
 sed -i '10i### UBOOT AND LINUX KERNEL' userdata.txt
-sed -i '18i### WIRELESS' userdata.txt
-sed -i '23i### CUSTOM' userdata.txt
-sed -i '37i### COMPILER TUNING' userdata.txt
-sed -i '40i### WHOAMI AND HOST' userdata.txt
-sed -i '43i### LOCALES' userdata.txt
-sed -i '51i### TIMEZONE' userdata.txt
-sed -i '56i### NAME SERVER' userdata.txt
-sed -i '59i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '17i### WIRELESS' userdata.txt
+sed -i '22i### CUSTOM' userdata.txt
+sed -i '36i### COMPILER TUNING' userdata.txt
+sed -i '39i### WHOAMI AND HOST' userdata.txt
+sed -i '42i### LOCALES' userdata.txt
+sed -i '50i### TIMEZONE' userdata.txt
+sed -i '55i### NAME SERVER' userdata.txt
+sed -i '58i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # customize your image
 custom_txt(){

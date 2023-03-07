@@ -14,12 +14,20 @@ source userdata.txt
 if [ $verbose -eq 1 ]; then
 	set -x
 fi
-
+HOST_ARCH=`uname -m`
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
+	crosscompile="0"
+fi
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then
+	crosscompile="1"
+fi
+if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
+	crosscompile="1"
+fi
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_UBOOT_VERSION ]; then :; else UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
 fi
-
 # compiler
 if [ $ccache -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
@@ -36,7 +44,6 @@ if [ $ccache -eq 0 ]; then
 	rm -f {ccache.txt,gcc.txt}
 	gcc_version
 fi
-
 # boards
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then

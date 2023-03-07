@@ -14,7 +14,16 @@ source userdata.txt
 if [ $verbose -eq 1 ]; then
 	set -x;
 fi
-
+HOST_ARCH=`uname -m`
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
+	crosscompile="0"
+fi
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then
+	crosscompile="1"
+fi
+if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
+	crosscompile="1"
+fi
 # override the userdata.txt file for best user experience
 if [[ "$FORCE_GITHUB" == "true" ]]; then
 	VERSION="${GITHUB_BRANCH_VERSION}"
@@ -38,9 +47,7 @@ if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm
 	fi
 fi
 # end override
-
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
-
 if [ $ccache -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		rm -f {ccache.txt,gcc.txt};
