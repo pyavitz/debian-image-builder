@@ -1,0 +1,119 @@
+#!/bin/bash
+
+run_function2 (){
+# function
+function punzip {
+unzip $1 | pv -l -s $(unzip -Z -1 $1 | wc -l) > /dev/null;
+}
+
+# variables
+RUNPATH="/home/$USERNAME/smgplayer/SMGPlayer"
+ROOTPATH="/"
+SMGURL="http://newmanager.smg.com.tr/downloads/PlayerRestore/armhf/"
+FILENAME="nodeplayer8.7.11.zip"
+BASSHARMHF="bassarmhf.zip"
+MAINEFILE="smgplayerArmHF.zip"
+
+# download
+echo "Downloading assets ..."
+if [[ -d "/root/assets" ]]; then
+	rm -fdr /root/assets
+fi
+cd ~; mkdir -p /root/assets; cd assets
+wget -cq --show-progress $SMGURL$FILENAME
+wget -cq --show-progress $SMGURL$MAINEFILE
+wget -cq --show-progress $SMGURL$BASSHARMHF
+
+# unzip
+echo ""; echo "Extracting ..."
+punzip $BASSHARMHF
+punzip $FILENAME
+punzip $MAINEFILE
+
+# installing
+echo ""; echo "Installing ..."
+mkdir -p smgplayer/plugins
+mv nodeplayer smgplayer/
+mv bassarmhf/*.so smgplayer/plugins/
+rm -fdr bassarmhf nodeplayer $MAINEFILE $FILENAME $BASSHARMHF
+chown -R root:root "smgplayer/smg.service"
+chmod +x "smgplayer/smgstats"
+chmod +x "smgplayer/SMGPlayer"
+chmod +x "smgplayer/watchdog"
+chmod +x "smgplayer/nodeplayer"
+sed -i "s#^APP_DIR=.*#APP_DIR=/home/$USERNAME/smgplayer#g" smgplayer/SMGPlayer
+sed -i "s#^exePath=.*#exePath=/home/$USERNAME/smgplayer/nodeplayer#g" smgplayer/config.ini
+sed -i "s#^updatePath=.*#updatePath=/home/$USERNAME/smgplayer/update#g" smgplayer/config.ini
+sed -i "s#^playerpath=.*#playerpath=/home/$USERNAME/smgplayer#g" smgplayer/smgstats
+sed -i "s#^rootpath=.*#rootpath=$ROOTPATH#g" smgplayer/smgstats
+mv -f smgplayer/smgstats /usr/bin
+if [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" ]]; then
+	sed -i "s/^User=.*/User=$USERNAME/g" smgplayer/smg.service
+	sed -i "s#^ExecStart=.*#ExecStart=$RUNPATH#g" smgplayer/smg.service
+	mv -f smgplayer/smg.service /etc/systemd/system/
+	#systemctl enable smg
+else
+	rm -f smgplayer/smg.service
+	tee /etc/init.d/smg <<'EOF'
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: SMG PLayer
+# Required-Start: $all
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 6
+# Short-Description: SMG Player
+# Description:
+### END INIT INFO
+
+# chmod +x /etc/init.d/smgplayer
+# update-rc.d smgplayer defaults 5
+
+. /lib/lsb/init-functions
+
+case "$1" in
+	start)
+		log_daemon_msg "Starting SMG Player"
+		/home/smg/smgplayer/SMGPlayer &
+		log_end_msg $?
+		exit 0
+		;;
+	stop)
+		log_daemon_msg "Stopping SMG Player"
+		killall watchdog > /dev/null 2>&1
+		killall nodeplayer > /dev/null 2>&1
+		killall SMGPlayer > /dev/null 2>&1
+		log_end_msg $?
+		exit 3
+		;;
+	restart)
+		log_daemon_msg "Restarting SMG Player"
+		killall watchdog > /dev/null 2>&1
+		killall nodeplayer > /dev/null 2>&1
+		killall SMGPlayer > /dev/null 2>&1
+		sleep .75
+		/home/smg/smgplayer/SMGPlayer &
+		log_end_msg $?
+		exit 0
+		;;
+esac
+EOF
+	if [[ -f "/etc/init.d/smg" ]]; then
+		chmod +x /etc/init.d/smg
+		#update-rc.d smg defaults 5
+	fi
+fi
+
+if [[ -d "/home/$USERNAME" ]]; then
+	mv -f smgplayer /home/$USERNAME/
+	chown -R $USERNAME:$USERNAME "/home/$USERNAME/smgplayer"
+else
+	read -p "Install failed :("
+fi
+
+# clean
+cd ~
+if [[ -d "/root/assets" ]]; then
+	rm -fdr /root/assets
+fi
+}
