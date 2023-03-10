@@ -51,12 +51,10 @@ if [[ "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" ]]; then
 	fi
 fi
 
-if [[ `grep -w "0f" "/sys/class/net/eth0/queues/rx-0/rps_cpus"` ]]; then
+if [[ -f "/sys/class/net/eth0/queues/rx-0/rps_cpus" ]] && [[ `grep -w "0f" "/sys/class/net/eth0/queues/rx-0/rps_cpus"` ]]; then
 	:;
 else
-	if [[ -f "/sys/class/net/eth0/queues/rx-0/rps_cpus" ]]; then
-		echo f > /sys/class/net/eth0/queues/rx-0/rps_cpus
-	fi
+	echo "f" > /sys/class/net/eth0/queues/rx-0/rps_cpus
 fi
 
 exit 0

@@ -118,48 +118,25 @@ systemctl enable leds
 # tweaks
 tweaks_service(){
 cd ~
-if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "radxazero" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f ${BOARD}-tweaks /usr/bin/${BOARD}-tweaks
-	chmod +x /usr/bin/${BOARD}-tweaks
-	chown root:root /usr/bin/${BOARD}-tweaks
-fi
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f odroid-tweaks /usr/bin/odroid-tweaks
+echo "overclock=0" > /etc/opt/overclock.txt
+chmod +x /usr/bin/tweaks
+chown root:root /usr/bin/tweaks
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
 	mv -f irq-tweaks /usr/bin/irq-tweaks
-	chmod +x /usr/bin/odroid-tweaks
 	chmod +x /usr/bin/irq-tweaks
-	chown root:root /usr/bin/odroid-tweaks
 	chown root:root /usr/bin/irq-tweaks
-fi
-if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$BOARD" == "tinker" ]]; then
-	echo "overclock=0" > /etc/opt/overclock.txt
-	mv -f rk-tweaks /usr/bin/rk-tweaks
-	chmod +x /usr/bin/rk-tweaks
-	chown root:root /usr/bin/rk-tweaks
-fi
-if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
-	mv -f nanopi5-tweaks /usr/bin/
-	chmod +x /usr/bin/nanopi5-tweaks
-	chown root:root /usr/bin/nanopi5-tweaks
-fi
-if [[ "$BOARD" == "x96air" ]]; then
-	mv -f ${BOARD}-tweaks /usr/bin/${BOARD}-tweaks
-	chmod +x /usr/bin/${BOARD}-tweaks
-	chown root:root /usr/bin/${BOARD}-tweaks
 fi
 
 lepotato_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Le Potato Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/lepotato-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=network.target network-online.target ifup@.service
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/lepotato-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -175,12 +152,12 @@ odroid_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=ODROID Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/odroid-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=network.target network-online.target
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/odroid-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -191,7 +168,8 @@ WantedBy=multi-user.target
 EOF
 systemctl enable tweaks
 
-tee /etc/systemd/system/irq-tweaks.service <<EOF
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
+	tee /etc/systemd/system/irq-tweaks.service <<EOF
 [Unit]
 Description=ODROID IRQ Tweaks
 ConditionFileIsExecutable=/usr/bin/irq-tweaks
@@ -206,20 +184,21 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable irq-tweaks
+	systemctl enable irq-tweaks
+fi
 }
 
 rockchip_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Rockchip Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/rk-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=network.target bluetooth.target rc-local.service
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/rk-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -235,12 +214,12 @@ radxazero_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Radxa Zero Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/radxazero-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target network.target bluetooth.target
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/radxazero-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -256,13 +235,13 @@ nanopi5_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=NanoPi Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/nanopi5-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=network.target
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/nanopi5-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -278,13 +257,13 @@ cubietruck_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Cubietruck Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/cubietruck-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=rc-local.service
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/cubietruck-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -300,13 +279,13 @@ cuboxi_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Cubox-i Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/cuboxi-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=rc-local.service
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/cuboxi-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -322,12 +301,12 @@ x96air_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=X96-AIR Specific System Tweaks
-ConditionFileIsExecutable=/usr/bin/x96air-tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
 After=network.target network-online.target ifup@.service bluetooth.target leds.service
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/x96air-tweaks
+ExecStart=/usr/bin/tweaks
 TimeoutSec=0
 RemainAfterExit=yes
 StandardOutput=journal+console
@@ -339,10 +318,24 @@ EOF
 systemctl enable tweaks
 }
 
+restart_tweaks(){
+tee /usr/bin/restart-tweaks <<EOF
+#!/bin/bash
+
+service tweaks stop
+sleep .50
+service tweaks start
+
+exit 0
+EOF
+chmod +x /usr/bin/restart-tweaks
+}
+
 if [[ "$DISTRO" == "devuan" ]]; then
+	restart_tweaks
 	mv -f tweaks.init /etc/init.d/tweaks
 	chmod +x /etc/init.d/tweaks
-	chown root:root /etc/init.d/tweaks;
+	chown root:root /etc/init.d/tweaks
 else
 	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
 		${BOARD}_systemd;
@@ -353,7 +346,7 @@ else
 	if [[ "$FAMILY_EXT" == "odroid" ]]; then
 		odroid_systemd;
 	fi
-	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$BOARD" == "tinker" ]]; then
+	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 		rockchip_systemd;
 	fi
 fi
@@ -376,7 +369,6 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-
 systemctl enable credentials
 }
 
@@ -421,8 +413,10 @@ systemctl enable kali-tweaks
 }
 
 enable_sysvinit(){
-chmod +x /etc/init.d/governor
-chmod +x /etc/init.d/firstboot
+if [[ -f "/etc/init.d/tweaks" ]]; then
+	chmod +x /etc/init.d/tweaks
+	update-rc.d tweaks defaults 2
+fi
 if [[ -f "/usr/local/sbin/led-trigger" ]]; then
 	chmod +x /etc/init.d/leds
 	update-rc.d leds defaults 2
@@ -431,24 +425,14 @@ if [[ "$BOARD" == "pinea64plus" || "$BOARD" == "nanopineoplus2" ]]; then
 	chmod +x /etc/init.d/bthelper
 	update-rc.d bthelper defaults 2
 fi
-if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ "$FAMILY_EXT" == "meson8b" || "$BOARD" == "bananapim5" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidhc4" ]]; then
-		:;
-	else
-		chmod +x /etc/init.d/tweaks
-		update-rc.d tweaks defaults 2
-	fi
-fi
-if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" || "$BOARD" == "tinker" ]]; then
-	chmod +x /etc/init.d/tweaks
-	update-rc.d tweaks defaults 2
-fi
-chmod +x /etc/init.d/zramswap
 if [ $networkmanager -eq 0 ]; then
 	chmod +x /etc/init.d/network
 	update-rc.d -f networking remove
 fi
+chmod +x /etc/init.d/governor
+chmod +x /etc/init.d/firstboot
 chmod +x /etc/init.d/credentials
+chmod +x /etc/init.d/zramswap
 update-rc.d -f hwclock.sh remove
 update-rc.d firstboot defaults S
 update-rc.d governor defaults 2

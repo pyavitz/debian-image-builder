@@ -261,34 +261,14 @@ sleep 1s
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
 mv -f {add-overlay,bootcmd,menu-config,menu-config-update,setup,smon,sysinfo} /usr/local/bin/
-# Allwinner tweaks
-if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$BOARD" == "cubietruck" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
+# Tweaks
+if [[ -f "/usr/bin/tweaks" ]]; then
+	tweaks_service > /dev/null 2>&1
 fi
-# Amlogic tweaks
-if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ "$BOARD" == "lepotato" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || "$BOARD" == "radxazero" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-	if [[ "$BOARD" == "x96air" ]]; then
-		tweaks_service > /dev/null 2>&1;
-		mv -f flash-recovery /usr/local/sbin/
-		chmod +x /usr/local/sbin/flash-recovery
-	fi
-fi
-# Freescale tweaks
-if [[ "$FAMILY" == "freescale" ]]; then
-	if [[ "$BOARD" == "cuboxi" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
-fi
-# Rockchip tweaks
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" || "$BOARD" == "tinker" ]]; then
-		tweaks_service > /dev/null 2>&1;
-	fi
+# X96-AIR flash recovery script
+if [[ "$BOARD" == "x96air" ]]; then
+	mv -f flash-recovery /usr/local/sbin/
+	chmod +x /usr/local/sbin/flash-recovery
 fi
 if [ $networkmanager -eq 0 ]; then
 	wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/;
