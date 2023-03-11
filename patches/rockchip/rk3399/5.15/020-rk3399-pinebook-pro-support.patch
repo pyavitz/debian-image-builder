@@ -884,7 +884,7 @@ diff -Naur a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
  /**
 diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
 --- a/drivers/usb/typec/altmodes/displayport.c	2023-03-11 11:37:18.090023768 -0500
-+++ b/drivers/usb/typec/altmodes/displayport.c	2023-03-11 11:42:57.090629009 -0500
++++ b/drivers/usb/typec/altmodes/displayport.c	2023-03-11 12:54:21.399513062 -0500
 @@ -9,6 +9,8 @@
   */
  
@@ -894,7 +894,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  #include <linux/mutex.h>
  #include <linux/module.h>
  #include <linux/usb/pd_vdo.h>
-@@ -135,13 +137,48 @@
+@@ -135,15 +137,53 @@
  	return ret;
  }
  
@@ -943,8 +943,13 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
 +		dp_altmode_update_extcon(dp, true);
  		return typec_altmode_notify(dp->alt, TYPEC_STATE_USB,
  					    &dp->data);
++	}
++
++	dp_altmode_update_extcon(dp, false);
  
-@@ -175,9 +212,11 @@
+ 	ret = dp_altmode_notify(dp);
+ 	if (ret)
+@@ -175,9 +215,11 @@
  	if (ret) {
  		if (DP_CONF_GET_PIN_ASSIGN(dp->data.conf))
  			dp_altmode_notify(dp);
@@ -957,7 +962,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  	}
  
  	return ret;
-@@ -220,6 +259,8 @@
+@@ -220,6 +262,8 @@
  	case DP_STATE_EXIT:
  		if (typec_altmode_exit(dp->alt))
  			dev_err(&dp->alt->dev, "Exit Mode Failed!\n");
@@ -966,7 +971,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  		break;
  	default:
  		break;
-@@ -536,8 +577,13 @@
+@@ -536,8 +580,13 @@
  	if (!(DP_CAP_PIN_ASSIGN_DFP_D(port->vdo) &
  	      DP_CAP_PIN_ASSIGN_UFP_D(alt->vdo)) &&
  	    !(DP_CAP_PIN_ASSIGN_UFP_D(port->vdo) &
