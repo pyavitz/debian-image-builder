@@ -883,8 +883,8 @@ diff -Naur a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
  
  /**
 diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
---- a/drivers/usb/typec/altmodes/displayport.c	2022-08-03 06:03:56.000000000 -0400
-+++ b/drivers/usb/typec/altmodes/displayport.c	2022-08-09 18:45:16.669482197 -0400
+--- a/drivers/usb/typec/altmodes/displayport.c	2023-03-11 11:37:18.090023768 -0500
++++ b/drivers/usb/typec/altmodes/displayport.c	2023-03-11 11:42:57.090629009 -0500
 @@ -9,6 +9,8 @@
   */
  
@@ -894,7 +894,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  #include <linux/mutex.h>
  #include <linux/module.h>
  #include <linux/usb/pd_vdo.h>
-@@ -135,15 +137,53 @@
+@@ -135,13 +137,48 @@
  	return ret;
  }
  
@@ -943,13 +943,8 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
 +		dp_altmode_update_extcon(dp, true);
  		return typec_altmode_notify(dp->alt, TYPEC_STATE_USB,
  					    &dp->data);
-+    }
-+
-+	dp_altmode_update_extcon(dp, false);
  
- 	ret = dp_altmode_notify(dp);
- 	if (ret)
-@@ -175,9 +215,11 @@
+@@ -175,9 +212,11 @@
  	if (ret) {
  		if (DP_CONF_GET_PIN_ASSIGN(dp->data.conf))
  			dp_altmode_notify(dp);
@@ -962,7 +957,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  	}
  
  	return ret;
-@@ -220,6 +262,8 @@
+@@ -220,6 +259,8 @@
  	case DP_STATE_EXIT:
  		if (typec_altmode_exit(dp->alt))
  			dev_err(&dp->alt->dev, "Exit Mode Failed!\n");
@@ -971,11 +966,11 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  		break;
  	default:
  		break;
-@@ -530,8 +574,14 @@
- 	if (!(DP_CAP_DFP_D_PIN_ASSIGN(port->vdo) &
- 	      DP_CAP_UFP_D_PIN_ASSIGN(alt->vdo)) &&
- 	    !(DP_CAP_UFP_D_PIN_ASSIGN(port->vdo) &
--	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo)))
+@@ -536,8 +577,13 @@
+ 	if (!(DP_CAP_PIN_ASSIGN_DFP_D(port->vdo) &
+ 	      DP_CAP_PIN_ASSIGN_UFP_D(alt->vdo)) &&
+ 	    !(DP_CAP_PIN_ASSIGN_UFP_D(port->vdo) &
+-	      DP_CAP_PIN_ASSIGN_DFP_D(alt->vdo)))
 -		return -ENODEV;
 +	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo))) {
 +            dev_err(&alt->dev, "No compatible pin configuration found:"\
@@ -984,7 +979,6 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
 +                    DP_CAP_UFP_D_PIN_ASSIGN(port->vdo), DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo));
 +            return -ENODEV;
 +	}
-+
  
  	ret = sysfs_create_group(&alt->dev.kobj, &dp_altmode_group);
  	if (ret)
@@ -1008,8 +1002,8 @@ diff -Naur a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
  		pdev->ops->attention(pdev, vdo);
  }
 diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
---- a/drivers/usb/typec/tcpm/tcpm.c	2022-08-03 06:03:56.000000000 -0400
-+++ b/drivers/usb/typec/tcpm/tcpm.c	2022-08-09 18:45:16.671482158 -0400
+--- a/drivers/usb/typec/tcpm/tcpm.c	2023-03-11 11:37:18.092023761 -0500
++++ b/drivers/usb/typec/tcpm/tcpm.c	2023-03-11 11:50:47.964817979 -0500
 @@ -8,6 +8,7 @@
  #include <linux/completion.h>
  #include <linux/debugfs.h>
@@ -1067,16 +1061,15 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  static int tcpm_pd_transmit(struct tcpm_port *port,
  			    enum tcpm_transmit_type type,
  			    const struct pd_message *msg)
-@@ -1074,6 +1110,8 @@
+@@ -1073,6 +1109,7 @@
+ 	port->data_role = data;
  	typec_set_data_role(port->typec_port, data);
  	typec_set_pwr_role(port->typec_port, role);
- 
 +	tcpm_update_extcon_data(port, attached);
-+
+ 
  	return 0;
  }
- 
-@@ -1523,7 +1561,7 @@
+@@ -1523,7 +1560,7 @@
  		paltmode->mode = i;
  		paltmode->vdo = p[i];
  
@@ -1085,7 +1078,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  			 pmdata->altmodes, paltmode->svid,
  			 paltmode->mode, paltmode->vdo);
  
-@@ -1544,6 +1582,8 @@
+@@ -1544,6 +1581,8 @@
  			tcpm_log(port, "Failed to register partner SVID 0x%04x",
  				 modep->altmode_desc[i].svid);
  			altmode = NULL;
@@ -1094,7 +1087,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  		}
  		port->partner_altmode[i] = altmode;
  	}
-@@ -1678,9 +1718,11 @@
+@@ -1678,9 +1717,11 @@
  			modep->svid_index++;
  			if (modep->svid_index < modep->nsvids) {
  				u16 svid = modep->svids[modep->svid_index];
@@ -1106,7 +1099,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  				tcpm_register_partner_altmodes(port);
  			}
  			break;
-@@ -3622,6 +3664,7 @@
+@@ -3622,6 +3663,7 @@
  static void tcpm_typec_disconnect(struct tcpm_port *port)
  {
  	if (port->connected) {
@@ -1114,16 +1107,15 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  		typec_unregister_partner(port->partner);
  		port->partner = NULL;
  		port->connected = false;
-@@ -3700,6 +3743,8 @@
+@@ -3700,6 +3742,7 @@
  	}
  
  	tcpm_reset_port(port);
-+
 +	tcpm_update_extcon_data(port, false);
  }
  
  static void tcpm_src_detach(struct tcpm_port *port)
-@@ -5924,6 +5969,64 @@
+@@ -5923,6 +5966,64 @@
  }
  EXPORT_SYMBOL_GPL(tcpm_tcpc_reset);
  
@@ -1188,7 +1180,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  static int tcpm_fw_get_caps(struct tcpm_port *port,
  			    struct fwnode_handle *fwnode)
  {
-@@ -5944,6 +6047,23 @@
+@@ -5942,6 +6043,23 @@
  	 */
  	fw_devlink_purge_absent_suppliers(fwnode);
  
@@ -1209,13 +1201,14 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
 +	}
 +#endif
 +
- 	/* USB data support is optional */
- 	ret = fwnode_property_read_string(fwnode, "data-role", &cap_str);
- 	if (ret == 0) {
-@@ -6381,6 +6501,17 @@
+ 	ret = typec_get_fw_cap(&port->typec_caps, fwnode);
+ 	if (ret < 0)
+ 		return ret;
+@@ -6365,7 +6483,17 @@
  		goto out_destroy_wq;
  
  	port->try_role = port->typec_caps.prefer_role;
+-
 +#ifdef CONFIG_EXTCON
 +	port->extcon = devm_extcon_dev_allocate(dev, port->extcon_cables);
 +	if (IS_ERR(port->extcon)) {
@@ -1227,10 +1220,10 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
 +		goto out_destroy_wq;
 +	}
 +#endif
- 
  	port->typec_caps.fwnode = tcpc->fwnode;
  	port->typec_caps.revision = 0x0120;	/* Type-C spec release 1.2 */
-@@ -6415,6 +6546,12 @@
+ 	port->typec_caps.pd_revision = 0x0300;	/* USB-PD spec release 3.0 */
+@@ -6399,6 +6527,12 @@
  				     port->port_altmode, ALTMODE_DISCOVERY_MAX);
  	port->registered = true;
  
