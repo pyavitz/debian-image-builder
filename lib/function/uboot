@@ -37,6 +37,19 @@ else
 fi
 }
 
+crust_firmware(){
+# https://github.com/crust-firmware/crust
+# apt install gcc-or1k-elf
+# The package isn't currently available in the Debian Bullseye repo.
+# For the time being we will use precompiled binaries.
+if [[ "$BOARD" == "tritium" || "$BOARD" == "nanopineoplus2" ]]; then
+	cp ../files/boot/crust/h5-scp.bin u-boot/scp.bin
+fi
+if [[ "$BOARD" == "pinea64plus" ]]; then
+	cp ../files/boot/crust/a64-scp.bin u-boot/scp.bin
+fi
+}
+
 u-boot(){
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
@@ -63,6 +76,7 @@ fi
 # arm trusted firmware
 if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
 	cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin
+	crust_firmware
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
