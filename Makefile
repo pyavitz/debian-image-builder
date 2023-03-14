@@ -133,8 +133,8 @@ ifdef version
 endif
 
 ifdef myconfig
-	@$(shell sed -i "24s/.*/custom_defconfig=1/" userdata.txt)
-	@$(shell sed -i "25s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
+	@$(shell sed -i "23s/.*/custom_defconfig=1/" userdata.txt)
+	@$(shell sed -i "24s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 endif
 
 # GITHUB
