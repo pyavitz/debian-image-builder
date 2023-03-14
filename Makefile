@@ -180,7 +180,7 @@ menu:
 
 # reset myconfig to 0
 myconfig_0:
-	@$(shell sed -i "24s/.*/custom_defconfig=0/" userdata.txt)
+	@$(shell sed -i "23s/.*/custom_defconfig=0/" userdata.txt)
 
 config:
 	# Please be patient
