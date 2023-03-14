@@ -206,9 +206,38 @@ echo_menuconfig
 sleep 1s
 if [ $crosscompile -eq 1 ]; then
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig
+	sleep .25
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} savedefconfig
 else
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" menuconfig
+	sleep .25
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" savedefconfig
 fi
+echo "# ${DEFAULT_MOTD} defconfig saved."
+options=("Continue" "Quit")
+select opt in "${options[@]}"
+do
+	case $opt in
+		"Continue")
+			if [[ -f "defconfig" ]]; then
+				echo ""
+				mkdir -p ../../$OUTPUT/
+				cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
+			fi
+			break
+			;;
+		"Quit")
+			if [[ -f "defconfig" ]]; then
+				echo ""
+				mkdir -p ../../$OUTPUT/
+				cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
+				ls -ls ../../$OUTPUT/${BOARD}_defconfig
+			fi
+			exit 0
+			;;
+		*) echo "invalid option $REPLY";;
+	esac
+done
 }
 
 ccompile(){
