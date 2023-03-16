@@ -440,12 +440,9 @@ index 000000000000..225dbbe4955d
 +&usb_host0_xhci {
 +	extcon = <&usb2phy0>;
 +};
-diff --git a/arch/arm64/boot/dts/rockchip/rk3568-radxa-e25.dts b/arch/arm64/boot/dts/rockchip/rk3568-radxa-e25.dts
-new file mode 100644
-index 000000000000..fb96019b0e87
---- /dev/null
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-radxa-e25.dts
-@@ -0,0 +1,229 @@
+--- /dev/null	2023-03-06 16:28:19.117910243 -0500
++++ b/arch/arm64/boot/dts/rockchip/rk3568-radxa-e25.dts	2023-03-16 12:40:40.360895510 -0400
+@@ -0,0 +1,234 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +
 +/dts-v1/;
@@ -627,14 +624,19 @@ index 000000000000..fb96019b0e87
 +	status = "okay";
 +};
 +
++// sdcard
 +&sdmmc0 {
++	max-frequency = <150000000>;
++	supports-sd;
 +	bus-width = <4>;
++	cap-mmc-highspeed;
 +	cap-sd-highspeed;
 +	cd-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
 +	/* Also used in pcie30x1_clkreqnm0 */
 +	disable-wp;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd>;
++	sd-uhs-sdr50;
 +	sd-uhs-sdr104;
 +	vmmc-supply = <&vcc3v3_sd>;
 +	vqmmc-supply = <&vccio_sd>;
@@ -675,5 +677,3 @@ index 000000000000..fb96019b0e87
 +	phy-supply = <&vcc3v3_ngff>;
 +	status = "okay";
 +};
--- 
-2.25.1
