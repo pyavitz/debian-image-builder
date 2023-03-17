@@ -294,20 +294,17 @@ finish_image(){
 IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
 IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
 if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; fi
-if [ $compress_img -eq 1 ] && [[ "$IMG_COMPRESSION" == "xz" ]]; then
+if [ $compress_img -eq 1 ]; then
 	echo_compress
-	xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}
-	if [[ -f "${IMAGE_FIN_NAME}.xz" ]]; then
-		sha256sum ${IMAGE_FIN_NAME}.xz > ${IMAGE_FIN_NAME}.xz.sha256
-		sha256sum --check ${IMAGE_FIN_NAME}.xz.sha256
+	if [[ "$IMG_COMPRESSION" == "xz" ]]; then
+		xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}
 	fi
-fi
-if [ $compress_img -eq 1 ] && [[ "$IMG_COMPRESSION" == "zstd" ]]; then
-	echo_compress
-	zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}
-	if [[ -f "${IMAGE_FIN_NAME}.zst" ]]; then
-		sha256sum ${IMAGE_FIN_NAME}.zst > ${IMAGE_FIN_NAME}.zst.sha256
-		sha256sum --check ${IMAGE_FIN_NAME}.zst.sha256
+	if [[ "$IMG_COMPRESSION" == "zst" ]]; then
+		zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}
+	fi
+	if [[ -f "${IMAGE_FIN_NAME}.${IMG_COMPRESSION}" ]]; then
+		sha256sum ${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
+		sha256sum --check ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
 	fi
 fi
 }
