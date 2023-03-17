@@ -95,6 +95,13 @@ if [[ "$VFAT" == "true" ]]; then
 
 		p
 		w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+		if [[ "$EFI" == "true" ]]; then
+			if [[ "$FAMILY" == "broadcom" ]]; then
+				:;
+			else
+				parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 esp on
+			fi
+		fi
 	fi
 else
 	echo -e "o
