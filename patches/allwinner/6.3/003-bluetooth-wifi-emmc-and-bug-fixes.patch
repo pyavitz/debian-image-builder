@@ -1,0 +1,117 @@
+diff -Naur a/arch/arm/kernel/topology.c b/arch/arm/kernel/topology.c
+--- a/arch/arm/kernel/topology.c	2022-07-31 17:03:01.000000000 -0400
++++ b/arch/arm/kernel/topology.c	2022-08-02 03:40:00.000000000 -0400
+@@ -121,7 +121,7 @@
+ 
+ 		rate = of_get_property(cn, "clock-frequency", &len);
+ 		if (!rate || len != 4) {
+-			pr_err("%pOF missing clock-frequency property\n", cn);
++			//pr_err("%pOF missing clock-frequency property\n", cn);
+ 			continue;
+ 		}
+ 
+diff -Naur a/drivers/mmc/host/sunxi-mmc.c b/drivers/mmc/host/sunxi-mmc.c
+--- a/drivers/mmc/host/sunxi-mmc.c	2022-07-31 17:03:01.000000000 -0400
++++ b/drivers/mmc/host/sunxi-mmc.c	2022-08-05 19:30:36.172444360 -0400
+@@ -1191,6 +1191,13 @@
+ 	.needs_new_timings = true,
+ };
+ 
++static const struct sunxi_mmc_cfg sun50i_h5_emmc_cfg = {
++	.idma_des_size_bits = 13,
++	.clk_delays = NULL,
++	.can_calibrate = true,
++	.needs_new_timings = false,
++};
++
+ static const struct sunxi_mmc_cfg sun50i_a100_cfg = {
+ 	.idma_des_size_bits = 16,
+ 	.idma_des_shift = 2,
+@@ -1217,6 +1224,7 @@
+ 	{ .compatible = "allwinner,sun20i-d1-mmc", .data = &sun20i_d1_cfg },
+ 	{ .compatible = "allwinner,sun50i-a64-mmc", .data = &sun50i_a64_cfg },
+ 	{ .compatible = "allwinner,sun50i-a64-emmc", .data = &sun50i_a64_emmc_cfg },
++	{ .compatible = "allwinner,sun50i-h5-emmc", .data = &sun50i_h5_emmc_cfg },
+ 	{ .compatible = "allwinner,sun50i-a100-mmc", .data = &sun50i_a100_cfg },
+ 	{ .compatible = "allwinner,sun50i-a100-emmc", .data = &sun50i_a100_emmc_cfg },
+ 	{ /* sentinel */ }
+diff -Naur a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+--- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c	2022-07-31 17:03:01.000000000 -0400
++++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c	2022-08-05 19:30:36.188444084 -0400
+@@ -2050,6 +2050,7 @@
+ 			ie_offset = _REASOCREQ_IE_OFFSET_;
+ 
+ 		sinfo.filled = 0;
++		sinfo.pertid = 0;
+ 		sinfo.assoc_req_ies = pmgmt_frame + WLAN_HDR_A3_LEN + ie_offset;
+ 		sinfo.assoc_req_ies_len = frame_len - WLAN_HDR_A3_LEN - ie_offset;
+ 		cfg80211_new_sta(ndev, GetAddr2Ptr(pmgmt_frame), &sinfo, GFP_ATOMIC);
+--- a/net/rfkill/rfkill-gpio.c	2023-03-12 19:36:44.000000000 -0400
++++ b/net/rfkill/rfkill-gpio.c	2023-03-18 05:30:15.667340386 -0400
+@@ -23,6 +23,7 @@
+ 	struct rfkill		*rfkill_dev;
+ 	struct clk		*clk;
+ 
++	int			clk_frequency;
+ 	bool			clk_enabled;
+ };
+ 
+@@ -31,13 +32,13 @@
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
+ 	if (!blocked && !IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+-		clk_enable(rfkill->clk);
++		clk_prepare_enable(rfkill->clk);
+ 
+ 	gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
+ 	gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
+ 
+ 	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+-		clk_disable(rfkill->clk);
++		clk_disable_unprepare(rfkill->clk);
+ 
+ 	rfkill->clk_enabled = !blocked;
+ 
+@@ -87,12 +88,11 @@
+ 	if (dev_of_node(&pdev->dev)) {
+ 		name_property = "label";
+ 		type_property = "radio-type";
+-	} else {
+-		name_property = "name";
+-		type_property = "type";
+ 	}
+-	device_property_read_string(&pdev->dev, name_property, &rfkill->name);
+-	device_property_read_string(&pdev->dev, type_property, &type_name);
++
++	device_property_read_string(&pdev->dev, "rfkill-name", &rfkill->name);
++	device_property_read_string(&pdev->dev, "rfkill-type", &type_name);
++	device_property_read_u32(&pdev->dev, "clock-frequency", &rfkill->clk_frequency);
+ 
+ 	if (!rfkill->name)
+ 		rfkill->name = dev_name(&pdev->dev);
+@@ -106,6 +106,9 @@
+ 	}
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
++	if (!IS_ERR(rfkill->clk) && rfkill->clk_frequency > 0) {
++		clk_set_rate(rfkill->clk, rfkill->clk_frequency); 
++	}
+ 
+ 	gpio = devm_gpiod_get_optional(&pdev->dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpio))
+@@ -165,11 +168,11 @@
+ };
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
+ #endif
+-
+-static const struct of_device_id rfkill_of_match[] __maybe_unused = {
+-	{ .compatible = "rfkill-gpio", },
+-	{ },
++static const struct of_device_id rfkill_of_match[] = { 
++	{ .compatible = "rfkill-gpio", }, 
++	{},
+ };
++
+ MODULE_DEVICE_TABLE(of, rfkill_of_match);
+ 
+ static struct platform_driver rfkill_gpio_driver = {
