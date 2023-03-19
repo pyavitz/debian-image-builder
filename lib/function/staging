@@ -345,13 +345,17 @@ fi
 
 odroid_bootini(){
 rm -f p1/boot.ini
-if [[ -f "files/boot/odroid/${BOARD}-boot.ini" ]]; then
-	cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini;
-	sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini;
-	if [[ "$FSTYPE" == "ext4" || "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
-		sed -i "s/rootfstype=/${ROOT_FSTYPE}/g" p1/boot.ini;
-	fi
-fi
+cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini
+sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini
+sed -i "s/rootfstype=/${ROOT_FSTYPE}/g" p1/boot.ini
+tee --append p1/boot.ini <<EOF
+fatload mmc 0:1 0x20800000 uImage
+fatload mmc 0:1 0x22000000 uInitrd
+fatload mmc 0:1 0x21800000 amlogic/meson8b-odroidc1.dtb
+fdt addr 21800000
+
+bootm 0x20800000 0x22000000 0x21800000
+EOF
 }
 
 extlinux(){
