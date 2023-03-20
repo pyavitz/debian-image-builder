@@ -63,12 +63,11 @@ Release:		# Debian: bullseye, bookworm, testing, unstable and sid
 Network Manager		# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
-U-Boot:			# Supported: v2022.10
-Branch:			# Supported: 5.15 and current stable
+U-Boot:			# Supported: v2023.01
+Branch:			# Supported: 5.15 / 6.1 and "maybe" current stable
 Build:			# Kernel build version number
 Menuconfig:		# Run uboot and kernel menuconfig
 Compiler:		# GNU Compiler Collection
-Crosscompile:		# 1 cross compile | 0 native compile
 Caching on:		# Ccache
 
 Extra wireless support
