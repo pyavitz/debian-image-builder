@@ -8,15 +8,16 @@ diff -Naur a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
  dtb-$(CONFIG_ARCH_ALPINE) += \
  	alpine-db.dtb
  dtb-$(CONFIG_MACH_ARTPEC6) += \
-diff -Naur a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
---- a/arch/arm/boot/dts/overlays/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/boot/dts/overlays/Makefile	2022-08-11 23:33:08.084400048 -0400
-@@ -0,0 +1,14 @@
+--- /dev/null	2023-03-20 10:42:07.099687087 -0400
++++ b/arch/arm/boot/dts/overlays/Makefile	2023-03-21 08:33:51.304046417 -0400
+@@ -0,0 +1,16 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
 +	sun8i-h3-i2c0.dtbo \
 +	sun8i-h3-i2c1.dtbo \
 +	sun8i-h3-i2c2.dtbo \
++	sun8i-h3-spi-add-cs1.dtbo \
++	sun8i-h3-spi-jedec-nor.dtbo \
 +	sun8i-h3-spi-spidev.dtbo \
 +	sun8i-h3-uart1.dtbo \
 +	sun8i-h3-uart2.dtbo \
@@ -95,6 +96,95 @@ diff -Naur a/arch/arm/boot/dts/overlays/sun8i-h3-i2c2.dts b/arch/arm/boot/dts/ov
 +		target = <&i2c2>;
 +		__overlay__ {
 +			status = "okay";
++		};
++	};
++};
+--- /dev/null	2023-03-20 10:42:07.099687087 -0400
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-spi-add-cs1.dts	2023-03-21 08:31:56.313710000 -0400
+@@ -0,0 +1,41 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target = <&pio>;
++		__overlay__ {
++			spi0_cs1: spi0_cs1 {
++				pins = "PA21";
++				function = "gpio_out";
++				output-high;
++			};
++
++			spi1_cs1: spi1_cs1 {
++				pins = "PA10";
++				function = "gpio_out";
++				output-high;
++			};
++		};
++	};
++
++	fragment@1 {
++		target = <&spi0>;
++		__overlay__ {
++			pinctrl-names = "default", "default";
++			pinctrl-1 = <&spi0_cs1>;
++			cs-gpios = <0>, <&pio 0 21 0>; /* PA21 */
++		};
++	};
++
++	fragment@2 {
++		target = <&spi1>;
++		__overlay__ {
++			pinctrl-names = "default", "default";
++			pinctrl-1 = <&spi1_cs1>;
++			cs-gpios = <0>, <&pio 0 10 0>; /* PA10 */
++		};
++	};
++};
+--- /dev/null	2023-03-20 10:42:07.099687087 -0400
++++ b/arch/arm/boot/dts/overlays/sun8i-h3-spi-jedec-nor.dts	2023-03-21 08:31:56.313710000 -0400
+@@ -0,0 +1,42 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			spi0 = "/soc/spi@1c68000";
++			spi1 = "/soc/spi@1c69000";
++		};
++	};
++
++	fragment@1 {
++		target = <&spi0>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spiflash@0 {
++				compatible = "jedec,spi-nor";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++				status = "disabled";
++			};
++		};
++	};
++
++	fragment@2 {
++		target = <&spi1>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spiflash@0 {
++				compatible = "jedec,spi-nor";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++				status = "disabled";
++			};
 +		};
 +	};
 +};
