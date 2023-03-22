@@ -112,14 +112,16 @@ chmod +x /usr/local/sbin/hdmi-led-trigger
 
 make_uimage(){
 mkdir -p /etc/initramfs/post-update.d/
-tee /etc/initramfs/post-update.d/99-uimage <<EOF
+cat <<EOF > "/etc/initramfs/post-update.d/99-uimage"
 #!/bin/bash
+
 if [ -f /boot/uImage ]; then
-	rm -f /boot/uImage;
+	rm -f /boot/uImage
 fi
 if [ -f /boot/Image ]; then
-	mkimage -A arm -O linux -T kernel -C none -a 0x2080000 -e 0x2080000 -n "Linux" -d /boot/Image /boot/uImage > /dev/null 2>&1;
+	mkimage -A arm -O linux -T kernel -C none -a 0x2080000 -e 0x2080000 -n "Linux" -d /boot/Image /boot/uImage > /dev/null 2>&1
 fi
+
 exit 0
 EOF
 chmod +x /etc/initramfs/post-update.d/99-uimage

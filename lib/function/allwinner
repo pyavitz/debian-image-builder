@@ -49,22 +49,6 @@ rm -fdr firmware
 }
 
 pine64_bthelper(){
-tee /usr/local/sbin/pine64-bthelper <<EOF
-#!/bin/bash
-if [[ -f "/sys/class/rfkill/rfkill0/state" ]]; then
-	echo "1" > /sys/class/rfkill/rfkill0/state
-	sleep 1s
-	rtk_hciattach /dev/ttyS1 rtk_h5
-	sleep 2s
-	hciconfig hci0 up
-fi
-EOF
-if [[ -f "/usr/local/sbin/pine64-bthelper" ]]; then
-	chmod +x /usr/local/sbin/pine64-bthelper;
-fi
-}
-
-pine64_bthelper2(){
 echo  ""
 echo -e "Installing bluetooth helper ..."
 sleep .50
@@ -80,6 +64,19 @@ echo "r8723bs" > /etc/modules-load.d/pine64.conf
 echo "hci_uart" >> /etc/modules-load.d/pine64.conf
 mkdir -p /etc/modprobe.d/
 echo "options r8723bs rtw_power_mgnt=0" > /etc/modprobe.d/wifi-pwrmgnt.conf
+cat <<EOF > "/usr/local/sbin/pine64-bthelper"
+#!/bin/bash
+if [[ -f "/sys/class/rfkill/rfkill0/state" ]]; then
+	echo "1" > /sys/class/rfkill/rfkill0/state
+	sleep 1s
+	rtk_hciattach /dev/ttyS1 rtk_h5
+	sleep 2s
+	hciconfig hci0 up
+fi
+EOF
+if [[ -f "/usr/local/sbin/pine64-bthelper" ]]; then
+	chmod +x /usr/local/sbin/pine64-bthelper
+fi
 }
 
 ct_blacklist(){
