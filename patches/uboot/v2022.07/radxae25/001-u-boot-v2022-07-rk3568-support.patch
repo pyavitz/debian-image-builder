@@ -1,86 +1,6 @@
-diff -Naur a/Makefile b/Makefile
---- a/Makefile	2022-07-11 09:42:58.000000000 -0400
-+++ b/Makefile	2022-08-07 02:03:03.729399129 -0400
-@@ -413,13 +413,7 @@
- PYTHON		?= python
- PYTHON2		= python2
- PYTHON3		?= python3
--
--# The devicetree compiler and pylibfdt are automatically built unless DTC is
--# provided. If DTC is provided, it is assumed the pylibfdt is available too.
--DTC_INTREE	:= $(objtree)/scripts/dtc/dtc
--DTC		?= $(DTC_INTREE)
--DTC_MIN_VERSION	:= 010406
--
-+DTC		?= $(objtree)/scripts/dtc/dtc
- CHECK		= sparse
- 
- CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
-@@ -1047,6 +1041,9 @@
- cmd_mkimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $< $@ \
- 	>$(MKIMAGEOUTPUT) $(if $(KBUILD_VERBOSE:0=), && cat $(MKIMAGEOUTPUT))
- 
-+cmd_mkimage_combined = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $(COMBINED_FILE):$< $@ \
-+	>$(MKIMAGEOUTPUT) $(if $(KBUILD_VERBOSE:0=), && cat $(MKIMAGEOUTPUT))
-+
- quiet_cmd_mkfitimage = MKIMAGE $@
- cmd_mkfitimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) \
- 	-f $(U_BOOT_ITS) -p $(CONFIG_FIT_EXTERNAL_OFFSET) $@ \
-@@ -1491,6 +1488,7 @@
- ifeq ($(CONFIG_ARCH_ROCKCHIP),y)
- 
- # TPL + SPL
-+ifneq ($(CONFIG_SYS_SOC),$(filter $(CONFIG_SYS_SOC),"rk3568" "rk3566"))
- ifeq ($(CONFIG_SPL)$(CONFIG_TPL),yy)
- MKIMAGEFLAGS_u-boot-tpl-rockchip.bin = -n $(CONFIG_SYS_SOC) -T rksd
- tpl/u-boot-tpl-rockchip.bin: tpl/u-boot-tpl.bin FORCE
-@@ -1502,6 +1500,12 @@
- idbloader.img: spl/u-boot-spl.bin FORCE
- 	$(call if_changed,mkimage)
- endif
-+else
-+MKIMAGEFLAGS_idbloader.img = -n $(CONFIG_SYS_SOC) -T rksd
-+COMBINED_FILE = ram_init.bin
-+idbloader.img: spl/u-boot-spl.bin FORCE
-+	$(call if_changed,mkimage_combined)
-+endif
- 
- ifeq ($(CONFIG_ARM64),y)
- OBJCOPYFLAGS_u-boot-rockchip.bin = -I binary -O binary \
-@@ -2060,29 +2064,9 @@
- 
- endif
- 
--# Check dtc and pylibfdt, if DTC is provided, else build them
- PHONY += scripts_dtc
- scripts_dtc: scripts_basic
--	$(Q)if test "$(DTC)" = "$(DTC_INTREE)"; then \
--		$(MAKE) $(build)=scripts/dtc; \
--	else \
--		if ! $(DTC) -v >/dev/null; then \
--			echo '*** Failed to check dtc version: $(DTC)'; \
--			false; \
--		else \
--			if test "$(call dtc-version)" -lt $(DTC_MIN_VERSION); then \
--				echo '*** Your dtc is too old, please upgrade to dtc $(DTC_MIN_VERSION) or newer'; \
--				false; \
--			else \
--				if [ -n "$(CONFIG_PYLIBFDT)" ]; then \
--					if ! echo "import libfdt" | $(PYTHON3) 2>/dev/null; then \
--						echo '*** pylibfdt does not seem to be available with $(PYTHON3)'; \
--						false; \
--					fi; \
--				fi; \
--			fi; \
--		fi; \
--	fi
-+	$(Q)$(MAKE) $(build)=scripts/dtc
- 
- # ---------------------------------------------------------------------------
- quiet_cmd_cpp_lds = LDS     $@
 diff -Naur a/arch/arm/dts/include/dt-bindings/power/rk3568-power.h b/arch/arm/dts/include/dt-bindings/power/rk3568-power.h
 --- a/arch/arm/dts/include/dt-bindings/power/rk3568-power.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/dts/include/dt-bindings/power/rk3568-power.h	2022-08-07 02:03:04.053398054 -0400
++++ b/arch/arm/dts/include/dt-bindings/power/rk3568-power.h	2023-03-23 06:28:53.852531965 -0400
 @@ -0,0 +1,32 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +#ifndef __DT_BINDINGS_POWER_RK3568_POWER_H__
@@ -116,7 +36,7 @@ diff -Naur a/arch/arm/dts/include/dt-bindings/power/rk3568-power.h b/arch/arm/dt
 +#endif
 diff -Naur a/arch/arm/dts/include/dt-bindings/soc/rockchip,vop2.h b/arch/arm/dts/include/dt-bindings/soc/rockchip,vop2.h
 --- a/arch/arm/dts/include/dt-bindings/soc/rockchip,vop2.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/dts/include/dt-bindings/soc/rockchip,vop2.h	2022-08-07 02:03:04.053398054 -0400
++++ b/arch/arm/dts/include/dt-bindings/soc/rockchip,vop2.h	2023-03-23 06:29:04.360390567 -0400
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +
@@ -132,81 +52,9 @@ diff -Naur a/arch/arm/dts/include/dt-bindings/soc/rockchip,vop2.h b/arch/arm/dts
 +#define RK3568_VOP2_EP_LVDS1	6
 +
 +#endif /* __DT_BINDINGS_ROCKCHIP_VOP2_H */
-diff -Naur a/arch/arm/dts/rk3566.dtsi b/arch/arm/dts/rk3566.dtsi
---- a/arch/arm/dts/rk3566.dtsi	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/dts/rk3566.dtsi	2022-08-07 02:03:03.189400920 -0400
-@@ -0,0 +1,36 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+
-+#include "rk356x.dtsi"
-+
-+/ {
-+	compatible = "rockchip,rk3566";
-+};
-+
-+&pipegrf {
-+	compatible = "rockchip,rk3566-pipegrf", "syscon";
-+};
-+
-+&power {
-+	power-domain@RK3568_PD_PIPE {
-+		reg = <RK3568_PD_PIPE>;
-+		clocks = <&cru PCLK_PIPE>;
-+		pm_qos = <&qos_pcie2x1>,
-+			 <&qos_sata1>,
-+			 <&qos_sata2>,
-+			 <&qos_usb3_0>,
-+			 <&qos_usb3_1>;
-+		#power-domain-cells = <0>;
-+	};
-+};
-+
-+&usbdrd30 {
-+	phys = <&u2phy0_otg>;
-+	phy-names = "usb2-phy";
-+	extcon = <&u2phy0>;
-+	maximum-speed = "high-speed";
-+	snps,dis_u2_susphy_quirk;
-+};
-+
-+&vop {
-+	compatible = "rockchip,rk3566-vop";
-+};
-diff -Naur a/arch/arm/dts/rk3568-evb.dts b/arch/arm/dts/rk3568-evb.dts
---- a/arch/arm/dts/rk3568-evb.dts	2022-07-11 09:42:58.000000000 -0400
-+++ b/arch/arm/dts/rk3568-evb.dts	2022-08-07 02:03:03.189400920 -0400
-@@ -74,6 +74,11 @@
- 	status = "okay";
- };
- 
-+&sdmmc0 {
-+	status = "okay";
-+	max-frequency = <52000000>;
-+};
-+
- &uart2 {
- 	status = "okay";
- };
-diff -Naur a/arch/arm/dts/rk3568-pinctrl.dtsi b/arch/arm/dts/rk3568-pinctrl.dtsi
---- a/arch/arm/dts/rk3568-pinctrl.dtsi	2022-07-11 09:42:58.000000000 -0400
-+++ b/arch/arm/dts/rk3568-pinctrl.dtsi	2022-08-07 02:03:03.149401053 -0400
-@@ -3108,4 +3108,13 @@
- 				<4 RK_PA0 3 &pcfg_pull_none_drv_level_2>;
- 		};
- 	};
-+
-+	tsadc {
-+		/omit-if-no-ref/
-+		tsadc_pin: tsadc-pin {
-+			rockchip,pins =
-+				/* tsadc_pin */
-+				<0 RK_PA1 0 &pcfg_pull_none>;
-+		};
-+	};
- };
 diff -Naur a/arch/arm/dts/rk3568.dtsi b/arch/arm/dts/rk3568.dtsi
 --- a/arch/arm/dts/rk3568.dtsi	2022-07-11 09:42:58.000000000 -0400
-+++ b/arch/arm/dts/rk3568.dtsi	2022-08-07 02:03:03.149401053 -0400
++++ b/arch/arm/dts/rk3568.dtsi	2023-03-23 06:29:04.357390607 -0400
 @@ -3,777 +3,144 @@
   * Copyright (c) 2021 Rockchip Electronics Co., Ltd.
   */
@@ -1100,9 +948,41 @@ diff -Naur a/arch/arm/dts/rk3568.dtsi b/arch/arm/dts/rk3568.dtsi
 +&vop {
 +	compatible = "rockchip,rk3568-vop";
 +};
+diff -Naur a/arch/arm/dts/rk3568-evb.dts b/arch/arm/dts/rk3568-evb.dts
+--- a/arch/arm/dts/rk3568-evb.dts	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3568-evb.dts	2023-03-23 06:28:53.842532099 -0400
+@@ -74,6 +74,11 @@
+ 	status = "okay";
+ };
+ 
++&sdmmc0 {
++	status = "okay";
++	max-frequency = <52000000>;
++};
++
+ &uart2 {
+ 	status = "okay";
+ };
+diff -Naur a/arch/arm/dts/rk3568-pinctrl.dtsi b/arch/arm/dts/rk3568-pinctrl.dtsi
+--- a/arch/arm/dts/rk3568-pinctrl.dtsi	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/dts/rk3568-pinctrl.dtsi	2023-03-23 06:28:53.843532086 -0400
+@@ -3108,4 +3108,13 @@
+ 				<4 RK_PA0 3 &pcfg_pull_none_drv_level_2>;
+ 		};
+ 	};
++
++	tsadc {
++		/omit-if-no-ref/
++		tsadc_pin: tsadc-pin {
++			rockchip,pins =
++				/* tsadc_pin */
++				<0 RK_PA1 0 &pcfg_pull_none>;
++		};
++	};
+ };
 diff -Naur a/arch/arm/dts/rk356x.dtsi b/arch/arm/dts/rk356x.dtsi
 --- a/arch/arm/dts/rk356x.dtsi	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm/dts/rk356x.dtsi	2022-08-07 02:03:03.149401053 -0400
++++ b/arch/arm/dts/rk356x.dtsi	2023-03-23 06:29:04.360390567 -0400
 @@ -0,0 +1,1635 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -2741,7 +2621,7 @@ diff -Naur a/arch/arm/dts/rk356x.dtsi b/arch/arm/dts/rk356x.dtsi
 +#include "rk3568-pinctrl.dtsi"
 diff -Naur a/arch/arm/include/asm/arch-rockchip/gpio.h b/arch/arm/include/asm/arch-rockchip/gpio.h
 --- a/arch/arm/include/asm/arch-rockchip/gpio.h	2022-07-11 09:42:58.000000000 -0400
-+++ b/arch/arm/include/asm/arch-rockchip/gpio.h	2022-08-07 02:03:03.221400814 -0400
++++ b/arch/arm/include/asm/arch-rockchip/gpio.h	2023-03-23 06:28:53.855531925 -0400
 @@ -6,6 +6,7 @@
  #ifndef _ASM_ARCH_GPIO_H
  #define _ASM_ARCH_GPIO_H
@@ -2792,10 +2672,58 @@ diff -Naur a/arch/arm/include/asm/arch-rockchip/gpio.h b/arch/arm/include/asm/ar
  
  enum gpio_pu_pd {
  	GPIO_PULL_NORMAL = 0,
+diff -Naur a/arch/arm/mach-rockchip/boot_mode.c b/arch/arm/mach-rockchip/boot_mode.c
+--- a/arch/arm/mach-rockchip/boot_mode.c	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/mach-rockchip/boot_mode.c	2023-03-23 06:29:04.378390325 -0400
+@@ -51,7 +51,7 @@
+ 	ret = -ENODEV;
+ 	uclass_foreach_dev(dev, uc) {
+ 		if (!strncmp(dev->name, "saradc", 6)) {
+-			ret = adc_channel_single_shot(dev->name, 1, &val);
++			ret = adc_channel_single_shot(dev->name, 0, &val);
+ 			break;
+ 		}
+ 	}
+@@ -89,6 +89,7 @@
+ 	boot_mode = readl(reg);
+ 	debug("%s: boot mode 0x%08x\n", __func__, boot_mode);
+ 
++#if !defined(CONFIG_SPL_BUILD) && !defined(CONFIG_TPL_BUILD)
+ 	/* Clear boot mode */
+ 	writel(BOOT_NORMAL, reg);
+ 
+@@ -102,6 +103,7 @@
+ 		env_set("preboot", "setenv preboot; ums mmc 0");
+ 		break;
+ 	}
++#endif
+ 
+ 	return 0;
+ }
+diff -Naur a/arch/arm/mach-rockchip/Makefile b/arch/arm/mach-rockchip/Makefile
+--- a/arch/arm/mach-rockchip/Makefile	2022-07-11 09:42:58.000000000 -0400
++++ b/arch/arm/mach-rockchip/Makefile	2023-03-23 06:29:04.377390338 -0400
+@@ -15,13 +15,13 @@
+ 
+ obj-spl-$(CONFIG_ROCKCHIP_RK3036) += rk3036-board-spl.o
+ 
+-ifeq ($(CONFIG_SPL_BUILD)$(CONFIG_TPL_BUILD),)
+-
+ # Always include boot_mode.o, as we bypass it (i.e. turn it off)
+ # inside of boot_mode.c when CONFIG_BOOT_MODE_REG is 0.  This way,
+ # we can have the preprocessor correctly recognise both 0x0 and 0
+ # meaning "turn it off".
+-obj-y += boot_mode.o
++obj-$(CONFIG_ARCH_ROCKCHIP) += boot_mode.o
++
++ifeq ($(CONFIG_SPL_BUILD)$(CONFIG_TPL_BUILD),)
+ obj-$(CONFIG_ROCKCHIP_COMMON_BOARD) += board.o
+ obj-$(CONFIG_MISC_INIT_R) += misc.o
+ endif
 diff -Naur a/arch/arm/mach-rockchip/rk3568/rk3568.c b/arch/arm/mach-rockchip/rk3568/rk3568.c
 --- a/arch/arm/mach-rockchip/rk3568/rk3568.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/arch/arm/mach-rockchip/rk3568/rk3568.c	2022-08-07 02:03:03.285400602 -0400
-@@ -5,8 +5,10 @@
++++ b/arch/arm/mach-rockchip/rk3568/rk3568.c	2023-03-23 06:29:04.380390298 -0400
+@@ -5,24 +5,47 @@
  
  #include <common.h>
  #include <dm.h>
@@ -2803,10 +2731,31 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/rk3568.c b/arch/arm/mach-rockchip/rk3
  #include <asm/armv8/mmu.h>
  #include <asm/io.h>
 +#include <asm/arch-rockchip/bootrom.h>
++#include <asm/arch-rockchip/boot_mode.h>
  #include <asm/arch-rockchip/grf_rk3568.h>
  #include <asm/arch-rockchip/hardware.h>
  #include <dt-bindings/clock/rk3568-cru.h>
-@@ -23,6 +25,16 @@
+ 
+ #define PMUGRF_BASE			0xfdc20000
+ #define GRF_BASE			0xfdc60000
++#define GRF_GPIO1B_IOMUX_H		0x0c
++#define GRF_GPIO1C_IOMUX_L		0x10
++#define GRF_GPIO1C_IOMUX_H		0x14
++#define GRF_GPIO1D_IOMUX_L		0x18
++#define GRF_GPIO1D_IOMUX_H		0x1c
++#define GRF_GPIO2A_IOMUX_L		0x20
+ #define GRF_GPIO1B_DS_2			0x218
+ #define GRF_GPIO1B_DS_3			0x21c
+ #define GRF_GPIO1C_DS_0			0x220
+ #define GRF_GPIO1C_DS_1			0x224
+ #define GRF_GPIO1C_DS_2			0x228
+ #define GRF_GPIO1C_DS_3			0x22c
+-#define SGRF_BASE			0xFDD18000
++#define GRF_GPIO1D_DS_0			0x230
++#define GRF_GPIO1D_DS_1			0x234
++#define GRF_GPIO1D_DS_2			0x238
++#define SGRF_BASE			0xfdd18000
++#define SGRF_SOC_CON3			0x0c
  #define SGRF_SOC_CON4			0x10
  #define EMMC_HPROT_SECURE_CTRL		0x03
  #define SDMMC0_HPROT_SECURE_CTRL	0x01
@@ -2823,7 +2772,7 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/rk3568.c b/arch/arm/mach-rockchip/rk3
  /* PMU_GRF_GPIO0D_IOMUX_L */
  enum {
  	GPIO0D1_SHIFT		= 4,
-@@ -43,6 +55,12 @@
+@@ -43,6 +66,12 @@
  	UART2_IO_SEL_M0		= 0,
  };
  
@@ -2836,7 +2785,7 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/rk3568.c b/arch/arm/mach-rockchip/rk3
  static struct mm_region rk3568_mem_map[] = {
  	{
  		.virt = 0x0UL,
-@@ -91,6 +109,20 @@
+@@ -91,6 +120,20 @@
  int arch_cpu_init(void)
  {
  #ifdef CONFIG_SPL_BUILD
@@ -2857,7 +2806,28 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/rk3568.c b/arch/arm/mach-rockchip/rk3
  	/* Set the emmc sdmmc0 to secure */
  	rk_clrreg(SGRF_BASE + SGRF_SOC_CON4, (EMMC_HPROT_SECURE_CTRL << 11
  		| SDMMC0_HPROT_SECURE_CTRL << 4));
-@@ -104,3 +136,31 @@
+@@ -101,6 +144,75 @@
+ 	writel(0x3f3f0707, GRF_BASE + GRF_GPIO1C_DS_1);
+ 	writel(0x3f3f0707, GRF_BASE + GRF_GPIO1C_DS_2);
+ 	writel(0x3f3f0707, GRF_BASE + GRF_GPIO1C_DS_3);
++
++	/* emmc, sfc, and sdmmc iomux */
++	writel((0x7777UL << 16) | (0x1111), GRF_BASE + GRF_GPIO1B_IOMUX_H);
++	writel((0x7777UL << 16) | (0x1111), GRF_BASE + GRF_GPIO1C_IOMUX_L);
++	writel((0x7777UL << 16) | (0x2111), GRF_BASE + GRF_GPIO1C_IOMUX_H);
++	writel((0x7777UL << 16) | (0x1111), GRF_BASE + GRF_GPIO1D_IOMUX_L);
++	writel((0x7777UL << 16) | (0x1111), GRF_BASE + GRF_GPIO1D_IOMUX_H);
++	writel((0x7777UL << 16) | (0x1111), GRF_BASE + GRF_GPIO2A_IOMUX_L);
++
++	/* set the fspi d0~3 cs0 to level 2 */
++	writel(0x3f000700, GRF_BASE + GRF_GPIO1C_DS_3);
++	writel(0x3f000700, GRF_BASE + GRF_GPIO1D_DS_0);
++	writel(0x3f3f0707, GRF_BASE + GRF_GPIO1D_DS_1);
++	writel(0x003f0007, GRF_BASE + GRF_GPIO1D_DS_2);
++
++	/* Set the fspi to secure */
++	writel(((0x1 << 14) << 16) | (0x0 << 14), SGRF_BASE + SGRF_SOC_CON3);
++
  #endif
  	return 0;
  }
@@ -2889,9 +2859,32 @@ diff -Naur a/arch/arm/mach-rockchip/rk3568/rk3568.c b/arch/arm/mach-rockchip/rk3
 +	return 0;
 +};
 +#endif
++
++#ifdef CONFIG_SPL_BUILD
++
++void __weak led_setup(void)
++{
++}
++
++void spl_board_init(void)
++{
++	led_setup();
++
++#if defined(SPL_DM_REGULATOR)
++	/*
++	 * Turning the eMMC and SPI back on (if disabled via the Qseven
++	 * BIOS_ENABLE) signal is done through a always-on regulator).
++	 */
++	if (regulators_enable_boot_on(false))
++		debug("%s: Cannot enable boot on regulator\n", __func__);
++#endif
++
++	setup_boot_mode();
++}
++#endif
 diff -Naur a/arch/arm/mach-rockchip/sdram.c b/arch/arm/mach-rockchip/sdram.c
 --- a/arch/arm/mach-rockchip/sdram.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/arch/arm/mach-rockchip/sdram.c	2022-08-07 02:03:03.285400602 -0400
++++ b/arch/arm/mach-rockchip/sdram.c	2023-03-23 06:28:53.861531844 -0400
 @@ -3,6 +3,8 @@
   * Copyright (C) 2017 Rockchip Electronics Co., Ltd.
   */
@@ -2968,7 +2961,7 @@ diff -Naur a/arch/arm/mach-rockchip/sdram.c b/arch/arm/mach-rockchip/sdram.c
  }
 diff -Naur a/common/board_f.c b/common/board_f.c
 --- a/common/board_f.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/common/board_f.c	2022-08-07 02:03:02.921401809 -0400
++++ b/common/board_f.c	2023-03-23 06:28:53.862531830 -0400
 @@ -345,7 +345,14 @@
  #endif
  	gd->ram_top = gd->ram_base + get_effective_memsize();
@@ -2984,9 +2977,24 @@ diff -Naur a/common/board_f.c b/common/board_f.c
  	debug("Ram top: %08lX\n", (ulong)gd->ram_top);
  #if defined(CONFIG_MP) && (defined(CONFIG_MPC86xx) || defined(CONFIG_E500))
  	/*
+diff -Naur a/common/spl/Kconfig b/common/spl/Kconfig
+--- a/common/spl/Kconfig	2022-07-11 09:42:58.000000000 -0400
++++ b/common/spl/Kconfig	2023-03-23 06:29:04.367390473 -0400
+@@ -488,6 +488,11 @@
+ 	  ensure this information is available to the next image
+ 	  invoked).
+ 
++config SPL_ADC
++	bool "Support ADC drivers in SPL"
++	help
++	  Enable ADC drivers in SPL.
++
+ config SPL_CACHE
+ 	bool "Support CACHE drivers"
+ 	help
 diff -Naur a/doc/build/gcc.rst b/doc/build/gcc.rst
 --- a/doc/build/gcc.rst	2022-07-11 09:42:58.000000000 -0400
-+++ b/doc/build/gcc.rst	2022-08-07 02:03:03.493399912 -0400
++++ b/doc/build/gcc.rst	2023-03-23 06:29:04.399390042 -0400
 @@ -131,27 +131,6 @@
  * O=<dir> - generate all output files in directory <dir>, including .config
  * V=1 - verbose build
@@ -3015,9 +3023,28 @@ diff -Naur a/doc/build/gcc.rst b/doc/build/gcc.rst
  Other build targets
  ~~~~~~~~~~~~~~~~~~~
  
+diff -Naur a/drivers/clk/rockchip/clk_rk3568.c b/drivers/clk/rockchip/clk_rk3568.c
+--- a/drivers/clk/rockchip/clk_rk3568.c	2022-07-11 09:42:58.000000000 -0400
++++ b/drivers/clk/rockchip/clk_rk3568.c	2023-03-23 06:29:04.373390392 -0400
+@@ -14,6 +14,7 @@
+ #include <asm/arch-rockchip/clock.h>
+ #include <asm/arch-rockchip/hardware.h>
+ #include <asm/io.h>
++#include <dm/device-internal.h>
+ #include <dm/lists.h>
+ #include <dt-bindings/clock/rk3568-cru.h>
+ 
+@@ -2934,6 +2935,7 @@
+ 						    glb_srst_fst);
+ 		priv->glb_srst_snd_value = offsetof(struct rk3568_cru,
+ 						    glb_srsr_snd);
++		dev_set_priv(sys_child, priv);
+ 	}
+ 
+ #if CONFIG_IS_ENABLED(RESET_ROCKCHIP)
 diff -Naur a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
 --- a/drivers/gpio/Kconfig	2022-07-11 09:42:58.000000000 -0400
-+++ b/drivers/gpio/Kconfig	2022-08-07 02:03:03.585399607 -0400
++++ b/drivers/gpio/Kconfig	2023-03-23 06:28:53.855531925 -0400
 @@ -341,6 +341,19 @@
  	  The GPIOs for a device are defined in the device tree with one node
  	  for each bank.
@@ -3040,7 +3067,7 @@ diff -Naur a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
  	depends on SANDBOX && DM && DM_GPIO
 diff -Naur a/drivers/gpio/rk_gpio.c b/drivers/gpio/rk_gpio.c
 --- a/drivers/gpio/rk_gpio.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/drivers/gpio/rk_gpio.c	2022-08-07 02:03:03.581399620 -0400
++++ b/drivers/gpio/rk_gpio.c	2023-03-23 06:29:04.368390459 -0400
 @@ -2,12 +2,15 @@
  /*
   * (C) Copyright 2015 Google, Inc
@@ -3125,7 +3152,7 @@ diff -Naur a/drivers/gpio/rk_gpio.c b/drivers/gpio/rk_gpio.c
  
  	return 0;
  }
-@@ -86,8 +111,8 @@
+@@ -86,14 +111,14 @@
  	ret = pinctrl_get_gpio_mux(priv->pinctrl, priv->bank, offset);
  	if (ret)
  		return ret;
@@ -3136,6 +3163,13 @@ diff -Naur a/drivers/gpio/rk_gpio.c b/drivers/gpio/rk_gpio.c
  	return is_output ? GPIOF_OUTPUT : GPIOF_INPUT;
  #endif
  }
+ 
+ /* Simple SPL interface to GPIOs */
+-#ifdef CONFIG_SPL_BUILD
++#if defined(CONFIG_SPL_BUILD) && !defined(CONFIG_ROCKCHIP_GPIO_V2)
+ 
+ enum {
+ 	PULL_NONE_1V8 = 0,
 @@ -142,19 +167,49 @@
  {
  	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
@@ -3193,9 +3227,19 @@ diff -Naur a/drivers/gpio/rk_gpio.c b/drivers/gpio/rk_gpio.c
  
  	return 0;
  }
+diff -Naur a/drivers/Makefile b/drivers/Makefile
+--- a/drivers/Makefile	2022-07-11 09:42:58.000000000 -0400
++++ b/drivers/Makefile	2023-03-23 06:29:04.367390473 -0400
+@@ -1,5 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0+
+ 
++obj-$(CONFIG_$(SPL_)ADC) += adc/
+ obj-$(CONFIG_$(SPL_TPL_)BOOTCOUNT_LIMIT) += bootcount/
+ obj-$(CONFIG_$(SPL_TPL_)BUTTON) += button/
+ obj-$(CONFIG_$(SPL_TPL_)CACHE) += cache/
 diff -Naur a/drivers/mmc/dw_mmc.c b/drivers/mmc/dw_mmc.c
 --- a/drivers/mmc/dw_mmc.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/drivers/mmc/dw_mmc.c	2022-08-07 02:03:03.597399567 -0400
++++ b/drivers/mmc/dw_mmc.c	2023-03-23 06:28:53.848532019 -0400
 @@ -529,7 +529,8 @@
  	if (host->board_init)
  		host->board_init(host);
@@ -3208,7 +3252,7 @@ diff -Naur a/drivers/mmc/dw_mmc.c b/drivers/mmc/dw_mmc.c
  		debug("%s[%d] Fail-reset!!\n", __func__, __LINE__);
 diff -Naur a/drivers/pinctrl/rockchip/Makefile b/drivers/pinctrl/rockchip/Makefile
 --- a/drivers/pinctrl/rockchip/Makefile	2022-07-11 09:42:58.000000000 -0400
-+++ b/drivers/pinctrl/rockchip/Makefile	2022-08-07 02:03:03.649399395 -0400
++++ b/drivers/pinctrl/rockchip/Makefile	2023-03-23 06:28:53.856531911 -0400
 @@ -14,4 +14,5 @@
  obj-$(CONFIG_ROCKCHIP_RK3328) += pinctrl-rk3328.o
  obj-$(CONFIG_ROCKCHIP_RK3368) += pinctrl-rk3368.o
@@ -3217,7 +3261,7 @@ diff -Naur a/drivers/pinctrl/rockchip/Makefile b/drivers/pinctrl/rockchip/Makefi
  obj-$(CONFIG_ROCKCHIP_RV1108) += pinctrl-rv1108.o
 diff -Naur a/drivers/pinctrl/rockchip/pinctrl-rk3568.c b/drivers/pinctrl/rockchip/pinctrl-rk3568.c
 --- a/drivers/pinctrl/rockchip/pinctrl-rk3568.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/pinctrl/rockchip/pinctrl-rk3568.c	2022-08-07 02:03:03.649399395 -0400
++++ b/drivers/pinctrl/rockchip/pinctrl-rk3568.c	2023-03-23 06:28:53.857531898 -0400
 @@ -0,0 +1,360 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
@@ -3581,7 +3625,7 @@ diff -Naur a/drivers/pinctrl/rockchip/pinctrl-rk3568.c b/drivers/pinctrl/rockchi
 +};
 diff -Naur a/drivers/pinctrl/rockchip/pinctrl-rockchip-core.c b/drivers/pinctrl/rockchip/pinctrl-rockchip-core.c
 --- a/drivers/pinctrl/rockchip/pinctrl-rockchip-core.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/drivers/pinctrl/rockchip/pinctrl-rockchip-core.c	2022-08-07 02:03:03.649399395 -0400
++++ b/drivers/pinctrl/rockchip/pinctrl-rockchip-core.c	2023-03-23 06:28:53.857531898 -0400
 @@ -400,7 +400,7 @@
  	int prop_len, param;
  	const u32 *data;
@@ -3620,7 +3664,7 @@ diff -Naur a/drivers/pinctrl/rockchip/pinctrl-rockchip-core.c b/drivers/pinctrl/
  			/* preset drv offset value, set new start value */
 diff -Naur a/drivers/pinctrl/rockchip/pinctrl-rockchip.h b/drivers/pinctrl/rockchip/pinctrl-rockchip.h
 --- a/drivers/pinctrl/rockchip/pinctrl-rockchip.h	2022-07-11 09:42:58.000000000 -0400
-+++ b/drivers/pinctrl/rockchip/pinctrl-rockchip.h	2022-08-07 02:03:03.649399395 -0400
++++ b/drivers/pinctrl/rockchip/pinctrl-rockchip.h	2023-03-23 06:28:53.857531898 -0400
 @@ -6,9 +6,13 @@
  #ifndef __DRIVERS_PINCTRL_ROCKCHIP_H
  #define __DRIVERS_PINCTRL_ROCKCHIP_H
@@ -3708,9 +3752,41 @@ diff -Naur a/drivers/pinctrl/rockchip/pinctrl-rockchip.h b/drivers/pinctrl/rockc
  	u32 route_offset;
  	u32 route_val;
  };
+diff -Naur a/drivers/ram/rockchip/sdram_common.c b/drivers/ram/rockchip/sdram_common.c
+--- a/drivers/ram/rockchip/sdram_common.c	2022-07-11 09:42:58.000000000 -0400
++++ b/drivers/ram/rockchip/sdram_common.c	2023-03-23 06:29:04.363390527 -0400
+@@ -299,22 +299,22 @@
+ 		bw = cap_info->bw;
+ 		cs_cap = (1 << (row + col + bk + bw - 20));
+ 		if (bw == 2) {
+-			if (cs_cap <= 0x2000000) /* 256Mb */
++			if (cs_cap <= 0x20) /* 256Mb */
+ 				die_bw_0 = (col < 9) ? 2 : 1;
+-			else if (cs_cap <= 0x10000000) /* 2Gb */
++			else if (cs_cap <= 0x100) /* 2Gb */
+ 				die_bw_0 = (col < 10) ? 2 : 1;
+-			else if (cs_cap <= 0x40000000) /* 8Gb */
++			else if (cs_cap <= 0x400) /* 8Gb */
+ 				die_bw_0 = (col < 11) ? 2 : 1;
+ 			else
+ 				die_bw_0 = (col < 12) ? 2 : 1;
+ 			if (cs > 1) {
+ 				row = cap_info->cs1_row;
+ 				cs_cap = (1 << (row + col + bk + bw - 20));
+-				if (cs_cap <= 0x2000000) /* 256Mb */
++				if (cs_cap <= 0x20) /* 256Mb */
+ 					die_bw_0 = (col < 9) ? 2 : 1;
+-				else if (cs_cap <= 0x10000000) /* 2Gb */
++				else if (cs_cap <= 0x100) /* 2Gb */
+ 					die_bw_0 = (col < 10) ? 2 : 1;
+-				else if (cs_cap <= 0x40000000) /* 8Gb */
++				else if (cs_cap <= 0x400) /* 8Gb */
+ 					die_bw_0 = (col < 11) ? 2 : 1;
+ 				else
+ 					die_bw_0 = (col < 12) ? 2 : 1;
 diff -Naur a/dts/Kconfig b/dts/Kconfig
 --- a/dts/Kconfig	2022-07-11 09:42:58.000000000 -0400
-+++ b/dts/Kconfig	2022-08-07 02:03:03.729399129 -0400
++++ b/dts/Kconfig	2023-03-23 06:29:04.402390002 -0400
 @@ -5,6 +5,9 @@
  config SUPPORT_OF_CONTROL
  	bool
@@ -3731,7 +3807,7 @@ diff -Naur a/dts/Kconfig b/dts/Kconfig
  	help
 diff -Naur a/include/configs/rk3568_common.h b/include/configs/rk3568_common.h
 --- a/include/configs/rk3568_common.h	2022-07-11 09:42:58.000000000 -0400
-+++ b/include/configs/rk3568_common.h	2022-08-07 02:03:03.993398254 -0400
++++ b/include/configs/rk3568_common.h	2023-03-23 06:29:04.348390729 -0400
 @@ -24,6 +24,11 @@
  #define CONFIG_SYS_SDRAM_BASE		0
  #define SDRAM_MAX_SIZE			0xf0000000
@@ -3746,7 +3822,7 @@ diff -Naur a/include/configs/rk3568_common.h b/include/configs/rk3568_common.h
  	"scriptaddr=0x00c00000\0"	\
 diff -Naur a/include/image.h b/include/image.h
 --- a/include/image.h	2022-07-11 09:42:58.000000000 -0400
-+++ b/include/image.h	2022-08-07 02:03:04.073397988 -0400
++++ b/include/image.h	2023-03-23 06:29:04.385390230 -0400
 @@ -1020,21 +1020,6 @@
  
  int fit_set_timestamp(void *fit, int noffset, time_t timestamp);
@@ -3769,17 +3845,89 @@ diff -Naur a/include/image.h b/include/image.h
  int fit_cipher_data(const char *keydir, void *keydest, void *fit,
  		    const char *comment, int require_keys,
  		    const char *engine_id, const char *cmdname);
-diff -Naur a/scripts/Makefile b/scripts/Makefile
---- a/scripts/Makefile	2022-07-11 09:42:58.000000000 -0400
-+++ b/scripts/Makefile	2022-08-07 02:03:02.957401690 -0400
-@@ -10,3 +10,4 @@
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2022-07-11 09:42:58.000000000 -0400
++++ b/Makefile	2023-03-23 06:29:04.398390055 -0400
+@@ -413,13 +413,7 @@
+ PYTHON		?= python
+ PYTHON2		= python2
+ PYTHON3		?= python3
+-
+-# The devicetree compiler and pylibfdt are automatically built unless DTC is
+-# provided. If DTC is provided, it is assumed the pylibfdt is available too.
+-DTC_INTREE	:= $(objtree)/scripts/dtc/dtc
+-DTC		?= $(DTC_INTREE)
+-DTC_MIN_VERSION	:= 010406
+-
++DTC		?= $(objtree)/scripts/dtc/dtc
+ CHECK		= sparse
  
- # Let clean descend into subdirs
- subdir-	+= basic kconfig dtc
-+subdir-$(CONFIG_DTC)	+= dtc
+ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
+@@ -1047,6 +1041,9 @@
+ cmd_mkimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $< $@ \
+ 	>$(MKIMAGEOUTPUT) $(if $(KBUILD_VERBOSE:0=), && cat $(MKIMAGEOUTPUT))
+ 
++cmd_mkimage_combined = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $(COMBINED_FILE):$< $@ \
++	>$(MKIMAGEOUTPUT) $(if $(KBUILD_VERBOSE:0=), && cat $(MKIMAGEOUTPUT))
++
+ quiet_cmd_mkfitimage = MKIMAGE $@
+ cmd_mkfitimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) \
+ 	-f $(U_BOOT_ITS) -p $(CONFIG_FIT_EXTERNAL_OFFSET) $@ \
+@@ -1491,6 +1488,7 @@
+ ifeq ($(CONFIG_ARCH_ROCKCHIP),y)
+ 
+ # TPL + SPL
++ifneq ($(CONFIG_SYS_SOC),$(filter $(CONFIG_SYS_SOC),"rk3568" "rk3566"))
+ ifeq ($(CONFIG_SPL)$(CONFIG_TPL),yy)
+ MKIMAGEFLAGS_u-boot-tpl-rockchip.bin = -n $(CONFIG_SYS_SOC) -T rksd
+ tpl/u-boot-tpl-rockchip.bin: tpl/u-boot-tpl.bin FORCE
+@@ -1502,6 +1500,12 @@
+ idbloader.img: spl/u-boot-spl.bin FORCE
+ 	$(call if_changed,mkimage)
+ endif
++else
++MKIMAGEFLAGS_idbloader.img = -n $(CONFIG_SYS_SOC) -T rksd
++COMBINED_FILE = ram_init.bin
++idbloader.img: spl/u-boot-spl.bin FORCE
++	$(call if_changed,mkimage_combined)
++endif
+ 
+ ifeq ($(CONFIG_ARM64),y)
+ OBJCOPYFLAGS_u-boot-rockchip.bin = -I binary -O binary \
+@@ -2060,29 +2064,9 @@
+ 
+ endif
+ 
+-# Check dtc and pylibfdt, if DTC is provided, else build them
+ PHONY += scripts_dtc
+ scripts_dtc: scripts_basic
+-	$(Q)if test "$(DTC)" = "$(DTC_INTREE)"; then \
+-		$(MAKE) $(build)=scripts/dtc; \
+-	else \
+-		if ! $(DTC) -v >/dev/null; then \
+-			echo '*** Failed to check dtc version: $(DTC)'; \
+-			false; \
+-		else \
+-			if test "$(call dtc-version)" -lt $(DTC_MIN_VERSION); then \
+-				echo '*** Your dtc is too old, please upgrade to dtc $(DTC_MIN_VERSION) or newer'; \
+-				false; \
+-			else \
+-				if [ -n "$(CONFIG_PYLIBFDT)" ]; then \
+-					if ! echo "import libfdt" | $(PYTHON3) 2>/dev/null; then \
+-						echo '*** pylibfdt does not seem to be available with $(PYTHON3)'; \
+-						false; \
+-					fi; \
+-				fi; \
+-			fi; \
+-		fi; \
+-	fi
++	$(Q)$(MAKE) $(build)=scripts/dtc
+ 
+ # ---------------------------------------------------------------------------
+ quiet_cmd_cpp_lds = LDS     $@
 diff -Naur a/scripts/dtc-version.sh b/scripts/dtc-version.sh
 --- a/scripts/dtc-version.sh	2022-07-11 09:42:58.000000000 -0400
-+++ b/scripts/dtc-version.sh	2022-08-07 02:03:02.957401690 -0400
++++ b/scripts/dtc-version.sh	2023-03-23 06:29:04.406389948 -0400
 @@ -10,16 +10,11 @@
  dtc="$*"
  
@@ -3798,32 +3946,17 @@ diff -Naur a/scripts/dtc-version.sh b/scripts/dtc-version.sh
  MAJOR=$($dtc -v | head -1 | awk '{print $NF}' | cut -d . -f 1)
  MINOR=$($dtc -v | head -1 | awk '{print $NF}' | cut -d . -f 2)
  PATCH=$($dtc -v | head -1 | awk '{print $NF}' | cut -d . -f 3 | cut -d - -f 1)
-diff -Naur a/tools/Kconfig b/tools/Kconfig
---- a/tools/Kconfig	2022-07-11 09:42:58.000000000 -0400
-+++ b/tools/Kconfig	2022-08-07 02:03:02.989401584 -0400
-@@ -16,7 +16,7 @@
+diff -Naur a/scripts/Makefile b/scripts/Makefile
+--- a/scripts/Makefile	2022-07-11 09:42:58.000000000 -0400
++++ b/scripts/Makefile	2023-03-23 06:29:04.404389975 -0400
+@@ -10,3 +10,4 @@
  
- config TOOLS_LIBCRYPTO
- 	bool "Use OpenSSL's libcrypto library for host tools"
--	default y
-+	default n
- 	help
- 	  Cryptographic signature, verification, and encryption of images is
- 	  provided by host tools using OpenSSL's libcrypto. Select 'n' here if
-diff -Naur a/tools/Makefile b/tools/Makefile
---- a/tools/Makefile	2022-07-11 09:42:58.000000000 -0400
-+++ b/tools/Makefile	2022-08-07 02:03:02.989401584 -0400
-@@ -119,7 +119,6 @@
- 			imximage.o \
- 			imx8image.o \
- 			imx8mimage.o \
--			kwbimage.o \
- 			lib/md5.o \
- 			lpc32xximage.o \
- 			mxsimage.o \
+ # Let clean descend into subdirs
+ subdir-	+= basic kconfig dtc
++subdir-$(CONFIG_DTC)	+= dtc
 diff -Naur a/tools/fit_image.c b/tools/fit_image.c
 --- a/tools/fit_image.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/tools/fit_image.c	2022-08-07 02:03:02.989401584 -0400
++++ b/tools/fit_image.c	2023-03-23 06:29:04.389390177 -0400
 @@ -59,9 +59,6 @@
  		ret = fit_set_timestamp(ptr, 0, time);
  	}
@@ -3836,7 +3969,7 @@ diff -Naur a/tools/fit_image.c b/tools/fit_image.c
  				      params->comment,
 diff -Naur a/tools/image-host.c b/tools/image-host.c
 --- a/tools/image-host.c	2022-07-11 09:42:58.000000000 -0400
-+++ b/tools/image-host.c	2022-08-07 02:03:03.017401491 -0400
++++ b/tools/image-host.c	2023-03-23 06:29:04.391390150 -0400
 @@ -14,11 +14,6 @@
  #include <image.h>
  #include <version.h>
@@ -3965,3 +4098,14 @@ diff -Naur a/tools/image-host.c b/tools/image-host.c
  int fit_cipher_data(const char *keydir, void *keydest, void *fit,
  		    const char *comment, int require_keys,
  		    const char *engine_id, const char *cmdname)
+diff -Naur a/tools/Makefile b/tools/Makefile
+--- a/tools/Makefile	2022-07-11 09:42:58.000000000 -0400
++++ b/tools/Makefile	2023-03-23 06:29:04.411389880 -0400
+@@ -119,7 +119,6 @@
+ 			imximage.o \
+ 			imx8image.o \
+ 			imx8mimage.o \
+-			kwbimage.o \
+ 			lib/md5.o \
+ 			lpc32xximage.o \
+ 			mxsimage.o \
