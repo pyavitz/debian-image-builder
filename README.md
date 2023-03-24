@@ -109,7 +109,7 @@ FSTYPE="ext4"
 # UEFI Options: true false
 ENABLE_EFI="false"
 
-# Compression Types: xz zstd
+# Compression Types: xz zst
 IMG_COMPRESSION="xz"
 ```
 
