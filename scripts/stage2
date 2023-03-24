@@ -55,41 +55,41 @@ apt autoremove -y
 if [ $networkmanager -eq 1 ]; then
 	NETWORKING="network-manager";
 	if [[ "$DISTRO" == "devuan" ]]; then
-		NETWORKING_EXTRA="";
+		NETWORKING_EXTRA=""
 	fi
 else
 	NETWORKING="ifupdown";
 	if [[ "$DISTRO" == "devuan" ]]; then
-		NETWORKING_EXTRA="ifupdown-extra";
+		NETWORKING_EXTRA="ifupdown-extra"
 	fi
 fi
 # Install base and extra packages
 if [[ "$DISTRO" == "debian" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} resolvconf haveged ${NETWORKING};
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} resolvconf haveged ${NETWORKING}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
-	apt install -y openssh-client openssh-server --no-install-recommends;
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} openresolv haveged ${NETWORKING} ${NETWORKING_EXTRA};
+	apt install -y openssh-client openssh-server --no-install-recommends
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} openresolv haveged ${NETWORKING} ${NETWORKING_EXTRA}
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
-		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5 ${NETWORKING};
+		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5 ${UBUNTU_FW} ${NETWORKING}
 	else
-		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${NETWORKING};
+		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${UBUNTU_FW} ${NETWORKING}
 	fi
 	if [ $networkmanager -eq 0 ]; then
 		if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
 			# disable systemd-networkd and mask systemd-networkd-wait-online
-			systemctl disable systemd-networkd;
-			systemctl mask systemd-networkd-wait-online;
+			systemctl disable systemd-networkd
+			systemctl mask systemd-networkd-wait-online
 		fi
 	fi
 fi
 if [[ "$DISTRO" == "kali" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${FIRMWARE} dbus-user-session libical3 resolvconf haveged ntpdate ${NETWORKING};
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} dbus-user-session libical3 resolvconf haveged ntpdate ${NETWORKING}
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
-	apt install -y ${RPI};
+	apt install -y ${RPI}
 fi
 # apt clean
 if [[ "$DISTRO" == "ubuntu" ]]; then
@@ -124,12 +124,12 @@ apt -y autoclean
 # hostname / username / password
 if [[ "$HOSTNAME" == "default" ]]; then
 	# default hostname
-	echo -n "${BOARD}" > /etc/hostname;
-	sed -i "1 a 127.0.1.1	${BOARD}" /etc/hosts;
+	echo -n "${BOARD}" > /etc/hostname
+	sed -i "1 a 127.0.1.1	${BOARD}" /etc/hosts
 else
 	# custom hostname
-	echo -n "${HOSTNAME}" > /etc/hostname;
-	sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts;
+	echo -n "${HOSTNAME}" > /etc/hostname
+	sed -i "1 a 127.0.1.1	${HOSTNAME}" /etc/hosts
 fi
 if [ $useracct -eq 0 ]; then
 	echo "";
