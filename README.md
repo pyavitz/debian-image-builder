@@ -46,7 +46,12 @@ make cleanup    # Clean up image errors
 make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
-#### Config Menu ([Linux kernel options](https://github.com/pyavitz/debian-image-builder/wiki/Building-vendor-kernels))
+#### Config Menu
+* [Profile options](https://github.com/pyavitz/debian-image-builder/wiki/Builder-profile)
+* [Vendor kernel options](https://github.com/pyavitz/debian-image-builder/wiki/Building-vendor-kernels)
+
+---
+
 * Review the userdata.txt file for further options: locales, timezone and nameserver(s)
 * 1 active | 0 inactive
 ```sh
