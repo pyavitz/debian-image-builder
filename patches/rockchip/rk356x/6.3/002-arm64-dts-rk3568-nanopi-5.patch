@@ -1,13 +1,289 @@
---- /dev/null	2023-03-01 05:01:29.249787939 -0500
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-common.dtsi	2023-03-05 07:49:55.161510929 -0500
-@@ -0,0 +1,643 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+diff -Naur a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation/devicetree/bindings/arm/rockchip.yaml
+--- a/Documentation/devicetree/bindings/arm/rockchip.yaml	2023-03-19 16:27:55.000000000 -0400
++++ b/Documentation/devicetree/bindings/arm/rockchip.yaml	2023-03-24 08:24:39.828645764 -0400
+@@ -201,6 +201,13 @@
+               - friendlyarm,nanopi-r4s-enterprise
+           - const: rockchip,rk3399
+ 
++      - description: FriendlyElec NanoPi R5 series boards
++        items:
++          - enum:
++              - friendlyarm,nanopi-r5c
++              - friendlyarm,nanopi-r5s
++          - const: rockchip,rk3568
++
+       - description: GeekBuying GeekBox
+         items:
+           - const: geekbuying,geekbox
+--- /dev/null	2023-03-20 10:42:07.099687087 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5c.dts	2023-03-24 08:24:39.828645764 -0400
+@@ -0,0 +1,112 @@
++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 +/*
-+ * Copyright (c) 2023 FriendlyElec Computer Tech. Co., Ltd.
++ * Copyright (c) 2022 FriendlyElec Computer Tech. Co., Ltd.
++ * (http://www.friendlyelec.com)
++ *
++ * Copyright (c) 2023 Tianling Shen <cnsztl@gmail.com>
++ */
++
++/dts-v1/;
++#include "rk3568-nanopi-r5s.dtsi"
++
++/ {
++	model = "FriendlyElec NanoPi R5C";
++	compatible = "friendlyarm,nanopi-r5c", "rockchip,rk3568";
++
++	gpio-keys {
++		compatible = "gpio-keys";
++		pinctrl-names = "default";
++		pinctrl-0 = <&reset_button_pin>;
++
++		button-reset {
++			debounce-interval = <50>;
++			gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_LOW>;
++			label = "reset";
++			linux,code = <KEY_RESTART>;
++		};
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&lan_led_pin>, <&power_led_pin>, <&wan_led_pin>, <&wlan_led_pin>;
++
++		led-lan {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_LAN;
++			gpios = <&gpio3 RK_PA3 GPIO_ACTIVE_HIGH>;
++		};
++
++		power_led: led-power {
++			color = <LED_COLOR_ID_RED>;
++			function = LED_FUNCTION_POWER;
++			linux,default-trigger = "heartbeat";
++			gpios = <&gpio3 RK_PA2 GPIO_ACTIVE_HIGH>;
++		};
++
++		led-wan {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_WAN;
++			gpios = <&gpio3 RK_PA4 GPIO_ACTIVE_HIGH>;
++		};
++
++		led-wlan {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_WLAN;
++			gpios = <&gpio3 RK_PA5 GPIO_ACTIVE_HIGH>;
++		};
++	};
++};
++
++&pcie2x1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie20_reset_pin>;
++	reset-gpios = <&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&pcie3x1 {
++	num-lanes = <1>;
++	reset-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie>;
++	status = "okay";
++};
++
++&pcie3x2 {
++	num-lanes = <1>;
++	reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie>;
++	status = "okay";
++};
++
++&pinctrl {
++	gpio-leds {
++		lan_led_pin: lan-led-pin {
++			rockchip,pins = <3 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		power_led_pin: power-led-pin {
++			rockchip,pins = <3 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		wan_led_pin: wan-led-pin {
++			rockchip,pins = <3 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		wlan_led_pin: wlan-led-pin {
++			rockchip,pins = <3 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
++	pcie {
++		pcie20_reset_pin: pcie20-reset-pin {
++			rockchip,pins = <2 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	rockchip-key {
++		reset_button_pin: reset-button-pin {
++			rockchip,pins = <4 RK_PA0 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++};
+--- /dev/null	2023-03-20 10:42:07.099687087 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2023-03-24 08:24:39.830645734 -0400
+@@ -0,0 +1,137 @@
++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
++/*
++ * Copyright (c) 2022 FriendlyElec Computer Tech. Co., Ltd.
++ * (http://www.friendlyelec.com)
++ *
++ * Copyright (c) 2023 Tianling Shen <cnsztl@gmail.com>
++ */
++
++/dts-v1/;
++#include "rk3568-nanopi-r5s.dtsi"
++
++/ {
++	model = "FriendlyElec NanoPi R5S";
++	compatible = "friendlyarm,nanopi-r5s", "rockchip,rk3568";
++
++	aliases {
++		ethernet0 = &gmac0;
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&lan1_led_pin>, <&lan2_led_pin>, <&power_led_pin>, <&wan_led_pin>;
++
++		led-lan1 {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_LAN;
++			function-enumerator = <1>;
++			gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
++		};
++
++		led-lan2 {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_LAN;
++			function-enumerator = <2>;
++			gpios = <&gpio3 RK_PD7 GPIO_ACTIVE_HIGH>;
++		};
++
++		power_led: led-power {
++			color = <LED_COLOR_ID_RED>;
++			function = LED_FUNCTION_POWER;
++			linux,default-trigger = "heartbeat";
++			gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
++		};
++
++		led-wan {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_WAN;
++			gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
++		};
++	};
++};
++
++&gmac0 {
++	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>;
++	assigned-clock-parents = <&cru SCLK_GMAC0_RGMII_SPEED>, <&cru CLK_MAC0_2TOP>;
++	assigned-clock-rates = <0>, <125000000>;
++	clock_in_out = "output";
++	phy-handle = <&rgmii_phy0>;
++	phy-mode = "rgmii";
++	pinctrl-names = "default";
++	pinctrl-0 = <&gmac0_miim
++		     &gmac0_tx_bus2
++		     &gmac0_rx_bus2
++		     &gmac0_rgmii_clk
++		     &gmac0_rgmii_bus>;
++	snps,reset-gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
++	snps,reset-active-low;
++	/* Reset time is 15ms, 50ms for rtl8211f */
++	snps,reset-delays-us = <0 15000 50000>;
++	tx_delay = <0x3c>;
++	rx_delay = <0x2f>;
++	status = "okay";
++};
++
++&mdio0 {
++	rgmii_phy0: ethernet-phy@1 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <1>;
++		pinctrl-0 = <&eth_phy0_reset_pin>;
++		pinctrl-names = "default";
++	};
++};
++
++&pcie2x1 {
++	num-lanes = <1>;
++	reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&pcie30phy {
++	data-lanes = <1 2>;
++	status = "okay";
++};
++
++&pcie3x1 {
++	num-lanes = <1>;
++	reset-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie>;
++	status = "okay";
++};
++
++&pcie3x2 {
++	num-lanes = <1>;
++	num-ib-windows = <8>;
++	num-ob-windows = <8>;
++	reset-gpios = <&gpio2 RK_PD6 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie>;
++	status = "okay";
++};
++
++&pinctrl {
++	gmac0 {
++		eth_phy0_reset_pin: eth-phy0-reset-pin {
++			rockchip,pins = <0 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	gpio-leds {
++		lan1_led_pin: lan1-led-pin {
++			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		lan2_led_pin: lan2-led-pin {
++			rockchip,pins = <3 RK_PD7 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		power_led_pin: power-led-pin {
++			rockchip,pins = <4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		wan_led_pin: wan-led-pin {
++			rockchip,pins = <2 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++};
++
+--- /dev/null	2023-03-20 10:42:07.099687087 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dtsi	2023-03-24 08:24:39.829645749 -0400
+@@ -0,0 +1,590 @@
++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
++/*
++ * Copyright (c) 2022 FriendlyElec Computer Tech. Co., Ltd.
++ * (http://www.friendlyelec.com)
++ *
++ * Copyright (c) 2023 Tianling Shen <cnsztl@gmail.com>
 + */
 +
 +/dts-v1/;
 +#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
 +#include <dt-bindings/leds/common.h>
 +#include <dt-bindings/pinctrl/rockchip.h>
 +#include <dt-bindings/soc/rockchip,vop2.h>
@@ -17,29 +293,10 @@
 +	aliases {
 +		mmc0 = &sdmmc0;
 +		mmc1 = &sdhci;
-+		led-boot = &sys_led;
-+		led-failsafe = &sys_led;
-+		led-running = &sys_led;
-+		led-upgrade = &sys_led;
 +	};
 +
 +	chosen: chosen {
 +		stdout-path = "serial2:1500000n8";
-+	};
-+
-+	firmware {
-+		optee: optee {
-+			compatible = "linaro,optee-tz";
-+			method = "smc";
-+		};
-+	};
-+
-+	cspmu: cspmu@fd90c000 {
-+		compatible = "rockchip,cspmu";
-+		reg = <0x0 0xfd90c000 0x0 0x1000>,
-+			<0x0 0xfd90d000 0x0 0x1000>,
-+			<0x0 0xfd90e000 0x0 0x1000>,
-+			<0x0 0xfd90f000 0x0 0x1000>;
 +	};
 +
 +	hdmi-con {
@@ -53,7 +310,7 @@
 +		};
 +	};
 +
-+	vdd_usbc: vdd-usbc {
++	vdd_usbc: vdd-usbc-regulator {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vdd_usbc";
 +		regulator-always-on;
@@ -62,7 +319,7 @@
 +		regulator-max-microvolt = <5000000>;
 +	};
 +
-+	vcc3v3_sys: vcc3v3-sys {
++	vcc3v3_sys: vcc3v3-sys-regulator {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc3v3_sys";
 +		regulator-always-on;
@@ -72,7 +329,7 @@
 +		vin-supply = <&vdd_usbc>;
 +	};
 +
-+	vcc5v0_sys: vcc5v0-sys {
++	vcc5v0_sys: vcc5v0-sys-regulator {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc5v0_sys";
 +		regulator-always-on;
@@ -80,26 +337,6 @@
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		vin-supply = <&vdd_usbc>;
-+	};
-+
-+	pcie30_avdd0v9: pcie30-avdd0v9 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pcie30_avdd0v9";
-+		regulator-always-on;
-+		regulator-boot-on;
-+		regulator-min-microvolt = <900000>;
-+		regulator-max-microvolt = <900000>;
-+		vin-supply = <&vcc3v3_sys>;
-+	};
-+
-+	pcie30_avdd1v8: pcie30-avdd1v8 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pcie30_avdd1v8";
-+		regulator-always-on;
-+		regulator-boot-on;
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		vin-supply = <&vcc3v3_sys>;
 +	};
 +
 +	vcc3v3_pcie: vcc3v3-pcie-regulator {
@@ -113,29 +350,7 @@
 +		vin-supply = <&vcc5v0_sys>;
 +	};
 +
-+	vcc3v3_pcie: vcc3v3-pcie-regulator {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc3v3_pcie";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		enable-active-high;
-+		gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_HIGH>;
-+		startup-delay-us = <50000>;
-+		vin-supply = <&vcc3v3_pcie>;
-+	};
-+
-+	vcc3v3_ngff: vcc3v3-ngff-regulator {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc3v3_ngff";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		enable-active-high;
-+		gpio = <&gpio4 RK_PC1 GPIO_ACTIVE_HIGH>;
-+		startup-delay-us = <50000>;
-+		vin-supply = <&vcc3v3_pcie>;
-+	};
-+
-+	vcc5v0_usb: vcc5v0_usb {
++	vcc5v0_usb: vcc5v0-usb-regulator {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc5v0_usb";
 +		regulator-always-on;
@@ -145,19 +360,21 @@
 +		vin-supply = <&vdd_usbc>;
 +	};
 +
-+	vcc5v0_usb_host: vcc5v0-usb-host {
++	vcc5v0_usb_host: vcc5v0-usb-host-regulator {
 +		compatible = "regulator-fixed";
 +		enable-active-high;
 +		gpio = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>;
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&vcc5v0_usb_host_en>;
 +		regulator-name = "vcc5v0_usb_host";
++		regulator-always-on;
++		regulator-boot-on;
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		vin-supply = <&vcc5v0_usb>;
 +	};
 +
-+	vcc5v0_usb_otg: vcc5v0-usb-otg {
++	vcc5v0_usb_otg: vcc5v0-usb-otg-regulator {
 +		compatible = "regulator-fixed";
 +		enable-active-high;
 +		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_HIGH>;
@@ -169,13 +386,23 @@
 +		vin-supply = <&vcc5v0_usb>;
 +	};
 +
-+	vcc5v0_sysp: vcc5v0-sysp {
++	pcie30_avdd0v9: pcie30-avdd0v9-regulator {
 +		compatible = "regulator-fixed";
-+		regulator-name = "vcc5v0_sysp";
++		regulator-name = "pcie30_avdd0v9";
 +		regulator-always-on;
 +		regulator-boot-on;
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
++		regulator-min-microvolt = <900000>;
++		regulator-max-microvolt = <900000>;
++		vin-supply = <&vcc3v3_sys>;
++	};
++
++	pcie30_avdd1v8: pcie30-avdd1v8-regulator {
++		compatible = "regulator-fixed";
++		regulator-name = "pcie30_avdd1v8";
++		regulator-always-on;
++		regulator-boot-on;
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
 +		vin-supply = <&vcc3v3_sys>;
 +	};
 +};
@@ -343,7 +570,6 @@
 +
 +			vdda0v9_image: LDO_REG1 {
 +				regulator-name = "vdda0v9_image";
-+				regulator-always-on;
 +				regulator-min-microvolt = <950000>;
 +				regulator-max-microvolt = <950000>;
 +
@@ -379,8 +605,6 @@
 +
 +			vccio_acodec: LDO_REG4 {
 +				regulator-name = "vccio_acodec";
-+				regulator-always-on;
-+				regulator-boot-on;
 +				regulator-min-microvolt = <3300000>;
 +				regulator-max-microvolt = <3300000>;
 +
@@ -439,7 +663,6 @@
 +
 +			vcca1v8_image: LDO_REG9 {
 +				regulator-name = "vcca1v8_image";
-+				regulator-always-on;
 +				regulator-min-microvolt = <1800000>;
 +				regulator-max-microvolt = <1800000>;
 +
@@ -461,12 +684,14 @@
 +			vcc3v3_sd: SWITCH_REG2 {
 +				regulator-name = "vcc3v3_sd";
 +				regulator-always-on;
++				regulator-boot-on;
 +
 +				regulator-state-mem {
 +					regulator-off-in-suspend;
 +				};
 +			};
 +		};
++
 +	};
 +};
 +
@@ -476,20 +701,17 @@
 +	hym8563: rtc@51 {
 +		compatible = "haoyu,hym8563";
 +		reg = <0x51>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&rtc_int>;
 +		interrupt-parent = <&gpio0>;
 +		interrupts = <RK_PD3 IRQ_TYPE_LEVEL_LOW>;
++		#clock-cells = <0>;
++		clock-output-names = "rtcic_32kout";
++		pinctrl-names = "default";
++		pinctrl-0 = <&hym8563_int>;
 +		wakeup-source;
 +	};
 +};
 +
 +&i2s0_8ch {
-+	status = "okay";
-+};
-+
-+&i2s1_8ch {
-+	rockchip,trcm-sync-tx-only;
 +	status = "okay";
 +};
 +
@@ -499,16 +721,15 @@
 +};
 +
 +&pinctrl {
-+
-+	pmic {
-+		pmic_int: pmic_int {
-+			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
++	hym8563 {
++		hym8563_int: hym8563-int {
++			rockchip,pins = <0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_up>;
 +		};
 +	};
 +
-+	rtc {
-+		rtc_int: rtc-int {
-+			rockchip,pins = <0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_up>;
++	pmic {
++		pmic_int: pmic-int {
++			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
 +		};
 +	};
 +
@@ -535,10 +756,6 @@
 +	status = "okay";
 +};
 +
-+&rng {
-+	status = "okay";
-+};
-+
 +&saradc {
 +	vref-supply = <&vcca_1v8>;
 +	status = "okay";
@@ -554,15 +771,17 @@
 +};
 +
 +&sdmmc0 {
++	max-frequency = <150000000>;
++	no-sdio;
++	no-mmc;
 +	bus-width = <4>;
++	cap-mmc-highspeed;
 +	cap-sd-highspeed;
-+	cd-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
 +	disable-wp;
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
-+	sd-uhs-sdr104;
 +	vmmc-supply = <&vcc3v3_sd>;
 +	vqmmc-supply = <&vccio_sd>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
 +	status = "okay";
 +};
 +
@@ -643,311 +862,4 @@
 +		reg = <ROCKCHIP_VOP2_EP_HDMI0>;
 +		remote-endpoint = <&hdmi_in_vp0>;
 +	};
-+};
---- /dev/null	2023-03-01 05:01:29.249787939 -0500
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5c.dts	2023-03-05 07:50:04.917451797 -0500
-@@ -0,0 +1,140 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-+
-+/dts-v1/;
-+#include <dt-bindings/input/input.h>
-+#include "rk3568-nanopi-common.dtsi"
-+
-+/ {
-+	model = "FriendlyElec NanoPi R5C";
-+	compatible = "friendlyarm,nanopi-r5c", "rockchip,rk3568";
-+
-+	aliases {
-+		ethernet0 = &rtl8125_1;
-+		ethernet1 = &rtl8125_2;
-+	};
-+
-+	gpio-keys {
-+		compatible = "gpio-keys";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&reset_button_pin>;
-+
-+		button-reset {
-+			debounce-interval = <50>;
-+			gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_LOW>;
-+			label = "reset";
-+			linux,code = <KEY_RESTART>;
-+		};
-+	};
-+
-+	gpio-leds {
-+		compatible = "gpio-leds";
-+
-+		sys_led: led-sys {
-+			gpios = <&gpio3 RK_PA2 GPIO_ACTIVE_HIGH>;
-+			label = "red:power";
-+			linux,default-trigger = "heartbeat";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&sys_led_pin>;
-+		};
-+
-+		wan_led: led-wan {
-+			gpios = <&gpio3 RK_PA4 GPIO_ACTIVE_HIGH>;
-+			label = "green:wan";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&wan_led_pin>;
-+		};
-+
-+		led_lan: led-lan {
-+			gpios = <&gpio3 RK_PA3 GPIO_ACTIVE_HIGH>;
-+			label = "green:lan";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&lan_led_pin>;
-+		};
-+
-+		wlan_led: led-wlan {
-+			gpios = <&gpio3 RK_PA5 GPIO_ACTIVE_HIGH>;
-+			label = "green:wlan";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&wlan_led_pin>;
-+		};
-+	};
-+};
-+
-+&pcie2x1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie20_reset_pin>;
-+	reset-gpios = <&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
-+	status = "okay";
-+};
-+
-+&pcie3x1 {
-+	num-lanes = <1>;
-+	reset-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
-+	vpcie3v3-supply = <&vcc3v3_pcie>;
-+	status = "okay";
-+
-+	pcie@10 {
-+		reg = <0x00100000 0 0 0 0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		rtl8125_1: pcie-eth@10,0 {
-+			compatible = "pci10ec,8125";
-+			reg = <0x000000 0 0 0 0>;
-+
-+			realtek,led-data = <0x78>;
-+		};
-+	};
-+};
-+
-+&pcie3x2 {
-+	num-lanes = <1>;
-+	reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
-+	vpcie3v3-supply = <&vcc3v3_pcie>;
-+	status = "okay";
-+
-+	pcie@20 {
-+		reg = <0x00200000 0 0 0 0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		rtl8125_2: pcie-eth@20,0 {
-+			compatible = "pci10ec,8125";
-+			reg = <0x000000 0 0 0 0>;
-+
-+			realtek,led-data = <0x78>;
-+		};
-+	};
-+};
-+
-+&pinctrl {
-+	gpio-leds {
-+		sys_led_pin: sys-led-pin {
-+			rockchip,pins = <3 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		wan_led_pin: wan-led-pin {
-+			rockchip,pins = <3 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		lan_led_pin: lan-led-pin {
-+			rockchip,pins = <3 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		wlan_led_pin: wlan-led-pin {
-+			rockchip,pins = <3 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+	};
-+
-+	pcie {
-+		pcie20_reset_pin: pcie20-reset-pin {
-+			rockchip,pins = <2 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+
-+	rockchip-key {
-+		reset_button_pin: reset-button-pin {
-+			rockchip,pins = <4 RK_PA0 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+};
---- /dev/null	2023-03-01 05:01:29.249787939 -0500
-+++ b/arch/arm64/boot/dts/rockchip/rk3568-nanopi-r5s.dts	2023-03-05 07:01:57.807457000 -0500
-@@ -0,0 +1,161 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+
-+/dts-v1/;
-+#include "rk3568-nanopi-common.dtsi"
-+
-+/ {
-+	model = "FriendlyElec NanoPi R5S";
-+	compatible = "friendlyarm,nanopi-r5s", "rockchip,rk3568";
-+
-+	aliases {
-+		ethernet0 = &gmac0;
-+	};
-+
-+	fan: pwm-fan {
-+		compatible = "pwm-fan";
-+		cooling-levels = <0 18 102 170 255>;
-+		#cooling-cells = <2>;
-+		fan-supply = <&vcc5v0_sysp>;
-+		pwms = <&pwm0 0 50000 0>;
-+	};
-+
-+	gpio-key {
-+		compatible = "gpio-key";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&key1_pin>;
-+
-+		button@1 {
-+			debounce-interval = <50>;
-+			gpios = <&gpio4 RK_PA0 GPIO_ACTIVE_LOW>;
-+			wakeup-source;
-+		};
-+	};
-+
-+	gpio-leds {
-+		compatible = "gpio-leds";
-+
-+		sys_led: led-sys {
-+			gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-+			label = "red:power";
-+			linux,default-trigger = "heartbeat";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&sys_led_pin>;
-+		};
-+
-+		wan_led: led-wan {
-+			gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
-+			label = "green:wan";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&wan_led_pin>;
-+		};
-+
-+		lan1_led: led-lan1 {
-+			gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
-+			label = "green:lan1";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&lan1_led_pin>;
-+		};
-+
-+		lan2_led: led-lan2 {
-+			gpios = <&gpio3 RK_PD7 GPIO_ACTIVE_HIGH>;
-+			label = "green:lan2";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&lan2_led_pin>;
-+		};
-+	};
-+};
-+
-+&gmac0 {
-+	phy-mode = "rgmii";
-+	clock_in_out = "output";
-+
-+	snps,reset-gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
-+	snps,reset-active-low;
-+	/* Reset time is 20ms, 100ms for rtl8211f */
-+	snps,reset-delays-us = <0 20000 100000>;
-+
-+	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>;
-+	assigned-clock-parents = <&cru SCLK_GMAC0_RGMII_SPEED>, <&cru CLK_MAC0_2TOP>;
-+
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&gmac0_miim
-+		     &gmac0_tx_bus2
-+		     &gmac0_rx_bus2
-+		     &gmac0_rgmii_clk
-+		     &gmac0_rgmii_bus>;
-+
-+	tx_delay = <0x3c>;
-+	rx_delay = <0x2f>;
-+
-+	phy-handle = <&rgmii_phy0>;
-+	status = "okay";
-+};
-+
-+&mdio0 {
-+	rgmii_phy0: ethernet-phy@1 {
-+		compatible = "ethernet-phy-ieee802.3-c22";
-+		reg = <0x1>;
-+		interrupt-parent = <&gpio0>;
-+		interrupts = <RK_PC4 IRQ_TYPE_LEVEL_LOW>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&gmac_int>;
-+	};
-+};
-+
-+&pcie3x1 {
-+	num-lanes = <1>;
-+	// reset-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
-+	reset-gpios = <&gpio3 RK_PA1 GPIO_ACTIVE_HIGH>;
-+	vpcie3v3-supply = <&vcc3v3_ngff>;
-+	status = "okay";
-+};
-+
-+&pcie3x2 {
-+	num-lanes = <1>;
-+	reset-gpios = <&gpio2 RK_PD6 GPIO_ACTIVE_HIGH>;
-+	vpcie3v3-supply = <&vcc3v3_pcie>;
-+	status = "okay";
-+};
-+
-+&pcie2x1 {
-+	num-viewport = <4>;
-+	reset-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
-+	status = "okay";
-+};
-+
-+&pinctrl {
-+	gpio-leds {
-+
-+		sys_led_pin: sys-led-pin {
-+			rockchip,pins = <4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		wan_led_pin: wan-led-pin {
-+			rockchip,pins = <2 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		lan1_led_pin: lan1-led-pin {
-+			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		lan2_led_pin: lan2-led-pin {
-+			rockchip,pins = <3 RK_PD7 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+	};
-+
-+	gmac {
-+		gmac_int: gmac-int {
-+			rockchip,pins = <0 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+
-+	gpio-key {
-+		key1_pin: key1-pin {
-+			rockchip,pins = <4 RK_PA0 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+};
-+
-+&pwm0 {
-+	status = "okay";
 +};
