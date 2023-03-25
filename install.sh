@@ -7,7 +7,11 @@ TXT="\033[0m"
 YLW="\e[0;33m"
 FIN="\e[0m"
 ARCH=`uname -m`
+BRANCH=`git branch`
 
+echo ""
+echo -en "${TXT}Debian Image Builder:${FIN}"
+echo -e " ${PNK}[${FIN}${GRN}${BRANCH}${FIN}${PNK}]${FIN}"
 if [[ -e "/etc/os-release" ]]; then
 	RELEASE=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
 else
@@ -21,8 +25,6 @@ else
 	echo -e "Missing dependency: curl"
 	exit 0
 fi
-
-echo ""
 echo -en "${TXT}Checking Internet Connection:${FIN} "
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	echo -en "${PNK}[${FIN}${GRN}OK${FIN}${PNK}]${FIN}"
