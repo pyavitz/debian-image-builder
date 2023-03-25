@@ -6,7 +6,6 @@ source packaging/pkgvars
 source lib/function/linux
 source lib/function/github
 source lib/function/patching
-source lib/function/compiler
 source lib/function/wireless
 source board.txt
 source userdata.txt
@@ -50,19 +49,18 @@ fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 if [ $ccache -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
-		rm -f {ccache.txt,gcc.txt};
-		ccache_version;
+		:;
 	else
-		sudo apt update; sudo apt upgrade -y; sudo apt install -y ccache;
-		sleep 1s;
-		rm -f {ccache.txt,gcc.txt};
-		ccache_version;
+		apt install -y ccache
 	fi
 fi
-if [ $ccache -eq 0 ]; then
-	rm -f {ccache.txt,gcc.txt};
-	gcc_version;
+if [ $ccache -eq 1 ]; then
+	DEST="/usr/lib/ccache"
+else
+	DEST="/usr/bin"
 fi
+NATIVE="${DEST}/${COMPILER}"
+CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
 # sources directory
 kernel_source
 if [[ -d "${KERNEL}-${VERSION}" ]]; then

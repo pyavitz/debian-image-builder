@@ -165,7 +165,7 @@ if [ $crosscompile -eq 1 ]; then
 else
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG}
 fi
-echo_done
+echo ""
 }
 
 bconfig(){
@@ -197,7 +197,7 @@ if [ $crosscompile -eq 1 ]; then
 else
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG}
 fi
-echo_done
+echo ""
 }
 
 menuconfig(){
@@ -241,15 +241,15 @@ done
 }
 
 ccompile(){
-echo -e "-- ${GRN}CC${FIN}"
-echo_build
+echo -e "${GRN}  CC${FIN}"
+echo -e "  GCC ${DEST}/${COMPILER}"
 echo ${BUILD_VERSION} > .version
 echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} bindeb-pkg
 }
 
 ncompile(){
-echo -e "-- ${GRN}NC${FIN}"
-echo_build
+echo -e "${GRN}  NC${FIN}"
+echo -e "  GCC ${DEST}/${COMPILER}"
 echo ${BUILD_VERSION} > .version
 echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} ARCH=${ARCH} CC=${NATIVE} CFLAGS="${CFLAGS}" bindeb-pkg
 }
