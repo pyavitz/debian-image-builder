@@ -1,5 +1,5 @@
 ## Notice
-* Miscellaneous test [images](https://github.com/pyavitz/binary/releases/tag/images)
+* Requested images [images](https://github.com/pyavitz/binary/releases/tag/images)
 
 ## Boards
 ```sh
