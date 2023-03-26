@@ -76,10 +76,10 @@ Compiler:		# GNU Compiler Collection
 Caching on:		# Ccache
 
 Extra wireless support
-rtl88XXau:		# Realtek 8812AU/21AU wireless support
-rtl88XXbu:		# Realtek 88X2BU wireless support
-rtl88XXcu:		# Realtek 8811CU/21CU wireless support
-rtl8188eu:		# Realtek 8188EU wireless support
+RTL88XXAU:		# Realtek 8812AU/21AU wireless support
+RTL88X2BU:		# Realtek 88X2BU wireless support
+RTL88XXCU:		# Realtek 8811CU/21CU wireless support
+RTL8188EU:		# Realtek 8188EU wireless support
 
 Customize
 Defconfig:		# User defconfig
@@ -92,9 +92,6 @@ Devel Rootfs:		# Developer rootfs tarball
 Compress img:		# Auto compress img > img.xz
 User scripts:		# Review the README in the files/userscripts directory
 User service:		# Create user during first boot (bypass the user information above)
-
-Odroids
-petitboot:		# Enable boot option
 ```
 
 #### Customize image
@@ -108,6 +105,9 @@ FSTYPE="ext4"
 
 # UEFI Options: true false
 ENABLE_EFI="false"
+
+# Petitboot (ODROID): true false
+ENABLE_PETITBOOT="false"
 
 # Compression Types: xz zst
 IMG_COMPRESSION="xz"
@@ -129,12 +129,12 @@ Patches "-p1" placed in patches/userpatches are applied during compilation.
 
 ```sh
 # change from 0 to 1
-aircrack=0
+AIRCRACK=0
 ```
 #### Amlogic eMMC boot (u-boot only)
 ```sh
 # change from 0 to 1
-emmc=0
+EMMC=0
 ```
 ## Usage
 * Review the [Wiki](https://github.com/pyavitz/debian-image-builder/wiki)
