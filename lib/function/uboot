@@ -92,7 +92,7 @@ uboot_patching
 echo ""
 export ARCH=${ARCH}
 uboot_configs
-if [ $crosscompile -eq 1 ]; then
+if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
 else
@@ -100,8 +100,8 @@ else
 	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG}
 fi
 # menuconfig
-if [ $menuconfig -eq 1 ]; then
-	if [ $crosscompile -eq 1 ]; then
+if [ $MENUCONFIG -eq 1 ]; then
+	if [ $CROSSCOMPILE -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
 		make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
 	else
@@ -112,7 +112,7 @@ fi
 # compile
 echo
 echo_cuboot
-if [ $crosscompile -eq 1 ]; then
+if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	echo -e "  GCC     ${DEST}/${COMPILER}"
 	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE}
@@ -234,9 +234,11 @@ u-boot
 if [[ -f "u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot.bin ../../${OUTPUT}/
-	cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl1.bin ../../${OUTPUT}/
-	cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl2.bin ../../${OUTPUT}/
-	cp -f ../../${PRECOMPILED_UBOOT_DIR}/tzsw.bin ../../${OUTPUT}/
+	if [[ "$BOARD" == "odroidxu4" ]]; then
+		cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl1.bin ../../${OUTPUT}/
+		cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl2.bin ../../${OUTPUT}/
+		cp -f ../../${PRECOMPILED_UBOOT_DIR}/tzsw.bin ../../${OUTPUT}/
+	fi
 	uboot_packaging
 	echo ""
 else

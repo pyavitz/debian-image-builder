@@ -80,6 +80,9 @@ if [ "$ARCH" = "um" ] ; then
 else
 	cp System.map "$tmpdir/boot/System.map-$version"
 	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
+	if [ -f arch/arm/boot/zImage ]; then
+		cp arch/arm/boot/zImage "$tmpdir/boot/Image"
+	fi
 	if [ -f arch/arm64/boot/Image ]; then
 		cp arch/arm64/boot/Image "$tmpdir/boot/Image";
 	fi
@@ -218,45 +221,55 @@ mkdir -p "$destdir"
 (cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
 ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
 rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
-if [ -f headers-byteshift.patch ]; then
-	cp headers-byteshift.patch $destdir/
-	mkdir -p $kernel_headers_dir/DEBIAN
-	cat > $kernel_headers_dir/DEBIAN/postinst <<EOT
-#!/bin/bash
-# compile headers
 
+# kernel headers postinst and preinst script
+if [ -f headers-byteshift.patch ]; then
+	cp -f "headers-byteshift.patch" "$destdir/"
+	mkdir -p "$kernel_headers_dir/DEBIAN"
+	cat <<EOF > "$kernel_headers_dir/DEBIAN/postinst"
+#!/bin/bash
 set -e
 
 clean_headers(){
 find -type f -exec touch {} +
-echo 'y' | make ARCH=arm64 M=scripts clean
+if grep -w "Linux/arm" ".config"; then
+	echo 'y' | make ARCH=arm M=scripts clean;
+else
+	echo 'y' | make M=scripts clean;
+fi
 patch -p1 < headers-byteshift.patch
 rm -f headers-byteshift.patch
-echo 'y' | make ARCH=arm64 -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts
-echo 'y' | make ARCH=arm64 -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/
-if [ -e .config.old ]; then
-	rm -f .config.old;
+if grep -w "Linux/arm" ".config"; then
+	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
+	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
+else
+	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
+	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
 fi
+if [ -f .config.old ]; then rm -f .config.old; fi
 }
 
+# compile headers
 cd /usr/src/linux-headers-$version
 echo -e "Compiling headers ..."
 clean_headers > /dev/null 2>&1;
-exit 0
-EOT
-	chmod 755 $kernel_headers_dir/DEBIAN/postinst
-fi
-	mkdir -p $kernel_headers_dir/DEBIAN
-	cat > $kernel_headers_dir/DEBIAN/preinst <<EOT
-#!/bin/sh
-# remove old linux headers
 
+exit 0
+EOF
+	chmod 755 "$kernel_headers_dir/DEBIAN/postinst"
+fi
+
+mkdir -p $kernel_headers_dir/DEBIAN
+cat <<EOF > "$kernel_headers_dir/DEBIAN/preinst"
+#!/bin/sh
 set -e
 
+# remove old linux headers
 rm -fdr /usr/src/linux-headers-* > /dev/null 2>&1
+
 exit 0
-EOT
-        chmod 755 $kernel_headers_dir/DEBIAN/preinst
+EOF
+chmod 755 "$kernel_headers_dir/DEBIAN/preinst"
 
 if [ "$ARCH" != "um" ]; then
 	create_package "$kernel_headers_packagename" "$kernel_headers_dir"

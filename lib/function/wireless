@@ -2,12 +2,12 @@
 
 # RTL8812AU
 rtl8812au_download(){
-if [ $aircrack -eq 1 ]; then
+if [ $AIRCRACK -eq 1 ]; then
 	RTL88XXAU="aircrack-ng"
 else
 	RTL88XXAU="pyavitz"
 fi
-if [ $aircrack -eq 1 ]; then
+if [ $AIRCRACK -eq 1 ]; then
 	if [[ -d "rtl8812au" ]]; then
 		echo -en "${PNK}[${FIN}${WHT}aircrack${FIN}${PNK}]${FIN} "
 		rm -fdr rtl8812au
@@ -42,7 +42,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 
 
 rtl8812au_module(){
-if [ $rtl8812au -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+if [ $RTL88XXAU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	echo "CONFIG_88XXAU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 }
@@ -85,7 +85,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 }
 
 rtl8811cu_module(){
-if [ $rtl8811cu -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+if [ $RTL88XXCU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	echo "CONFIG_RTL8821CU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 }
@@ -154,7 +154,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 }
 
 rtl88x2bu_module(){
-if [ $rtl88x2bu -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+if [ $RTL88X2BU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	echo "CONFIG_RTL8822BU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 }
@@ -189,7 +189,7 @@ echo "	  Help message of RTL8188EU" >> drivers/net/wireless/rtl8188eu/Kconfig
 }
 
 rtl8188eu_module(){
-if [ $rtl8188eu -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+if [ $RTL8188EU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	echo "CONFIG_RTL8188EU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 }
@@ -295,24 +295,24 @@ fi
 }
 
 extra_wireless(){
-if [ $rtl8812au -eq 1 ] || [ $rtl88x2bu -eq 1 ] || [ $rtl8811cu -eq 1 ] || [ $rtl8188eu -eq 1 ] || [[ "$BOARD" == "orangepir1" || "$BOARD" == "tinker" || "$BOARD" == "x96air" ]]; then
+if [ $RTL88XXAU -eq 1 ] || [ $RTL88X2BU -eq 1 ] || [ $RTL88XXCU -eq 1 ] || [ $RTL8188EU -eq 1 ] || [[ "$BOARD" == "orangepir1" || "$BOARD" == "tinker" || "$BOARD" == "x96air" ]]; then
 	echo ""
-	if [ $rtl8812au -eq 1 ]; then
+	if [ $RTL88XXAU -eq 1 ]; then
 		echo -en "${WHT}Realtek 88XXAU${FIN} "
 		rtl8812au_download
 		echo_bdone
 	fi
-	if [ $rtl88x2bu -eq 1 ]; then
+	if [ $RTL88X2BU -eq 1 ]; then
 		echo -en "${WHT}Realtek 88X2BU${FIN} "
 		rtl88x2bu_download
 		echo_bdone
 	fi
-	if [ $rtl8811cu -eq 1 ]; then
+	if [ $RTL88XXCU -eq 1 ]; then
 		echo -en "${WHT}Realtek 88XXCU${FIN} "
 		rtl8811cu_download
 		echo_bdone
 	fi
-	if [ $rtl8188eu -eq 1 ]; then
+	if [ $RTL8188EU -eq 1 ]; then
 		echo -en "${WHT}Realtek 8188EU${FIN} "
 		rtl8188eu_download
 		echo_bdone

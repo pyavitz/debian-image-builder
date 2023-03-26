@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # builder version
-BUILDER="5.4"
+BUILDER="5.5"
 
 # script
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
@@ -30,8 +30,8 @@ NAME=""
 USERNAME=""
 PASSWORD=""
 VERSION="$LTS1"
-networkmanager="1"
-useracct="0"
+NETWORKMANAGER="1"
+USERACCT="0"
 LOCALE="en_US.UTF-8"
 TIMEZONE="America/New_York"
 USER_NAMESERVER1="8.8.8.8"
@@ -45,21 +45,20 @@ DISTRO="debian"
 DISTRO_VERSION="bullseye"
 UBOOT_VERSION="v2023.01"
 BUILD_VERSION="1"
-menuconfig="0"
+MENUCONFIG="0"
 COMPILER="gcc-$GCC"
-ccache="0"
-rtl88XXau="0"
-rtl88X2bu="0"
-rtl88XXcu="0"
-rtl8188eu="0"
-custom_defconfig="0"
+CCACHE="0"
+RTL88XXAU="0"
+RTL88X2BU="0"
+RTL88XXCU="0"
+RTL8188EU="0"
+CUSTOM_DEFCONFIG="0"
 MYCONFIG=""
-logging="0"
-verbose="0"
-devrootfs="1"
-compress_img="0"
-uscripts="0"
-petitboot="0"
+LOGGING="0"
+VERBOSE="0"
+DEVROOTFS="1"
+COMPRESS_IMG="0"
+USCRIPTS="0"
 
 # open fd
 exec 3>&1
@@ -78,35 +77,32 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
 	" Distribution"		6 1	""	 		6 14 0 0 \
 	" Distro:"		7 1	"$DISTRO"		7 10 24 0 \
 	" Release:"		8 1	"$DISTRO_VERSION"	8 11 23 0 \
-	" Network Manager:"	9 1	"$networkmanager"	9 19 2 0 \
+	" Network Manager:"	9 1	"$NETWORKMANAGER"	9 19 2 0 \
 	" "			10 1	""			10 14 0 0 \
 	" U-Boot:"   		11 1    "$UBOOT_VERSION"	11 10 13 0 \
 	" Branch:"   		12 1    "$VERSION"		12 10 10 0 \
 	" Build:"   		13 1    "$BUILD_VERSION"	13 9 4 0 \
-	" Menuconfig:"		14 1	"$menuconfig"		14 14 2 0 \
+	" Menuconfig:"		14 1	"$MENUCONFIG"		14 14 2 0 \
 	" Compiler:"		15 1	"$COMPILER"		15 12 9 0 \
-	" Caching on:"		16 1	"$ccache"	 	16 14 2 0 \
+	" Caching on:"		16 1	"$CCACHE"	 	16 14 2 0 \
 	" "			17 1	""			17 14 0 0 \
 	" Wireless"		18 1	""			18 14 0 0 \
-	" rtl88XXau:"		19 1	"$rtl88XXau"		19 13 2 0 \
-	" rtl88X2bu:"		20 1	"$rtl88X2bu"		20 13 2 0 \
-	" rtl88XXcu:"		21 1	"$rtl88XXcu"		21 13 2 0 \
-	" rtl8188eu:"		22 1	"$rtl8188eu"		22 13 2 0 \
+	" RTL88XXAU:"		19 1	"$RTL88XXAU"		19 13 2 0 \
+	" RTL88X2BU:"		20 1	"$RTL88X2BU"		20 13 2 0 \
+	" RTL88XXCU:"		21 1	"$RTL88XXCU"		21 13 2 0 \
+	" RTL8188EU:"		22 1	"$RTL8188EU"		22 13 2 0 \
 	" "			23 1	""			23 14 0 0 \
 	" Customize"		24 1	""			24 14 0 0 \
-	" Defconfig:"		25 1	"$custom_defconfig"	25 13 2 0 \
+	" Defconfig:"		25 1	"$CUSTOM_DEFCONFIG"	25 13 2 0 \
 	" Name:"		26 1	"$MYCONFIG"		26 8 26 0 \
 	" "			27 1	""			27 14 0 0 \
 	" User Options"		28 1	""			28 14 0 0 \
-	" Logging:"		29 1	"$logging"		29 11 2 0 \
-	" Verbosity:"		30 1	"$verbose"		30 13 2 0 \
-	" Devel Rootfs:"	31 1	"$devrootfs"		31 16 2 0 \
-	" Compress img:"	32 1	"$compress_img"		32 16 2 0 \
-	" User scripts:"	33 1	"$uscripts"		33 16 2 0 \
-	" User service:"	34 1	"$useracct"		34 16 2 0 \
-	" "			35 1	""			35 14 0 0 \
-	" Odroids"		36 1	""			36 14 0 0 \
-	" Petitboot:"		37 1	"$petitboot"		37 13 2 0 \
+	" Logging:"		29 1	"$LOGGING"		29 11 2 0 \
+	" Verbosity:"		30 1	"$VERBOSE"		30 13 2 0 \
+	" Devel Rootfs:"	31 1	"$DEVROOTFS"		31 16 2 0 \
+	" Compress img:"	32 1	"$COMPRESS_IMG"		32 16 2 0 \
+	" User scripts:"	33 1	"$USCRIPTS"		33 16 2 0 \
+	" User service:"	34 1	"$USERACCT"		34 16 2 0 \
 2>&1 1>&3)
 
 # close fd
@@ -120,29 +116,28 @@ echo PASSWORD='"' >> tmp0
 echo HOSTNAME='"' >> tmp0
 echo DISTRO='"' >> tmp0
 echo DISTRO_VERSION='"' >> tmp0
-echo networkmanager= >> tmp0
+echo NETWORKMANAGER= >> tmp0
 echo UBOOT_VERSION='"' >> tmp0
 echo VERSION='"' >> tmp0
 echo BUILD_VERSION='"' >> tmp0
-echo menuconfig= >> tmp0
+echo MENUCONFIG= >> tmp0
 echo COMPILER='"' >> tmp0
-echo ccache= >> tmp0
-echo rtl8812au= >> tmp0
-echo rtl88x2bu= >> tmp0
-echo rtl8811cu= >> tmp0
-echo rtl8188eu= >> tmp0
-echo custom_defconfig= >> tmp0
+echo CCACHE= >> tmp0
+echo RTL88XXAU= >> tmp0
+echo RTL88X2BU= >> tmp0
+echo RTL88XXCU= >> tmp0
+echo RTL8188EU= >> tmp0
+echo CUSTOM_DEFCONFIG= >> tmp0
 echo MYCONFIG='"' >> tmp0
-echo logging= >> tmp0
-echo verbose= >> tmp0
-echo devrootfs= >> tmp0
-echo compress_img= >> tmp0
-echo uscripts= >> tmp0
-echo useracct= >> tmp0
-echo petitboot= >> tmp0
-echo emmc=0 >> tmp0
-echo aircrack=0 >> tmp0
-echo rootpasswd=0 >> tmp0
+echo LOGGING= >> tmp0
+echo VERBOSE= >> tmp0
+echo DEVROOTFS= >> tmp0
+echo COMPRESS_IMG= >> tmp0
+echo USCRIPTS= >> tmp0
+echo USERACCT= >> tmp0
+echo EMMC=0 >> tmp0
+echo AIRCRACK=0 >> tmp0
+echo ROOTPASSWD=0 >> tmp0
 echo USER_PKGS='"''"' >> tmp0
 echo CORES=\`nproc\` >> tmp0
 echo CFLAGS='"''"' >> tmp0
@@ -190,12 +185,12 @@ sed -i '6i### DISTRIBUTION AND RELEASE' userdata.txt
 sed -i '10i### UBOOT AND LINUX KERNEL' userdata.txt
 sed -i '17i### WIRELESS' userdata.txt
 sed -i '22i### CUSTOM' userdata.txt
-sed -i '36i### COMPILER TUNING' userdata.txt
-sed -i '39i### WHOAMI AND HOST' userdata.txt
-sed -i '42i### LOCALES' userdata.txt
-sed -i '50i### TIMEZONE' userdata.txt
-sed -i '55i### NAME SERVER' userdata.txt
-sed -i '58i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '35i### COMPILER TUNING' userdata.txt
+sed -i '38i### WHOAMI AND HOST' userdata.txt
+sed -i '41i### LOCALES' userdata.txt
+sed -i '49i### TIMEZONE' userdata.txt
+sed -i '54i### NAME SERVER' userdata.txt
+sed -i '57i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # customize your image
 custom_txt(){
@@ -207,6 +202,9 @@ echo 'FSTYPE="ext4"' >> custom.txt
 echo "" >> custom.txt
 echo "# UEFI Options: true false" >> custom.txt
 echo 'ENABLE_EFI="false"' >> custom.txt
+echo "" >> custom.txt
+echo "# Petitboot (ODROID): true false" >> custom.txt
+echo 'ENABLE_PETITBOOT="false"' >> custom.txt
 echo "" >> custom.txt
 echo "# Compression Types: xz zst" >> custom.txt
 echo 'IMG_COMPRESSION="xz"' >> custom.txt

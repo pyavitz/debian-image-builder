@@ -10,18 +10,18 @@ source lib/function/wireless
 source board.txt
 source userdata.txt
 
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	set -x;
 fi
 HOST_ARCH=`uname -m`
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
-	crosscompile="0"
+	CROSSCOMPILE="0"
 fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then
-	crosscompile="1"
+	CROSSCOMPILE="1"
 fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
-	crosscompile="1"
+	CROSSCOMPILE="1"
 fi
 # override the userdata.txt file for best user experience
 if [[ "$FORCE_GITHUB" == "true" ]]; then
@@ -47,14 +47,14 @@ if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" || "$BOARD" == "odroidm
 fi
 # end override
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
-if [ $ccache -eq 1 ]; then
+if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		:;
 	else
 		apt install -y ccache
 	fi
 fi
-if [ $ccache -eq 1 ]; then
+if [ $CCACHE -eq 1 ]; then
 	DEST="/usr/lib/ccache"
 else
 	DEST="/usr/bin"
@@ -84,24 +84,24 @@ if [[ ! -z $FAMILY ]]; then
 fi
 # defconfig
 if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
-	if [ $custom_defconfig -eq 1 ]; then
+	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then
 		cconfig;
 	else
 		vendor_config;
 	fi
 else
-	if [ $custom_defconfig -eq 1 ]; then
+	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then
 		cconfig;
 	else
 		bconfig;
 	fi
 fi
 # menuconfig
-if [ $menuconfig -eq 1 ]; then
+if [ $MENUCONFIG -eq 1 ]; then
 	menuconfig;
 fi
 # builddeb
-if [ $crosscompile -eq 1 ]; then
+if [ $CROSSCOMPILE -eq 1 ]; then
 	ccompile;
 else
 	ncompile;

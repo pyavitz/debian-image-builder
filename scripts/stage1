@@ -5,18 +5,18 @@ validation
 if [[ -f "custom.txt" ]]; then
 	. custom.txt
 else
+	ENABLE_VFAT="false"
 	FSTYPE="ext4"
 	ENABLE_EFI="false"
-fi
-if [[ -f "board.txt" ]] && [[ `grep -w 'PETITBOOT="true"' "board.txt"` ]]; then
-	sed -i 's/petitboot=0/petitboot=1/g' userdata.txt
+	ENABLE_PETITBOOT="false"
+	IMG_COMPRESSION="xz"
 fi
 source lib/function/staging
 source lib/function/release
 source lib/function/shrink
 source userdata.txt
 # check user data file
-if [ $useracct -eq 0 ]; then
+if [ $USERACCT -eq 0 ]; then
 	if [ -z $NAME ] && [ -z $USERNAME ] && [ -z $PASSWORD ]; then
 		echo -e ""
 		echo -e "Name, Username and Password fields are empty?"
@@ -30,7 +30,7 @@ fi
 # customize image
 customize_image > /dev/null 2>&1
 # user scripts pre-stage1
-if [ $uscripts -eq 1 ]; then uscripts_pre-stage1; fi
+if [ $USCRIPTS -eq 1 ]; then uscripts_pre-stage1; fi
 # source board and family
 source board.txt
 source lib/function/${FAMILY}
@@ -44,7 +44,7 @@ else
 	exit 0
 fi
 # check verbosity
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	set -eux -o pipefail;
 else
 	set -eu -o pipefail;
@@ -107,12 +107,12 @@ if [[ ! -z $FAMILY ]]; then
 	fi
 fi
 # user account service
-if [ $useracct -eq 1 ]; then
+if [ $USERACCT -eq 1 ]; then
 	mkdir -p ${P_VALUE}/root/useracct;
 	cp -r files/useracct/* ${P_VALUE}/root/useracct;
 fi
 # user scripts stage1
-if [ $uscripts -eq 1 ]; then
+if [ $USCRIPTS -eq 1 ]; then
 	uscripts_stage1;
 fi
 echo ""

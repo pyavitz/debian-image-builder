@@ -10,32 +10,32 @@ source board.txt
 source userdata.txt
 
 # debug switch
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	set -x
 fi
 HOST_ARCH=`uname -m`
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
-	crosscompile="0"
+	CROSSCOMPILE="0"
 fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then
-	crosscompile="1"
+	CROSSCOMPILE="1"
 fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
-	crosscompile="1"
+	CROSSCOMPILE="1"
 fi
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_UBOOT_VERSION ]; then :; else UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
 fi
 # compiler
-if [ $ccache -eq 1 ]; then
+if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		:;
 	else
 		apt install -y ccache
 	fi
 fi
-if [ $ccache -eq 1 ]; then
+if [ $CCACHE -eq 1 ]; then
 	DEST="/usr/lib/ccache"
 else
 	DEST="/usr/bin"

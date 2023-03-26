@@ -201,12 +201,12 @@ fi
 }
 
 setup(){
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	partition;
 else
 	partition > /dev/null 2>&1;
 fi
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	uuid;
 else
 	uuid > /dev/null 2>&1;
@@ -224,12 +224,12 @@ mkdir -p ${P_VALUE}/etc/apt/apt.conf.d ${P_VALUE}/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "${P_VALUE}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p ${P_VALUE}/usr/bin
 cp $(command -v "${STATIC}") ${P_VALUE}/usr/bin
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	choose_release;
 else
 	choose_release > /dev/null 2>&1;
 fi
-if [ $verbose -eq 1 ]; then
+if [ $VERBOSE -eq 1 ]; then
 	${P_VALUE}_fstab;
 else
 	${P_VALUE}_fstab > /dev/null 2>&1;
@@ -301,7 +301,7 @@ finish_image(){
 IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
 IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
 if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; fi
-if [ $compress_img -eq 1 ]; then
+if [ $COMPRESS_IMG -eq 1 ]; then
 	echo_compress
 	if [[ "$IMG_COMPRESSION" == "xz" ]]; then
 		xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}
@@ -385,7 +385,7 @@ EOF
 customize_image(){
 # edit board.txt variables before the file gets sourced
 if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
-	if [ $petitboot -eq 1 ]; then
+	if [[ "$ENABLE_PETITBOOT" == "true" ]]; then
 		sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
 		sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
 		sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
