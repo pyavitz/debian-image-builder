@@ -358,6 +358,34 @@ bootm 0x20800000 0x22000000 0x21800000
 EOF
 }
 
+bootcmd(){
+echo -en "$BOARD: "; echo -e "boot script"
+if [[ "$P_VALUE" == "p1" ]]; then
+	BOOT_PATH="p1/boot"
+else
+	BOOT_PATH="p1"
+fi
+rm -f ${BOOT_PATH}/{boot.cmd,boot.scr}
+cp -f files/boot/boot.cmd ${BOOT_PATH}/
+sed -i 's/^setenv bootlabel "".*/setenv bootlabel "'"${DEFAULT_MOTD}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv uuid "".*/setenv uuid "'"PARTUUID=${ROOT_PARTUUID}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv rootfstype "".*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv console "".*/setenv console "'"${CONSOLE}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv extra "".*/setenv extra "'"${EXTRA}"'"/g' ${BOOT_PATH}/boot.cmd
+if [[ "$P_VALUE" == "p1" ]]; then
+	sed -i 's/^setenv fk_kvers "".*/setenv fk_kvers "'"boot\/Image"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv initrd "".*/setenv fk_kvers "'"boot\/uInitrd"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv fdtdir "".*/setenv fk_kvers "'"boot\/${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	sed -i 's/^setenv fk_kvers "".*/setenv fk_kvers "'"Image"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv initrd "".*/setenv fk_kvers "'"uInitrd"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv fdtdir "".*/setenv fk_kvers "'"${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
+fi
+sed -i 's/^setenv fdtfile "".*/setenv fk_kvers "'"${DEVICETREE}"'"/g' ${BOOT_PATH}/boot.cmd
+mkimage -C none -A arm -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
+}
+
 extlinux(){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
 if [[ "$P_VALUE" == "p1" ]]; then
