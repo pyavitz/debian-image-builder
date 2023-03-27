@@ -50,7 +50,12 @@ sleep 1s
 mount "${ROOTFS}" p1
 p1_uuid
 echo ""
-extlinux > /dev/null 2>&1
+if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	extlinux > /dev/null 2>&1
+fi
+if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	bootcmd > /dev/null 2>&1
+fi
 if [[ "$ARCH" == "arm" ]]; then
 	# remove 100mb file
 	rm -f p1/block.img
@@ -101,6 +106,9 @@ if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	else
 		extlinux > /dev/null 2>&1
 	fi
+fi
+if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	bootcmd > /dev/null 2>&1
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
 	brcm_config > /dev/null 2>&1
