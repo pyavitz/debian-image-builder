@@ -376,13 +376,20 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	sed -i 's/^setenv fk_kvers "".*/setenv fk_kvers "'"boot\/Image"'"/g' ${BOOT_PATH}/boot.cmd
 	sed -i 's/^setenv initrd "".*/setenv fk_kvers "'"boot\/uInitrd"'"/g' ${BOOT_PATH}/boot.cmd
 	sed -i 's/^setenv fdtdir "".*/setenv fk_kvers "'"boot\/${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv load "".*/setenv load "'"ext4load"'"/g' ${BOOT_PATH}/boot.cmd
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	sed -i 's/^setenv fk_kvers "".*/setenv fk_kvers "'"Image"'"/g' ${BOOT_PATH}/boot.cmd
-	sed -i 's/^setenv initrd "".*/setenv fk_kvers "'"uInitrd"'"/g' ${BOOT_PATH}/boot.cmd
-	sed -i 's/^setenv fdtdir "".*/setenv fk_kvers "'"${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv initrd "".*/setenv initrd "'"uInitrd"'"/g' ${BOOT_PATH}/boot.cmd
+	sed -i 's/^setenv fdtdir "".*/setenv fdtdir "'"${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
+	if [[ "$VFAT" == "true" ]]; then
+		sed -i 's/^setenv load "".*/setenv load "'"fatload"'"/g' ${BOOT_PATH}/boot.cmd
+	fi
+	if [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]] && [[ "$VFAT" == "false" ]]; then
+		sed -i 's/^setenv load "".*/setenv load "'"ext2load"'"/g' ${BOOT_PATH}/boot.cmd
+	fi
 fi
-sed -i 's/^setenv fdtfile "".*/setenv fk_kvers "'"${DEVICETREE}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv fdtfile "".*/setenv fdtfile "'"${DEVICETREE}"'"/g' ${BOOT_PATH}/boot.cmd
 mkimage -C none -A arm -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
 }
 
