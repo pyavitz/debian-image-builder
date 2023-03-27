@@ -134,7 +134,7 @@ ifdef version
 endif
 
 ifdef myconfig
-	@$(shell sed -i "23s/.*/custom_defconfig=1/" userdata.txt)
+	@$(shell sed -i "23s/.*/CUSTOM_DEFCONFIG="'"1"'"/" userdata.txt)
 	@$(shell sed -i "24s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 endif
 
@@ -181,7 +181,7 @@ menu:
 
 # reset myconfig to 0
 myconfig_0:
-	@$(shell sed -i "23s/.*/custom_defconfig=0/" userdata.txt)
+	@$(shell sed -i "23s/.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
 
 config:
 	# Please be patient
