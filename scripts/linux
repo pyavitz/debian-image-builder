@@ -11,7 +11,7 @@ source board.txt
 source userdata.txt
 
 if [ $VERBOSE -eq 1 ]; then
-	set -x;
+	set -x
 fi
 HOST_ARCH=`uname -m`
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
@@ -65,10 +65,10 @@ CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
 kernel_source
 if [[ -d "${KERNEL}-${VERSION}" ]]; then
 	CAP_KERNEL=`echo "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"`
-	echo -en "${WHT}${CAP_KERNEL}-${VERSION}${FIN}";
-	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN} ";
-	rm -fdr ${KERNEL}-${VERSION};
-	echo -e "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}";
+	echo -en "${WHT}${CAP_KERNEL}-${VERSION}${FIN}"
+	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN} "
+	rm -fdr ${KERNEL}-${VERSION}
+	echo -e "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 fi
 # download and extract
 download
@@ -80,45 +80,56 @@ else
 fi
 # patching
 if [[ ! -z $FAMILY ]]; then
-	linux_patching;
+	linux_patching
 fi
 # defconfig
 if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
 	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then
-		cconfig;
+		cconfig
 	else
-		vendor_config;
+		vendor_config
 	fi
 else
 	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then
-		cconfig;
+		cconfig
 	else
-		bconfig;
+		bconfig
 	fi
 fi
 # menuconfig
 if [ $MENUCONFIG -eq 1 ]; then
-	menuconfig;
+	menuconfig
 fi
 # builddeb
 if [ $CROSSCOMPILE -eq 1 ]; then
-	ccompile;
+	ccompile
 else
-	ncompile;
+	ncompile
 fi
 echo ""
 # finish
 cd ..
 rm -f {*linux-image-dbg*.deb,linux-libc-dev*.deb,*.buildinfo,*.changes}
-if [[ `ls ../${OUTPUT}/*linux*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p ../${OUTPUT}/tmp;
-	mv -f ../${OUTPUT}/{*linux-image*.deb,*linux-headers*.deb} ../${OUTPUT}/tmp;
+if [[ `ls *linux*.deb` ]] > /dev/null 2>&1; then
+	if [[ `ls ../${OUTPUT}/*linux*.deb` ]] > /dev/null 2>&1; then
+		mkdir -p ../${OUTPUT}/tmp
+		mv -f ../${OUTPUT}/{*linux-image*.deb,*linux-headers*.deb} ../${OUTPUT}/tmp
+	fi
+	mkdir -p ../${OUTPUT}
+	mv -f *.deb ../${OUTPUT}/
+	if [[ -f "../github.txt" ]]; then
+		rm -f ../github.txt
+	fi
+	echo_done
+	exit 0
+else
+	if [[ -f "../github.txt" ]]; then
+		rm -f ../github.txt
+	fi
+	echo ""
+	echo -e "${KERNEL} ${VERSION} [FAILED]"
+	read -p "Press enter to continue."
+	exit 1
 fi
-mkdir -p ../${OUTPUT}
-mv -f *.deb ../${OUTPUT}/
-if [[ -f "../github.txt" ]]; then
-	rm -f ../github.txt;
-fi
-echo_done
 
 exit 0
