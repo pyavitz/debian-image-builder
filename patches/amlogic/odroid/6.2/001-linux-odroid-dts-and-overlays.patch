@@ -1,15 +1,15 @@
 diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
---- a/arch/arm64/boot/dts/amlogic/Makefile	2023-01-08 12:49:43.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/Makefile	2023-01-09 22:39:10.000000000 -0500
-@@ -15,6 +15,7 @@
- dtb-$(CONFIG_ARCH_MESON) += meson-g12b-odroid-go-ultra.dtb
+--- a/arch/arm64/boot/dts/amlogic/Makefile	2023-03-22 08:34:07.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/Makefile	2023-03-28 04:02:05.061830602 -0400
+@@ -14,6 +14,7 @@
+ dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-odroid-n2-plus.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-odroid-n2.dtb
 +dtb-$(CONFIG_ARCH_MESON) += meson-g12b-odroid-n2l.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-khadas-vim3.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-gxbb-kii-pro.dtb
-@@ -68,3 +69,13 @@
+@@ -67,3 +68,14 @@
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
@@ -23,6 +23,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +
 +subdir-y += overlays/odroidc4
 +subdir-y += overlays/odroidn2
++subdir-y += overlays/odroidn2_plus
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts
 --- a/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	1969-12-31 19:00:00.000000000 -0500
 +++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	2023-01-09 22:39:10.000000000 -0500
@@ -2054,15 +2055,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts b/arch/arm64
 +		};
 +	};
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile
---- a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile	2023-01-09 22:39:10.000000000 -0500
-@@ -0,0 +1,19 @@
+--- /dev/null	2023-03-25 18:25:03.416647652 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile	2023-03-28 04:05:11.593878533 -0400
+@@ -0,0 +1,20 @@
 +dtbo-y += \
 +	fanspeed-full.dtbo \
 +	hktft35.dtbo \
 +	i2c0.dtbo \
 +	i2c1.dtbo \
++	meson-g12b-odroid-n2-spi.dtbo \
 +	pps-gpio_p11.dtbo \
 +	pps-gpio_p12.dtbo \
 +	pwm_cd.dtbo \
@@ -2077,6 +2078,32 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile b/arch/arm64
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
+--- /dev/null	2023-03-25 18:25:03.416647652 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts	2023-03-28 04:04:28.241345322 -0400
+@@ -0,0 +1,23 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	fragment@0 {
++		target = <&sd_emmc_c>;
++		__overlay__ {
++			pinctrl-0 = <&emmc_ctrl_pins>, <&emmc_data_4b_pins>, <&emmc_ds_pins>;
++			bus-width = <4>;
++		};
++	};
++
++	fragment@1 {
++		target = <&spifc>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts	1969-12-31 19:00:00.000000000 -0500
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts	2023-01-09 22:39:10.000000000 -0500
@@ -2488,15 +2515,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/i2c1.dts b/arch/
 +		};
 +	};
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/Makefile b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/Makefile
---- a/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/Makefile	2023-01-09 22:39:10.000000000 -0500
-@@ -0,0 +1,19 @@
+--- /dev/null	2023-03-25 18:25:03.416647652 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/Makefile	2023-03-28 04:05:24.833734592 -0400
+@@ -0,0 +1,20 @@
 +dtbo-y += \
 +	fanspeed-full.dtbo \
 +	hktft35.dtbo \
 +	i2c0.dtbo \
 +	i2c1.dtbo \
++	meson-g12b-odroid-n2-spi.dtbo \
 +	pps-gpio_p11.dtbo \
 +	pps-gpio_p12.dtbo \
 +	pwm_cd.dtbo \
@@ -2511,6 +2538,32 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/Makefile b/arch/
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
+--- /dev/null	2023-03-25 18:25:03.416647652 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/meson-g12b-odroid-n2-spi.dts	2023-03-28 04:04:28.241345000 -0400
+@@ -0,0 +1,23 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	fragment@0 {
++		target = <&sd_emmc_c>;
++		__overlay__ {
++			pinctrl-0 = <&emmc_ctrl_pins>, <&emmc_data_4b_pins>, <&emmc_ds_pins>;
++			bus-width = <4>;
++		};
++	};
++
++	fragment@1 {
++		target = <&spifc>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
 diff -Naur a/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/pps-gpio_p11.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/pps-gpio_p11.dts
 --- a/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/pps-gpio_p11.dts	1969-12-31 19:00:00.000000000 -0500
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/pps-gpio_p11.dts	2023-01-09 22:39:10.000000000 -0500
