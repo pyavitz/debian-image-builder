@@ -1,157 +1,21 @@
-diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
---- a/arch/arm64/boot/dts/rockchip/Makefile	2022-09-08 05:24:08.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/Makefile	2022-09-18 13:21:34.753349073 -0400
-@@ -39,6 +39,7 @@
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4b.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-neo4.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-r4s.dtb
-+dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-r4se.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-orangepi.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-pinebook-pro.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-puma-haikou.dtb
-diff -Naur a/arch/arm64/boot/dts/rockchip/rk3399-nanopi-r4se.dts b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-r4se.dts
---- a/arch/arm64/boot/dts/rockchip/rk3399-nanopi-r4se.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-r4se.dts	2022-09-17 11:54:23.000000000 -0400
-@@ -0,0 +1,141 @@
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-r4se.dts	2023-03-30 15:19:59.105041611 -0400
+@@ -0,0 +1,18 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * FriendlyElec NanoPC-T4 board device tree source
-+ *
-+ * Copyright (c) 2020 FriendlyElec Computer Tech. Co., Ltd.
-+ * (http://www.friendlyarm.com)
-+ *
-+ * Copyright (c) 2018 Collabora Ltd.
-+ *
-+ * Copyright (c) 2020 Jensen Huang <jensenhuang@friendlyarm.com>
-+ * Copyright (c) 2020 Marty Jones <mj8263788@gmail.com>
-+ * Copyright (c) 2021 Tianling Shen <cnsztl@gmail.com>
-+ */
 +
 +/dts-v1/;
-+#include "rk3399-nanopi4.dtsi"
++#include "rk3399-nanopi-r4s.dts"
 +
 +/ {
 +	model = "FriendlyElec NanoPi R4SE";
 +	compatible = "friendlyarm,nanopi-r4se", "rockchip,rk3399";
-+
-+	aliases {
-+		led-boot = &sys_led;
-+		led-failsafe = &sys_led;
-+		led-running = &sys_led;
-+		led-upgrade = &sys_led;
-+	};
-+	
-+	/delete-node/ display-subsystem;
-+
-+	gpio-leds {
-+		pinctrl-0 = <&lan_led_pin>, <&sys_led_pin>, <&wan_led_pin>;
-+
-+		/delete-node/ led-0;
-+
-+		lan_led: led-lan {
-+			gpios = <&gpio1 RK_PA1 GPIO_ACTIVE_HIGH>;
-+			label = "green:lan";
-+		};
-+
-+		sys_led: led-sys {
-+			gpios = <&gpio0 RK_PB5 GPIO_ACTIVE_HIGH>;
-+			label = "red:sys";
-+			default-state = "on";
-+		};
-+
-+		wan_led: led-wan {
-+			gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
-+			label = "green:wan";
-+		};
-+	};
-+
-+	gpio-keys {
-+		pinctrl-0 = <&reset_button_pin>;
-+
-+		/delete-node/ power;
-+
-+		reset {
-+			debounce-interval = <50>;
-+			gpios = <&gpio1 RK_PC6 GPIO_ACTIVE_LOW>;
-+			label = "reset";
-+			linux,code = <KEY_RESTART>;
-+		};
-+	};
-+
-+	vdd_5v: vdd-5v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vdd_5v";
-+		regulator-always-on;
-+		regulator-boot-on;
-+	};
 +};
 +
-+&i2c2 {
-+	eeprom@51 {
-+		compatible = "microchip,24c02", "atmel,24c02";
-+		reg = <0x51>;
-+		pagesize = <16>;
-+		read-only; /* This holds our MAC */
-+	};
++
++&emmc_phy {
++	status = "okay";
 +};
 +
-+&i2c4 {
-+	status = "disabled";
++&sdhci {
++	status = "okay";
 +};
-+
-+&pcie0 {
-+	max-link-speed = <1>;
-+	num-lanes = <1>;
-+	vpcie3v3-supply = <&vcc3v3_sys>;
-+};
-+
-+&pinctrl {
-+	gpio-leds {
-+		/delete-node/ status-led-pin;
-+
-+		lan_led_pin: lan-led-pin {
-+			rockchip,pins = <1 RK_PA1 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		sys_led_pin: sys-led-pin {
-+			rockchip,pins = <0 RK_PB5 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		wan_led_pin: wan-led-pin {
-+			rockchip,pins = <1 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+	};
-+
-+	rockchip-key {
-+		/delete-node/ power-key;
-+
-+		reset_button_pin: reset-button-pin {
-+			rockchip,pins = <1 RK_PC6 RK_FUNC_GPIO &pcfg_pull_up>;
-+		};
-+	};
-+};
-+
-+&sdio0 {
-+	status = "disabled";
-+};
-+
-+&u2phy0_host {
-+	phy-supply = <&vdd_5v>;
-+};
-+
-+&u2phy1_host {
-+	status = "disabled";
-+};
-+
-+&uart0 {
-+	status = "disabled";
-+};
-+
-+&usbdrd_dwc3_0 {
-+	dr_mode = "host";
-+};
-+
-+&vcc3v3_sys {
-+	vin-supply = <&vcc5v0_sys>;
-+};
-
