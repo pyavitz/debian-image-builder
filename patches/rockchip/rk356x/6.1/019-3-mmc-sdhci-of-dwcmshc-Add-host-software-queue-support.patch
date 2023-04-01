@@ -1,0 +1,90 @@
+From 55c88b9f9ed2ba17fe5a4b095fd0fbd9c38b1c4b Mon Sep 17 00:00:00 2001
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Date: Tue, 31 Jan 2023 08:46:31 +0800
+Subject: [PATCH 3/3] mmc: sdhci-of-dwcmshc: Add host software queue support
+
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+ drivers/mmc/host/sdhci-of-dwcmshc.c | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+--- a/drivers/mmc/host/sdhci-of-dwcmshc.c
++++ b/drivers/mmc/host/sdhci-of-dwcmshc.c
+@@ -20,6 +20,7 @@
+ #include <linux/sizes.h>
+ 
+ #include "sdhci-pltfm.h"
++#include "mmc_hsq.h"
+ 
+ #define SDHCI_DWCMSHC_ARG2_STUFF	GENMASK(31, 16)
+ 
+@@ -331,6 +332,14 @@ static void rk35xx_sdhci_reset(struct sd
+ 	sdhci_reset(host, mask);
+ }
+ 
++static void sdhci_dwcmshc_request_done(struct sdhci_host *host, struct mmc_request *mrq)
++{
++	if (mmc_hsq_finalize_request(host->mmc, mrq))
++		return;
++
++	mmc_request_done(host->mmc, mrq);
++}
++
+ static const struct sdhci_ops sdhci_dwcmshc_ops = {
+ 	.set_clock		= sdhci_set_clock,
+ 	.set_bus_width		= sdhci_set_bus_width,
+@@ -347,6 +356,7 @@ static const struct sdhci_ops sdhci_dwcm
+ 	.get_max_clock		= sdhci_pltfm_clk_get_max_clock,
+ 	.reset			= rk35xx_sdhci_reset,
+ 	.adma_write_desc	= dwcmshc_adma_write_desc,
++	.request_done		= sdhci_dwcmshc_request_done,
+ };
+ 
+ static const struct sdhci_pltfm_data sdhci_dwcmshc_pdata = {
+@@ -462,6 +472,7 @@ static int dwcmshc_probe(struct platform
+ 	struct dwcmshc_priv *priv;
+ 	struct rk35xx_priv *rk_priv = NULL;
+ 	const struct sdhci_pltfm_data *pltfm_data;
++	struct mmc_hsq *hsq;
+ 	int err;
+ 	u32 extra;
+ 
+@@ -515,6 +526,16 @@ static int dwcmshc_probe(struct platform
+ 	host->mmc_host_ops.request = dwcmshc_request;
+ 	host->mmc_host_ops.hs400_enhanced_strobe = dwcmshc_hs400_enhanced_strobe;
+ 
++	hsq = devm_kzalloc(&pdev->dev, sizeof(*hsq), GFP_KERNEL);
++	if (!hsq) {
++		err = -ENOMEM;
++		goto err_clk;
++	}
++
++	err = mmc_hsq_init(hsq, host->mmc);
++	if (err)
++		goto err_clk;
++
+ 	if (pltfm_data == &sdhci_dwcmshc_rk35xx_pdata) {
+ 		rk_priv = devm_kzalloc(&pdev->dev, sizeof(struct rk35xx_priv), GFP_KERNEL);
+ 		if (!rk_priv) {
+@@ -602,6 +623,8 @@ static int dwcmshc_suspend(struct device
+ 	struct rk35xx_priv *rk_priv = priv->priv;
+ 	int ret;
+ 
++	mmc_hsq_suspend(host->mmc);
++
+ 	ret = sdhci_suspend_host(host);
+ 	if (ret)
+ 		return ret;
+@@ -642,7 +665,11 @@ static int dwcmshc_resume(struct device
+ 			return ret;
+ 	}
+ 
+-	return sdhci_resume_host(host);
++	ret = sdhci_resume_host(host);
++	if (ret)
++		return ret;
++
++	return mmc_hsq_resume(host->mmc);
+ }
+ #endif
+ 

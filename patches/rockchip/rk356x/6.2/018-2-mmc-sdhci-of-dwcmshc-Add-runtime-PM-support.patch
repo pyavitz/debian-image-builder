@@ -1,0 +1,93 @@
+From ce8180045daea68c45ba5bd2495885410b7b9dc8 Mon Sep 17 00:00:00 2001
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Date: Tue, 31 Jan 2023 08:46:30 +0800
+Subject: [PATCH 2/3] mmc: sdhci-of-dwcmshc: Add runtime PM support
+
+This patch adds runtime PM support.
+
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+ drivers/mmc/host/sdhci-of-dwcmshc.c | 51 ++++++++++++++++++++++++++++-
+ 1 file changed, 50 insertions(+), 1 deletion(-)
+
+--- a/drivers/mmc/host/sdhci-of-dwcmshc.c
++++ b/drivers/mmc/host/sdhci-of-dwcmshc.c
+@@ -15,6 +15,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include <linux/sizes.h>
+ 
+@@ -546,6 +547,13 @@ static int dwcmshc_probe(struct platform
+ 	if (err)
+ 		goto err_setup_host;
+ 
++	pm_runtime_get_noresume(&pdev->dev);
++	pm_runtime_set_active(&pdev->dev);
++	pm_runtime_enable(&pdev->dev);
++	pm_runtime_set_autosuspend_delay(&pdev->dev, 50);
++	pm_runtime_use_autosuspend(&pdev->dev);
++	pm_runtime_put_autosuspend(&pdev->dev);
++
+ 	return 0;
+ 
+ err_setup_host:
+@@ -575,6 +583,11 @@ static int dwcmshc_remove(struct platfor
+ 	if (rk_priv)
+ 		clk_bulk_disable_unprepare(RK35xx_MAX_CLKS,
+ 					   rk_priv->rockchip_clks);
++
++	pm_runtime_get_sync(&pdev->dev);
++	pm_runtime_disable(&pdev->dev);
++	pm_runtime_put_noidle(&pdev->dev);
++
+ 	sdhci_pltfm_free(pdev);
+ 
+ 	return 0;
+@@ -633,7 +646,43 @@ static int dwcmshc_resume(struct device
+ }
+ #endif
+ 
+-static SIMPLE_DEV_PM_OPS(dwcmshc_pmops, dwcmshc_suspend, dwcmshc_resume);
++#ifdef CONFIG_PM
++static int dwcmshc_runtime_suspend(struct device *dev)
++{
++	struct sdhci_host *host = dev_get_drvdata(dev);
++	u16 data;
++	int ret;
++
++	ret = sdhci_runtime_suspend_host(host);
++	if (ret)
++		return ret;
++
++	data = sdhci_readw(host, SDHCI_CLOCK_CONTROL);
++	data &= ~SDHCI_CLOCK_CARD_EN;
++	sdhci_writew(host, data, SDHCI_CLOCK_CONTROL);
++
++	return 0;
++}
++
++static int dwcmshc_runtime_resume(struct device *dev)
++{
++	struct sdhci_host *host = dev_get_drvdata(dev);
++	u16 data;
++
++	data = sdhci_readw(host, SDHCI_CLOCK_CONTROL);
++	data |= SDHCI_CLOCK_CARD_EN;
++	sdhci_writew(host, data, SDHCI_CLOCK_CONTROL);
++
++	return sdhci_runtime_resume_host(host, 0);
++}
++#endif
++
++static const struct dev_pm_ops dwcmshc_pmops = {
++	SET_SYSTEM_SLEEP_PM_OPS(dwcmshc_suspend,
++				dwcmshc_resume)
++	SET_RUNTIME_PM_OPS(dwcmshc_runtime_suspend,
++			   dwcmshc_runtime_resume, NULL)
++};
+ 
+ static struct platform_driver sdhci_dwcmshc_driver = {
+ 	.driver	= {
