@@ -47,6 +47,11 @@ fi
 #fi
 # end override
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
+if [[ -e "/etc/os-release" ]]; then
+	CODENAME=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
+else
+	CODENAME="none"
+fi
 if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		:;
@@ -54,13 +59,37 @@ if [ $CCACHE -eq 1 ]; then
 		apt install -y ccache
 	fi
 fi
+if [ $CLANG -eq 1 ]; then
+	if [[ "$CODENAME" == "jammy" ]]; then
+		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then
+			:;
+		else
+			apt install -y clang clang-14 clang-15 lld lld-14 lld-15 llvm
+		fi
+	else
+		echo -e "${CODENAME} is not supported."
+		exit 0
+	fi
+fi
 if [ $CCACHE -eq 1 ]; then
 	DEST="/usr/lib/ccache"
 else
 	DEST="/usr/bin"
 fi
-NATIVE="${DEST}/${COMPILER}"
-CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
+NATIVE="CC=${DEST}/${COMPILER}"
+CROSS="CC=${DEST}/${CROSS_COMPILE}${COMPILER}"
+if [ $CLANG -eq 1 ] && [ $CCACHE -eq 0 ]; then
+	NATIVE="CC=${CLANG_VERSION} ${CLANG_LLVM}"
+	if [[ "$ARCH_EXT" == "armel" ]]; then
+		DEST="/usr/bin"
+		CROSS="CC=${DEST}/${CLANG_VERSION}"
+	else
+		CROSS="CC=${CLANG_VERSION} ${CLANG_LLVM}"
+	fi
+else
+	echo "Disable ccache and try again."
+	exit 0
+fi
 # sources directory
 kernel_source
 if [[ -d "${KERNEL}-${VERSION}" ]]; then
