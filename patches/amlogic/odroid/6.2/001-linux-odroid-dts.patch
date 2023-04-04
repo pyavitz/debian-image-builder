@@ -243,39 +243,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/bo
  &gpio {
  	/*
  	 * WARNING: The USB Hub on the Odroid-C4 needs a reset signal
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts	2022-12-04 17:48:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts	2022-12-05 21:19:50.000000000 -0500
-@@ -73,6 +73,16 @@
- 	sound {
- 		model = "ODROID-HC4";
- 	};
-+
-+	leds {
-+	      compatible = "gpio-leds";
-+	      led-red {
-+		      color = <LED_COLOR_ID_RED>;
-+		      function = LED_FUNCTION_POWER;
-+		      gpios = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
-+		      linux,default-trigger = "default-on";
-+	      };
-+      };
- };
- 
- &cpu_thermal {
-@@ -131,10 +141,6 @@
- };
- 
- &usb {
--	phys = <&usb2_phy1>;
--	phy-names = "usb2-phy1";
--};
--
--&usb2_phy0 {
--	status = "disabled";
-+	phys = <&usb2_phy0>, <&usb2_phy1>;
-+	phy-names = "usb2-phy0", "usb2-phy1";
- };
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2022-12-04 17:48:12.000000000 -0500
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2022-12-05 21:19:50.000000000 -0500

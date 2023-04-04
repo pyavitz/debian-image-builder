@@ -243,8 +243,8 @@
 +};
 +
 --- /dev/null	2023-03-30 04:59:11.183822108 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft32.dts	2023-04-04 03:10:21.914274704 -0400
-@@ -0,0 +1,33 @@
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2_plus/hktft35.dts	2023-04-04 03:10:21.920274598 -0400
+@@ -0,0 +1,53 @@
 +/dts-v1/;
 +/plugin/;
 +
@@ -253,31 +253,51 @@
 +
 +/ {
 +	fragment@0 {
-+		target = <&spicc0>;
++		target-path = "/";
 +
 +		__overlay__ {
-+			status = "okay";
++			backlight: backlight {
++				compatible = "gpio-backlight";
++				gpios = <&gpio GPIOX_5 GPIO_ACTIVE_HIGH>;
++			};
 +
-+			cs-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_LOW>;
-+
-+			display: display@0 {
-+				#address-cells = <0x1>;
-+				#size-cells = <0x0>;
++			display: display {
++				#address-cells = <2>;
++				#size-cells = <1>;
 +
 +				status = "okay";
++				compatible = "hardkernel,ili9488";
++				reg = <0x0 0xff63445c 0x0 0x04>;
 +
-+				compatible = "hardkernel,hktft32";
-+				reg = <0>;
++				rotate = <270>;
++				backlight = <&backlight>;
 +
-+				spi-max-frequency = <40000000>;
-+				rotation = <90>;
-+				reset-gpios = <&gpio GPIOX_4 GPIO_ACTIVE_HIGH>;
-+				dc-gpios = <&gpio GPIOX_7 GPIO_ACTIVE_HIGH>;
++				db-bits-0 = <0x00000002>;
++				db-bits-1 = <0x00000004>;
++				db-bits-2 = <0x00000001>;
++				db-bits-3 = <0x00000800>;
++				db-bits-4 = <0x00000200>;
++				db-bits-5 = <0x00000100>;
++				db-bits-6 = <0x00000080>;
++				db-bits-7 = <0x00000010>;
++				db-bits-wr = <0x00000400>;
++
++				reset-gpios = <&gpio GPIOX_3 GPIO_ACTIVE_HIGH>;
++				dc-gpios = <&gpio GPIOX_14 GPIO_ACTIVE_HIGH>;
++				wr-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_HIGH>;
++				cs-gpios = <&gpio GPIOX_16 GPIO_ACTIVE_HIGH>;
++				db-gpios = <&gpio GPIOX_1 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_2 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_0 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_11 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_9 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_8 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_7 GPIO_ACTIVE_HIGH>,
++					<&gpio GPIOX_4 GPIO_ACTIVE_HIGH>;
 +			};
 +		};
 +	};
 +};
-+
 --- /dev/null	2023-03-30 04:59:11.183822108 -0400
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c0.dts	2023-04-04 03:10:21.914274704 -0400
 @@ -0,0 +1,13 @@
