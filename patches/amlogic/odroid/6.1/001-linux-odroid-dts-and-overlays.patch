@@ -135,61 +135,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  &uart_AO {
  	status = "okay";
  	pinctrl-0 = <&uart_ao_a_pins>;
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
---- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts	2022-12-05 21:19:50.000000000 -0500
-@@ -0,0 +1,51 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
-+ *
-+ */
-+
-+/dts-v1/;
-+
-+/* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
-+#include "meson-g12b-a311d.dtsi"
-+#include "meson-g12b-odroid-n2.dtsi"
-+
-+/ {
-+	compatible = "hardkernel,odroid-n2l", "amlogic,s922x", "amlogic,g12b";
-+	model = "Hardkernel ODROID-N2L";
-+
-+	aliases {
-+		/delete-property/ rtc0;
-+	};
-+};
-+
-+&ethmac {
-+	status = "disabled";
-+};
-+
-+&i2c3 {
-+	/delete-node/ rtc@51;
-+};
-+
-+&usb {
-+	/delete-property/ vbus-supply;
-+};
-+
-+&usb_pwr_en {
-+	/delete-property/ gpio;
-+	/delete-property/ enable-active-high;
-+};
-+
-+&vddcpu_a {
-+	regulator-min-microvolt = <680000>;
-+	regulator-max-microvolt = <1040000>;
-+
-+	pwms = <&pwm_ab 0 1500 0>;
-+};
-+
-+&vddcpu_b {
-+	regulator-min-microvolt = <680000>;
-+	regulator-max-microvolt = <1040000>;
-+
-+	pwms = <&pwm_AO_cd 1 1500 0>;
-+};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2022-12-04 17:48:12.000000000 -0500
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2022-12-05 21:19:50.000000000 -0500
@@ -397,9 +342,62 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot
  &usb {
  	status = "okay";
  	vbus-supply = <&usb_pwr_en>;
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts	2023-04-04 03:10:21.911274757 -0400
+@@ -0,0 +1,51 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
++ *
++ */
++
++/dts-v1/;
++
++/* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
++#include "meson-g12b-a311d.dtsi"
++#include "meson-g12b-odroid-n2.dtsi"
++
++/ {
++	compatible = "hardkernel,odroid-n2l", "amlogic,s922x", "amlogic,g12b";
++	model = "Hardkernel ODROID-N2L";
++
++	aliases {
++		/delete-property/ rtc0;
++	};
++};
++
++&ethmac {
++	status = "disabled";
++};
++
++&i2c3 {
++	/delete-node/ rtc@51;
++};
++
++&usb {
++	/delete-property/ vbus-supply;
++};
++
++&usb_pwr_en {
++	/delete-property/ gpio;
++	/delete-property/ enable-active-high;
++};
++
++&vddcpu_a {
++	regulator-min-microvolt = <680000>;
++	regulator-max-microvolt = <1040000>;
++
++	pwms = <&pwm_ab 0 1500 0>;
++};
++
++&vddcpu_b {
++	regulator-min-microvolt = <680000>;
++	regulator-max-microvolt = <1040000>;
++
++	pwms = <&pwm_AO_cd 1 1500 0>;
++};
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	2023-04-04 03:10:21.912274740 -0400
 @@ -0,0 +1,9 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -410,9 +408,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts b/arch/arm64/boot/
 +/dts-v1/;
 +
 +#include "meson-gxbb-odroidc2.dts"
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts	2023-04-04 03:10:21.912274740 -0400
 @@ -0,0 +1,71 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -485,9 +482,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts b/arch/arm64/boot/
 +&vddcpu {
 +	regulator-max-microvolt = <1030000>;
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts	2023-04-04 03:10:21.913274722 -0400
 @@ -0,0 +1,81 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -570,9 +566,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts b/arch/arm64/boot
 +&vddcpu {
 +	regulator-max-microvolt = <1030000>;
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts	2023-04-04 03:10:21.913274722 -0400
 @@ -0,0 +1,191 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -765,9 +760,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts b/arch/arm64/boot/
 +&toacodec {
 +	status = "okay";
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi	2023-04-04 03:10:21.913274722 -0400
 @@ -0,0 +1,308 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -1077,9 +1071,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi b/arch/arm64/boot
 +&gpio {
 +	/delete-node/ hog-0;
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts	2023-04-04 03:10:21.913274722 -0400
 @@ -0,0 +1,134 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -1215,9 +1208,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts b/arch/arm64/
 +		opp-microvolt = <1040000>;
 +	};
 +};
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts b/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts
---- a/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts	1969-12-31 19:00:00.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts	2022-12-05 21:19:50.000000000 -0500
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts	2023-04-04 03:10:21.913274722 -0400
 @@ -0,0 +1,140 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
