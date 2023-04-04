@@ -25,6 +25,51 @@
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
 --- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/can0.dts	2023-04-03 21:51:26.000000000 -0400
+@@ -0,0 +1,42 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++
++/ {
++	fragment@0 {
++		target-path = "/";
++		__overlay__ {
++			can0_clk: can0-clk {
++				compatible = "fixed-clock";
++				clock-frequency = <8000000>;
++				clock-output-names = "can0_clk";
++				#clock-cells = <0>;
++			};
++		};
++	};
++
++	fragment@1 {
++		target = <&spicc0>;
++		__overlay__ {
++			status = "okay";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			num_chipselect = <1>;
++			cs-gpios = <&gpio GPIOH_6 GPIO_ACTIVE_LOW>;
++
++			can0: can@0 {
++				compatible = "microchip,mcp2515";
++				reg = <0>;
++				clocks = <&can0_clk>;
++				interrupt-parent = <&gpio_intc>;
++				/* GPIOX_3 */
++				interrupts = <80 IRQ_TYPE_EDGE_FALLING>;
++				spi-max-frequency = <10000000>;
++				status = "okay";
++			};
++		};
++	};
++};
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts	2023-04-03 21:51:26.000000000 -0400
 @@ -0,0 +1,110 @@
 +/dts-v1/;
