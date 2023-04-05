@@ -44,9 +44,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot
  						mux {
  							groups = "uart_ao_a_tx",
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2022-12-04 17:48:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2022-12-05 21:19:50.000000000 -0500
-@@ -12,9 +12,14 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2023-03-22 08:34:07.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi	2023-04-05 11:01:35.376015422 -0400
+@@ -12,9 +12,20 @@
  / {
  	aliases {
  		serial0 = &uart_AO;
@@ -58,10 +58,16 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  		rtc0 = &rtc;
  		rtc1 = &vrtc;
 +		spi0 = &spicc0;
++	};
++
++	gpiomem {
++		compatible = "amlogic, gpiomem";
++		reg = <0x0 0xff634000 0x0 0x1000>; /* PERIPHS_REG */
++		status = "okay";
  	};
  
  	dio2133: audio-amplifier-0 {
-@@ -527,6 +532,27 @@
+@@ -527,6 +538,27 @@
  	linux,rc-map-name = "rc-odroid";
  };
  
@@ -89,7 +95,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  &i2c3 {
  	status = "okay";
  	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
-@@ -539,6 +565,20 @@
+@@ -539,6 +571,20 @@
  	};
  };
  
@@ -110,7 +116,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  &pwm_ab {
  	pinctrl-0 = <&pwm_a_e_pins>;
  	pinctrl-names = "default";
-@@ -670,6 +710,24 @@
+@@ -670,6 +716,24 @@
  	status = "okay";
  };
  
@@ -136,9 +142,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/
  	status = "okay";
  	pinctrl-0 = <&uart_ao_a_pins>;
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2022-12-04 17:48:12.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2022-12-05 21:19:50.000000000 -0500
-@@ -11,6 +11,11 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2023-03-22 08:34:07.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2023-04-05 11:01:33.162049243 -0400
+@@ -11,6 +11,19 @@
  	compatible = "hardkernel,odroid-c4", "amlogic,sm1";
  	model = "Hardkernel ODROID-C4";
  
@@ -147,10 +153,18 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/bo
 +		i2c1 = &i2c3;
 +	};
 +
++
++	gpiomem {
++		compatible = "amlogic, gpiomem";
++		reg = <0x0 0xff634000 0x0 0x1000>,	/* GPIO banks */
++			<0x0 0xff800000 0x0 0x1000>;	/* GPIO_AO bank */
++		status = "okay";
++	};
++
  	leds {
  		compatible = "gpio-leds";
  
-@@ -28,6 +33,92 @@
+@@ -28,6 +41,92 @@
  	};
  };
  
