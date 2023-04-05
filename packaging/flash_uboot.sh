@@ -122,6 +122,14 @@ if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 0 ] && [[ -f "${DIR}/u-boot.bin.s
 	dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
 	echo -e "You may now reboot."
 fi
+# amlogic / odroid / mtd
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" ]] && [[ -e "/dev/mtdblock0" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
+	echo -en "== SPI flash: "
+	sleep .50
+	# flash binary
+	dd if="${DIR}/u-boot.bin" of="/dev/mtdblock0"
+	echo -e "You may now reboot."
+fi
 
 # freescale
 if [[ "$FAMILY" == "freescale" ]] && [[ -f "${DIR}/sploader.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then

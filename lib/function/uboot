@@ -80,13 +80,18 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-		cp -f ${RKBIN_ELF} u-boot/bl31.elf
-		cp -f ${RKBIN_RAM} u-boot/ram_init.bin
+		RK35="../files/boot/rk35"
+		cp -f ${RK35}/${RKBIN_ELF} u-boot/bl31.elf
+		cp -f ${RK35}/${RKBIN_RAM} u-boot/ram_init.bin
 	fi
 fi
 # patching
 cp board.txt u-boot/
 cd u-boot
+if [[ "$UBOOT_VERSION" == "v2023.04" ]] && [[ "$FAMILY_EXT" == "rk356x" ]]; then
+	export BL31="bl31.elf"
+	export ROCKCHIP_TPL="ram_init.bin"
+fi
 uboot_patching
 # make defconfig
 echo ""
@@ -202,9 +207,9 @@ uboot-source
 if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	arm-trusted-firmware
 fi
-if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-	rkbin
-fi
+#if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+#	rkbin
+#fi
 u-boot
 if [[ -f "idbloader.img" ]]; then
 	mkdir -p ../../${OUTPUT}
