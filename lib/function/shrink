@@ -2,15 +2,18 @@
 
 # shrink image
 shrink(){
-if [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then
-	chmod +x scripts/shrink;
-	scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img;
-fi
-if [[ "$P_VALUE" == "p1" ]]; then
-	kpartx_p1;
+if [[ -f "scripts/shrink" ]]; then
+	chmod +x scripts/shrink
+	scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img
 else
-	if [[ "$EFI" == "true" ]]; then :; else kpartx_p2; fi
+	echo ""
+	echo "Builder error! Shrink script missing from repository."
+	make cleanup > /dev/null 2>&1
+	make cleanup > /dev/null 2>&1
+	exit 0
 fi
+if [[ "$P_VALUE" == "p1" ]]; then kpartx_p1; fi
+if [[ "$P_VALUE" == "p2" ]]; then kpartx_p2; fi
 }
 
 p1_uuid(){
@@ -25,12 +28,6 @@ kpartx_p1(){
 if [[ "$P_ROOTFS" == "p1" ]]; then
 	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1;
 	echo '"' > kpart3;
-fi
-if [[ "$P_ROOTFS" == "p2" ]]; then
-	echo 'LOOP1="/dev/mapper/' > kpart1;
-	echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1;
-	echo '"' > kpart3;
-	echo '"' >> kpart3;
 fi
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 kpartx="$(kpartx -av $IMAGE_FILE)"
@@ -110,14 +107,16 @@ fi
 if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	bootcmd > /dev/null 2>&1
 fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	brcm_config > /dev/null 2>&1
-fi
-if [[ "$PETITBOOT" == "true" ]]; then
+if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	# odroid g12/sm1
 	odroid_bootcmd > /dev/null 2>&1
 fi
-if [[ "$BOOTINI" == "true" ]] && [[ "$BOARD" == "odroidc1" ]]; then
+if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	# odroid c1
 	odroid_bootini > /dev/null 2>&1
+fi
+if [[ "$FAMILY" == "broadcom" ]]; then
+	brcm_config > /dev/null 2>&1
 fi
 if [[ "$ARCH" == "arm" ]]; then
 	# remove 100mb file
