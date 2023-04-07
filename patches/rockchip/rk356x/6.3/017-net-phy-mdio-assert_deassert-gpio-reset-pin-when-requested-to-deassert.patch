@@ -1,0 +1,21 @@
+diff -Naur a/drivers/net/phy/mdio_device.c b/drivers/net/phy/mdio_device.c
+--- a/drivers/net/phy/mdio_device.c	2023-04-02 17:29:29.000000000 -0400
++++ b/drivers/net/phy/mdio_device.c	2023-04-07 07:16:39.509824386 -0400
+@@ -122,8 +122,15 @@
+ 	if (!mdiodev->reset_gpio && !mdiodev->reset_ctrl)
+ 		return;
+ 
+-	if (mdiodev->reset_gpio)
+-		gpiod_set_value_cansleep(mdiodev->reset_gpio, value);
++	if (mdiodev->reset_gpio && value)
++		return;
++
++	if (mdiodev->reset_gpio && !value) {
++		gpiod_set_value_cansleep(mdiodev->reset_gpio, 1);
++		if (mdiodev->reset_assert_delay)
++			fsleep(mdiodev->reset_assert_delay);
++		gpiod_set_value_cansleep(mdiodev->reset_gpio, 0);
++	}
+ 
+ 	if (mdiodev->reset_ctrl) {
+ 		if (value)
