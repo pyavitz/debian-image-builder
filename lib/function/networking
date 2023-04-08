@@ -4,7 +4,7 @@
 extra_firmware(){
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 echo ""
-echo "Adding extra firmware ..."
+echo "Adding ${DEFAULT_MOTD} firmware ..."
 sleep .50
 mkdir -p /lib/firmware/brcm
 cd ~
@@ -62,7 +62,7 @@ if [[ "$FAMILY_EXT" == "rk356x" || "$FAMILY_EXT" == "rk3588" ]]; then
 	fi
 	if [[ "$BOARD" == "khadasedge2" ]]; then
 		cd ~
-		echo -e ""
+		echo ""
 		git clone -b kedge2 https://github.com/pyavitz/firmware.git
 		cp -R firmware/* /lib/firmware
 		rm -fdr firmware
@@ -75,15 +75,16 @@ if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
 	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
 fi
 if [[ "$BOARD" == "tinker" ]] && [[ "$DISTRO" == "ubuntu" ]]; then
+	cd ~
 	echo ""
-	mkdir -p /lib/firmware/updates
-	ln -s /lib/firmware /etc/firmware
-	git clone -b realtek https://github.com/pyavitz/firmware.git /lib/firmware/updates
+	git clone -b realtek https://github.com/pyavitz/firmware.git
+	cp -R firmware/* /lib/firmware
+	rm -fdr firmware
 fi
 if [[ "$BOARD" == "indiedroid-nova" ]]; then
 	cd ~
 	echo ""
-	echo "Installing ${DEFAULT_MOTD} bluetooth support ..."
+	echo "Installing bluetooth support ..."
 	git clone https://github.com/stvhay/rkwifibt
 	# build the hci driver
 	cd rkwifibt
