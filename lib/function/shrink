@@ -2,6 +2,7 @@
 
 # shrink image
 shrink(){
+RELEASE=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
 if [[ -f "scripts/shrink" ]]; then
 	chmod +x scripts/shrink
 	scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img
@@ -15,36 +16,28 @@ if [[ "$P_VALUE" == "p1" ]]; then kpartx_p1; fi
 if [[ "$P_VALUE" == "p2" ]]; then kpartx_p2; fi
 }
 
-p1_uuid(){
-if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
-ROOTFS="${ROOTFS_LOOP}"
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > part-uuid.txt
-source part-uuid.txt
-}
-
 kpartx_p1(){
 if [[ "$P_ROOTFS" == "p1" ]]; then
-	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1;
-	echo '"' > kpart3;
+	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1
+	echo '"' > kpart3
 fi
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
-kpartx="$(kpartx -av $IMAGE_FILE)"
-echo "$kpartx"
-if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
+KPARTX="$(kpartx -av $IMAGE_FILE)"
+echo "$KPARTX"
+if [[ "$RELEASE" == "jammy" ]]; then
 	# snapd woes; grep for higher loop numbers
-	grep -o 'loop[0-9]\+p.' <<<"$kpartx" > kpart2;
+	grep -o 'loop[0-9]\+p.' <<<"$KPARTX" > kpart2
 else
-	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
+	grep -o 'loop.p.' <<<"$KPARTX" > kpart2
 fi
 paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
 ROOTFS="${ROOTFS_LOOP}"
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
 mkdir -p p1
 sleep 1s
 mount "${ROOTFS}" p1
-p1_uuid
 echo ""
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	extlinux > /dev/null 2>&1
@@ -63,27 +56,17 @@ kpartx -d ${IMAGE_FILE}
 rm -f kpart.txt
 }
 
-p2_uuid(){
-if [ -f part-uuid.txt ]; then rm -f part-uuid.txt; fi
-ROOTFS="${ROOTFS_LOOP}"
-ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
-source part-uuid.txt
-}
-
 kpartx_p2(){
 echo 'BOOT_LOOP="/dev/mapper/' > kpart1
 echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
-kpartx="$(kpartx -av $IMAGE_FILE)"
-echo "$kpartx"
-if [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
+KPARTX="$(kpartx -av $IMAGE_FILE)"
+echo "$KPARTX"
+if [[ "$RELEASE" == "jammy" ]]; then
 	# snapd woes; grep for higher loop numbers
-	grep -o 'loop[0-9]\+p.' <<<"$kpartx" > kpart2;
+	grep -o 'loop[0-9]\+p.' <<<"$KPARTX" > kpart2
 else
-	grep -o 'loop.p.' <<<"$kpartx" > kpart2;
+	grep -o 'loop.p.' <<<"$KPARTX" > kpart2
 fi
 echo '"' > kpart3
 echo '"' >> kpart3
@@ -91,10 +74,12 @@ paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
 rm -f {kpart1,kpart2,kpart3}
 source kpart.txt
 BOOT="${BOOT_LOOP}"
+ROOTFS="${ROOTFS_LOOP}"
+ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
+ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
 mkdir -p p1
 sleep 1s
 mount "${BOOT}" p1
-p2_uuid
 echo ""
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	if [[ "$FAMILY" == "broadcom" ]]; then

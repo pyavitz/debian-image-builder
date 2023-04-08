@@ -3,27 +3,27 @@ source lib/function/echoes
 source lib/source
 validation
 source lib/function/rootfs
-source board.txt > /dev/null 2>&1
-source userdata.txt > /dev/null 2>&1
+source board.txt
+source userdata.txt
 HOST_MACHINE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 if [[ -d "sysroot" ]]; then
-	make cleanup;
-	clear -x;
+	make cleanup
+	clear -x
 fi
 if [ $VERBOSE -eq 1 ]; then
-	set -eux -o pipefail;
+	set -eux -o pipefail
 else
-	set -eu -o pipefail;
+	set -eu -o pipefail
 fi
 if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" ]]; then
-	${DISTRO}_keyring;
+	${DISTRO}_keyring
 fi
 if [[ "$HOST_MACHINE" == "Ubuntu" ]]; then
 	:;
 else
 	if [[ "$DISTRO" == "ubuntu" ]]; then
-		ubuntu_setup;
+		ubuntu_setup
 	fi
 fi
 ROOT="sysroot"
