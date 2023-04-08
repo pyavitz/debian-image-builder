@@ -43,7 +43,7 @@ crust_firmware(){
 # The package isn't currently available in the Debian Bullseye repo.
 # For the time being we will use precompiled binaries.
 if [[ "$SERIES" == "sun50i-a64" || "$SERIES" == "sun50i-h5" ]]; then
-	cp ../files/boot/crust/${SERIES}-scp.bin u-boot/scp.bin
+	cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
 fi
 }
 
@@ -60,9 +60,6 @@ echo_extract
 if [[ "$FAMILY" == "amlogic" ]] && [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then
 	pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .
 fi
-if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ -f "rkbin-master.tar.gz" ]]; then
-	pv rkbin-master.tar.gz | tar -xzf - -C .
-fi
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
 	pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
 	mv -f u-boot-${UBOOT_VERSION} u-boot
@@ -70,27 +67,29 @@ else
 	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
 	exit 0
 fi
+# patching
+cp board.txt u-boot/
+cd u-boot
 # arm trusted firmware
 if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
-	cp arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin u-boot/bl31.bin
+	cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
 	crust_firmware
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-		cp arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf u-boot/bl31.elf
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-		RK35="../files/boot/rk35"
-		cp -f ${RK35}/${RKBIN_ELF} u-boot/bl31.elf
-		cp -f ${RK35}/${RKBIN_RAM} u-boot/ram_init.bin
+		RK35="../../files/boot/rk35"
+		cp ../${FAMILY_EXT}-arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
+		cp -f bl31.elf atf-bl31
+		cp -f ${RK35}/${RKBIN_RAM} .
+		cp -f ${RKBIN_RAM} ram_init.bin
 	fi
 fi
-# patching
-cp board.txt u-boot/
-cd u-boot
-if [[ "$UBOOT_VERSION" == "v2023.04" ]] && [[ "$FAMILY_EXT" == "rk356x" ]]; then
-	export BL31="bl31.elf"
-	export ROCKCHIP_TPL="ram_init.bin"
+if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$UBOOT_VERSION" == "v2023.04" ]]; then
+	#export BL31="bl31.elf"
+	export ROCKCHIP_TPL="${RKBIN_RAM}"
 fi
 uboot_patching
 # make defconfig
@@ -204,12 +203,7 @@ fi
 # rockchip
 rockchip-uboot-string(){
 uboot-source
-if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-	arm-trusted-firmware
-fi
-#if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-#	rkbin
-#fi
+arm-trusted-firmware
 u-boot
 if [[ -f "idbloader.img" ]]; then
 	mkdir -p ../../${OUTPUT}

@@ -2,22 +2,43 @@
 
 # ATF
 arm-trusted-firmware(){
-if [[ -e arm-trusted-firmware ]]; then
-	echo -en "${WHT}arm trusted firmware${FIN} "
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd arm-trusted-firmware
-	make realclean > /dev/null 2>&1
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	echo_bdone
-else
-	echo -en "${WHT}arm trusted firmware${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/ARM-software/arm-trusted-firmware.git
-	cd arm-trusted-firmware
-	make realclean > /dev/null 2>&1
-	echo_bdone
+if [[ "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
+	if [[ -d "arm-trusted-firmware" ]]; then
+		echo -en "${WHT}arm trusted firmware${FIN} "
+		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+		cd arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		git config pull.rebase false
+		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+		git pull -q
+		echo_bdone
+	else
+		echo -en "${WHT}arm trusted firmware${FIN} "
+		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+		git clone -q https://github.com/ARM-software/arm-trusted-firmware.git
+		cd arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		echo_bdone
+	fi
+fi
+if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+	if [[ -d "${FAMILY_EXT}-arm-trusted-firmware" ]]; then
+		echo -en "${WHT}arm trusted firmware${FIN} "
+		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+		cd ${FAMILY_EXT}-arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		git config pull.rebase false
+		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+		git pull -q
+		echo_bdone
+	else
+		echo -en "${WHT}arm trusted firmware${FIN} "
+		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+		git clone -q https://github.com/pyavitz/arm-trusted-firmware.git ${FAMILY_EXT}-arm-trusted-firmware
+		cd ${FAMILY_EXT}-arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		echo_bdone
+	fi
 fi
 echo ""
 if [ $CROSSCOMPILE -eq 1 ]; then
@@ -31,18 +52,4 @@ else
 fi
 cd ..
 if [ -f u-boot-${UBOOT_VERSION}.tar.gz ]; then echo ""; else :; fi 
-}
-
-rkbin(){
-#RKURL="https://github.com/rockchip-linux/rkbin/archive/refs/heads"
-RKURL="https://github.com/mj22226/rkbin/archive/refs/heads"
-if [[ -f "rkbin-master.tar.gz" ]]; then
-	echo -en "${WHT}rkbin-master${FIN} "
-	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
-else
-	echo -en "${WHT}rkbin-master${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-	aria2c -q ${RKURL}/master.tar.gz
-	echo_bdone
-fi
 }
