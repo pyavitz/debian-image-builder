@@ -203,13 +203,14 @@ if [[ "$BOARD" == "lepotato" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "renega
 	echo ""
 	echo "Binding eMMC ..."
 	bind_emmc
-	echo "Done."
+	echo "[done]"
 fi
 
 echo ""
 if [[ `ls "${MMC}"` ]]; then
-	echo -e "Partitioning "
-	partition
+	echo -en "Partitioning: "
+	if [[ "$GPT" == "true" ]]; echo -e "[GPT]"; else echo -e "[MSDOS]"; fi
+	partition > /dev/null 2>&1
 	echo -e "[done]"
 else
 	export NEWT_COLORS='root=,black'
@@ -246,7 +247,7 @@ if [[ "$FAMILY" == "samsung" ]]; then
 	dd if=${DIR}/tzsw.bin of=/dev/${DEVICE} seek=1502 conv=fsync
 	dd if=/dev/zero of=/dev/${DEVICE} seek=2015 bs=512 count=32 conv=fsync
 fi
-echo "Done."
+echo "[done]"
 
 echo ""
 echo -en "Fetching UUID "
@@ -257,7 +258,7 @@ echo "Creating fstab and extlinux ..."
 source /etc/opt/part-uuid.txt
 create_fstab
 create_extlinux
-echo "Done."
+echo "[done]"
 
 echo ""
 echo -en "Unmounting eMMC "
