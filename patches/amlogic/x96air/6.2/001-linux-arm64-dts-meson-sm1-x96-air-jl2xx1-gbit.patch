@@ -60,9 +60,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/
  
  	non-removable;
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-02-06 02:06:34.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-02-10 07:50:09.369803648 -0500
-@@ -7,20 +7,33 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-04-06 06:10:58.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-04-11 19:44:52.670768955 -0400
+@@ -7,20 +7,34 @@
  /dts-v1/;
  
  #include "meson-sm1-ac2xx.dtsi"
@@ -74,6 +74,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
  
 +	aliases {
++		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
 +		rtc1 = &vrtc;
 +	};
@@ -98,7 +99,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  
  		assigned-clocks = <&clkc CLKID_MPLL2>,
  				  <&clkc CLKID_MPLL0>,
-@@ -43,8 +56,20 @@
+@@ -43,8 +57,20 @@
  			sound-dai = <&frddr_c>;
  		};
  
@@ -120,7 +121,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,20 +78,75 @@
+@@ -53,20 +79,75 @@
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -168,7 +169,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +				sound-dai = <&acodec>;
 +			};
 +		};
-+	};
+ 	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -177,7 +178,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
- 	};
++	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -198,7 +199,17 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  };
  
  &arb {
-@@ -103,10 +183,68 @@
+@@ -99,14 +180,78 @@
+ 	linux,rc-map-name = "rc-beelink-gs1";
+ };
+ 
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
+ &tdmif_b {
  	status = "okay";
  };
  
@@ -268,9 +279,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +	mali-supply=<&vddgpu>;
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-02-06 02:06:34.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-02-10 07:49:50.051100526 -0500
-@@ -7,20 +7,33 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-04-06 06:10:58.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-04-11 19:45:26.147463948 -0400
+@@ -7,20 +7,34 @@
  /dts-v1/;
  
  #include "meson-sm1-ac2xx.dtsi"
@@ -282,6 +293,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
  
 +	aliases {
++		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
 +		rtc1 = &vrtc;
 +	};
@@ -306,7 +318,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  
  		assigned-clocks = <&clkc CLKID_MPLL2>,
  				  <&clkc CLKID_MPLL0>,
-@@ -43,8 +56,20 @@
+@@ -43,8 +57,20 @@
  			sound-dai = <&frddr_c>;
  		};
  
@@ -328,7 +340,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,20 +78,75 @@
+@@ -53,20 +79,75 @@
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -376,7 +388,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				sound-dai = <&acodec>;
 +			};
 +		};
- 	};
++	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -385,7 +397,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
-+	};
+ 	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -406,7 +418,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  };
  
  &arb {
-@@ -82,7 +162,7 @@
+@@ -82,7 +163,7 @@
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
@@ -415,7 +427,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  	phy-handle = <&external_phy>;
  
  	rx-internal-delay-ps = <800>;
-@@ -90,7 +170,6 @@
+@@ -90,7 +171,6 @@
  
  &ext_mdio {
  	external_phy: ethernet-phy@0 {
@@ -423,7 +435,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  		reg = <0>;
  		max-speed = <1000>;
  
-@@ -104,6 +183,7 @@
+@@ -104,6 +184,7 @@
  	};
  };
  
@@ -431,7 +443,17 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  &frddr_a {
  	status = "okay";
  };
-@@ -124,10 +204,68 @@
+@@ -120,14 +201,78 @@
+ 	linux,rc-map-name = "rc-x96max";
+ };
+ 
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
+ &tdmif_b {
  	status = "okay";
  };
  
@@ -500,9 +522,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
---- /dev/null	2023-02-09 18:47:41.034188779 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-rtc.dts	2023-02-10 07:36:31.877714323 -0500
-@@ -0,0 +1,267 @@
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-rtc.dts	2023-04-11 19:46:02.782129408 -0400
+@@ -0,0 +1,274 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -520,6 +542,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
 +
 +	aliases {
++		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
 +		rtc0 = &rtc;
 +		rtc1 = &vrtc;
@@ -685,6 +708,12 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +	linux,rc-map-name = "rc-beelink-gs1";
 +};
 +
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
 +&tdmif_b {
 +	status = "okay";
 +};
@@ -770,9 +799,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		clock-output-names = "xin32k";
 +	};
 +};
---- /dev/null	2023-02-09 18:47:41.034188779 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit-rtc.dts	2023-02-10 07:36:50.126413312 -0500
-@@ -0,0 +1,288 @@
+--- /dev/null	2023-03-30 04:59:11.183822108 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit-rtc.dts	2023-04-11 19:46:35.394830970 -0400
+@@ -0,0 +1,295 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -790,6 +819,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
 +
 +	aliases {
++		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
 +		rtc0 = &rtc;
 +		rtc1 = &vrtc;
@@ -974,6 +1004,12 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +
 +&ir {
 +	linux,rc-map-name = "rc-x96max";
++};
++
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
 +};
 +
 +&tdmif_b {
