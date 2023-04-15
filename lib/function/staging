@@ -1,7 +1,8 @@
 #!/bin/bash
 
 filesystem(){
-if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs.vfat -n"; else BOOTFS="mkfs.ext2 -L"; fi
+if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; else EXTFS="ext4"; fi
+if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs.vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$EFI" == "true" ]]; then BOOT_LABEL="EFI"; else BOOT_LABEL="BOOT"; fi
 if [[ "$P_VALUE" == "p2" ]]; then MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${IMAGE_LOOP_DEV_BOOT}"; fi
 if [[ "$FSTYPE" == "ext4" ]]; then
@@ -185,7 +186,7 @@ if [[ "$VFAT" == "true" ]] && [[ "$EFI" == "true" ]]; then
 	BOOTFS_TABLE="/boot/efi	vfat	defaults 0 2"
 fi
 if [[ "$VFAT" == "false" ]] && [[ "$EFI" == "false" ]]; then
-	BOOTFS_TABLE="/boot	ext2	rw,relatime,errors=continue 0 2"
+	BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
 fi
 tee p2/etc/fstab <<EOF
 UUID=${BOOT_UUID}	${BOOTFS_TABLE}
