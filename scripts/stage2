@@ -376,43 +376,44 @@ mv -f root-ini /root/.config/mc/ini
 mv -f nanorc-root /root/.nanorc
 chown -R root:root /root
 if [ $USERACCT -eq 0 ]; then
-	mkdir -p /home/${USERNAME}/.config/mc;
-	mv -f user-ini /home/${USERNAME}/.config/mc/ini;
-	mv -f nanorc-user /home/${USERNAME}/.nanorc;
-	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
+	mkdir -p /home/${USERNAME}/.config/mc
+	mv -f user-ini /home/${USERNAME}/.config/mc/ini
+	mv -f nanorc-user /home/${USERNAME}/.nanorc
+	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 fi
 
 # Firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
 	if [[ "$BOARD" == "bananapim2zero" || "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" || "$BOARD" == "cubietruck" ]]; then
-		alt_firmware;
+		alt_firmware
 	else
-		extra_firmware;
+		extra_firmware
 	fi
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "radxazero" ]]; then
-		radxazero_firmware;
+		radxazero_firmware
 	else
-		extra_firmware;
+		extra_firmware
 	fi
 fi
 if [[ "$FAMILY" == "freescale" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
-	extra_firmware;
+	extra_firmware
 fi
 if [[ "$FAMILY" == "broadcom" ]]; then
-	brcm_firmware;
+	brcm_firmware
 fi
 
 # Network Setup
+realtek_conf > /dev/null 2>&1
 if [ $NETWORKMANAGER -eq 1 ]; then
-	networkmanager-setup > /dev/null 2>&1;
-	networkmanager-credentials > /dev/null 2>&1;
+	networkmanager-setup > /dev/null 2>&1
+	networkmanager-credentials > /dev/null 2>&1
 else
-	ifupdown-setup > /dev/null 2>&1;
-	ifupdown-credentials > /dev/null 2>&1;
+	ifupdown-setup > /dev/null 2>&1
+	ifupdown-credentials > /dev/null 2>&1
 	if [[ "$BOARD" == "orangepir1" || "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
-		router_ifupdown;
+		router_ifupdown
 	fi
 fi
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" || "$DISTRO" == "kali" ]]; then
@@ -421,9 +422,9 @@ fi
 
 # Allocate zramswap
 if [[ -f "/etc/default/zramswap" ]]; then
-	sed -i 's/#ALLOCATION=256/ALLOCATION=1024/g' /etc/default/zramswap;
-	sed -i 's/#SIZE=256/SIZE=1024/g' /etc/default/zramswap;
-	sed -i 's/#PRIORITY=100/PRIORITY=100/g' /etc/default/zramswap;
+	sed -i 's/#ALLOCATION=256/ALLOCATION=1024/g' /etc/default/zramswap
+	sed -i 's/#SIZE=256/SIZE=1024/g' /etc/default/zramswap
+	sed -i 's/#PRIORITY=100/PRIORITY=100/g' /etc/default/zramswap
 fi
 
 # Regulatory db

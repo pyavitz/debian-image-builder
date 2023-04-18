@@ -117,8 +117,15 @@ cd ~
 rm -fdr wireless-regdb
 }
 
-# wireless conf files (network-manager)
-rtl88x2bu_conf(){
+# wireless conf files
+realtek_conf(){
+echo "options 8723bs rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8723bs.conf
+echo "options 8723ds rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8723ds.conf
+echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
+echo "options 88x2cs rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/88x2cs.conf
+echo "options 88XXau rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/88XXau.conf
+chown root:root /etc/modprobe.d/{8723bs.conf,8723ds.conf,8821cu.conf,88XXau.conf}
+
 mkdir -p /usr/lib/NetworkManager/conf.d/
 tee /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf <<EOF
 # Certain drivers are known not to support changing the MAC address.
@@ -131,9 +138,7 @@ wifi.cloned-mac-address=preserve
 ethernet.cloned-mac-address=preserve
 EOF
 chown root:root /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf
-}
 
-rtl8821cu_conf(){
 mkdir -p /usr/lib/NetworkManager/conf.d/
 tee /usr/lib/NetworkManager/conf.d/rtl8821cu.conf <<EOF
 # Certain drivers are known not to support changing the MAC address.
@@ -218,13 +223,6 @@ if [ $RTL8188EU -eq 1 ]; then
 	fi
 fi
 
-# realtek conf
-echo "options 8723bs rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8723bs.conf
-echo "options 8723ds rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8723ds.conf
-echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/8821cu.conf
-echo "options 88XXau rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/88XXau.conf
-chown root:root /etc/modprobe.d/{8723bs.conf,8723ds.conf,8821cu.conf,88XXau.conf}
-
 # ifupdown interfaces and wpa_supplicant files
 tee /etc/network/interfaces <<EOF
 # Interfaces
@@ -307,8 +305,6 @@ else
 	echo "[connection]" > /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf
 	echo "wifi.powersave = 2" >> /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf
 fi
-rtl88x2bu_conf
-rtl8821cu_conf
 }
 
 ifupdown-credentials(){
