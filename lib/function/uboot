@@ -80,8 +80,12 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
 		RK35="../../files/boot/rk35"
-		cp ../${FAMILY_EXT}-arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
-		cp -f bl31.elf atf-bl31
+		if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "nanopir5c" ]]; then
+			cp ../${FAMILY_EXT}-arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
+		fi
+		if [[ "$BOARD" == "odroidm1" || "$BOARD" == "radxae25" ]]; then
+			cp -f ${RK35}/${RKBIN_ELF} bl31.elf
+		fi
 		cp -f ${RK35}/${RKBIN_RAM} .
 		cp -f ${RKBIN_RAM} ram_init.bin
 	fi
