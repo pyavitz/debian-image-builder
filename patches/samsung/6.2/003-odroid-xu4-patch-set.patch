@@ -1,0 +1,268 @@
+diff -Naur a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+--- a/drivers/media/i2c/Kconfig	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/i2c/Kconfig	2022-11-03 12:55:59.650630859 -0400
+@@ -1595,4 +1595,11 @@
+ 
+ endmenu
+ 
++config LT8619C
++	tristate "LT8619c HDMI to LVDS Converter"
++	depends on OF
++	select REGMAP_I2C
++	help
++	  lt8619c chip driver.
++
+ endif # VIDEO_DEV
+diff -Naur a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+--- a/drivers/media/i2c/Makefile	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/i2c/Makefile	2022-11-03 12:55:59.650630859 -0400
+@@ -142,3 +142,5 @@
+ obj-$(CONFIG_VIDEO_VS6624) += vs6624.o
+ obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
+ obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
++
++obj-$(CONFIG_LT8619C)		+= lt8619c.o
+diff -Naur a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h b/drivers/media/platform/samsung/exynos-gsc/gsc-core.h
+--- a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/platform/samsung/exynos-gsc/gsc-core.h	2022-11-03 12:55:59.646630859 -0400
+@@ -481,9 +481,9 @@
+ {
+ 	struct gsc_frame *frame;
+ 
+-	if (V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE == type) {
++	if (V4L2_BUF_TYPE_VIDEO_OUTPUT == type || V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE == type) {
+ 		frame = &ctx->s_frame;
+-	} else if (V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == type) {
++	} else if (V4L2_BUF_TYPE_VIDEO_CAPTURE == type || V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE == type) {
+ 		frame = &ctx->d_frame;
+ 	} else {
+ 		pr_err("Wrong buffer/video queue type (%d)", type);
+diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c
+--- a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c	2022-11-03 12:55:59.650630859 -0400
+@@ -1783,6 +1783,31 @@
+  * V4L2 controls
+  */
+ 
++static int vidioc_decoder_cmd(struct file *file, void *priv,
++			struct v4l2_decoder_cmd *cmd)
++{
++	struct s5p_jpeg_ctx *ctx = fh_to_ctx(priv);
++	struct vb2_queue *vq_src = v4l2_m2m_get_vq(ctx->fh.m2m_ctx, V4L2_BUF_TYPE_VIDEO_OUTPUT);
++	struct vb2_v4l2_buffer *buf;
++
++	switch (cmd->cmd) {
++	case V4L2_DEC_CMD_STOP:
++		if (cmd->flags != 0)
++			return -EINVAL;
++		if (!vb2_is_streaming(vq_src))
++			return -EINVAL;
++
++		buf = v4l2_m2m_last_src_buf(ctx->fh.m2m_ctx);
++		buf->flags |= V4L2_BUF_FLAG_LAST;
++
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int s5p_jpeg_g_selection(struct file *file, void *priv,
+ 			 struct v4l2_selection *s)
+ {
+@@ -1817,9 +1842,6 @@
+ 	return 0;
+ }
+ 
+-/*
+- * V4L2 controls
+- */
+ static int s5p_jpeg_s_selection(struct file *file, void *fh,
+ 				  struct v4l2_selection *s)
+ {
+@@ -2011,6 +2033,8 @@
+ 	.vidioc_streamon		= v4l2_m2m_ioctl_streamon,
+ 	.vidioc_streamoff		= v4l2_m2m_ioctl_streamoff,
+ 
++	.vidioc_decoder_cmd             = vidioc_decoder_cmd,
++
+ 	.vidioc_g_selection		= s5p_jpeg_g_selection,
+ 	.vidioc_s_selection		= s5p_jpeg_s_selection,
+ 
+@@ -2457,13 +2481,6 @@
+ 
+ 	size = q_data->size;
+ 
+-	/*
+-	 * header is parsed during decoding and parsed information stored
+-	 * in the context so we do not allow another buffer to overwrite it
+-	 */
+-	if (ctx->mode == S5P_JPEG_DECODE)
+-		count = 1;
+-
+ 	*nbuffers = count;
+ 	*nplanes = 1;
+ 	sizes[0] = size;
+@@ -2571,6 +2588,7 @@
+ static void s5p_jpeg_stop_streaming(struct vb2_queue *q)
+ {
+ 	struct s5p_jpeg_ctx *ctx = vb2_get_drv_priv(q);
++	struct vb2_v4l2_buffer *buf;
+ 
+ 	/*
+ 	 * STREAMOFF is an acknowledgment for resolution change event.
+@@ -2583,6 +2601,11 @@
+ 		ctx->state = JPEGCTX_RUNNING;
+ 	}
+ 
++	while ((buf = v4l2_m2m_src_buf_remove(ctx->fh.m2m_ctx)))
++		v4l2_m2m_buf_done(buf, VB2_BUF_STATE_ERROR);
++	while ((buf = v4l2_m2m_dst_buf_remove(ctx->fh.m2m_ctx)))
++		v4l2_m2m_buf_done(buf, VB2_BUF_STATE_ERROR);
++
+ 	pm_runtime_put(ctx->jpeg->dev);
+ }
+ 
+@@ -2682,6 +2705,8 @@
+ 	v4l2_m2m_buf_done(src_buf, state);
+ 	if (curr_ctx->mode == S5P_JPEG_ENCODE)
+ 		vb2_set_plane_payload(&dst_buf->vb2_buf, 0, payload_size);
++	if (src_buf->flags & V4L2_BUF_FLAG_LAST)
++		dst_buf->flags |= V4L2_BUF_FLAG_LAST;
+ 	v4l2_m2m_buf_done(dst_buf, state);
+ 
+ 	curr_ctx->subsampling = s5p_jpeg_get_subsampling_mode(jpeg->regs);
+diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c
+--- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c	2022-11-03 12:55:59.650630859 -0400
+@@ -858,7 +858,7 @@
+ 	 * We'll do mostly sequential access, so sacrifice TLB efficiency for
+ 	 * faster allocation.
+ 	 */
+-	q->dma_attrs = DMA_ATTR_ALLOC_SINGLE_PAGES;
++	q->dma_attrs = DMA_ATTR_ALLOC_SINGLE_PAGES | DMA_ATTR_NO_KERNEL_MAPPING;
+ 	q->mem_ops = &vb2_dma_contig_memops;
+ 	q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
+ 	ret = vb2_queue_init(q);
+@@ -893,7 +893,7 @@
+ 	 * We'll do mostly sequential access, so sacrifice TLB efficiency for
+ 	 * faster allocation.
+ 	 */
+-	q->dma_attrs = DMA_ATTR_ALLOC_SINGLE_PAGES;
++	q->dma_attrs = DMA_ATTR_ALLOC_SINGLE_PAGES | DMA_ATTR_NO_KERNEL_MAPPING;
+ 	q->mem_ops = &vb2_dma_contig_memops;
+ 	q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
+ 	ret = vb2_queue_init(q);
+@@ -941,6 +941,11 @@
+ 	mfc_debug_enter();
+ 	if (dev)
+ 		mutex_lock(&dev->mfc_mutex);
++
++	/* stop streaming */
++	vb2_streamoff(&ctx->vq_src, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE);
++	vb2_streamoff(&ctx->vq_dst, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE);
++
+ 	vb2_queue_release(&ctx->vq_src);
+ 	vb2_queue_release(&ctx->vq_dst);
+ 	if (dev) {
+diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c
+--- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c	2022-11-03 12:55:59.650630859 -0400
+@@ -631,8 +631,8 @@
+ 	struct s5p_mfc_ctx *ctx = fh_to_ctx(priv);
+ 
+ 	if (ctx->state == MFCINST_ERROR) {
+-		mfc_err("Call on QBUF after unrecoverable error\n");
+-		return -EIO;
++		//mfc_err("Call on QBUF after unrecoverable error\n");
++		return -EAGAIN;
+ 	}
+ 	if (buf->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
+ 		return vb2_qbuf(&ctx->vq_src, NULL, buf);
+@@ -651,8 +651,8 @@
+ 	int ret;
+ 
+ 	if (ctx->state == MFCINST_ERROR) {
+-		mfc_err_limited("Call on DQBUF after unrecoverable error\n");
+-		return -EIO;
++		//mfc_err_limited("Call on DQBUF after unrecoverable error\n");
++		return -EAGAIN;
+ 	}
+ 
+ 	switch (buf->type) {
+diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c
+--- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c	2022-10-30 18:19:28.000000000 -0400
++++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c	2022-11-03 12:55:59.650630859 -0400
+@@ -1214,6 +1214,7 @@
+ {
+ 	struct s5p_mfc_dev *dev = ctx->dev;
+ 	struct s5p_mfc_buf *mb_entry;
++	struct s5p_mfc_buf *dst_buf;
+ 	unsigned long enc_y_addr = 0, enc_c_addr = 0;
+ 	unsigned long mb_y_addr, mb_c_addr;
+ 	int slice_type;
+@@ -1233,8 +1234,12 @@
+ 					&mb_entry->b->vb2_buf, 0);
+ 			mb_c_addr = vb2_dma_contig_plane_dma_addr(
+ 					&mb_entry->b->vb2_buf, 1);
++			dst_buf = list_entry(ctx->dst_queue.next,
++					struct s5p_mfc_buf, list);
+ 			if ((enc_y_addr == mb_y_addr) &&
+ 						(enc_c_addr == mb_c_addr)) {
++				dst_buf->b->timecode = mb_entry->b->timecode;
++				dst_buf->b->vb2_buf.timestamp = mb_entry->b->vb2_buf.timestamp;
+ 				list_del(&mb_entry->list);
+ 				ctx->src_queue_cnt--;
+ 				vb2_buffer_done(&mb_entry->b->vb2_buf,
+@@ -1247,8 +1252,12 @@
+ 					&mb_entry->b->vb2_buf, 0);
+ 			mb_c_addr = vb2_dma_contig_plane_dma_addr(
+ 					&mb_entry->b->vb2_buf, 1);
++			dst_buf = list_entry(ctx->dst_queue.next,
++					struct s5p_mfc_buf, list);
+ 			if ((enc_y_addr == mb_y_addr) &&
+ 						(enc_c_addr == mb_c_addr)) {
++				dst_buf->b->timecode = mb_entry->b->timecode;
++				dst_buf->b->vb2_buf.timestamp = mb_entry->b->vb2_buf.timestamp;
+ 				list_del(&mb_entry->list);
+ 				ctx->ref_queue_cnt--;
+ 				vb2_buffer_done(&mb_entry->b->vb2_buf,
+diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
+--- a/scripts/Makefile.lib	2023-04-20 06:37:00.000000000 -0400
++++ b/scripts/Makefile.lib	2023-04-21 17:49:05.840646699 -0400
+@@ -340,12 +340,13 @@
+ # DTC
+ # ---------------------------------------------------------------------------
+ DTC ?= $(objtree)/scripts/dtc/dtc
+-DTC_FLAGS += -Wno-interrupt_provider \
++DTC_FLAGS += -Wno-interrupt_provider --symbol \
+ 	-Wno-unique_unit_address
+ 
+ # Disable noisy checks by default
+ ifeq ($(findstring 1,$(KBUILD_EXTRA_WARN)),)
+ DTC_FLAGS += -Wno-unit_address_vs_reg \
++	-Wno-gpios_property \
+ 	-Wno-avoid_unnecessary_addr_size \
+ 	-Wno-alias_paths \
+ 	-Wno-graph_child_address \
+@@ -439,6 +440,18 @@
+ $(obj)/%.dtbo: $(src)/%.dtso $(DTC) FORCE
+ 	$(call if_changed_dep,dtc)
+ 
++quiet_cmd_dtco = DTCO    $@
++cmd_dtco = mkdir -p $(dir ${dtc-tmp}) ; \
++	$(CPP) $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ; \
++	$(DTC) -@ -H epapr -O dtb -o $@ -b 0 \
++		-i $(dir $<) $(DTC_FLAGS) \
++		-Wno-interrupts_property \
++		-d $(depfile).dtc.tmp $(dtc-tmp) ; \
++	cat $(depfile).pre.tmp $(depfile).dtc.tmp > $(depfile)
++
++$(obj)/%.dtbo: $(obj)/%.dts FORCE
++	$(call if_changed_dep,dtco)
++
+ dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
+ 
+ # Bzip2
