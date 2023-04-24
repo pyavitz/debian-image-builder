@@ -1,61 +1,52 @@
 #!/bin/bash
-# Description: Install to eMMC
+# Description: Transfer to eMMC
 # Destination: /usr/local/bin/write2mmc
 
+# LANGUAGE
+export LC_ALL=$(locale -a|grep -ix 'c.utf-\?8' || echo C)
+
+# CAUTION
+WARNING (){
+export NEWT_COLORS='root=,black'
+whiptail --msgbox "    $WARNING_MSG" 0 0
+exit 0
+}
+
+if [ "$USER" != "root" ]; then
+        echo "Please run this as root or with sudo privileges."
+        exit 1
+fi
 if [[ -f "/etc/opt/board.txt" ]]; then
-	DIR="/usr/lib/u-boot"
-	FSTYPE=`findmnt -v -n -o FSTYPE /`
-	if [[ `lsblk | grep boot0` ]]; then
-		MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
-	fi
-	source /etc/opt/board.txt
+	. /etc/opt/board.txt
 else
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Your board is not supported." 0 0
-	exit 0
+	WARNING_MSG="Your board is not supported."
+	WARNING
+fi
+if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "amlogic" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
+	:;
+else
+	WARNING_MSG="Your board is not supported."
+	WARNING
+fi
+if [[ -d "/usr/lib/u-boot" ]]; then
+	UBOOT_DIR="/usr/lib/u-boot"
+else
+	WARNING_MSG="Your board is not supported."
+	WARNING
+fi
+if [[ -f "/etc/default/write2mmc" ]]; then
+	. /etc/default/write2mmc
+else
+	echo 'DISCLAIMER="true"' | tee /etc/default/write2mmc > /dev/null 2>&1
+	echo 'VERBOSITY="0"' | tee -a /etc/default/write2mmc > /dev/null 2>&1
+	. /etc/default/write2mmc
 fi
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	:;
 else
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Script requires a internet connection." 0 0
-	exit 0
+	WARNING_MSG="Script requires a internet connection."
+	WARNING
 fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Partition scheme is not supported." 0 0
-	exit 0
-fi
-if [[ "$FSTYPE" == "ext4" ]]; then
-	:;
-else
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    The $FSTYPE filesystem is not supported." 0 0
-	exit 0
-fi
-
-# functions
-supported_boards(){
-if [[ "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" ]]; then
-	# allwinner
-	supported=1;
-fi
-if [[ "$BOARD" == "bananapim5" || "$BOARD" == "lepotato" || "$BOARD" == "odroidc4" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
-	# amlogic
-	supported=1;
-fi
-if [[ "$BOARD" == "pinebookpro" || "$BOARD" == "nanopct4" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" || "$BOARD" == "radxae25" || "$BOARD" == "renegade" ]]; then
-	# rockchip
-	supported=1;
-fi
-if [[ "$BOARD" == "odroidxu4" ]]; then
-	# samsung
-	supported=1;
-fi
-}
-
-# progress bar
-check_progressbar(){
 if [[ -f "/etc/opt/progressbar.txt" ]]; then
 	:;
 else
@@ -63,38 +54,263 @@ else
 	wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/
 	mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt
 fi
-}
+if [[ `command -v mkfs.f2fs` ]]; then :; else apt install -y f2fs-tools; fi
 
-# bind emmc
-bind_emmc(){
-if [[ "$BOARD" == "lepotato" ]]; then
-	MMC_TARGET="d0074000.mmc"
-	SOC_FAMILY="meson-gx-mmc"
-fi
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	MMC_TARGET="ffe07000.mmc"
-	SOC_FAMILY="meson-gx-mmc"
-fi
-if [[ "$BOARD" == "renegade" ]]; then
-	MMC_TARGET="ff520000.mmc"
-	SOC_FAMILY="dwmmc_rockchip"
-fi
-echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
-sleep .75
-echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
-sleep .75
-lsblk -dno NAME,SIZE
-}
+# STYLE
+BLD="\033[1m"
+ITL="\033[3m"
+FIN="\033[0m"
+EE="echo -e"
+EN="echo -en"
 
-# partition
-partition(){
+$EE
+$EE "${BLD}Would you like to transfer the current install to another drive?${FIN}"
+$EN "${ITL}YES / NO:${FIN} "
+read CHOICE
+if [[ "$CHOICE" == "YES" || "$CHOICE" == "Yes" || "$CHOICE" == "yes" ]]; then
+	if [[ "$DISCLAIMER" == "true" ]]; then
+		export NEWT_COLORS='root=,black'
+		whiptail --title "DISCLAIMER" --msgbox "The write2mmc script can transfer your current install to other drives besides the eMMC. Being able to boot from USB or NVME depends more on the maturity of U-Boot, than the ability to write the OS to those drives." 0 0
+		sed -i 's/DISCLAIMER="true"/DISCLAIMER="false"/g' /etc/default/write2mmc
+	fi
+else
+	$EE "Program Terminated."
+	exit 0
+fi
+
+# BIND EMMC
+$EE ""
+$EE "${BLD}If you haven't already, attach the eMMC module and select Bind.${FIN}"
+$EE "${BLD}If this doesn't apply to you, select Skip.${FIN}"
+options=("Bind" "Skip")
+select opt in "${options[@]}"
+do
+	case $opt in
+		"Bind")
+			if [[ "$BOARD" == "lepotato" ]]; then
+				MMC_TARGET="d0074000.mmc"
+				SOC_FAMILY="meson-gx-mmc"
+			fi
+			if [[ "$FAMILY_EXT" == "odroid" ]]; then
+				MMC_TARGET="ffe07000.mmc"
+				SOC_FAMILY="meson-gx-mmc"
+			fi
+			if [[ "$BOARD" == "renegade" ]]; then
+				MMC_TARGET="ff520000.mmc"
+				SOC_FAMILY="dwmmc_rockchip"
+			fi
+			echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
+			sleep .75
+			echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
+			sleep .75
+			#lsblk -dno NAME,SIZE
+			break
+			;;
+		"Skip")
+			break
+			;;
+		*) echo "invalid option $REPLY";;
+	esac
+done
+
+# CURRENT
+$EE ""
+$EE "${BLD}${ITL}CURRENT PARTITION SCHEME${FIN}"
+if [[ `findmnt -v -n -o SOURCE /boot` ]]; then
+	CB_NODE=`findmnt -v -n -o SOURCE /boot`
+	CB_FSTYPE=`findmnt -v -n -o FSTYPE /boot`
+	$EN "BOOT: ${BLD}${CB_NODE}${FIN} "
+	$EE "FSTYPE: ${BLD}${CB_FSTYPE}${FIN}"
+fi
+if [[ `findmnt -v -n -o SOURCE /` ]]; then
+	CR_NODE=`findmnt -v -n -o SOURCE /`
+	CR_FSTYPE=`findmnt -v -n -o FSTYPE /`
+	$EN "ROOT: ${BLD}${CR_NODE}${FIN} "
+	$EE "FSTYPE: ${BLD}${CR_FSTYPE}${FIN}"
+fi
+
+# AVAILABLE 
+if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1 || \
+	[[ `ls /dev/nvme*[a-z]` ]] > /dev/null 2>&1 || \
+		[[ `ls /dev/mmcblk[0-9]` ]] > /dev/null 2>&1; then
+	$EE ""
+	$EE "${BLD}${ITL}AVAILABLE DRIVES${FIN}"
+	if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1; then
+		HD_CHK=`findmnt -v -n -o SOURCE / | sed 's/.$//'`
+		ls /dev/sd*[a-z]
+	fi
+	if [[ `ls /dev/nvme*[a-z]` ]] > /dev/null 2>&1; then
+		NVME_CHK=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
+		ls /dev/nvme*[0-9]
+	fi
+	if [[ `ls /dev/mmcblk[0-9]` ]] > /dev/null 2>&1; then
+		MMC_CHK=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
+		ls /dev/mmcblk[0-9]
+		if [[ `lsblk | grep boot0` ]]; then
+			EMMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
+		fi
+		if [[ "$EMMC" == "$MMC_CHK" ]]; then
+			$EE ""
+			$EE "${BLD}eMMC Detected:${FIN} $EMMC"
+		fi
+	fi
+else
+	$EE ""
+	$EE "There are no available drives to tranfer too."
+fi
+
+# CHOOSE DRIVE
+$EE ""
+$EE "${BLD}From the list of AVAILABLE DRIVES above, write in the device node"
+$EN "you want to transfer the current install too:${FIN} "
+$EN "/dev/"
+read NODE
+DEVICE_NODE="/dev/${NODE}"
+if [[ "$HD_CHK" == "$DEVICE_NODE" || "$NVME_CHK" == "$DEVICE_NODE" || "$MMC_CHK" == "$DEVICE_NODE" ]]; then
+	$EE
+	$EE "${BLD}WARNING:${FIN} The drive you selected is currently in use."
+	exit 0
+fi
+if [[ "$EMMC" == "$DEVICE_NODE" ]]; then
+	EMMC_TRUE="1"
+fi
+	
+# PARTITION SCHEME
+$EE ""
+$EE "${BLD}Select a Partition Scheme${FIN}"
+options=("One Partition" "Two Partitions")
+select opt in "${options[@]}"
+do
+	case $opt in
+		"One Partition")
+			P_VALUE="p1"
+			break
+			;;
+		"Two Partitions")
+			P_VALUE="p2"
+			break
+			;;
+		*) echo "invalid option $REPLY";;
+	esac
+done
+
+# FILESYSTEM TYPES
+if [[ "$P_VALUE" == "p2" ]]; then
+	$EE ""
+	$EE "${BLD}Filesystem Types${FIN}"
+	$EE "${ITL}BOOT OPTIONS: ${FIN}vfat ext2 ext4"
+	$EE "${ITL}ROOT OPTIONS: ${FIN}btrfs ext4 f2fs xfs"
+	$EE ""
+	$EN "BOOT Partition: "
+	read B_FSTYPE
+	$EN "ROOT Partition: "
+	read R_FSTYPE
+else
+	R_FSTYPE="ext4"
+fi
+
+# BOOT PARTITION VARIABLES
+if [[ "$P_VALUE" == "p1" ]]; then
+	P_ROOTFS="p1"
+	if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
+		P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
+	fi
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	if [[ "$B_FSTYPE" == "vfat" ]]; then
+		BOOTFS="mkfs.vfat -n"
+		BOOTFS_TABLE="/boot	vfat	defaults 0 2"
+	fi
+	if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+		EXTFS="${B_FSTYPE}"
+		BOOTFS="mkfs.${EXTFS} -L"
+		BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
+	fi
+	P_BOOT="p1"
+	P_ROOTFS="p2"
+	BOOT_LABEL="BOOT"
+	if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
+		P_BOOT=`echo $P_BOOT | sed 's/p//g'`
+		P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
+	fi
+	MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${DEVICE_NODE}${P_BOOT}"
+fi
+
+# ROOT PARTITION VARIABLES
+if [[ "$R_FSTYPE" == "btrfs" ]]; then
+	MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+	MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+	ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+	RESIZEFS="btrfs filesystem resize max /mnt/${P_ROOTFS}"
+fi
+if [[ "$R_FSTYPE" == "ext4" ]]; then
+	MAKE_ROOTFS="mkfs.ext4 -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+	MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+	ROOTFS_TABLE="ext4	defaults,noatime,commit=600,errors=remount-ro 0 1"
+	ROOT_FSTYPE="rootfstype=ext4"
+	RESIZEFS="resize2fs ${DEVICE_NODE}${P_ROOTFS}"
+fi
+if [[ "$R_FSTYPE" == "f2fs" ]]; then
+	MAKE_ROOTFS="mkfs.f2fs -f -l ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+	MOUNT_ROOTFS="mount -o rw,acl,active_logs=6,background_gc=on,user_xattr ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+	ROOTFS_TABLE="f2fs	rw,acl,active_logs=6,background_gc=on,user_xattr 0 0"
+	ROOT_FSTYPE="rootfstype=f2fs"
+	RESIZEFS="resize.f2fs ${DEVICE_NODE}${P_ROOTFS}"
+fi
+if [[ "$R_FSTYPE" == "xfs" ]]; then
+	MAKE_ROOTFS="mkfs.xfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+	MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+	ROOTFS_TABLE="xfs	defaults,noatime 0 1"
+	ROOT_FSTYPE="rootfstype=xfs"
+	RESIZEFS="xfs_growfs -d /mnt/${P_ROOTFS}"
+fi
+
+# SUMMARY
+$EE ""
+$EE "${BLD}Summary List${FIN}"
+$EE "Board: $DEFAULT_MOTD"
+$EN "Platform: "; $EE "$FAMILY" | sed -e 's/\(.*\)/\U\1/'
+$EE "Drive: $DEVICE_NODE"
+$EN "Partitions: "; $EE "$P_VALUE" | sed 's/p//g'
+if [[ "$P_VALUE" == "p2" ]]; then
+	$EN "BOOT FSTYPE: "; $EE "$B_FSTYPE"
+	$EN "ROOT FSTYPE: "; $EE "$R_FSTYPE"
+else
+	$EN "ROOT FSTYPE: "; $EE "$R_FSTYPE"
+fi
+$EE ""
+options=("Continue" "Quit")
+select opt in "${options[@]}"
+do
+	case $opt in
+		"Continue")
+			break
+			;;
+		"Quit")
+			$EE "Program Terminated."
+			exit 0
+			;;
+		*) echo "invalid option $REPLY";;
+	esac
+done
+
+# PARTITION FUNCTIONS
+one_partition (){
+# wipe drive
+sfdisk --delete $DEVICE_NODE
+sleep 1
+kpartx $DEVICE_NODE
+sleep .25
+kpartx -u $DEVICE_NODE
+sleep 1
+# fin
 if [[ "$GPT" == "true" ]]; then
-	dd if=/dev/zero of="${MMC}" bs=8M count=1
-	parted --script "${MMC}" \
+	parted --script "${DEVICE_NODE}" \
 	mklabel gpt \
 	mkpart 1 ext2 16MiB 100%
-else
-	dd if=/dev/zero of="${MMC}" bs=8M count=1
+fi
+if [[ "$GPT" == "false" ]]; then
 	echo -e "o
 	n
 	p
@@ -106,20 +322,22 @@ else
 	4101561
 
 	p
-	w" | fdisk "${MMC}"
+	w" | fdisk "${DEVICE_NODE}"
 fi
-partprobe "${MMC}"
-if [[ `ls "${MMC}p1"` ]]; then
-	echo 'y' | mkfs.ext4 -L ROOTFS "${MMC}p1"
+partprobe "${DEVICE_NODE}"
+sleep 1.25
+if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
+	mkdir -p /mnt/${P_ROOTFS}
+	echo 'y' | $MAKE_ROOTFS
 	sleep .50
-	mount "${MMC}p1" /mnt
+	mount "${DEVICE_NODE}${P_ROOTFS}" /mnt/${P_ROOTFS}
 	sync
-	umount /mnt
+	umount /mnt/${P_ROOTFS}
 	sleep .50
-	mount -o defaults,noatime "${MMC}p1" /mnt
-	bash growpart ${MMC} 1
+	$MOUNT_ROOTFS
+	bash growpart ${DEVICE_NODE} 1
 	sleep .75
-	resize2fs "${MMC}p1"
+	${RESIZEFS} "${DEVICE_NODE}${P_ROOTFS}"
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Partitioning failed!" 0 0
@@ -127,13 +345,124 @@ else
 fi
 }
 
-# rsync
-transfer(){
-cd /
-rsync -apvx --progress --stats --human-readable . /mnt > /dev/null 
+two_partitions (){
+# wipe drive
+sfdisk --delete $DEVICE_NODE
+sleep 1
+kpartx $DEVICE_NODE
+sleep .25
+kpartx -u $DEVICE_NODE
+sleep 1
+# fin
+if [[ "$B_FSTYPE" == "vfat" ]]; then
+	if [[ "$GPT" == "true" ]]; then
+		parted --script "${DEVICE_NODE}" \
+		mklabel gpt \
+		mkpart 1 fat32 16MiB 256MiB \
+		mkpart 2 ext2 256MiB 100%
+	fi
+	if [[ "$GPT" == "false" ]]; then
+		echo -e "o
+		n
+		p
+		1
+		${OFFSET}
+		526335
+		a
+		c
+		t
+		b
+		n
+		p
+		2
+		526336
+
+		p
+		w" | fdisk "${DEVICE_NODE}"
+	fi
+	if [[ "$EFI" == "true" ]]; then
+		parted --script "${DEVICE_NODE}" set 1 esp on
+	fi
+fi
+if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+	echo -e "o
+	n
+	p
+	1
+	${OFFSET}
+	526335
+	n
+	p
+	2
+	526336
+
+	p
+	w" | fdisk "${DEVICE_NODE}"
+fi
+partprobe "${DEVICE_NODE}"
+sleep 1.25
+if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
+	mkdir -p /mnt/${P_BOOT}
+	mkdir -p /mnt/${P_ROOTFS}
+	echo 'y' | $MAKE_BOOTFS
+	echo 'y' | $MAKE_ROOTFS
+	sleep .50
+	mount "${DEVICE_NODE}${P_BOOT}" /mnt/${P_BOOT}
+	mount "${DEVICE_NODE}${P_ROOTFS}" /mnt/${P_ROOTFS}
+	if [[ "$R_FSTYPE" == "btrfs" ]]; then
+		btrfs subvolume create /mnt/${P_ROOTFS}/@
+	fi
+	sync
+	umount /mnt/${P_ROOTFS}
+	sleep .50
+	if [[ "$R_FSTYPE" == "f2fs" ]]; then
+		$RESIZEFS
+		sleep .75
+	fi
+	$MOUNT_ROOTFS
+	if [[ "$R_FSTYPE" == "btrfs" || "$R_FSTYPE" == "ext4" || "$R_FSTYPE" == "xfs"  ]]; then
+		bash growpart ${DEVICE_NODE} 2
+		sleep .75
+		$RESIZEFS
+	fi
+else
+	export NEWT_COLORS='root=,black'
+	whiptail --msgbox "    Partitioning failed!" 0 0
+	exit 0
+fi
 }
 
-transfer_to_emmc(){
+# SETUP PARTITIONS
+if [[ "$P_VALUE" == "p1" ]]; then
+	if [[ "$VERBOSITY" = "1" ]]; then
+		one_partition
+	else
+		$EE
+		$EN "Partitioning: $DEVICE_NODE "
+		one_partition > /dev/null 2>&1
+		$EE "[done]"
+	fi
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	if [[ "$VERBOSITY" = "1" ]]; then
+		two_partitions
+	else
+		$EE
+		$EN "Partitioning: $DEVICE_NODE "
+		two_partitions > /dev/null 2>&1
+		$EE "[done]"
+	fi
+fi
+
+# RSYNC
+transfer (){
+cd /
+if [[ "$P_VALUE" == "p2" ]]; then
+	cp -fr /boot/* /mnt/${P_BOOT}/
+fi
+rsync -apvx --progress --stats --human-readable . /mnt/${P_ROOTFS} > /dev/null
+}
+
 source /etc/opt/progressbar.txt
 enable_trapping
 setup_scroll_area
@@ -147,34 +476,53 @@ do
 	fi
 done
 destroy_scroll_area
-}
 
-# uuid / partuuid
-fetch_uuid(){
-ROOT_UUID=$(blkid -o export -- ${MMC}p1 | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- ${MMC}p1 | sed -ne 's/^PARTUUID=//p')
+# WRITE U-BOOT
+$EE "Writing u-boot ..."
+sleep .75
+if [[ "$FAMILY" == "allwinner" ]]; then
+	dd if=${UBOOT_DIR}/u-boot-sunxi-with-spl.bin of=${DEVICE_NODE} conv=fsync bs=1024 seek=8
+fi
+if [[ "$FAMILY" == "amlogic" ]]; then
+	if [ $EMMC_TRUE -eq 1 ]; then
+		dd if=${UBOOT_DIR}/u-boot.bin of=${DEVICE_NODE} bs=512 seek=1	
+	else
+		dd if=${UBOOT_DIR}/u-boot.bin.sd.bin of=${DEVICE_NODE} conv=fsync bs=1 count=442
+		dd if=${UBOOT_DIR}/u-boot.bin.sd.bin of=${DEVICE_NODE} conv=fsync bs=512 skip=1 seek=1
+	fi
+fi
+if [[ "$FAMILY" == "rockchip" ]]; then
+	dd if=${UBOOT_DIR}/idbloader.bin of=${DEVICE_NODE} seek=64
+	dd if=${UBOOT_DIR}/u-boot.itb of=${DEVICE_NODE} seek=16384
+fi
+if [[ "$FAMILY" == "samsung" ]]; then
+	if [ $EMMC_TRUE -eq 1 ]; then
+		DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
+		echo 0 > /sys/block/${DEVICE}/force_ro
+		sleep 1s
+		dd if=${UBOOT_DIR}/bl1.bin of=/dev/${DEVICE} seek=0 conv=fsync
+		dd if=${UBOOT_DIR}/bl2.bin of=/dev/${DEVICE} seek=30 conv=fsync
+		dd if=${UBOOT_DIR}/u-boot.bin of=/dev/${DEVICE} seek=62 conv=fsync
+		dd if=${UBOOT_DIR}/tzsw.bin of=/dev/${DEVICE} seek=1502 conv=fsync
+		dd if=/dev/zero of=/dev/${DEVICE} seek=2015 bs=512 count=32 conv=fsync
+	else
+		dd if=${UBOOT_DIR}/bl1.bin of=${DEVICE_NODE} seek=0 conv=fsync
+		dd if=${UBOOT_DIR}/bl2.bin of=${DEVICE_NODE} seek=30 conv=fsync
+		dd if=${UBOOT_DIR}/u-boot.bin of=${DEVICE_NODE} seek=62 conv=fsync
+		dd if=${UBOOT_DIR}/tzsw.bin of=${DEVICE_NODE} seek=1502 conv=fsync
+		dd if=/dev/zero of=${DEVICE_NODE} seek=2015 bs=512 count=32 conv=fsync
+	fi
+fi
 
-echo ROOT_UUID='"'$ROOT_UUID'"' > /etc/opt/part-uuid.txt
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> /etc/opt/part-uuid.txt
-}
-
-# fstab
-create_fstab(){
-rm -f /mnt/etc/fstab
-tee /mnt/etc/fstab <<EOF
-UUID=${ROOT_UUID}	/	ext4	defaults,noatime,commit=600,errors=remount-ro 0 1
-tmpfs	/tmp	tmpfs	defaults,nosuid 0 0
-EOF
-}
-
-# extlinux
-create_extlinux(){
+p1_boot (){
+$EE
+$EE "extlinux.conf"
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait rootfstype=ext4 fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
-mkdir -p /mnt/boot/extlinux
-rm -f /mnt/boot/extlinux/extlinux.conf
-tee /mnt/boot/extlinux/extlinux.conf <<EOF
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
+mkdir -p /mnt/${P_ROOTFS}/boot/extlinux
+rm -f /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
+tee /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf <<EOF
 label default
 	kernel ../Image
 	initrd ../uInitrd
@@ -183,90 +531,72 @@ label default
 	#fdtoverlays
 	${CMDLINE}
 EOF
+$EE
+$EE "fstab"
+rm -f /mnt/${P_ROOTFS}/etc/fstab
+tee /mnt/${P_ROOTFS}/etc/fstab <<EOF
+UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
+tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
+EOF
 }
 
-# run script
-if [ "$USER" != "root" ]; then
-        echo "Please run this as root or with sudo privileges."
-        exit 1
+p2_boot (){
+$EE
+$EE "extlinux.conf"
+FDT="../${FAMILY}/${DTB}.dtb"
+FDTDIR="../${FAMILY}/"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
+mkdir -p /mnt/${P_BOOT}/extlinux
+rm -f /mnt/${P_BOOT}/extlinux/extlinux.conf
+tee /mnt/${P_BOOT}/extlinux/extlinux.conf <<EOF
+label default
+	kernel ../Image
+	initrd ../uInitrd
+	fdtdir ${FDTDIR}
+	fdt ${FDT}
+	#fdtoverlays
+	${CMDLINE}
+EOF
+$EE
+$EE "fstab"
+rm -f /mnt/${P_ROOTFS}/etc/fstab
+tee /mnt/${P_ROOTFS}/etc/fstab <<EOF
+UUID=${BOOT_UUID}	${BOOTFS_TABLE}
+UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
+tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
+EOF
+}
+
+if [[ "$P_VALUE" == "p1" ]]; then
+	ROOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^UUID=//p')
+	ROOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^PARTUUID=//p')
+	if [[ "$VERBOSITY" = "1" ]]; then
+		p1_boot
+	else
+		p1_boot > /dev/null 2>&1
+	fi
+	rm -fdr /mnt/${P_ROOTFS}/mnt/*
+	umount /mnt/${P_ROOTFS}
+	rm -fdr /mnt/${P_ROOTFS}
 fi
-supported_boards
-if [ $supported -eq 1 ] > /dev/null 2>&1; then
-	:;
-else
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Your board is not supported." 0 0
-	exit 0
-fi
-check_progressbar
-if [[ "$BOARD" == "lepotato" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "renegade" ]]; then
-	echo ""
-	echo "Binding eMMC ..."
-	bind_emmc
-	echo "[done]"
+if [[ "$P_VALUE" == "p2" ]]; then
+	BOOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_BOOT} | sed -ne 's/^UUID=//p')
+	BOOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_BOOT} | sed -ne 's/^PARTUUID=//p')
+	ROOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^UUID=//p')
+	ROOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^PARTUUID=//p')
+	if [[ "$VERBOSITY" = "1" ]]; then
+		p2_boot
+	else
+		p2_boot > /dev/null 2>&1
+	fi
+	rm -fdr /mnt/${P_ROOTFS}/mnt/*
+	umount /mnt/${P_BOOT}
+	umount /mnt/${P_ROOTFS}
+	rm -fdr /mnt/${P_BOOT}
+	rm -fdr /mnt/${P_ROOTFS}
 fi
 
-echo ""
-if [[ `ls "${MMC}"` ]]; then
-	echo -en "Partitioning: "
-	if [[ "$GPT" == "true" ]]; echo -e "[GPT]"; else echo -e "[MSDOS]"; fi
-	partition > /dev/null 2>&1
-	echo -e "[done]"
-else
-	export NEWT_COLORS='root=,black'
-	whiptail --msgbox "    Did you attach the eMMC module?" 0 0
-	exit 0
-fi
+$EE ""
+$EE "${BLD}Transfer complete.${FIN}"
 
-echo ""
-echo -e "Please be patient as the root filesystem"
-echo -e "is transferred over to the eMMC module."
-transfer_to_emmc
-sleep .75
-clear -x
-
-echo "Writing u-boot ..."
-sleep .75
-if [[ "$FAMILY" == "allwinner" ]]; then
-	dd if=${DIR}/u-boot-sunxi-with-spl.bin of=${MMC} conv=fsync bs=1024 seek=8
-fi
-if [[ "$FAMILY" == "amlogic" ]]; then
-	dd if=${DIR}/u-boot.bin of=${MMC} bs=512 seek=1
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	dd if=${DIR}/idbloader.bin of=${MMC} seek=64
-	dd if=${DIR}/u-boot.itb of=${MMC} seek=16384
-fi
-if [[ "$FAMILY" == "samsung" ]]; then
-	DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
-	echo 0 > /sys/block/${DEVICE}/force_ro
-	sleep 1s
-	dd if=${DIR}/bl1.bin of=/dev/${DEVICE} seek=0 conv=fsync
-	dd if=${DIR}/bl2.bin of=/dev/${DEVICE} seek=30 conv=fsync
-	dd if=${DIR}/u-boot.bin of=/dev/${DEVICE} seek=62 conv=fsync
-	dd if=${DIR}/tzsw.bin of=/dev/${DEVICE} seek=1502 conv=fsync
-	dd if=/dev/zero of=/dev/${DEVICE} seek=2015 bs=512 count=32 conv=fsync
-fi
-echo "[done]"
-
-echo ""
-echo -en "Fetching UUID "
-fetch_uuid
-echo "[done]"
-
-echo "Creating fstab and extlinux ..."
-source /etc/opt/part-uuid.txt
-create_fstab
-create_extlinux
-echo "[done]"
-
-echo ""
-echo -en "Unmounting eMMC "
-rm -f /etc/opt/part-uuid.txt
-rm -fdr /mnt/mnt/*
-umount /mnt
-rm -fdr /mnt/*
-echo "[done]"
-echo ""
-echo "You may now power down and remove the sdcard."
 exit 0
