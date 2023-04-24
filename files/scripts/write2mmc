@@ -337,7 +337,7 @@ if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
 	$MOUNT_ROOTFS
 	bash growpart ${DEVICE_NODE} 1
 	sleep .75
-	${RESIZEFS} "${DEVICE_NODE}${P_ROOTFS}"
+	$RESIZEFS
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Partitioning failed!" 0 0
@@ -461,6 +461,13 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	cp -fr /boot/* /mnt/${P_BOOT}/
 fi
 rsync -apvx --progress --stats --human-readable . /mnt/${P_ROOTFS} > /dev/null
+if [[ "$P_VALUE" == "p1" ]]; then
+	mkdir -p /mnt/${P_ROOTFS}/boot
+	cp -fr /boot/* /mnt/${P_ROOTFS}/boot/
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	rm -fdr /mnt/${P_ROOTFS}/boot/*
+fi
 }
 
 source /etc/opt/progressbar.txt
