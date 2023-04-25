@@ -148,6 +148,9 @@ endif
 ifdef branch
 	@echo "$(branch)" >> github.txt
 endif
+ifdef force_github
+	@echo 'FORCE_GITHUB="$(force_github)"' > override.txt
+endif
 	# Compiling kernel
 	$(call build_kernel)
 
