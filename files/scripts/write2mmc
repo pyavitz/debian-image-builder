@@ -147,9 +147,9 @@ if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1 || \
 	if [[ `ls /dev/mmcblk[0-9]` ]] > /dev/null 2>&1; then
 		MMC_CHK=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 		ls /dev/mmcblk[0-9]
-		if [[ `lsblk | grep boot0` ]]; then
-			EMMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
-		fi
+	fi
+	if [[ `lsblk | grep boot0` ]]; then
+		EMMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
 		if [[ "$EMMC" == "$MMC_CHK" ]]; then
 			$EE ""
 			$EE "${BLD}eMMC Detected:${FIN} $EMMC"
@@ -174,7 +174,9 @@ if [[ "$HD_CHK" == "$DEVICE_NODE" || "$NVME_CHK" == "$DEVICE_NODE" || "$MMC_CHK"
 	exit 0
 fi
 if [[ "$EMMC" == "$DEVICE_NODE" ]]; then
-	EMMC_TRUE="1"
+	EMMC_TRUE="true"
+else
+	EMMC_TRUE="false"	
 fi
 	
 # PARTITION SCHEME
@@ -275,6 +277,7 @@ $EE "Board: $DEFAULT_MOTD"
 $EN "Platform: "; $EE "$FAMILY" | sed -e 's/\(.*\)/\U\1/'
 $EE "Drive: $DEVICE_NODE"
 $EN "Partitions: "; $EE "$P_VALUE" | sed 's/p//g'
+$EE "eMMC Transfer: $EMMC_TRUE"
 if [[ "$P_VALUE" == "p2" ]]; then
 	$EN "BOOT FSTYPE: "; $EE "$B_FSTYPE"
 	$EN "ROOT FSTYPE: "; $EE "$R_FSTYPE"
@@ -493,7 +496,7 @@ if [[ "$FAMILY" == "allwinner" ]]; then
 	dd if=${UBOOT_DIR}/u-boot-sunxi-with-spl.bin of=${DEVICE_NODE} conv=fsync bs=1024 seek=8
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [ $EMMC_TRUE -eq 1 ]; then
+	if [[ "$EMMC_TRUE" == "true" ]]; then
 		dd if=${UBOOT_DIR}/u-boot.bin of=${DEVICE_NODE} bs=512 seek=1	
 	else
 		dd if=${UBOOT_DIR}/u-boot.bin.sd.bin of=${DEVICE_NODE} conv=fsync bs=1 count=442
@@ -505,7 +508,7 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 	dd if=${UBOOT_DIR}/u-boot.itb of=${DEVICE_NODE} seek=16384
 fi
 if [[ "$FAMILY" == "samsung" ]]; then
-	if [ $EMMC_TRUE -eq 1 ]; then
+	if [[ "$EMMC_TRUE" == "true" ]]; then
 		DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
 		echo 0 > /sys/block/${DEVICE}/force_ro
 		sleep 1s
