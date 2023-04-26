@@ -1,0 +1,220 @@
+diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+--- a/arch/arm/dts/Makefile	2022-10-03 15:25:32.000000000 -0400
++++ b/arch/arm/dts/Makefile	2022-12-06 15:15:15.601735160 -0500
+@@ -651,6 +651,7 @@
+ 	sun8i-a83t-tbs-a711.dtb
+ dtb-$(CONFIG_MACH_SUN8I_H3) += \
+ 	sun8i-h2-plus-bananapi-m2-zero.dtb \
++	sun8i-h2-plus-bananapi-p2-zero.dtb \
+ 	sun8i-h2-plus-libretech-all-h3-cc.dtb \
+ 	sun8i-h2-plus-orangepi-r1.dtb \
+ 	sun8i-h2-plus-orangepi-zero.dtb \
+--- /dev/null	2022-11-30 15:30:49.541198490 -0500
++++ b/arch/arm/dts/sun8i-h2-plus-bananapi-p2-zero.dts	2022-12-06 15:17:28.483191563 -0500
+@@ -0,0 +1,181 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (C) 2020 Mizan R <exqdzn@gmail.com>
++ *
++ * Based on sun8i-h2-plus-bananapi-m2-zero.dts, which is:
++ *   Copyright (C) 2017 Icenowy Zheng <icenowy@aosc.io>
++ */
++
++/dts-v1/;
++#include "sun8i-h3.dtsi"
++#include "sunxi-common-regulators.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Banana Pi BPI-P2-Zero";
++	compatible = "sinovoip,bpi-p2-zero", "allwinner,sun8i-h2-plus";
++
++	aliases {
++		serial0 = &uart0;
++		serial1 = &uart1;
++		ethernet0 = &emac;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	connector {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			 hdmi_con_in: endpoint {
++				  remote-endpoint = <&hdmi_out_con>;
++			 };
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++
++		pwr_led {
++			 label = "bananapi-p2-zero:red:pwr";
++			 linux,default-trigger = "heartbeat";
++			 gpios = <&r_pio 0 10 GPIO_ACTIVE_HIGH>; /* PL10 */
++			 default-state = "on";
++		};
++	};
++
++	gpio_keys {
++		compatible = "gpio-keys";
++		pinctrl-names = "default";
++
++		sw4 {
++			 label = "power";
++			 linux,code = <BTN_0>;
++			 gpios = <&r_pio 0 3 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	reg_vdd_cpux: vdd-cpux-regulator {
++		compatible = "regulator-gpio";
++		regulator-name = "vdd-cpux";
++		regulator-type = "voltage";
++		regulator-boot-on;
++		regulator-always-on;
++		regulator-min-microvolt = <1100000>;
++		regulator-max-microvolt = <1300000>;
++		regulator-ramp-delay = <50>; /* 4ms */
++
++		gpios = <&r_pio 0 1 GPIO_ACTIVE_HIGH>; /* PL1 */
++		enable-active-high;
++		gpios-states = <0x1>;
++		states = <1100000 0x0
++			   1300000 0x1>;
++	};
++
++	wifi_pwrseq: wifi_pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		pinctrl-names = "default";
++		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>; /* PL7 */
++	};
++};
++
++&cpu0 {
++	cpu-supply = <&reg_vdd_cpux>;
++};
++
++&de {
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&emac {
++	phy-handle = <&int_mii_phy>;
++	phy-mode = "mii";
++	allwinner,leds-active-low;
++	status = "okay";
++};
++
++&hdmi {
++	status = "disabled";
++};
++
++&hdmi_out {
++	hdmi_out_con: endpoint {
++		remote-endpoint = <&hdmi_con_in>;
++	};
++};
++
++&mmc0 {
++	vmmc-supply = <&reg_vcc3v3>;
++	bus-width = <4>;
++	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>; /* PF6 */
++	status = "okay";
++};
++
++&mmc1 {
++	vmmc-supply = <&reg_vcc3v3>;
++	vqmmc-supply = <&reg_vcc3v3>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	bus-width = <4>;
++	non-removable;
++	status = "okay";
++
++	brcmf: wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4329-fmac";
++		interrupt-parent = <&pio>;
++		interrupts = <6 10 IRQ_TYPE_LEVEL_LOW>; /* PG10 / EINT10 */
++		interrupt-names = "host-wake";
++	};
++};
++
++&mmc2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc2_8bit_pins>;
++	vmmc-supply = <&reg_vcc3v3>;
++	vqmmc-supply = <&reg_vcc3v3>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_pa_pins>;
++	status = "okay";
++};
++
++&uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
++	status = "okay";
++};
++
++&usb_otg {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&usbphy {
++	usb0_id_det-gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>; /* PL6 */
++	/*
++	 * There're two micro-USB connectors, one is power-only and another is
++	 * OTG. The Vbus of these two connectors are connected together, so
++	 * the external USB device will be powered just by the power input
++	 * from the power-only USB port.
++	 */
++	status = "okay";
++};
+--- /dev/null	2022-11-30 15:30:49.541198490 -0500
++++ b/configs/bananapi_p2_zero_defconfig	2022-12-06 15:57:14.518822648 -0500
+@@ -0,0 +1,22 @@
++CONFIG_ARM=y
++CONFIG_ARCH_SUNXI=y
++CONFIG_SPL=y
++CONFIG_MACH_SUN8I_H3=y
++CONFIG_DRAM_CLK=408
++CONFIG_DRAM_ZQ=3881979
++CONFIG_DRAM_ODT_EN=y
++CONFIG_NR_DRAM_BANKS=1
++CONFIG_MMC_SUNXI_SLOT_EXTRA=2
++CONFIG_MMC0_CD_PIN=""
++CONFIG_SPL_STACK=0x8000
++CONFIG_SYS_PBSIZE=1024
++# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
++CONFIG_CONSOLE_MUX=y
++# CONFIG_CMD_FLASH is not set
++# CONFIG_SPL_DOS_PARTITION is not set
++# CONFIG_SPL_ISO_PARTITION is not set
++# CONFIG_SPL_EFI_PARTITION is not set
++CONFIG_DEFAULT_DEVICE_TREE="sun8i-h2-plus-bananapi-p2-zero"
++CONFIG_SUN8I_EMAC=y
++CONFIG_USB_EHCI_HCD=y
++# CONFIG_SYS_USB_EVENT_POLL_VIA_INT_QUEUE is not set
