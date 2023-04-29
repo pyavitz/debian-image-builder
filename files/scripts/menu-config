@@ -182,35 +182,38 @@ done
 }
 
 change_sudo(){
-CONFIRM="${STATUS}d"
+if [[ "$SUDOERS" == "true" ]]; then STATUS="enabled"; else STATUS="disabled"; fi
+CONFIRM=`echo "${STATUS}" | sed -e "s/\b\(.\)/\u\1/g"`
+US_QUESTION=`echo "${STATUS}" | sed -e "s/\b\(.\)/\u\1/g" | sed 's/d//g'`
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-if (whiptail --backtitle "Sudo: $STATUS Security" --title "Confirm" --yesno "    $STATUS require password?" 0 0); then
+if (whiptail --backtitle "Sudo: $US_QUESTION Security" --title "Confirm" --yesno "    $US_QUESTION require password?" 0 0); then
 	if [[ $SUDOERS == "true" ]]; then
 		sudo rm -f /etc/sudoers.d/010_${USER}-nopasswd
 	else
 		echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_${USER}-nopasswd
 	fi
-	whiptail --backtitle "Sudo: $STATUS Security" --title "Confirmation" --msgbox "    $CONFIRM successfully." 0 0;
+	whiptail --backtitle "Sudo: $CONFIRM Security" --title "Confirmation" --msgbox "    $CONFIRM successfully." 0 0;
 else
 	whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
 fi
 }
 
 user_security(){
+USERNAME=`echo "${USER}" | sed -e "s/\b\(.\)/\u\1/g"`
 if [[ -f "/etc/sudoers.d/010_$USER-nopasswd" ]]; then
 	SUDOERS="true"
-	STATUS="Disable"
+	STATUS="disabled"
 else
 	SUDOERS="false"
-	STATUS="Enable"
+	STATUS="enabled"
 fi
 while [ 1 ]
 do
 SECURITY=$(
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-whiptail --backtitle "Security Settings: $USER" --title "Choose" --menu "" --nocancel 0 0 0 \
+whiptail --backtitle "Security Settings: $USERNAME" --title "Choose" --menu "" --nocancel 0 0 0 \
 	"1)" "Password          Change user password" \
-	"2)" "Sudo              $STATUS require password" \
+	"2)" "Sudo              Require password (${STATUS})" \
 	"E)" "Exit .." 3>&2 2>&1 1>&3
 )
 case $SECURITY in
