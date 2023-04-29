@@ -181,6 +181,54 @@ while true; do
 done
 }
 
+change_sudo(){
+CONFIRM="${STATUS}d"
+export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+if (whiptail --backtitle "Sudo: $STATUS Security" --title "Confirm" --yesno "    $STATUS require password?" 0 0); then
+	if [[ $SUDOERS == "true" ]]; then
+		sudo rm -f /etc/sudoers.d/010_${USER}-nopasswd
+	else
+		echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_${USER}-nopasswd
+	fi
+	whiptail --backtitle "Sudo: $STATUS Security" --title "Confirmation" --msgbox "    $CONFIRM successfully." 0 0;
+else
+	whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+fi
+}
+
+user_security(){
+if [[ -f "/etc/sudoers.d/010_$USER-nopasswd" ]]; then
+	SUDOERS="true"
+	STATUS="Disable"
+else
+	SUDOERS="false"
+	STATUS="Enable"
+fi
+while [ 1 ]
+do
+SECURITY=$(
+export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+whiptail --backtitle "Security Settings: $USER" --title "Choose" --menu "" --nocancel 0 0 0 \
+	"1)" "Password          Change user password" \
+	"2)" "Sudo              $STATUS require password" \
+	"E)" "Exit .." 3>&2 2>&1 1>&3
+)
+case $SECURITY in
+	"1)")
+		change_password
+		;;
+	"2)")
+		change_sudo
+		break
+		;;
+	"E)")
+		clear -x
+		break
+		;;
+	esac
+done
+}
+
 change_hostname(){
 CURRENT=`hostname`
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
@@ -476,7 +524,7 @@ export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 whiptail --backtitle "${RELEASE}: System Settings" --title "Menu Config" --menu "" --nocancel 0 25 0 \
 	"W)" "Wireless          Configure wireless network interface" \
 	"" "" \
-	"1)" "Password          Change user password" \
+	"1)" "Security          User security management" \
 	"2)" "Hostname          Change system hostname" \
 	"3)" "Keyboard          Change keyboard layout" \
 	"4)" "Locales           Change language settings" \
@@ -504,7 +552,7 @@ case $CHOICE in
 	"")
 		;;
 	"1)")
-		change_password
+		user_security
 		;;
 	"2)")
 		change_hostname
