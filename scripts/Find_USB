@@ -1,0 +1,61 @@
+#! /bin/bash
+# COLOR
+XXX="\e[0;38m"
+RED="\e[0;31m"
+GRN="\e[0;32m"
+YLW="\e[0;33m"
+BLU="\e[0;34m"	# Dark bluue, barley seen
+PNK="\e[0;35m"
+Blu="\e[0;36m"
+Xyy="\e[0;37m"	# yellow
+WHT="\033[0m"
+FIN="\e[0m"
+
+case `basename $0` in
+  Find_USB)
+    # Won't work as a mere mortal
+    if [ $UID -ne 0 ]; then
+      echo "This script MUST be run as root. Please su or sudo and try again!"
+      echo
+      exit 1
+    fi
+    ;;
+esac
+
+echo -e "\n\n${RED}[${WHT}${WHT}[${Blu}[${GRN}  Pleaze Plug in ${FIN}${YLW}USB${GRN} Device  ${Blu}]${Xyy}]${RED}]${FIN}"
+# Wait until a new [0-9] node appears in /dev
+#   This should be OK because there should be few device changes during operation
+DEV_FILE="/tmp/inotify_devs"
+INOTIFY_CMD="inotifywait -q"
+WATCH="CREATE"
+
+# Watch for CREATEs in /dev of xxx[0-9]*
+$INOTIFY_CMD -m --exclude "t[my]" /dev | while read a b c; do
+  if [ "$b" != "$WATCH" ]; then continue; fi
+  C="${c/[0-9]*/}"
+  if [ "$c" != "$C" -a -e "$a$C" -a -e "$a${C}1" ]; then
+    echo "${C}" > ${DEV_FILE}
+    exit  # This exits the 'while read' subprocess
+  fi
+done
+read fldev <$DEV_FILE
+rm -f $DEV_FILE
+
+echo; echo "Flash drive is /dev/${fldev}"; echo
+echo "/dev/${fldev}" > USB_Drive.txt
+
+MounteD=`cat /etc/mtab | grep $fldev`
+echo -e "\n${PNK}[${GRN}      Flash drive is $fldev ${PNK}]${FIN}"
+if [ "${MounteD}" != "" ]; then
+	echo "  Un Mounting $fldev "
+	for i in {1..9}; do
+		NAME=`cat /etc/mtab | grep "$fldev$i" | cut -d " " -f2`
+		if [ "$NAME" != "" ]; then
+			umount $NAME
+		fi
+      done
+else
+	echo "  $fldev is not mounted, continuing "
+fi
+
+exit 0
