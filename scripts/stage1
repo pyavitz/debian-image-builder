@@ -158,28 +158,16 @@ if [[ "$P_VALUE" == "p1" ]]; then
 		resize2fs -M "${IMAGE_LOOP_DEV_ROOTFS}"
 		tune2fs -Ohas_journal "${IMAGE_LOOP_DEV_ROOTFS}"
 	fi
-	if [[ ! -f USB_Drive.txt ]]; then
-		losetup -d "${IMAGE_LOOP_DEV}";
-	fi
-	if [[ -f "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" ]]; then
-		mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";
-	fi
+	losetup -d "${IMAGE_LOOP_DEV}";
+	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";
 	if [ $RAM -ne 0 ]; then
 		umount "${IMAGE_FOLDER}";
 	fi
-	if [[ -d ${IMAGE_FOLDER} ]]; then
-		rmdir "${IMAGE_FOLDER}";
-	fi
+	rmdir "${IMAGE_FOLDER}";
 	rmdir p1;
-	if [[ ! -f USB_Drive.txt ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
+	if [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
 	finish_image;
-	if [[ -f USB_Drive.txt ]]; then
-		echo -e "${PNK}[${GRN}Ejecting USB $USB_Drive ${YLW}$P_VALUE ${GRN}Install${PNK}]${FIN}"
-		eject -v $USB_Drive
-		rm -vf  {board.txt,kernel.txt,part-uuid.txt,USB_Drive.txt}
-	else
-		rm -f {part-uuid.txt,board.txt,kernel.txt};
-	fi
+	rm -f {part-uuid.txt,board.txt,kernel.txt};
 	exit 0
 fi
 
@@ -264,28 +252,16 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		resize2fs -M "${IMAGE_LOOP_DEV_ROOTFS}"
 		tune2fs -Ohas_journal "${IMAGE_LOOP_DEV_ROOTFS}"
 	fi
-	if [[ ! -f USB_Drive.txt ]]; then
-		losetup -d "${IMAGE_LOOP_DEV}";
-	fi
-	if [[ -f "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" ]]; then
-		mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";
-	fi
+	losetup -d "${IMAGE_LOOP_DEV}";
+	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}";
 	if [ $RAM -ne 0 ]; then
 		umount "${IMAGE_FOLDER}";
 	fi
-	if [[ -d ${IMAGE_FOLDER} ]]; then
-		rmdir "${IMAGE_FOLDER}";
-	fi
+	rmdir "${IMAGE_FOLDER}";
 	rmdir p1 p2;
-	if [[ ! -f USB_Drive.txt ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
+	if [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
 	finish_image;
-	if [[ -f USB_Drive.txt ]]; then
-		echo -e "${PNK}[${GRN}Ejecting USB $USB_Drive ${YLW}$P_VALUE ${GRN}Install${PNK}]${FIN}"
-		eject -v $USB_Drive
-		rm -vf  {board.txt,kernel.txt,part-uuid.txt,USB_Drive.txt}
-	else
-		rm -f {part-uuid.txt,board.txt,kernel.txt};
-	fi
+	rm -f {part-uuid.txt,board.txt,kernel.txt};
 	exit 0
 fi
 

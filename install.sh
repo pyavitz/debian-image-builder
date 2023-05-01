@@ -83,7 +83,6 @@ if [[ "$ARCH" == "aarch64" ]]; then
 		make ncompile
 	fi
 fi
-apt install -y eject inotify-tools
 
 # install builder theme
 make dialogrc

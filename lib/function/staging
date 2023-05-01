@@ -26,18 +26,7 @@ fi
 }
 
 single_partition(){
-if [[ -f USB_Drive.txt ]]; then
-	USB_Drive="$(cat USB_Drive.txt)"
-	IMAGE_LOOP_DEV="${USB_Drive}"
-	Disk="${USB_Drive}"
-	Size=""
-	dd if=/dev/zero of=${USB_Drive} bs=4K count=420 conv=notrunc status=progress
-else
-	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-	Disk="${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	Size=5999999
-fi
+truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$GPT" == "true" ]]; then
 	if [[ "$FAMILY_EXT" == "rk356x" || "$FAMILY_EXT" == "rk3588" ]]; then
 		sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
@@ -57,16 +46,13 @@ else
 	a
 	t
 	b
-	${Size}
+	5999999
 
 	p
-	w" | fdisk "${Disk}"
+	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 fi
-if [[ -f USB_Drive.txt ]]; then
-	IMAGE_LOOP_DEV_ROOTFS="${USB_Drive}1"
-else
-	IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
-fi
+IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
 mkdir -p ${P_ROOTFS}
 filesystem
@@ -82,27 +68,15 @@ $MOUNT_ROOTFS
 }
 
 dual_partition(){
-if [[ -f USB_Drive.txt ]]; then
-	USB_Drive="$(cat USB_Drive.txt)"
-	IMAGE_LOOP_DEV="${USB_Drive}"
-	Disk="${USB_Drive}"
-	Size=" "
-	dd if=/dev/zero of=${USB_Drive} bs=1M count=420 conv=notrunc status=progress
-else
-	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-	IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-	Disk="${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	Size="+3G"
-	IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
-fi
+truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$VFAT" == "true" ]]; then
 	if [[ "$GPT" == "true" ]]; then
-		parted --script "${Disk}" \
+		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 		mklabel gpt \
 		mkpart 1 fat32 16MiB 256MiB \
 		mkpart 2 ext2 256MiB 100%
 		if [[ "$EFI" == "true" ]]; then
-			parted --script "${Disk}" set 1 esp on
+			parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 esp on
 		fi
 	else
 		echo -e "o
@@ -119,14 +93,14 @@ if [[ "$VFAT" == "true" ]]; then
 		p
 		2
 		526336
-		
+
 		p
-		w" | fdisk "${Disk}";
+		w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 		if [[ "$EFI" == "true" ]]; then
 			if [[ "$FAMILY" == "broadcom" ]]; then
 				:;
 			else
-				parted --script "${Disk}" set 1 esp on
+				parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 esp on
 			fi
 		fi
 	fi
@@ -141,17 +115,13 @@ else
 	p
 	2
 	526336
-	
+
 	p
-	w" | fdisk "${Disk}";
+	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 fi
-if [[ -f USB_Drive.txt ]]; then
-	IMAGE_LOOP_DEV_BOOT="${USB_Drive}1"
-	IMAGE_LOOP_DEV_ROOTFS="${USB_Drive}2"
-else
-	IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
-	IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
-fi
+IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
+IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
 partprobe "${IMAGE_LOOP_DEV}"
 mkdir -p ${P_BOOT} ${P_ROOTFS}
 filesystem

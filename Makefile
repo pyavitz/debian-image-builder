@@ -148,6 +148,9 @@ endif
 ifdef branch
 	@echo "$(branch)" >> github.txt
 endif
+ifdef force_github
+	@echo 'FORCE_GITHUB="$(force_github)"' > override.txt
+endif
 	# Compiling kernel
 	$(call build_kernel)
 
@@ -170,17 +173,6 @@ usbboot:
 	# Creating image
 	$(call build_usbboot)
 
-usb: 
-	# Creating USB Device
-	@bash ./scripts/Find_USB
-	# Compiling u-boot
-	$(call build_uboot)
-	# Compiling kernel
-	$(call build_kernel)
-	# Creating ROOTFS tarball
-	$(call create_rootfs)
-	# Creating image
-	$(call build_image)
 # MISCELLANEOUS
 menu: 
 	# Menu
