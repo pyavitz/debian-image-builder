@@ -1,6 +1,5 @@
-diff -Naur a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt
---- a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	1969-12-31 19:00:00.000000000 -0500
-+++ b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	2022-10-26 12:33:53.169892430 -0400
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	2023-05-02 23:31:49.506230239 -0400
 @@ -0,0 +1,18 @@
 +Generic GPIO bit-banged PWM driver
 +
@@ -21,8 +20,8 @@ diff -Naur a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt b/Documentation/
 +		pwm-gpios = <&pio 7 2 GPIO_ACTIVE_LOW>;
 +	};
 diff -Naur a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
---- a/drivers/pwm/Kconfig	2022-10-26 06:35:57.000000000 -0400
-+++ b/drivers/pwm/Kconfig	2022-10-26 12:33:53.170892283 -0400
+--- a/drivers/pwm/Kconfig	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/pwm/Kconfig	2023-05-02 23:31:49.529219241 -0400
 @@ -195,6 +195,21 @@
  	  To compile this driver as a module, choose M here: the module
  	  will be called pwm-fsl-ftm.
@@ -46,8 +45,8 @@ diff -Naur a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
  	tristate "HiSilicon BVT PWM support"
  	depends on ARCH_HISI || COMPILE_TEST
 diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
---- a/drivers/pwm/Makefile	2022-10-26 06:35:57.000000000 -0400
-+++ b/drivers/pwm/Makefile	2022-10-26 12:33:53.170892283 -0400
+--- a/drivers/pwm/Makefile	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/pwm/Makefile	2023-05-02 23:31:49.529219241 -0400
 @@ -16,6 +16,7 @@
  obj-$(CONFIG_PWM_DWC)		+= pwm-dwc.o
  obj-$(CONFIG_PWM_EP93XX)	+= pwm-ep93xx.o
@@ -56,10 +55,9 @@ diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
  obj-$(CONFIG_PWM_HIBVT)		+= pwm-hibvt.o
  obj-$(CONFIG_PWM_IMG)		+= pwm-img.o
  obj-$(CONFIG_PWM_IMX1)		+= pwm-imx1.o
-diff -Naur a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
---- a/drivers/pwm/pwm-gpio.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/pwm/pwm-gpio.c	2022-10-26 12:37:12.321819000 -0400
-@@ -0,0 +1,287 @@
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/drivers/pwm/pwm-gpio.c	2023-05-02 23:31:49.530218763 -0400
+@@ -0,0 +1,255 @@
 +/*
 + * Copyright (c) 2015 Olliver Schinagl <oliver@schinagl.nl>
 + *
@@ -196,43 +194,11 @@ diff -Naur a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
 +		gpio_pwm_off(gpio_data);
 +}
 +
-+static int gpio_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
-+			const struct pwm_state *state)
-+{
-+	int err;
-+	bool enabled = pwm->state.enabled;
-+
-+	if (state->polarity != pwm->state.polarity) {
-+		if (enabled) {
-+			gpio_pwm_disable(chip, pwm);
-+			enabled = false;
-+		}
-+
-+		err = gpio_pwm_set_polarity(chip, pwm, state->polarity);
-+		if (err)
-+			return err;
-+	}
-+
-+	if (!state->enabled) {
-+		if (enabled)
-+			gpio_pwm_disable(chip, pwm);
-+
-+		return 0;
-+	}
-+
-+	err = gpio_pwm_config(pwm->chip, pwm,
-+		state->duty_cycle, state->period);
-+	if (err)
-+		return err;
-+
-+	if (!enabled)
-+		err = gpio_pwm_enable(chip, pwm);
-+
-+	return err;
-+}
-+
 +static const struct pwm_ops gpio_pwm_ops = {
-+	.apply = gpio_pwm_apply,
++	.config = gpio_pwm_config,
++	.set_polarity = gpio_pwm_set_polarity,
++	.enable = gpio_pwm_enable,
++	.disable = gpio_pwm_disable,
 +	.owner = THIS_MODULE,
 +};
 +
@@ -348,9 +314,9 @@ diff -Naur a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
 +MODULE_DESCRIPTION("Generic GPIO bit-banged PWM driver");
 +MODULE_LICENSE("GPL");
 diff -Naur a/MAINTAINERS b/MAINTAINERS
---- a/MAINTAINERS	2022-10-26 06:35:57.000000000 -0400
-+++ b/MAINTAINERS	2022-10-26 12:33:53.179890958 -0400
-@@ -7830,6 +7830,11 @@
+--- a/MAINTAINERS	2023-04-30 19:23:24.000000000 -0400
++++ b/MAINTAINERS	2023-05-02 23:31:49.510228326 -0400
+@@ -7827,6 +7827,11 @@
  F:	drivers/i2c/muxes/i2c-mux-gpio.c
  F:	include/linux/platform_data/i2c-mux-gpio.h
  
