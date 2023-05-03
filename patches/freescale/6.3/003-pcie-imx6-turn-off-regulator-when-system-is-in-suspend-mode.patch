@@ -1,0 +1,61 @@
+diff -Naur a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+--- a/drivers/pci/controller/dwc/pci-imx6.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/pci/controller/dwc/pci-imx6.c	2023-05-02 23:59:30.074434573 -0400
+@@ -966,22 +966,13 @@
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
+ 	int ret;
+ 
+-	if (imx6_pcie->vpcie) {
+-		ret = regulator_enable(imx6_pcie->vpcie);
+-		if (ret) {
+-			dev_err(dev, "failed to enable vpcie regulator: %d\n",
+-				ret);
+-			return ret;
+-		}
+-	}
+-
+ 	imx6_pcie_assert_core_reset(imx6_pcie);
+ 	imx6_pcie_init_phy(imx6_pcie);
+ 
+ 	ret = imx6_pcie_clk_enable(imx6_pcie);
+ 	if (ret) {
+ 		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
+-		goto err_reg_disable;
++		return ret;
+ 	}
+ 
+ 	if (imx6_pcie->phy) {
+@@ -1015,9 +1006,6 @@
+ 		phy_exit(imx6_pcie->phy);
+ err_clk_disable:
+ 	imx6_pcie_clk_disable(imx6_pcie);
+-err_reg_disable:
+-	if (imx6_pcie->vpcie)
+-		regulator_disable(imx6_pcie->vpcie);
+ 	return ret;
+ }
+ 
+@@ -1032,9 +1020,6 @@
+ 		phy_exit(imx6_pcie->phy);
+ 	}
+ 	imx6_pcie_clk_disable(imx6_pcie);
+-
+-	if (imx6_pcie->vpcie)
+-		regulator_disable(imx6_pcie->vpcie);
+ }
+ 
+ static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
+@@ -1403,6 +1388,13 @@
+ 		if (PTR_ERR(imx6_pcie->vpcie) != -ENODEV)
+ 			return PTR_ERR(imx6_pcie->vpcie);
+ 		imx6_pcie->vpcie = NULL;
++	} else {
++		ret = regulator_enable(imx6_pcie->vpcie);
++		if (ret) {
++			dev_err(dev, "failed to enable vpcie regulator: %d\n",
++				ret);
++			return ret;
++		}
+ 	}
+ 
+ 	imx6_pcie->vph = devm_regulator_get_optional(&pdev->dev, "vph");
