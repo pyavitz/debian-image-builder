@@ -176,8 +176,8 @@ HOSTNAME="$CURRENT"		# Hostname
 
 For headless use: ssh user@ipaddress
 ```
-#### System menu config (`menu-config`)
-<img src="https://i.imgur.com/A3rlsD2.png" alt="Menu Interface: System Settings" />
+#### System settings (`menu-config`)
+<img src="https://i.imgur.com/oKDPNA1.png" alt="Menu Interface: System Settings" />
 
 ---
 
