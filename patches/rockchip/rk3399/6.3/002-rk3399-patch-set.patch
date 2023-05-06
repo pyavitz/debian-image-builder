@@ -1,0 +1,742 @@
+diff -Naur a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+--- a/Documentation/admin-guide/kernel-parameters.txt	2023-04-30 19:32:26.000000000 -0400
++++ b/Documentation/admin-guide/kernel-parameters.txt	2023-05-06 10:45:33.607895703 -0400
+@@ -4388,6 +4388,14 @@
+ 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
+ 			all PCIe root ports use INTx for all services).
+ 
++	pcie_rockchip_host.bus_scan_delay=	[PCIE] Delay in ms before
++			scanning PCIe bus in Rockchip PCIe host driver. Some PCIe
++			cards seem to need delays that can be several hundred ms.
++			If set to greater than or equal to 0 this parameter will
++			override delay that can be set in device tree.
++			Values less than 0 mean that this parameter is ignored.
++			default=-1
++
+ 	pcmv=		[HW,PCMCIA] BadgePAD 4
+ 
+ 	pd_ignore_unused
+diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-half-divider.c
+--- a/drivers/clk/rockchip/clk-half-divider.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/clk/rockchip/clk-half-divider.c	2023-05-06 10:45:33.597895853 -0400
+@@ -166,7 +166,7 @@
+ 					  unsigned long flags,
+ 					  spinlock_t *lock)
+ {
+-	struct clk_hw *hw = ERR_PTR(-ENOMEM);
++	struct clk_hw *hw;
+ 	struct clk_mux *mux = NULL;
+ 	struct clk_gate *gate = NULL;
+ 	struct clk_divider *div = NULL;
+diff -Naur a/drivers/clk/rockchip/clk-rk3399.c b/drivers/clk/rockchip/clk-rk3399.c
+--- a/drivers/clk/rockchip/clk-rk3399.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/clk/rockchip/clk-rk3399.c	2023-05-06 10:45:33.589895973 -0400
+@@ -624,7 +624,7 @@
+ 	GATE(SCLK_I2S2_8CH, "clk_i2s2", "clk_i2s2_mux", CLK_SET_RATE_PARENT,
+ 			RK3399_CLKGATE_CON(8), 11, GFLAGS),
+ 
+-	MUX(0, "clk_i2sout_src", mux_i2sch_p, CLK_SET_RATE_PARENT,
++	MUX(SCLK_I2SOUT_SRC, "clk_i2sout_src", mux_i2sch_p, CLK_SET_RATE_PARENT,
+ 			RK3399_CLKSEL_CON(31), 0, 2, MFLAGS),
+ 	COMPOSITE_NODIV(SCLK_I2S_8CH_OUT, "clk_i2sout", mux_i2sout_p, CLK_SET_RATE_PARENT,
+ 			RK3399_CLKSEL_CON(31), 2, 1, MFLAGS,
+diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+--- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2023-05-06 10:45:33.625895434 -0400
+@@ -74,6 +74,7 @@
+ 	struct regmap *regmap;
+ 	struct rockchip_encoder encoder;
+ 	const struct rockchip_hdmi_chip_data *chip_data;
++	const struct dw_hdmi_plat_data *plat_data;
+ 	struct clk *ref_clk;
+ 	struct clk *grf_clk;
+ 	struct dw_hdmi *hdmi;
+@@ -161,6 +162,12 @@
+ 			{ 0x4064, 0x0003}
+ 		},
+ 	}, {
++		340000000, {
++			{ 0x0052, 0x0003 },
++			{ 0x214d, 0x0003 },
++			{ 0x4065, 0x0003 },
++		},
++	}, {
+ 		~0UL, {
+ 			{ 0x00a0, 0x000a },
+ 			{ 0x2001, 0x000f },
+@@ -186,6 +193,8 @@
+ 	}, {
+ 		148500000, { 0x0000, 0x0038, 0x0038 },
+ 	}, {
++		600000000, { 0x0000, 0x0000, 0x0000 },
++	}, {
+ 		~0UL,      { 0x0000, 0x0000, 0x0000},
+ 	}
+ };
+@@ -241,23 +250,32 @@
+ }
+ 
+ static enum drm_mode_status
+-dw_hdmi_rockchip_mode_valid(struct dw_hdmi *hdmi, void *data,
++dw_hdmi_rockchip_mode_valid(struct dw_hdmi *dw_hdmi, void *data,
+ 			    const struct drm_display_info *info,
+ 			    const struct drm_display_mode *mode)
+ {
++	struct rockchip_hdmi *hdmi = data;
+ 	const struct dw_hdmi_mpll_config *mpll_cfg = rockchip_mpll_cfg;
+ 	int pclk = mode->clock * 1000;
+-	bool valid = false;
++	bool exact_match = hdmi->plat_data->phy_force_vendor;
+ 	int i;
+ 
+ 	for (i = 0; mpll_cfg[i].mpixelclock != (~0UL); i++) {
+-		if (pclk == mpll_cfg[i].mpixelclock) {
+-			valid = true;
+-			break;
+-		}
++		/*
++		 * For vendor specific phys force an exact match of the pixelclock
++		 * to preserve the original behaviour of the driver.
++		 */
++		if (exact_match && pclk == mpll_cfg[i].mpixelclock)
++			return MODE_OK;
++		/*
++		 * The Synopsys phy can work with pixelclocks up to the value given
++		 * in the corresponding mpll_cfg entry.
++		 */
++		if (!exact_match && pclk <= mpll_cfg[i].mpixelclock)
++			return MODE_OK;
+ 	}
+ 
+-	return (valid) ? MODE_OK : MODE_BAD;
++	return MODE_BAD;
+ }
+ 
+ static void dw_hdmi_rockchip_encoder_disable(struct drm_encoder *encoder)
+@@ -546,8 +564,10 @@
+ 		return -ENOMEM;
+ 
+ 	hdmi->dev = &pdev->dev;
++	hdmi->plat_data = plat_data;
+ 	hdmi->chip_data = plat_data->phy_data;
+ 	plat_data->phy_data = hdmi;
++	plat_data->priv_data = hdmi;
+ 	encoder = &hdmi->encoder.encoder;
+ 
+ 	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm, dev->of_node);
+diff -Naur a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
+--- a/drivers/pci/controller/pcie-rockchip.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/pci/controller/pcie-rockchip.c	2023-05-06 10:45:33.607895703 -0400
+@@ -118,8 +118,7 @@
+ 	}
+ 
+ 	if (rockchip->is_rc) {
+-		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep",
+-							    GPIOD_OUT_HIGH);
++		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep", GPIOD_OUT_HIGH);
+ 		if (IS_ERR(rockchip->ep_gpio))
+ 			return dev_err_probe(dev, PTR_ERR(rockchip->ep_gpio),
+ 					     "failed to get ep GPIO\n");
+@@ -149,6 +148,12 @@
+ 		return PTR_ERR(rockchip->clk_pcie_pm);
+ 	}
+ 
++	err = of_property_read_u32(node, "bus-scan-delay-ms", &rockchip->bus_scan_delay);
++	if (err) {
++		dev_info(dev, "no bus scan delay, default to 0 ms\n");
++		rockchip->bus_scan_delay = 0;
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
+diff -Naur a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
+--- a/drivers/pci/controller/pcie-rockchip.h	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/pci/controller/pcie-rockchip.h	2023-05-06 10:45:33.608895688 -0400
+@@ -299,6 +299,8 @@
+ 	phys_addr_t msg_bus_addr;
+ 	bool is_rc;
+ 	struct resource *mem_res;
++	/* Bus scan delay is a workaround for some pcie devices causing crashes */
++	u32 bus_scan_delay;
+ };
+ 
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+diff -Naur a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+--- a/drivers/pci/controller/pcie-rockchip-host.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/pci/controller/pcie-rockchip-host.c	2023-05-06 10:45:33.607895703 -0400
+@@ -24,6 +24,7 @@
+ #include <linux/kernel.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/module.h>
++#include <linux/moduleparam.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
+ #include <linux/of_pci.h>
+@@ -38,6 +39,9 @@
+ #include "../pci.h"
+ #include "pcie-rockchip.h"
+ 
++static int bus_scan_delay = -1;
++module_param_named(bus_scan_delay, bus_scan_delay, int, S_IRUGO);
++
+ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+ {
+ 	u32 status;
+@@ -932,6 +936,7 @@
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_host_bridge *bridge;
+ 	int err;
++	u32 delay = 0;
+ 
+ 	if (!dev->of_node)
+ 		return -ENODEV;
+@@ -981,6 +986,26 @@
+ 	bridge->sysdata = rockchip;
+ 	bridge->ops = &rockchip_pcie_ops;
+ 
++	/* Checking if bus scan delay was given from command line and prefer
++	 * that over the value in device tree (which defaults to 0 if not set).
++	 */
++	if (bus_scan_delay >= 0) {
++		delay = bus_scan_delay;
++		dev_info(dev, "wait %u ms (from command-line) before bus scan\n", delay);
++	} else {
++		delay = rockchip->bus_scan_delay;
++		dev_info(dev, "wait %u ms (from device tree) before bus scan\n", delay);
++	}
++	/* Workaround for some devices crashing on pci_host_probe / pci_scan_root_bus_bridge
++	 * calls: sleep a bit before bus scan. Call trace gets to rockchip_pcie_rd_conf when
++	 * trying to read vendor id (pci_bus_generic_read_dev_vendor_id is in call stack)
++	 * before panicing. I have no idea why this works or what causes the panic. I just
++	 * found this hack by luck when trying to "make it break differently if possible".
++	 */
++	if (delay > 0) {
++		msleep(delay);
++	}
++
+ 	err = rockchip_pcie_setup_irq(rockchip);
+ 	if (err)
+ 		goto err_remove_irq_domain;
+diff -Naur a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/phy-rockchip-typec.c
+--- a/drivers/phy/rockchip/phy-rockchip-typec.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/phy/rockchip/phy-rockchip-typec.c	2023-05-06 10:45:33.611895643 -0400
+@@ -40,6 +40,7 @@
+ #include <linux/clk-provider.h>
+ #include <linux/delay.h>
+ #include <linux/extcon.h>
++#include <linux/extcon-provider.h>
+ #include <linux/io.h>
+ #include <linux/iopoll.h>
+ #include <linux/kernel.h>
+@@ -1157,6 +1158,22 @@
+ 				dev_err(dev, "Invalid or missing extcon\n");
+ 			return PTR_ERR(tcphy->extcon);
+ 		}
++	} else {
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB,
++					       EXTCON_PROP_USB_SS);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB_HOST,
++					       EXTCON_PROP_USB_SS);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_DISP_DP,
++					       EXTCON_PROP_USB_SS);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB,
++					       EXTCON_PROP_USB_TYPEC_POLARITY);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB_HOST,
++					       EXTCON_PROP_USB_TYPEC_POLARITY);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_DISP_DP,
++					       EXTCON_PROP_USB_TYPEC_POLARITY);
++		extcon_sync(tcphy->extcon, EXTCON_USB);
++		extcon_sync(tcphy->extcon, EXTCON_USB_HOST);
++		extcon_sync(tcphy->extcon, EXTCON_DISP_DP);
+ 	}
+ 
+ 	pm_runtime_enable(dev);
+diff -Naur a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
+--- a/drivers/tty/serdev/core.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/tty/serdev/core.c	2023-05-06 10:45:33.611895643 -0400
+@@ -430,11 +430,22 @@
+ 	dev_pm_domain_detach(dev, true);
+ }
+ 
++static void serdev_drv_shutdown(struct device *dev)
++{
++	const struct serdev_device_driver *sdrv;
++	if (dev->driver) {
++		sdrv = to_serdev_device_driver(dev->driver);
++		if (sdrv->shutdown)
++			sdrv->shutdown(to_serdev_device(dev));
++	}
++}
++
+ static struct bus_type serdev_bus_type = {
+ 	.name		= "serial",
+ 	.match		= serdev_device_match,
+ 	.probe		= serdev_drv_probe,
+ 	.remove		= serdev_drv_remove,
++    .shutdown	= serdev_drv_shutdown,
+ };
+ 
+ /**
+diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
+--- a/drivers/usb/typec/altmodes/displayport.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/usb/typec/altmodes/displayport.c	2023-05-06 10:45:33.612895628 -0400
+@@ -9,6 +9,8 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/extcon.h>
++#include <linux/extcon-provider.h>
+ #include <linux/mutex.h>
+ #include <linux/module.h>
+ #include <linux/property.h>
+@@ -68,6 +70,8 @@
+ 	struct fwnode_handle *connector_fwnode;
+ };
+ 
++void dp_altmode_update_extcon(struct dp_altmode *dp, bool disconnect);
++
+ static int dp_altmode_notify(struct dp_altmode *dp)
+ {
+ 	unsigned long conf;
+@@ -76,7 +80,9 @@
+ 	if (dp->data.conf) {
+ 		state = get_count_order(DP_CONF_GET_PIN_ASSIGN(dp->data.conf));
+ 		conf = TYPEC_MODAL_STATE(state);
++		dp_altmode_update_extcon(dp, false);
+ 	} else {
++		dp_altmode_update_extcon(dp, true);
+ 		conf = TYPEC_STATE_USB;
+ 	}
+ 
+@@ -157,6 +163,40 @@
+ 	return ret;
+ }
+ 
++void dp_altmode_update_extcon(struct dp_altmode *dp, bool disconnect) {
++	const struct device *dev = &dp->port->dev;
++	struct extcon_dev* edev = NULL;
++
++	while (dev) {
++		edev = extcon_find_edev_by_node(dev->of_node);
++		if(!IS_ERR(edev)) {
++			break;
++		}
++		dev = dev->parent;
++	}
++
++	if (IS_ERR_OR_NULL(edev)) {
++		return;
++	}
++
++	if (disconnect || !dp->data.conf) {
++		extcon_set_state_sync(edev, EXTCON_DISP_DP, false);
++	} else {
++		union extcon_property_value extcon_true = { .intval = true };
++		extcon_set_state(edev, EXTCON_DISP_DP, true);
++		if (DP_CONF_GET_PIN_ASSIGN(dp->data.conf) & DP_PIN_ASSIGN_MULTI_FUNC_MASK) {
++			extcon_set_state_sync(edev, EXTCON_USB_HOST, true);
++			extcon_set_property(edev, EXTCON_DISP_DP, EXTCON_PROP_USB_SS,
++						 extcon_true);
++		} else {
++			extcon_set_state_sync(edev, EXTCON_USB_HOST, false);
++		}
++		extcon_sync(edev, EXTCON_DISP_DP);
++		extcon_set_state_sync(edev, EXTCON_USB, false);
++	}
++
++}
++
+ static int dp_altmode_configured(struct dp_altmode *dp)
+ {
+ 	sysfs_notify(&dp->alt->dev.kobj, "displayport", "configuration");
+@@ -226,6 +266,8 @@
+ 	case DP_STATE_EXIT:
+ 		if (typec_altmode_exit(dp->alt))
+ 			dev_err(&dp->alt->dev, "Exit Mode Failed!\n");
++		else
++			dp_altmode_update_extcon(dp, true);
+ 		break;
+ 	default:
+ 		break;
+@@ -554,8 +596,13 @@
+ 	if (!(DP_CAP_PIN_ASSIGN_DFP_D(port->vdo) &
+ 	      DP_CAP_PIN_ASSIGN_UFP_D(alt->vdo)) &&
+ 	    !(DP_CAP_PIN_ASSIGN_UFP_D(port->vdo) &
+-	      DP_CAP_PIN_ASSIGN_DFP_D(alt->vdo)))
+-		return -ENODEV;
++	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo))) {
++            dev_err(&alt->dev, "No compatible pin configuration found:"\
++                    "%04lx -> %04lx, %04lx <- %04lx",
++                    DP_CAP_DFP_D_PIN_ASSIGN(port->vdo), DP_CAP_UFP_D_PIN_ASSIGN(alt->vdo),
++                    DP_CAP_UFP_D_PIN_ASSIGN(port->vdo), DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo));
++            return -ENODEV;
++	}
+ 
+ 	ret = sysfs_create_group(&alt->dev.kobj, &dp_altmode_group);
+ 	if (ret)
+diff -Naur a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
+--- a/drivers/usb/typec/bus.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/usb/typec/bus.c	2023-05-06 10:45:33.612895628 -0400
+@@ -185,8 +185,14 @@
+  */
+ void typec_altmode_attention(struct typec_altmode *adev, u32 vdo)
+ {
+-	struct typec_altmode *pdev = &to_altmode(adev)->partner->adev;
++	struct typec_altmode *pdev;
++	WARN_ONCE(!adev, "typec bus attention: adev is NULL!");
++	WARN_ONCE(!to_altmode(adev)->partner, "typec bus attention: partner is NULL!");
++	if(!adev || !to_altmode(adev)->partner) {
++		return;
++	}
+ 
++    pdev = &to_altmode(adev)->partner->adev;
+ 	if (pdev->ops && pdev->ops->attention)
+ 		pdev->ops->attention(pdev, vdo);
+ }
+diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
+--- a/drivers/usb/typec/tcpm/tcpm.c	2023-04-30 19:32:26.000000000 -0400
++++ b/drivers/usb/typec/tcpm/tcpm.c	2023-05-06 10:42:21.325769952 -0400
+@@ -8,6 +8,7 @@
+ #include <linux/completion.h>
+ #include <linux/debugfs.h>
+ #include <linux/device.h>
++#include <linux/extcon-provider.h>
+ #include <linux/hrtimer.h>
+ #include <linux/jiffies.h>
+ #include <linux/kernel.h>
+@@ -486,6 +487,10 @@
+ 	 */
+ 	bool slow_charger_loop;
+ 
++#ifdef CONFIG_EXTCON
++	struct extcon_dev *extcon;
++	unsigned int *extcon_cables;
++#endif
+ 	/*
+ 	 * When true indicates that the lower level drivers indicate potential presence
+ 	 * of contaminant in the connector pins based on the tcpm state machine
+@@ -879,6 +884,35 @@
+ 	port->ams = NONE_AMS;
+ }
+ 
++static void tcpm_update_extcon_data(struct tcpm_port *port, bool attached) {
++#ifdef CONFIG_EXTCON
++	unsigned int *capability = port->extcon_cables;
++	if (port->data_role == TYPEC_HOST) {
++		extcon_set_state(port->extcon, EXTCON_USB, false);
++		extcon_set_state(port->extcon, EXTCON_USB_HOST, attached);
++	} else {
++		extcon_set_state(port->extcon, EXTCON_USB, true);
++		extcon_set_state(port->extcon, EXTCON_USB_HOST, attached);
++	}
++	while (*capability != EXTCON_NONE) {
++		if (attached) {
++			union extcon_property_value val;
++			val.intval = (port->polarity == TYPEC_POLARITY_CC2);
++			extcon_set_property(port->extcon, *capability,
++				EXTCON_PROP_USB_TYPEC_POLARITY, val);
++		} else {
++			extcon_set_state(port->extcon, *capability, false);
++		}
++		extcon_sync(port->extcon, *capability);
++		capability++;
++	}
++	tcpm_log(port, "Extcon update (%s): %s, %s",
++		attached ? "attached" : "detached",
++		port->data_role == TYPEC_HOST ? "host" : "device",
++		port->polarity == TYPEC_POLARITY_CC1 ? "normal" : "flipped");
++#endif
++}
++
+ static int tcpm_pd_transmit(struct tcpm_port *port,
+ 			    enum tcpm_transmit_type type,
+ 			    const struct pd_message *msg)
+@@ -1090,6 +1124,8 @@
+ 	port->data_role = data;
+ 	typec_set_data_role(port->typec_port, data);
+ 	typec_set_pwr_role(port->typec_port, role);
++	
++	tcpm_update_extcon_data(port, attached);
+ 
+ 	return 0;
+ }
+@@ -1548,7 +1584,7 @@
+ 		paltmode->mode = i;
+ 		paltmode->vdo = p[i];
+ 
+-		tcpm_log(port, " Alternate mode %d: SVID 0x%04x, VDO %d: 0x%08x",
++		tcpm_log(port, "Alternate mode %d: SVID 0x%04x, VDO %d: 0x%08x",
+ 			 pmdata->altmodes, paltmode->svid,
+ 			 paltmode->mode, paltmode->vdo);
+ 
+@@ -1569,6 +1605,8 @@
+ 			tcpm_log(port, "Failed to register partner SVID 0x%04x",
+ 				 modep->altmode_desc[i].svid);
+ 			altmode = NULL;
++		} else {
++			tcpm_log(port, "Registered altmode 0x%04x", modep->altmode_desc[i].svid);
+ 		}
+ 		port->partner_altmode[i] = altmode;
+ 	}
+@@ -1703,9 +1741,11 @@
+ 			modep->svid_index++;
+ 			if (modep->svid_index < modep->nsvids) {
+ 				u16 svid = modep->svids[modep->svid_index];
++				tcpm_log(port, "More modes available, sending discover");
+ 				response[0] = VDO(svid, 1, svdm_version, CMD_DISCOVER_MODES);
+ 				rlen = 1;
+ 			} else {
++				tcpm_log(port, "Got all patner modes, registering");
+ 				tcpm_register_partner_altmodes(port);
+ 			}
+ 			break;
+@@ -3698,6 +3738,7 @@
+ static void tcpm_typec_disconnect(struct tcpm_port *port)
+ {
+ 	if (port->connected) {
++		tcpm_update_extcon_data(port, false);
+ 		typec_partner_set_usb_power_delivery(port->partner, NULL);
+ 		typec_unregister_partner(port->partner);
+ 		port->partner = NULL;
+@@ -3784,6 +3825,8 @@
+ 	}
+ 
+ 	tcpm_reset_port(port);
++
++	tcpm_update_extcon_data(port, false);
+ }
+ 
+ static void tcpm_src_detach(struct tcpm_port *port)
+@@ -6060,6 +6103,64 @@
+ }
+ EXPORT_SYMBOL_GPL(tcpm_tcpc_reset);
+ 
++unsigned int default_supported_cables[] = {
++	EXTCON_NONE
++};
++
++static int tcpm_fw_get_caps_late(struct tcpm_port *port,
++			    struct fwnode_handle *fwnode)
++{
++	int ret, i;
++	ret = fwnode_property_count_u32(fwnode, "typec-altmodes");
++	if (ret > 0) {
++		u32 *props;
++		if (ret % 4) {
++			dev_err(port->dev, "Length of typec altmode array must be divisible by 4");
++			return -EINVAL;
++		}
++
++		props = devm_kzalloc(port->dev, sizeof(u32) * ret, GFP_KERNEL);
++		if (!props) {
++			dev_err(port->dev, "Failed to allocate memory for altmode properties");
++			return -ENOMEM;
++		}
++
++		if(fwnode_property_read_u32_array(fwnode, "typec-altmodes", props, ret) < 0) {
++			dev_err(port->dev, "Failed to read altmodes from port");
++			return -EINVAL;
++		}
++
++		i = 0;
++		while (ret > 0 && i < ARRAY_SIZE(port->port_altmode)) {
++			struct typec_altmode *alt;
++			struct typec_altmode_desc alt_desc = {
++				.svid = props[i * 4],
++				.mode = props[i * 4 + 1],
++				.vdo  = props[i * 4 + 2],
++				.roles = props[i * 4 + 3],
++			};
++
++
++			tcpm_log(port, "Adding altmode SVID: 0x%04x, mode: %d, vdo: %u, role: %d",
++				alt_desc.svid, alt_desc.mode, alt_desc.vdo, alt_desc.roles);
++			alt = typec_port_register_altmode(port->typec_port,
++							  &alt_desc);
++			if (IS_ERR(alt)) {
++				tcpm_log(port,
++					 "%s: failed to register port alternate mode 0x%x",
++					 dev_name(port->dev), alt_desc.svid);
++				break;
++			}
++			typec_altmode_set_drvdata(alt, port);
++			alt->ops = &tcpm_altmode_ops;
++			port->port_altmode[i] = alt;
++			i++;
++			ret -= 4;
++		}
++	}
++	return 0;
++}
++
+ static void tcpm_port_unregister_pd(struct tcpm_port *port)
+ {
+ 	usb_power_delivery_unregister_capabilities(port->port_sink_caps);
+@@ -6132,6 +6233,23 @@
+ 	if (!fwnode)
+ 		return -EINVAL;
+ 
++#ifdef CONFIG_EXTCON
++	ret = fwnode_property_count_u32(fwnode, "extcon-cables");
++	if (ret > 0) {
++		port->extcon_cables = devm_kzalloc(port->dev, sizeof(u32) * ret, GFP_KERNEL);
++		if (!port->extcon_cables) {
++			dev_err(port->dev, "Failed to allocate memory for extcon cable types. "\
++				"Using default tyes");
++			goto extcon_default;
++		}
++		fwnode_property_read_u32_array(fwnode, "extcon-cables", port->extcon_cables, ret);
++	} else {
++extcon_default:
++		dev_info(port->dev, "No cable types defined, using default cables");
++		port->extcon_cables = default_supported_cables;
++	}
++#endif
++
+ 	/*
+ 	 * This fwnode has a "compatible" property, but is never populated as a
+ 	 * struct device. Instead we simply parse it to read the properties.
+@@ -6564,6 +6682,18 @@
+ 		goto out_destroy_wq;
+ 
+ 	port->try_role = port->typec_caps.prefer_role;
++	
++#ifdef CONFIG_EXTCON
++	port->extcon = devm_extcon_dev_allocate(dev, port->extcon_cables);
++	if (IS_ERR(port->extcon)) {
++		dev_err(dev, "Failed to allocate extcon device: %ld", PTR_ERR(port->extcon));
++		goto out_destroy_wq;
++	}
++	if((err = devm_extcon_dev_register(dev, port->extcon))) {
++		dev_err(dev, "Failed to register extcon device: %d", err);
++		goto out_destroy_wq;
++	}
++#endif
+ 
+ 	port->typec_caps.fwnode = tcpc->fwnode;
+ 	port->typec_caps.revision = 0x0120;	/* Type-C spec release 1.2 */
+@@ -6604,6 +6734,12 @@
+ 				     port->port_altmode, ALTMODE_DISCOVERY_MAX);
+ 	port->registered = true;
+ 
++	err = tcpm_fw_get_caps_late(port, tcpc->fwnode);
++	if (err < 0) {
++		dev_err(dev, "Failed to get altmodes from fwnode");
++		goto out_destroy_wq;
++	}
++
+ 	mutex_lock(&port->lock);
+ 	tcpm_init(port);
+ 	mutex_unlock(&port->lock);
+diff -Naur a/include/dt-bindings/clock/rk3399-cru.h b/include/dt-bindings/clock/rk3399-cru.h
+--- a/include/dt-bindings/clock/rk3399-cru.h	2023-04-30 19:32:26.000000000 -0400
++++ b/include/dt-bindings/clock/rk3399-cru.h	2023-05-06 10:45:33.589895973 -0400
+@@ -19,6 +19,7 @@
+ #define ARMCLKB				9
+ 
+ /* sclk gates (special clocks) */
++#define SCLK_I2SOUT_SRC			64
+ #define SCLK_I2C1			65
+ #define SCLK_I2C2			66
+ #define SCLK_I2C3			67
+diff -Naur a/include/linux/serdev.h b/include/linux/serdev.h
+--- a/include/linux/serdev.h	2023-04-30 19:32:26.000000000 -0400
++++ b/include/linux/serdev.h	2023-05-06 10:57:32.379299972 -0400
+@@ -65,6 +65,7 @@
+ 	struct device_driver driver;
+ 	int	(*probe)(struct serdev_device *);
+ 	void	(*remove)(struct serdev_device *);
++	void	(*shutdown)(struct serdev_device *);
+ };
+ 
+ static inline struct serdev_device_driver *to_serdev_device_driver(struct device_driver *d)
+diff -Naur a/kernel/dma/pool.c b/kernel/dma/pool.c
+--- a/kernel/dma/pool.c	2023-04-30 19:32:26.000000000 -0400
++++ b/kernel/dma/pool.c	2023-05-06 10:45:33.585896033 -0400
+@@ -189,13 +189,10 @@
+ 	int ret = 0;
+ 
+ 	/*
+-	 * If coherent_pool was not used on the command line, default the pool
+-	 * sizes to 128KB per 1GB of memory, min 128KB, max MAX_ORDER-1.
++	 * Use 2MiB as default pool size.
+ 	 */
+ 	if (!atomic_pool_size) {
+-		unsigned long pages = totalram_pages() / (SZ_1G / SZ_128K);
+-		pages = min_t(unsigned long, pages, MAX_ORDER_NR_PAGES);
+-		atomic_pool_size = max_t(size_t, pages << PAGE_SHIFT, SZ_128K);
++		atomic_pool_size = SZ_2M;
+ 	}
+ 	INIT_WORK(&atomic_pool_work, atomic_pool_work_fn);
+ 
+diff -Naur a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
+--- a/sound/soc/codecs/es8316.c	2023-04-30 19:32:26.000000000 -0400
++++ b/sound/soc/codecs/es8316.c	2023-05-06 10:45:33.579896123 -0400
+@@ -696,7 +696,7 @@
+ 	snd_soc_component_update_bits(component, ES8316_GPIO_DEBOUNCE,
+ 				      ES8316_GPIO_ENABLE_INTERRUPT, 0);
+ 
+-	if (es8316->jack->status & SND_JACK_MICROPHONE) {
++	if (es8316->jack && (es8316->jack->status & SND_JACK_MICROPHONE)) {
+ 		es8316_disable_micbias_for_mic_gnd_short_detect(component);
+ 		snd_soc_jack_report(es8316->jack, 0, SND_JACK_BTN_0);
+ 	}
+diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
+--- a/sound/soc/codecs/rt5651.c	2023-04-30 19:32:26.000000000 -0400
++++ b/sound/soc/codecs/rt5651.c	2023-05-06 10:45:33.582896078 -0400
+@@ -24,6 +24,7 @@
+ #include <sound/initval.h>
+ #include <sound/tlv.h>
+ #include <sound/jack.h>
++#include <linux/clk.h>
+ 
+ #include "rl6231.h"
+ #include "rt5651.h"
+@@ -1511,6 +1512,7 @@
+ static int rt5651_set_bias_level(struct snd_soc_component *component,
+ 			enum snd_soc_bias_level level)
+ {
++	struct rt5651_priv *rt5651 = snd_soc_component_get_drvdata(component);
+ 	switch (level) {
+ 	case SND_SOC_BIAS_PREPARE:
+ 		if (SND_SOC_BIAS_STANDBY == snd_soc_component_get_bias_level(component)) {
+@@ -1518,6 +1520,13 @@
+ 				snd_soc_component_update_bits(component, RT5651_D_MISC,
+ 						    0xc00, 0xc00);
+ 		}
++		if (!IS_ERR(rt5651->mclk)){
++			if (snd_soc_component_get_bias_level(component) == SND_SOC_BIAS_ON) {
++				clk_disable_unprepare(rt5651->mclk);
++			} else {
++				clk_prepare_enable(rt5651->mclk);
++			}
++		}
+ 		break;
+ 	case SND_SOC_BIAS_STANDBY:
+ 		if (SND_SOC_BIAS_OFF == snd_soc_component_get_bias_level(component)) {
+@@ -2059,6 +2068,13 @@
+ {
+ 	struct rt5651_priv *rt5651 = snd_soc_component_get_drvdata(component);
+ 
++	/* Check if MCLK provided */
++	rt5651->mclk = devm_clk_get(component->dev, "mclk");
++	if (PTR_ERR(rt5651->mclk) == -EPROBE_DEFER){
++		dev_err(component->dev, "unable to get mclk\n");
++		return -EPROBE_DEFER;
++	}
++
+ 	rt5651->component = component;
+ 
+ 	snd_soc_component_update_bits(component, RT5651_PWR_ANLG1,
+diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
+--- a/sound/soc/codecs/rt5651.h	2023-04-30 19:32:26.000000000 -0400
++++ b/sound/soc/codecs/rt5651.h	2023-05-06 10:45:33.582896078 -0400
+@@ -2097,6 +2097,7 @@
+ 
+ 	int dmic_en;
+ 	bool hp_mute;
++	struct clk *mclk;
+ };
+ 
+ #endif /* __RT5651_H__ */
