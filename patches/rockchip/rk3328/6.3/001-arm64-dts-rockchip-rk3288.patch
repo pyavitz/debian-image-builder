@@ -639,8 +639,16 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchi
 +};
 diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rockchip/rk3328.dtsi
 --- a/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2023-04-30 19:32:26.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2023-05-06 08:46:30.695660370 -0400
-@@ -141,6 +141,17 @@
++++ b/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2023-05-06 10:10:31.281897571 -0400
+@@ -103,6 +103,7 @@
+ 		l2: l2-cache0 {
+ 			compatible = "cache";
+ 			cache-level = <2>;
++			cache-unified;
+ 		};
+ 	};
+ 
+@@ -141,6 +142,17 @@
  			opp-microvolt = <1300000>;
  			clock-latency-ns = <40000>;
  		};
@@ -658,7 +666,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  	};
  
  	analog_sound: analog-sound {
-@@ -194,6 +205,26 @@
+@@ -194,6 +206,26 @@
  		method = "smc";
  	};
  
@@ -685,7 +693,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  	timer {
  		compatible = "arm,armv8-timer";
  		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-@@ -280,6 +311,17 @@
+@@ -280,6 +312,17 @@
  		status = "disabled";
  	};
  
@@ -703,7 +711,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  	grf: syscon@ff100000 {
  		compatible = "rockchip,rk3328-grf", "syscon", "simple-mfd";
  		reg = <0x0 0xff100000 0x0 0x1000>;
-@@ -301,6 +343,10 @@
+@@ -301,6 +344,10 @@
  			#address-cells = <1>;
  			#size-cells = <0>;
  
@@ -714,7 +722,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  			power-domain@RK3328_PD_HEVC {
  				reg = <RK3328_PD_HEVC>;
  				#power-domain-cells = <0>;
-@@ -621,6 +667,7 @@
+@@ -621,6 +668,7 @@
  				  "ppmmu1";
  		clocks = <&cru ACLK_GPU>, <&cru ACLK_GPU>;
  		clock-names = "bus", "core";
@@ -722,7 +730,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  		resets = <&cru SRST_GPU_A>;
  	};
  
-@@ -802,6 +849,7 @@
+@@ -802,6 +850,7 @@
  			<&cru ACLK_BUS_PRE>, <&cru HCLK_BUS_PRE>,
  			<&cru PCLK_BUS_PRE>, <&cru ACLK_PERI_PRE>,
  			<&cru HCLK_PERI>, <&cru PCLK_PERI>,
@@ -730,7 +738,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  			<&cru SCLK_RTC32K>;
  		assigned-clock-parents =
  			<&cru HDMIPHY>, <&cru PLL_APLL>,
-@@ -823,6 +871,7 @@
+@@ -823,6 +872,7 @@
  			<150000000>, <75000000>,
  			<75000000>, <150000000>,
  			<75000000>, <75000000>,
@@ -738,7 +746,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  			<32768>;
  	};
  
-@@ -863,6 +912,47 @@
+@@ -863,6 +913,47 @@
  		};
  	};
  
@@ -786,7 +794,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  	sdmmc: mmc@ff500000 {
  		compatible = "rockchip,rk3328-dw-mshc", "rockchip,rk3288-dw-mshc";
  		reg = <0x0 0xff500000 0x0 0x4000>;
-@@ -1002,6 +1092,8 @@
+@@ -1002,6 +1093,8 @@
  			 <&cru ACLK_USB3OTG>;
  		clock-names = "ref_clk", "suspend_clk",
  			      "bus_clk";
@@ -797,7 +805,7 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rock
  		snps,dis-del-phy-power-chg-quirk;
 diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
 --- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2023-04-30 19:32:26.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2023-05-06 08:46:30.694660380 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2023-05-06 09:05:50.513892850 -0400
 @@ -5,9 +5,10 @@
  
  /dts-v1/;
@@ -1081,8 +1089,55 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dt
  	status = "okay";
 diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
 --- a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts	2023-04-30 19:32:26.000000000 -0400
-+++ b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts	2023-05-06 08:46:30.698660340 -0400
-@@ -386,6 +386,18 @@
++++ b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts	2023-05-06 10:16:26.371380149 -0400
+@@ -5,6 +5,7 @@
+ 
+ /dts-v1/;
+ #include "rk3328.dtsi"
++#include "rk3328-dram-default-timing.dtsi"
+ 
+ / {
+ 	model = "Pine64 Rock64";
+@@ -37,7 +38,8 @@
+ 		vin-supply = <&vcc_io>;
+ 	};
+ 
+-	vcc_host_5v: vcc-host-5v-regulator {
++	// Common enable line for all of the rails mentioned in the labels.
++	vcc_host_5v: vcc_host1_5v: vcc_otg_5v: vcc-host-5v-regulator {
+ 		compatible = "regulator-fixed";
+ 		gpio = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
+ 		pinctrl-names = "default";
+@@ -48,17 +50,6 @@
+ 		vin-supply = <&vcc_sys>;
+ 	};
+ 
+-	vcc_host1_5v: vcc_otg_5v: vcc-host1-5v-regulator {
+-		compatible = "regulator-fixed";
+-		gpio = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&usb20_host_drv>;
+-		regulator-name = "vcc_host1_5v";
+-		regulator-always-on;
+-		regulator-boot-on;
+-		vin-supply = <&vcc_sys>;
+-	};
+-
+ 	vcc_sys: vcc-sys {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc_sys";
+@@ -162,6 +153,10 @@
+ 	status = "okay";
+ };
+ 
++&gpu {
++	mali-supply = <&vdd_logic>;
++};
++
+ &hdmi {
+ 	status = "okay";
+ };
+@@ -386,6 +381,18 @@
  	status = "okay";
  };
  
@@ -1099,17 +1154,5 @@ diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts b/arch/arm64/boot/dt
 +};
 +
  &usb_host0_ehci {
- 	status = "okay";
- };
-@@ -394,6 +406,11 @@
- 	status = "okay";
- };
- 
-+&usbdrd3 {
-+	dr_mode = "host";
-+	status = "okay";
-+};
-+
- &vop {
  	status = "okay";
  };
