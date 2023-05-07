@@ -5,38 +5,91 @@ user_patches(){
 if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
 	echo ""
 	echo -e "${WHT}Applying user patches${FIN} ..."
-	for i in ../../${USERPATCHES}/*.patch; do patch -p1 < $i; done;
-	echo_done;
+	for i in ../../${USERPATCHES}/*.patch; do patch -p1 < $i; done
+	echo_done
 fi
 }
 
-# setup uboot patch log
+# uboot patch log
 uboot_log(){
 LOG_DIR="../../output/logs"
 LOG_FILE="${LOG_DIR}/${BOARD}-u-boot-patch.log"
 if [[ -f "${LOG_FILE}" ]]; then
-	mv -f ${LOG_FILE} ${LOG_FILE}.1;
-	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE};
-	echo `date` >> ${LOG_FILE};
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
 else
-	mkdir -p ${LOG_DIR};
-	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE};
-	echo `date` >> ${LOG_FILE};
+	mkdir -p ${LOG_DIR}
+	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
 fi
 }
 
-# setup linux patch log
+# u-boot patching
+uboot_patching(){
+# dry run
+if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
+	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
+		[[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
+	uboot_log
+	echo ""
+	echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}"
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# check log and report
+if [[ -f "${LOG_FILE}" ]]; then
+	if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
+		grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
+	fi
+	if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
+		grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
+		if [ $VERBOSE -eq 1 ]; then
+			exit 0
+		fi
+	fi
+fi
+# apply patches
+if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
+	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
+		[[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
+	echo "" >> ${LOG_FILE}
+	echo "# APPLYING PATCHES" >> ${LOG_FILE}
+	echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# clean
+if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
+if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
+}
+
+# linux patch log
 linux_log(){
 LOG_DIR="../../output/logs"
 LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
 if [ -e ${LOG_FILE} ]; then
-	mv -f ${LOG_FILE} ${LOG_FILE}.1;
-	echo "Linux ${VERSION}" > ${LOG_FILE};
-	echo `date` >> ${LOG_FILE};
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
 else
-	mkdir -p ${LOG_DIR};
-	echo "Linux ${VERSION}" > ${LOG_FILE};
-	echo `date` >> ${LOG_FILE};
+	mkdir -p ${LOG_DIR}
+	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
 fi
 }
 
@@ -45,73 +98,42 @@ dryrun(){
 linux_log
 echo ""
 echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
-# apply across all boards
 if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-if [[ "$FAMILY" == "allwinner" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]] && [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}" >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-if [[ "$FAMILY" == "freescale" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-fi
-if [[ "$BOARD" == "bananapim5" || "$BOARD" == "lepotato" || "$BOARD" == "radxazero" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${BOARD}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	if [[ -e "../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$BOARD" == "x96air" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${BOARD}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	if [[ -e "../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk356x" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-		if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; then
+	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
+		if [[ `ls ../../${LINUX_PATCHDIR}/../all/*.patch` ]] > /dev/null 2>&1; then
+			echo "# ${LINUX_PATCHDIR}/../all" >> ${LOG_FILE}
+			for i in ../../${LINUX_PATCHDIR}/../all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
 		fi
 	fi
-	if [[ "$FAMILY_EXT" == "rk3588" ]] && [[ -d "../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi	
 fi
-if [[ "$FAMILY" == "samsung" ]] || [[ "$FAMILY_EXT" == "meson8b" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
+if [[ "$FAMILY" == "amlogic" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
 fi
 }
 
 # linux check log and report
 check(){
 if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
-	grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
+	grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
 fi
 if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
-	grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
+	grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
 	if [ $VERBOSE -eq 1 ]; then
-		exit 0;
+		exit 0
 	fi
 fi
 }
@@ -120,112 +142,32 @@ fi
 apply(){
 echo "" >> ${LOG_FILE}
 echo "# APPLYING PATCHES" >> ${LOG_FILE}
-echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
-# apply across all boards
+echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}"
 if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+		for i in ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-if [[ "$FAMILY" == "allwinner" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]] && [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}" >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-if [[ "$FAMILY" == "freescale" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-fi
-if [[ "$BOARD" == "bananapim5" || "$BOARD" == "lepotato" || "$BOARD" == "radxazero" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${BOARD}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	if [[ -e "../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$BOARD" == "x96air" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${BOARD}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	if [[ -e "../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ "$LINUX_VERSION" == "5.15" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/misc/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk356x" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-			for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-		fi
-	fi
-	if [[ "$FAMILY_EXT" == "rk3588" ]] && [[ -d "../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}" ]] && [[ "$FORCE_GITHUB" == "false" ]]; then
-		for i in ../../${LINUX_PATCHDIR}/${FAMILY_EXT}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-if [[ "$FAMILY" == "samsung" ]] || [[ "$FAMILY_EXT" == "meson8b" ]]; then
-	for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-fi
-}
-
-# u-boot patching
-uboot_patching(){
-# dry run
-if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-	uboot_log;
-	echo "";
-	echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${YLW}dry run${FIN}${PNK}]${FIN}";
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-fi
-# check log and report
-if [[ -f "${LOG_FILE}" ]]; then
-	if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
-		grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
-	fi
-	if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
-		grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}";
-		if [ $VERBOSE -eq 1 ]; then
-			exit 0;
+if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; then
+	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
+		if [[ `ls ../../${LINUX_PATCHDIR}/../all/*.patch` ]] > /dev/null 2>&1; then
+			echo "# ${LINUX_PATCHDIR}/../all" >> ${LOG_FILE}
+			for i in ../../${LINUX_PATCHDIR}/../all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 		fi
 	fi
 fi
-# apply patches
-if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-	echo "" >> ${LOG_FILE}
-	echo "# APPLYING PATCHES" >> ${LOG_FILE}
-	echo -e " ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
-	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE};
+if [[ "$FAMILY" == "amlogic" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-# clean
-if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
-if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 }
 
 linux_patching(){
@@ -233,9 +175,11 @@ linux_patching(){
 linux_packaging
 # patching
 if [[ ! -z $VENDOR_KERNEL ]]; then
-	user_patches;
+	user_patches
 else
-	dryrun; check; apply; user_patches;
+	if [[ "$FORCE_GITHUB" == "false" ]]; then
+		dryrun; check; apply; user_patches;
+	fi
 fi
 # clean
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
