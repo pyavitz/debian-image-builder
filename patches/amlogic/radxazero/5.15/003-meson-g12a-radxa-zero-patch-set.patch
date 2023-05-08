@@ -1,6 +1,15 @@
+diff -Naur a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
+--- a/arch/arm64/boot/.gitignore	2023-04-30 19:23:24.000000000 -0400
++++ b/arch/arm64/boot/.gitignore	2023-05-07 21:22:08.939503725 -0400
+@@ -1,3 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ Image
+ Image.gz
++*.dtb*
++*.scr
 diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
---- a/drivers/gpu/drm/meson/meson_vclk.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_vclk.c	2022-05-23 06:12:47.953207627 -0400
+--- a/drivers/gpu/drm/meson/meson_vclk.c	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_vclk.c	2023-05-07 21:22:08.960503361 -0400
 @@ -357,6 +357,8 @@
  	MESON_VCLK_HDMI_594000,
  /* 2970 /1 /1 /1 /5 /1  => /1 /2 */
@@ -41,8 +50,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vc
  
  		meson_hdmi_pll_set_params(priv, m, frac, od1, od2, od3);
 diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
---- a/drivers/gpu/drm/meson/meson_venc.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/gpu/drm/meson/meson_venc.c	2022-05-23 06:12:47.953207627 -0400
+--- a/drivers/gpu/drm/meson/meson_venc.c	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/gpu/drm/meson/meson_venc.c	2023-05-07 21:22:08.961503344 -0400
 @@ -866,10 +866,11 @@
  			    DRM_MODE_FLAG_PVSYNC | DRM_MODE_FLAG_NVSYNC))
  		return MODE_BAD;
@@ -58,8 +67,8 @@ diff -Naur a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_ve
  
  	return MODE_OK;
 diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/panfrost_job.c
---- a/drivers/gpu/drm/panfrost/panfrost_job.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/gpu/drm/panfrost/panfrost_job.c	2022-05-23 06:12:47.957207595 -0400
+--- a/drivers/gpu/drm/panfrost/panfrost_job.c	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/gpu/drm/panfrost/panfrost_job.c	2023-05-07 21:22:08.962503327 -0400
 @@ -234,7 +234,7 @@
  	if (!atomic_read(&pfdev->reset.pending)) {
  		job_write(pfdev, JS_COMMAND_NEXT(js), JS_COMMAND_START);
@@ -69,7 +78,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  			job, js, subslot, jc_head, cfg & 0xf);
  	}
  	spin_unlock(&pfdev->js->job_lock);
-@@ -400,12 +400,12 @@
+@@ -425,12 +425,12 @@
  	bool signal_fence = true;
  
  	if (!panfrost_exception_is_fault(js_status)) {
@@ -84,7 +93,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  			js, exception_name,
  			job_read(pfdev, JS_HEAD_LO(js)),
  			job_read(pfdev, JS_TAIL_LO(js)));
-@@ -646,7 +646,7 @@
+@@ -671,7 +671,7 @@
  				 10, 10000);
  
  	if (ret)
@@ -93,7 +102,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  
  	/* Handle the remaining interrupts before we reset. */
  	panfrost_job_handle_irqs(pfdev);
-@@ -715,7 +715,7 @@
+@@ -740,7 +740,7 @@
  	if (dma_fence_is_signaled(job->done_fence))
  		return DRM_GPU_SCHED_STAT_NOMINAL;
  
@@ -102,7 +111,7 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		js,
  		job_read(pfdev, JS_CONFIG(js)),
  		job_read(pfdev, JS_STATUS(js)),
-@@ -796,7 +796,7 @@
+@@ -822,7 +822,7 @@
  					IRQF_SHARED, KBUILD_MODNAME "-job",
  					pfdev);
  	if (ret) {
@@ -111,9 +120,9 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		return ret;
  	}
  
-@@ -814,7 +814,7 @@
+@@ -840,7 +840,7 @@
  				     pfdev->reset.wq,
- 				     NULL, "pan_js", pfdev->dev);
+ 				     NULL, "pan_js");
  		if (ret) {
 -			dev_err(pfdev->dev, "Failed to create scheduler: %d.", ret);
 +			dev_err(pfdev->dev, "Failed to create scheduler: %d\n", ret);
@@ -121,9 +130,19 @@ diff -Naur a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/
  		}
  	}
 diff -Naur a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/sched_main.c
---- a/drivers/gpu/drm/scheduler/sched_main.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/gpu/drm/scheduler/sched_main.c	2022-05-23 06:12:47.957207595 -0400
-@@ -912,7 +912,7 @@
+--- a/drivers/gpu/drm/scheduler/sched_main.c	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/gpu/drm/scheduler/sched_main.c	2023-05-07 21:22:08.963503309 -0400
+@@ -489,8 +489,7 @@
+ 			if (r == -ENOENT)
+ 				drm_sched_job_done(s_job);
+ 			else if (r)
+-				DRM_ERROR("fence add callback failed (%d)\n",
+-					  r);
++				DRM_ERROR("Failed to add fence callback: %d\n", r);
+ 		} else
+ 			drm_sched_job_done(s_job);
+ 	}
+@@ -776,7 +775,7 @@
  	struct drm_gpu_scheduler *sched = (struct drm_gpu_scheduler *)param;
  	int r;
  
@@ -132,9 +151,33 @@ diff -Naur a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/
  
  	while (!kthread_should_stop()) {
  		struct drm_sched_entity *entity = NULL;
+@@ -824,13 +823,11 @@
+ 			if (r == -ENOENT)
+ 				drm_sched_job_done(sched_job);
+ 			else if (r)
+-				DRM_ERROR("fence add callback failed (%d)\n",
+-					  r);
++				DRM_ERROR("Failed to add fence callback: %d\n", r);
+ 			dma_fence_put(fence);
+ 		} else {
+ 			if (IS_ERR(fence))
+ 				dma_fence_set_error(&s_fence->finished, PTR_ERR(fence));
+-
+ 			drm_sched_job_done(sched_job);
+ 		}
+ 
+@@ -885,7 +882,7 @@
+ 	if (IS_ERR(sched->thread)) {
+ 		ret = PTR_ERR(sched->thread);
+ 		sched->thread = NULL;
+-		DRM_ERROR("Failed to create scheduler for %s.\n", name);
++		DRM_ERROR("Failed to create scheduler for %s: %d\n", name, ret);
+ 		return ret;
+ 	}
+ 
 diff -Naur a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/pinctrl-meson-g12a.c
---- a/drivers/pinctrl/meson/pinctrl-meson-g12a.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/drivers/pinctrl/meson/pinctrl-meson-g12a.c	2022-05-23 06:12:47.977207436 -0400
+--- a/drivers/pinctrl/meson/pinctrl-meson-g12a.c	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/pinctrl/meson/pinctrl-meson-g12a.c	2023-05-07 21:22:08.972503153 -0400
 @@ -269,15 +269,19 @@
  /* pwm_b */
  static const unsigned int pwm_b_x7_pins[]		= { GPIOX_7 };
@@ -155,7 +198,7 @@ diff -Naur a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/
  
  /* pwm_e */
  static const unsigned int pwm_e_pins[]			= { GPIOX_16 };
-@@ -590,6 +594,9 @@
+@@ -588,6 +592,9 @@
  	GROUP(bt565_a_din5,		2),
  	GROUP(bt565_a_din6,		2),
  	GROUP(bt565_a_din7,		2),
@@ -165,7 +208,7 @@ diff -Naur a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/
  	GROUP(tsin_b_valid_z,		3),
  	GROUP(tsin_b_sop_z,		3),
  	GROUP(tsin_b_din0_z,		3),
-@@ -722,6 +729,7 @@
+@@ -719,6 +726,7 @@
  	GROUP(uart_c_rts,		2),
  	GROUP(iso7816_clk_h,		1),
  	GROUP(iso7816_data_h,		1),
@@ -173,7 +216,7 @@ diff -Naur a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/
  	GROUP(pwm_f_h,			4),
  	GROUP(cec_ao_a_h,		4),
  	GROUP(cec_ao_b_h,		5),
-@@ -1057,15 +1065,15 @@
+@@ -1053,15 +1061,15 @@
  };
  
  static const char * const pwm_b_groups[] = {
@@ -192,9 +235,77 @@ diff -Naur a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/
  };
  
  static const char * const pwm_e_groups[] = {
+diff -Naur a/drivers/soc/amlogic/meson-gx-socinfo.c b/drivers/soc/amlogic/meson-gx-socinfo.c
+--- a/drivers/soc/amlogic/meson-gx-socinfo.c	2023-04-30 19:23:24.000000000 -0400
++++ b/drivers/soc/amlogic/meson-gx-socinfo.c	2023-05-07 21:22:08.953503483 -0400
+@@ -65,6 +65,7 @@
+ 	{ "A113X", 0x25, 0x37, 0xff },
+ 	{ "A113D", 0x25, 0x22, 0xff },
+ 	{ "S905D2", 0x28, 0x10, 0xf0 },
++	{ "S905Y2", 0x28, 0x30, 0xf0 },
+ 	{ "S905X2", 0x28, 0x40, 0xf0 },
+ 	{ "A311D", 0x29, 0x10, 0xf0 },
+ 	{ "S922X", 0x29, 0x40, 0xf0 },
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2023-04-30 19:23:24.000000000 -0400
++++ b/Makefile	2023-05-07 21:22:08.940503708 -0400
+@@ -1443,7 +1443,7 @@
+ 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
+ 
+ %.dtbo: include/config/kernel.release scripts_dtc
+-	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
++	$(Q)$(MAKE) $(build)=$(dtstree)/overlays $(dtstree)/overlays/$@
+ 
+ PHONY += dtbs dtbs_install dtbs_check
+ dtbs: include/config/kernel.release scripts_dtc
+diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
+--- a/scripts/Makefile.dtbinst	2023-04-30 19:23:24.000000000 -0400
++++ b/scripts/Makefile.dtbinst	2023-05-07 21:22:08.940503708 -0400
+@@ -18,9 +18,10 @@
+ include $(src)/Makefile
+ 
+ dtbs    := $(addprefix $(dst)/, $(dtb-y) $(if $(CONFIG_OF_ALL_DTBS),$(dtb-)))
++dtbos   := $(addprefix $(dst)/, $(dtbo-y) $(if $(CONFIG_OF_ALL_DTBS),$(dtb-)))
+ subdirs := $(addprefix $(obj)/, $(subdir-y) $(subdir-m))
+ 
+-__dtbs_install: $(dtbs) $(subdirs)
++__dtbs_install: $(dtbs) $(dtbos) $(subdirs)
+ 	@:
+ 
+ quiet_cmd_dtb_install = INSTALL $@
+diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
+--- a/scripts/Makefile.lib	2023-04-30 19:23:24.000000000 -0400
++++ b/scripts/Makefile.lib	2023-05-07 21:22:08.941503691 -0400
+@@ -300,6 +300,7 @@
+ ifeq ($(findstring 1,$(KBUILD_EXTRA_WARN)),)
+ DTC_FLAGS += -Wno-unit_address_vs_reg \
+ 	-Wno-unit_address_format \
++	-Wno-gpios_property \
+ 	-Wno-avoid_unnecessary_addr_size \
+ 	-Wno-alias_paths \
+ 	-Wno-graph_child_address \
+@@ -373,6 +374,18 @@
+ $(obj)/%.dt.yaml: $(src)/%.dts $(DTC) $(DT_TMP_SCHEMA) FORCE
+ 	$(call if_changed_rule,dtc)
+ 
++quiet_cmd_dtco = DTCO    $@
++cmd_dtco = mkdir -p $(dir ${dtc-tmp}) ; \
++	$(CPP) $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ; \
++	$(DTC) -@ -H epapr -O dtb -o $@ -b 0 \
++		-i $(dir $<) $(DTC_FLAGS) \
++		-Wno-interrupts_property \
++		-d $(depfile).dtc.tmp $(dtc-tmp) ; \
++	cat $(depfile).pre.tmp $(depfile).dtc.tmp > $(depfile)
++
++$(obj)/%.dtbo: $(obj)/%.dts FORCE
++	$(call if_changed_dep,dtco)
++
+ dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
+ 
+ # Bzip2
 diff -Naur a/sound/soc/codecs/hdmi-codec.c b/sound/soc/codecs/hdmi-codec.c
---- a/sound/soc/codecs/hdmi-codec.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/sound/soc/codecs/hdmi-codec.c	2022-05-23 06:12:47.941207723 -0400
+--- a/sound/soc/codecs/hdmi-codec.c	2023-04-30 19:23:24.000000000 -0400
++++ b/sound/soc/codecs/hdmi-codec.c	2023-05-07 21:22:08.945503621 -0400
 @@ -188,84 +188,97 @@
  /*
   * hdmi_codec_channel_alloc: speaker configuration available for CEA
@@ -365,21 +476,9 @@ diff -Naur a/sound/soc/codecs/hdmi-codec.c b/sound/soc/codecs/hdmi-codec.c
  
  	for (i = 0; i < info->max_channels; i++) {
  		if (hcp->chmap_idx == HDMI_CODEC_CHMAP_IDX_UNKNOWN)
-diff -Naur a/sound/soc/meson/Kconfig b/sound/soc/meson/Kconfig
---- a/sound/soc/meson/Kconfig	2022-05-22 15:52:31.000000000 -0400
-+++ b/sound/soc/meson/Kconfig	2022-05-23 06:12:47.945207691 -0400
-@@ -70,6 +70,8 @@
- 	imply SND_MESON_AXG_PDM
- 	imply SND_MESON_G12A_TOACODEC
- 	imply SND_MESON_G12A_TOHDMITX if DRM_MESON_DW_HDMI
-+	imply SND_SOC_MESON_T9015
-+	imply SND_SOC_SIMPLE_AMPLIFIER
- 	help
- 	  Select Y or M to add support for the AXG SoC sound card
- 
 diff -Naur a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
---- a/sound/soc/meson/aiu-codec-ctrl.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/sound/soc/meson/aiu-codec-ctrl.c	2022-05-23 06:12:47.957207595 -0400
+--- a/sound/soc/meson/aiu-codec-ctrl.c	2023-04-30 19:23:24.000000000 -0400
++++ b/sound/soc/meson/aiu-codec-ctrl.c	2023-05-07 21:22:08.966503257 -0400
 @@ -12,14 +12,60 @@
  #include "aiu.h"
  #include "meson-codec-glue.h"
@@ -523,8 +622,8 @@ diff -Naur a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
  
  static const struct snd_soc_dapm_widget aiu_hdmi_ctrl_widgets[] = {
 diff -Naur a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
---- a/sound/soc/meson/axg-frddr.c	2022-05-22 15:52:31.000000000 -0400
-+++ b/sound/soc/meson/axg-frddr.c	2022-05-23 06:12:47.945207691 -0400
+--- a/sound/soc/meson/axg-frddr.c	2023-04-30 19:23:24.000000000 -0400
++++ b/sound/soc/meson/axg-frddr.c	2023-05-07 21:22:08.948503569 -0400
 @@ -106,7 +106,7 @@
  	.name = "FRDDR",
  	.playback = {
@@ -543,3 +642,73 @@ diff -Naur a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
  		.channels_max	= AXG_FIFO_CH_MAX,
  		.rates		= AXG_FIFO_RATES,
  		.formats	= AXG_FIFO_FORMATS,
+diff -Naur a/sound/soc/meson/axg-tdm-interface.c b/sound/soc/meson/axg-tdm-interface.c
+--- a/sound/soc/meson/axg-tdm-interface.c	2023-04-30 19:23:24.000000000 -0400
++++ b/sound/soc/meson/axg-tdm-interface.c	2023-05-07 21:22:08.967503240 -0400
+@@ -351,13 +351,29 @@
+ 	return 0;
+ }
+ 
+-static int axg_tdm_iface_prepare(struct snd_pcm_substream *substream,
++static int axg_tdm_iface_trigger(struct snd_pcm_substream *substream,
++				 int cmd,
+ 				 struct snd_soc_dai *dai)
+ {
+-	struct axg_tdm_stream *ts = snd_soc_dai_get_dma_data(dai, substream);
++	struct axg_tdm_stream *ts =
++		snd_soc_dai_get_dma_data(dai, substream);
+ 
+-	/* Force all attached formatters to update */
+-	return axg_tdm_stream_reset(ts);
++	switch (cmd) {
++	case SNDRV_PCM_TRIGGER_START:
++	case SNDRV_PCM_TRIGGER_RESUME:
++	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
++		axg_tdm_stream_start(ts);
++		break;
++	case SNDRV_PCM_TRIGGER_SUSPEND:
++	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
++	case SNDRV_PCM_TRIGGER_STOP:
++		axg_tdm_stream_stop(ts);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
+ }
+ 
+ static int axg_tdm_iface_remove_dai(struct snd_soc_dai *dai)
+@@ -397,8 +413,8 @@
+ 	.set_fmt	= axg_tdm_iface_set_fmt,
+ 	.startup	= axg_tdm_iface_startup,
+ 	.hw_params	= axg_tdm_iface_hw_params,
+-	.prepare	= axg_tdm_iface_prepare,
+ 	.hw_free	= axg_tdm_iface_hw_free,
++	.trigger	= axg_tdm_iface_trigger,
+ };
+ 
+ /* TDM Backend DAIs */
+diff -Naur a/sound/soc/meson/Kconfig b/sound/soc/meson/Kconfig
+--- a/sound/soc/meson/Kconfig	2023-04-30 19:23:24.000000000 -0400
++++ b/sound/soc/meson/Kconfig	2023-05-07 21:22:08.949503552 -0400
+@@ -70,6 +70,8 @@
+ 	imply SND_MESON_AXG_PDM
+ 	imply SND_MESON_G12A_TOACODEC
+ 	imply SND_MESON_G12A_TOHDMITX if DRM_MESON_DW_HDMI
++	imply SND_SOC_MESON_T9015
++	imply SND_SOC_SIMPLE_AMPLIFIER
+ 	help
+ 	  Select Y or M to add support for the AXG SoC sound card
+ 
+diff -Naur a/sound/soc/meson/meson-card-utils.c b/sound/soc/meson/meson-card-utils.c
+--- a/sound/soc/meson/meson-card-utils.c	2023-04-30 19:23:24.000000000 -0400
++++ b/sound/soc/meson/meson-card-utils.c	2023-05-07 21:22:08.968503223 -0400
+@@ -302,6 +302,7 @@
+ 
+ 	priv->card.owner = THIS_MODULE;
+ 	priv->card.dev = dev;
++	priv->card.driver_name = dev->driver->name;
+ 	priv->match_data = data;
+ 
+ 	ret = snd_soc_of_parse_card_name(&priv->card, "model");

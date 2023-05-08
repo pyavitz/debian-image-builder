@@ -1,0 +1,498 @@
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile	2023-05-07 21:22:08.936503777 -0400
+@@ -0,0 +1,19 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	meson-g12a-gpio-8-led.dtbo \
++	meson-g12a-gpio-10-led.dtbo \
++	meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dtbo \
++	meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dtbo \
++	meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dtbo \
++	meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dtbo \
++	meson-g12a-pwmao-a-on-gpioao-11.dtbo \
++	meson-g12a-pwm-c-on-gpiox-8.dtbo \
++	meson-g12a-spi-spidev.dtbo \
++	meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dtbo \
++	meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
++	meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
++	meson-g12a-uart-ee-c.dtbo \
++	meson-g12-gxl-cma-pool-896MB.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,26 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target-path = "/";
++			__overlay__ {
++
++			leds {
++				compatible = "gpio-leds";
++
++				led-green {
++					label = "radxa-zero:green";
++					gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
++					linux,default-trigger = "heartbeat";
++					default-state = "on";
++				};
++			};
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-8-led.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,26 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target-path = "/";
++			__overlay__ {
++
++			leds {
++				compatible = "gpio-leds";
++
++				led-green {
++					label = "radxa-zero:green";
++					gpios = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
++					linux,default-trigger = "heartbeat";
++					default-state = "on";
++				};
++			};
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c_AO>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c_ao_sck_pins &i2c_ao_sda_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c1>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c1_sda_h6_pins &i2c1_sck_h7_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c1>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c1_sda_x_pins &i2c1_sck_x_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c3>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c3_sck_a_pins &i2c3_sda_a_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts	2023-05-07 21:22:08.937503760 -0400
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&pwm_AO_ab>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&pwm_ao_a_pins>;
++			pinctrl-names = "default";
++			clocks = <&xtal>;
++			clock-names = "clkin3";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts	2023-05-07 21:22:08.938503743 -0400
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&pwm_cd>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&pwm_c_x8_pins>;
++			pinctrl-names = "default";
++			clocks = <&xtal>;
++			clock-names = "clkin2";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts	2023-05-07 21:22:08.938503743 -0400
+@@ -0,0 +1,38 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&spicc0>;
++		__overlays__ {
++			pinctrl-0 = <&spicc0_x_pins &spicc0_ss0_x_pins>;
++			pinctrl-names = "default";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev@0 {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <10000000>;
++			};
++		};
++	};
++
++	fragment@1 {
++		target = <&spicc1>;
++		__overlays__ {
++			pinctrl-0 = <&spicc1_pins &spicc1_ss0_pins>;
++			pinctrl-names = "default";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev@0 {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <10000000>;
++			};
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts	2023-05-07 21:22:08.938503743 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_a_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts	2023-05-07 21:22:08.938503743 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_b_tx_2_rx_3_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts	2023-05-07 21:22:08.938503743 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_b_tx_8_rx_9_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts	2023-05-07 21:22:08.938503743 -0400
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_C>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_c_pins &uart_c_cts_rts_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts	2023-05-07 21:22:08.939503725 -0400
+@@ -0,0 +1,19 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "amlogic,g12a", "amlogic,g12b", "amlogic,meson-gxl";
++
++	fragment@0 {
++		target-path = "/reserved-memory";
++		__overlay__ {
++			linux,cma {
++				compatible = "shared-dma-pool";
++				reusable;
++				size = <0x0 0x38000000>;
++				alignment = <0x0 0x400000>;
++				linux,cma-default;
++			};
++		};
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/amlogic/overlays/README.meson-overlays	2023-05-07 21:22:08.939503725 -0400
+@@ -0,0 +1,168 @@
++## Introduction
++
++This document describes overlays provided in the kernel packages.
++For generic device tree overlays documentation please see
++https://wiki.radxa.com/Device-tree-overlays
++
++## Platform and Chips:
++
++Amlogic
++- meson-g12a / S905Y2
++
++#### usage
++
++Kernel provided DT overlays files are in
++  /boot/dtbs/$(uname -r)/amlogic/overlays/
++
++/boot/uEnv.txt contents:
++
++overlays=meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3 meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7 meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15 meson-g12a-spi-spidev
++param_spidev_spi_bus=0
++param_spidev_max_freq=10000000
++
++Add names of overlays you want to activate to overlays= line in /boot/uEnv.txt, separated with spaces.
++Add required parameters with their values to /boot/uEnv.txt, one per line.
++Add optional parameters with their values to /boot/uEnv.txt if you want to change the default value, one per line.
++
++#### Meson Overlay details:
++
++- meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3 meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7 meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11 meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15
++- meson-g12a-pwmao-a-on-gpioao-11 meson-g12a-pwm-c-on-gpiox-8
++- meson-g12a-spi-spidev
++- meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1 meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3 meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9 meson-g12a-uart-ee-c
++
++#### meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7
++
++Activates I2C EE M1
++
++Device name: /dev/i2c-1
++
++Pins (SCL, SDA): GPIOH_7, GPIOH_6
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7
++
++#### meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11
++
++Activates I2C EE M1
++
++Device name: /dev/i2c-1
++
++Pins (SCL, SDA): GPIOX_11, GPIOX_10
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11
++
++#### meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15
++
++Activates I2C EE M3
++
++Device name: /dev/i2c-3
++
++Pins (SCL, SDA): GPIOA_15, GPIOA_14
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15
++
++#### meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3
++
++Activates I2C AO M0
++
++Device name: /dev/i2c-4
++
++Pins (SCL, SDA): GPIOAO_2, GPIOAO_3
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3
++
++#### meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1
++
++Activates UART AO A (/dev/ttyAML0)
++
++pins (RX, TX): GPIOAO_1, GPIOAO_0
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1
++
++This dtbo meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1 enables us to use /dev/ttyAML0 as serial console or common serial communication.
++
++For usage of serial console, add the following lines to /boot/uEnv.txt
++
++console=ttyAML0,115200
++overlays=meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1
++
++For usage of common serial communication, add the following line to /boot/uEnv.txt
++
++overlays=meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1
++
++#### meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3
++
++Activates UART AO B (/dev/ttyAML1)
++
++pins (RX, TX): GPIOAO_3, GPIOAO_2
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3
++
++#### meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9
++
++Activates UART AO B (/dev/ttyAML1)
++
++pins (RX, TX): GPIOAO_9, GPIOAO_8
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9
++
++#### meson-g12a-uart-ee-c
++
++Activates UART EE C (/dev/ttyAML4)
++
++pins (RX, TX, RTS, CTS): GPIOH_6, GPIOH_7, GPIOH_4, GPIOH_5
++
++Usage: add one line in /boot/uEnv.txt
++overlays=meson-g12a-uart-ee-c
++
++#### meson-g12a-pwm-c-on-gpiox-8
++
++Activates PWM_C
++
++Pins: GPIOX_8
++
++#### meson-g12a-pwmao-a-on-gpioao-11
++
++Activates PWMAO_A
++
++Pins: GPIOAO_11
++
++#### meson-g12a-spi-spidev
++
++Activates SPIdev device node (/dev/spidevX.Y) for userspace SPI access,
++where X is the bus number and Y is the CS number
++
++SPI A bus
++    pins (SS0, SCLK, MOSI, MISO): GPIOX_10, GPIOX_11, GPIOX_8, GPIOX_9
++    device: /dev/spidev0.0
++
++SPI B bus
++    pins (SS0, SCLK, MOSI, MISO): GPIOH_6, GPIOH_7, GPIOH_4, GPIOH_5
++    device: /dev/spidev1.0
++
++Parameters:
++
++param_spidev_spi_bus (int)
++    SPI bus to activate SPIdev support on
++    Required
++    Supported values: 0, 1
++
++param_spidev_spi_cs (int)
++    SPI chip select number
++    Optional
++    Default: 0
++    Supported values: 0
++
++param_spidev_max_freq (int)
++    Maximum SPIdev frequency
++    Optional
++    Default: 10000000
++    Range: 3000 - 100000000
++
