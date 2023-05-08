@@ -1,6 +1,6 @@
 diff -Naur a/drivers/auxdisplay/Kconfig b/drivers/auxdisplay/Kconfig
---- a/drivers/auxdisplay/Kconfig	2023-01-12 06:00:49.000000000 -0500
-+++ b/drivers/auxdisplay/Kconfig	2023-02-01 07:32:04.467775142 -0500
+--- a/drivers/auxdisplay/Kconfig	2023-04-30 19:26:28.000000000 -0400
++++ b/drivers/auxdisplay/Kconfig	2023-05-08 08:10:51.950090734 -0400
 @@ -203,6 +203,30 @@
  	  line and the Linux version on the second line, but that's
  	  still useful.
@@ -33,16 +33,15 @@ diff -Naur a/drivers/auxdisplay/Kconfig b/drivers/auxdisplay/Kconfig
  	tristate "Parallel port LCD/Keypad Panel support"
  	depends on PARPORT
 diff -Naur a/drivers/auxdisplay/Makefile b/drivers/auxdisplay/Makefile
---- a/drivers/auxdisplay/Makefile	2023-01-12 06:00:49.000000000 -0500
-+++ b/drivers/auxdisplay/Makefile	2023-02-01 07:32:16.649672180 -0500
+--- a/drivers/auxdisplay/Makefile	2023-04-30 19:26:28.000000000 -0400
++++ b/drivers/auxdisplay/Makefile	2023-05-08 08:11:23.922071732 -0400
 @@ -14,3 +14,4 @@
  obj-$(CONFIG_PARPORT_PANEL)	+= panel.o
  obj-$(CONFIG_LCD2S)		+= lcd2s.o
  obj-$(CONFIG_LINEDISP)		+= line-display.o
 +obj-$(CONFIG_OPENVFD)		+= openvfd/
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/controller.h b/drivers/auxdisplay/openvfd/controllers/controller.h
---- a/drivers/auxdisplay/openvfd/controllers/controller.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/controller.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/controller.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,28 @@
 +#ifndef __CONTROLLERH__
 +#define __CONTROLLERH__
@@ -72,9 +71,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/controller.h b/drivers/auxdi
 +};
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/controller_list.h b/drivers/auxdisplay/openvfd/controllers/controller_list.h
---- a/drivers/auxdisplay/openvfd/controllers/controller_list.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/controller_list.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/controller_list.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,12 @@
 +#ifndef __CONTROLLER_LIST_H__
 +#define __CONTROLLER_LIST_H__
@@ -88,9 +86,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/controller_list.h b/drivers/
 +#include "il3829.h"
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/dummy.c b/drivers/auxdisplay/openvfd/controllers/dummy.c
---- a/drivers/auxdisplay/openvfd/controllers/dummy.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/dummy.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/dummy.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,99 @@
 +#include "dummy.h"
 +
@@ -191,9 +188,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/dummy.c b/drivers/auxdisplay
 +{
 +	return sizeof(*data);
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/dummy.h b/drivers/auxdisplay/openvfd/controllers/dummy.h
---- a/drivers/auxdisplay/openvfd/controllers/dummy.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/dummy.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/dummy.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __DUMMYH__
 +#define __DUMMYH__
@@ -203,10 +199,9 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/dummy.h b/drivers/auxdisplay
 +struct controller_interface *init_dummy(struct vfd_dev *dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd628.c b/drivers/auxdisplay/openvfd/controllers/fd628.c
---- a/drivers/auxdisplay/openvfd/controllers/fd628.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fd628.c	2023-01-12 10:11:41.000000000 -0500
-@@ -0,0 +1,374 @@
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fd628.c	2023-05-01 10:22:44.000000000 -0400
+@@ -0,0 +1,375 @@
 +#include "../protocols/i2c_sw.h"
 +#include "../protocols/spi_sw.h"
 +#include "fd628.h"
@@ -347,8 +342,9 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd628.c b/drivers/auxdisplay
 +	}
 +
 +	ram_size = ram_grid_size * ram_grid_count;
-+	fd628_set_brightness_level(dev->brightness);
 +	memset(dev->wbuf, 0x00, sizeof(dev->wbuf));
++	fd628_write_data((unsigned char *)dev->wbuf, sizeof(dev->wbuf));
++	fd628_set_brightness_level(dev->brightness);
 +	return 1;
 +}
 +
@@ -581,9 +577,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd628.c b/drivers/auxdisplay
 +		status = 0;
 +	return status;
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd628.h b/drivers/auxdisplay/openvfd/controllers/fd628.h
---- a/drivers/auxdisplay/openvfd/controllers/fd628.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fd628.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fd628.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __FD628H__
 +#define __FD628H__
@@ -593,10 +588,9 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd628.h b/drivers/auxdisplay
 +struct controller_interface *init_fd628(struct vfd_dev *dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd650.c b/drivers/auxdisplay/openvfd/controllers/fd650.c
---- a/drivers/auxdisplay/openvfd/controllers/fd650.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fd650.c	2023-01-12 10:11:41.000000000 -0500
-@@ -0,0 +1,296 @@
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fd650.c	2023-05-01 10:22:44.000000000 -0400
+@@ -0,0 +1,297 @@
 +#include "../protocols/i2c_sw.h"
 +#include "fd650.h"
 +
@@ -684,6 +678,7 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd650.c b/drivers/auxdisplay
 +		return 0;
 +
 +	memset(dev->wbuf, 0x00, sizeof(dev->wbuf));
++	fd650_write_data((unsigned char *)dev->wbuf, sizeof(dev->wbuf));
 +	fd650_set_brightness_level(dev->brightness);
 +	switch(dev->dtb_active.display.type) {
 +		case DISPLAY_TYPE_5D_7S_T95:
@@ -893,9 +888,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd650.c b/drivers/auxdisplay
 +		status = 0;
 +	return status;
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd650.h b/drivers/auxdisplay/openvfd/controllers/fd650.h
---- a/drivers/auxdisplay/openvfd/controllers/fd650.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fd650.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fd650.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __FD650H__
 +#define __FD650H__
@@ -905,9 +899,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fd650.h b/drivers/auxdisplay
 +struct controller_interface *init_fd650(struct vfd_dev *dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,112 @@
 +// Grotesk16x32_h.h
 +// Font type    : Full (96 characters)
@@ -1021,9 +1014,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h b/dri
 +0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0C,0x00,0x3E,0x00,0x3F,0x00,0x7F,0x02,0x63,0x87,0xE1,0xC7,0xC1,0xCE,0x40,0xFE,0x00,0x7C,0x00,0x38,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ~
 +0x00,0x00,0x00,0x00,0x07,0xC0,0x0F,0xE0,0x1C,0x70,0x38,0x38,0x30,0x18,0x30,0x18,0x30,0x18,0x38,0x38,0x1C,0x70,0x0F,0xE0,0x07,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // �
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,107 @@
 +// Grotesk16x32_v.h
 +// Font type	: Full (96 characters)
@@ -1132,9 +1124,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h b/dri
 +0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0xF0,0x7C,0x1C,0x1E,0x1E,0x3C,0xF8,0xE0,0xC0,0x00,0x00,0x80,0xE0,0xF0,0x60,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x03,0x07,0x07,0x07,0x03,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ~
 +0x00,0x00,0x00,0xC0,0xF0,0x38,0x1C,0x0C,0x0C,0x0C,0x1C,0x38,0xF0,0xC0,0x00,0x00,0x00,0x00,0x00,0x03,0x07,0x0E,0x1C,0x18,0x18,0x18,0x1C,0x0E,0x07,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // °
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,107 @@
 +// Grotesk24x48_v.h
 +// Font type	: Full (96 characters)
@@ -1243,9 +1234,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h b/dri
 +0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,0xC0,0xC0,0xC0,0xC0,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0xF8,0xFE,0xFF,0x1F,0x07,0x07,0x07,0x07,0x1F,0x3F,0xFE,0xF8,0xF0,0xC0,0x80,0x00,0x00,0x00,0xC0,0xF0,0xFC,0xF8,0x10,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x03,0x07,0x0F,0x0F,0x1F,0x1F,0x1F,0x0F,0x07,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ~
 +0x00,0x00,0x00,0x00,0xC0,0xC0,0xE0,0xF8,0xF8,0x38,0x38,0x38,0x38,0xF8,0xF8,0xE0,0xC0,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7F,0xFF,0xFF,0xC1,0x80,0x80,0x00,0x00,0x00,0x00,0x80,0x80,0xC1,0xFF,0xFF,0x7F,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x03,0x0F,0x0F,0x0E,0x0E,0x0E,0x0E,0x0F,0x0F,0x03,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // °
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,112 @@
 +// Grotesk32x64_h.h
 +// Font type    : Full (96 characters)
@@ -1359,9 +1349,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h b/dri
 +0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x03,0xF0,0x00,0x00,0x07,0xFC,0x00,0x00,0x0F,0xFC,0x00,0x00,0x0F,0xFE,0x00,0x00,0x1F,0xFF,0x00,0x00,0x3F,0xFF,0x00,0x08,0x3E,0x1F,0x80,0x0E,0x3C,0x0F,0xC0,0x1E,0x7C,0x07,0xC0,0x1F,0x7C,0x07,0xE0,0x3E,0x78,0x03,0xE0,0x3E,0xF8,0x03,0xF0,0x7C,0x70,0x01,0xF8,0xFC,0x30,0x00,0xFF,0xF8,0x00,0x00,0xFF,0xF8,0x00,0x00,0x7F,0xF0,0x00,0x00,0x3F,0xF0,0x00,0x00,0x1F,0xE0,0x00,0x00,0x0F,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ~
 +0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0F,0xC0,0x00,0x00,0x3F,0xF0,0x00,0x00,0xFF,0xFC,0x00,0x01,0xF8,0x7E,0x00,0x01,0xE0,0x1E,0x00,0x03,0xC0,0x0F,0x00,0x03,0x80,0x07,0x00,0x07,0x80,0x07,0x80,0x07,0x00,0x03,0x80,0x07,0x00,0x03,0x80,0x07,0x00,0x03,0x80,0x07,0x00,0x03,0x80,0x07,0x80,0x07,0x80,0x03,0x80,0x07,0x00,0x03,0xC0,0x0F,0x00,0x01,0xE0,0x1E,0x00,0x00,0xF8,0x7E,0x00,0x00,0x7F,0xFC,0x00,0x00,0x3F,0xF0,0x00,0x00,0x0F,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // �
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,23 @@
 +// icons16x16_h.h
 +// Font type	: Full (15 characters)
@@ -1386,9 +1375,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h b/drive
 +0x3F,0xF8,0x40,0x04,0x80,0x02,0x9E,0xF2,0x9E,0xF2,0x9E,0xF2,0x9E,0xF2,0x80,0x02,0x9E,0xF2,0x9E,0xF2,0x9E,0xF2,0x9E,0xF2,0x80,0x02,0x40,0x04,0x3F,0xF8,0x00,0x00,  // Apps
 +0x03,0xC0,0x23,0xC4,0x7F,0xFE,0x3F,0xFC,0x3F,0xFC,0x3E,0x7C,0xFC,0x3F,0xF8,0x1F,0xF8,0x1F,0xFC,0x3F,0x3E,0x7C,0x3F,0xFC,0x3F,0xFC,0x7F,0xFE,0x23,0xC4,0x03,0xC0,  // Setup
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,23 @@
 +// icons16x16_v.h
 +// Font type	: Full (15 characters)
@@ -1413,9 +1401,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h b/drive
 +0xFC,0x02,0x01,0x79,0x79,0x79,0x79,0x01,0x79,0x79,0x79,0x79,0x01,0x02,0xFC,0x00,0x1F,0x20,0x40,0x4F,0x4F,0x4F,0x4F,0x40,0x4F,0x4F,0x4F,0x4F,0x40,0x20,0x1F,0x00,  // Apps
 +0xC0,0xC4,0xFE,0xFC,0xFC,0x7C,0x3F,0x1F,0x1F,0x3F,0x7C,0xFC,0xFC,0xFE,0xC4,0xC0,0x03,0x23,0x7F,0x3F,0x3F,0x3E,0xFC,0xF8,0xF8,0xFC,0x3E,0x3F,0x3F,0x7F,0x23,0x03,  // Setup
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,23 @@
 +// icons32x32_h.h
 +// Font type	: Full (15 characters)
@@ -1440,9 +1427,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h b/drive
 +0x0F,0xFF,0xFF,0xC0,0x1F,0xFF,0xFF,0xE0,0x38,0x00,0x00,0x70,0x70,0x00,0x00,0x38,0xE0,0x00,0x00,0x1C,0xC0,0x00,0x00,0x0C,0xC1,0xFC,0xFE,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC0,0x00,0x00,0x0C,0xC0,0x00,0x00,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC3,0xFC,0xFF,0x0C,0xC1,0xFC,0xFE,0x0C,0xC0,0x00,0x00,0x0C,0xE0,0x00,0x00,0x1C,0x70,0x00,0x00,0x38,0x38,0x00,0x00,0x70,0x1F,0xFF,0xFF,0xE0,0x0F,0xFF,0xFF,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // Apps
 +0x00,0x07,0xE0,0x00,0x00,0x07,0xE0,0x00,0x00,0x07,0xE0,0x00,0x03,0x07,0xF0,0xC0,0x07,0xCF,0xF1,0xE0,0x0F,0xFF,0xFF,0xF0,0x1F,0xFF,0xFF,0xF8,0x1F,0xFF,0xFF,0xF8,0x0F,0xFF,0xFF,0xF0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xF8,0x1F,0xE0,0x0F,0xF0,0x0F,0xF8,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0x1F,0xF0,0x0F,0xF0,0x07,0xF8,0x1F,0xE0,0x07,0xFF,0xFF,0xE0,0x07,0xFF,0xFF,0xE0,0x0F,0xFF,0xFF,0xF0,0x1F,0xFF,0xFF,0xF8,0x1F,0xFF,0xFF,0xF8,0x0F,0xFF,0xFF,0xF0,0x07,0x8F,0xF1,0xE0,0x03,0x0F,0xE0,0xC0,0x00,0x07,0xE0,0x00,0x00,0x07,0xE0,0x00,0x00,0x07,0xE0,0x00,  // Setup
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,23 @@
 +// icons32x32_v.h
 +// Font type	: Full (15 characters)
@@ -1467,9 +1453,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h b/drive
 +0xF0,0xF8,0x1C,0x0E,0x07,0x03,0x83,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x03,0x03,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x83,0x03,0x07,0x0E,0x1C,0xF8,0xF0,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00,0x00,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x00,0x00,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x00,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00,0x00,0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x00,0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x7F,0x00,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x03,0x07,0x0E,0x1C,0x38,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x38,0x1C,0x0E,0x07,0x03,0x00,0x00,  // Apps
 +0x00,0x00,0x00,0xC0,0xE0,0xF0,0xF8,0xF8,0xF0,0xF0,0xE0,0xE0,0xF0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF8,0xE0,0xE0,0xE0,0xF0,0xF8,0xF8,0xF0,0xE0,0xC0,0x00,0x00,0x00,0xE0,0xE0,0xE0,0xE0,0xF1,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x1F,0x0F,0x07,0x07,0x07,0x07,0x07,0x07,0x0F,0x1F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF1,0xF0,0xE0,0xE0,0xE0,0x07,0x07,0x07,0x0F,0x8F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF8,0xF0,0xE0,0xE0,0xE0,0xE0,0xE0,0xE0,0xF0,0xF8,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x8F,0x07,0x07,0x07,0x07,0x00,0x00,0x00,0x03,0x07,0x0F,0x1F,0x1F,0x0F,0x07,0x07,0x07,0x1F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x0F,0x07,0x07,0x07,0x0F,0x1F,0x1F,0x0F,0x07,0x03,0x00,0x00,0x00,  // Setup
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h
---- a/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,107 @@
 +// Retro8x16_v.h
 +// Font type	: Full (96 characters)
@@ -1578,10 +1563,9 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h b/driver
 +0x00,0xC0,0x30,0xC0,0x00,0xF0,0x00,0x00,0x00,0x03,0x00,0x00,0x03,0x00,0x00,0x00,  // ~
 +0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x30,0x00,0x30,0x00,0x30,0x00,  // ...
 +};
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c
---- a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c	2023-01-12 10:11:41.000000000 -0500
-@@ -0,0 +1,963 @@
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c	2023-05-01 10:22:44.000000000 -0400
+@@ -0,0 +1,986 @@
 +#include "gfx_mono_ctrl.h"
 +#include "fonts/Grotesk16x32_h.h"
 +#include "fonts/Grotesk16x32_v.h"
@@ -1889,6 +1873,24 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c b/drivers/au
 +	else
 +		print_buffer(ram_buffer, &rect, 0);
 +	specific_gfx_mono_ctrl.print_string(ram_buffer, &rect);
++}
++
++static unsigned char prepare_and_print_string(const char *str, const struct font *font_struct, unsigned char x, unsigned char y)
++{
++	char buffer[512];
++	struct rect rect;
++	init_rect(&rect, font_struct, str, 0, y, 0);
++	if (rect.length > 0) {
++		if (rect.length < strlen(str)) {
++			scnprintf(buffer, sizeof(buffer), "%s", str);
++			buffer[rect.length - 1] = 0x7F; // 0x7F = position of ellipsis.
++			buffer[rect.length] = '\0';
++			print_string(buffer, font_struct, x, y);
++		} else {
++			print_string(str, font_struct, x, y);
++		}
++	}
++	return rect.length;
 +}
 +
 +static void setup_fonts(void)
@@ -2427,6 +2429,11 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c b/drivers/au
 +
 +static void print_title(const struct vfd_display_data *data)
 +{
++	unsigned char offset = (unsigned char)max((size_t)0, (columns - (font_text.font_width * strlen(data->string_main))) / 2);
++	if (strlen(data->string_secondary) > 0 && prepare_and_print_string(data->string_main, &font_text, offset, font_small_text.font_height))
++		prepare_and_print_string(data->string_secondary, &font_small_text, 0, 0);
++	else
++		prepare_and_print_string(data->string_main, &font_text, offset, 0);
 +}
 +
 +static void print_date(const struct vfd_display_data *data)
@@ -2545,9 +2552,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c b/drivers/au
 +		str, x, y, transposed, c_width, c_height, rect->length, rect->x1, rect->y1, rect->x2, rect->y2, rect->width, rect->height, rect->text_width, rect->text_height);
 +#endif
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h
---- a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,58 @@
 +#ifndef __GFXMONOCTRLH__
 +#define __GFXMONOCTRLH__
@@ -2607,9 +2613,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h b/drivers/au
 +struct controller_interface *init_gfx_mono_ctrl(struct vfd_dev *_dev, const struct specific_gfx_mono_ctrl *specific_gfx_mono_ctrl);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/hd44780.c b/drivers/auxdisplay/openvfd/controllers/hd44780.c
---- a/drivers/auxdisplay/openvfd/controllers/hd44780.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/hd44780.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/hd44780.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,760 @@
 +#include "../protocols/i2c_sw.h"
 +#include "hd44780.h"
@@ -3371,9 +3376,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/hd44780.c b/drivers/auxdispl
 +		}
 +	}
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/hd44780.h b/drivers/auxdisplay/openvfd/controllers/hd44780.h
---- a/drivers/auxdisplay/openvfd/controllers/hd44780.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/hd44780.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/hd44780.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __HD44780H__
 +#define __HD44780H__
@@ -3383,9 +3387,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/hd44780.h b/drivers/auxdispl
 +struct controller_interface *init_hd47780(struct vfd_dev *dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/il3829.c b/drivers/auxdisplay/openvfd/controllers/il3829.c
---- a/drivers/auxdisplay/openvfd/controllers/il3829.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/il3829.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/il3829.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,513 @@
 +#include <linux/gpio.h>
 +#include <linux/list.h>
@@ -3900,9 +3903,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/il3829.c b/drivers/auxdispla
 +
 +	return ret;
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/il3829.h b/drivers/auxdisplay/openvfd/controllers/il3829.h
---- a/drivers/auxdisplay/openvfd/controllers/il3829.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/il3829.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/il3829.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __il3829H__
 +#define __il3829H__
@@ -3912,9 +3914,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/il3829.h b/drivers/auxdispla
 +struct controller_interface *init_il3829(struct vfd_dev *_dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/pcd8544.c b/drivers/auxdisplay/openvfd/controllers/pcd8544.c
---- a/drivers/auxdisplay/openvfd/controllers/pcd8544.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/pcd8544.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/pcd8544.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,210 @@
 +#include <linux/gpio.h>
 +#include "../protocols/i2c_hw.h"
@@ -4126,9 +4127,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/pcd8544.c b/drivers/auxdispl
 +
 +	return ret;
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/pcd8544.h b/drivers/auxdisplay/openvfd/controllers/pcd8544.h
---- a/drivers/auxdisplay/openvfd/controllers/pcd8544.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/pcd8544.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/pcd8544.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __PCD8544H__
 +#define __PCD8544H__
@@ -4138,10 +4138,9 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/pcd8544.h b/drivers/auxdispl
 +struct controller_interface *init_pcd8544(struct vfd_dev *_dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c b/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c
---- a/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c	2023-01-12 10:11:41.000000000 -0500
-@@ -0,0 +1,103 @@
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c	2023-05-01 10:22:44.000000000 -0400
+@@ -0,0 +1,106 @@
 +#include "controller.h"
 +
 +#define LEDCODES_LEN	(sizeof(LED_decode_tab1)/sizeof(LED_decode_tab1[0]))
@@ -4213,6 +4212,9 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c b/drivers/auxdis
 +			raw_wdata[i + 1] = char_to_mask(buffer[i]);
 +		break;
 +	case DISPLAY_MODE_TITLE:
++		raw_wdata[0] = 0;
++		for (i = 1; i <= 4; i++)
++			raw_wdata[i] = data->string_main[i - 1] ? char_to_mask(data->string_main[i - 1]) : 0;
 +		break;
 +	case DISPLAY_MODE_TEMPERATURE:
 +		len = scnprintf(buffer, sizeof(buffer), "%d%c%c", data->temperature % 1000, 0xB0, 'c'); // ascii 176 = degree
@@ -4245,9 +4247,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c b/drivers/auxdis
 +
 +	return status;
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/ssd1306.c b/drivers/auxdisplay/openvfd/controllers/ssd1306.c
---- a/drivers/auxdisplay/openvfd/controllers/ssd1306.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/ssd1306.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/ssd1306.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,353 @@
 +#include <linux/gpio.h>
 +#include "../protocols/i2c_hw.h"
@@ -4602,9 +4603,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/ssd1306.c b/drivers/auxdispl
 +
 +	return ret;
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/controllers/ssd1306.h b/drivers/auxdisplay/openvfd/controllers/ssd1306.h
---- a/drivers/auxdisplay/openvfd/controllers/ssd1306.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/controllers/ssd1306.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/controllers/ssd1306.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __SSD1306H__
 +#define __SSD1306H__
@@ -4614,9 +4614,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/controllers/ssd1306.h b/drivers/auxdispl
 +struct controller_interface *init_ssd1306(struct vfd_dev *_dev);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/glyphs.h b/drivers/auxdisplay/openvfd/glyphs.h
---- a/drivers/auxdisplay/openvfd/glyphs.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/glyphs.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/glyphs.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,339 @@
 +#ifndef __GLYPHS__
 +#define __GLYPHS__
@@ -4957,9 +4956,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/glyphs.h b/drivers/auxdisplay/openvfd/gl
 +};
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/Makefile b/drivers/auxdisplay/openvfd/Makefile
---- a/drivers/auxdisplay/openvfd/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/Makefile	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/Makefile	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,14 @@
 +obj-$(CONFIG_OPENVFD) := openvfd.o
 +openvfd-objs += protocols/i2c_sw.o
@@ -4975,9 +4973,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/Makefile b/drivers/auxdisplay/openvfd/Ma
 +openvfd-objs += controllers/pcd8544.o
 +openvfd-objs += controllers/il3829.o
 +openvfd-objs += openvfd_drv.o
-diff -Naur a/drivers/auxdisplay/openvfd/openvfd_drv.c b/drivers/auxdisplay/openvfd/openvfd_drv.c
---- a/drivers/auxdisplay/openvfd/openvfd_drv.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/openvfd_drv.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/openvfd_drv.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,1043 @@
 +/*
 + * Open VFD Driver
@@ -6022,9 +6019,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/openvfd_drv.c b/drivers/auxdisplay/openv
 +MODULE_AUTHOR("Arthur Liberman");
 +MODULE_DESCRIPTION("OpenVFD Driver");
 +MODULE_LICENSE("GPL");
-diff -Naur a/drivers/auxdisplay/openvfd/openvfd_drv.h b/drivers/auxdisplay/openvfd/openvfd_drv.h
---- a/drivers/auxdisplay/openvfd/openvfd_drv.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/openvfd_drv.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/openvfd_drv.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,302 @@
 +#ifndef __OPENVFD_DRV_H__
 +#define __OPENVFD_DRV_H__
@@ -6059,7 +6055,7 @@ diff -Naur a/drivers/auxdisplay/openvfd/openvfd_drv.h b/drivers/auxdisplay/openv
 +#define FALSE 0
 +#endif
 +
-+#define  OPENVFD_DRIVER_VERSION	"V1.4.1"
++#define  OPENVFD_DRIVER_VERSION	"V1.4.2"
 +
 +/*
 + * Ioctl definitions
@@ -6328,9 +6324,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/openvfd_drv.h b/drivers/auxdisplay/openv
 +}Brightness;
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_hw.c b/drivers/auxdisplay/openvfd/protocols/i2c_hw.c
---- a/drivers/auxdisplay/openvfd/protocols/i2c_hw.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/i2c_hw.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/i2c_hw.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,161 @@
 +
 +#include <linux/gpio.h>
@@ -6493,9 +6488,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_hw.c b/drivers/auxdisplay/
 +{
 +	return i2c_hw_write_cmd_data(NULL, 0, &bdata, 1);
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_hw.h b/drivers/auxdisplay/openvfd/protocols/i2c_hw.h
---- a/drivers/auxdisplay/openvfd/protocols/i2c_hw.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/i2c_hw.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/i2c_hw.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,8 @@
 +#ifndef __I2C_HW_H__
 +#define __I2C_HW_H__
@@ -6505,9 +6499,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_hw.h b/drivers/auxdisplay/
 +struct protocol_interface *init_hw_i2c(unsigned short _address, unsigned char _device_id);
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_sw.c b/drivers/auxdisplay/openvfd/protocols/i2c_sw.c
---- a/drivers/auxdisplay/openvfd/protocols/i2c_sw.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/i2c_sw.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/i2c_sw.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,257 @@
 +#include <linux/gpio.h>
 +#include <linux/version.h>
@@ -6766,9 +6759,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_sw.c b/drivers/auxdisplay/
 +{
 +	return i2c_sw_write_cmd_data(NULL, 0, &bdata, 1);
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_sw.h b/drivers/auxdisplay/openvfd/protocols/i2c_sw.h
---- a/drivers/auxdisplay/openvfd/protocols/i2c_sw.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/i2c_sw.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/i2c_sw.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,13 @@
 +#ifndef __I2C_SW_H__
 +#define __I2C_SW_H__
@@ -6783,9 +6775,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/i2c_sw.h b/drivers/auxdisplay/
 +struct protocol_interface *init_sw_i2c(unsigned short address, unsigned char lsb_first, unsigned char clock_stretch_support, struct vfd_pin pin_scl, struct vfd_pin pin_sda, unsigned long i2c_delay, unsigned char(*test_connection)(const struct protocol_interface *protocol));
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/protocol.h b/drivers/auxdisplay/openvfd/protocols/protocol.h
---- a/drivers/auxdisplay/openvfd/protocols/protocol.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/protocol.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/protocol.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,25 @@
 +#ifndef __PROTOCOLS__
 +#define __PROTOCOLS__
@@ -6812,9 +6803,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/protocol.h b/drivers/auxdispla
 +};
 +
 +#endif
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/spi_sw.c b/drivers/auxdisplay/openvfd/protocols/spi_sw.c
---- a/drivers/auxdisplay/openvfd/protocols/spi_sw.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/spi_sw.c	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/spi_sw.c	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,194 @@
 +#include <linux/gpio.h>
 +#include "spi_sw.h"
@@ -7010,9 +7000,8 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/spi_sw.c b/drivers/auxdisplay/
 +{
 +	return spi_sw_write_cmd_data(NULL, 0, &bdata, 1);
 +}
-diff -Naur a/drivers/auxdisplay/openvfd/protocols/spi_sw.h b/drivers/auxdisplay/openvfd/protocols/spi_sw.h
---- a/drivers/auxdisplay/openvfd/protocols/spi_sw.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/auxdisplay/openvfd/protocols/spi_sw.h	2023-01-12 10:11:41.000000000 -0500
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/openvfd/protocols/spi_sw.h	2023-05-01 10:22:44.000000000 -0400
 @@ -0,0 +1,14 @@
 +#ifndef __SPI_SW_H__
 +#define __SPI_SW_H__
@@ -7028,3 +7017,382 @@ diff -Naur a/drivers/auxdisplay/openvfd/protocols/spi_sw.h b/drivers/auxdisplay/
 +struct protocol_interface *init_sw_spi_4w(unsigned char lsb_first, struct vfd_pin clk, struct vfd_pin dout, struct vfd_pin din, struct vfd_pin stb, unsigned long _spi_delay);
 +
 +#endif
+--- /dev/null	2023-05-08 07:57:14.951142188 -0400
++++ b/drivers/auxdisplay/tm1628.c	2023-05-01 10:22:44.000000000 -0400
+@@ -0,0 +1,376 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Titan Micro Electronics TM1628 LED controller
++ *
++ * Copyright (c) 2019 Andreas Färber
++ * Copyright (c) 2022 Heiner Kallweit
++ */
++
++#include <linux/ctype.h>
++#include <linux/delay.h>
++#include <linux/leds.h>
++#include <linux/module.h>
++#include <linux/property.h>
++#include <linux/spi/spi.h>
++#include <uapi/linux/map_to_7segment.h>
++
++#define TM1628_CMD_DISPLAY_MODE		(0 << 6)
++#define TM1628_DISPLAY_MODE_6_12	0x02
++#define TM1628_DISPLAY_MODE_7_11	0x03
++
++#define TM1628_CMD_DATA			(1 << 6)
++#define TM1628_DATA_TEST_MODE		BIT(3)
++#define TM1628_DATA_FIXED_ADDR		BIT(2)
++#define TM1628_DATA_WRITE_DATA		0x00
++#define TM1628_DATA_READ_DATA		0x02
++
++#define TM1628_CMD_DISPLAY_CTRL		(2 << 6)
++#define TM1628_DISPLAY_CTRL_DISPLAY_ON	BIT(3)
++
++#define TM1628_CMD_SET_ADDRESS		(3 << 6)
++
++#define TM1628_BRIGHTNESS_MAX		7
++#define NUM_LED_SEGS			7
++
++/* Physical limits, depending on the mode the chip may support less */
++#define MAX_GRID_SIZE			7
++#define MAX_SEGMENT_NUM			16
++
++struct tm1628_led {
++	struct led_classdev	leddev;
++	struct tm1628		*ctrl;
++	u32			grid;
++	u32			seg;
++};
++
++struct tm1628 {
++	struct spi_device		*spi;
++	__le16				data[MAX_GRID_SIZE];
++	struct mutex			disp_lock;
++	char				text[MAX_GRID_SIZE + 1];
++	u8				segment_mapping[NUM_LED_SEGS];
++	u8				grid[MAX_GRID_SIZE];
++	int				grid_size;
++	struct tm1628_led		leds[];
++};
++
++/* Command 1: Display Mode Setting */
++static int tm1628_set_display_mode(struct spi_device *spi, u8 grid_mode)
++{
++	const u8 cmd = TM1628_CMD_DISPLAY_MODE | grid_mode;
++
++	return spi_write(spi, &cmd, 1);
++}
++
++/* Command 3: Address Setting */
++static int tm1628_set_address(struct spi_device *spi, u8 offset)
++{
++	const u8 cmd = TM1628_CMD_SET_ADDRESS | (offset * sizeof(__le16));
++
++	return spi_write(spi, &cmd, 1);
++}
++
++/* Command 2: Data Setting */
++static int tm1628_write_data(struct spi_device *spi, unsigned int offset,
++			     unsigned int len)
++{
++	struct tm1628 *s = spi_get_drvdata(spi);
++	const u8 cmd = TM1628_CMD_DATA | TM1628_DATA_WRITE_DATA;
++	struct spi_transfer xfers[] = {
++		{
++			.tx_buf = &cmd,
++			.len = 1,
++		},
++		{
++			.tx_buf = (__force void *)(s->data + offset),
++			.len = len * sizeof(__le16),
++		},
++	};
++
++	if (offset + len > MAX_GRID_SIZE) {
++		dev_err(&spi->dev, "Invalid data address offset %u len %u\n",
++			offset, len);
++		return -EINVAL;
++	}
++
++	tm1628_set_address(spi, offset);
++
++	return spi_sync_transfer(spi, xfers, ARRAY_SIZE(xfers));
++}
++
++/* Command 4: Display Control */
++static int tm1628_set_display_ctrl(struct spi_device *spi, bool on)
++{
++	u8 cmd = TM1628_CMD_DISPLAY_CTRL | TM1628_BRIGHTNESS_MAX;
++
++	if (on)
++		cmd |= TM1628_DISPLAY_CTRL_DISPLAY_ON;
++
++	return spi_write(spi, &cmd, 1);
++}
++
++static int tm1628_show_text(struct tm1628 *s)
++{
++	static SEG7_CONVERSION_MAP(map_seg7, MAP_ASCII7SEG_ALPHANUM);
++	int msg_len, i, ret;
++
++	msg_len = strlen(s->text);
++
++	mutex_lock(&s->disp_lock);
++
++	for (i = 0; i < s->grid_size; i++) {
++		int pos = s->grid[i] - 1;
++		int j, char7_raw, char7;
++
++		if (i >= msg_len) {
++			s->data[pos] = 0;
++			continue;
++		}
++
++		char7_raw = map_to_seg7(&map_seg7, s->text[i]);
++
++		for (j = 0, char7 = 0; j < NUM_LED_SEGS; j++) {
++			if (char7_raw & BIT(j))
++				char7 |= BIT(s->segment_mapping[j] - 1);
++		}
++
++		s->data[pos] = cpu_to_le16(char7);
++	}
++
++	ret = tm1628_write_data(s->spi, 0, s->grid_size);
++
++	mutex_unlock(&s->disp_lock);
++
++	return ret;
++}
++
++static int tm1628_led_set_brightness(struct led_classdev *led_cdev,
++				     enum led_brightness brightness)
++{
++	struct tm1628_led *led = container_of(led_cdev, struct tm1628_led, leddev);
++	struct tm1628 *s = led->ctrl;
++	int ret, offset = led->grid - 1;
++	__le16 bit = cpu_to_le16(BIT(led->seg - 1));
++
++	mutex_lock(&s->disp_lock);
++
++	if (brightness == LED_OFF)
++		s->data[offset] &= ~bit;
++	else
++		s->data[offset] |= bit;
++
++	ret = tm1628_write_data(s->spi, offset, 1);
++
++	mutex_unlock(&s->disp_lock);
++
++	return ret;
++}
++
++static enum led_brightness tm1628_led_get_brightness(struct led_classdev *led_cdev)
++{
++	struct tm1628_led *led = container_of(led_cdev, struct tm1628_led, leddev);
++	struct tm1628 *s = led->ctrl;
++	int offset = led->grid - 1;
++	__le16 bit = cpu_to_le16(BIT(led->seg - 1));
++	bool on;
++
++	mutex_lock(&s->disp_lock);
++	on = s->data[offset] & bit;
++	mutex_unlock(&s->disp_lock);
++
++	return on ? LED_ON : LED_OFF;
++}
++
++static int tm1628_register_led(struct tm1628 *s, struct fwnode_handle *node,
++			       u32 grid, u32 seg, struct tm1628_led *led)
++{
++	struct device *dev = &s->spi->dev;
++	struct led_init_data init_data = { .fwnode = node };
++
++	led->ctrl = s;
++	led->grid = grid;
++	led->seg  = seg;
++	led->leddev.max_brightness = LED_ON;
++	led->leddev.brightness_set_blocking = tm1628_led_set_brightness;
++	led->leddev.brightness_get = tm1628_led_get_brightness;
++
++	return devm_led_classdev_register_ext(dev, &led->leddev, &init_data);
++}
++
++static ssize_t display_text_show(struct device *dev, struct device_attribute *attr,
++				 char *buf)
++{
++	struct tm1628 *s = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%s\n", s->text);
++}
++
++static ssize_t display_text_store(struct device *dev, struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct tm1628 *s = dev_get_drvdata(dev);
++	int ret, i;
++
++	for (i = 0; i < count && i < s->grid_size && isprint(buf[i]); i++)
++		s->text[i] = buf[i];
++
++	s->text[i] = '\0';
++
++	ret = tm1628_show_text(s);
++	if (ret < 0)
++		return ret;
++
++	return count;
++}
++
++static const DEVICE_ATTR_RW(display_text);
++
++static int tm1628_spi_probe(struct spi_device *spi)
++{
++	struct fwnode_handle *child;
++	unsigned int num_leds;
++	struct tm1628 *s;
++	int ret, i;
++
++	num_leds = device_get_child_node_count(&spi->dev);
++
++	s = devm_kzalloc(&spi->dev, struct_size(s, leds, num_leds), GFP_KERNEL);
++	if (!s)
++		return -ENOMEM;
++
++	s->spi = spi;
++	spi_set_drvdata(spi, s);
++
++	mutex_init(&s->disp_lock);
++
++	/* According to TM1628 datasheet */
++	msleep(200);
++
++	/* Clear screen */
++	ret = tm1628_write_data(spi, 0, MAX_GRID_SIZE);
++	if (ret)
++		return ret;
++
++	/* For now we support 6x12 mode only. This should be sufficient for most use cases */
++	ret = tm1628_set_display_mode(spi, TM1628_DISPLAY_MODE_6_12);
++	if (ret)
++		return ret;
++
++	ret = tm1628_set_display_ctrl(spi, true);
++	if (ret)
++		return ret;
++
++	num_leds = 0;
++
++	if (!IS_REACHABLE(CONFIG_LEDS_CLASS))
++		goto no_leds;
++
++	device_for_each_child_node(&spi->dev, child) {
++		u32 reg[2];
++
++		ret = fwnode_property_read_u32_array(child, "reg", reg, 2);
++		if (ret) {
++			dev_err(&spi->dev, "Reading %s reg property failed (%d)\n",
++				fwnode_get_name(child), ret);
++			continue;
++		}
++
++		if (reg[0] == 0 || reg[0] > MAX_GRID_SIZE) {
++			dev_err(&spi->dev, "Invalid grid %u at %s\n",
++				reg[0], fwnode_get_name(child));
++			continue;
++		}
++
++		if (reg[1] == 0 || reg[1] > MAX_SEGMENT_NUM) {
++			dev_err(&spi->dev, "Invalid segment %u at %s\n",
++				reg[1], fwnode_get_name(child));
++			continue;
++		}
++
++		ret = tm1628_register_led(s, child, reg[0], reg[1], s->leds + num_leds);
++		if (ret) {
++			dev_err(&spi->dev, "Failed to register LED %s (%d)\n",
++				fwnode_get_name(child), ret);
++			continue;
++		}
++		num_leds++;
++	}
++
++no_leds:
++	ret = device_property_count_u8(&spi->dev, "titanmec,grid");
++	if (ret < 1 || ret > MAX_GRID_SIZE) {
++		dev_err(&spi->dev, "Invalid display length (%d)\n", ret);
++		return -EINVAL;
++	}
++
++	s->grid_size = ret;
++
++	ret = device_property_read_u8_array(&spi->dev, "titanmec,grid", s->grid, s->grid_size);
++	if (ret < 0)
++		return ret;
++
++	for (i = 0; i < s->grid_size; i++) {
++		if (s->grid[i] < 1 || s->grid[i] > s->grid_size)
++			return -EINVAL;
++	}
++
++	ret = device_property_read_u8_array(&spi->dev, "titanmec,segment-mapping",
++					    s->segment_mapping, NUM_LED_SEGS);
++	if (ret < 0)
++		return ret;
++
++	for (i = 0; i < NUM_LED_SEGS; i++) {
++		if (s->segment_mapping[i] < 1 || s->segment_mapping[i] > MAX_SEGMENT_NUM)
++			return -EINVAL;
++	}
++
++	ret = device_create_file(&spi->dev, &dev_attr_display_text);
++	if (ret)
++		return ret;
++
++	dev_info(&spi->dev, "Configured display with %u digits and %u symbols\n",
++		 s->grid_size, num_leds);
++
++	return 0;
++}
++
++static void tm1628_spi_remove(struct spi_device *spi)
++{
++	device_remove_file(&spi->dev, &dev_attr_display_text);
++	tm1628_set_display_ctrl(spi, false);
++}
++
++static void tm1628_spi_shutdown(struct spi_device *spi)
++{
++	tm1628_set_display_ctrl(spi, false);
++}
++
++static const struct of_device_id tm1628_spi_of_matches[] = {
++	{ .compatible = "titanmec,tm1628" },
++	{}
++};
++MODULE_DEVICE_TABLE(of, tm1628_spi_of_matches);
++
++static const struct spi_device_id tm1628_spi_id_table[] = {
++	{ "tm1628" },
++	{},
++};
++MODULE_DEVICE_TABLE(spi, tm1628_spi_id_table);
++
++static struct spi_driver tm1628_spi_driver = {
++	.probe = tm1628_spi_probe,
++	.remove = tm1628_spi_remove,
++	.shutdown = tm1628_spi_shutdown,
++	.id_table = tm1628_spi_id_table,
++
++	.driver = {
++		.name = "tm1628",
++		.of_match_table = tm1628_spi_of_matches,
++	},
++};
++module_spi_driver(tm1628_spi_driver);
++
++MODULE_DESCRIPTION("TM1628 LED controller driver");
++MODULE_AUTHOR("Andreas Färber <afaerber@suse.de>");
++MODULE_AUTHOR("Heiner Kallweit <hkallweit1@gmail.com>");
++MODULE_LICENSE("GPL");
