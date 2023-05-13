@@ -25,13 +25,18 @@ fi
 if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "amlogic" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
 	:;
 else
-	WARNING_MSG="Your board is not supported."
+	PLATFORM=`echo $FAMILY | sed -e 's/\(.*\)/\U\1/'`
+	WARNING_MSG="The $PLATFORM platform is currently not supported."
+	WARNING
+fi
+if [[ "$BOOTCMD" == "true" || "$BOOTINI" == "true" || "$PETITBOOT" == "true" ]]; then
+	WARNING_MSG="Only boards using EXTLINUX are currently supported at this time."
 	WARNING
 fi
 if [[ -d "/usr/lib/u-boot" ]]; then
 	UBOOT_DIR="/usr/lib/u-boot"
 else
-	WARNING_MSG="Your board is not supported."
+	WARNING_MSG="The '/usr/lib/u-boot' directory is missing?"
 	WARNING
 fi
 if [[ -f "/etc/default/write2mmc" ]]; then
@@ -44,7 +49,7 @@ fi
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 	:;
 else
-	WARNING_MSG="Script requires a internet connection."
+	WARNING_MSG="The write2mmc script requires an internet connection."
 	WARNING
 fi
 if [[ -f "/etc/opt/progressbar.txt" ]]; then
