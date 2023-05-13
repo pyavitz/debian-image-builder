@@ -1,0 +1,1139 @@
+diff -Naur a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
+--- a/arch/arm64/boot/dts/rockchip/Makefile	2023-04-30 19:26:28.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/Makefile	2023-05-06 11:32:39.495675581 -0400
+@@ -14,7 +14,6 @@
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3328-rock64.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3328-rock-pi-e.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3328-roc-cc.dtb
+-dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3328-roc-pc.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3368-evb-act8846.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3368-geekbox.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3368-lion-haikou.dtb
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-dram-default-timing.dtsi	2023-05-06 11:32:39.492675625 -0400
+@@ -0,0 +1,311 @@
++/*
++ * Copyright (c) 2017 Fuzhou Rockchip Electronics Co., Ltd
++ *
++ * This file is dual-licensed: you can use it either under the terms
++ * of the GPL or the X11 license, at your option. Note that this dual
++ * licensing only applies to this file, and not this project as a
++ * whole.
++ *
++ *  a) This library is free software; you can redistribute it and/or
++ *     modify it under the terms of the GNU General Public License as
++ *     published by the Free Software Foundation; either version 2 of the
++ *     License, or (at your option) any later version.
++ *
++ *     This library is distributed in the hope that it will be useful,
++ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *     GNU General Public License for more details.
++ *
++ * Or, alternatively,
++ *
++ *  b) Permission is hereby granted, free of charge, to any person
++ *     obtaining a copy of this software and associated documentation
++ *     files (the "Software"), to deal in the Software without
++ *     restriction, including without limitation the rights to use,
++ *     copy, modify, merge, publish, distribute, sublicense, and/or
++ *     sell copies of the Software, and to permit persons to whom the
++ *     Software is furnished to do so, subject to the following
++ *     conditions:
++ *
++ *     The above copyright notice and this permission notice shall be
++ *     included in all copies or substantial portions of the Software.
++ *
++ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
++ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
++ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ *     OTHER DEALINGS IN THE SOFTWARE.
++ */
++#include <dt-bindings/clock/rockchip-ddr.h>
++#include <dt-bindings/memory/rk3328-dram.h>
++
++/ {
++	ddr_timing: ddr_timing {
++		compatible = "rockchip,ddr-timing";
++		ddr3_speed_bin = <DDR3_DEFAULT>;
++		ddr4_speed_bin = <DDR4_DEFAULT>;
++		pd_idle = <0>;
++		sr_idle = <0>;
++		sr_mc_gate_idle = <0>;
++		srpd_lite_idle	= <0>;
++		standby_idle = <0>;
++
++		auto_pd_dis_freq = <1066>;
++		auto_sr_dis_freq = <800>;
++		ddr3_dll_dis_freq = <300>;
++		ddr4_dll_dis_freq = <625>;
++		phy_dll_dis_freq = <400>;
++
++		ddr3_odt_dis_freq = <100>;
++		phy_ddr3_odt_dis_freq = <100>;
++		ddr3_drv = <DDR3_DS_40ohm>;
++		ddr3_odt = <DDR3_ODT_120ohm>;
++		phy_ddr3_ca_drv = <PHY_DDR3_RON_RTT_34ohm>;
++		phy_ddr3_ck_drv = <PHY_DDR3_RON_RTT_45ohm>;
++		phy_ddr3_dq_drv = <PHY_DDR3_RON_RTT_34ohm>;
++		phy_ddr3_odt = <PHY_DDR3_RON_RTT_225ohm>;
++
++		lpddr3_odt_dis_freq = <666>;
++		phy_lpddr3_odt_dis_freq = <666>;
++		lpddr3_drv = <LP3_DS_40ohm>;
++		lpddr3_odt = <LP3_ODT_240ohm>;
++		phy_lpddr3_ca_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_lpddr3_ck_drv = <PHY_DDR4_LPDDR3_RON_RTT_43ohm>;
++		phy_lpddr3_dq_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_lpddr3_odt = <PHY_DDR4_LPDDR3_RON_RTT_240ohm>;
++
++		lpddr4_odt_dis_freq = <800>;
++		phy_lpddr4_odt_dis_freq = <800>;
++		lpddr4_drv = <LP4_PDDS_60ohm>;
++		lpddr4_dq_odt = <LP4_DQ_ODT_40ohm>;
++		lpddr4_ca_odt = <LP4_CA_ODT_40ohm>;
++		phy_lpddr4_ca_drv = <PHY_DDR4_LPDDR3_RON_RTT_40ohm>;
++		phy_lpddr4_ck_cs_drv = <PHY_DDR4_LPDDR3_RON_RTT_80ohm>;
++		phy_lpddr4_dq_drv = <PHY_DDR4_LPDDR3_RON_RTT_80ohm>;
++		phy_lpddr4_odt = <PHY_DDR4_LPDDR3_RON_RTT_60ohm>;
++
++		ddr4_odt_dis_freq = <666>;
++		phy_ddr4_odt_dis_freq = <666>;
++		ddr4_drv = <DDR4_DS_34ohm>;
++		ddr4_odt = <DDR4_RTT_NOM_240ohm>;
++		phy_ddr4_ca_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_ddr4_ck_drv = <PHY_DDR4_LPDDR3_RON_RTT_43ohm>;
++		phy_ddr4_dq_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_ddr4_odt = <PHY_DDR4_LPDDR3_RON_RTT_240ohm>;
++
++		/* CA de-skew, one step is 47.8ps, range 0-15 */
++		ddr3a1_ddr4a9_de-skew = <7>;
++		ddr3a0_ddr4a10_de-skew = <7>;
++		ddr3a3_ddr4a6_de-skew = <8>;
++		ddr3a2_ddr4a4_de-skew = <8>;
++		ddr3a5_ddr4a8_de-skew = <7>;
++		ddr3a4_ddr4a5_de-skew = <9>;
++		ddr3a7_ddr4a11_de-skew = <7>;
++		ddr3a6_ddr4a7_de-skew = <9>;
++		ddr3a9_ddr4a0_de-skew = <8>;
++		ddr3a8_ddr4a13_de-skew = <7>;
++		ddr3a11_ddr4a3_de-skew = <9>;
++		ddr3a10_ddr4cs0_de-skew = <7>;
++		ddr3a13_ddr4a2_de-skew = <8>;
++		ddr3a12_ddr4ba1_de-skew = <7>;
++		ddr3a15_ddr4odt0_de-skew = <7>;
++		ddr3a14_ddr4a1_de-skew = <8>;
++		ddr3ba1_ddr4a15_de-skew = <7>;
++		ddr3ba0_ddr4bg0_de-skew = <7>;
++		ddr3ras_ddr4cke_de-skew = <7>;
++		ddr3ba2_ddr4ba0_de-skew = <8>;
++		ddr3we_ddr4bg1_de-skew = <8>;
++		ddr3cas_ddr4a12_de-skew = <7>;
++		ddr3ckn_ddr4ckn_de-skew = <8>;
++		ddr3ckp_ddr4ckp_de-skew = <8>;
++		ddr3cke_ddr4a16_de-skew = <8>;
++		ddr3odt0_ddr4a14_de-skew = <7>;
++		ddr3cs0_ddr4act_de-skew = <8>;
++		ddr3reset_ddr4reset_de-skew = <7>;
++		ddr3cs1_ddr4cs1_de-skew = <7>;
++		ddr3odt1_ddr4odt1_de-skew = <7>;
++
++		/* DATA de-skew
++		 * RX one step is 25.1ps, range 0-15
++		 * TX one step is 47.8ps, range 0-15
++		 */
++		cs0_dm0_rx_de-skew = <7>;
++		cs0_dm0_tx_de-skew = <8>;
++		cs0_dq0_rx_de-skew = <7>;
++		cs0_dq0_tx_de-skew = <8>;
++		cs0_dq1_rx_de-skew = <7>;
++		cs0_dq1_tx_de-skew = <8>;
++		cs0_dq2_rx_de-skew = <7>;
++		cs0_dq2_tx_de-skew = <8>;
++		cs0_dq3_rx_de-skew = <7>;
++		cs0_dq3_tx_de-skew = <8>;
++		cs0_dq4_rx_de-skew = <7>;
++		cs0_dq4_tx_de-skew = <8>;
++		cs0_dq5_rx_de-skew = <7>;
++		cs0_dq5_tx_de-skew = <8>;
++		cs0_dq6_rx_de-skew = <7>;
++		cs0_dq6_tx_de-skew = <8>;
++		cs0_dq7_rx_de-skew = <7>;
++		cs0_dq7_tx_de-skew = <8>;
++		cs0_dqs0_rx_de-skew = <6>;
++		cs0_dqs0p_tx_de-skew = <9>;
++		cs0_dqs0n_tx_de-skew = <9>;
++
++		cs0_dm1_rx_de-skew = <7>;
++		cs0_dm1_tx_de-skew = <7>;
++		cs0_dq8_rx_de-skew = <7>;
++		cs0_dq8_tx_de-skew = <8>;
++		cs0_dq9_rx_de-skew = <7>;
++		cs0_dq9_tx_de-skew = <7>;
++		cs0_dq10_rx_de-skew = <7>;
++		cs0_dq10_tx_de-skew = <8>;
++		cs0_dq11_rx_de-skew = <7>;
++		cs0_dq11_tx_de-skew = <7>;
++		cs0_dq12_rx_de-skew = <7>;
++		cs0_dq12_tx_de-skew = <8>;
++		cs0_dq13_rx_de-skew = <7>;
++		cs0_dq13_tx_de-skew = <7>;
++		cs0_dq14_rx_de-skew = <7>;
++		cs0_dq14_tx_de-skew = <8>;
++		cs0_dq15_rx_de-skew = <7>;
++		cs0_dq15_tx_de-skew = <7>;
++		cs0_dqs1_rx_de-skew = <7>;
++		cs0_dqs1p_tx_de-skew = <9>;
++		cs0_dqs1n_tx_de-skew = <9>;
++
++		cs0_dm2_rx_de-skew = <7>;
++		cs0_dm2_tx_de-skew = <8>;
++		cs0_dq16_rx_de-skew = <7>;
++		cs0_dq16_tx_de-skew = <8>;
++		cs0_dq17_rx_de-skew = <7>;
++		cs0_dq17_tx_de-skew = <8>;
++		cs0_dq18_rx_de-skew = <7>;
++		cs0_dq18_tx_de-skew = <8>;
++		cs0_dq19_rx_de-skew = <7>;
++		cs0_dq19_tx_de-skew = <8>;
++		cs0_dq20_rx_de-skew = <7>;
++		cs0_dq20_tx_de-skew = <8>;
++		cs0_dq21_rx_de-skew = <7>;
++		cs0_dq21_tx_de-skew = <8>;
++		cs0_dq22_rx_de-skew = <7>;
++		cs0_dq22_tx_de-skew = <8>;
++		cs0_dq23_rx_de-skew = <7>;
++		cs0_dq23_tx_de-skew = <8>;
++		cs0_dqs2_rx_de-skew = <6>;
++		cs0_dqs2p_tx_de-skew = <9>;
++		cs0_dqs2n_tx_de-skew = <9>;
++
++		cs0_dm3_rx_de-skew = <7>;
++		cs0_dm3_tx_de-skew = <7>;
++		cs0_dq24_rx_de-skew = <7>;
++		cs0_dq24_tx_de-skew = <8>;
++		cs0_dq25_rx_de-skew = <7>;
++		cs0_dq25_tx_de-skew = <7>;
++		cs0_dq26_rx_de-skew = <7>;
++		cs0_dq26_tx_de-skew = <7>;
++		cs0_dq27_rx_de-skew = <7>;
++		cs0_dq27_tx_de-skew = <7>;
++		cs0_dq28_rx_de-skew = <7>;
++		cs0_dq28_tx_de-skew = <7>;
++		cs0_dq29_rx_de-skew = <7>;
++		cs0_dq29_tx_de-skew = <7>;
++		cs0_dq30_rx_de-skew = <7>;
++		cs0_dq30_tx_de-skew = <7>;
++		cs0_dq31_rx_de-skew = <7>;
++		cs0_dq31_tx_de-skew = <7>;
++		cs0_dqs3_rx_de-skew = <7>;
++		cs0_dqs3p_tx_de-skew = <9>;
++		cs0_dqs3n_tx_de-skew = <9>;
++
++		cs1_dm0_rx_de-skew = <7>;
++		cs1_dm0_tx_de-skew = <8>;
++		cs1_dq0_rx_de-skew = <7>;
++		cs1_dq0_tx_de-skew = <8>;
++		cs1_dq1_rx_de-skew = <7>;
++		cs1_dq1_tx_de-skew = <8>;
++		cs1_dq2_rx_de-skew = <7>;
++		cs1_dq2_tx_de-skew = <8>;
++		cs1_dq3_rx_de-skew = <7>;
++		cs1_dq3_tx_de-skew = <8>;
++		cs1_dq4_rx_de-skew = <7>;
++		cs1_dq4_tx_de-skew = <8>;
++		cs1_dq5_rx_de-skew = <7>;
++		cs1_dq5_tx_de-skew = <8>;
++		cs1_dq6_rx_de-skew = <7>;
++		cs1_dq6_tx_de-skew = <8>;
++		cs1_dq7_rx_de-skew = <7>;
++		cs1_dq7_tx_de-skew = <8>;
++		cs1_dqs0_rx_de-skew = <6>;
++		cs1_dqs0p_tx_de-skew = <9>;
++		cs1_dqs0n_tx_de-skew = <9>;
++
++		cs1_dm1_rx_de-skew = <7>;
++		cs1_dm1_tx_de-skew = <7>;
++		cs1_dq8_rx_de-skew = <7>;
++		cs1_dq8_tx_de-skew = <8>;
++		cs1_dq9_rx_de-skew = <7>;
++		cs1_dq9_tx_de-skew = <7>;
++		cs1_dq10_rx_de-skew = <7>;
++		cs1_dq10_tx_de-skew = <8>;
++		cs1_dq11_rx_de-skew = <7>;
++		cs1_dq11_tx_de-skew = <7>;
++		cs1_dq12_rx_de-skew = <7>;
++		cs1_dq12_tx_de-skew = <8>;
++		cs1_dq13_rx_de-skew = <7>;
++		cs1_dq13_tx_de-skew = <7>;
++		cs1_dq14_rx_de-skew = <7>;
++		cs1_dq14_tx_de-skew = <8>;
++		cs1_dq15_rx_de-skew = <7>;
++		cs1_dq15_tx_de-skew = <7>;
++		cs1_dqs1_rx_de-skew = <7>;
++		cs1_dqs1p_tx_de-skew = <9>;
++		cs1_dqs1n_tx_de-skew = <9>;
++
++		cs1_dm2_rx_de-skew = <7>;
++		cs1_dm2_tx_de-skew = <8>;
++		cs1_dq16_rx_de-skew = <7>;
++		cs1_dq16_tx_de-skew = <8>;
++		cs1_dq17_rx_de-skew = <7>;
++		cs1_dq17_tx_de-skew = <8>;
++		cs1_dq18_rx_de-skew = <7>;
++		cs1_dq18_tx_de-skew = <8>;
++		cs1_dq19_rx_de-skew = <7>;
++		cs1_dq19_tx_de-skew = <8>;
++		cs1_dq20_rx_de-skew = <7>;
++		cs1_dq20_tx_de-skew = <8>;
++		cs1_dq21_rx_de-skew = <7>;
++		cs1_dq21_tx_de-skew = <8>;
++		cs1_dq22_rx_de-skew = <7>;
++		cs1_dq22_tx_de-skew = <8>;
++		cs1_dq23_rx_de-skew = <7>;
++		cs1_dq23_tx_de-skew = <8>;
++		cs1_dqs2_rx_de-skew = <6>;
++		cs1_dqs2p_tx_de-skew = <9>;
++		cs1_dqs2n_tx_de-skew = <9>;
++
++		cs1_dm3_rx_de-skew = <7>;
++		cs1_dm3_tx_de-skew = <7>;
++		cs1_dq24_rx_de-skew = <7>;
++		cs1_dq24_tx_de-skew = <8>;
++		cs1_dq25_rx_de-skew = <7>;
++		cs1_dq25_tx_de-skew = <7>;
++		cs1_dq26_rx_de-skew = <7>;
++		cs1_dq26_tx_de-skew = <7>;
++		cs1_dq27_rx_de-skew = <7>;
++		cs1_dq27_tx_de-skew = <7>;
++		cs1_dq28_rx_de-skew = <7>;
++		cs1_dq28_tx_de-skew = <7>;
++		cs1_dq29_rx_de-skew = <7>;
++		cs1_dq29_tx_de-skew = <7>;
++		cs1_dq30_rx_de-skew = <7>;
++		cs1_dq30_tx_de-skew = <7>;
++		cs1_dq31_rx_de-skew = <7>;
++		cs1_dq31_tx_de-skew = <7>;
++		cs1_dqs3_rx_de-skew = <7>;
++		cs1_dqs3p_tx_de-skew = <9>;
++		cs1_dqs3n_tx_de-skew = <9>;
++	};
++};
+--- /dev/null	2023-04-29 08:31:15.023562380 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-dram-renegade-timing.dtsi	2023-05-06 11:32:39.457676137 -0400
+@@ -0,0 +1,311 @@
++/*
++ * Copyright (c) 2017 Fuzhou Rockchip Electronics Co., Ltd
++ *
++ * This file is dual-licensed: you can use it either under the terms
++ * of the GPL or the X11 license, at your option. Note that this dual
++ * licensing only applies to this file, and not this project as a
++ * whole.
++ *
++ *  a) This library is free software; you can redistribute it and/or
++ *     modify it under the terms of the GNU General Public License as
++ *     published by the Free Software Foundation; either version 2 of the
++ *     License, or (at your option) any later version.
++ *
++ *     This library is distributed in the hope that it will be useful,
++ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *     GNU General Public License for more details.
++ *
++ * Or, alternatively,
++ *
++ *  b) Permission is hereby granted, free of charge, to any person
++ *     obtaining a copy of this software and associated documentation
++ *     files (the "Software"), to deal in the Software without
++ *     restriction, including without limitation the rights to use,
++ *     copy, modify, merge, publish, distribute, sublicense, and/or
++ *     sell copies of the Software, and to permit persons to whom the
++ *     Software is furnished to do so, subject to the following
++ *     conditions:
++ *
++ *     The above copyright notice and this permission notice shall be
++ *     included in all copies or substantial portions of the Software.
++ *
++ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
++ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
++ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ *     OTHER DEALINGS IN THE SOFTWARE.
++ */
++#include <dt-bindings/clock/rockchip-ddr.h>
++#include <dt-bindings/memory/rk3328-dram.h>
++
++/ {
++	ddr_timing: ddr_timing {
++		compatible = "rockchip,ddr-timing";
++		ddr3_speed_bin = <DDR3_DEFAULT>;
++		ddr4_speed_bin = <DDR4_DEFAULT>;
++		pd_idle = <0>;
++		sr_idle = <0>;
++		sr_mc_gate_idle = <0>;
++		srpd_lite_idle	= <0>;
++		standby_idle = <0>;
++
++		auto_pd_dis_freq = <1066>;
++		auto_sr_dis_freq = <800>;
++		ddr3_dll_dis_freq = <300>;
++		ddr4_dll_dis_freq = <625>;
++		phy_dll_dis_freq = <400>;
++
++		ddr3_odt_dis_freq = <100>;
++		phy_ddr3_odt_dis_freq = <100>;
++		ddr3_drv = <DDR3_DS_40ohm>;
++		ddr3_odt = <DDR3_ODT_120ohm>;
++		phy_ddr3_ca_drv = <PHY_DDR3_RON_RTT_34ohm>;
++		phy_ddr3_ck_drv = <PHY_DDR3_RON_RTT_45ohm>;
++		phy_ddr3_dq_drv = <PHY_DDR3_RON_RTT_34ohm>;
++		phy_ddr3_odt = <PHY_DDR3_RON_RTT_225ohm>;
++
++		lpddr3_odt_dis_freq = <666>;
++		phy_lpddr3_odt_dis_freq = <666>;
++		lpddr3_drv = <LP3_DS_40ohm>;
++		lpddr3_odt = <LP3_ODT_240ohm>;
++		phy_lpddr3_ca_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_lpddr3_ck_drv = <PHY_DDR4_LPDDR3_RON_RTT_43ohm>;
++		phy_lpddr3_dq_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_lpddr3_odt = <PHY_DDR4_LPDDR3_RON_RTT_240ohm>;
++
++		lpddr4_odt_dis_freq = <800>;
++		phy_lpddr4_odt_dis_freq = <800>;
++		lpddr4_drv = <LP4_PDDS_60ohm>;
++		lpddr4_dq_odt = <LP4_DQ_ODT_40ohm>;
++		lpddr4_ca_odt = <LP4_CA_ODT_40ohm>;
++		phy_lpddr4_ca_drv = <PHY_DDR4_LPDDR3_RON_RTT_40ohm>;
++		phy_lpddr4_ck_cs_drv = <PHY_DDR4_LPDDR3_RON_RTT_80ohm>;
++		phy_lpddr4_dq_drv = <PHY_DDR4_LPDDR3_RON_RTT_80ohm>;
++		phy_lpddr4_odt = <PHY_DDR4_LPDDR3_RON_RTT_60ohm>;
++
++		ddr4_odt_dis_freq = <666>;
++		phy_ddr4_odt_dis_freq = <666>;
++		ddr4_drv = <DDR4_DS_34ohm>;
++		ddr4_odt = <DDR4_RTT_NOM_240ohm>;
++		phy_ddr4_ca_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_ddr4_ck_drv = <PHY_DDR4_LPDDR3_RON_RTT_43ohm>;
++		phy_ddr4_dq_drv = <PHY_DDR4_LPDDR3_RON_RTT_34ohm>;
++		phy_ddr4_odt = <PHY_DDR4_LPDDR3_RON_RTT_240ohm>;
++
++		/* CA de-skew, one step is 47.8ps, range 0-15 */
++		ddr3a1_ddr4a9_de-skew = <0>;
++		ddr3a0_ddr4a10_de-skew = <0>;
++		ddr3a3_ddr4a6_de-skew = <1>;
++		ddr3a2_ddr4a4_de-skew = <1>;
++		ddr3a5_ddr4a8_de-skew = <0>;
++		ddr3a4_ddr4a5_de-skew = <2>;
++		ddr3a7_ddr4a11_de-skew = <0>;
++		ddr3a6_ddr4a7_de-skew = <2>;
++		ddr3a9_ddr4a0_de-skew = <1>;
++		ddr3a8_ddr4a13_de-skew = <0>;
++		ddr3a11_ddr4a3_de-skew = <2>;
++		ddr3a10_ddr4cs0_de-skew = <0>;
++		ddr3a13_ddr4a2_de-skew = <1>;
++		ddr3a12_ddr4ba1_de-skew = <0>;
++		ddr3a15_ddr4odt0_de-skew = <0>;
++		ddr3a14_ddr4a1_de-skew = <1>;
++		ddr3ba1_ddr4a15_de-skew = <0>;
++		ddr3ba0_ddr4bg0_de-skew = <0>;
++		ddr3ras_ddr4cke_de-skew = <0>;
++		ddr3ba2_ddr4ba0_de-skew = <1>;
++		ddr3we_ddr4bg1_de-skew = <1>;
++		ddr3cas_ddr4a12_de-skew = <0>;
++		ddr3ckn_ddr4ckn_de-skew = <5>;
++		ddr3ckp_ddr4ckp_de-skew = <5>;
++		ddr3cke_ddr4a16_de-skew = <1>;
++		ddr3odt0_ddr4a14_de-skew = <0>;
++		ddr3cs0_ddr4act_de-skew = <1>;
++		ddr3reset_ddr4reset_de-skew = <0>;
++		ddr3cs1_ddr4cs1_de-skew = <0>;
++		ddr3odt1_ddr4odt1_de-skew = <0>;
++
++		/* DATA de-skew
++		 * RX one step is 25.1ps, range 0-15
++		 * TX one step is 47.8ps, range 0-15
++		 */
++		cs0_dm0_rx_de-skew = <7>;
++		cs0_dm0_tx_de-skew = <8>;
++		cs0_dq0_rx_de-skew = <7>;
++		cs0_dq0_tx_de-skew = <8>;
++		cs0_dq1_rx_de-skew = <7>;
++		cs0_dq1_tx_de-skew = <8>;
++		cs0_dq2_rx_de-skew = <7>;
++		cs0_dq2_tx_de-skew = <8>;
++		cs0_dq3_rx_de-skew = <7>;
++		cs0_dq3_tx_de-skew = <8>;
++		cs0_dq4_rx_de-skew = <7>;
++		cs0_dq4_tx_de-skew = <8>;
++		cs0_dq5_rx_de-skew = <7>;
++		cs0_dq5_tx_de-skew = <8>;
++		cs0_dq6_rx_de-skew = <7>;
++		cs0_dq6_tx_de-skew = <8>;
++		cs0_dq7_rx_de-skew = <7>;
++		cs0_dq7_tx_de-skew = <8>;
++		cs0_dqs0_rx_de-skew = <6>;
++		cs0_dqs0p_tx_de-skew = <9>;
++		cs0_dqs0n_tx_de-skew = <9>;
++
++		cs0_dm1_rx_de-skew = <7>;
++		cs0_dm1_tx_de-skew = <7>;
++		cs0_dq8_rx_de-skew = <7>;
++		cs0_dq8_tx_de-skew = <8>;
++		cs0_dq9_rx_de-skew = <7>;
++		cs0_dq9_tx_de-skew = <7>;
++		cs0_dq10_rx_de-skew = <7>;
++		cs0_dq10_tx_de-skew = <8>;
++		cs0_dq11_rx_de-skew = <7>;
++		cs0_dq11_tx_de-skew = <7>;
++		cs0_dq12_rx_de-skew = <7>;
++		cs0_dq12_tx_de-skew = <8>;
++		cs0_dq13_rx_de-skew = <7>;
++		cs0_dq13_tx_de-skew = <7>;
++		cs0_dq14_rx_de-skew = <7>;
++		cs0_dq14_tx_de-skew = <8>;
++		cs0_dq15_rx_de-skew = <7>;
++		cs0_dq15_tx_de-skew = <7>;
++		cs0_dqs1_rx_de-skew = <7>;
++		cs0_dqs1p_tx_de-skew = <9>;
++		cs0_dqs1n_tx_de-skew = <9>;
++
++		cs0_dm2_rx_de-skew = <7>;
++		cs0_dm2_tx_de-skew = <8>;
++		cs0_dq16_rx_de-skew = <7>;
++		cs0_dq16_tx_de-skew = <8>;
++		cs0_dq17_rx_de-skew = <7>;
++		cs0_dq17_tx_de-skew = <8>;
++		cs0_dq18_rx_de-skew = <7>;
++		cs0_dq18_tx_de-skew = <8>;
++		cs0_dq19_rx_de-skew = <7>;
++		cs0_dq19_tx_de-skew = <8>;
++		cs0_dq20_rx_de-skew = <7>;
++		cs0_dq20_tx_de-skew = <8>;
++		cs0_dq21_rx_de-skew = <7>;
++		cs0_dq21_tx_de-skew = <8>;
++		cs0_dq22_rx_de-skew = <7>;
++		cs0_dq22_tx_de-skew = <8>;
++		cs0_dq23_rx_de-skew = <7>;
++		cs0_dq23_tx_de-skew = <8>;
++		cs0_dqs2_rx_de-skew = <6>;
++		cs0_dqs2p_tx_de-skew = <9>;
++		cs0_dqs2n_tx_de-skew = <9>;
++
++		cs0_dm3_rx_de-skew = <7>;
++		cs0_dm3_tx_de-skew = <7>;
++		cs0_dq24_rx_de-skew = <7>;
++		cs0_dq24_tx_de-skew = <8>;
++		cs0_dq25_rx_de-skew = <7>;
++		cs0_dq25_tx_de-skew = <7>;
++		cs0_dq26_rx_de-skew = <7>;
++		cs0_dq26_tx_de-skew = <7>;
++		cs0_dq27_rx_de-skew = <7>;
++		cs0_dq27_tx_de-skew = <7>;
++		cs0_dq28_rx_de-skew = <7>;
++		cs0_dq28_tx_de-skew = <7>;
++		cs0_dq29_rx_de-skew = <7>;
++		cs0_dq29_tx_de-skew = <7>;
++		cs0_dq30_rx_de-skew = <7>;
++		cs0_dq30_tx_de-skew = <7>;
++		cs0_dq31_rx_de-skew = <7>;
++		cs0_dq31_tx_de-skew = <7>;
++		cs0_dqs3_rx_de-skew = <7>;
++		cs0_dqs3p_tx_de-skew = <9>;
++		cs0_dqs3n_tx_de-skew = <9>;
++
++		cs1_dm0_rx_de-skew = <7>;
++		cs1_dm0_tx_de-skew = <8>;
++		cs1_dq0_rx_de-skew = <7>;
++		cs1_dq0_tx_de-skew = <8>;
++		cs1_dq1_rx_de-skew = <7>;
++		cs1_dq1_tx_de-skew = <8>;
++		cs1_dq2_rx_de-skew = <7>;
++		cs1_dq2_tx_de-skew = <8>;
++		cs1_dq3_rx_de-skew = <7>;
++		cs1_dq3_tx_de-skew = <8>;
++		cs1_dq4_rx_de-skew = <7>;
++		cs1_dq4_tx_de-skew = <8>;
++		cs1_dq5_rx_de-skew = <7>;
++		cs1_dq5_tx_de-skew = <8>;
++		cs1_dq6_rx_de-skew = <7>;
++		cs1_dq6_tx_de-skew = <8>;
++		cs1_dq7_rx_de-skew = <7>;
++		cs1_dq7_tx_de-skew = <8>;
++		cs1_dqs0_rx_de-skew = <6>;
++		cs1_dqs0p_tx_de-skew = <9>;
++		cs1_dqs0n_tx_de-skew = <9>;
++
++		cs1_dm1_rx_de-skew = <7>;
++		cs1_dm1_tx_de-skew = <7>;
++		cs1_dq8_rx_de-skew = <7>;
++		cs1_dq8_tx_de-skew = <8>;
++		cs1_dq9_rx_de-skew = <7>;
++		cs1_dq9_tx_de-skew = <7>;
++		cs1_dq10_rx_de-skew = <7>;
++		cs1_dq10_tx_de-skew = <8>;
++		cs1_dq11_rx_de-skew = <7>;
++		cs1_dq11_tx_de-skew = <7>;
++		cs1_dq12_rx_de-skew = <7>;
++		cs1_dq12_tx_de-skew = <8>;
++		cs1_dq13_rx_de-skew = <7>;
++		cs1_dq13_tx_de-skew = <7>;
++		cs1_dq14_rx_de-skew = <7>;
++		cs1_dq14_tx_de-skew = <8>;
++		cs1_dq15_rx_de-skew = <7>;
++		cs1_dq15_tx_de-skew = <7>;
++		cs1_dqs1_rx_de-skew = <7>;
++		cs1_dqs1p_tx_de-skew = <9>;
++		cs1_dqs1n_tx_de-skew = <9>;
++
++		cs1_dm2_rx_de-skew = <7>;
++		cs1_dm2_tx_de-skew = <8>;
++		cs1_dq16_rx_de-skew = <7>;
++		cs1_dq16_tx_de-skew = <8>;
++		cs1_dq17_rx_de-skew = <7>;
++		cs1_dq17_tx_de-skew = <8>;
++		cs1_dq18_rx_de-skew = <7>;
++		cs1_dq18_tx_de-skew = <8>;
++		cs1_dq19_rx_de-skew = <7>;
++		cs1_dq19_tx_de-skew = <8>;
++		cs1_dq20_rx_de-skew = <7>;
++		cs1_dq20_tx_de-skew = <8>;
++		cs1_dq21_rx_de-skew = <7>;
++		cs1_dq21_tx_de-skew = <8>;
++		cs1_dq22_rx_de-skew = <7>;
++		cs1_dq22_tx_de-skew = <8>;
++		cs1_dq23_rx_de-skew = <7>;
++		cs1_dq23_tx_de-skew = <8>;
++		cs1_dqs2_rx_de-skew = <6>;
++		cs1_dqs2p_tx_de-skew = <9>;
++		cs1_dqs2n_tx_de-skew = <9>;
++
++		cs1_dm3_rx_de-skew = <7>;
++		cs1_dm3_tx_de-skew = <7>;
++		cs1_dq24_rx_de-skew = <7>;
++		cs1_dq24_tx_de-skew = <8>;
++		cs1_dq25_rx_de-skew = <7>;
++		cs1_dq25_tx_de-skew = <7>;
++		cs1_dq26_rx_de-skew = <7>;
++		cs1_dq26_tx_de-skew = <7>;
++		cs1_dq27_rx_de-skew = <7>;
++		cs1_dq27_tx_de-skew = <7>;
++		cs1_dq28_rx_de-skew = <7>;
++		cs1_dq28_tx_de-skew = <7>;
++		cs1_dq29_rx_de-skew = <7>;
++		cs1_dq29_tx_de-skew = <7>;
++		cs1_dq30_rx_de-skew = <7>;
++		cs1_dq30_tx_de-skew = <7>;
++		cs1_dq31_rx_de-skew = <7>;
++		cs1_dq31_tx_de-skew = <7>;
++		cs1_dqs3_rx_de-skew = <7>;
++		cs1_dqs3p_tx_de-skew = <9>;
++		cs1_dqs3n_tx_de-skew = <9>;
++	};
++};
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328.dtsi b/arch/arm64/boot/dts/rockchip/rk3328.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2023-04-30 19:26:28.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328.dtsi	2023-05-06 11:32:39.440676385 -0400
+@@ -140,6 +140,17 @@
+ 			opp-microvolt = <1300000>;
+ 			clock-latency-ns = <40000>;
+ 		};
++		opp-1512000000 {
++			opp-hz = /bits/ 64 <1512000000>;
++			opp-microvolt = <1400000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1608000000 {
++			opp-hz = /bits/ 64 <1608000000>;
++			opp-microvolt = <1450000>;
++			clock-latency-ns = <40000>;
++			turbo-mode;
++		};
+ 	};
+ 
+ 	analog_sound: analog-sound {
+@@ -193,6 +204,26 @@
+ 		method = "smc";
+ 	};
+ 
++	spdif_out: spdif-out {
++		compatible = "linux,spdif-dit";
++		#sound-dai-cells = <0>;
++		status = "disabled";
++	};
++
++	spdif_sound: spdif-sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,name = "SPDIF";
++		status = "disabled";
++
++		simple-audio-card,cpu {
++			sound-dai = <&spdif>;
++		};
++
++		simple-audio-card,codec {
++			sound-dai = <&spdif_out>;
++		};
++	};
++
+ 	timer {
+ 		compatible = "arm,armv8-timer";
+ 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+@@ -279,6 +310,17 @@
+ 		status = "disabled";
+ 	};
+ 
++	rng: rng@ff060000 {
++		compatible = "rockchip,cryptov1-rng";
++		reg = <0x0 0xff060000 0x0 0x4000>;
++
++		clocks = <&cru SCLK_CRYPTO>, <&cru HCLK_CRYPTO_SLV>;
++		clock-names = "clk_crypto", "hclk_crypto";
++		assigned-clocks = <&cru SCLK_CRYPTO>, <&cru HCLK_CRYPTO_SLV>;
++		assigned-clock-rates = <150000000>, <100000000>;
++		status = "okay";
++	};
++
+ 	grf: syscon@ff100000 {
+ 		compatible = "rockchip,rk3328-grf", "syscon", "simple-mfd";
+ 		reg = <0x0 0xff100000 0x0 0x1000>;
+@@ -300,6 +342,10 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 
++			power-domain@RK3328_PD_GPU {
++				reg = <RK3328_PD_GPU>;
++				clocks = <&cru ACLK_GPU>;
++			};		
+ 			power-domain@RK3328_PD_HEVC {
+ 				reg = <RK3328_PD_HEVC>;
+ 				#power-domain-cells = <0>;
+@@ -620,6 +666,7 @@
+ 				  "ppmmu1";
+ 		clocks = <&cru ACLK_GPU>, <&cru ACLK_GPU>;
+ 		clock-names = "bus", "core";
++		power-domains = <&power RK3328_PD_GPU>;
+ 		resets = <&cru SRST_GPU_A>;
+ 	};
+ 
+@@ -801,6 +848,7 @@
+ 			<&cru ACLK_BUS_PRE>, <&cru HCLK_BUS_PRE>,
+ 			<&cru PCLK_BUS_PRE>, <&cru ACLK_PERI_PRE>,
+ 			<&cru HCLK_PERI>, <&cru PCLK_PERI>,
++			<&cru ACLK_GPU>,
+ 			<&cru SCLK_RTC32K>;
+ 		assigned-clock-parents =
+ 			<&cru HDMIPHY>, <&cru PLL_APLL>,
+@@ -822,6 +870,7 @@
+ 			<150000000>, <75000000>,
+ 			<75000000>, <150000000>,
+ 			<75000000>, <75000000>,
++			<500000000>,
+ 			<32768>;
+ 	};
+ 
+@@ -862,6 +911,47 @@
+ 		};
+ 	};
+ 
++	usb3phy_grf: syscon@ff460000 {
++		compatible = "rockchip,usb3phy-grf", "syscon";
++		reg = <0x0 0xff460000 0x0 0x1000>;
++	};
++
++	u3phy: usb3-phy@ff470000 {
++		compatible = "rockchip,rk3328-u3phy";
++		reg = <0x0 0xff470000 0x0 0x0>;
++		rockchip,u3phygrf = <&usb3phy_grf>;
++		rockchip,grf = <&grf>;
++		interrupts = <GIC_SPI 77 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "linestate";
++		clocks = <&cru PCLK_USB3PHY_OTG>, <&cru PCLK_USB3PHY_PIPE>;
++		clock-names = "u3phy-otg", "u3phy-pipe";
++		resets = <&cru SRST_USB3PHY_U2>,
++			 <&cru SRST_USB3PHY_U3>,
++			 <&cru SRST_USB3PHY_PIPE>,
++			 <&cru SRST_USB3OTG_UTMI>,
++			 <&cru SRST_USB3PHY_OTG_P>,
++			 <&cru SRST_USB3PHY_PIPE_P>;
++		reset-names = "u3phy-u2-por", "u3phy-u3-por",
++			      "u3phy-pipe-mac", "u3phy-utmi-mac",
++			      "u3phy-utmi-apb", "u3phy-pipe-apb";
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++		status = "disabled";
++
++		u3phy_utmi: utmi@ff470000 {
++			reg = <0x0 0xff470000 0x0 0x8000>;
++			#phy-cells = <0>;
++			status = "disabled";
++		};
++
++		u3phy_pipe: pipe@ff478000 {
++			reg = <0x0 0xff478000 0x0 0x8000>;
++			#phy-cells = <0>;
++			status = "disabled";
++		};
++	};
++
+ 	sdmmc: mmc@ff500000 {
+ 		compatible = "rockchip,rk3328-dw-mshc", "rockchip,rk3288-dw-mshc";
+ 		reg = <0x0 0xff500000 0x0 0x4000>;
+@@ -1001,6 +1091,8 @@
+ 			 <&cru ACLK_USB3OTG>;
+ 		clock-names = "ref_clk", "suspend_clk",
+ 			      "bus_clk";
++		resets = <&cru SRST_USB3OTG>;
++		reset-names = "usb3-otg";
+ 		dr_mode = "otg";
+ 		phy_type = "utmi_wide";
+ 		snps,dis-del-phy-power-chg-quirk;
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
+--- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2023-04-30 19:26:28.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts	2023-05-06 11:32:39.439676400 -0400
+@@ -5,9 +5,10 @@
+ 
+ /dts-v1/;
+ #include "rk3328.dtsi"
++#include "rk3328-dram-renegade-timing.dtsi"
+ 
+ / {
+-	model = "Firefly roc-rk3328-cc";
++	model = "Firefly Renegade";
+ 	compatible = "firefly,roc-rk3328-cc", "rockchip,rk3328";
+ 
+ 	aliases {
+@@ -19,6 +20,79 @@
+ 		stdout-path = "serial2:1500000n8";
+ 	};
+ 
++	dfi: dfi@ff790000 {
++		reg = <0x00 0xff790000 0x00 0x400>;
++		compatible = "rockchip,rk3328-dfi";
++		rockchip,grf = <&grf>;
++		status = "okay";
++	};
++
++	dmc: dmc {
++		compatible = "rockchip,rk3328-dmc";
++		center-supply = <&vdd_logic>;
++		devfreq-events = <&dfi>;
++		clocks = <&cru SCLK_DDRCLK>;
++		clock-names = "dmc_clk";
++		operating-points-v2 = <&dmc_opp_table>;
++		ddr_timing = <&ddr_timing>;
++		upthreshold = <40>;
++		downdifferential = <20>;
++		auto-min-freq = <840000>;
++		auto-freq-en = <0>;
++		#cooling-cells = <2>;
++		status = "okay";
++
++		ddr_power_model: ddr_power_model {
++			compatible = "ddr_power_model";
++			dynamic-power-coefficient = <120>;
++			static-power-coefficient = <200>;
++			ts = <32000 4700 (-80) 2>;
++			thermal-zone = "soc-thermal";
++		};
++	};
++
++	dmc_opp_table: dmc-opp-table {
++		compatible = "operating-points-v2";
++
++		rockchip,leakage-voltage-sel = <
++			1   10    0
++			11  254   1
++		>;
++		nvmem-cells = <&logic_leakage>;
++		nvmem-cell-names = "ddr_leakage";
++
++		opp-786000000 {
++			opp-hz = /bits/ 64 <786000000>;
++			opp-microvolt = <1075000>;
++			opp-microvolt-L0 = <1075000>;
++			opp-microvolt-L1 = <1050000>;
++		};
++		opp-798000000 {
++			opp-hz = /bits/ 64 <798000000>;
++			opp-microvolt = <1075000>;
++			opp-microvolt-L0 = <1075000>;
++			opp-microvolt-L1 = <1050000>;
++		};
++		opp-840000000 {
++			opp-hz = /bits/ 64 <840000000>;
++			opp-microvolt = <1075000>;
++			opp-microvolt-L0 = <1075000>;
++			opp-microvolt-L1 = <1050000>;
++		};
++		opp-924000000 {
++			opp-hz = /bits/ 64 <924000000>;
++			opp-microvolt = <1100000>;
++			opp-microvolt-L0 = <1100000>;
++			opp-microvolt-L1 = <1075000>;
++		};
++		opp-1068000000 {
++			opp-hz = /bits/ 64 <1068000000>;
++			opp-microvolt = <1175000>;
++			opp-microvolt-L0 = <1175000>;
++			opp-microvolt-L1 = <1150000>;
++		};
++	};
++
+ 	gmac_clkin: external-gmac-clock {
+ 		compatible = "fixed-clock";
+ 		clock-frequency = <125000000>;
+@@ -26,18 +100,9 @@
+ 		#clock-cells = <0>;
+ 	};
+ 
+-	dc_12v: dc-12v {
+-		compatible = "regulator-fixed";
+-		regulator-name = "dc_12v";
+-		regulator-always-on;
+-		regulator-boot-on;
+-		regulator-min-microvolt = <12000000>;
+-		regulator-max-microvolt = <12000000>;
+-	};
+-
+ 	vcc_sd: sdmmc-regulator {
+ 		compatible = "regulator-fixed";
+-		gpio = <&gpio0 RK_PD6 GPIO_ACTIVE_LOW>;
++		gpio = <&gpio0 RK_PD6 GPIO_ACTIVE_HIGH>;
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&sdmmc0m1_pin>;
+ 		regulator-boot-on;
+@@ -47,12 +112,12 @@
+ 		vin-supply = <&vcc_io>;
+ 	};
+ 
+-	vcc_sdio: sdmmcio-regulator {
++	vccio_sd: sdmmcio-regulator {
+ 		compatible = "regulator-gpio";
+ 		gpios = <&grf_gpio 0 GPIO_ACTIVE_HIGH>;
+ 		states = <1800000 0x1>,
+ 			 <3300000 0x0>;
+-		regulator-name = "vcc_sdio";
++		regulator-name = "vccio_sd";
+ 		regulator-type = "voltage";
+ 		regulator-min-microvolt = <1800000>;
+ 		regulator-max-microvolt = <3300000>;
+@@ -74,11 +139,11 @@
+ 	vcc_sys: vcc-sys {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc_sys";
+-		regulator-always-on;
+-		regulator-boot-on;
++		//regulator-always-on;
++		//regulator-boot-on;
+ 		regulator-min-microvolt = <5000000>;
+ 		regulator-max-microvolt = <5000000>;
+-		vin-supply = <&dc_12v>;
++		//vin-supply = <&dc_12v>;
+ 	};
+ 
+ 	vcc_phy: vcc-phy-regulator {
+@@ -92,22 +157,30 @@
+ 		compatible = "gpio-leds";
+ 
+ 		power_led: led-0 {
+-			label = "firefly:blue:power";
+-			linux,default-trigger = "heartbeat";
++			label = "firefly:red:power";
++			linux,default-trigger = "default-on";
+ 			gpios = <&rk805 1 GPIO_ACTIVE_LOW>;
+ 			default-state = "on";
+ 		};
+ 
+ 		user_led: led-1 {
+-			label = "firefly:yellow:user";
+-			linux,default-trigger = "mmc1";
++			label = "firefly:green:status";
++			linux,default-trigger = "heartbeat";
+ 			gpios = <&rk805 0 GPIO_ACTIVE_LOW>;
+-			default-state = "off";
++			default-state = "on";
+ 		};
+ 	};
++
++	ir-receiver {
++		compatible = "gpio-ir-receiver";
++		gpios = <&gpio2 RK_PA2 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&ir_int>;
++		pinctrl-names = "default";
++	};
+ };
+ 
+ &analog_sound {
++	simple-audio-card,name = "TRS Jack";
+ 	status = "okay";
+ };
+ 
+@@ -164,6 +237,10 @@
+ 	status = "okay";
+ };
+ 
++&gpu {
++	mali-supply = <&vdd_logic>;
++};
++
+ &hdmi {
+ 	status = "okay";
+ };
+@@ -203,8 +280,9 @@
+ 		regulators {
+ 			vdd_logic: DCDC_REG1 {
+ 				regulator-name = "vdd_logic";
+-				regulator-min-microvolt = <712500>;
+-				regulator-max-microvolt = <1450000>;
++				regulator-min-microvolt = <900000>;
++				regulator-max-microvolt = <1175000>;
++				regulator-ramp-delay = <12500>;
+ 				regulator-always-on;
+ 				regulator-boot-on;
+ 				regulator-state-mem {
+@@ -215,8 +293,9 @@
+ 
+ 			vdd_arm: DCDC_REG2 {
+ 				regulator-name = "vdd_arm";
+-				regulator-min-microvolt = <712500>;
++				regulator-min-microvolt = <950000>;
+ 				regulator-max-microvolt = <1450000>;
++				regulator-ramp-delay = <12500>;
+ 				regulator-always-on;
+ 				regulator-boot-on;
+ 				regulator-state-mem {
+@@ -298,7 +377,7 @@
+ 
+ 	vccio1-supply = <&vcc_io>;
+ 	vccio2-supply = <&vcc18_emmc>;
+-	vccio3-supply = <&vcc_sdio>;
++	vccio3-supply = <&vccio_sd>;
+ 	vccio4-supply = <&vcc_18>;
+ 	vccio5-supply = <&vcc_io>;
+ 	vccio6-supply = <&vcc_io>;
+@@ -306,6 +385,12 @@
+ };
+ 
+ &pinctrl {
++	ir {
++		ir_int: ir-int {
++			rockchip,pins = <2 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
+ 	pmic {
+ 		pmic_int_l: pmic-int-l {
+ 			rockchip,pins = <1 RK_PD0 RK_FUNC_GPIO &pcfg_pull_up>;
+@@ -332,11 +417,26 @@
+ 	sd-uhs-sdr50;
+ 	sd-uhs-sdr104;
+ 	vmmc-supply = <&vcc_sd>;
+-	vqmmc-supply = <&vcc_sdio>;
++	vqmmc-supply = <&vccio_sd>;
++	status = "okay";
++};
++
++&spdif {
++	pinctrl-0 = <&spdifm0_tx>;
+ 	status = "okay";
+ };
+ 
++&spdif_out {
++	status = "okay";
++};
++
++&spdif_sound {
++ 	status = "okay";
++};
++ 
+ &tsadc {
++	rockchip,hw-tshut-mode = <0>;
++	rockchip,hw-tshut-polarity = <0>;
+ 	status = "okay";
+ };
+ 
+@@ -361,6 +461,18 @@
+ 	status = "okay";
+ };
+ 
++&u3phy {
++	status = "okay";
++};
++
++&u3phy_utmi {
++	status = "okay";
++};
++
++&u3phy_pipe {
++	status = "okay";
++};
++
+ &usbdrd3 {
+ 	dr_mode = "host";
+ 	status = "okay";
+diff -Naur a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
+--- a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts	2023-04-30 19:26:28.000000000 -0400
++++ b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts	2023-05-06 11:38:55.906146561 -0400
+@@ -5,6 +5,7 @@
+ 
+ /dts-v1/;
+ #include "rk3328.dtsi"
++#include "rk3328-dram-default-timing.dtsi"
+ 
+ / {
+ 	model = "Pine64 Rock64";
+@@ -37,7 +38,8 @@
+ 		vin-supply = <&vcc_io>;
+ 	};
+ 
+-	vcc_host_5v: vcc-host-5v-regulator {
++	// Common enable line for all of the rails mentioned in the labels.
++	vcc_host_5v: vcc_host1_5v: vcc_otg_5v: vcc-host-5v-regulator {
+ 		compatible = "regulator-fixed";
+ 		gpio = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
+ 		pinctrl-names = "default";
+@@ -48,17 +50,6 @@
+ 		vin-supply = <&vcc_sys>;
+ 	};
+ 
+-	vcc_host1_5v: vcc_otg_5v: vcc-host1-5v-regulator {
+-		compatible = "regulator-fixed";
+-		gpio = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&usb20_host_drv>;
+-		regulator-name = "vcc_host1_5v";
+-		regulator-always-on;
+-		regulator-boot-on;
+-		vin-supply = <&vcc_sys>;
+-	};
+-
+ 	vcc_sys: vcc-sys {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc_sys";
+@@ -386,6 +377,18 @@
+ 	status = "okay";
+ };
+ 
++&u3phy {
++	status = "okay";
++};
++
++&u3phy_utmi {
++	status = "okay";
++};
++
++&u3phy_pipe {
++	status = "okay";
++};
++
+ &usb_host0_ehci {
+ 	status = "okay";
+ };

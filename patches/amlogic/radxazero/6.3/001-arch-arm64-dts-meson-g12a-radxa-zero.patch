@@ -1,0 +1,165 @@
+diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+--- a/arch/arm64/boot/dts/amlogic/Makefile	2023-04-30 19:32:26.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/Makefile	2023-05-07 21:51:48.419505233 -0400
+@@ -1,4 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
++subdir-y += overlays
++
+ dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j100.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j110-rev-2.dtb
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi
+--- a/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi	2023-04-30 19:32:26.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi	2023-05-07 23:00:23.523560768 -0400
+@@ -51,6 +51,7 @@
+ 		l2: l2-cache0 {
+ 			compatible = "cache";
+ 			cache-level = <2>;
++			cache-unified;
+ 		};
+ 	};
+ 
+@@ -92,6 +93,12 @@
+ 			opp-hz = /bits/ 64 <1800000000>;
+ 			opp-microvolt = <981000>;
+ 		};
++
++		opp-2004000000 {
++			opp-hz = /bits/ 64 <2004000000>;
++			opp-microvolt = <1022000>;
++			turbo-mode;
++		};
+ 	};
+ };
+ 
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+--- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2023-04-30 19:32:26.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts	2023-05-07 21:51:48.420505222 -0400
+@@ -60,6 +60,17 @@
+ 		clock-names = "ext_clock";
+ 	};
+ 
++	typec2_vbus: regulator-typec2_vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "TYPEC2_VBUS";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&ao_5v>;
++
++		gpio = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
+ 	ao_5v: regulator-ao_5v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "AO_5V";
+@@ -191,6 +202,18 @@
+ 	};
+ };
+ 
++&ao_pinctrl {
++	/* Ensure the TYPE C controller irq pin is not driven by the SoC */
++	fusb302_irq_pins: fusb302_irq {
++		mux {
++			groups = "GPIOAO_5";
++			function = "gpio_aobus";
++			bias-pull-up;
++			output-disable;
++		};
++	};
++};
++
+ &arb {
+ 	status = "okay";
+ };
+@@ -278,6 +301,22 @@
+ 	pinctrl-names = "default";
+ };
+ 
++&i2c_AO {
++	fusb302@22 {
++		compatible = "fcs,fusb302";
++		reg = <0x22>;
++
++		pinctrl-0 = <&fusb302_irq_pins>;
++		pinctrl-names = "default";
++		interrupt-parent = <&gpio_intc>;
++		interrupts = <5 IRQ_TYPE_LEVEL_LOW>;
++
++		vbus-supply = <&typec2_vbus>;
++
++		status = "okay";
++	};
++};
++
+ &pwm_AO_cd {
+ 	pinctrl-0 = <&pwm_ao_d_e_pins>;
+ 	pinctrl-names = "default";
+@@ -402,3 +441,11 @@
+ &usb {
+ 	status = "okay";
+ };
++
++&usb2_phy0 {
++	phy-supply = <&typec2_vbus>;
++};
++
++&usb3_pcie_phy {
++	phy-supply = <&typec2_vbus>;
++};
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-04-30 19:32:26.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-05-07 21:51:48.497504357 -0400
+@@ -797,6 +797,22 @@
+ 						};
+ 					};
+ 
++					pwm_b_h7_pins: pwm-b-h7 {
++						mux {
++							groups = "pwm_b_h7";
++							function = "pwm_b";
++							bias-disable;
++						};
++					};
++
++					pwm_b_z0_pins: pwm-b-z0 {
++						mux {
++							groups = "pwm_b_z0";
++							function = "pwm_b";
++							bias-disable;
++						};
++					};
++
+ 					pwm_c_c_pins: pwm-c-c {
+ 						mux {
+ 							groups = "pwm_c_c";
+@@ -821,6 +837,14 @@
+ 						};
+ 					};
+ 
++					pwm_c_z1_pins: pwm-c-z1 {
++						mux {
++							groups = "pwm_c_z1";
++							function = "pwm_c";
++							bias-disable;
++						};
++					};
++
+ 					pwm_d_x3_pins: pwm-d-x3 {
+ 						mux {
+ 							groups = "pwm_d_x3";
+@@ -835,6 +859,14 @@
+ 							function = "pwm_d";
+ 							bias-disable;
+ 						};
++					};
++
++					pwm_d_z2_pins: pwm-d-z2 {
++						mux {
++							groups = "pwm_d_z2";
++							function = "pwm_d";
++							bias-disable;
++						};
+ 					};
+ 
+ 					pwm_e_pins: pwm-e {
