@@ -11,10 +11,13 @@ fi
 if [[ "$RANDOM_LOGO" == "false" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
 	cp -f ../../${BOOTLOGO} ${LOGODIR}/
 fi
+# add default builder config options
+if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
 # allwinner
 if [[ "$FAMILY" == "allwinner" ]]; then
-	echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}
 	if [[ "$BOARD" == "cubietruck" ]]; then
 		sed -i 's/CONFIG_DRAM_CLK=432/CONFIG_DRAM_CLK=384/g' configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_MMC_SUNXI_SLOT_EXTRA=2" >> configs/${UBOOT_DEFCONFIG}
@@ -29,13 +32,10 @@ if [[ "$FAMILY" == "allwinner" ]]; then
 fi
 # amlogic
 if [[ "$FAMILY" == "amlogic" ]]; then
-	echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}
 	if [[ "$BOARD" == "lepotato" ]]; then
 		cp ../../${PRECOMPILED_UBOOT_DIR}/${BOARD}.bmp tools/logos/libre-computer.bmp
 	fi
 	if [[ "$BOARD" == "radxazero" ]]; then
-		echo "CONFIG_BOOTDELAY=5" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_USE_PREBOOT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_VIDEO_LOGO=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_BMP_16BPP=y" >> configs/${UBOOT_DEFCONFIG}
@@ -52,28 +52,14 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		echo "CONFIG_SPL_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
 	if [[ "$BOARD" == "x96air" ]] && [[ "$UBOOT_VERSION" == "v2023.01" ]]; then
-		# trouble shooting: show console output
-		#echo "CONFIG_CONSOLE_MUX=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_SYS_CONSOLE_IS_IN_ENV=y" >> configs/${UBOOT_DEFCONFIG}
 		if [[ -f "../../${PRECOMPILED_UBOOT_DIR}/${FAMILY_EXT}.bmp" ]]; then
 			cp ../../${PRECOMPILED_UBOOT_DIR}/${FAMILY_EXT}.bmp tools/logos/
 		fi
 	fi
 fi
-# broadcom
-if [[ "$FAMILY" == "broadcom" ]]; then
-	echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}
-fi
-# freescale
-if [[ "$FAMILY" == "freescale" ]]; then
-	echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}
-fi
 # rockchip
 if [[ "$FAMILY" == "rockchip" ]]; then
-	echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}
 	if [[ "$FAMILY_EXT" == "rk3288" ]]; then
 		echo "CONFIG_DM_RESET=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
@@ -118,11 +104,4 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		fi
 	fi
 fi
-# samsung
-if [[ "$FAMILY" == "samsung" ]]; then
-	echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}
-fi
-# add BTRFS support
-if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
-if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
 }
