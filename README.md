@@ -106,6 +106,9 @@ FSTYPE="ext4"
 # UEFI Options: true false
 ENABLE_EFI="false"
 
+# Shrink Image (EXT4 Only): true false
+ENABLE_SHRINK="true"
+
 # Petitboot (ODROID): true false
 ENABLE_PETITBOOT="false"
 
