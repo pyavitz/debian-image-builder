@@ -127,6 +127,28 @@ if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2
 	chown root:root /usr/bin/irq-tweaks
 fi
 
+bananapi_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=BPI Specific System Tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 lepotato_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
@@ -343,8 +365,8 @@ else
 	if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
 		nanopi5_systemd;
 	fi
-	if [[ "$FAMILY_EXT" == "odroid" ]]; then
-		odroid_systemd;
+	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" ]]; then
+		${FAMILY_EXT}_systemd;
 	fi
 	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 		rockchip_systemd;
