@@ -119,7 +119,7 @@ sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wi
 }
 
 rtl88x2cs_module(){
-if [[ "$BOARD" == "x96air" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+if [[ "$BOARD" == "x96air" ]] && [[ "$LINUX_VERSION" == "5.15" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	echo "CONFIG_RTL8822CS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 }
@@ -331,7 +331,7 @@ if [ $RTL88XXAU -eq 1 ] || [ $RTL88X2BU -eq 1 ] || [ $RTL88XXCU -eq 1 ] || [ $RT
 		rtl8723ds_download
 		echo_bdone
 	fi
-	if [[ "$BOARD" == "x96air" ]]; then
+	if [[ "$BOARD" == "x96air" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
 		echo -en "${WHT}Realtek 88X2CS${FIN} "
 		rtl88x2cs_download
 		echo_bdone
