@@ -26,7 +26,14 @@ fi
 }
 
 single_partition(){
-truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+if [[ $Dev_Device == "" ]] || [[ $Dev_Device == "loop" ]]; then
+	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+else
+	Dev_Mount_Check;
+	IMAGE_LOOP_DEV="/dev/${Dev_Device}"
+	ln -sv ${IMAGE_LOOP_DEV} ${IMAGE_FOLDER}${IMAGE_FILE_NAME}
+fi
 if [[ "$GPT" == "true" ]]; then
 	if [[ "$FAMILY_EXT" == "rk356x" || "$FAMILY_EXT" == "rk3588" ]]; then
 		sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
@@ -51,9 +58,14 @@ else
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 fi
-IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
+if [[ ${Dev_Device} == "sda" ]] || [[ ${Dev_Device} == "sdb" ]] || [[ ${Dev_Device} == "sdc" ]] || [[ ${Dev_Device} == "sdd" ]]; then
+	IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}1"
+else
+	IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
+fi
 partprobe "${IMAGE_LOOP_DEV}"
+sleep 1s
+sync
 mkdir -p ${P_ROOTFS}
 filesystem
 $MAKE_ROOTFS
@@ -68,7 +80,14 @@ $MOUNT_ROOTFS
 }
 
 dual_partition(){
-truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
+if [[ $Dev_Device == "" ]] || [[ $Dev_Device == "loop" ]]; then
+	truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
+else
+	Dev_Mount_Check;
+	IMAGE_LOOP_DEV="/dev/${Dev_Device}"
+	ln -sv ${IMAGE_LOOP_DEV} ${IMAGE_FOLDER}${IMAGE_FILE_NAME}
+fi
 if [[ "$VFAT" == "true" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
@@ -119,10 +138,16 @@ else
 	p
 	w" | fdisk "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 fi
-IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
-IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
-IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
+if [[ ${Dev_Device} == "sda" ]] || [[ ${Dev_Device} == "sdb" ]] || [[ ${Dev_Device} == "sdc" ]] || [[ ${Dev_Device} == "sdd" ]]; then
+	IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}1"
+	IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}2"
+else
+	IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
+	IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
+fi
 partprobe "${IMAGE_LOOP_DEV}"
+sleep 1s
+sync
 mkdir -p ${P_BOOT} ${P_ROOTFS}
 filesystem
 $MAKE_BOOTFS
@@ -151,6 +176,34 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	P_BOOT="p1"
 	P_ROOTFS="p2"
 	dual_partition
+fi
+}
+
+Dev_Mount_Check(){
+if [[ ${Dev_Device} == "nvme0n1" ]] || [[ ${Dev_Device} == "nvme1n1" ]]; then
+	if [[ ! `ls -l /dev/${Dev_Device} | grep crw` ]]; then echo "No Special Device"; exit 22; fi
+elif [[ ! `ls -l /dev/${Dev_Device} | grep brw` ]]; then echo "No Special block File"; exit 22; fi
+
+if [[ $(`cat /etc/mtab | grep $Dev_Device`) != "" ]]; then
+	echo "  Un Mounting $Dev_Device "
+	for i in {1..9}; do
+		NAME=`cat /etc/mtab | grep "$Dev_Device$i" | cut -d " " -f2`
+		if [ "$NAME" != "" ]; then
+			umount $NAME
+		fi
+	  done
+fi
+
+# wipe drive
+echo -e "${PNK}[${GRN}Wiping Device, Pleaze wait ${YLW}/dev/${Dev_Device}${PNK}]${FIN}"
+if [[ ${Dev_Device} == "nvme0n1" ]] || [[ ${Dev_Device} == "nvme1n1" ]]; then
+	nvme format -f -s1 /dev/${Dev_Device}	# # To securely erase a listed NVMe SSD
+	blkdiscard  -v /dev/${Dev_Device}		# make sure everything is trim and zeroed
+	nvme smart-log /dev/${Dev_Device}
+elif [[ "$P_VALUE" == "p1" ]]; then
+	dd if=/dev/zero of=/dev/${Dev_Device} bs=4K count=420 conv=notrunc
+else
+	dd if=/dev/zero of=/dev/${Dev_Device} bs=1M count=420 conv=notrunc
 fi
 }
 
