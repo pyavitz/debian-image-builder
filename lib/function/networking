@@ -27,6 +27,15 @@ chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
+git clone -q -b realtek https://github.com/pyavitz/firmware.git
+cp -R firmware/* /lib/firmware
+rm -fdr firmware
+mkdir -p /lib/firmware/rtl_nic
+wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
+if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
+	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
+	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
+fi
 if [[ "$BOARD" == "pinebookpro" ]]; then
 	# wifi and bluetooth firmware
 	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/brcmfmac43456-sdio.txt
@@ -63,29 +72,15 @@ if [[ "$FAMILY_EXT" == "rk356x" || "$FAMILY_EXT" == "rk3588" ]]; then
 	if [[ "$BOARD" == "khadasedge2" ]]; then
 		cd ~
 		echo ""
-		git clone -b kedge2 https://github.com/pyavitz/firmware.git
+		git clone -q -b kedge2 https://github.com/pyavitz/firmware.git
 		cp -R firmware/* /lib/firmware
 		rm -fdr firmware
 	fi
 fi
-mkdir -p /lib/firmware/rtl_nic
-wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
-if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
-	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
-	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
-fi
-if [[ "$FAMILY_EXT" == "bananapi" || "$BOARD" == "tinker" || "$BOARD" == "x96air" ]]; then
-	cd ~
-	echo ""
-	git clone -b realtek https://github.com/pyavitz/firmware.git
-	cp -R firmware/* /lib/firmware
-	rm -fdr firmware
-fi
 if [[ "$BOARD" == "indiedroid-nova" ]]; then
 	cd ~
-	echo ""
 	#echo "Installing bluetooth support ..."
-	git clone https://github.com/stvhay/rkwifibt
+	git clone -q https://github.com/stvhay/rkwifibt
 	# build the hci driver
 	cd rkwifibt
 	make -C realtek/rtk_hciattach
