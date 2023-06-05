@@ -1,0 +1,47 @@
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4-cm4io.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4-cm4io.dts
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4-cm4io.dts	2023-06-04 14:04:27.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4-cm4io.dts	2023-06-05 07:50:43.764022583 -0400
+@@ -20,6 +20,12 @@
+ 		i2c1 = &i2c3;
+ 	};
+ 
++	reboot: meson64-reboot {
++		compatible = "meson64,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++	};
++
+ 	adc-keys {
+ 		compatible = "adc-keys";
+ 		io-channels = <&saradc 2>;
+@@ -50,14 +56,15 @@
+ 		led-blue {
+ 			color = <LED_COLOR_ID_BLUE>;
+ 			function = LED_FUNCTION_STATUS;
+-			gpios = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
++			gpios = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_LOW>;
+ 			linux,default-trigger = "heartbeat";
+ 		};
+ 
+ 		led-green {
+ 			color = <LED_COLOR_ID_GREEN>;
+ 			function = LED_FUNCTION_STATUS;
+-			gpios = <&gpio_ao GPIOAO_2 GPIO_ACTIVE_HIGH>;
++			gpios = <&gpio_ao GPIOAO_2 GPIO_ACTIVE_LOW>;
++			linux,default-trigger = "default-on";
+ 		};
+ 	};
+ 
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi	2023-06-04 14:04:27.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi	2023-06-05 07:49:00.713560198 -0400
+@@ -369,8 +369,7 @@
+ 
+ 	bluetooth {
+ 		compatible = "realtek,rtl8822cs-bt";
+-		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
+-		host-wake-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
++		enable-gpios  = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
+ 		device-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
+ 	};
+ };
