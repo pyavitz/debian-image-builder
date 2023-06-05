@@ -39,17 +39,6 @@ fi
 if [[ -f "override.txt" ]]; then
 	rm -f override.txt
 fi
-# force linux version on sun8i-h3 for best user experience
-if [[ "$FAMILY_EXT" == "sun8i" ]]; then
-	JSON_FILE="https://kernel.org/releases.json"
-	if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | grep -w 5.15` ]]; then
-		LTS1_L="5p";
-	else
-		LTS1_L="6p";
-	fi
-	LTS1=$(curl -Ls $JSON_FILE | grep -w "version" | sed -n $LTS1_L | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g')
-	VERSION="${LTS1}"
-fi
 # end override
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 if [[ -e "/etc/os-release" ]]; then
