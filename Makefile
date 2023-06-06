@@ -191,8 +191,8 @@ menu:
 	@${MENU}
 
 # reset myconfig to 0
-myconfig_0:
-	@$(shell sed -i "23s/.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
+reset:
+	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
 
 config:
 	# Please be patient
