@@ -134,14 +134,12 @@ uboot:
 kernel: 
 	@rm -f github.txt
 ifdef version
-	@$(shell sed -i "12s/.*/VERSION="'"${version}"'"/" userdata.txt)
+	@$(shell sed -i "s/^VERSION=.*/VERSION="'"${version}"'"/" userdata.txt)
 endif
-
 ifdef myconfig
-	@$(shell sed -i "23s/.*/CUSTOM_DEFCONFIG="'"1"'"/" userdata.txt)
-	@$(shell sed -i "24s/.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
+	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"1"'"/" userdata.txt)
+	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 endif
-
 # GITHUB
 ifdef github
 	@echo "$(github)" > github.txt
@@ -159,6 +157,12 @@ endif
 	$(call build_kernel)
 
 image:
+ifdef distro
+	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
+endif
+ifdef release
+	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
+endif
 	# Creating image
 	$(call build_image)
 
