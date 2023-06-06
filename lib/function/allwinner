@@ -30,22 +30,25 @@ if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.txt" ]]; then
 	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.txt /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-p2-zero.txt
 fi
 if [[ -f "fw-0a5c_21e8.hcd" ]]; then 
-	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
-	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd;
-	chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd;
-	chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
+	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+	chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+	chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 fi
 if [[ -f "UPDATE.mem" ]]; then
-	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem;
-	rm -f UPDATE.mem;
+	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
+	rm -f UPDATE.mem
 fi
+git clone -q -b realtek https://github.com/pyavitz/firmware.git
+cp -R firmware/* /lib/firmware
+rm -fdr firmware
 mkdir -p /lib/firmware/rtl_nic
 wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
 if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
-	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic;
-	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz;
+	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
+	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
 fi
-rm -fdr firmware
+cd ~
 }
 
 pine64_bthelper(){

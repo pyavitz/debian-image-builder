@@ -44,6 +44,15 @@ if [[ -f "UPDATE.mem" ]]; then
 	rm -f UPDATE.mem;
 fi
 rm -fdr firmware
+git clone -q -b realtek https://github.com/pyavitz/firmware.git
+cp -R firmware/* /lib/firmware
+rm -fdr firmware
+mkdir -p /lib/firmware/rtl_nic
+wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
+if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
+	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
+	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
+fi
 ${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz
 tar xf meson-firmware-master.tar.gz
 mkdir -p /lib/firmware/meson
@@ -59,12 +68,6 @@ ${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux
 ${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_rdwr.bin
 chown -R root:root /lib/firmware/ene-ub6250
 cd ~
-mkdir -p /lib/firmware/rtl_nic
-wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
-if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
-	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic;
-	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz;
-fi
 }
 
 odroid_udev_rules(){
