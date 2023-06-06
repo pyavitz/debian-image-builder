@@ -113,7 +113,9 @@ fi
 run_debootstrap(){
 if [[ "$DISTRO" == "devuan" ]]; then
 	KEY="/usr/share/keyrings/devuan-archive-keyring.gpg"
-	debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://deb.devuan.org/merged
+	exclude="--exclude=usr-is-merged"
+	include="--include=debootstrap,kbd,locales,keyboard-configuration,console-setup,mlocate,devuan-keyring"
+	debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=$KEY --no-merged-usr ${include} ${exclude} ${DISTRO_VERSION} ${ROOT} http://deb.devuan.org/merged
 	chroot ${ROOT} /debootstrap/debootstrap --second-stage
 else
 	debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} ${ROOT}
