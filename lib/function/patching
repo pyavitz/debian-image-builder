@@ -109,6 +109,12 @@ if [[ -d "../../${WIRELESSPATCHES}/${LINUX_VERSION}" ]]; then
 		for i in ../../${WIRELESSPATCHES}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
+if [[ "$BOARD" == "bananapicm4" ]] && [[ -d "../../${WIRELESSPATCHES}/${LINUX_VERSION}/HACK" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/${LINUX_VERSION}/HACK/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/${LINUX_VERSION}/HACK" >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/${LINUX_VERSION}/HACK/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
 if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}" >> ${LOG_FILE}
@@ -158,6 +164,12 @@ if [[ -d "../../${WIRELESSPATCHES}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${WIRELESSPATCHES}/${LINUX_VERSION}" >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+if [[ "$BOARD" == "bananapicm4" ]] && [[ -d "../../${WIRELESSPATCHES}/${LINUX_VERSION}/HACK" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/${LINUX_VERSION}/HACK/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/${LINUX_VERSION}/HACK" >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/${LINUX_VERSION}/HACK/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
 if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
