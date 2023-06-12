@@ -1,0 +1,43 @@
+The driver overrides the error codes and IRQ0 returned by platform_get_irq()
+to -EINVAL, so if it returns -EPROBE_DEFER, the driver will fail the probe
+permanently instead of the deferred probing. Switch to propagating the error
+codes upstream.  IRQ0 is no longer returned by platform_get_irq(), so we now
+can safely ignore it...
+
+Fixes: cbcaac6d7dd2 ("mmc: meson-gx-mmc: Fix platform_get_irq's error checking")
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+diff --git a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
+index b8514d9d5e73..75f97dce7ef3 100644
+--- a/drivers/mmc/host/meson-gx-mmc.c
++++ b/drivers/mmc/host/meson-gx-mmc.c
+@@ -1192,8 +1192,8 @@ static int meson_mmc_probe(struct platform_device *pdev)
+ 		return PTR_ERR(host->regs);
+ 
+ 	host->irq = platform_get_irq(pdev, 0);
+-	if (host->irq <= 0)
+-		return -EINVAL;
++	if (host->irq < 0)
++		return host->irq;
+ 
+ 	cd_irq = platform_get_irq_optional(pdev, 1);
+ 	mmc_gpio_set_cd_irq(mmc, cd_irq);
+-- 
+2.26.3
+diff --git a/drivers/mmc/host/sunxi-mmc.c b/drivers/mmc/host/sunxi-mmc.c
+index 3db9f32d6a7b..69dcb8805e05 100644
+--- a/drivers/mmc/host/sunxi-mmc.c
++++ b/drivers/mmc/host/sunxi-mmc.c
+@@ -1350,8 +1350,8 @@ static int sunxi_mmc_resource_request(struct sunxi_mmc_host *host,
+ 		return ret;
+ 
+ 	host->irq = platform_get_irq(pdev, 0);
+-	if (host->irq <= 0) {
+-		ret = -EINVAL;
++	if (host->irq < 0) {
++		ret = host->irq;
+ 		goto error_disable_mmc;
+ 	}
+ 
+-- 
+2.26.3
