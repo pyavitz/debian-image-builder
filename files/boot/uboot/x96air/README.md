@@ -1,8 +1,10 @@
 #### NOTE
 ```sh
-These are no longer used. The board is currently using U-Boot v2023.01.
+This is only required for SD boot, when Vendor U-Boot is on the eMMC.
+Enable `EMMC=1` in the `userdata.txt` file to bypass and boot mainline.
 ```
+
 ```sh
-scripts and mainline boot bins from: https://github.com/hexdump0815
+Scripts and mainline boot bins from: https://github.com/hexdump0815
 https://github.com/hexdump0815/imagebuilder/releases/tag/210805-01
 ```
