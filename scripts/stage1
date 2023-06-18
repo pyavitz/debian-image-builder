@@ -238,6 +238,11 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		# odroid c1
 		odroid_bootini > /dev/null 2>&1
 	fi
+	if [[ "$BOARD" == "x96air" ]] && [[ "$EMMC" == "0" ]]; then
+		cp -fr files/boot/uboot/${BOARD}/{aml_autoscript.cmd,s905_autoscript.cmd,chainload.bin} p1/
+		mkimage -C none -A arm -T script -d p1/aml_autoscript.cmd p1/aml_autoscript > /dev/null 2>&1
+		mkimage -C none -A arm -T script -d p1/s905_autoscript.cmd p1/s905_autoscript > /dev/null 2>&1
+	fi
 	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]] && [[ "$ARCH" == "arm" ]]; then
 		# add removable 100mb file to ensure space on the img after shrinking
 		dd if="/dev/urandom" of="p2/block.img" bs=100MB count=1 > /dev/null 2>&1
