@@ -3,13 +3,13 @@
 
 ## Boards
 ```sh
-Allwinner:      # NanoPi M1/NEO/Plus2, OrangePi One/PC/R1 and Tritium
-Amlogic:        # Le Potato, Odroid C4/HC4/N2/N2L/N2+ and Radxa Zero
+Allwinner:      # NanoPi M1/NEO/Plus2/R1, OrangePi One/PC/R1 and Tritium
+Amlogic:        # BananaPi CM4IO, Le Potato, Odroid C4/HC4/N2/N2L/N2+ and Radxa Zero
 Broadcom:       # Raspberry Pi 0W/2B/3B+/4B
 Rockchip:       # NanoPC-T4, Odroid M1, Renegade, ROCK64, ROCKPro64 and Tinkerboard
 Samsung:        # Odroid XU4
 
-WIP:		# Cubietruck, Cubox-i, Banana Pi CM4/M2/M5/P2 Zero, Khadas Edge2
+WIP:		# Cubietruck, Cubox-i, BananaPi M2/M5/P2 Zero, Khadas Edge2
 		# NanoPi R4S/R4SE/R5S/R5C, Odroid C1, OrangePi 5, Pinebook Pro
 		# Indiedroid Nova, and Radxa E25/Rock5b
 ```
