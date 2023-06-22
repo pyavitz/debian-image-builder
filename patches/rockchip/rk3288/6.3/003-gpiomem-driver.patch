@@ -1,6 +1,6 @@
 diff -Naur a/drivers/char/Kconfig b/drivers/char/Kconfig
---- a/drivers/char/Kconfig	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/char/Kconfig	2023-05-03 00:13:28.183987096 -0400
+--- a/drivers/char/Kconfig	2023-06-14 05:17:06.000000000 -0400
++++ b/drivers/char/Kconfig	2023-06-22 09:34:39.875969989 -0400
 @@ -6,6 +6,7 @@
  menu "Character devices"
  
@@ -10,8 +10,8 @@ diff -Naur a/drivers/char/Kconfig b/drivers/char/Kconfig
  config TTY_PRINTK
  	tristate "TTY driver to output user messages via printk"
 diff -Naur a/drivers/char/Makefile b/drivers/char/Makefile
---- a/drivers/char/Makefile	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/char/Makefile	2023-05-03 00:13:28.184987035 -0400
+--- a/drivers/char/Makefile	2023-06-14 05:17:06.000000000 -0400
++++ b/drivers/char/Makefile	2023-06-22 09:34:39.875969989 -0400
 @@ -42,6 +42,8 @@
  
  obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
@@ -21,8 +21,8 @@ diff -Naur a/drivers/char/Makefile b/drivers/char/Makefile
  obj-$(CONFIG_XILLYBUS_CLASS)	+= xillybus/
  obj-$(CONFIG_POWERNV_OP_PANEL)	+= powernv-op-panel.o
  obj-$(CONFIG_ADI)		+= adi.o
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/char/rockchip/Kconfig	2023-05-03 00:15:11.766691902 -0400
+--- /dev/null	2023-06-17 08:32:20.061755428 -0400
++++ b/drivers/char/rockchip/Kconfig	2023-06-22 09:36:57.899745273 -0400
 @@ -0,0 +1,16 @@
 +#
 +# Broadcom char driver config
@@ -40,12 +40,12 @@ diff -Naur a/drivers/char/Makefile b/drivers/char/Makefile
 +		Provides users with root-free access to the GPIO registers
 +		on the 3288. Calling mmap(/dev/gpiomem) will map the GPIO
 +		register page to the user's pointer.
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/char/rockchip/Makefile	2023-05-03 00:16:07.547292305 -0400
+--- /dev/null	2023-06-17 08:32:20.061755428 -0400
++++ b/drivers/char/rockchip/Makefile	2023-06-22 09:37:17.920414539 -0400
 @@ -0,0 +1 @@
 +obj-$(CONFIG_RK3288_DEVGPIOMEM)+= rk3288-gpiomem.o
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/char/rockchip/rk3288-gpiomem.c	2023-05-03 00:17:24.676889393 -0400
+--- /dev/null	2023-06-17 08:32:20.061755428 -0400
++++ b/drivers/char/rockchip/rk3288-gpiomem.c	2023-06-22 09:37:31.626187078 -0400
 @@ -0,0 +1,303 @@
 +/**
 + * GPIO memory device driver
@@ -217,7 +217,7 @@ diff -Naur a/drivers/char/Makefile b/drivers/char/Makefile
 +	.mmap = rk3288_gpiomem_mmap,
 +};
 +
-+static int rk3288_gpiomem_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
++static int rk3288_gpiomem_dev_uevent(const struct device *dev, struct kobj_uevent_env *env)
 +{
 +    add_uevent_var(env, "DEVMODE=%#o", 0666);
 +    return 0;
