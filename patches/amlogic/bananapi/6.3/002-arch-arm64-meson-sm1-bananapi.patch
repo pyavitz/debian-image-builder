@@ -1,0 +1,99 @@
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts	2023-06-21 10:02:19.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts	2023-06-23 06:27:17.225011000 -0400
+@@ -29,6 +29,7 @@
+ 		assigned-clock-rates = <294912000>,
+ 				       <270950400>,
+ 				       <393216000>;
++		status = "okay";
+ 
+ 		dai-link-0 {
+ 			sound-dai = <&frddr_a>;
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts	2023-06-21 10:02:19.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts	2023-06-23 06:27:23.917904000 -0400
+@@ -25,6 +25,20 @@
+ 		};
+ 	};
+ 
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
++		clocks = <&wifi32k>;
++		clock-names = "ext_clock";
++	};
++
++	wifi32k: wifi32k {
++		compatible = "pwm-clock";
++		#clock-cells = <0>;
++		clock-frequency = <32768>;
++		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "BPI-M5";
+@@ -64,6 +78,7 @@
+ 		assigned-clock-rates = <294912000>,
+ 				       <270950400>,
+ 				       <393216000>;
++		status = "okay";
+ 
+ 		dai-link-0 {
+ 			sound-dai = <&frddr_a>;
+@@ -172,6 +187,36 @@
+ 	status = "okay";
+ };
+ 
++/* SDIO */
++&sd_emmc_a {
++	/* enable if WiFi/BT board connected */
++	status = "disabled";
++	pinctrl-0 = <&sdio_pins>;
++	pinctrl-1 = <&sdio_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	bus-width = <4>;
++	sd-uhs-sdr104;
++	max-frequency = <50000000>;
++
++	non-removable;
++	disable-wp;
++
++	/* WiFi firmware requires power in suspend */
++	keep-power-in-suspend;
++
++	mmc-pwrseq = <&sdio_pwrseq>;
++
++	vmmc-supply = <&vddao_3v3>;
++	vqmmc-supply = <&vddao_1v8>;
++
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+@@ -219,3 +264,18 @@
+ &toddr_c {
+ 	status = "okay";
+ };
++
++&uart_A {
++	/* enable if WiFi/BT board connected */
++	status = "disabled";
++	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
++	pinctrl-names = "default";
++	uart-has-rtscts;
++
++	bluetooth {
++		compatible = "realtek,rtl8822cs-bt";
++		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
++		host-wake-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
++		device-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++	};
++};
