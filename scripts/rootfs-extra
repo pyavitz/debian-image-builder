@@ -14,6 +14,11 @@ echo -e "\e[1;37mAdding additional packages to $CAP_DISTRO $CAP_RELEASE\e[0m ...
 mount -t proc proc proc/
 mount -t sysfs sys sys/
 
+if [[ -f "/etc/apt/trusted.gpg" ]] && [[ "$DISTRO" == "raspbian" ]]; then
+	mkdir -p /etc/apt/trusted.gpg.d
+	mv -f /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/raspbian-archive-keyring.gpg
+fi
+
 apt-get update
 apt-get install -y apt-utils
 
@@ -25,22 +30,22 @@ set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if [[ "$DISTRO" == "debian" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} resolvconf haveged;
+if [[ "$DISTRO" == "debian" || "$DISTRO" == "raspbian" ]]; then
+	apt install -y ${PKGS} ${USER_PKGS} resolvconf haveged
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
-	apt install -y openssh-client openssh-server --no-install-recommends;
-	apt install -y ${PKGS} ${USER_PKGS} openresolv haveged;
+	apt install -y openssh-client openssh-server --no-install-recommends
+	apt install -y ${PKGS} ${USER_PKGS} openresolv haveged
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
-		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5;
+		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5
 	else
-		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5;
+		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5
 	fi
 fi
 if [[ "$DISTRO" == "kali" ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} dbus-user-session libical3 resolvconf haveged;
+	apt install -y ${PKGS} ${USER_PKGS} dbus-user-session libical3 resolvconf haveged
 fi
 apt -y clean
 apt -y autoclean

@@ -61,7 +61,15 @@ if [ -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
 else
 	wget -cq --show-progress $URL$FILE
 	sudo dpkg -i $FILE
-	rm -f $FILE;
+	rm -f $FILE
+fi
+}
+
+raspbian_keyring(){
+if [[ -f "/usr/share/keyrings/raspbian-archive-keyring.gpg" ]]; then
+	:;
+else
+	curl -sS http://archive.raspbian.org/raspbian.public.key | gpg --dearmor | tee /usr/share/keyrings/raspbian-archive-keyring.gpg > /dev/null 2>&1
 fi
 }
 
@@ -111,12 +119,19 @@ fi
 }
 
 run_debootstrap(){
+KEY_DIR="/usr/share/keyrings"
+if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "ubuntu" ]]; then
+	debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} ${ROOT}
+	chroot ${ROOT} /debootstrap/debootstrap --second-stage
+fi
 if [[ "$DISTRO" == "devuan" ]]; then
-	KEY="/usr/share/keyrings/devuan-archive-keyring.gpg"
+	KEY="${KEY_DIR}/devuan-archive-keyring.gpg"
 	debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://deb.devuan.org/merged
 	chroot ${ROOT} /debootstrap/debootstrap --second-stage
-else
-	debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} ${ROOT}
+fi
+if [[ "$DISTRO" == "raspbian" ]]; then
+	KEY="${KEY_DIR}/raspbian-archive-keyring.gpg"
+	debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=$KEY ${DISTRO_VERSION} ${ROOT} http://mirrordirector.raspbian.org/raspbian
 	chroot ${ROOT} /debootstrap/debootstrap --second-stage
 fi
 }

@@ -410,7 +410,7 @@ read -p "Press enter to continue."
 
 tinker_rtc_ds1307(){
 if [[ `apt list fake-hwclock | grep "[installed]"` ]] &> /dev/null; then
-	if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
+	if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Kali" || "$RELEASE" == "Ubuntu" || "$RELEASE" == "Raspbian" ]]; then
 		sudo systemctl stop fake-hwclock
 		sudo systemctl disable fake-hwclock
 	fi
@@ -451,7 +451,7 @@ else
 	sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/rtc-ds1307 -P /usr/local/sbin
 	sudo chmod +x /usr/local/sbin/rtc-ds1307
 fi
-if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
+if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Kali" || "$RELEASE" == "Ubuntu" || "$RELEASE" == "Raspbian" ]]; then
 	if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
 		:;
 	else
@@ -641,7 +641,7 @@ case $CHOICE in
 					clear -x
 					supported_list
 					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
-						if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Ubuntu" ]]; then
+						if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Kali" || "$RELEASE" == "Ubuntu" || "$RELEASE" == "Raspbian" ]]; then
 							systemd_fanctrl > /dev/null 2>&1
 							install_fanctrl > /dev/null 2>&1
 							fan-ctrl -m
