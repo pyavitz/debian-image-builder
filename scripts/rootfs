@@ -6,7 +6,11 @@ source lib/function/rootfs
 source board.txt
 source userdata.txt
 HOST_MACHINE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
-
+if [[ "$ROOTFS_ARCH" == "rootfs-armel" ]] && [[ "$DISTRO" == "ubuntu" ]]; then
+	echo -e "${YLW}${DISTRO} is not supported${FIN}."
+	echo ""
+	exit 0
+fi
 if [[ -d "sysroot" ]]; then
 	make cleanup
 	clear -x
