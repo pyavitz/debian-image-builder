@@ -19,8 +19,7 @@ source userdata.txt
 # check user data file
 if [ $USERACCT -eq 0 ]; then
 	if [ -z $NAME ] && [ -z $USERNAME ] && [ -z $PASSWORD ]; then
-		echo -e ""
-		echo -e "Name, Username and Password fields are empty?"
+		echo -e "Name, Username or Password field is empty?"
 		echo -e "Enable the user account service or input your"
 		echo -e "information into the userdata.txt file."
 		echo -e ""
@@ -42,16 +41,20 @@ if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ `l
 	:;
 else
 	echo -e "Missing u-boot or linux deb package"
+	echo -e ""
+	read -p "Press enter to continue."
 	exit 0
 fi
-# check verbosity
+# verbosity
 if [ $VERBOSE -eq 1 ]; then
-	set -eux -o pipefail;
+	set -eux -o pipefail
 else
-	set -eu -o pipefail;
+	set -eu -o pipefail
 fi
 if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
 	echo "The $FSTYPE filesystem requires a boot partition."
+	echo -e ""
+	read -p "Press enter to continue."
 	exit 0
 fi
 # start

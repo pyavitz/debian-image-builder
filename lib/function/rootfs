@@ -43,7 +43,7 @@ if [[ `ls /usr/share/keyrings/{devuan-archive-keyring.gpg,devuan-keyring.gpg}` ]
 	:;
 else
 	wget -cq --show-progress $URL$FILE
-	sudo dpkg -i $FILE
+	dpkg -i $FILE
 	rm -f $FILE
 fi
 if [[ -f "/usr/share/debootstrap/scripts/${DISTRO_VERSION}" ]]; then
@@ -60,7 +60,7 @@ if [ -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
 	:;
 else
 	wget -cq --show-progress $URL$FILE
-	sudo dpkg -i $FILE
+	dpkg -i $FILE
 	rm -f $FILE
 fi
 }
@@ -74,11 +74,11 @@ fi
 }
 
 ubuntu_setup(){
-if [[ `uname -m | grep "x86_64"` ]]; then
-	MACHINE="amd64";
+if [[ "$HOST_ARCH" == "x86_64" ]]; then
+	MACHINE="amd64"
 fi
-if [[ `uname -m | grep "aarch64"` ]]; then
-	MACHINE="arm64";
+if [[ "$HOST_ARCH" == "aarch64" ]]; then
+	MACHINE="arm64"
 fi
 URL="https://github.com/pyavitz/debian-image-builder/releases/download/dpkg/"
 FILE1="dpkg_1.21.2_$MACHINE.deb"
@@ -95,7 +95,7 @@ else
 	else
 		wget -cq $URL$FILE1
 		wget -cq $URL$FILE2
-		sudo dpkg -i *.deb
+		dpkg -i *.deb
 		rm -f *.deb
 	fi
 fi
@@ -106,7 +106,7 @@ else
 	wget -cq --show-progress $URL$FILE4
 	wget -cq --show-progress $URL$FILE5
 	wget -cq --show-progress $URL$FILE6
-	sudo dpkg -i *.deb
+	dpkg -i *.deb
 	rm -f *.deb
 fi
 if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then

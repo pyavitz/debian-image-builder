@@ -7,25 +7,42 @@ source board.txt
 source userdata.txt
 HOST_MACHINE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 HOST_ARCH=`uname -m`
-if [[ "$ROOTFS_ARCH" == "rootfs-armel" ]] && [[ "$DISTRO" == "ubuntu" ]]; then
-	echo -e "${YLW}${DISTRO} is not supported${FIN}."
-	echo ""
-	exit 0
-fi
-if [[ "$ROOTFS_ARCH" == "rootfs-armel" || "$ROOTFS_ARCH" == "rootfs-arm64" ]] && [[ "$DISTRO" == "raspbian" ]]; then
-	echo -e "${YLW}${DISTRO} is not supported${FIN}."
-	echo ""
-	exit 0
-fi
+
+# clean
 if [[ -d "sysroot" ]]; then
 	make cleanup
 	clear -x
 fi
+
+# verbosity
 if [ $VERBOSE -eq 1 ]; then
 	set -eux -o pipefail
 else
 	set -eu -o pipefail
 fi
+
+# restrictions
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$DISTRO" == "raspbian" ]]; then
+	echo -e "Aarch64 is currently not supported."
+	echo -e "To build an Raspbian IMG you need to use x86_64."
+	echo -e ""
+	read -p "Press enter to continue."
+	exit 0
+fi
+if [[ "$ROOTFS_ARCH" == "rootfs-armel" ]] && [[ "$DISTRO" == "ubuntu" ]]; then
+	echo -e "Ubuntu does not support ${ARCH_EXT}."
+	echo -e ""
+	read -p "Press enter to continue."
+	exit 0
+fi
+if [[ "$ROOTFS_ARCH" == "rootfs-armel" || "$ROOTFS_ARCH" == "rootfs-arm64" ]] && [[ "$DISTRO" == "raspbian" ]]; then
+	echo -e "Raspbian does not support ${ARCH_EXT}."
+	echo -e ""
+	read -p "Press enter to continue."
+	exit 0
+fi
+
+# keyrings and setups
 if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" ]]; then
 	${DISTRO}_keyring
 fi
@@ -36,6 +53,7 @@ else
 		ubuntu_setup
 	fi
 fi
+
 ROOT="sysroot"
 RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
 if [[ -f "$RELEASE_TARBALL" ]]; then
@@ -84,6 +102,9 @@ fi
 # clean up
 if [[ -f "${ROOT}/usr/bin/${STATIC}" ]]; then
 	rm -f ${ROOT}/usr/bin/${STATIC}
+fi
+if [[ -e "${ROOT}/lost+found" ]]; then
+	rm -fdr ${ROOT}/lost+found
 fi
 rm -fdr ${ROOT}/var/cache/debconf/*
 
