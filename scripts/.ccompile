@@ -1,8 +1,9 @@
 #!/bin/bash
 
+HOST_CODENAME=`cat /etc/os-release | grep -w "VERSION_CODENAME" | sed 's/VERSION_CODENAME=//g'`
 ARCH=`uname -m`
 
-ubuntu-ccompile(){
+jammy-ccompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
 	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
@@ -16,10 +17,10 @@ sudo debconf-apt-progress -- apt install -y \
 	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
 	gcc-12-arm-linux-gnueabihf colorized-logs u-boot-tools gdisk jq wget btrfs-progs xfsprogs \
 	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi gcc-12-arm-linux-gnueabi \
-	crossbuild-essential-armel python3-pyelftools
+	crossbuild-essential-armel python3-pyelftools curl
 }
 
-bullseye-ccompile(){
+bullseye-ccompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
 	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
@@ -29,26 +30,37 @@ sudo debconf-apt-progress -- apt install -y \
 	python-is-python2 python-dev-is-python2 zstd gcc-arm-none-eabi gcc-9-arm-linux-gnueabihf \
 	gcc-9-aarch64-linux-gnu gcc-10-aarch64-linux-gnu gcc-10-arm-linux-gnueabihf jq \
 	colorized-logs gdisk wget btrfs-progs xfsprogs gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi \
-	crossbuild-essential-armel python3-setuptools python3-pyelftools
+	crossbuild-essential-armel python3-setuptools python3-pyelftools curl
+}
+
+bookworm-ccompile (){
+sudo debconf-apt-progress -- apt install -y \
+	build-essential bison bc git dialog patch dosfstools zip unzip parted \
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
+	lzop lz4 aria2 pv crossbuild-essential-arm64 crossbuild-essential-armhf u-boot-tools \
+	distro-info-data lsb-release libelf-dev fdisk kpartx ccache xz-utils gcc-11 gcc-12 \
+	python-is-python3 python-dev-is-python3 zstd gcc-arm-none-eabi gcc-11-arm-linux-gnueabihf \
+	gcc-11-aarch64-linux-gnu gcc-12-aarch64-linux-gnu gcc-12-arm-linux-gnueabihf \
+	colorized-logs gdisk jq wget btrfs-progs xfsprogs gcc-11-arm-linux-gnueabi \
+	gcc-12-arm-linux-gnueabi crossbuild-essential-armel python3-setuptools \
+	python3-pyelftools curl
 }
 
 if [[ "$ARCH" == "aarch64" ]]; then
-	echo ""
+	echo -e ""
 	echo -e "You are running: $ARCH"
 	echo -e "Please run: make ncompile"
 	exit 0
 fi
 
-if [[ `grep -w "jammy" "/etc/os-release"` ]] || [[ `grep -w "kinetic" "/etc/os-release"` ]]; then
+if [[ "$HOST_CODENAME" == "bullseye" || "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
 	echo ""
-	ubuntu-ccompile
+	${HOST_CODENAME}-ccompile
 else
-	if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
-		echo ""
-		bullseye-ccompile
-	else
-		echo ""
-		echo -e "What OS are you running?"
-		exit 0
-	fi
+	echo -e ""
+	echo -e "Something went wrong..?"
+	exit 0
 fi
+
+exit 0

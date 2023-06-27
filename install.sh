@@ -45,10 +45,15 @@ else
 		echo -en "${PNK}[${FIN}${GRN}Debian Bullseye${FIN}${PNK}]${FIN}"
 		echo ""
 	else
-		echo -ne "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-		echo ""
-		echo -e "${TXT}The OS you are running is not supported${FIN}."
-		exit 0
+		if [[ "$RELEASE" == "bookworm" ]]; then
+			echo -en "${PNK}[${FIN}${GRN}Debian Bookworm${FIN}${PNK}]${FIN}"
+			echo ""
+		else
+			echo -ne "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			echo ""
+			echo -e "${TXT}The OS you are running is not supported${FIN}."
+			exit 0
+		fi
 	fi
 fi
 echo ""
@@ -57,6 +62,7 @@ if [[ "$ARCH" == "x86_64" ]] || [[ "$ARCH" == "aarch64" ]]; then
 	:;
 else
 	echo -e "ARCH: $ARCH is not supported by this script."
+	exit 0
 fi
 sleep 1s
 if [[ "$ARCH" == "x86_64" ]]; then

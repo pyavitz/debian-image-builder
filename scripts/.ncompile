@@ -1,8 +1,9 @@
 #!/bin/bash
 
+HOST_CODENAME=`cat /etc/os-release | grep -w "VERSION_CODENAME" | sed 's/VERSION_CODENAME=//g'`
 ARCH=`uname -m`
 
-ubuntu-ncompile(){
+jammy-ncompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch make dosfstools zip unzip \
 	qemu debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
@@ -15,10 +16,10 @@ sudo debconf-apt-progress -- apt install -y \
 	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
 	gcc-12-arm-linux-gnueabihf colorized-logs gdisk jq wget btrfs-progs xfsprogs \
 	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi \
-	gcc-12-arm-linux-gnueabi crossbuild-essential-armel python3-pyelftools
+	gcc-12-arm-linux-gnueabi crossbuild-essential-armel python3-pyelftools curl
 }
 
-bullseye-ncompile(){
+bullseye-ncompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
 	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
@@ -28,7 +29,20 @@ sudo debconf-apt-progress -- apt install -y \
 	zstd gcc-9 gcc-10 crossbuild-essential-armhf gcc-9-arm-linux-gnueabihf jq \
 	gcc-10-arm-linux-gnueabihf colorized-logs gdisk wget btrfs-progs xfsprogs \
 	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi crossbuild-essential-armel \
-	python3-setuptools python3-pyelftools
+	python3-setuptools python3-pyelftools curl
+}
+
+bookworm-ccompile (){
+sudo debconf-apt-progress -- apt install -y \
+	build-essential bison bc git dialog patch dosfstools zip unzip parted \
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-distutils python3-dev swig fakeroot \
+	lzop lz4 aria2 pv gcc-arm-none-eabi distro-info-data lsb-release u-boot-tools \
+	python-is-python3 python-dev-is-python3 libelf-dev fdisk kpartx ccache xz-utils \
+	zstd gcc-11 gcc-12 crossbuild-essential-armhf gcc-11-arm-linux-gnueabihf \
+	gcc-12-arm-linux-gnueabihf colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+	gcc-11-arm-linux-gnueabi gcc-12-arm-linux-gnueabi crossbuild-essential-armel \
+	python3-setuptools python3-pyelftools curl
 }
 
 if [[ "$ARCH" == "x86_64" ]]; then
@@ -38,16 +52,13 @@ if [[ "$ARCH" == "x86_64" ]]; then
 	exit 0
 fi
 
-if [[ `grep -w "jammy" "/etc/os-release"` ]] || [[ `grep -w "kinetic" "/etc/os-release"` ]]; then
+if [[ "$HOST_CODENAME" == "bullseye" || "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
 	echo ""
-	ubuntu-ncompile
+	${HOST_CODENAME}-ncompile
 else
-	if [[ `grep -w "bullseye" "/etc/os-release"` ]]; then
-		echo ""
-		bullseye-ncompile
-	else
-		echo ""
-		echo -e "What OS are you running?"
-		exit 0
-	fi
+	echo -e ""
+	echo -e "Something went wrong..?"
+	exit 0
 fi
+
+exit 0
