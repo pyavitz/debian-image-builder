@@ -14,8 +14,8 @@ echo ""
 echo -en "$BOARD: "; echo -e "config.txt"
 tee p1/config.txt <<EOF
 arm_64bit=1
-#kernel=Image
-kernel=u-boot.bin
+kernel=Image
+#kernel=u-boot.bin
 initramfs initrd.gz followkernel
 
 # needed by uboot
@@ -45,14 +45,14 @@ fi
 # /boot/extlinux/extlinux.conf
 brcm_extlinux(){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
-CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 rootwait"
+CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=5 rootwait"
 if [[ -f "p1/extlinux/extlinux.conf" ]]; then rm -f p1/extlinux/extlinux.conf; fi
 mkdir -p p1/extlinux
 tee p1/extlinux/extlinux.conf <<EOF
 label default
 	kernel ../Image
 	initrd ../initrd.gz
-	#fdt ../${DTB}.dtb
+	fdt ../${DTB}.dtb
 	${CMDLINE}
 EOF
 if [[ -f "p1/cmdline.txt" ]]; then rm -f p1/cmdline.txt; fi
