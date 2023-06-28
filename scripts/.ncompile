@@ -1,7 +1,6 @@
 #!/bin/bash
 
-HOST_CODENAME=`cat /etc/os-release | grep -w "VERSION_CODENAME" | sed 's/VERSION_CODENAME=//g'`
-ARCH=`uname -m`
+source lib/source
 
 jammy-ncompile (){
 sudo debconf-apt-progress -- apt install -y \
@@ -45,9 +44,9 @@ sudo debconf-apt-progress -- apt install -y \
 	python3-setuptools python3-pyelftools curl
 }
 
-if [[ "$ARCH" == "x86_64" ]]; then
+if [[ "$HOST_ARCH" == "x86_64" ]]; then
 	echo ""
-	echo -e "You are running: $ARCH"
+	echo -e "You are running: $HOST_ARCH"
 	echo -e "Please run: make ccompile"
 	exit 0
 fi
