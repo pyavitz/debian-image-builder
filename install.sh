@@ -32,15 +32,15 @@ else
 fi
 echo -en "${TXT}Checking Host Machine:${FIN} "
 sleep .50
-if [[ "$HOST_CODENAMES" == "jammy" ]]; then
+if [[ "$HOST_CODENAME" == "jammy" ]]; then
 	echo -en "${PNK}[${FIN}${GRN}Ubuntu Jammy Jellyfish${FIN}${PNK}]${FIN}"
 	echo ""
 else
-	if [[ "$HOST_CODENAMES" == "bullseye" ]]; then
+	if [[ "$HOST_CODENAME" == "bullseye" ]]; then
 		echo -en "${PNK}[${FIN}${GRN}Debian Bullseye${FIN}${PNK}]${FIN}"
 		echo ""
 	else
-		if [[ "$HOST_CODENAMES" == "bookworm" ]]; then
+		if [[ "$HOST_CODENAME" == "bookworm" ]]; then
 			echo -en "${PNK}[${FIN}${GRN}Debian Bookworm${FIN}${PNK}]${FIN}"
 			echo ""
 		else
