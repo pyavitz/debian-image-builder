@@ -49,7 +49,7 @@ make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
 #### Config Menu
-* [Profile options](https://github.com/pyavitz/debian-image-builder/wiki/Builder-profile)
+* [Profile options](https://github.com/pyavitz/debian-image-builder/wiki)
 * [Vendor kernel options](https://github.com/pyavitz/debian-image-builder/wiki/Building-vendor-kernels)
 
 ---
