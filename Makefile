@@ -127,12 +127,19 @@ ncompile:
 
 
 # COMMANDS
-uboot: 
+uboot:
+	@rm -f override.txt
+# ARCHITECTURE
+ifdef arch
+	@echo 'ARCH_EXT="$(arch)"' > override.txt
+	@echo 'DEBARCH="$(arch)"' >> override.txt
+endif
 	# Compiling u-boot
 	$(call build_uboot)
 
-kernel: 
+kernel:
 	@rm -f github.txt
+	@rm -f override.txt
 ifdef build
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
 endif
@@ -159,20 +166,31 @@ endif
 ifdef force_github
 	@echo 'FORCE_GITHUB="$(force_github)"' > override.txt
 endif
+# ARCHITECTURE
+ifdef arch
+	@echo 'ARCH_EXT="$(arch)"' > override.txt
+	@echo 'DEBARCH="$(arch)"' >> override.txt
+endif
 	# Compiling kernel
 	$(call build_kernel)
 
 image:
+	@rm -f override.txt
+# DISTRO AND RELEASE
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
 endif
 ifdef release
 	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
 endif
+# ARCHITECTURE
+ifdef arch
+	@echo 'ARCH_EXT="$(arch)"' > override.txt
+endif
 	# Creating image
 	$(call build_image)
 
-all: 
+all:
 	# - - - - - - - -
 	# Compiling u-boot
 	$(call build_uboot)
@@ -184,11 +202,11 @@ all:
 	$(call build_image)
 
 usbboot:
-	# Creating image
+	# Creating usb image
 	$(call build_usbboot)
 
 # MISCELLANEOUS
-menu: 
+menu:
 	# Menu
 	@chmod +x ${MENU}
 	@chmod +x ${GMENU}
@@ -196,8 +214,9 @@ menu:
 	@chmod +x ${LIT}
 	@${MENU}
 
-# reset the userdata file
+# USERDATA RESET
 reset:
+	# Resetting userdata.txt file
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"1"'"/" userdata.txt)
 	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
@@ -213,7 +232,12 @@ dialogrc:
 	@${DIALOGRC}
 
 rootfs:
-	# ROOTFS
+	@rm -f override.txt
+# ARCHITECTURE
+ifdef arch
+	@echo 'ARCH_EXT="$(arch)"' > override.txt
+endif
+	# Root Filesystem
 	$(call create_rootfs)
 
 cleanup:

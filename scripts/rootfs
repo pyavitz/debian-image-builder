@@ -3,6 +3,12 @@ source lib/function/echoes
 source lib/source
 validation
 source lib/function/rootfs
+# override the board file
+if [[ -f "override.txt" ]]; then
+	. override.txt
+	sed -i 's/^ARCH_EXT=.*/ARCH_EXT="'"${ARCH_EXT}"'"/' board.txt
+	rm -f override.txt
+fi
 source board.txt
 source userdata.txt
 
@@ -18,7 +24,6 @@ if [ $VERBOSE -eq 1 ]; then
 else
 	set -eu -o pipefail
 fi
-
 # restrictions
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$DISTRO" == "raspbian" ]]; then
 	echo -e "Aarch64 is currently not supported."
@@ -39,7 +44,6 @@ if [[ "$ROOTFS_ARCH" == "rootfs-armel" || "$ROOTFS_ARCH" == "rootfs-arm64" ]] &&
 	read -p "Press enter to continue."
 	exit 0
 fi
-
 # keyrings and setups
 if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" ]]; then
 	${DISTRO}_keyring

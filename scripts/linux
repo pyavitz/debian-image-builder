@@ -23,9 +23,19 @@ fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
 	CROSSCOMPILE="1"
 fi
-# override the board and userdata.txt file for best user experience
+# override the board file
 if [[ -f "override.txt" ]]; then
 	. override.txt
+	if [[ "$ARCH_EXT" == "armel" ]]; then
+		CROSS_COMPILE="arm-linux-gnueabi-"
+	fi
+	if [[ "$ARCH_EXT" == "armhf" ]]; then
+		CROSS_COMPILE="arm-linux-gnueabihf-"
+	fi
+	if [[ "$ARCH_EXT" == "arm64" ]]; then
+		CROSS_COMPILE="aarch64-linux-gnu-"
+	fi
+	rm -f override.txt
 fi
 if [[ "$FORCE_GITHUB" == "true" ]]; then
 	VERSION="${GITHUB_BRANCH_VERSION}"
@@ -33,13 +43,10 @@ if [[ "$FORCE_GITHUB" == "true" ]]; then
 	echo "${GITHUB_REPO}" >> github.txt
 	echo "${GITHUB_BRANCH}" >> github.txt
 fi
+# override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
 fi
-if [[ -f "override.txt" ]]; then
-	rm -f override.txt
-fi
-# end override
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 if [[ -e "/etc/os-release" ]]; then
 	CODENAME=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`

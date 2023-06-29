@@ -31,6 +31,12 @@ fi
 customize_image > /dev/null 2>&1
 # user scripts pre-stage1
 if [ $USCRIPTS -eq 1 ]; then uscripts_pre-stage1; fi
+# override the board file
+if [[ -f "override.txt" ]]; then
+	. override.txt
+	sed -i 's/^ARCH_EXT=.*/ARCH_EXT="'"${ARCH_EXT}"'"/' board.txt
+	rm -f override.txt
+fi
 # source board and family
 source board.txt
 source lib/function/${FAMILY}
