@@ -231,7 +231,7 @@ dialogrc:
 
 rootfs:
 	@rm -f override.txt
-	# DISTRO AND RELEASE
+# DISTRO AND RELEASE
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
 endif
