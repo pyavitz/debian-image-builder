@@ -14,11 +14,13 @@ WIP:		# Cubietruck, Cubox-i, BananaPi M2/M5/P2 Zero, Khadas Edge2
 		# Indiedroid Nova, and Radxa E25/Rock5b
 ```
 
-### Dependencies for Debian Bullseye and Ubuntu Jammy Jellyfish
-* **Recommended host:** Debian Bullseye
+### Host dependencies for Debian Bullseye / Bookworm and Ubuntu Jammy Jellyfish
+* **Debian Bullseye** (recommended)
+* **Debian Bookworm** (testing)
+* **Ubuntu Jammy Jellyfish** (recommended)
 
 **Install options:**
-* Run the `./install.sh` script ***(recommended)***
+* Run the `./install.sh` script (recommended)
 * Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies) (dependency: make)
 * Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
