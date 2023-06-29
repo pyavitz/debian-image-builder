@@ -132,7 +132,6 @@ uboot:
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
-	@echo 'DEBARCH="$(arch)"' >> override.txt
 endif
 	# Compiling u-boot
 	$(call build_uboot)
@@ -169,7 +168,6 @@ endif
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
-	@echo 'DEBARCH="$(arch)"' >> override.txt
 endif
 	# Compiling kernel
 	$(call build_kernel)
@@ -233,6 +231,13 @@ dialogrc:
 
 rootfs:
 	@rm -f override.txt
+	# DISTRO AND RELEASE
+ifdef distro
+	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
+endif
+ifdef release
+	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
+endif
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
