@@ -1,5 +1,5 @@
 From: Patrick Yavitz <pyavitz@gmail.com>
-Subject: rtw88: decrease the log level of tx report
+Subject: v2 rtw88: decrease the log level of tx report
 
 Decrease the log level of tx report 'failed to get tx report from firmware' spam.
 
@@ -9,7 +9,7 @@ https://cgit.freebsd.org/src/commit/?id=e140d551b78670fbf99c83a59438cb13de50420f
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 diff -Naur a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
 --- a/drivers/net/wireless/realtek/rtw88/tx.c	2023-06-30 13:28:40.396914119 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c	2023-06-30 13:28:07.136423316 -0400
++++ b/drivers/net/wireless/realtek/rtw88/tx.c	2023-06-30 16:57:33.868259352 -0400
 @@ -177,14 +177,16 @@
  	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
  	unsigned long flags;
@@ -32,21 +32,3 @@ diff -Naur a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/real
  }
  
  void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
-@@ -546,7 +548,7 @@
- 	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control->sta, skb);
- 	ret = rtw_hci_tx_write(rtwdev, &pkt_info, skb);
- 	if (ret) {
--		rtw_err(rtwdev, "failed to write TX skb to HCI\n");
-+		rtw_err(rtwdev, "%s: failed to write TX skb to HCI: %d\n", ret);
- 		goto out;
- 	}
- 
-@@ -603,7 +605,7 @@
- 	rtw_tx_pkt_info_update(rtwdev, &pkt_info, txq->sta, skb);
- 	ret = rtw_hci_tx_write(rtwdev, &pkt_info, skb);
- 	if (ret) {
--		rtw_err(rtwdev, "failed to write TX skb to HCI\n");
-+		rtw_err(rtwdev, "%s: failed to write TX skb to HCI: %d\n", ret);
- 		return ret;
- 	}
- 	rtwtxq->last_push = jiffies;
