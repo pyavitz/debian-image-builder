@@ -2,7 +2,7 @@
 # DEBIAN IMAGE BUILDER: SYSTEM MENU INTERFACE
 # Description: SYSTEM MENU INTERFACE
 # Destination: /usr/local/bin/menu-config
-RELEASE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
+DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
 else
@@ -410,11 +410,11 @@ read -p "Press enter to continue."
 
 tinker_rtc_ds1307(){
 if [[ `apt list fake-hwclock | grep "[installed]"` ]] &> /dev/null; then
-	if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Kali" || "$RELEASE" == "Ubuntu" || "$RELEASE" == "Raspbian" ]]; then
+	if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
 		sudo systemctl stop fake-hwclock
 		sudo systemctl disable fake-hwclock
 	fi
-	if [[ "$RELEASE" == "Devuan" ]]; then
+	if [[ "$DISTRO" == "Devuan" ]]; then
 		sudo service fake-hwclock stop
 		sudo update-rc.d -f fake-hwclock remove
 	fi
@@ -451,7 +451,7 @@ else
 	sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/rtc-ds1307 -P /usr/local/sbin
 	sudo chmod +x /usr/local/sbin/rtc-ds1307
 fi
-if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Kali" || "$RELEASE" == "Ubuntu" || "$RELEASE" == "Raspbian" ]]; then
+if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
 	if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
 		:;
 	else
@@ -471,7 +471,7 @@ WantedBy=multi-user.target
 EOF
 	fi
 fi
-if [[ "$RELEASE" == "Devuan" ]]; then
+if [[ "$DISTRO" == "Devuan" ]]; then
 	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
 		:;
 	else
@@ -529,7 +529,7 @@ while [ 1 ]
 do
 CHOICE=$(
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-whiptail --backtitle "${RELEASE}: System Settings" --title "Menu Config" --menu "" --nocancel 0 25 0 \
+whiptail --backtitle "${DISTRO}: System Settings" --title "Menu Config" --menu "" --nocancel 0 25 0 \
 	"W)" "Wireless          Configure wireless network interface" \
 	"" "" \
 	"1)" "Security          User security management" \
@@ -625,7 +625,7 @@ case $CHOICE in
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
 			"FC)" "Fan Control              Set trip point" \
-			"DC)" "Debconf                  Reconfigure ${RELEASE} configuration system" \
+			"DC)" "Debconf                  Reconfigure ${DISTRO} configuration system" \
 			"RZ)" "Radxa Zero Rev 1.5       Wifi (cap SDIO speed)" \
 			"TB)" "Tinkerboard R2.0         Enable DS1307 RTC" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
@@ -641,12 +641,12 @@ case $CHOICE in
 					clear -x
 					supported_list
 					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
-						if [[ "$RELEASE" == "Debian" || "$RELEASE" == "Kali" || "$RELEASE" == "Ubuntu" || "$RELEASE" == "Raspbian" ]]; then
+						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
 							systemd_fanctrl > /dev/null 2>&1
 							install_fanctrl > /dev/null 2>&1
 							fan-ctrl -m
 						fi
-						if [[ "$RELEASE" == "Devuan" ]]; then
+						if [[ "$DISTRO" == "Devuan" ]]; then
 							sysvinit_fanctrl > /dev/null 2>&1
 							install_fanctrl > /dev/null 2>&1
 							fan-ctrl -m

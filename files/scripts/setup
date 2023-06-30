@@ -1,12 +1,11 @@
 #!/bin/bash
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
-fi
-if [[ -f "/etc/os-release" ]]; then
-	NAME=`cat /etc/os-release | grep -w 'NAME=' | sed 's/NAME="//g' | sed 's/"//g'`
 else
-	NAME="none"
+	echo -e "Your board is not supported."
+	exit 0
 fi
+DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 audio_mixer(){
 sudo amixer -c 0 set 'TOHDMITX' 'on'
@@ -16,7 +15,7 @@ sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
 sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
 sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
 sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
 	sudo amixer -c 0 set 'ACODEC' '85%'
 fi
 # Save
@@ -53,7 +52,7 @@ while getopts "rh" OPTION; do
 			sudo dpkg-reconfigure locales tzdata keyboard-configuration
 			sleep .50
 			if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-				if [[ "$NAME" == "Ubuntu" ]]; then echo ""; fi
+				if [[ "$DISTRO" == "Ubuntu" ]]; then echo ""; fi
 				echo "Reconfiguring debconf ..."
 				if [[ `command -v tasksel` ]]; then
 					:;
@@ -69,10 +68,9 @@ while getopts "rh" OPTION; do
 				echo ""
 			fi
 			sleep .50
-			if [[ -f "/etc/opt/board.txt" ]]; then
-				if [[ "$BOARD" == "radxazero" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "x96air" ]]; then
-					confirm
-				fi
+
+			if [[ "$BOARD" == "radxazero" || "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "x96air" ]]; then
+				confirm
 			fi
 			sleep .50
 			sudo update-ca-certificates -f
