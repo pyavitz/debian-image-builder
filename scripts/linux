@@ -18,7 +18,6 @@ source userdata.txt
 if [ $VERBOSE -eq 1 ]; then
 	set -x
 fi
-HOST_ARCH=`uname -m`
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
 	CROSSCOMPILE="0"
 fi
@@ -39,11 +38,6 @@ if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
 fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
-if [[ -e "/etc/os-release" ]]; then
-	CODENAME=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
-else
-	CODENAME="none"
-fi
 if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		:;
@@ -52,14 +46,14 @@ if [ $CCACHE -eq 1 ]; then
 	fi
 fi
 if [ $CLANG -eq 1 ]; then
-	if [[ "$CODENAME" == "bookworm" || "$CODENAME" == "jammy" ]]; then
+	if [[ "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
 		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then
 			:;
 		else
 			apt install -y clang clang-14 clang-15 lld lld-14 lld-15 llvm
 		fi
 	else
-		echo -e "${CODENAME} is not supported."
+		echo -e "${HOST_CODENAME} is not supported."
 		exit 0
 	fi
 fi
