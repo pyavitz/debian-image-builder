@@ -2,39 +2,41 @@
 # Debian Bookworm
 # RPI Cam Web Interface: https://github.com/silvanmelchior/RPi_Cam_Web_Interface
 # Missing dependency: gpac
-# The script doesn't do a full gpac install and instead saves a tarball to
-# /usr/src/gpac-2.0.0.tar.xz. The tarball contains the source and compiled debs.
-# Once booted, extract and install the needed packages.
+# Source tarbell and debs are saved to /usr/src/gpac-2.0.0.tar.xz
 
 run_function2 (){
 if [[ "$DISTRO" == "debian" ]] && [[ "$DISTRO_VERSION" == "bookworm" ]]; then
-	GPAC_URL="http://deb.debian.org/debian/pool/main/g/gpac/"
+	GPAC_URL="https://github.com/pyavitz/debian-image-builder/releases/download/gpac/"
 	GPAC="gpac_2.0.0+dfsg1.orig.tar.xz"
 	GPAC_DEBIAN="gpac_2.0.0+dfsg1-4.debian.tar.xz"
 	GPAC_DEPENDS="liba52-0.7.4-dev libasound2-dev libavcodec-dev libavdevice-dev libavformat-dev \
 		libavutil-dev libfaad-dev libfreetype-dev libjack-jackd2-dev libjpeg-dev libmad0-dev \
 		libogg-dev libpng-dev libpulse-dev libsdl2-dev libswscale-dev libtheora-dev libvorbis-dev \
-		libxv-dev libxvidcore-dev"
+		libxv-dev libxvidcore-dev apache2 php8.2"
 	cd ~
 	mkdir -p gpac
 	wget --show-progress -cq ${GPAC_URL}${GPAC} -P gpac/
 	wget --show-progress -cq ${GPAC_URL}${GPAC_DEBIAN} -P gpac/
 	if [[ -f "gpac/${GPAC}" ]] && [[ -f "gpac/${GPAC_DEBIAN}" ]]; then
 		cd gpac
-		echo -e "${GPAC} and ${GPAC_DEBIAN} found"
+		echo -e "Found: ${GPAC} ${GPAC_DEBIAN}"
 		tar xf $GPAC
 		tar xf $GPAC_DEBIAN
 		mv -f debian gpac-2.0.0/
 		cd gpac-2.0.0
 		apt install -y $GPAC_DEPENDS
 		dpkg-buildpackage -us -uc
+		cd ..
+		rm -fdr gpac-2.0.0
+		mkdir -p dbgsym
+		mv -f {gpac-dbgsym_2.0.0+dfsg1-4_*.deb,gpac-modules-base-dbgsym_2.0.0+dfsg1-4_*.deb,libgpac11-dbgsym_2.0.0+dfsg1-4_*.deb} dbgsym/
+		dpkg -i *.deb
 		cd ~
-		rm -fdr gpac/gpac-2.0.0
 		tar -czf gpac-2.0.0.tar.xz gpac
 		rm -fdr gpac
 		mv -f gpac-2.0.0.tar.xz /usr/src/
 	else
-		read -p "Install failed :("
+		read -p "Installation failed."
 		rm -fdr ~/gpac
 	fi
 fi
