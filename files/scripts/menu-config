@@ -3,6 +3,7 @@
 # Description: SYSTEM MENU INTERFACE
 # Destination: /usr/local/bin/menu-config
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
+DISTRO_CODENAME=`cat /etc/os-release | grep -w "VERSION_CODENAME" | sed 's/VERSION_CODENAME=//g'`
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
 else
@@ -43,7 +44,8 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 		fan_ctrl=0
 	fi
 	# home assistant
-	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]]; then
+	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]] \
+		&& [[ "$DISTRO_CODENAME" == "bullseye" ]]; then
 		supported_ha=1
 	else
 		supported_ha=0
@@ -602,12 +604,14 @@ case $CHOICE in
 			"HA)")
 				export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 				supported_list
-				if [[ $supported_ha -ne 1 ]]; then
-					whiptail --msgbox "    HA install not currently supported on this platform." 0 0;
-				elif (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
-					homeAssistant
+				if [[ $supported_ha -eq 1 ]]; then
+					if (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
+						homeAssistant
+					else
+						whiptail --msgbox "    Hit enter to return to menu." 0 0
+					fi
 				else
-					whiptail --msgbox "    Hit enter to return to menu." 0 0
+					whiptail --msgbox "    HA install not currently supported on this platform." 0 0;
 				fi
 				;;
 			"E)")
