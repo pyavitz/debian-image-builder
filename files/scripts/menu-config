@@ -11,9 +11,17 @@ else
 	whiptail --msgbox "    Your board is not supported." 0 0
 	exit 0
 fi
+if [[ -f "/etc/default/menu-config" ]]; then
+	. /etc/default/menu-config
+else
+	echo '"VERBOSITY="0"' | sudo tee /etc/default/menu-config
+	. /etc/default/menu-config
+fi
 
 # developer debug switch
-VERBOSITY="0"
+if [ $VERBOSITY -eq 1 ]; then
+	set -x
+fi
 
 # functions
 supported_list(){
@@ -106,9 +114,9 @@ case $SOUND_MIXER in
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "HDMI AUDIO" --title "Confirm" --yesno "    Apply HDMI Audio Settings?" 0 0); then
 				amlogic_hdmi
-				whiptail --backtitle "HDMI AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0;
+				whiptail --backtitle "HDMI AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0
 			else
-				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
 			fi
 		else
 			export NEWT_COLORS='root=,black'
@@ -121,9 +129,9 @@ case $SOUND_MIXER in
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirm" --yesno "    Apply Analog Audio Settings?" 0 0); then
 				amlogic_analog
-				whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0;
+				whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0
 			else
-				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
 			fi
 		else
 			export NEWT_COLORS='root=,black'
@@ -147,20 +155,20 @@ overclocking(){
 if [ $supported_oc -eq 1 ] > /dev/null 2>&1; then
 	if (whiptail --backtitle "Board: $DEFAULT_MOTD" --title "$DEFAULT_MOTD" --yesno "   Overclock?" 0 0); then
 		echo ""
-		echo -e "Overclocking: $DEFAULT_MOTD ";
-		echo "";
+		echo -e "Overclocking: $DEFAULT_MOTD "
+		echo ""
 		echo -en "Running service: "
-		overclock > /dev/null 2>&1;
-		sleep 1s;
-		echo -e "[done]";
-		echo "";
-		echo -e "Cores:" $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq);
-		echo "";
-		read -p "You may need to reboot for it to take effect";
+		overclock > /dev/null 2>&1
+		sleep 1s
+		echo -e "[done]"
+		echo ""
+		echo -e "Cores:" $(sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq)
+		echo ""
+		read -p "You may need to reboot for it to take effect"
 		clear -x
 	fi
 else
-	whiptail --msgbox "    Your board is not supported." 0 0;
+	whiptail --msgbox "    Your board is not supported." 0 0
 fi
 }
 
@@ -170,18 +178,18 @@ while true; do
 	PASSWD1=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password" --nocancel 8 78 3>&1 1>&2 2>&3)
 	PASSWD2=$(whiptail --backtitle "Menu Interface: User Password" --title "User: $USER" --passwordbox "Enter new password (again)" --nocancel 8 78 3>&1 1>&2 2>&3)
 	if [ "$PASSWD1" = "$PASSWD2" ]; then
-		PASSWORD="${PASSWD1}";
+		PASSWORD="${PASSWD1}"
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		if (whiptail --backtitle "Menu Interface: User Password: Confirm" --title "Confirm" --yesno "    Set the new password?" 0 0); then
-			echo "$PASSWORD" | sed 's/.*/\0\n\0/' | sudo passwd -q $USER 2> /dev/null;
-			whiptail --backtitle "Menu Interface: User Password: Confirmation" --title "Confirmation" --msgbox "    Password changed successfully." 0 0;
+			echo "$PASSWORD" | sed 's/.*/\0\n\0/' | sudo passwd -q $USER 2> /dev/null
+			whiptail --backtitle "Menu Interface: User Password: Confirmation" --title "Confirmation" --msgbox "    Password changed successfully." 0 0
 		else
-			whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+			whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
 		fi
 	else
-		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray';
-		whiptail --backtitle "" --msgbox "    Passwords don't match? Try again." 0 0;
-		continue;
+		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+		whiptail --backtitle "" --msgbox "    Passwords don't match? Try again." 0 0
+		continue
 	fi
 	break
 	clear -x
@@ -199,9 +207,9 @@ if (whiptail --backtitle "Sudo: $US_QUESTION Security" --title "Confirm" --yesno
 	else
 		echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_${USER}-nopasswd
 	fi
-	whiptail --backtitle "Sudo: $CONFIRM Security" --title "Confirmation" --msgbox "    $CONFIRM successfully." 0 0;
+	whiptail --backtitle "Sudo: $CONFIRM Security" --title "Confirmation" --msgbox "    $CONFIRM successfully." 0 0
 else
-	whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+	whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
 fi
 }
 
@@ -246,18 +254,18 @@ NEWHOST=$(whiptail --backtitle "Menu Interface: Hostname" --title "Current: $CUR
 HOSTNAME="${NEWHOST}"
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 if (whiptail --backtitle "Hostname: Confirm" --title "Confirm" --yesno "    Apply new hostname? ${HOSTNAME}" 0 0); then
-	sudo sh -c "echo '$HOSTNAME' > /etc/hostname";
+	sudo sh -c "echo '$HOSTNAME' > /etc/hostname"
 	sudo sed -i "2s/.*/127.0.1.1	$HOSTNAME/" /etc/hosts
 	if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
-		sudo service hostname.sh --full-restart;
-		sudo service avahi-daemon restart;
+		sudo service hostname.sh --full-restart
+		sudo service avahi-daemon restart
 	else
-		sudo hostnamectl set-hostname $HOSTNAME;
-		sudo systemctl restart avahi-daemon;
+		sudo hostnamectl set-hostname $HOSTNAME
+		sudo systemctl restart avahi-daemon
 	fi
-	whiptail --backtitle "Hostname: Confirmation" --title "Confirmation" --msgbox "    ${HOSTNAME} applied successfully." 0 0;
+	whiptail --backtitle "Hostname: Confirmation" --title "Confirmation" --msgbox "    ${HOSTNAME} applied successfully." 0 0
 else
-	whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0;
+	whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
 fi
 clear -x
 }
@@ -266,8 +274,8 @@ install_fanctrl(){
 if [[ `command -v fan-ctrl` ]]; then
 	:;
 else
-	sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin;
-	sudo chmod +x $(command -v fan-ctrl);
+	sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin
+	sudo chmod +x $(command -v fan-ctrl)
 fi
 }
 
@@ -288,7 +296,7 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-	sudo systemctl enable fan-ctrl;
+	sudo systemctl enable fan-ctrl
 fi
 }
 
@@ -296,9 +304,9 @@ sysvinit_fanctrl(){
 if [[ -f "/etc/init.d/fan-ctrl" ]]; then
 	:;
 else
-	sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl;
-	sudo chmod +x /etc/init.d/fan-ctrl;
-	sudo update-rc.d fan-ctrl defaults 2;
+	sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl
+	sudo chmod +x /etc/init.d/fan-ctrl
+	sudo update-rc.d fan-ctrl defaults 2
 fi
 }
 
@@ -315,27 +323,9 @@ homeAssistant(){
 clear -x
 echo "Installing Home Assistant ..."
 
-if [ $VERBOSITY -eq 1 ]; then
-	set -x
-fi
-
 if [ $hdmi_audio -eq 1 ]; then
 	amlogic_hdmi
 fi
-
-#if [[ "$FAMILY" == "amlogic" ]]; then
-#	# Make sure sound is enabled on N2+
-#	sudo amixer sset 'FRDDR_A SINK 1 SEL' 'OUT 1'
-#	sudo amixer sset 'FRDDR_A SRC 1 EN' 'on'
-#	sudo amixer sset 'TDMOUT_B SRC SEL' 'IN 0'
-#	sudo amixer sset 'TOHDMITX I2S SRC' 'I2S B'
-#	sudo amixer sset 'TOHDMITX' 'on'
-#	sudo amixer sset 'FRDDR_B SINK 1 SEL' 'OUT 2'
-#	sudo amixer sset 'FRDDR_B SRC 1 EN' 'on'
-#	sudo amixer sset 'FRDDR_C SINK 1 SEL' 'OUT 3'
-#	sudo amixer sset 'FRDDR_C SRC 1 EN' 'on'
-#	sudo alsactl store
-#fi
 
 # install docker
 curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -695,32 +685,32 @@ case $CHOICE in
 						if [[ `command -v dtc` ]]; then
 							:;
 						else
-							sudo apt update;
-							sudo apt install -y u-boot-tools;
+							sudo apt update
+							sudo apt install -y u-boot-tools
 						fi
 						if [ -f /etc/initramfs/post-update.d/99-sdio-speed ]; then
-							sudo rm -f /etc/initramfs/post-update.d/99-sdio-speed;
+							sudo rm -f /etc/initramfs/post-update.d/99-sdio-speed
 						fi
-						echo -e "Running setup ...";
-						sleep 1s;
+						echo -e "Running setup ..."
+						sleep .75
 						GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/boot"
 						sudo mkdir -p /etc/initramfs/post-update.d/
 						sudo wget -cq $GHURL/99-sdio-speed -P /etc/initramfs/post-update.d/
 						if [ -f /etc/initramfs/post-update.d/99-sdio-speed ]; then
-							sudo chmod +x /etc/initramfs/post-update.d/99-sdio-speed;
-							sudo chown root:root /etc/initramfs/post-update.d/99-sdio-speed;
-							sudo /etc/initramfs/post-update.d/99-sdio-speed;
+							sudo chmod +x /etc/initramfs/post-update.d/99-sdio-speed
+							sudo chown root:root /etc/initramfs/post-update.d/99-sdio-speed
+							sudo /etc/initramfs/post-update.d/99-sdio-speed
 						fi
 						echo ""
-						read -p "Press enter to continue.";
-						clear -x;
+						read -p "Press enter to continue."
+						clear -x
 					else
 						export NEWT_COLORS='root=,black'
-						whiptail --msgbox "    Your board is not supported." 0 0;
+						whiptail --msgbox "    Your board is not supported." 0 0
 					fi
 				else
 					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0;
+					whiptail --msgbox "    This requires a internet connection." 0 0
 				fi
 				;;
 			"TB)")
@@ -740,23 +730,23 @@ case $CHOICE in
 									sudo systemctl enable rtc-ds1307.service
 									sudo systemctl start rtc-ds1307.service
 									sudo systemctl set-default multi-user.target
-									whiptail --backtitle "Menu Interface: Sync Clock: Confirmation" --title "Confirmation" --msgbox "    Enabled." 0 0;
+									whiptail --backtitle "Menu Interface: Sync Clock: Confirmation" --title "Confirmation" --msgbox "    Enabled." 0 0
 								else
 									sleep .50
 									sudo systemctl enable rtc-ds1307.service
 									sudo systemctl start rtc-ds1307.service
 									sudo systemctl set-default multi-user.target
-									whiptail --title "Clock Not Synced" --msgbox "    Hit enter to return to menu." 0 0;
+									whiptail --title "Clock Not Synced" --msgbox "    Hit enter to return to menu." 0 0
 								fi
 							break
 						done
 					else
 						export NEWT_COLORS='root=,black'
-						whiptail --msgbox "    Your board is not supported." 0 0;
+						whiptail --msgbox "    Your board is not supported." 0 0
 					fi
 				else
 					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0;
+					whiptail --msgbox "    This requires a internet connection." 0 0
 				fi
 				;;
 			"E)")
