@@ -1,4 +1,3 @@
-From f4794df976bbf6c109f3d4bd7e247bcbfc587db6 Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <neil.armstrong@linaro.org>
 Date: Mon, 6 Mar 2023 09:31:38 +0100
 Subject: [PATCH] dt-bindings: arm: amlogic: Document the boards with the
@@ -40,7 +39,6 @@ index e16b5fa55847..30b27917a8be 100644
 -- 
 2.34.1
 
-From 2f449155e401644dd2f28b0ee8e17bd609e4ba0e Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <neil.armstrong@linaro.org>
 Date: Mon, 6 Mar 2023 09:31:39 +0100
 Subject: [PATCH] arm64: dts: amlogic: Add initial support for BPI-CM4 module
@@ -85,9 +83,9 @@ index 97b42e2100e0..d4b315a05ef9 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gsking-x.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking-pro.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking.dtb
---- /dev/null	2023-05-21 09:58:01.101444638 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4-cm4io.dts	2023-05-29 07:19:26.254573254 -0400
-@@ -0,0 +1,172 @@
+--- /dev/null	2023-07-07 19:42:40.585806232 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4-cm4io.dts	2023-07-09 06:06:05.444634581 -0400
+@@ -0,0 +1,170 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2023 Neil Armstrong <neil.armstrong@linaro.org>
@@ -108,12 +106,6 @@ index 97b42e2100e0..d4b315a05ef9 100644
 +		ethernet0 = &ethmac;
 +		i2c0 = &i2c1;
 +		i2c1 = &i2c3;
-+	};
-+
-+	reboot: meson64-reboot {
-+		compatible = "meson64,reboot";
-+		sys_reset = <0x84000009>;
-+		sys_poweroff = <0x84000008>;
 +	};
 +
 +	adc-keys {
@@ -213,6 +205,10 @@ index 97b42e2100e0..d4b315a05ef9 100644
 +	};
 +};
 +
++&reboot {
++	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++};
++
 +&cecb_AO {
 +	status = "okay";
 +};
@@ -260,12 +256,9 @@ index 97b42e2100e0..d4b315a05ef9 100644
 +
 +	status = "okay";
 +};
-diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi
-new file mode 100644
-index 000000000000..97e522921b06
---- /dev/null
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi
-@@ -0,0 +1,388 @@
+--- /dev/null	2023-07-07 19:42:40.585806232 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi-cm4.dtsi	2023-07-09 06:10:45.467740036 -0400
+@@ -0,0 +1,396 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2023 Neil Armstrong <neil.armstrong@linaro.org>
@@ -278,6 +271,15 @@ index 000000000000..97e522921b06
 +	aliases {
 +		serial0 = &uart_AO;
 +		rtc1 = &vrtc;
++	};
++
++	reboot: meson64-reboot {
++		compatible = "meson64,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
++		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
 +	};
 +
 +	chosen {
@@ -638,7 +640,6 @@ index 000000000000..97e522921b06
 +	bluetooth {
 +		compatible = "realtek,rtl8822cs-bt";
 +		enable-gpios  = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-+		//host-wake-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
 +		device-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
 +	};
 +};
@@ -654,5 +655,3 @@ index 000000000000..97e522921b06
 +	phys = <&usb2_phy0>, <&usb2_phy1>;
 +	phy-names = "usb2-phy0", "usb2-phy1";
 +};
--- 
-2.34.1

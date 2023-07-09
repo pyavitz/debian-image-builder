@@ -18,8 +18,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-gxbb-kii-pro.dtb
 --- /dev/null	2023-07-07 19:42:40.585806232 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-a311d-bananapi-m2s.dts	2023-07-08 10:49:51.973207289 -0400
-@@ -0,0 +1,37 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-a311d-bananapi-m2s.dts	2023-07-09 05:53:44.188239967 -0400
+@@ -0,0 +1,41 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2023 Christian Hewitt <christianshewitt@gmail.com>
@@ -40,6 +40,10 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +	};
 +};
 +
++&reboot {
++	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++};
++
 +/* Camera (CSI) bus */
 +&i2c1 {
 +	status = "okay";
@@ -58,8 +62,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +//	status = "okay";
 +//};
 --- /dev/null	2023-07-07 19:42:40.585806232 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi.dtsi	2023-07-08 10:49:51.973207289 -0400
-@@ -0,0 +1,521 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi.dtsi	2023-07-09 05:53:12.027864793 -0400
+@@ -0,0 +1,530 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre, SAS
@@ -77,6 +81,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +		serial0 = &uart_AO;
 +		ethernet0 = &ethmac;
 +		rtc1 = &vrtc;
++	};
++
++	reboot: meson64-reboot {
++		compatible = "meson64,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
++		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
 +	};
 +
 +	chosen {
@@ -582,8 +595,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +	phy-names = "usb2-phy0", "usb2-phy1";
 +};
 --- /dev/null	2023-07-07 19:42:40.585806232 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-s922x-bananapi-m2s.dts	2023-07-08 10:49:51.977207303 -0400
-@@ -0,0 +1,14 @@
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-s922x-bananapi-m2s.dts	2023-07-09 05:54:04.824479978 -0400
+@@ -0,0 +1,18 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2023 Christian Hewitt <christianshewitt@gmail.com>
@@ -597,4 +610,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +/ {
 +	compatible = "bananapi,bpi-m2s", "amlogic,s922x", "amlogic,g12b";
 +	model = "BananaPi M2S";
++};
++
++&reboot {
++	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
 +};
