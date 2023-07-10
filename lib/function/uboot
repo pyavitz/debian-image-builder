@@ -47,29 +47,7 @@ if [[ "$SERIES" == "sun50i-a64" || "$SERIES" == "sun50i-h5" ]]; then
 fi
 }
 
-u-boot(){
-if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
-	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
-	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
-else
-	uboot_search
-fi
-# extract
-echo ""
-echo_extract
-if [[ "$FAMILY" == "amlogic" ]] && [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then
-	pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .
-fi
-if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
-	pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
-	mv -f u-boot-${UBOOT_VERSION} u-boot
-else
-	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
-	exit 0
-fi
-cp board.txt u-boot/
-cd u-boot
-# arm trusted firmware
+atf_function(){ # place bl31 file.
 if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
 	cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
 	crust_firmware
@@ -94,6 +72,32 @@ if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$UBOOT_VERSION" == "v2023.04" ]]; then
 	#export BL31="bl31.elf"
 	export ROCKCHIP_TPL="${RKBIN_RAM}"
 fi
+}
+
+u-boot(){
+if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
+	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+else
+	uboot_search
+fi
+# extract
+echo ""
+echo_extract
+if [[ "$FAMILY" == "amlogic" ]] && [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then
+	pv amlogic-boot-fip-master.tar.gz | tar -xzf - -C .
+fi
+if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
+	pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
+	mv -f u-boot-${UBOOT_VERSION} u-boot
+else
+	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
+	exit 0
+fi
+cp board.txt u-boot/
+cd u-boot
+# arm trusted firmware
+atf_function
 # patching
 uboot_patching
 # make defconfig

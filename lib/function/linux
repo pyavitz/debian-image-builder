@@ -1,6 +1,6 @@
 #!/bin/bash
+# LINUX KERNEL VARIABLES AND FUNCTIONS
 
-# LINUX KERNEL VARIABLES
 DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 
 kernel_source(){
@@ -13,7 +13,7 @@ cd ${SRC}
 rpi_firmware(){
 BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
 mkdir -p firmware
-rm -f firmware/*
+rm -fr firmware/*
 cd firmware
 echo ""
 echo_firm
@@ -30,9 +30,9 @@ if [[ "$SERIES" == "bcm2711" ]]; then
 	${DOWNLOAD} ${BINURL}start4x.elf
 	cd ..
 	if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo_bdone
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
-		echo_fail
+		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
 		exit 0
 	fi
 else
@@ -47,9 +47,9 @@ else
 	${DOWNLOAD} ${BINURL}start_x.elf
 	cd ..
 	if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo_bdone
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
-		echo_fail
+		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
 		exit 0
 	fi
 fi
@@ -134,7 +134,6 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	rpi_firmware
 fi
 if [[ "$BOARD" == "tinker" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
-	#rtl8723bs
 	rtl8723ds
 fi
 if [[ "$BOARD" == "x96air" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
@@ -189,7 +188,6 @@ rtl88x2bu_module
 rtl8811cu_module
 rtl8188eu_module
 rtl8189es_module
-#rtl8723bs_module
 rtl8723ds_module
 rtl88x2cs_module
 if [ $LTO_CLANG_THIN -eq 1 ]; then
