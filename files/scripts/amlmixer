@@ -1,0 +1,77 @@
+#!/bin/bash
+# Description: Amlogic Mixer Settings
+# Destination: /usr/local/bin/amlmixer
+
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+else
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
+fi
+if [[ "$SERIES" == "meson-g12a" || "$SERIES" == "meson-g12b" || "$SERIES" == "meson-sm1" ]]; then
+	:;
+else
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
+fi
+
+# Restrict
+if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
+	HDMI_AUDIO=1
+else
+	HDMI_AUDIO=0
+fi
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+	JACK_AUDIO=1
+else
+	JACK_AUDIO=0
+fi
+
+hdmi(){
+if [ $HDMI_AUDIO -eq 1 ]; then
+	sudo amixer -c 0 set 'TOHDMITX' 'on'
+	sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
+	sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
+	sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
+	sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
+	sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
+	sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
+	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || \
+		"$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+		sudo amixer -c 0 set 'ACODEC' '85%'
+	fi
+	# Save
+	sudo alsactl store
+else
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
+fi
+}
+
+analog(){
+if [ $JACK_AUDIO -eq 1 ]; then
+	sudo amixer -c 0 set 'TOACODEC OUT EN' 'on'
+	sudo amixer -c 0 set 'TOACODEC SRC' 'I2S B'
+	sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
+	sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
+	sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
+	sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
+	sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
+	sudo amixer -c 0 set 'ACODEC' '85%'
+	# Save
+	sudo alsactl store
+else
+	export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+	whiptail --msgbox "    Your board is not supported." 0 0
+	exit 0
+fi
+}
+
+AMLMIXER=`echo $1`
+
+$AMLMIXER
+
+exit 0
