@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
---- a/arch/arm64/boot/dts/amlogic/Makefile	2023-02-06 02:06:34.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/Makefile	2023-02-10 07:50:54.958103911 -0500
+--- a/arch/arm64/boot/dts/amlogic/Makefile	2023-07-05 13:27:38.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/Makefile	2023-07-12 16:50:03.019252607 -0400
 @@ -66,4 +66,6 @@
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
@@ -9,8 +9,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
 +dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-rtc.dtb
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-12 06:00:49.000000000 -0500
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-01-31 22:07:58.936101914 -0500
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-07-05 13:27:38.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-07-12 16:50:03.023252700 -0400
 @@ -171,16 +171,15 @@
  				     "snps,dwmac";
  			reg = <0x0 0xff3f0000 0x0 0x10000>,
@@ -32,8 +32,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot
  
  			mdio0: mdio {
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-05-30 09:03:33.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-06-04 01:41:57.269461163 -0400
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-07-05 13:27:38.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi	2023-07-12 16:50:03.023252700 -0400
 @@ -80,6 +80,15 @@
  		regulator-always-on;
  	};
@@ -60,9 +60,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/
  
  	non-removable;
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-04-06 06:10:58.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-04-11 19:44:52.670768955 -0400
-@@ -7,20 +7,34 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-07-05 13:27:38.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts	2023-07-13 08:06:49.098230842 -0400
+@@ -7,20 +7,44 @@
  /dts-v1/;
  
  #include "meson-sm1-ac2xx.dtsi"
@@ -77,6 +77,13 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
 +		rtc1 = &vrtc;
++	};
++
++	spdif_dit: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "linux,spdif-dit";
++		status = "okay";
++		sound-name-prefix = "DIT";
 +	};
 +
  	sound {
@@ -94,12 +101,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
 +				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
 +				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
 +				"Lineout", "ACODEC LOLP",
 +				"Lineout", "ACODEC LORP";
  
  		assigned-clocks = <&clkc CLKID_MPLL2>,
  				  <&clkc CLKID_MPLL0>,
-@@ -43,8 +57,20 @@
+@@ -43,8 +67,20 @@
  			sound-dai = <&frddr_c>;
  		};
  
@@ -121,7 +131,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,20 +79,75 @@
+@@ -53,20 +89,88 @@
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -169,7 +179,20 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +				sound-dai = <&acodec>;
 +			};
 +		};
- 	};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
++	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -178,7 +201,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
-+	};
+ 	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -199,7 +222,20 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
  };
  
  &arb {
-@@ -99,14 +180,78 @@
+@@ -83,6 +187,12 @@
+ 	phy-mode = "rmii";
+ };
+ 
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &frddr_a {
+ 	status = "okay";
+ };
+@@ -99,14 +209,78 @@
  	linux,rc-map-name = "rc-beelink-gs1";
  };
  
@@ -279,9 +315,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot
 +	mali-supply=<&vddgpu>;
 +};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-04-06 06:10:58.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-04-11 19:45:26.147463948 -0400
-@@ -7,20 +7,34 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-07-05 13:27:38.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts	2023-07-13 08:02:07.889794175 -0400
+@@ -7,20 +7,44 @@
  /dts-v1/;
  
  #include "meson-sm1-ac2xx.dtsi"
@@ -297,7 +333,14 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		ethernet0 = &ethmac;
 +		rtc1 = &vrtc;
 +	};
-+	
++
++	spdif_dit: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "linux,spdif-dit";
++		status = "okay";
++		sound-name-prefix = "DIT";
++	};
++
  	sound {
  		compatible = "amlogic,axg-sound-card";
  		model = "X96-AIR";
@@ -313,12 +356,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
 +				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
 +				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
 +				"Lineout", "ACODEC LOLP",
 +				"Lineout", "ACODEC LORP";
  
  		assigned-clocks = <&clkc CLKID_MPLL2>,
  				  <&clkc CLKID_MPLL0>,
-@@ -43,8 +57,20 @@
+@@ -43,8 +67,20 @@
  			sound-dai = <&frddr_c>;
  		};
  
@@ -340,7 +386,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,20 +79,75 @@
+@@ -53,20 +89,88 @@
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -388,7 +434,20 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				sound-dai = <&acodec>;
 +			};
 +		};
-+	};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
+ 	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -397,7 +456,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
- 	};
++	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -418,7 +477,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  };
  
  &arb {
-@@ -82,7 +163,7 @@
+@@ -82,7 +186,7 @@
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
@@ -427,7 +486,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  	phy-handle = <&external_phy>;
  
  	rx-internal-delay-ps = <800>;
-@@ -90,7 +171,6 @@
+@@ -90,7 +194,6 @@
  
  &ext_mdio {
  	external_phy: ethernet-phy@0 {
@@ -435,15 +494,20 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
  		reg = <0>;
  		max-speed = <1000>;
  
-@@ -104,6 +184,7 @@
+@@ -104,6 +207,12 @@
  	};
  };
  
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
 +
  &frddr_a {
  	status = "okay";
  };
-@@ -120,14 +201,78 @@
+@@ -120,14 +229,78 @@
  	linux,rc-map-name = "rc-x96max";
  };
  
@@ -522,9 +586,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
---- /dev/null	2023-03-30 04:59:11.183822108 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-rtc.dts	2023-04-11 19:46:02.782129408 -0400
-@@ -0,0 +1,274 @@
+--- /dev/null	2023-07-11 16:52:34.391546334 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit-rtc.dts	2023-07-13 07:31:52.802897844 -0400
+@@ -0,0 +1,323 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -538,7 +602,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +#include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 +
 +/ {
-+	compatible = "amediatech,x96-air", "amlogic,sm1";
++	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
 +	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
 +
 +	aliases {
@@ -546,6 +610,13 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		ethernet0 = &ethmac;
 +		rtc0 = &rtc;
 +		rtc1 = &vrtc;
++	};
++
++	spdif_dit: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "linux,spdif-dit";
++		status = "okay";
++		sound-name-prefix = "DIT";
 +	};
 +
 +	sound {
@@ -561,6 +632,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
 +				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
 +				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
 +				"Lineout", "ACODEC LOLP",
 +				"Lineout", "ACODEC LORP";
 +
@@ -649,6 +723,19 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				sound-dai = <&acodec>;
 +			};
 +		};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
 +	};
 +
 +	vddgpu: regulator-vddgpu {
@@ -688,8 +775,34 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +
 +&ethmac {
 +	status = "okay";
-+	phy-handle = <&internal_ephy>;
-+	phy-mode = "rmii";
++
++	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
++	pinctrl-names = "default";
++	phy-mode = "rgmii";
++	phy-handle = <&external_phy>;
++
++	rx-internal-delay-ps = <800>;
++};
++
++&ext_mdio {
++	external_phy: ethernet-phy@0 {
++		reg = <0>;
++		max-speed = <1000>;
++
++		reset-assert-us = <10000>;
++		reset-deassert-us = <80000>;
++		reset-gpios = <&gpio GPIOZ_15 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>;
++
++		interrupt-parent = <&gpio_intc>;
++		/* MAC_INTR on GPIOZ_14 */
++		interrupts = <26 IRQ_TYPE_LEVEL_LOW>;
++	};
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
 +};
 +
 +&frddr_a {
@@ -705,7 +818,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +};
 +
 +&ir {
-+	linux,rc-map-name = "rc-beelink-gs1";
++	linux,rc-map-name = "rc-x96max";
 +};
 +
 +&sd_emmc_a {
@@ -799,9 +912,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		clock-output-names = "xin32k";
 +	};
 +};
---- /dev/null	2023-03-30 04:59:11.183822108 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit-rtc.dts	2023-04-11 19:46:35.394830970 -0400
-@@ -0,0 +1,295 @@
+--- /dev/null	2023-07-11 16:52:34.391546334 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-rtc.dts	2023-07-13 08:00:52.529680575 -0400
+@@ -0,0 +1,303 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -815,7 +928,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +#include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 +
 +/ {
-+	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
++	compatible = "amediatech,x96-air", "amlogic,sm1";
 +	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
 +
 +	aliases {
@@ -824,7 +937,14 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
-+	
++
++	spdif_dit: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "linux,spdif-dit";
++		status = "okay";
++		sound-name-prefix = "DIT";
++	};
++
 +	sound {
 +		compatible = "amlogic,axg-sound-card";
 +		model = "X96-AIR";
@@ -838,6 +958,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
 +				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
 +				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
 +				"Lineout", "ACODEC LOLP",
 +				"Lineout", "ACODEC LORP";
 +
@@ -926,6 +1049,19 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +				sound-dai = <&acodec>;
 +			};
 +		};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
 +	};
 +
 +	vddgpu: regulator-vddgpu {
@@ -965,30 +1101,15 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +
 +&ethmac {
 +	status = "okay";
++	phy-handle = <&internal_ephy>;
++	phy-mode = "rmii";
++};
 +
-+	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
 +	pinctrl-names = "default";
-+	phy-mode = "rgmii";
-+	phy-handle = <&external_phy>;
-+
-+	rx-internal-delay-ps = <800>;
++	status = "okay";
 +};
-+
-+&ext_mdio {
-+	external_phy: ethernet-phy@0 {
-+		reg = <0>;
-+		max-speed = <1000>;
-+
-+		reset-assert-us = <10000>;
-+		reset-deassert-us = <80000>;
-+		reset-gpios = <&gpio GPIOZ_15 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>;
-+
-+		interrupt-parent = <&gpio_intc>;
-+		/* MAC_INTR on GPIOZ_14 */
-+		interrupts = <26 IRQ_TYPE_LEVEL_LOW>;
-+	};
-+};
-+
 +
 +&frddr_a {
 +	status = "okay";
@@ -1003,7 +1124,7 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64
 +};
 +
 +&ir {
-+	linux,rc-map-name = "rc-x96max";
++	linux,rc-map-name = "rc-beelink-gs1";
 +};
 +
 +&sd_emmc_a {
