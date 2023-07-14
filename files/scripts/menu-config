@@ -636,14 +636,22 @@ case $CHOICE in
 					supported_list
 					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
 						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
-							systemd_fanctrl > /dev/null 2>&1
-							install_fanctrl > /dev/null 2>&1
-							fan-ctrl -m
+							if [[ `command -v fan-ctrl` ]]; then
+								fan-ctrl -m
+							else
+								systemd_fanctrl > /dev/null 2>&1
+								install_fanctrl > /dev/null 2>&1
+								fan-ctrl -m
+							fi
 						fi
 						if [[ "$DISTRO" == "Devuan" ]]; then
-							sysvinit_fanctrl > /dev/null 2>&1
-							install_fanctrl > /dev/null 2>&1
-							fan-ctrl -m
+							if [[ `command -v fan-ctrl` ]]; then
+								fan-ctrl -m
+							else
+								sysvinit_fanctrl > /dev/null 2>&1
+								install_fanctrl > /dev/null 2>&1
+								fan-ctrl -m
+							fi
 						fi
 					else
 						export NEWT_COLORS='root=,black'
