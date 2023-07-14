@@ -15,8 +15,8 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +
 +subdir-y += overlays/odroidc4
 +subdir-y += overlays/odroidn2
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	2023-05-04 03:15:34.000000000 -0400
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts	2023-07-11 23:38:52.000000000 -0400
 @@ -0,0 +1,9 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -27,9 +27,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +/dts-v1/;
 +
 +#include "meson-gxbb-odroidc2.dts"
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts	2023-05-04 03:15:34.000000000 -0400
-@@ -0,0 +1,51 @@
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts	2023-07-11 23:38:52.000000000 -0400
+@@ -0,0 +1,96 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2020 Dongjin Kim <tobetter@gmail.com>
@@ -40,8 +40,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +#include "meson-sm1-odroid-c4.dts"
 +
 +/ {
-+	model = "Hardkernel ODROID-C4";
-+
 +	odroid-reboot {
 +		compatible = "odroid,reboot";
 +		sys_reset = <0x84000009>;
@@ -50,6 +48,61 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +		sd-vqen = <&gpio_ao GPIOE_2 GPIO_ACTIVE_HIGH>;
 +		sd-vqsw = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
 +		sd-vmmc = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++	};
++};
++
++&cpu_opp_table {
++	/delete-node/ opp-100000000;
++	/delete-node/ opp-250000000;
++	/delete-node/ opp-500000000;
++	/delete-node/ opp-667000000;
++
++	opp-1000000000 {
++		opp-hz = /bits/ 64 <1000000000>;
++		opp-microvolt = <799999>;
++	};
++
++	opp-1200000000 {
++		opp-hz = /bits/ 64 <1200000000>;
++		opp-microvolt = <809999>;
++	};
++
++	opp-1404000000 {
++		opp-hz = /bits/ 64 <1404000000>;
++		opp-microvolt = <819999>;
++	};
++
++	opp-1500000000 {
++		opp-hz = /bits/ 64 <1500000000>;
++		opp-microvolt = <829999>;
++	};
++
++	opp-1608000000 {
++		opp-hz = /bits/ 64 <1608000000>;
++		opp-microvolt = <859999>;
++	};
++
++	opp-1704000000 {
++		opp-hz = /bits/ 64 <1704000000>;
++		opp-microvolt = <899999>;
++	};
++
++	opp-1800000000 {
++		opp-hz = /bits/ 64 <1800000000>;
++		opp-microvolt = <939999>;
++	};
++
++	opp-1908000000 {
++		opp-hz = /bits/ 64 <1908000000>;
++		opp-microvolt = <999999>;
++	};
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <1010000>;
++	};
++	opp-2100000000 {
++		opp-hz = /bits/ 64 <2100000000>;
++		opp-microvolt = <1030000>;
 +	};
 +};
 +
@@ -63,27 +116,19 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +	/delete-property/	interrupts-parent;
 +};
 +
-+&i2c2 {
-+	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c2_sda_x_pins>, <&i2c2_sck_x_pins>;
-+};
-+
-+&i2c3 {
-+	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
-+};
-+
 +&gpu_opp_table {
 +	opp-999999984 {
 +		opp-hz = /bits/ 64 <999999984>;
 +		opp-microvolt = <800000>;
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts	2023-05-04 03:15:34.000000000 -0400
-@@ -0,0 +1,81 @@
++
++&vddcpu {
++	regulator-max-microvolt = <1030000>;
++};
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidhc4.dts	2023-07-11 23:38:52.000000000 -0400
+@@ -0,0 +1,77 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2020 Dongjin Kim <tobetter@gmail.com>
@@ -92,10 +137,6 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +/dts-v1/;
 +
 +#include "meson-sm1-odroid-hc4.dts"
-+
-+/ {
-+	model = "Hardkernel ODROID-HC4";
-+};
 +
 +&cpu_opp_table {
 +	/delete-node/ opp-100000000;
@@ -165,9 +206,9 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +&vddcpu {
 +	regulator-max-microvolt = <1030000>;
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts	2023-05-04 03:15:34.000000000 -0400
-@@ -0,0 +1,191 @@
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dts	2023-07-11 23:38:52.000000000 -0400
+@@ -0,0 +1,34 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 Dongjin Kim <tobetter@gmail.com>
@@ -176,131 +217,18 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +
 +/dts-v1/;
 +
-+#include <dt-bindings/clock/axg-audio-clkc.h>
-+#include <dt-bindings/sound/meson-g12a-tohdmitx.h>
-+#include <dt-bindings/sound/meson-g12a-toacodec.h>
-+#include <dt-bindings/reset/amlogic,meson-axg-audio-arb.h>
-+#include <dt-bindings/reset/amlogic,meson-g12a-audio-reset.h>
 +#include <dt-bindings/pwm/pwm.h>
 +
 +#include "meson-g12b-odroid-n2.dts"
-+#include "meson64_odroidn2.dtsi"
 +
 +/ {
-+	model = "Hardkernel ODROID-N2";
-+
 +	reboot: odroid-reboot {
 +		compatible = "odroid,reboot";
 +		sys_reset = <0x84000009>;
 +		sys_poweroff = <0x84000008>;
 +
-+		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
 +		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	dio2133: audio-amplifier-0 {
-+		compatible = "simple-audio-amplifier";
-+		enable-gpios = <&gpio_ao GPIOAO_2 GPIO_ACTIVE_HIGH>;
-+		VCC-supply = <&vcc_5v>;
-+		sound-name-prefix = "AMP";
-+	};
-+
-+	spdif_dit: audio-codec-1 {
-+		#sound-dai-cells = <0>;
-+		compatible = "linux,spdif-dit";
-+		status = "okay";
-+		sound-name-prefix = "DIT";
-+	};
-+
-+	sound {
-+		compatible = "amlogic,axg-sound-card";
-+		model = "G12B-ODROID-N2";
-+		audio-aux-devs = <&tdmout_b>, <&tdmout_c>, <&dio2133>;
-+		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
-+				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
-+				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
-+				"TDM_B Playback", "TDMOUT_B OUT",
-+				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
-+				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
-+				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
-+				"TDM_C Playback", "TDMOUT_C OUT",
-+				"SPDIFOUT IN 0", "FRDDR_A OUT 3",
-+				"SPDIFOUT IN 1", "FRDDR_B OUT 3",
-+				"SPDIFOUT IN 2", "FRDDR_C OUT 3",
-+				"AMP INL", "ACODEC LOLP",
-+				"AMP INR", "ACODEC LORP";
-+
-+		assigned-clocks = <&clkc CLKID_HIFI_PLL>,
-+				  <&clkc CLKID_MPLL0>,
-+				  <&clkc CLKID_MPLL1>;
-+		assigned-clock-parents = <0>, <0>, <0>;
-+		assigned-clock-rates = <589824000>,
-+				       <270950400>,
-+				       <393216000>;
-+
-+		status = "okay";
-+
-+		dai-link-0 {
-+			sound-dai = <&frddr_a>;
-+		};
-+
-+		dai-link-1 {
-+			sound-dai = <&frddr_b>;
-+		};
-+
-+		dai-link-2 {
-+			sound-dai = <&frddr_c>;
-+		};
-+
-+		/* 8ch hdmi interface */
-+		dai-link-3 {
-+			sound-dai = <&tdmif_b>;
-+			dai-format = "i2s";
-+			dai-tdm-slot-tx-mask-0 = <1 1>;
-+			dai-tdm-slot-tx-mask-1 = <1 1>;
-+			dai-tdm-slot-tx-mask-2 = <1 1>;
-+			dai-tdm-slot-tx-mask-3 = <1 1>;
-+			mclk-fs = <256>;
-+
-+			codec {
-+				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
-+			};
-+		};
-+
-+		dai-link-4 {
-+			sound-dai = <&tdmif_c>;
-+			dai-format = "i2s";
-+			dai-tdm-slot-tx-mask-0 = <1 1>;
-+			mclk-fs = <256>;
-+
-+			codec {
-+				sound-dai = <&toacodec TOACODEC_IN_C>;
-+			};
-+		};
-+
-+		dai-link-5 {
-+			sound-dai = <&spdifout>;
-+
-+			codec {
-+				sound-dai = <&spdif_dit>;
-+			};
-+		};
-+
-+		dai-link-6 {
-+			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
-+
-+			codec {
-+				sound-dai = <&hdmi_tx>;
-+			};
-+		};
-+
-+		dai-link-7 {
-+			sound-dai = <&toacodec TOACODEC_OUT>;
-+
-+			codec {
-+				sound-dai = <&acodec>;
-+			};
-+		};
++		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
 +	};
 +};
 +
@@ -315,71 +243,42 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +		opp-microvolt = <800000>;
 +	};
 +};
-+
-+&spdifout {
-+	pinctrl-0 = <&spdif_out_a13_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&tdmif_b {
-+	pinctrl-0 = <&mclk0_a_pins>, <&tdm_b_fs_pins>, <&tdm_b_sclk_pins>,
-+		    <&tdm_b_dout0_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+
-+	assigned-clocks = <&clkc_audio AUD_CLKID_TDM_MCLK_PAD0>,
-+			  <&clkc_audio AUD_CLKID_TDM_SCLK_PAD1>,
-+			  <&clkc_audio AUD_CLKID_TDM_LRCLK_PAD1>;
-+	assigned-clock-parents = <&clkc_audio AUD_CLKID_MST_B_MCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_B_SCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_B_LRCLK>;
-+	assigned-clock-rates = <0>, <0>, <0>;
-+};
-+
-+&tdmif_c {
-+	status = "okay";
-+	assigned-clocks = <&clkc_audio AUD_CLKID_TDM_MCLK_PAD1>,
-+			  <&clkc_audio AUD_CLKID_TDM_SCLK_PAD2>,
-+			  <&clkc_audio AUD_CLKID_TDM_LRCLK_PAD2>;
-+	assigned-clock-parents = <&clkc_audio AUD_CLKID_MST_C_MCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_C_SCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_C_LRCLK>;
-+	assigned-clock-rates = <0>, <0>, <0>;
-+};
-+
-+&tdmout_c {
-+	status = "okay";
-+};
-+
-+&acodec {
-+	status = "okay";
-+};
-+
-+&toacodec {
-+	status = "okay";
-+};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi	2023-05-04 03:15:34.000000000 -0400
-@@ -0,0 +1,308 @@
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts	2023-07-11 23:38:52.000000000 -0400
+@@ -0,0 +1,150 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright (c) 2021 Dongjin Kim <tobetter@gmail.com>
++ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
 + *
 + */
 +
-+#include <dt-bindings/clock/axg-audio-clkc.h>
-+#include <dt-bindings/sound/meson-g12a-tohdmitx.h>
-+#include <dt-bindings/sound/meson-g12a-toacodec.h>
-+#include <dt-bindings/reset/amlogic,meson-axg-audio-arb.h>
-+#include <dt-bindings/reset/amlogic,meson-g12a-audio-reset.h>
++/dts-v1/;
++
 +#include <dt-bindings/pwm/pwm.h>
++
++#include "meson-g12b-odroid-n2l.dts"
 +
 +/ {
 +	aliases {
 +		mmc0 = &sd_emmc_c; /* eMMC */
 +		mmc1 = &sd_emmc_b; /* SD card */
 +		mmc2 = &sd_emmc_a; /* SDIO */
++	};
++
++	pwmgpio: pwmgpio {
++		compatible = "pwm-gpio";
++		#pwm-cells = <3>;
++		pwm-gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++	};
++
++	pwm-fan {
++		compatible = "pwm-fan";
++		pwms = <&pwmgpio 0 40000 PWM_POLARITY_INVERTED>;
++		cooling-min-state = <0>;
++		cooling-max-state = <3>;
++		#cooling-cells = <2>;
++		cooling-levels = <0 120 170 220>;
 +	};
 +
 +	reboot: odroid-reboot {
@@ -390,112 +289,129 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
 +		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
 +	};
++};
 +
-+	dio2133: audio-amplifier-0 {
-+		compatible = "simple-audio-amplifier";
-+		enable-gpios = <&gpio_ao GPIOAO_2 GPIO_ACTIVE_HIGH>;
-+		VCC-supply = <&vcc_5v>;
-+		sound-name-prefix = "AMP";
++&reboot {
++	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++};
++
++&cpu_opp_table_0 {
++	/delete-node/ opp-100000000;
++	/delete-node/ opp-250000000;
++	/delete-node/ opp-500000000;
++	/delete-node/ opp-667000000;
++	opp-1000000000 {
++		opp-hz = /bits/ 64 <1000000000>;
++		opp-microvolt = <760000>;
 +	};
-+
-+	spdif_dit: audio-codec-1 {
-+		#sound-dai-cells = <0>;
-+		compatible = "linux,spdif-dit";
-+		status = "okay";
-+		sound-name-prefix = "DIT";
++	opp-1200000000 {
++		opp-hz = /bits/ 64 <1200000000>;
++		opp-microvolt = <780000>;
 +	};
-+
-+	sound {
-+		compatible = "amlogic,axg-sound-card";
-+		model = "G12B-ODROID-N2";
-+		audio-aux-devs = <&tdmout_b>, <&tdmout_c>, <&dio2133>;
-+		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
-+				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
-+				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
-+				"TDM_B Playback", "TDMOUT_B OUT",
-+				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
-+				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
-+				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
-+				"TDM_C Playback", "TDMOUT_C OUT",
-+				"SPDIFOUT IN 0", "FRDDR_A OUT 3",
-+				"SPDIFOUT IN 1", "FRDDR_B OUT 3",
-+				"SPDIFOUT IN 2", "FRDDR_C OUT 3",
-+				"AMP INL", "ACODEC LOLP",
-+				"AMP INR", "ACODEC LORP";
-+
-+		assigned-clocks = <&clkc CLKID_HIFI_PLL>,
-+				  <&clkc CLKID_MPLL0>,
-+				  <&clkc CLKID_MPLL1>;
-+		assigned-clock-parents = <0>, <0>, <0>;
-+		assigned-clock-rates = <589824000>,
-+				       <270950400>,
-+				       <393216000>;
-+
-+		status = "okay";
-+
-+		dai-link-0 {
-+			sound-dai = <&frddr_a>;
-+		};
-+
-+		dai-link-1 {
-+			sound-dai = <&frddr_b>;
-+		};
-+
-+		dai-link-2 {
-+			sound-dai = <&frddr_c>;
-+		};
-+
-+		/* 8ch hdmi interface */
-+		dai-link-3 {
-+			sound-dai = <&tdmif_b>;
-+			dai-format = "i2s";
-+			dai-tdm-slot-tx-mask-0 = <1 1>;
-+			dai-tdm-slot-tx-mask-1 = <1 1>;
-+			dai-tdm-slot-tx-mask-2 = <1 1>;
-+			dai-tdm-slot-tx-mask-3 = <1 1>;
-+			mclk-fs = <256>;
-+
-+			codec {
-+				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
-+			};
-+		};
-+
-+		dai-link-4 {
-+			sound-dai = <&tdmif_c>;
-+			dai-format = "i2s";
-+			dai-tdm-slot-tx-mask-0 = <1 1>;
-+			mclk-fs = <256>;
-+
-+			codec {
-+				sound-dai = <&toacodec TOACODEC_IN_C>;
-+			};
-+		};
-+
-+		dai-link-5 {
-+			sound-dai = <&spdifout>;
-+
-+			codec {
-+				sound-dai = <&spdif_dit>;
-+			};
-+		};
-+
-+		dai-link-6 {
-+			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
-+
-+			codec {
-+				sound-dai = <&hdmi_tx>;
-+			};
-+		};
-+
-+		dai-link-7 {
-+			sound-dai = <&toacodec TOACODEC_OUT>;
-+
-+			codec {
-+				sound-dai = <&acodec>;
-+			};
-+		};
++	opp-1398000000 {
++		opp-hz = /bits/ 64 <1398000000>;
++		opp-microvolt = <810000>;
 +	};
++	opp-1512000000 {
++		opp-hz = /bits/ 64 <1512000000>;
++		opp-microvolt = <860000>;
++	};
++	opp-1608000000 {
++		opp-hz = /bits/ 64 <1608000000>;
++		opp-microvolt = <900000>;
++	};
++	opp-1704000000 {
++		opp-hz = /bits/ 64 <1704000000>;
++		opp-microvolt = <960000>;
++	};
++	opp-1800000000 {
++		opp-hz = /bits/ 64 <1800000000>;
++		opp-microvolt = <1020000>;
++	};
++	opp-1908000000 {
++		opp-hz = /bits/ 64 <1908000000>;
++		opp-microvolt = <1030000>;
++	};
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <1040000>;
++	};
++};
 +
++&cpub_opp_table_1 {
++	/delete-node/ opp-100000000;
++	/delete-node/ opp-250000000;
++	/delete-node/ opp-500000000;
++	/delete-node/ opp-667000000;
++	opp-1000000000 {
++		opp-hz = /bits/ 64 <1000000000>;
++		opp-microvolt = <730000>;
++	};
++	opp-1200000000 {
++		opp-hz = /bits/ 64 <1200000000>;
++		opp-microvolt = <750000>;
++	};
++	opp-1398000000 {
++		opp-hz = /bits/ 64 <1398000000>;
++		opp-microvolt = <770000>;
++	};
++	opp-1512000000 {
++		opp-hz = /bits/ 64 <1512000000>;
++		opp-microvolt = <770000>;
++	};
++	opp-1608000000 {
++		opp-hz = /bits/ 64 <1608000000>;
++		opp-microvolt = <780000>;
++	};
++	opp-1704000000 {
++		opp-hz = /bits/ 64 <1704000000>;
++		opp-microvolt = <790000>;
++	};
++	opp-1800000000 {
++		opp-hz = /bits/ 64 <1800000000>;
++		opp-microvolt = <830000>;
++	};
++	opp-1908000000 {
++		opp-hz = /bits/ 64 <1908000000>;
++		opp-microvolt = <860000>;
++	};
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <910000>;
++	};
++	opp-2100000000 {
++		opp-hz = /bits/ 64 <2100000000>;
++		opp-microvolt = <960000>;
++	};
++	opp-2208000000 {
++		opp-hz = /bits/ 64 <2208000000>;
++		opp-microvolt = <1030000>;
++	};
++	opp-2304000000 {
++		opp-hz = /bits/ 64 <2304000000>;
++		opp-microvolt = <1030000>;
++	};
++	opp-2400000000 {
++		opp-hz = /bits/ 64 <2400000000>;
++		opp-microvolt = <1040000>;
++	};
++};
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts	2023-07-11 23:38:52.000000000 -0400
+@@ -0,0 +1,167 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2020 Dongjin Kim <tobetter@gmail.com>
++ *
++ */
++
++/dts-v1/;
++
++#include <dt-bindings/pwm/pwm.h>
++
++#include "meson-g12b-odroid-n2-plus.dts"
++
++/ {
 +	pwmgpio:pwmgpio {
 +		compatible = "pwm-gpio";
 +		#pwm-cells = <3>;
@@ -511,51 +427,16 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +		#cooling-cells = <2>;
 +		cooling-levels = <0 120 170 220>;
 +	};
-+};
 +
-+&cpu_thermal {
-+	trips {
-+		fan_0: trip-point@0 {
-+			temperature = <65000>;
-+			hysteresis = <5000>;
-+			type = "active";
-+		};
-+		fan_1: trip-point@1 {
-+			temperature = <75000>;
-+			hysteresis = <5000>;
-+			type = "active";
-+		};
++	reboot: odroid-reboot {
++		compatible = "odroid,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
++		sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
 +	};
-+	cooling-maps {
-+		fan_cooling_map0 {
-+			trip = <&fan_0>;
-+			cooling-device = <&pwmfan THERMAL_NO_LIMIT 2>;
-+		};
-+		fan_cooling_map1 {
-+			trip = <&fan_1>;
-+			cooling-device = <&pwmfan 2 THERMAL_NO_LIMIT>;
-+		};
-+	};
-+};
-+
-+&i2c2 {
-+	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c2_sda_x_pins>, <&i2c2_sck_x_pins>;
-+};
-+
-+&i2c3 {
-+	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
-+};
-+
-+&sd_emmc_b {
-+	max-frequency = <200000000>;
-+	sd-uhs-sdr12;
-+	sd-uhs-sdr25;
-+	sd-uhs-sdr50;
-+	sd-uhs-sdr104;
 +};
 +
 +&ethmac {
@@ -563,133 +444,11 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +	/delete-property/	reset-names;
 +};
 +
-+//&external_phy {
-+//	/delete-property/	interrupts;
-+//	/delete-property/	interrupts-parent;
-+//};
-+//
-+&gpio {
-+	gpio-line-names =
-+		/* GPIOZ */
-+		"", "", "", "", "", "", "", "",
-+		"", "", "", "", "", "", "", "",
-+		/* GPIOH */
-+		"", "", "", "", "", "", "", "",
-+		"",
-+		/* BOOT */
-+		"", "", "", "", "", "", "", "",
-+		"", "", "", "", "", "", "", "",
-+		/* GPIOC */
-+		"", "", "", "", "", "", "", "",
-+		/* GPIOA */
-+		"PIN_44", /* GPIOA_0 */
-+		"PIN_46", /* GPIOA_1 */
-+		"PIN_45", /* GPIOA_2 */
-+		"PIN_47", /* GPIOA_3 */
-+		"PIN_26", /* GPIOA_4 */
-+		"", "", "", "", "", "",
-+		"PIN_42", /* GPIOA_11 */
-+		"PIN_32", /* GPIOA_12 */
-+		"PIN_7",  /* GPIOA_13 */
-+		"PIN_27", /* GPIOA_14 */
-+		"PIN_28", /* GPIOA_15 */
-+		/* GPIOX */
-+		"PIN_16", /* GPIOX_0 */
-+		"PIN_18", /* GPIOX_1 */
-+		"PIN_22", /* GPIOX_2 */
-+		"PIN_11", /* GPIOX_3 */
-+		"PIN_13", /* GPIOX_4 */
-+		"PIN_33", /* GPIOX_5 */
-+		"PIN_35", /* GPIOX_6 */
-+		"PIN_15", /* GPIOX_7 */
-+		"PIN_19", /* GPIOX_8 */
-+		"PIN_21", /* GPIOX_9 */
-+		"PIN_24", /* GPIOX_10 */
-+		"PIN_23", /* GPIOX_11 */
-+		"PIN_8",  /* GPIOX_12 */
-+		"PIN_10", /* GPIOX_13 */
-+		"PIN_29", /* GPIOX_14 */
-+		"PIN_31", /* GPIOX_15 */
-+		"PIN_12", /* GPIOX_16 */
-+		"PIN_3",  /* GPIOX_17 */
-+		"PIN_5",  /* GPIOX_18 */
-+		"PIN_36"; /* GPIOX_19 */
-+};
-+
 +&gpu_opp_table {
 +	opp-999999984 {
 +		opp-hz = /bits/ 64 <999999984>;
 +		opp-microvolt = <800000>;
 +	};
-+};
-+
-+&spdifout {
-+	pinctrl-0 = <&spdif_out_a13_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&tdmif_b {
-+	pinctrl-0 = <&mclk0_a_pins>, <&tdm_b_fs_pins>, <&tdm_b_sclk_pins>,
-+		    <&tdm_b_dout0_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+
-+	assigned-clocks = <&clkc_audio AUD_CLKID_TDM_MCLK_PAD0>,
-+			  <&clkc_audio AUD_CLKID_TDM_SCLK_PAD1>,
-+			  <&clkc_audio AUD_CLKID_TDM_LRCLK_PAD1>;
-+	assigned-clock-parents = <&clkc_audio AUD_CLKID_MST_B_MCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_B_SCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_B_LRCLK>;
-+	assigned-clock-rates = <0>, <0>, <0>;
-+};
-+
-+&tdmif_c {
-+	status = "okay";
-+	assigned-clocks = <&clkc_audio AUD_CLKID_TDM_MCLK_PAD1>,
-+			  <&clkc_audio AUD_CLKID_TDM_SCLK_PAD2>,
-+			  <&clkc_audio AUD_CLKID_TDM_LRCLK_PAD2>;
-+	assigned-clock-parents = <&clkc_audio AUD_CLKID_MST_C_MCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_C_SCLK>,
-+				 <&clkc_audio AUD_CLKID_MST_C_LRCLK>;
-+	assigned-clock-rates = <0>, <0>, <0>;
-+};
-+
-+&tdmout_c {
-+	status = "okay";
-+};
-+
-+&acodec {
-+	status = "okay";
-+};
-+
-+&toacodec {
-+	status = "okay";
-+};
-+
-+&gpio {
-+	/delete-node/ hog-0;
-+};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2_plus.dts	2023-05-04 03:15:34.000000000 -0400
-@@ -0,0 +1,134 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2020 Dongjin Kim <tobetter@gmail.com>
-+ *
-+ */
-+
-+/dts-v1/;
-+
-+#include "meson-g12b-odroid-n2-plus.dts"
-+#include "meson64_odroidn2.dtsi"
-+
-+/ {
-+	model = "Hardkernel ODROID-N2Plus";
-+};
-+
-+&reboot {
-+	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
 +};
 +
 +&vddcpu_a {
@@ -807,286 +566,118 @@ diff -Naur a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/
 +		opp-microvolt = <1040000>;
 +	};
 +};
---- /dev/null	2023-03-30 04:59:11.183822108 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts	2023-04-04 03:10:21.913274722 -0400
-@@ -0,0 +1,140 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
-+ *
-+ */
-+
-+/dts-v1/;
-+
-+#include "meson-g12b-odroid-n2l.dts"
-+#include "meson64_odroidn2.dtsi"
-+
-+/ {
-+	aliases {
-+		mmc0 = &sd_emmc_c; /* eMMC */
-+		mmc1 = &sd_emmc_b; /* SD card */
-+		mmc2 = &sd_emmc_a; /* SDIO */
-+	};
-+
-+	pwmgpio {
-+		compatible = "pwm-gpio";
-+		#pwm-cells = <3>;
-+		pwm-gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
-+		status = "okay";
-+	};
-+
-+	pwm-fan {
-+		compatible = "pwm-fan";
-+		pwms = <&pwmgpio 0 40000 PWM_POLARITY_INVERTED>;
-+		cooling-min-state = <0>;
-+		cooling-max-state = <3>;
-+		#cooling-cells = <2>;
-+		cooling-levels = <0 120 170 220>;
-+	};
-+};
-+
-+&reboot {
-+	sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
-+};
-+
-+&cpu_opp_table_0 {
-+	/delete-node/ opp-100000000;
-+	/delete-node/ opp-250000000;
-+	/delete-node/ opp-500000000;
-+	/delete-node/ opp-667000000;
-+	opp-1000000000 {
-+		opp-hz = /bits/ 64 <1000000000>;
-+		opp-microvolt = <760000>;
-+	};
-+	opp-1200000000 {
-+		opp-hz = /bits/ 64 <1200000000>;
-+		opp-microvolt = <780000>;
-+	};
-+	opp-1398000000 {
-+		opp-hz = /bits/ 64 <1398000000>;
-+		opp-microvolt = <810000>;
-+	};
-+	opp-1512000000 {
-+		opp-hz = /bits/ 64 <1512000000>;
-+		opp-microvolt = <860000>;
-+	};
-+	opp-1608000000 {
-+		opp-hz = /bits/ 64 <1608000000>;
-+		opp-microvolt = <900000>;
-+	};
-+	opp-1704000000 {
-+		opp-hz = /bits/ 64 <1704000000>;
-+		opp-microvolt = <960000>;
-+	};
-+	opp-1800000000 {
-+		opp-hz = /bits/ 64 <1800000000>;
-+		opp-microvolt = <1020000>;
-+	};
-+	opp-1908000000 {
-+		opp-hz = /bits/ 64 <1908000000>;
-+		opp-microvolt = <1030000>;
-+	};
-+	opp-2016000000 {
-+		opp-hz = /bits/ 64 <2016000000>;
-+		opp-microvolt = <1040000>;
-+	};
-+};
-+
-+&cpub_opp_table_1 {
-+	/delete-node/ opp-100000000;
-+	/delete-node/ opp-250000000;
-+	/delete-node/ opp-500000000;
-+	/delete-node/ opp-667000000;
-+	opp-1000000000 {
-+		opp-hz = /bits/ 64 <1000000000>;
-+		opp-microvolt = <730000>;
-+	};
-+	opp-1200000000 {
-+		opp-hz = /bits/ 64 <1200000000>;
-+		opp-microvolt = <750000>;
-+	};
-+	opp-1398000000 {
-+		opp-hz = /bits/ 64 <1398000000>;
-+		opp-microvolt = <770000>;
-+	};
-+	opp-1512000000 {
-+		opp-hz = /bits/ 64 <1512000000>;
-+		opp-microvolt = <770000>;
-+	};
-+	opp-1608000000 {
-+		opp-hz = /bits/ 64 <1608000000>;
-+		opp-microvolt = <780000>;
-+	};
-+	opp-1704000000 {
-+		opp-hz = /bits/ 64 <1704000000>;
-+		opp-microvolt = <790000>;
-+	};
-+	opp-1800000000 {
-+		opp-hz = /bits/ 64 <1800000000>;
-+		opp-microvolt = <830000>;
-+	};
-+	opp-1908000000 {
-+		opp-hz = /bits/ 64 <1908000000>;
-+		opp-microvolt = <860000>;
-+	};
-+	opp-2016000000 {
-+		opp-hz = /bits/ 64 <2016000000>;
-+		opp-microvolt = <910000>;
-+	};
-+	opp-2100000000 {
-+		opp-hz = /bits/ 64 <2100000000>;
-+		opp-microvolt = <960000>;
-+	};
-+	opp-2208000000 {
-+		opp-hz = /bits/ 64 <2208000000>;
-+		opp-microvolt = <1030000>;
-+	};
-+	opp-2304000000 {
-+		opp-hz = /bits/ 64 <2304000000>;
-+		opp-microvolt = <1030000>;
-+	};
-+	opp-2400000000 {
-+		opp-hz = /bits/ 64 <2400000000>;
-+		opp-microvolt = <1040000>;
-+	};
-+};
 diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi	2023-05-04 10:31:57.128174865 -0400
-@@ -354,7 +354,11 @@
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi	2023-07-11 00:31:05.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi	2023-07-11 23:38:52.000000000 -0400
+@@ -11,9 +11,12 @@
  
- 	bus-width = <4>;
- 	cap-sd-highspeed;
--	max-frequency = <50000000>;
-+	max-frequency = <200000000>;
-+	sd-uhs-sdr12;
-+	sd-uhs-sdr25;
-+	sd-uhs-sdr50;
-+	sd-uhs-sdr104;
- 	disable-wp;
- 
- 	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_LOW>;
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-a311d.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-a311d.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12b-a311d.dtsi	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-a311d.dtsi	2023-05-04 10:45:55.033909346 -0400
-@@ -45,6 +45,14 @@
- 			opp-hz = /bits/ 64 <1800000000>;
- 			opp-microvolt = <1001000>;
- 		};
-+		opp-1908000000 {
-+			opp-hz = /bits/ 64 <1908000000>;
-+			opp-microvolt = <1030000>;
-+		};
-+		opp-2016000000 {
-+			opp-hz = /bits/ 64 <2016000000>;
-+			opp-microvolt = <1040000>;
-+		};
- 	};
- 
- 	cpub_opp_table_1: opp-table-1 {
-@@ -105,5 +113,13 @@
-                         opp-hz = /bits/ 64 <2208000000>;
-                         opp-microvolt = <1011000>;
-                 };
-+		opp-2304000000 {
-+			opp-hz = /bits/ 64 <2304000000>;
-+			opp-microvolt = <1030000>;
-+		};
-+		opp-2400000000 {
-+			opp-hz = /bits/ 64 <2400000000>;
-+			opp-microvolt = <1040000>;
-+		};
- 	};
- };
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
---- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts	2023-05-04 10:45:55.040909243 -0400
-@@ -13,6 +13,15 @@
  / {
- 	compatible = "hardkernel,odroid-n2-plus", "amlogic,s922x", "amlogic,g12b";
- 	model = "Hardkernel ODROID-N2Plus";
-+
-+	reboot: odroid-reboot {
-+		compatible = "odroid,reboot";
-+		sys_reset = <0x84000009>;
-+		sys_poweroff = <0x84000008>;
-+
-+		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
-+		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
-+	};
- };
- 
- &vddcpu_a {
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi	2023-05-04 10:45:55.037909287 -0400
-@@ -116,7 +116,7 @@
- 		linux,cma {
- 			compatible = "shared-dma-pool";
- 			reusable;
--			size = <0x0 0x10000000>;
-+			size = <0x0 0x38000000>;
- 			alignment = <0x0 0x400000>;
- 			linux,cma-default;
- 		};
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi
---- a/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi	2023-05-04 10:45:55.031909375 -0400
-@@ -135,6 +135,22 @@
- 			opp-hz = /bits/ 64 <1908000000>;
- 			opp-microvolt = <950000>;
- 		};
-+
-+		opp-2016000000 {
-+			opp-hz = /bits/ 64 <2016000000>;
-+			opp-microvolt = <1000000>;
-+		};
-+
-+		opp-2100000000 {
-+			opp-hz = /bits/ 64 <2100000000>;
-+			opp-microvolt = <1022000>;
-+		};
-+
-+		opp-2200000000 {
-+			opp-hz = /bits/ 64 <2200000000>;
-+			opp-microvolt = <1030000>;
-+			turbo-mode;
-+		};
+ 	aliases {
+-		serial0 = &uart_AO;
+ 		ethernet0 = &ethmac;
+ 		rtc1 = &vrtc;
++		serial0 = &uart_AO;
++		serial1 = &uart_A;
++		serial2 = &uart_B;
++		serial3 = &uart_C;
  	};
+ 
+ 	chosen {
+@@ -430,12 +433,30 @@
+ 	status = "okay";
  };
  
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts	2023-05-04 03:15:34.000000000 -0400
-@@ -11,6 +11,11 @@
- 	compatible = "hardkernel,odroid-c4", "amlogic,sm1";
- 	model = "Hardkernel ODROID-C4";
- 
-+	aliases {
-+		i2c0 = &i2c2;
-+		i2c1 = &i2c3;
-+	};
++&uart_A {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_a_pins>;
++};
 +
- 	leds {
- 		compatible = "gpio-leds";
+ &uart_AO {
+ 	status = "okay";
+ 	pinctrl-0 = <&uart_ao_a_pins>;
+ 	pinctrl-names = "default";
+ };
  
-diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts	2023-04-23 15:02:52.000000000 -0400
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts	2023-05-04 03:15:34.000000000 -0400
-@@ -73,6 +73,16 @@
- 	sound {
- 		model = "ODROID-HC4";
++&uart_B {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_b_pins>;
++};
++
++&uart_C {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_c_pins>;
++};
++
+ &usb {
+ 	status = "okay";
+ };
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-go-ultra.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-go-ultra.dts
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-go-ultra.dts	2023-07-11 00:31:05.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-go-ultra.dts	2023-07-11 23:38:52.000000000 -0400
+@@ -17,8 +17,8 @@
+ 	model = "Hardkernel ODROID-GO-Ultra";
+ 
+ 	aliases {
+-		serial0 = &uart_AO;
+ 		rtc0 = &vrtc;
++		serial0 = &uart_AO;
  	};
-+
-+	leds {
-+	      compatible = "gpio-leds";
-+	      led-red {
-+		      color = <LED_COLOR_ID_RED>;
-+		      function = LED_FUNCTION_POWER;
-+		      gpios = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
-+		      linux,default-trigger = "default-on";
-+	      };
-+      };
+ 
+ 	adc-joystick-left {
+diff -Naur a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2023-07-11 00:31:05.000000000 -0400
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi	2023-07-11 23:38:52.000000000 -0400
+@@ -10,8 +10,12 @@
+ 
+ / {
+ 	aliases {
+-		serial0 = &uart_AO;
+ 		ethernet0 = &ethmac;
++		serial0 = &uart_AO;
++		serial1 = &uart_A;
++		serial2 = &uart_B;
++		serial3 = &uart_C;
++		serial4 = &uart_AO_B;
+ 	};
+ 
+ 	chosen {
+@@ -450,12 +454,36 @@
+ 	status = "okay";
  };
  
- &cpu_thermal {
++&uart_A {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_a_pins>;
++};
++
+ &uart_AO {
+ 	status = "okay";
+ 	pinctrl-0 = <&uart_ao_a_pins>;
+ 	pinctrl-names = "default";
+ };
+ 
++&uart_AO_B {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_ao_b_8_9_pins>;
++};
++
++&uart_B {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_b_pins>;
++};
++
++&uart_C {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_c_pins>;
++};
++
+ &usb {
+ 	status = "okay";
+ 	vbus-supply = <&usb_pwr_en>;

@@ -1,6 +1,6 @@
 diff -Naur a/arch/arm64/include/asm/system_misc.h b/arch/arm64/include/asm/system_misc.h
---- a/arch/arm64/include/asm/system_misc.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/arch/arm64/include/asm/system_misc.h	2023-05-04 11:23:56.988503362 -0400
+--- a/arch/arm64/include/asm/system_misc.h	2023-07-11 00:31:05.000000000 -0400
++++ b/arch/arm64/include/asm/system_misc.h	2023-07-11 23:38:52.000000000 -0400
 @@ -32,6 +32,8 @@
  struct mm_struct;
  extern void __show_regs(struct pt_regs *);
@@ -11,8 +11,8 @@ diff -Naur a/arch/arm64/include/asm/system_misc.h b/arch/arm64/include/asm/syste
  
  #endif	/* __ASM_SYSTEM_MISC_H */
 diff -Naur a/arch/arm64/kernel/process.c b/arch/arm64/kernel/process.c
---- a/arch/arm64/kernel/process.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/arch/arm64/kernel/process.c	2023-05-04 11:23:57.006503088 -0400
+--- a/arch/arm64/kernel/process.c	2023-07-11 00:31:05.000000000 -0400
++++ b/arch/arm64/kernel/process.c	2023-07-11 23:38:52.000000000 -0400
 @@ -68,6 +68,8 @@
  void (*pm_power_off)(void);
  EXPORT_SYMBOL_GPL(pm_power_off);
@@ -20,7 +20,7 @@ diff -Naur a/arch/arm64/kernel/process.c b/arch/arm64/kernel/process.c
 +void (*arm_pm_restart)(enum reboot_mode reboot_mode, const char *cmd);
 +
  #ifdef CONFIG_HOTPLUG_CPU
- void arch_cpu_idle_dead(void)
+ void __noreturn arch_cpu_idle_dead(void)
  {
 @@ -137,7 +139,10 @@
  		efi_reboot(reboot_mode, NULL);
@@ -35,8 +35,8 @@ diff -Naur a/arch/arm64/kernel/process.c b/arch/arm64/kernel/process.c
  	/*
  	 * Whoops - the architecture was unable to reboot.
 diff -Naur a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
---- a/drivers/power/reset/Kconfig	2023-04-23 15:02:52.000000000 -0400
-+++ b/drivers/power/reset/Kconfig	2023-05-04 03:15:34.000000000 -0400
+--- a/drivers/power/reset/Kconfig	2023-07-11 00:31:05.000000000 -0400
++++ b/drivers/power/reset/Kconfig	2023-07-11 23:38:52.000000000 -0400
 @@ -9,6 +9,13 @@
  
  if POWER_RESET
@@ -52,16 +52,16 @@ diff -Naur a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
  	bool "ams AS3722 power-off driver"
  	depends on MFD_AS3722
 diff -Naur a/drivers/power/reset/Makefile b/drivers/power/reset/Makefile
---- a/drivers/power/reset/Makefile	2023-04-23 15:02:52.000000000 -0400
-+++ b/drivers/power/reset/Makefile	2023-05-04 03:15:34.000000000 -0400
+--- a/drivers/power/reset/Makefile	2023-07-11 00:31:05.000000000 -0400
++++ b/drivers/power/reset/Makefile	2023-07-11 23:38:52.000000000 -0400
 @@ -1,4 +1,5 @@
  # SPDX-License-Identifier: GPL-2.0
 +obj-$(CONFIG_POWER_RESET_ODROID) += odroid-reboot.o
  obj-$(CONFIG_POWER_RESET_AS3722) += as3722-poweroff.o
  obj-$(CONFIG_POWER_RESET_AT91_POWEROFF) += at91-poweroff.o
  obj-$(CONFIG_POWER_RESET_AT91_RESET) += at91-reset.o
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/power/reset/odroid-reboot.c	2023-05-04 03:15:34.000000000 -0400
+--- /dev/null	2023-07-14 00:04:39.233950735 -0400
++++ b/drivers/power/reset/odroid-reboot.c	2023-07-11 23:38:52.000000000 -0400
 @@ -0,0 +1,181 @@
 +/*
 + * drivers/power/reset/odroid-reboot.c
