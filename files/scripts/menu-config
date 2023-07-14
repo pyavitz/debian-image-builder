@@ -29,34 +29,34 @@ DISCOVER=`echo $BOARD`
 if [[ "$DISCOVER" == "$BOARD" ]]; then
 	# overclocking
 	if [[ "$FAMILY_EXT" == "bananapi" || "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$FAMILY_EXT" == "odroid"  || "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk3328" || "$BOARD" == "tinker" || "$BOARD" == "radxazero" ]]; then
-		supported_oc=1
+		SUPPORTED_OC="1"
 	else
-		supported_oc=0
+		SUPPORTED_OC="0"
 	fi
 	# amlogic g12/sm1 series hdmi audio
 	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
-		hdmi_audio=1
+		HDMI_AUDIO="1"
 	else
-		hdmi_audio=0
+		HDMI_AUDIO="0"
 	fi
 	# amlogic g12/sm1 series analog audio
 	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
-		jack_audio=1
+		JACK_AUDIO="1"
 	else
-		jack_audio=0
+		JACK_AUDIO="0"
 	fi
 	# fan control
 	if [[ "$BOARD" == "nanopct4" || "$BOARD" == "odroidxu4" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
-		fan_ctrl=1
+		FAN_CTRL="1"
 	else
-		fan_ctrl=0
+		FAN_CTRL="0"
 	fi
 	# home assistant
 	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "raspi3" || "$BOARD" == "raspi4" ]] \
 		&& [[ "$DISTRO_CODENAME" == "bullseye" ]]; then
-		supported_ha=1
+		SUPPORTED_HA="1"
 	else
-		supported_ha=0
+		SUPPORTED_HA="0"
 	fi
 fi
 }
@@ -110,7 +110,7 @@ whiptail --backtitle "AMLOGIC: Audio Output" --title "Choose" --menu "" --nocanc
 case $SOUND_MIXER in
 	"1)")
 		supported_list
-		if [ $hdmi_audio -eq 1 ]; then
+		if [ $HDMI_AUDIO -eq 1 ]; then
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "HDMI AUDIO" --title "Confirm" --yesno "    Apply HDMI Audio Settings?" 0 0); then
 				amlogic_hdmi
@@ -125,7 +125,7 @@ case $SOUND_MIXER in
 		;;
 	"2)")
 		supported_list
-		if [ $jack_audio -eq 1 ]; then
+		if [ $JACK_AUDIO -eq 1 ]; then
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirm" --yesno "    Apply Analog Audio Settings?" 0 0); then
 				amlogic_analog
@@ -147,12 +147,12 @@ done
 }
 
 overclock(){
-echo "overclock=1" | sudo tee /etc/opt/overclock.txt
+echo 'overclock="1"' | sudo tee /etc/opt/overclock.txt
 sudo service tweaks restart
 }
 
 overclocking(){
-if [ $supported_oc -eq 1 ] > /dev/null 2>&1; then
+if [ $SUPPORTED_OC -eq 1 ] > /dev/null 2>&1; then
 	if (whiptail --backtitle "Board: $DEFAULT_MOTD" --title "$DEFAULT_MOTD" --yesno "   Overclock?" 0 0); then
 		echo ""
 		echo -e "Overclocking: $DEFAULT_MOTD "
@@ -323,7 +323,7 @@ homeAssistant(){
 clear -x
 echo "Installing Home Assistant ..."
 
-if [ $hdmi_audio -eq 1 ]; then
+if [ $HDMI_AUDIO -eq 1 ]; then
 	amlogic_hdmi
 fi
 
@@ -594,7 +594,7 @@ case $CHOICE in
 			"HA)")
 				export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 				supported_list
-				if [[ $supported_ha -eq 1 ]]; then
+				if [[ $SUPPORTED_HA -eq 1 ]]; then
 					if (whiptail --backtitle "Third-party: Home Assistant" --title "Install" --yesno "$HA_NOTES" 0 0); then
 						homeAssistant
 					else
@@ -634,7 +634,7 @@ case $CHOICE in
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					clear -x
 					supported_list
-					if [ $fan_ctrl -eq 1 ] > /dev/null 2>&1; then
+					if [ $FAN_CTRL -eq 1 ] > /dev/null 2>&1; then
 						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
 							if [[ `command -v fan-ctrl` ]]; then
 								fan-ctrl -m
