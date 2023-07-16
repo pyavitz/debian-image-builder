@@ -40,6 +40,26 @@ if [[ "$FAMILY_EXT" == "rk356x" ]]; then
 		echo_bdone
 	fi
 fi
+if [[ "$FAMILY_EXT" == "imx8" ]]; then
+	if [[ `grep -w "detachedHead = false" "/root/.gitconfig"` ]] > /dev/null 2>&1; then :; else git config --global advice.detachedHead false; fi
+	if [[ -d "${FAMILY_EXT}-arm-trusted-firmware" ]]; then
+		echo -en "${WHT}arm trusted firmware${FIN} "
+		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+		cd ${FAMILY_EXT}-arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		git config pull.rebase false
+		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+		git pull -q
+		echo_bdone
+	else
+		echo -en "${WHT}arm trusted firmware${FIN} "
+		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+		git clone -q https://github.com/nxp-imx/imx-atf -b lf-6.1.22-2.0.0 ${FAMILY_EXT}-arm-trusted-firmware
+		cd ${FAMILY_EXT}-arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		echo_bdone
+	fi
+fi
 echo ""
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"

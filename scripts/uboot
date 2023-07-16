@@ -18,6 +18,7 @@ source userdata.txt
 if [ $VERBOSE -eq 1 ]; then
 	set -x
 fi
+# compile native or cross
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
 	CROSSCOMPILE="0"
 fi
@@ -27,7 +28,7 @@ fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
 	CROSSCOMPILE="1"
 fi
-# override userdata file
+# override the user data file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_UBOOT_VERSION ]; then :; else UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
 fi
@@ -51,7 +52,7 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then
 		uboot_precompiled_packaging
 	else
-		source lib/function/fip
+		. lib/function/fip
 		${FAMILY}-uboot-string
 	fi
 fi
@@ -59,11 +60,24 @@ if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "rockchip" ]]; then
 	if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then
 		uboot_precompiled_packaging
 	else
-		source lib/function/atf
+		. lib/function/atf
 		${FAMILY}-uboot-string
 	fi
 fi
-if [[ "$FAMILY" == "broadcom" || "$FAMILY" == "freescale" || "$FAMILY" == "samsung" ]]; then
+if [[ "$FAMILY" == "freescale" ]]; then
+	if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then
+		uboot_precompiled_packaging
+	else
+		if [[ "$FAMILY_EXT" = "imx8" ]]; then
+			. lib/function/atf
+			. lib/function/freescale
+			${FAMILY}-uboot-string
+		else
+			${FAMILY}-uboot-string
+		fi
+	fi
+fi
+if [[ "$FAMILY" == "broadcom" || "$FAMILY" == "samsung" ]]; then
 	${FAMILY}-uboot-string
 fi
 

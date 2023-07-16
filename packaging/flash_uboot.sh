@@ -124,12 +124,19 @@ if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 0 ] && [[ -f "${DIR}/u-boot.bin.s
 fi
 
 # freescale
-if [[ "$FAMILY" == "freescale" ]] && [[ -f "${DIR}/sploader.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
+if [[ "$FAMILY" == "freescale" ]] && [[ "$ARCH" == "arm" ]] && [[ -f "${DIR}/sploader.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
 	target_device
 	sleep .50
 	# flash loader and binary
 	dd if="${DIR}/sploader.bin" of="${MMC}" bs=1k seek=1 conv=sync
 	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=1k seek=69 conv=sync
+	echo -e "You may now reboot."
+fi
+if [[ "$FAMILY" == "freescale" ]] && [[ "$ARCH" == "arm64" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
+	target_device
+	sleep .50
+	# flash binary
+	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=1k seek=33
 	echo -e "You may now reboot."
 fi
 

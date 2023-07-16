@@ -10,7 +10,7 @@ cd ${SRC}
 if [[ -d "u-boot-${UBOOT_VERSION}" ]]; then
 	rm -fdr u-boot-${UBOOT_VERSION}
 fi
-rm -fdr {amlogic-boot-fip-master,rkbin-master,blobs/amlogic-u-boot,u-boot}
+rm -fdr {amlogic-boot-fip-master,imx-mkimage,rkbin-master,blobs/amlogic-u-boot,u-boot}
 }
 
 uboot_search(){
@@ -195,15 +195,30 @@ fi
 # freescale
 freescale-uboot-string(){
 uboot-source
-u-boot
-if [[ -f "u-boot.img" ]]; then
-	mkdir -p ../../${OUTPUT}
-	cp -f SPL ../../${OUTPUT}/sploader.bin
-	cp -f u-boot.img ../../${OUTPUT}/u-boot.bin
-	uboot_packaging
-	echo ""
-else
-	report_error
+if [[ "$ARCH" == "arm" ]]; then
+	u-boot
+	if [[ -f "u-boot.img" ]]; then
+		mkdir -p ../../${OUTPUT}
+		cp -f SPL ../../${OUTPUT}/sploader.bin
+		cp -f u-boot.img ../../${OUTPUT}/u-boot.bin
+		uboot_packaging
+		echo ""
+	else
+		report_error
+	fi
+fi
+if [[ "$ARCH" == "arm64" ]]; then
+	arm-trusted-firmware
+	imx8_uboot
+	imx8_mkimage
+	if [[ -f "u-boot.bin" ]]; then
+		mkdir -p ../../${OUTPUT}
+		cp -f u-boot.bin ../../${OUTPUT}/
+		uboot_packaging
+		echo ""
+	else
+		report_error
+	fi
 fi
 }
 

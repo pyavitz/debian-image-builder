@@ -2,6 +2,138 @@
 
 # U-Boot
 flash_uboot(){
-dd if=${OUTPUT}/sploader.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=1 conv=sync;
-dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=69 conv=sync;
+if [[ "$SERIES" == "imx6q" ]]; then
+	dd if=${OUTPUT}/sploader.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=1 conv=sync
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=69 conv=sync
+fi
+if [[ "$SERIES" == "imx8mp" ]]; then
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=33
+fi
+}
+
+imx8_boot_firmware(){
+# firmware and mods
+cp ../${FAMILY_EXT}-arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin build/
+cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_hdmi_imx8m.bin build/
+cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_dp_imx8m.bin build/
+cp ../firmware-imx-8.17/firmware/ddr/synopsys/lpddr4*.bin build/
+export ATF_LOAD_ADDR=0x970000
+cat >> build/.config << EOF
+CONFIG_ENV_IS_NOWHERE=y
+CONFIG_SD_BOOT=y
+CONFIG_SYS_MMC_ENV_DEV=1
+CONFIG_SYS_MMC_ENV_PART=1
+CONFIG_ENV_IS_IN_SPI_FLASH=n
+CONFIG_ENV_SIZE=0x4000
+CONFIG_ENV_OFFSET=0x700000
+CONFIG_IMX_CONFIG="board/freescale/imx8mp_evk/imximage-8mp-lpddr4.cfg"
+CONFIG_DEFAULT_DEVICE_TREE="imx8mp-evk"
+EOF
+}
+
+imx8_uboot_download(){
+# download
+if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-imx-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-imx-${UBOOT_VERSION}.tar.gz
+	echo_bdone
+else
+	echo ""
+	echo -e "${WHT}Version selected is not available.${FIN}"
+	exit 0
+fi
+}
+
+imx8_uboot(){
+if [[ -f "u-boot-imx-${UBOOT_VERSION}.tar.gz" ]]; then
+	echo -en "${WHT}u-boot-imx-${UBOOT_VERSION}${FIN} "
+	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+else
+	imx8_uboot_download
+fi
+if [[ -d "imx-mkimage" ]]; then
+	echo -en "${WHT}imx-mkimage${FIN} "
+	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+else
+	git clone -q https://github.com/nxp-imx/imx-mkimage -b lf-6.1.22-2.0.0
+fi
+if [[ -f "firmware-imx-8.17.bin" ]] && [[ -d "firmware-imx-8.17" ]]; then
+	echo -en "${WHT}firmware-imx${FIN} "
+	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+else
+	rm -fdr firmware-imx-8.17*
+	cp -f ../files/firmware/imx8/u-boot-firmware-imx-8.17.bin firmware-imx-8.17.bin
+	chmod +x firmware-imx-8.17.bin
+	bash firmware-imx-8.17.bin --auto-accept
+fi
+# extract
+echo ""
+echo_extract
+if [[ -f "u-boot-imx-${UBOOT_VERSION}.tar.gz" ]]; then
+	pv u-boot-imx-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
+	mv -f u-boot-imx-${UBOOT_VERSION} u-boot
+else
+	echo -e "Missing u-boot-imx-${UBOOT_VERSION} tarball."
+	exit 0
+fi
+cp board.txt u-boot/
+cd u-boot
+# patching
+uboot_patching
+# make defconfig
+echo ""
+export ARCH=${ARCH}
+make distclean
+if [ $CROSSCOMPILE -eq 1 ]; then
+	echo -e "${GRN}  CC${FIN}"
+	make O=build -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
+else
+	echo -e "${GRN}  NC${FIN}"
+	make O=build -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG}
+fi
+${FAMILY_EXT}_boot_firmware
+# menuconfig
+if [ $MENUCONFIG -eq 1 ]; then
+	if [ $CROSSCOMPILE -eq 1 ]; then
+		echo -e "${GRN}  CC${FIN}"
+		make O=build -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make O=build -j${CORES} CC=${NATIVE} menuconfig
+	fi
+fi
+# compile
+echo
+echo_cuboot
+if [ $CROSSCOMPILE -eq 1 ]; then
+	echo -e "${GRN}  CC${FIN}"
+	echo -e "  GCC     ${DEST}/${COMPILER}"
+	make O=build -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE}
+else
+	echo -e "${GRN}  NC${FIN}"
+	echo -e "  GCC     ${DEST}/${COMPILER}"
+	make O=build -j${CORES} CC=${NATIVE}
+fi
+cd ..
+}
+
+imx8_mkimage(){
+cd imx-mkimage
+cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_hdmi_imx8m.bin iMX8M/
+cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_dp_imx8m.bin iMX8M/
+cp ../firmware-imx-8.17/firmware/ddr/synopsys/lpddr4*.bin iMX8M/
+cp ../u-boot/build/spl/u-boot-spl.bin iMX8M/
+cp ../u-boot/build/arch/arm/dts/imx8mp-evk.dtb iMX8M/imx8mp-evk.dtb
+cp ../u-boot/build/u-boot-nodtb.bin iMX8M/
+cp ../u-boot/build/tools/mkimage iMX8M/mkimage_uboot
+cp ../${FAMILY_EXT}-arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin iMX8M/
+cp ../u-boot/build/u-boot.bin iMX8M/
+make SOC=iMX8MP dtbs=imx8mp-evk.dtb flash_hdmi_spl_uboot
+if [[ -f "iMX8M/flash.bin" ]]; then
+	cp -f iMX8M/flash.bin ../u-boot/u-boot.bin
+	cd ../u-boot
+else
+	report_error
+fi
 }
