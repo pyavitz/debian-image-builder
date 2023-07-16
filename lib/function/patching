@@ -195,13 +195,10 @@ linux_patching(){
 # packaging
 linux_packaging
 # patching
-if [[ ! -z $VENDOR_KERNEL ]]; then
-	user_patches
-else
-	if [[ "$FORCE_GITHUB" == "false" ]]; then
-		dryrun; check; apply; user_patches;
-	fi
+if [[ "$LINUX_PATCHING" == "true" ]]; then
+	dryrun; check; apply
 fi
+user_patches
 # clean
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
