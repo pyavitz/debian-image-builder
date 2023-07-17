@@ -47,18 +47,38 @@ if [[ "$SERIES" == "sun50i-a64" || "$SERIES" == "sun50i-h5" ]]; then
 fi
 }
 
+report_atf_error (){
+echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
+echo ""
+exit 0
+}
+
 atf_function(){ # place bl31 file.
 if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
-	cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
+	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin" ]]; then
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
+	else
+		report_atf_error
+	fi
 	crust_firmware
 fi
 if [[ "$FAMILY_EXT" == "imx8" ]]; then
-	cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin bl31.bin
+	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin" ]]; then
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin bl31.bin
+	else
+		report_atf_error
+	fi
 	cp ../firmware-imx-8.17/firmware/ddr/synopsys/lpddr4*.bin .
+	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_hdmi_imx8m.bin .
+	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_dp_imx8m.bin .
 fi
 if [[ "$FAMILY" == "rockchip" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-		cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
+		if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
+			cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
+		else
+			report_atf_error
+		fi
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
 		RK35="../../files/boot/rk35"
@@ -72,10 +92,10 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		cp -f ${RKBIN_RAM} ram_init.bin
 	fi
 fi
-if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$UBOOT_VERSION" == "v2023.04" ]]; then
-	#export BL31="bl31.elf"
-	export ROCKCHIP_TPL="${RKBIN_RAM}"
-fi
+#if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$UBOOT_VERSION" == "v2023.04" ]]; then
+#	#export BL31="bl31.elf"
+#	export ROCKCHIP_TPL="${RKBIN_RAM}"
+#fi
 }
 
 u-boot(){
