@@ -195,6 +195,17 @@ linux_patching(){
 # packaging
 linux_packaging
 # patching
+if [[ "$FORCE_GITHUB" = "true" ]] && [[ "$LINUX_PATCHING" == "true" ]]; then
+	# Allow patching against the vendor source tree.
+	# As this is a special use case both variables need to be set
+	# to true to enable the feature. This requires user attention
+	# and knowledge of patch creation.
+	#
+	# Where to place patches? 'patches/$FAMILY/$GITHUB_BRANCH_VERSION'
+	# This may vary depending on the platform so review the LINUX_PATCHDIR
+	# variable in the $board file.
+	LINUX_VERSION="${GITHUB_BRANCH_VERSION}"
+fi
 if [[ "$LINUX_PATCHING" == "true" ]]; then
 	dryrun; check; apply
 fi
