@@ -209,6 +209,7 @@ reset:
 list:
 	# Boards
 	@ls lib/boards/
+
 config:
 	# Please be patient
 	@chmod +x ${CONF}
