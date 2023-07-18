@@ -79,22 +79,6 @@ help:
 	@echo ""
 	@echo "\t\t\t\e[1;31mDebian Image Builder\e[0m"
 	@echo "\t\t\t\e[1;37m********************\e[0m"
-	@echo "\e[1;37mBoards:\e[0m"
-	@echo "  Allwinner:  nanopim1 nanopineo nanopineoplus2 nanopir1 orangepione"
-	@echo "              orangepipc orangepir1 pinea64plus tritium"
-	@echo ""
-	@echo "  Amlogic:    bananapicm4 bananapim5 lepotato odroidc4 odroidhc4 odroidn2"
-	@echo "              odroidn2l odroidn2plus radxazero x96air"
-	@echo ""
-	@echo "  Broadcom:   raspizero raspi2 raspi3 raspi3-32b raspi4"
-	@echo ""
-	@echo "  Rockchip:   nanopct4 odroidm1 renegade rock64 rockpro64 tinker"
-	@echo ""
-	@echo "  Samsung:    odroidxu4"
-	@echo ""
-	@echo "  WIP:        cubietruck cuboxi bananapim2zero bananapip2zero khadasedge2"
-	@echo "              nanopir4s nanopir4se nanopir5c nanopir5s odroidc1 orangepi5"
-	@echo "              indiedroid-nova pinebookpro radxae25 rock5b"
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install x86_64 dependencies"
@@ -105,6 +89,7 @@ help:
 	@echo "  make purge                   Remove sources directory"
 	@echo "  make purge-all               Remove sources and output directory"
 	@echo ""
+	@echo "  make list                    Boards"
 	@echo "  make uboot board=XXX         Build u-boot"
 	@echo "  make kernel board=XXX        Build linux kernel package"
 	@echo "  make rootfs board=XXX        Create rootfs tarball"
@@ -220,6 +205,10 @@ reset:
 	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"_defconfig"'"/" userdata.txt)
 
+# LIST BOARDS
+list:
+	# Boards
+	@ls lib/boards/
 config:
 	# Please be patient
 	@chmod +x ${CONF}
