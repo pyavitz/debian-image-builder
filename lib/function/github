@@ -32,11 +32,21 @@ fi
 extra_wireless
 }
 
+report_github_tarball_error (){
+echo "NOTICE: Tarball ${VENDOR_KERNEL}-${VERSION} is MIA. Please make a report."
+echo ""
+exit 0
+}
+
 vendor_extract(){
 echo ""
-echo_extract
-pv ${VENDOR_KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-mv -f ${VENDOR_KERNEL}-${VERSION} linux-${VERSION}
+if [[ -f "${VENDOR_KERNEL}-${VERSION}.tar.gz" ]]; then
+	echo_extract
+	pv ${VENDOR_KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+	mv -f ${VENDOR_KERNEL}-${VERSION} linux-${VERSION}
+else
+	report_github_tarball_error
+fi
 if [[ -e "linux-${VERSION}/debian" ]]; then
 	rm -fdr linux-${VERSION}/debian
 fi

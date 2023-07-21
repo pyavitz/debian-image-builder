@@ -100,16 +100,30 @@ fi
 extra_wireless
 }
 
+report_tarball_error (){
+echo "NOTICE: Tarball ${KERNEL}-${VERSION} is MIA. Please make a report."
+echo ""
+exit 0
+}
+
 stable_extract(){
 echo ""
-echo_extract
-pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+	echo_extract
+	pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+else
+	report_tarball_error
+fi
 }
 
 mainline_extract(){
 echo ""
-echo_extract
-pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
+	echo_extract
+	pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+else
+	report_tarball_error
+fi
 }
 
 setup(){
