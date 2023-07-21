@@ -1,5 +1,43 @@
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723ds.c	2023-06-22 13:52:09.000000000 -0400
+From 33e2d64ebc667de18533aadd24b9afa5a77c15a4 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Fri, 21 Jul 2023 17:05:34 -0400
+Subject: [PATCH] drivers: net: wireless: realtek: rtw88: upstream wireless
+
+linux-next backport: linux-6.1.y
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../net/wireless/realtek/rtw88/rtw8723ds.c    |   41 +
+ .../net/wireless/realtek/rtw88/rtw8723du.c    |   36 +
+ .../net/wireless/realtek/rtw88/rtw8821cs.c    |   36 +
+ .../net/wireless/realtek/rtw88/rtw8821cu.c    |   50 +
+ .../net/wireless/realtek/rtw88/rtw8822bs.c    |   36 +
+ .../net/wireless/realtek/rtw88/rtw8822bu.c    |   90 ++
+ .../net/wireless/realtek/rtw88/rtw8822cs.c    |   36 +
+ .../net/wireless/realtek/rtw88/rtw8822cu.c    |   44 +
+ drivers/net/wireless/realtek/rtw88/sdio.c     | 1416 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/sdio.h     |  178 +++
+ drivers/net/wireless/realtek/rtw88/usb.c      |  931 +++++++++++
+ drivers/net/wireless/realtek/rtw88/usb.h      |  107 ++
+ 12 files changed, 3001 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723ds.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cs.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822bs.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822bu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822cs.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822cu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sdio.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sdio.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/usb.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/usb.h
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723ds.c b/drivers/net/wireless/realtek/rtw88/rtw8723ds.c
+new file mode 100644
+index 000000000000..e5b6960ba0a0
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723ds.c
 @@ -0,0 +1,41 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) Martin Blumenstingl <martin.blumenstingl@googlemail.com>
@@ -42,8 +80,11 @@
 +MODULE_AUTHOR("Martin Blumenstingl <martin.blumenstingl@googlemail.com>");
 +MODULE_DESCRIPTION("Realtek 802.11n wireless 8723ds driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723du.c b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
+new file mode 100644
+index 000000000000..322a805da76b
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
 @@ -0,0 +1,36 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
@@ -81,8 +122,11 @@
 +MODULE_AUTHOR("Hans Ulli Kroll <linux@ulli-kroll.de>");
 +MODULE_DESCRIPTION("Realtek 802.11n wireless 8723du driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821cs.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cs.c b/drivers/net/wireless/realtek/rtw88/rtw8821cs.c
+new file mode 100644
+index 000000000000..a359413369a4
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821cs.c
 @@ -0,0 +1,36 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) Martin Blumenstingl <martin.blumenstingl@googlemail.com>
@@ -120,8 +164,11 @@
 +MODULE_AUTHOR("Martin Blumenstingl <martin.blumenstingl@googlemail.com>");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless 8821cs driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cu.c b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+new file mode 100644
+index 000000000000..7a5cbdc31ef7
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
 @@ -0,0 +1,50 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
@@ -173,8 +220,11 @@
 +MODULE_AUTHOR("Hans Ulli Kroll <linux@ulli-kroll.de>");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless 8821cu driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822bs.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822bs.c b/drivers/net/wireless/realtek/rtw88/rtw8822bs.c
+new file mode 100644
+index 000000000000..31d8645f83bd
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822bs.c
 @@ -0,0 +1,36 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) Jernej Skrabec <jernej.skrabec@gmail.com>
@@ -212,8 +262,11 @@
 +MODULE_AUTHOR("Jernej Skrabec <jernej.skrabec@gmail.com>");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822bs driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822bu.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822bu.c b/drivers/net/wireless/realtek/rtw88/rtw8822bu.c
+new file mode 100644
+index 000000000000..ab620a0b1dfc
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822bu.c
 @@ -0,0 +1,90 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
@@ -305,8 +358,11 @@
 +MODULE_AUTHOR("Realtek Corporation");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822bu driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822cs.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822cs.c b/drivers/net/wireless/realtek/rtw88/rtw8822cs.c
+new file mode 100644
+index 000000000000..975e81c824f2
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822cs.c
 @@ -0,0 +1,36 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) Martin Blumenstingl <martin.blumenstingl@googlemail.com>
@@ -344,8 +400,11 @@
 +MODULE_AUTHOR("Martin Blumenstingl <martin.blumenstingl@googlemail.com>");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822cs driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822cu.c b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
+new file mode 100644
+index 000000000000..af28ca09d41f
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
 @@ -0,0 +1,44 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
@@ -391,8 +450,11 @@
 +MODULE_AUTHOR("Realtek Corporation");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822cu driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-07-07 19:42:40.585806232 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c	2023-07-10 05:58:23.384448785 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+new file mode 100644
+index 000000000000..b19262ec5d8c
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
 @@ -0,0 +1,1416 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright (C) 2021 Martin Blumenstingl <martin.blumenstingl@googlemail.com>
@@ -1810,8 +1872,11 @@
 +MODULE_AUTHOR("Jernej Skrabec");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless SDIO driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.h	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+new file mode 100644
+index 000000000000..3c659ed180f0
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sdio.h
 @@ -0,0 +1,178 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright (C) 2021 Martin Blumenstingl <martin.blumenstingl@googlemail.com>
@@ -1991,8 +2056,11 @@
 +}
 +
 +#endif
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+new file mode 100644
+index 000000000000..4a57efdba97b
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
 @@ -0,0 +1,931 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
@@ -2925,8 +2993,11 @@
 +MODULE_AUTHOR("Realtek Corporation");
 +MODULE_DESCRIPTION("Realtek 802.11ac wireless USB driver");
 +MODULE_LICENSE("Dual BSD/GPL");
---- /dev/null	2023-06-17 08:32:20.061755428 -0400
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h	2023-06-22 13:52:09.000000000 -0400
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
+new file mode 100644
+index 000000000000..ad1d7955c6a5
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/usb.h
 @@ -0,0 +1,107 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright(c) 2018-2019  Realtek Corporation
@@ -3035,3 +3106,6 @@
 +void rtw_usb_disconnect(struct usb_interface *intf);
 +
 +#endif
+-- 
+2.39.2
+
