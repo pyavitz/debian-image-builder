@@ -209,19 +209,6 @@ if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO
 	fi
 fi
 
-# blacklist old rtl8188eu wireless module
-mkdir -p /etc/modprobe.d
-if [ $RTL8188EU -eq 1 ]; then
-	echo "blacklist r8188eu" > /etc/modprobe.d/50-8188eu.conf
-	chown root:root /etc/modprobe.d/50-8188eu.conf
-	if [ -f /lib/firmware/rtlwifi/rtl8188eufw.bin ]; then
-		:;
-	else
-		mkdir -p /lib/firmware/rtlwifi
-		wget -cq https://github.com/armbian/firmware/raw/master/rtlwifi/rtl8188eufw.bin -P /lib/firmware/rtlwifi/
-	fi
-fi
-
 # ifupdown interfaces and wpa_supplicant files
 tee /etc/network/interfaces <<EOF
 # Interfaces

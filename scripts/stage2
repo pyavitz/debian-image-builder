@@ -410,17 +410,32 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 fi
 
 # Network Setup
-realtek_conf > /dev/null 2>&1
-if [ $NETWORKMANAGER -eq 1 ]; then
-	networkmanager-setup > /dev/null 2>&1
-	networkmanager-credentials > /dev/null 2>&1
+if [ $VERBOSE -eq 1 ]; then
+	realtek_conf
+	if [ $NETWORKMANAGER -eq 1 ]; then
+		networkmanager-setup
+		networkmanager-credentials
+	else
+		ifupdown-setup
+		ifupdown-credentials
+		router_ifupdown
+	fi
+	if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" || "$DISTRO" == "ubuntu" ]]; then
+		credentials_service
+	fi
 else
-	ifupdown-setup > /dev/null 2>&1
-	ifupdown-credentials > /dev/null 2>&1
-	router_ifupdown > /dev/null 2>&1
-fi
-if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" || "$DISTRO" == "ubuntu" ]]; then
-	credentials_service > /dev/null 2>&1
+	realtek_conf > /dev/null 2>&1
+	if [ $NETWORKMANAGER -eq 1 ]; then
+		networkmanager-setup > /dev/null 2>&1
+		networkmanager-credentials > /dev/null 2>&1
+	else
+		ifupdown-setup > /dev/null 2>&1
+		ifupdown-credentials > /dev/null 2>&1
+		router_ifupdown > /dev/null 2>&1
+	fi
+	if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" || "$DISTRO" == "ubuntu" ]]; then
+		credentials_service > /dev/null 2>&1
+	fi
 fi
 
 # Allocate zramswap
