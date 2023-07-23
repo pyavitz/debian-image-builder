@@ -124,7 +124,7 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
-#### Extra wireless support
+#### Extra wireless
 ```sh
 # change from 0 to 1
 RTL88XXAU:		# Realtek 8812AU/21AU wireless support
