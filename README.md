@@ -77,12 +77,6 @@ Menuconfig:		# Run uboot and kernel menuconfig
 Compiler:		# GNU Compiler Collection
 Caching on:		# Ccache
 
-Extra wireless support
-RTL88XXAU:		# Realtek 8812AU/21AU wireless support
-RTL88X2BU:		# Realtek 88X2BU wireless support
-RTL88XXCU:		# Realtek 8811CU/21CU wireless support
-RTL8188EU:		# Realtek 8188EU wireless support
-
 Customize
 Defconfig:		# User defconfig
 Name:			# Name of _defconfig (must be placed in defconfig dir.)
@@ -130,12 +124,14 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
-#### Aircrack (rtl88XXau)
-
+#### Extra wireless support
 ```sh
 # change from 0 to 1
-AIRCRACK=0
+RTL88XXAU:		# Realtek 8812AU/21AU wireless support
+RTL88X2BU:		# Realtek 88X2BU wireless support
+RTL88XXCU:		# Realtek 8811CU/21CU wireless support
 ```
+
 #### Amlogic eMMC boot (u-boot only)
 ```sh
 # change from 0 to 1
