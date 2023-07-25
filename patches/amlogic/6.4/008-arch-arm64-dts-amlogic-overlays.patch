@@ -1,0 +1,520 @@
+From df3bc8b1b56aa5d5ecc832bc712f8085a58cca47 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 25 Jul 2023 15:05:12 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: overlays
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ Makefile                                      |  2 +-
+ arch/arm64/boot/.gitignore                    |  2 +
+ arch/arm64/boot/dts/amlogic/Makefile          |  2 +
+ arch/arm64/boot/dts/amlogic/overlays/Makefile | 20 ++++++++++
+ .../overlays/meson-g12-gxl-cma-pool-896MB.dts | 19 ++++++++++
+ .../overlays/meson-g12a-gpio-10-led.dts       | 26 +++++++++++++
+ .../overlays/meson-g12a-gpio-8-led.dts        | 26 +++++++++++++
+ ...meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts | 15 ++++++++
+ .../meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts  | 15 ++++++++
+ ...meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts | 15 ++++++++
+ ...meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts | 15 ++++++++
+ .../overlays/meson-g12a-pwm-c-on-gpiox-8.dts  | 17 +++++++++
+ .../meson-g12a-pwmao-a-on-gpioao-11.dts       | 17 +++++++++
+ .../overlays/meson-g12a-spi-spidev.dts        | 38 +++++++++++++++++++
+ ...on-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts | 15 ++++++++
+ ...on-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts | 15 ++++++++
+ ...on-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts | 15 ++++++++
+ .../amlogic/overlays/meson-g12a-uart-ee-c.dts | 15 ++++++++
+ .../overlays/meson-sm1-x96-air-rtc.dts        | 11 ++++++
+ scripts/Makefile.dtbinst                      |  3 +-
+ scripts/Makefile.lib                          | 13 +++++++
+ 21 files changed, 314 insertions(+), 2 deletions(-)
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/Makefile
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-8-led.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts
+
+diff --git a/Makefile b/Makefile
+index 6c940cce3656..7b4c8f94e5ac 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1471,7 +1471,7 @@ ifneq ($(dtstree),)
+ 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
+ 
+ %.dtbo: dtbs_prepare
+-	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
++	$(Q)$(MAKE) $(build)=$(dtstree)/overlays $(dtstree)/overlays/$@
+ 
+ PHONY += dtbs dtbs_prepare dtbs_install dtbs_check
+ dtbs: dtbs_prepare
+diff --git a/arch/arm64/boot/.gitignore b/arch/arm64/boot/.gitignore
+index af5dc61f8b43..a5ce68fdfa7f 100644
+--- a/arch/arm64/boot/.gitignore
++++ b/arch/arm64/boot/.gitignore
+@@ -2,3 +2,5 @@
+ Image
+ Image.gz
+ vmlinuz*
++*.dtb*
++*.scr
+diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+index e213aeebb774..7af675846c13 100644
+--- a/arch/arm64/boot/dts/amlogic/Makefile
++++ b/arch/arm64/boot/dts/amlogic/Makefile
+@@ -1,4 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
++subdir-y += overlays
++
+ dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j100.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j110-rev-2.dtb
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts/amlogic/overlays/Makefile
+new file mode 100644
+index 000000000000..a2f9e2277c84
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile
+@@ -0,0 +1,20 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	meson-g12a-gpio-8-led.dtbo \
++	meson-g12a-gpio-10-led.dtbo \
++	meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dtbo \
++	meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dtbo \
++	meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dtbo \
++	meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dtbo \
++	meson-g12a-pwmao-a-on-gpioao-11.dtbo \
++	meson-g12a-pwm-c-on-gpiox-8.dtbo \
++	meson-g12a-spi-spidev.dtbo \
++	meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dtbo \
++	meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
++	meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
++	meson-g12a-uart-ee-c.dtbo \
++	meson-g12-gxl-cma-pool-896MB.dtbo \
++	meson-sm1-x96-air-rtc.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
+new file mode 100644
+index 000000000000..f8c476b04e8c
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
+@@ -0,0 +1,19 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "amlogic,g12a", "amlogic,g12b", "amlogic,meson-gxl";
++
++	fragment@0 {
++		target-path = "/reserved-memory";
++		__overlay__ {
++			linux,cma {
++				compatible = "shared-dma-pool";
++				reusable;
++				size = <0x0 0x38000000>;
++				alignment = <0x0 0x400000>;
++				linux,cma-default;
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts
+new file mode 100644
+index 000000000000..d76430328955
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-10-led.dts
+@@ -0,0 +1,26 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target-path = "/";
++			__overlay__ {
++
++			leds {
++				compatible = "gpio-leds";
++
++				led-green {
++					label = "radxa-zero:green";
++					gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
++					linux,default-trigger = "heartbeat";
++					default-state = "on";
++				};
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-8-led.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-8-led.dts
+new file mode 100644
+index 000000000000..9b294e97f79f
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-gpio-8-led.dts
+@@ -0,0 +1,26 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target-path = "/";
++			__overlay__ {
++
++			leds {
++				compatible = "gpio-leds";
++
++				led-green {
++					label = "radxa-zero:green";
++					gpios = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
++					linux,default-trigger = "heartbeat";
++					default-state = "on";
++				};
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
+new file mode 100644
+index 000000000000..259d716a3032
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c_AO>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c_ao_sck_pins &i2c_ao_sda_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
+new file mode 100644
+index 000000000000..0e90126470d5
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c1>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c1_sda_h6_pins &i2c1_sck_h7_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
+new file mode 100644
+index 000000000000..2fc602fdce3c
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c1>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c1_sda_x_pins &i2c1_sck_x_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
+new file mode 100644
+index 000000000000..8353308cd850
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c3>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c3_sck_a_pins &i2c3_sda_a_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts
+new file mode 100644
+index 000000000000..e73604e07e97
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwm-c-on-gpiox-8.dts
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&pwm_cd>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&pwm_c_x8_pins>;
++			pinctrl-names = "default";
++			clocks = <&xtal>;
++			clock-names = "clkin2";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts
+new file mode 100644
+index 000000000000..0739d6710b16
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-pwmao-a-on-gpioao-11.dts
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&pwm_AO_ab>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&pwm_ao_a_pins>;
++			pinctrl-names = "default";
++			clocks = <&xtal>;
++			clock-names = "clkin3";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts
+new file mode 100644
+index 000000000000..2cca485b09c9
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-spi-spidev.dts
+@@ -0,0 +1,38 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&spicc0>;
++		__overlays__ {
++			pinctrl-0 = <&spicc0_x_pins &spicc0_ss0_x_pins>;
++			pinctrl-names = "default";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev@0 {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <10000000>;
++			};
++		};
++	};
++
++	fragment@1 {
++		target = <&spicc1>;
++		__overlays__ {
++			pinctrl-0 = <&spicc1_pins &spicc1_ss0_pins>;
++			pinctrl-names = "default";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev@0 {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <10000000>;
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
+new file mode 100644
+index 000000000000..9a5ac2a24993
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_a_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
+new file mode 100644
+index 000000000000..e794e7c69928
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_b_tx_2_rx_3_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
+new file mode 100644
+index 000000000000..ccbc84aea2f4
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_b_tx_8_rx_9_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts
+new file mode 100644
+index 000000000000..0e467530e75f
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-g12a-uart-ee-c.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_C>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_c_pins &uart_c_cts_rts_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts
+new file mode 100644
+index 000000000000..e803198b5bc5
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts
+@@ -0,0 +1,11 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	fragment@0 {
++		target = <&i2c1>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff --git a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
+index 190d781e84f4..84c46c081218 100644
+--- a/scripts/Makefile.dtbinst
++++ b/scripts/Makefile.dtbinst
+@@ -18,9 +18,10 @@ include $(srctree)/scripts/Kbuild.include
+ include $(src)/Makefile
+ 
+ dtbs    := $(addprefix $(dst)/, $(dtb-y) $(if $(CONFIG_OF_ALL_DTBS),$(dtb-)))
++dtbos   := $(addprefix $(dst)/, $(dtbo-y) $(if $(CONFIG_OF_ALL_DTBS),$(dtb-)))
+ subdirs := $(addprefix $(obj)/, $(subdir-y) $(subdir-m))
+ 
+-__dtbs_install: $(dtbs) $(subdirs)
++__dtbs_install: $(dtbs) $(dtbos) $(subdirs)
+ 	@:
+ 
+ quiet_cmd_dtb_install = INSTALL $@
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 3aa384cec76b..ecae974bd58c 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -339,6 +339,7 @@ DTC_FLAGS += -Wno-interrupt_provider
+ # Disable noisy checks by default
+ ifeq ($(findstring 1,$(KBUILD_EXTRA_WARN)),)
+ DTC_FLAGS += -Wno-unit_address_vs_reg \
++	-Wno-gpios_property \
+ 	-Wno-avoid_unnecessary_addr_size \
+ 	-Wno-alias_paths \
+ 	-Wno-graph_child_address \
+@@ -408,6 +409,18 @@ $(obj)/%.dtb: $(src)/%.dts $(DTC) $(DT_TMP_SCHEMA) FORCE
+ $(obj)/%.dtbo: $(src)/%.dts $(DTC) FORCE
+ 	$(call if_changed_dep,dtc)
+ 
++quiet_cmd_dtco = DTCO    $@
++cmd_dtco = mkdir -p $(dir ${dtc-tmp}) ; \
++	$(CPP) $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ; \
++	$(DTC) -@ -H epapr -O dtb -o $@ -b 0 \
++		-i $(dir $<) $(DTC_FLAGS) \
++		-Wno-interrupts_property \
++		-d $(depfile).dtc.tmp $(dtc-tmp) ; \
++	cat $(depfile).pre.tmp $(depfile).dtc.tmp > $(depfile)
++
++$(obj)/%.dtbo: $(obj)/%.dts FORCE
++	$(call if_changed_dep,dtco)
++
+ dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
+ 
+ # Bzip2
+-- 
+2.39.2
+

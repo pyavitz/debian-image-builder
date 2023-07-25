@@ -120,6 +120,7 @@ if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
 		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
+# rockchip
 if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 		if [[ `ls ../../${LINUX_PATCHDIR}/../all/*.patch` ]] > /dev/null 2>&1; then
@@ -128,7 +129,24 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; t
 		fi
 	fi
 fi
-if [[ "$FAMILY" == "amlogic" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
+# amlogic: all
+if [[ "$FAMILY" == "amlogic" ]] && [[ -d "../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/all/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# amlogic: hacks: meson-gx-mmc: set core clock phase to 270
+if [[ "$FAMILY" == "amlogic" ]] && [[ "$BOARD" == "bananapim2pro" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]] \
+	&& [[ -d "../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/hack/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# amlogic: odroids
+if [[ "$FAMILY" == "amlogic" ]] && [[ "$FAMILY_EXT" == "odroid" ]] \
+	&& [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch; do patch --dry-run -N -p1 < $i; done >> ${LOG_FILE}
@@ -175,6 +193,7 @@ if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
 		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
+# rockchip
 if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 		if [[ `ls ../../${LINUX_PATCHDIR}/../all/*.patch` ]] > /dev/null 2>&1; then
@@ -183,7 +202,24 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; t
 		fi
 	fi
 fi
-if [[ "$FAMILY" == "amlogic" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
+# amlogic: all
+if [[ "$FAMILY" == "amlogic" ]] && [[ -d "../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/all/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/all/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# amlogic: hacks: meson-gx-mmc: set core clock phase to 270
+if [[ "$FAMILY" == "amlogic" ]] && [[ "$BOARD" == "bananapim2pro" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]] \
+	&& [[ -d "../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/hack/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# amlogic: odroids
+if [[ "$FAMILY" == "amlogic" ]] && [[ "$FAMILY_EXT" == "odroid" ]] \
+	&& [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
