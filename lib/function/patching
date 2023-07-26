@@ -10,6 +10,34 @@ if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
 fi
 }
 
+# check log and report
+check_log(){
+if [[ -f "${LOG_FILE}" ]]; then
+	if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
+		SKIPPING="true"
+		grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
+	else
+		SKIPPING="false"
+	fi
+	if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
+		FAILED="true"
+		grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
+		if [ $VERBOSE -eq 1 ]; then
+			exit 0
+		fi
+	else
+		FAILED="false"
+	fi
+fi
+if [[ "$SKIPPING" == "true" ]] && [[ "$FAILED" == "false" ]]; then
+	echo -en " ${PNK}[${FIN}${YLW}done${FIN}${PNK}]${FIN}"
+fi
+if [[ "$SKIPPING" == "false" ]] && [[ "$FAILED" == "false" ]]; then
+	echo -en " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+fi
+echo -e ""
+}
+
 # uboot patch log
 uboot_log(){
 LOG_DIR="../../output/logs"
@@ -23,45 +51,6 @@ else
 	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
 	echo `date` >> ${LOG_FILE}
 fi
-}
-
-# u-boot patching
-uboot_patching(){
-# apply patches
-if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
-	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
-		[[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-	uboot_log
-	echo ""
-	echo "" >> ${LOG_FILE}
-	echo "# APPLYING PATCHES" >> ${LOG_FILE}
-	echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}";
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
-	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
-	fi
-	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
-	fi
-fi
-# check log and report
-if [[ -f "${LOG_FILE}" ]]; then
-	if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
-		grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
-	fi
-	if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
-		grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
-		if [ $VERBOSE -eq 1 ]; then
-			exit 0
-		fi
-	fi
-fi
-# clean
-if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
-if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
-echo -e ""
 }
 
 # linux patch log
@@ -79,13 +68,42 @@ else
 fi
 }
 
+# u-boot patching
+uboot_patching(){
+# apply patches
+if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
+	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
+		[[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
+	uboot_log
+	echo ""
+	echo "" >> ${LOG_FILE}
+	echo "# APPLYING PATCHES" >> ${LOG_FILE}
+	echo -en "${WHT}Patches${FIN} ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}"
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+	if [[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# check log and report
+check_log
+# clean
+if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
+if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
+echo -e ""
+}
+
 # linux apply patches
 apply(){
 linux_log
 echo ""
 echo "" >> ${LOG_FILE}
 echo "# APPLYING PATCHES" >> ${LOG_FILE}
-echo -en "${WHT}Patching${FIN} ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}"
+echo -en "${WHT}Patches${FIN} ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}"
 if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		for i in ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
@@ -126,20 +144,6 @@ if [[ "$FAMILY" == "amlogic" ]] && [[ "$BOARD" == "bananapim2pro" || "$BOARD" ==
 fi
 }
 
-# linux check log and report
-check(){
-if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
-	grep "Skipping patch" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${WHT}skipping${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
-fi
-if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
-	grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
-	if [ $VERBOSE -eq 1 ]; then
-		exit 0
-	fi
-fi
-echo -e ""
-}
-
 linux_patching(){
 # packaging
 linux_packaging
@@ -156,7 +160,7 @@ if [[ "$FORCE_GITHUB" = "true" ]] && [[ "$LINUX_PATCHING" == "true" ]]; then
 	LINUX_VERSION="${GITHUB_BRANCH_VERSION}"
 fi
 if [[ "$LINUX_PATCHING" == "true" ]]; then
-	apply; check
+	apply; check_log
 fi
 user_patches
 # clean
