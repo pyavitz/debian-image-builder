@@ -111,7 +111,6 @@ ENABLE_PETITBOOT="false"
 # Compression Types: xz zst
 IMG_COMPRESSION="xz"
 ```
-
 #### User defconfig
 
 ```sh
@@ -124,18 +123,20 @@ userdata.txt file.
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
 ```
-#### Extra wireless
-```sh
-# change from 0 to 1
-RTL88XXAU:		# Realtek 8812AU/21AU wireless support
-RTL88X2BU:		# Realtek 88X2BU wireless support
-RTL88XXCU:		# Realtek 8811CU/21CU wireless support
-```
-
 #### Amlogic eMMC boot (u-boot only)
+
 ```sh
 # change from 0 to 1
 EMMC=0
+```
+
+#### Extra wireless
+* Linux 6.x.y has RTW88 support, which includes BU/CU. I recommended enabling that in the defconfig, if it isn't already.
+```sh
+# change from 0 to 1
+RTL88XXAU:		# Realtek 8812AU/21AU wireless support
+RTL88X2BU:		# Realtek 88X2BU wireless support (obsolete)
+RTL88XXCU:		# Realtek 8811CU/21CU wireless support (obsolete)
 ```
 ## Usage
 * Review the [Wiki](https://github.com/pyavitz/debian-image-builder/wiki)
