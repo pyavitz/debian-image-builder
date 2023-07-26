@@ -1,5 +1,99 @@
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile	2023-05-04 03:15:34.000000000 -0400
+From 4f3ea1bc88246b449c101f3b8a5ff8906b8e8cc5 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Wed, 26 Jul 2023 01:18:33 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: odroid overlays
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm64/boot/dts/amlogic/Makefile          |   3 +
+ .../dts/amlogic/overlays/odroidc4/Makefile    |  21 ++++
+ .../overlays/odroidc4/display_vu7c.dts        | 110 ++++++++++++++++++
+ .../amlogic/overlays/odroidc4/hifishield2.dts |  67 +++++++++++
+ .../dts/amlogic/overlays/odroidc4/hktft32.dts |  33 ++++++
+ .../dts/amlogic/overlays/odroidc4/hktft35.dts |  53 +++++++++
+ .../dts/amlogic/overlays/odroidc4/i2c0.dts    |  13 +++
+ .../dts/amlogic/overlays/odroidc4/i2c1.dts    |  13 +++
+ .../dts/amlogic/overlays/odroidc4/pcf8563.dts |  23 ++++
+ .../overlays/odroidc4/pps-gpio_p11.dts        |  19 +++
+ .../overlays/odroidc4/pps-gpio_p12.dts        |  19 +++
+ .../dts/amlogic/overlays/odroidc4/spi0.dts    |  21 ++++
+ .../amlogic/overlays/odroidc4/sx865x-i2c1.dts |  34 ++++++
+ .../dts/amlogic/overlays/odroidc4/uart0.dts   |  13 +++
+ .../dts/amlogic/overlays/odroidc4/uart1.dts   |  13 +++
+ .../dts/amlogic/overlays/odroidc4/uart2.dts   |  13 +++
+ .../dts/amlogic/overlays/odroidc4/uart3.dts   |  13 +++
+ .../amlogic/overlays/odroidc4/w1-gpio_p15.dts |  34 ++++++
+ .../amlogic/overlays/odroidc4/w1-gpio_p22.dts |  34 ++++++
+ .../dts/amlogic/overlays/odroidn2/Makefile    |  20 ++++
+ .../overlays/odroidn2/fanspeed-full.dts       |  12 ++
+ .../dts/amlogic/overlays/odroidn2/hktft35.dts |  53 +++++++++
+ .../dts/amlogic/overlays/odroidn2/i2c0.dts    |  13 +++
+ .../dts/amlogic/overlays/odroidn2/i2c1.dts    |  13 +++
+ .../odroidn2/meson-g12b-odroid-n2-spi.dts     |  23 ++++
+ .../overlays/odroidn2/pps-gpio_p11.dts        |  19 +++
+ .../overlays/odroidn2/pps-gpio_p12.dts        |  19 +++
+ .../dts/amlogic/overlays/odroidn2/pwm_cd.dts  |  24 ++++
+ .../dts/amlogic/overlays/odroidn2/pwm_ef.dts  |  24 ++++
+ .../overlays/odroidn2/pwmfan-lowtemp.dts      |  20 ++++
+ .../dts/amlogic/overlays/odroidn2/spi0.dts    |  21 ++++
+ .../amlogic/overlays/odroidn2/sx865x-i2c1.dts |  34 ++++++
+ .../dts/amlogic/overlays/odroidn2/uart0.dts   |  13 +++
+ .../dts/amlogic/overlays/odroidn2/uart1.dts   |  12 ++
+ .../amlogic/overlays/odroidn2/w1-gpio_p15.dts |  34 ++++++
+ .../amlogic/overlays/odroidn2/w1-gpio_p22.dts |  34 ++++++
+ 36 files changed, 937 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/hifishield2.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft32.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c0.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/pcf8563.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p11.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p12.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/sx865x-i2c1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart0.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart2.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart3.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p15.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p22.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/fanspeed-full.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/hktft35.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c0.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p12.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_cd.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_ef.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwmfan-lowtemp.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/sx865x-i2c1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart0.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p22.dts
+
+diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+index aef5d4a69e87..2f83efab0c61 100644
+--- a/arch/arm64/boot/dts/amlogic/Makefile
++++ b/arch/arm64/boot/dts/amlogic/Makefile
+@@ -81,3 +81,6 @@ dtb-$(CONFIG_ARCH_MESON) += meson64_odroidhc4.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2l.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2_plus.dtb
++
++subdir-y += overlays/odroidc4
++subdir-y += overlays/odroidn2
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile
+new file mode 100644
+index 000000000000..eb45590db2aa
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile
 @@ -0,0 +1,21 @@
 +dtbo-y += \
 +	display_vu7c.dtbo \
@@ -22,8 +116,11 @@
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts
+new file mode 100644
+index 000000000000..11bc62d8c9eb
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts
 @@ -0,0 +1,110 @@
 +/dts-v1/;
 +/plugin/;
@@ -135,8 +232,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hifishield2.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hifishield2.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hifishield2.dts
+new file mode 100644
+index 000000000000..e1b94d6d0b34
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hifishield2.dts
 @@ -0,0 +1,67 @@
 +/dts-v1/;
 +/plugin/;
@@ -205,8 +305,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft32.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft32.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft32.dts
+new file mode 100644
+index 000000000000..b4dc1a55862d
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft32.dts
 @@ -0,0 +1,33 @@
 +/dts-v1/;
 +/plugin/;
@@ -241,8 +344,11 @@
 +	};
 +};
 +
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts
+new file mode 100644
+index 000000000000..0fb34f609c79
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts
 @@ -0,0 +1,53 @@
 +/dts-v1/;
 +/plugin/;
@@ -297,8 +403,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c0.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c0.dts
+new file mode 100644
+index 000000000000..a225d47fcd46
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c0.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -313,8 +422,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c1.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c1.dts
+new file mode 100644
+index 000000000000..880e19952d5b
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/i2c1.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -329,8 +441,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pcf8563.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pcf8563.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pcf8563.dts
+new file mode 100644
+index 000000000000..6fe883a62b2b
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pcf8563.dts
 @@ -0,0 +1,23 @@
 +
 +/dts-v1/;
@@ -355,8 +470,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p11.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p11.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p11.dts
+new file mode 100644
+index 000000000000..85e107cc28d8
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p11.dts
 @@ -0,0 +1,19 @@
 +/dts-v1/;
 +/plugin/;
@@ -377,8 +495,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p12.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p12.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p12.dts
+new file mode 100644
+index 000000000000..fa02e68ca776
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/pps-gpio_p12.dts
 @@ -0,0 +1,19 @@
 +/dts-v1/;
 +/plugin/;
@@ -399,8 +520,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts
+new file mode 100644
+index 000000000000..da9817758bea
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts
 @@ -0,0 +1,21 @@
 +/dts-v1/;
 +/plugin/;
@@ -423,8 +547,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/sx865x-i2c1.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/sx865x-i2c1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/sx865x-i2c1.dts
+new file mode 100644
+index 000000000000..4b5e399bae62
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/sx865x-i2c1.dts
 @@ -0,0 +1,34 @@
 +/dts-v1/;
 +/plugin/;
@@ -460,8 +587,11 @@
 +                };
 +        };
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart0.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart0.dts
+new file mode 100644
+index 000000000000..a9cb3fb41077
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart0.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -476,8 +606,11 @@
 +	};
 +};
 +
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart1.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart1.dts
+new file mode 100644
+index 000000000000..c1d25f9bee4c
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart1.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -492,8 +625,11 @@
 +	};
 +};
 +
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart2.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart2.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart2.dts
+new file mode 100644
+index 000000000000..e2d717288ed0
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart2.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -508,8 +644,11 @@
 +	};
 +};
 +
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart3.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart3.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart3.dts
+new file mode 100644
+index 000000000000..735faedc9d94
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/uart3.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -524,8 +663,11 @@
 +	};
 +};
 +
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p15.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p15.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p15.dts
+new file mode 100644
+index 000000000000..6134f057cdfc
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p15.dts
 @@ -0,0 +1,34 @@
 +/dts-v1/;
 +/plugin/;
@@ -561,8 +703,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p22.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p22.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p22.dts
+new file mode 100644
+index 000000000000..14e700b10a48
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/w1-gpio_p22.dts
 @@ -0,0 +1,34 @@
 +/dts-v1/;
 +/plugin/;
@@ -598,14 +743,18 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile	2023-05-04 03:15:34.000000000 -0400
-@@ -0,0 +1,19 @@
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile
+new file mode 100644
+index 000000000000..a0aa9bcff446
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile
+@@ -0,0 +1,20 @@
 +dtbo-y += \
 +	fanspeed-full.dtbo \
 +	hktft35.dtbo \
 +	i2c0.dtbo \
 +	i2c1.dtbo \
++	meson-g12b-odroid-n2-spi.dtbo \
 +	pps-gpio_p11.dtbo \
 +	pps-gpio_p12.dtbo \
 +	pwm_cd.dtbo \
@@ -620,8 +769,11 @@
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/fanspeed-full.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/fanspeed-full.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/fanspeed-full.dts
+new file mode 100644
+index 000000000000..a9ab37525b6a
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/fanspeed-full.dts
 @@ -0,0 +1,12 @@
 +/dts-v1/;
 +/plugin/;
@@ -635,8 +787,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/hktft35.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/hktft35.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/hktft35.dts
+new file mode 100644
+index 000000000000..3dfc3c8e5eb2
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/hktft35.dts
 @@ -0,0 +1,53 @@
 +/dts-v1/;
 +/plugin/;
@@ -691,8 +846,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c0.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c0.dts
+new file mode 100644
+index 000000000000..a225d47fcd46
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c0.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -707,8 +865,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts
+new file mode 100644
+index 000000000000..880e19952d5b
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -723,8 +884,40 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts
+new file mode 100644
+index 000000000000..658afb1fb58d
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts
+@@ -0,0 +1,23 @@
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/gpio/meson-g12a-gpio.h>
++
++/ {
++	fragment@0 {
++		target = <&sd_emmc_c>;
++		__overlay__ {
++			pinctrl-0 = <&emmc_ctrl_pins>, <&emmc_data_4b_pins>, <&emmc_ds_pins>;
++			bus-width = <4>;
++		};
++	};
++
++	fragment@1 {
++		target = <&spifc>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts
+new file mode 100644
+index 000000000000..85e107cc28d8
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts
 @@ -0,0 +1,19 @@
 +/dts-v1/;
 +/plugin/;
@@ -745,8 +938,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p12.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p12.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p12.dts
+new file mode 100644
+index 000000000000..fa02e68ca776
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p12.dts
 @@ -0,0 +1,19 @@
 +/dts-v1/;
 +/plugin/;
@@ -767,8 +963,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_cd.dts	2023-05-04 10:00:34.967472001 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_cd.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_cd.dts
+new file mode 100644
+index 000000000000..1dae8522bd4f
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_cd.dts
 @@ -0,0 +1,24 @@
 +/dts-v1/;
 +/plugin/;
@@ -794,8 +993,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_ef.dts	2023-05-04 10:00:42.517362582 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_ef.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_ef.dts
+new file mode 100644
+index 000000000000..f7c6afb10f9f
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_ef.dts
 @@ -0,0 +1,24 @@
 +/dts-v1/;
 +/plugin/;
@@ -821,8 +1023,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwmfan-lowtemp.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwmfan-lowtemp.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwmfan-lowtemp.dts
+new file mode 100644
+index 000000000000..bfa41cb90395
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwmfan-lowtemp.dts
 @@ -0,0 +1,20 @@
 +/dts-v1/;
 +/plugin/;
@@ -844,8 +1049,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts
+new file mode 100644
+index 000000000000..da9817758bea
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts
 @@ -0,0 +1,21 @@
 +/dts-v1/;
 +/plugin/;
@@ -868,8 +1076,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/sx865x-i2c1.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/sx865x-i2c1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/sx865x-i2c1.dts
+new file mode 100644
+index 000000000000..981c61338c6d
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/sx865x-i2c1.dts
 @@ -0,0 +1,34 @@
 +/dts-v1/;
 +/plugin/;
@@ -905,8 +1116,11 @@
 +                };
 +        };
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart0.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart0.dts
+new file mode 100644
+index 000000000000..a9cb3fb41077
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart0.dts
 @@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
@@ -921,8 +1135,11 @@
 +	};
 +};
 +
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts	2023-05-04 10:01:01.729083999 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts
+new file mode 100644
+index 000000000000..9cc1f5715e0a
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts
 @@ -0,0 +1,12 @@
 +/dts-v1/;
 +/plugin/;
@@ -936,8 +1153,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts
+new file mode 100644
+index 000000000000..6134f057cdfc
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts
 @@ -0,0 +1,34 @@
 +/dts-v1/;
 +/plugin/;
@@ -973,8 +1193,11 @@
 +		};
 +	};
 +};
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p22.dts	2023-05-04 03:15:34.000000000 -0400
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p22.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p22.dts
+new file mode 100644
+index 000000000000..14e700b10a48
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p22.dts
 @@ -0,0 +1,34 @@
 +/dts-v1/;
 +/plugin/;
@@ -1010,3 +1233,6 @@
 +		};
 +	};
 +};
+-- 
+2.39.2
+
