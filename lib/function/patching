@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# user patches
-user_patches(){
-if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
-	echo ""
-	echo -e "${WHT}Applying user patches${FIN} ..."
-	for i in ../../${USERPATCHES}/*.patch; do patch -p1 < $i; done
-	echo_done
-fi
-}
-
 # check log and report
 check_log(){
 if [[ -f "${LOG_FILE}" ]]; then
@@ -57,7 +47,7 @@ fi
 linux_log(){
 LOG_DIR="../../output/logs"
 LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
-if [ -e ${LOG_FILE} ]; then
+if [[ -f "${LOG_FILE}" ]]; then
 	mv -f ${LOG_FILE} ${LOG_FILE}.1
 	echo "Linux ${VERSION}" > ${LOG_FILE}
 	echo `date` >> ${LOG_FILE}
@@ -65,6 +55,33 @@ else
 	mkdir -p ${LOG_DIR}
 	echo "Linux ${VERSION}" > ${LOG_FILE}
 	echo `date` >> ${LOG_FILE}
+fi
+}
+
+# linux user patch log
+linux_user_log(){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-user-patch.log"
+if [[ -f "${LOG_FILE}" ]]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+else
+	mkdir -p ${LOG_DIR}
+	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+fi
+}
+
+# user patches
+user_patches(){
+if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
+	linux_user_log
+	echo "" >> ${LOG_FILE}
+	echo "# APPLYING USER PATCHES" >> ${LOG_FILE}
+	echo -en "${WHT}User Patches${FIN} ${PNK}[${FIN}${GRN}applying${FIN}${PNK}]${FIN}"
+	for i in ../../${USERPATCHES}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	check_log
 fi
 }
 
