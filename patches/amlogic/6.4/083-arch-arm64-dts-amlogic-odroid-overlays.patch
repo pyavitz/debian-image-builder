@@ -1,12 +1,14 @@
-From 4f3ea1bc88246b449c101f3b8a5ff8906b8e8cc5 Mon Sep 17 00:00:00 2001
+From c053ef52fb1f6d302f7b4c19cd9c21e906137a03 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 26 Jul 2023 01:18:33 -0400
+Date: Fri, 28 Jul 2023 04:29:02 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: odroid overlays
+
+Vendor overlays
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm64/boot/dts/amlogic/Makefile          |   3 +
- .../dts/amlogic/overlays/odroidc4/Makefile    |  21 ++++
+ arch/arm64/boot/dts/amlogic/Makefile          |   2 +
+ .../dts/amlogic/overlays/odroidc4/Makefile    |  22 ++++
  .../overlays/odroidc4/display_vu7c.dts        | 110 ++++++++++++++++++
  .../amlogic/overlays/odroidc4/hifishield2.dts |  67 +++++++++++
  .../dts/amlogic/overlays/odroidc4/hktft32.dts |  33 ++++++
@@ -16,7 +18,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../dts/amlogic/overlays/odroidc4/pcf8563.dts |  23 ++++
  .../overlays/odroidc4/pps-gpio_p11.dts        |  19 +++
  .../overlays/odroidc4/pps-gpio_p12.dts        |  19 +++
- .../dts/amlogic/overlays/odroidc4/spi0.dts    |  21 ++++
+ .../dts/amlogic/overlays/odroidc4/spi0.dts    |  24 ++++
  .../amlogic/overlays/odroidc4/sx865x-i2c1.dts |  34 ++++++
  .../dts/amlogic/overlays/odroidc4/uart0.dts   |  13 +++
  .../dts/amlogic/overlays/odroidc4/uart1.dts   |  13 +++
@@ -29,19 +31,18 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../dts/amlogic/overlays/odroidn2/hktft35.dts |  53 +++++++++
  .../dts/amlogic/overlays/odroidn2/i2c0.dts    |  13 +++
  .../dts/amlogic/overlays/odroidn2/i2c1.dts    |  13 +++
- .../odroidn2/meson-g12b-odroid-n2-spi.dts     |  23 ++++
  .../overlays/odroidn2/pps-gpio_p11.dts        |  19 +++
  .../overlays/odroidn2/pps-gpio_p12.dts        |  19 +++
  .../dts/amlogic/overlays/odroidn2/pwm_cd.dts  |  24 ++++
  .../dts/amlogic/overlays/odroidn2/pwm_ef.dts  |  24 ++++
  .../overlays/odroidn2/pwmfan-lowtemp.dts      |  20 ++++
- .../dts/amlogic/overlays/odroidn2/spi0.dts    |  21 ++++
+ .../dts/amlogic/overlays/odroidn2/spi0.dts    |  24 ++++
  .../amlogic/overlays/odroidn2/sx865x-i2c1.dts |  34 ++++++
  .../dts/amlogic/overlays/odroidn2/uart0.dts   |  13 +++
- .../dts/amlogic/overlays/odroidn2/uart1.dts   |  12 ++
+ .../dts/amlogic/overlays/odroidn2/uart1.dts   |  13 +++
  .../amlogic/overlays/odroidn2/w1-gpio_p15.dts |  34 ++++++
  .../amlogic/overlays/odroidn2/w1-gpio_p22.dts |  34 ++++++
- 36 files changed, 937 insertions(+)
+ 35 files changed, 921 insertions(+)
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/display_vu7c.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidc4/hifishield2.dts
@@ -65,7 +66,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/hktft35.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c0.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/i2c1.dts
- create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p11.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pps-gpio_p12.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/pwm_cd.dts
@@ -79,22 +79,25 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p22.dts
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index aef5d4a69e87..2f83efab0c61 100644
+index 28b56ecd44da..549d87cd3804 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
-@@ -81,3 +81,6 @@ dtb-$(CONFIG_ARCH_MESON) += meson64_odroidhc4.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2l.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2_plus.dtb
-+
+@@ -1,6 +1,8 @@
+ # SPDX-License-Identifier: GPL-2.0
+ subdir-y += overlays
+ subdir-y += overlays/radxazero
 +subdir-y += overlays/odroidc4
 +subdir-y += overlays/odroidn2
+ 
+ dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j100.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile
 new file mode 100644
-index 000000000000..eb45590db2aa
+index 000000000000..abc92635681f
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/Makefile
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,22 @@
++# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
 +	display_vu7c.dtbo \
 +	hifishield2.dtbo \
@@ -346,7 +349,7 @@ index 000000000000..b4dc1a55862d
 +
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts
 new file mode 100644
-index 000000000000..0fb34f609c79
+index 000000000000..3dfc3c8e5eb2
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/hktft35.dts
 @@ -0,0 +1,53 @@
@@ -363,7 +366,7 @@ index 000000000000..0fb34f609c79
 +		__overlay__ {
 +			backlight: backlight {
 +				compatible = "gpio-backlight";
-+				gpios = <&gpio GPIOX_6 GPIO_ACTIVE_HIGH>;
++				gpios = <&gpio GPIOX_5 GPIO_ACTIVE_HIGH>;
 +			};
 +
 +			display: display {
@@ -522,10 +525,10 @@ index 000000000000..fa02e68ca776
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts
 new file mode 100644
-index 000000000000..da9817758bea
+index 000000000000..4fd45bc4a5a9
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidc4/spi0.dts
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,24 @@
 +/dts-v1/;
 +/plugin/;
 +
@@ -538,10 +541,13 @@ index 000000000000..da9817758bea
 +
 +		__overlay__ {
 +			status = "okay";
-+
-+			cs-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_LOW>;
++			#address-cells = <1>;
++			#size-cells = <0>;
 +
 +			spidev: spidev@0 {
++				status = "okay";
++				compatible = "odroid,spi-dev";
++				reg = <0>;
 +				spi-max-frequency = <100000000>;
 +			};
 +		};
@@ -745,16 +751,16 @@ index 000000000000..14e700b10a48
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile
 new file mode 100644
-index 000000000000..a0aa9bcff446
+index 000000000000..c218fbb329f2
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/Makefile
 @@ -0,0 +1,20 @@
++# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
 +	fanspeed-full.dtbo \
 +	hktft35.dtbo \
 +	i2c0.dtbo \
 +	i2c1.dtbo \
-+	meson-g12b-odroid-n2-spi.dtbo \
 +	pps-gpio_p11.dtbo \
 +	pps-gpio_p12.dtbo \
 +	pwm_cd.dtbo \
@@ -881,35 +887,6 @@ index 000000000000..880e19952d5b
 +		__overlay__ {
 +			status = "okay";
 +			clock-frequency = <100000>;
-+		};
-+	};
-+};
-diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts
-new file mode 100644
-index 000000000000..658afb1fb58d
---- /dev/null
-+++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/meson-g12b-odroid-n2-spi.dts
-@@ -0,0 +1,23 @@
-+/dts-v1/;
-+/plugin/;
-+
-+#include <dt-bindings/interrupt-controller/irq.h>
-+#include <dt-bindings/gpio/gpio.h>
-+#include <dt-bindings/gpio/meson-g12a-gpio.h>
-+
-+/ {
-+	fragment@0 {
-+		target = <&sd_emmc_c>;
-+		__overlay__ {
-+			pinctrl-0 = <&emmc_ctrl_pins>, <&emmc_data_4b_pins>, <&emmc_ds_pins>;
-+			bus-width = <4>;
-+		};
-+	};
-+
-+	fragment@1 {
-+		target = <&spifc>;
-+		__overlay__ {
-+			status = "okay";
 +		};
 +	};
 +};
@@ -1051,10 +1028,10 @@ index 000000000000..bfa41cb90395
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts
 new file mode 100644
-index 000000000000..da9817758bea
+index 000000000000..4fd45bc4a5a9
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/spi0.dts
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,24 @@
 +/dts-v1/;
 +/plugin/;
 +
@@ -1067,10 +1044,13 @@ index 000000000000..da9817758bea
 +
 +		__overlay__ {
 +			status = "okay";
-+
-+			cs-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_LOW>;
++			#address-cells = <1>;
++			#size-cells = <0>;
 +
 +			spidev: spidev@0 {
++				status = "okay";
++				compatible = "odroid,spi-dev";
++				reg = <0>;
 +				spi-max-frequency = <100000000>;
 +			};
 +		};
@@ -1137,10 +1117,10 @@ index 000000000000..a9cb3fb41077
 +
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts
 new file mode 100644
-index 000000000000..9cc1f5715e0a
+index 000000000000..c1d25f9bee4c
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/uart1.dts
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,13 @@
 +/dts-v1/;
 +/plugin/;
 +
@@ -1153,6 +1133,7 @@ index 000000000000..9cc1f5715e0a
 +		};
 +	};
 +};
++
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts b/arch/arm64/boot/dts/amlogic/overlays/odroidn2/w1-gpio_p15.dts
 new file mode 100644
 index 000000000000..6134f057cdfc
