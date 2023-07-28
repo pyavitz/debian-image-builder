@@ -1,5 +1,6 @@
 ## Notice
 * Requested [images](https://github.com/pyavitz/binary/releases/tag/images)
+* Overlay [changes](https://github.com/pyavitz/debian-image-builder/commit/67eafb34cedd24cb68da57ac318f85b94ec4af86)
 
 ## Boards
 ```sh
