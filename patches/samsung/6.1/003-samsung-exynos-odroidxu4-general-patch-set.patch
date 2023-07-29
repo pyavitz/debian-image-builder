@@ -1,7 +1,57 @@
-diff -Naur a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
---- a/arch/arm/kernel/setup.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/arch/arm/kernel/setup.c	2023-05-02 23:08:15.976926810 -0400
-@@ -92,7 +92,7 @@
+From 8b4a0a4f716c0151f46414341b51ee56ae7982d8 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 29 Jul 2023 10:11:20 -0400
+Subject: [PATCH] samsung: exynos: odroidxu4: general patch set
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/kernel/setup.c                       |    2 +-
+ arch/arm/mach-exynos/exynos.c                 |   28 +
+ drivers/char/Kconfig                          |    9 +
+ drivers/char/Makefile                         |    1 +
+ drivers/char/exynos-gpiomem.c                 |  268 +++++
+ drivers/devfreq/exynos-bus.c                  |   14 +-
+ drivers/gpu/drm/exynos/exynos_hdmi.c          |  214 +++-
+ drivers/gpu/drm/exynos/exynos_mixer.c         |   33 +-
+ drivers/gpu/drm/tiny/Kconfig                  |   13 +
+ drivers/gpu/drm/tiny/Makefile                 |    1 +
+ drivers/gpu/drm/tiny/ili9341.c                |    2 +
+ drivers/gpu/drm/tiny/ili9488_pio.c            |  366 ++++++
+ drivers/hid/hid-ids.h                         |    4 +
+ drivers/hid/hid-quirks.c                      |    3 +
+ drivers/input/touchscreen/Kconfig             |   10 +
+ drivers/input/touchscreen/Makefile            |    1 +
+ drivers/input/touchscreen/dwav-usb-mt.c       |  554 +++++++++
+ drivers/input/touchscreen/goodix.c            |    4 +
+ drivers/media/i2c/Kconfig                     |    7 +
+ drivers/media/i2c/Makefile                    |    2 +
+ drivers/media/i2c/lt8619c.c                   | 1030 +++++++++++++++++
+ drivers/media/i2c/lt8619c.h                   |  107 ++
+ .../platform/samsung/exynos-gsc/gsc-core.h    |    4 +-
+ .../platform/samsung/s5p-jpeg/jpeg-core.c     |   45 +-
+ .../media/platform/samsung/s5p-mfc/s5p_mfc.c  |    9 +-
+ .../platform/samsung/s5p-mfc/s5p_mfc_dec.c    |    8 +-
+ .../platform/samsung/s5p-mfc/s5p_mfc_enc.c    |    9 +
+ drivers/mmc/host/dw_mmc-exynos.h              |    2 +-
+ .../ethernet/stmicro/stmmac/stmmac_ethtool.c  |   11 +-
+ drivers/net/phy/phy_device.c                  |    6 +-
+ drivers/net/phy/realtek.c                     |   36 +
+ drivers/regulator/s2mps11.c                   |   80 ++
+ drivers/spi/spidev.c                          |    3 +
+ drivers/thermal/samsung/exynos_tmu.c          |   18 +-
+ include/drm/drm_mipi_dbi.h                    |    7 +-
+ 35 files changed, 2859 insertions(+), 52 deletions(-)
+ create mode 100644 drivers/char/exynos-gpiomem.c
+ create mode 100644 drivers/gpu/drm/tiny/ili9488_pio.c
+ create mode 100644 drivers/input/touchscreen/dwav-usb-mt.c
+ create mode 100644 drivers/media/i2c/lt8619c.c
+ create mode 100644 drivers/media/i2c/lt8619c.h
+
+diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
+index cb88c6e69377..3e74d040038f 100644
+--- a/arch/arm/kernel/setup.c
++++ b/arch/arm/kernel/setup.c
+@@ -92,7 +92,7 @@ EXPORT_SYMBOL(cacheid);
  
  unsigned int __atags_pointer __initdata;
  
@@ -10,10 +60,11 @@ diff -Naur a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
  EXPORT_SYMBOL(system_rev);
  
  const char *system_serial;
-diff -Naur a/arch/arm/mach-exynos/exynos.c b/arch/arm/mach-exynos/exynos.c
---- a/arch/arm/mach-exynos/exynos.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/arch/arm/mach-exynos/exynos.c	2023-05-02 23:08:15.976926810 -0400
-@@ -221,3 +221,31 @@
+diff --git a/arch/arm/mach-exynos/exynos.c b/arch/arm/mach-exynos/exynos.c
+index 51a247ca4da8..63fabfe5f692 100644
+--- a/arch/arm/mach-exynos/exynos.c
++++ b/arch/arm/mach-exynos/exynos.c
+@@ -221,3 +221,31 @@ DT_MACHINE_START(EXYNOS_DT, "Samsung Exynos (Flattened Device Tree)")
  	.dt_compat	= exynos_dt_compat,
  	.dt_fixup	= exynos_dt_fixup,
  MACHINE_END
@@ -45,10 +96,312 @@ diff -Naur a/arch/arm/mach-exynos/exynos.c b/arch/arm/mach-exynos/exynos.c
 +
 +ODROID_MACHINE_START(XU3, exynos5422_odroidxu3_dt_compat)
 +ODROID_MACHINE_START(XU4, exynos5422_odroidxu4_dt_compat)
-diff -Naur a/drivers/devfreq/exynos-bus.c b/drivers/devfreq/exynos-bus.c
---- a/drivers/devfreq/exynos-bus.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/devfreq/exynos-bus.c	2023-05-02 23:08:15.981926796 -0400
-@@ -243,7 +243,7 @@
+diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
+index 0f378d29dab0..fee4ad641251 100644
+--- a/drivers/char/Kconfig
++++ b/drivers/char/Kconfig
+@@ -459,4 +459,13 @@ config RANDOM_TRUST_BOOTLOADER
+ 	  believe its RNG facilities may be faulty. This may also be configured
+ 	  at boot time with "random.trust_bootloader=on/off".
+ 
++config EXYNOS_GPIOMEM
++	tristate "/dev/gpiomem rootless GPIO access via mmap() on the EXYNOS"
++	default m
++	help
++	  Provides users with root-free access to the GPIO registers
++	  on EXYNOS. Calling mmap(/dev/gpiomem) will map the GPIO register
++	  page to the user's pointer. This drvier can allow to access gpio
++	  memory area in user account.
++
+ endmenu
+diff --git a/drivers/char/Makefile b/drivers/char/Makefile
+index 1b35d1724565..06a87bf5d164 100644
+--- a/drivers/char/Makefile
++++ b/drivers/char/Makefile
+@@ -45,3 +45,4 @@ obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
+ obj-$(CONFIG_XILLYBUS_CLASS)	+= xillybus/
+ obj-$(CONFIG_POWERNV_OP_PANEL)	+= powernv-op-panel.o
+ obj-$(CONFIG_ADI)		+= adi.o
++obj-$(CONFIG_EXYNOS_GPIOMEM)	+= exynos-gpiomem.o
+diff --git a/drivers/char/exynos-gpiomem.c b/drivers/char/exynos-gpiomem.c
+new file mode 100644
+index 000000000000..03ea4344346a
+--- /dev/null
++++ b/drivers/char/exynos-gpiomem.c
+@@ -0,0 +1,268 @@
++/*
++ * linux/drivers/char/exynos-gpiomem.c
++ *
++ * GPIO memory device driver
++ *
++ * Creates a chardev /dev/gpiomem which will provide user access to
++ * the EXYNOS's GPIO registers when it is mmap()'d.
++ * No longer need root for user GPIO access, but without relaxing permissions
++ * on /dev/mem.
++ *
++ * Copyright (c) 2017 Hardkernel Co., Ltd.
++ *
++ * This driver is based on bcm2835-gpiomem.c in Raspberrypi's linux kernel 4.4:
++ *	Written by Luke Wren <luke@raspberrypi.org>
++ *	Copyright (c) 2015, Raspberry Pi (Trading) Ltd.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions, and the following disclaimer,
++ *    without modification.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The names of the above-listed copyright holders may not be used
++ *    to endorse or promote products derived from this software without
++ *    specific prior written permission.
++ *
++ * ALTERNATIVELY, this software may be distributed under the terms of the
++ * GNU General Public License ("GPL") version 2, as published by the Free
++ * Software Foundation.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
++ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/mm.h>
++#include <linux/slab.h>
++#include <linux/cdev.h>
++#include <linux/pagemap.h>
++#include <linux/io.h>
++#include <linux/of.h>
++#include <asm/io.h>
++
++#define DEVICE_NAME "exynos-gpiomem"
++#define DRIVER_NAME "gpiomem-exynos"
++#define DEVICE_MINOR 0
++
++struct exynos_gpiomem_instance {
++	unsigned long gpio_regs_phys[32];
++	int gpio_area_count;
++	struct device *dev;
++};
++
++static struct cdev exynos_gpiomem_cdev;
++static dev_t exynos_gpiomem_devid;
++static struct class *exynos_gpiomem_class;
++static struct device *exynos_gpiomem_dev;
++static struct exynos_gpiomem_instance *inst;
++
++static int exynos_gpiomem_open(struct inode *inode, struct file *file)
++{
++	int dev = iminor(inode);
++	int ret = 0;
++
++	if (dev != DEVICE_MINOR) {
++		dev_err(inst->dev, "Unknown minor device: %d", dev);
++		ret = -ENXIO;
++	}
++	return ret;
++}
++
++static int exynos_gpiomem_release(struct inode *inode, struct file *file)
++{
++	int dev = iminor(inode);
++	int ret = 0;
++
++	if (dev != DEVICE_MINOR) {
++		dev_err(inst->dev, "Unknown minor device %d", dev);
++		ret = -ENXIO;
++	}
++	return ret;
++}
++
++static const struct vm_operations_struct exynos_gpiomem_vm_ops = {
++#ifdef CONFIG_HAVE_IOREMAP_PROT
++	.access = generic_access_phys
++#endif
++};
++
++static int exynos_gpiomem_mmap(struct file *file, struct vm_area_struct *vma)
++{
++	int gpio_area = 0;
++
++	while (gpio_area < inst->gpio_area_count) {
++		if ((inst->gpio_regs_phys[gpio_area] >> PAGE_SHIFT) == vma->vm_pgoff)
++			goto found;
++
++		gpio_area++;
++	}
++
++	return -EACCES;
++
++found:
++	vma->vm_page_prot = phys_mem_access_prot(file, vma->vm_pgoff,
++			PAGE_SIZE,
++			vma->vm_page_prot);
++
++	vma->vm_ops = &exynos_gpiomem_vm_ops;
++
++	if (remap_pfn_range(vma, vma->vm_start,
++				vma->vm_pgoff,
++				PAGE_SIZE,
++				vma->vm_page_prot)) {
++		return -EAGAIN;
++	}
++
++	return 0;
++}
++
++static const struct file_operations
++exynos_gpiomem_fops = {
++	.owner = THIS_MODULE,
++	.open = exynos_gpiomem_open,
++	.release = exynos_gpiomem_release,
++	.mmap = exynos_gpiomem_mmap,
++};
++
++static int exynos_gpiomem_probe(struct platform_device *pdev)
++{
++	int err = 0;
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct resource *res = NULL;
++	int i = 0;
++
++	/* Allocate buffers and instance data */
++	inst = kzalloc(sizeof(struct exynos_gpiomem_instance), GFP_KERNEL);
++
++	if (!inst) {
++		err = -ENOMEM;
++		goto failed_inst_alloc;
++	}
++
++	inst->dev = dev;
++
++	inst->gpio_area_count = of_property_count_elems_of_size(np, "reg",
++				sizeof(u32)) / 2;
++
++	if (inst->gpio_area_count > 32 || inst->gpio_area_count <= 0) {
++		dev_err(inst->dev, "failed to get gpio register area.");
++		err = -EINVAL;
++		goto failed_inst_alloc;
++	}
++
++	dev_info(inst->dev, "Initialised: GPIO register area is %d",
++			inst->gpio_area_count);
++
++	for (i = 0; i < inst->gpio_area_count; ++i) {
++		res = platform_get_resource(pdev, IORESOURCE_MEM, i);
++		if (res) {
++			inst->gpio_regs_phys[i] = res->start;
++		} else {
++			dev_err(inst->dev, "failed to get IO resource");
++			err = -ENOENT;
++			goto failed_get_resource;
++		}
++	}
++
++	/* Create character device entries */
++	err = alloc_chrdev_region(&exynos_gpiomem_devid,
++				  DEVICE_MINOR, 1, DEVICE_NAME);
++	if (err != 0) {
++		dev_err(inst->dev, "unable to allocate device number");
++		goto failed_alloc_chrdev;
++	}
++	cdev_init(&exynos_gpiomem_cdev, &exynos_gpiomem_fops);
++	exynos_gpiomem_cdev.owner = THIS_MODULE;
++	err = cdev_add(&exynos_gpiomem_cdev, exynos_gpiomem_devid, 1);
++	if (err != 0) {
++		dev_err(inst->dev, "unable to register device");
++		goto failed_cdev_add;
++	}
++
++	/* Create sysfs entries */
++	exynos_gpiomem_class = class_create(THIS_MODULE, DEVICE_NAME);
++	err = IS_ERR(exynos_gpiomem_class);
++	if (err)
++		goto failed_class_create;
++
++	exynos_gpiomem_dev = device_create(exynos_gpiomem_class, NULL,
++					exynos_gpiomem_devid, NULL,
++					"gpiomem");
++	err = IS_ERR(exynos_gpiomem_dev);
++	if (err)
++		goto failed_device_create;
++
++	for (i = 0; i < inst->gpio_area_count; ++i) {
++		dev_info(inst->dev, "Initialised: Registers at 0x%08lx",
++				inst->gpio_regs_phys[i]);
++	}
++
++	return 0;
++
++failed_device_create:
++	class_destroy(exynos_gpiomem_class);
++failed_class_create:
++	cdev_del(&exynos_gpiomem_cdev);
++failed_cdev_add:
++	unregister_chrdev_region(exynos_gpiomem_devid, 1);
++failed_alloc_chrdev:
++failed_get_resource:
++	kfree(inst);
++failed_inst_alloc:
++	dev_err(inst->dev, "could not load exynos_gpiomem");
++	return err;
++}
++
++static int exynos_gpiomem_remove(struct platform_device *pdev)
++{
++	struct device *dev = inst->dev;
++
++	kfree(inst);
++	device_destroy(exynos_gpiomem_class, exynos_gpiomem_devid);
++	class_destroy(exynos_gpiomem_class);
++	cdev_del(&exynos_gpiomem_cdev);
++	unregister_chrdev_region(exynos_gpiomem_devid, 1);
++
++	dev_info(dev, "GPIO mem driver removed - OK");
++	return 0;
++}
++
++static const struct of_device_id exynos_gpiomem_of_match[] = {
++	{.compatible = "samsung,exynos-gpiomem",},
++	{ },
++};
++MODULE_DEVICE_TABLE(of, exynos_gpiomem_of_match);
++
++static struct platform_driver exynos_gpiomem_driver = {
++	.driver			= {
++		.name		= DRIVER_NAME,
++		.owner		= THIS_MODULE,
++		.of_match_table	= exynos_gpiomem_of_match,
++	},
++	.probe			= exynos_gpiomem_probe,
++	.remove			= exynos_gpiomem_remove,
++};
++
++module_platform_driver(exynos_gpiomem_driver);
++
++MODULE_ALIAS("platform:gpiomem-exynos");
++MODULE_DESCRIPTION("EXYNOS gpiomem driver for accessing GPIO from userspace");
++MODULE_AUTHOR("Brian Kim <brian.kim@hardkernel.com>");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/devfreq/exynos-bus.c b/drivers/devfreq/exynos-bus.c
+index 027e8f336acc..e6a0915cd6ad 100644
+--- a/drivers/devfreq/exynos-bus.c
++++ b/drivers/devfreq/exynos-bus.c
+@@ -243,7 +243,7 @@ static int exynos_bus_parse_of(struct device_node *np,
  {
  	struct device *dev = bus->dev;
  	struct dev_pm_opp *opp;
@@ -57,7 +410,7 @@ diff -Naur a/drivers/devfreq/exynos-bus.c b/drivers/devfreq/exynos-bus.c
  	int ret;
  
  	/* Get the clock to provide each bus with source clock */
-@@ -267,13 +267,21 @@
+@@ -267,13 +267,21 @@ static int exynos_bus_parse_of(struct device_node *np,
  	}
  
  	rate = clk_get_rate(bus->clk);
@@ -81,10 +434,11 @@ diff -Naur a/drivers/devfreq/exynos-bus.c b/drivers/devfreq/exynos-bus.c
  	bus->curr_freq = dev_pm_opp_get_freq(opp);
  	dev_pm_opp_put(opp);
  
-diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exynos_hdmi.c
---- a/drivers/gpu/drm/exynos/exynos_hdmi.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/gpu/drm/exynos/exynos_hdmi.c	2023-05-02 23:08:15.982926793 -0400
-@@ -145,6 +145,33 @@
+diff --git a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exynos_hdmi.c
+index b7c11bdce2c8..b7195b1f95c9 100644
+--- a/drivers/gpu/drm/exynos/exynos_hdmi.c
++++ b/drivers/gpu/drm/exynos/exynos_hdmi.c
+@@ -145,6 +145,33 @@ struct hdmi_context {
  	bool				powered;
  };
  
@@ -118,10 +472,11 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  static inline struct hdmi_context *encoder_to_hdmi(struct drm_encoder *e)
  {
  	return container_of(e, struct hdmi_context, encoder);
-@@ -232,6 +259,38 @@
+@@ -231,6 +258,38 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
+ 			0x54, 0xe3, 0x24, 0x00, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
- 	{
++	{
 +		.pixel_clock = 31490000,
 +		.conf = {
 +			0x01, 0xD1, 0x34, 0x74, 0x44, 0x3C, 0x3A, 0xC2,
@@ -153,11 +508,10 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
 +			0x54, 0x80, 0x25, 0x01, 0x00, 0x00, 0x01, 0x80,
 +		},
 +	},
-+	{
+ 	{
  		.pixel_clock = 36000000,
  		.conf = {
- 			0x01, 0x51, 0x2d, 0x55, 0x40, 0x01, 0x00, 0x08,
-@@ -249,6 +308,29 @@
+@@ -249,6 +308,29 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
  			0x54, 0x9a, 0x24, 0x00, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
@@ -187,7 +541,7 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  	{
  		.pixel_clock = 65000000,
  		.conf = {
-@@ -277,7 +359,7 @@
+@@ -277,7 +359,7 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
  		},
  	},
  	{
@@ -196,10 +550,11 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  		.conf = {
  			0x01, 0xd1, 0x3e, 0x35, 0x40, 0x5b, 0xde, 0x08,
  			0x82, 0xa0, 0x73, 0xd9, 0x45, 0xa0, 0xac, 0x80,
-@@ -295,6 +377,15 @@
+@@ -294,6 +376,15 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
+ 			0x54, 0xa5, 0x24, 0x01, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
- 	{
++	{
 +		.pixel_clock = 80140000,
 +		.conf = {
 +			0x01, 0xD1, 0x21, 0x11, 0x40, 0x3C, 0x2F, 0xC8,
@@ -208,14 +563,14 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
 +			0x54, 0x99, 0x24, 0x01, 0x00, 0x00, 0x01, 0x80,
 +		},
 +	},
-+	{
+ 	{
  		.pixel_clock = 83500000,
  		.conf = {
- 			0x01, 0xd1, 0x23, 0x11, 0x40, 0x0c, 0xfb, 0x08,
-@@ -304,6 +395,15 @@
+@@ -303,6 +394,15 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
+ 			0x54, 0x93, 0x24, 0x01, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
- 	{
++	{
 +		.pixel_clock = 84750000,
 +		.conf = {
 +			0x01, 0xD1, 0x23, 0x11, 0x40, 0x30, 0x1E, 0xC7,
@@ -224,14 +579,14 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
 +			0x54, 0x48, 0x24, 0x00, 0x00, 0x00, 0x01, 0x80,
 +		},
 +	},
-+	{
+ 	{
  		.pixel_clock = 85500000,
  		.conf = {
- 			0x01, 0xd1, 0x24, 0x11, 0x40, 0x40, 0xd0, 0x08,
-@@ -313,6 +413,33 @@
+@@ -312,6 +412,33 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
+ 			0x54, 0x90, 0x24, 0x01, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
- 	{
++	{
 +		.pixel_clock = 85860000,
 +		.conf = {
 +			0x01, 0xD1, 0x24, 0x11, 0x40, 0x30, 0xD2, 0xC8,
@@ -258,14 +613,14 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
 +			0x54, 0x3B, 0x24, 0x00, 0x00, 0x00, 0x01, 0x80,
 +		},
 +	},
-+	{
+ 	{
  		.pixel_clock = 106500000,
  		.conf = {
- 			0x01, 0xd1, 0x2c, 0x12, 0x40, 0x0c, 0x09, 0x08,
-@@ -322,6 +449,24 @@
+@@ -321,6 +448,24 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
+ 			0x54, 0x73, 0x24, 0x01, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
- 	{
++	{
 +		.pixel_clock = 106560000,
 +		.conf = {
 +			0x01, 0xD1, 0x2C, 0x12, 0x40, 0x78, 0x73, 0xCA,
@@ -283,14 +638,14 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
 +			0x54, 0xC7, 0x25, 0x03, 0x00, 0x00, 0x01, 0x80,
 +		},
 +	},
-+	{
+ 	{
  		.pixel_clock = 108000000,
  		.conf = {
- 			0x01, 0x51, 0x2d, 0x15, 0x40, 0x01, 0x00, 0x08,
-@@ -349,6 +494,24 @@
+@@ -348,6 +493,24 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
+ 			0x54, 0x9d, 0x25, 0x03, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
- 	{
++	{
 +		.pixel_clock = 122000000,
 +		.conf = {
 +			0x01, 0xD1, 0x33, 0x14, 0x40, 0x30, 0xF0, 0xC8,
@@ -308,11 +663,10 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
 +			0x54, 0x87, 0x25, 0x03, 0x00, 0x00, 0x01, 0x80,
 +		},
 +	},
-+	{
+ 	{
  		.pixel_clock = 146250000,
  		.conf = {
- 			0x01, 0xd1, 0x3d, 0x15, 0x40, 0x18, 0xfd, 0x08,
-@@ -366,6 +529,43 @@
+@@ -366,6 +529,43 @@ static const struct hdmiphy_config hdmiphy_v14_configs[] = {
  			0x54, 0x4b, 0x25, 0x03, 0x00, 0x00, 0x01, 0x80,
  		},
  	},
@@ -356,7 +710,7 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  };
  
  static const struct hdmiphy_config hdmiphy_5420_configs[] = {
-@@ -854,6 +1054,9 @@
+@@ -854,6 +1054,9 @@ static enum drm_connector_status hdmi_detect(struct drm_connector *connector,
  {
  	struct hdmi_context *hdata = connector_to_hdmi(connector);
  
@@ -366,7 +720,7 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  	if (gpiod_get_value(hdata->hpd_gpio))
  		return connector_status_connected;
  
-@@ -893,7 +1096,10 @@
+@@ -893,7 +1096,10 @@ static int hdmi_get_modes(struct drm_connector *connector)
  	if (!edid)
  		return -ENODEV;
  
@@ -378,7 +732,7 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  	DRM_DEV_DEBUG_KMS(hdata->dev, "%s : width[%d] x height[%d]\n",
  			  (hdata->dvi_mode ? "dvi monitor" : "hdmi monitor"),
  			  edid->width_cm, edid->height_cm);
-@@ -1592,6 +1798,9 @@
+@@ -1592,6 +1798,9 @@ static int hdmi_audio_hw_params(struct device *dev, void *data,
  				struct hdmi_codec_params *params)
  {
  	struct hdmi_context *hdata = dev_get_drvdata(dev);
@@ -388,7 +742,7 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  
  	if (daifmt->fmt != HDMI_I2S || daifmt->bit_clk_inv ||
  	    daifmt->frame_clk_inv || daifmt->bit_clk_provider ||
-@@ -1968,6 +2177,7 @@
+@@ -1968,6 +2177,7 @@ static int hdmi_probe(struct platform_device *pdev)
  	platform_set_drvdata(pdev, hdata);
  
  	hdata->dev = dev;
@@ -396,10 +750,11 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_hdmi.c b/drivers/gpu/drm/exynos/exyno
  
  	mutex_init(&hdata->mutex);
  
-diff -Naur a/drivers/gpu/drm/exynos/exynos_mixer.c b/drivers/gpu/drm/exynos/exynos_mixer.c
---- a/drivers/gpu/drm/exynos/exynos_mixer.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/gpu/drm/exynos/exynos_mixer.c	2023-05-02 23:08:15.983926790 -0400
-@@ -318,23 +318,26 @@
+diff --git a/drivers/gpu/drm/exynos/exynos_mixer.c b/drivers/gpu/drm/exynos/exynos_mixer.c
+index 8d333db813b7..669169d64126 100644
+--- a/drivers/gpu/drm/exynos/exynos_mixer.c
++++ b/drivers/gpu/drm/exynos/exynos_mixer.c
+@@ -318,23 +318,26 @@ static void mixer_cfg_gfx_blend(struct mixer_context *ctx, unsigned int win,
  	u32 val;
  
  	val  = MXR_GRP_CFG_COLOR_KEY_DISABLE; /* no blank key */
@@ -441,10 +796,47 @@ diff -Naur a/drivers/gpu/drm/exynos/exynos_mixer.c b/drivers/gpu/drm/exynos/exyn
  	mixer_reg_writemask(ctx, MXR_GRAPHIC_CFG(win),
  			    val, MXR_GRP_CFG_MISC_MASK);
  }
-diff -Naur a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
---- a/drivers/gpu/drm/tiny/ili9341.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/gpu/drm/tiny/ili9341.c	2023-05-02 23:08:15.983926790 -0400
-@@ -163,12 +163,14 @@
+diff --git a/drivers/gpu/drm/tiny/Kconfig b/drivers/gpu/drm/tiny/Kconfig
+index 565957264875..6ea9ee1e42ef 100644
+--- a/drivers/gpu/drm/tiny/Kconfig
++++ b/drivers/gpu/drm/tiny/Kconfig
+@@ -148,6 +148,19 @@ config TINYDRM_ILI9486
+ 
+ 	  If M is selected the module will be called ili9486.
+ 
++config TINYDRM_ILI9488_PIO
++	tristate "DRM support for ILI9488 display panels (8bit PIO)"
++	depends on DRM
++	select DRM_KMS_HELPER
++	select DRM_KMS_CMA_HELPER
++	select DRM_MIPI_DBI
++	select BACKLIGHT_CLASS_DEVICE
++	help
++	  DRM driver for th following Ilitek ILI9488 panels:
++          * Hardkernel 3.5" 480x320 TFT (HKTFT 3.5")
++
++	  If M is selected the module will be called hktft35.
++
+ config TINYDRM_MI0283QT
+ 	tristate "DRM support for MI0283QT"
+ 	depends on DRM && SPI
+diff --git a/drivers/gpu/drm/tiny/Makefile b/drivers/gpu/drm/tiny/Makefile
+index 1d9d6227e7ab..2d617bb921c7 100644
+--- a/drivers/gpu/drm/tiny/Makefile
++++ b/drivers/gpu/drm/tiny/Makefile
+@@ -11,6 +11,7 @@ obj-$(CONFIG_TINYDRM_ILI9163)		+= ili9163.o
+ obj-$(CONFIG_TINYDRM_ILI9225)		+= ili9225.o
+ obj-$(CONFIG_TINYDRM_ILI9341)		+= ili9341.o
+ obj-$(CONFIG_TINYDRM_ILI9486)		+= ili9486.o
++obj-$(CONFIG_TINYDRM_ILI9488_PIO)	+= ili9488_pio.o
+ obj-$(CONFIG_TINYDRM_MI0283QT)		+= mi0283qt.o
+ obj-$(CONFIG_TINYDRM_REPAPER)		+= repaper.o
+ obj-$(CONFIG_TINYDRM_ST7586)		+= st7586.o
+diff --git a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
+index 69b265e78096..f91e849a0a75 100644
+--- a/drivers/gpu/drm/tiny/ili9341.c
++++ b/drivers/gpu/drm/tiny/ili9341.c
+@@ -163,12 +163,14 @@ static const struct drm_driver ili9341_driver = {
  
  static const struct of_device_id ili9341_of_match[] = {
  	{ .compatible = "adafruit,yx240qv29" },
@@ -459,8 +851,11 @@ diff -Naur a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
  	{ }
  };
  MODULE_DEVICE_TABLE(spi, ili9341_id);
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/gpu/drm/tiny/ili9488_pio.c	2023-05-02 23:08:15.984926787 -0400
+diff --git a/drivers/gpu/drm/tiny/ili9488_pio.c b/drivers/gpu/drm/tiny/ili9488_pio.c
+new file mode 100644
+index 000000000000..f3a0b1fb885a
+--- /dev/null
++++ b/drivers/gpu/drm/tiny/ili9488_pio.c
 @@ -0,0 +1,366 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -828,44 +1223,11 @@ diff -Naur a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
 +MODULE_DESCRIPTION("Ilitek ILI9488 DRM driver (8bit PIO mode)");
 +MODULE_AUTHOR("Dongjin Kim <tobetter@gmail.com>");
 +MODULE_LICENSE("GPL");
-diff -Naur a/drivers/gpu/drm/tiny/Kconfig b/drivers/gpu/drm/tiny/Kconfig
---- a/drivers/gpu/drm/tiny/Kconfig	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/gpu/drm/tiny/Kconfig	2023-05-02 23:08:15.983926790 -0400
-@@ -161,6 +161,19 @@
- 
- 	  If M is selected the module will be called ili9486.
- 
-+config TINYDRM_ILI9488_PIO
-+	tristate "DRM support for ILI9488 display panels (8bit PIO)"
-+	depends on DRM
-+	select DRM_KMS_HELPER
-+	select DRM_KMS_CMA_HELPER
-+	select DRM_MIPI_DBI
-+	select BACKLIGHT_CLASS_DEVICE
-+	help
-+	  DRM driver for th following Ilitek ILI9488 panels:
-+          * Hardkernel 3.5" 480x320 TFT (HKTFT 3.5")
-+
-+	  If M is selected the module will be called hktft35.
-+
- config TINYDRM_MI0283QT
- 	tristate "DRM support for MI0283QT"
- 	depends on DRM && SPI
-diff -Naur a/drivers/gpu/drm/tiny/Makefile b/drivers/gpu/drm/tiny/Makefile
---- a/drivers/gpu/drm/tiny/Makefile	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/gpu/drm/tiny/Makefile	2023-05-02 23:08:15.983926790 -0400
-@@ -12,6 +12,7 @@
- obj-$(CONFIG_TINYDRM_ILI9225)		+= ili9225.o
- obj-$(CONFIG_TINYDRM_ILI9341)		+= ili9341.o
- obj-$(CONFIG_TINYDRM_ILI9486)		+= ili9486.o
-+obj-$(CONFIG_TINYDRM_ILI9488_PIO)	+= ili9488_pio.o
- obj-$(CONFIG_TINYDRM_MI0283QT)		+= mi0283qt.o
- obj-$(CONFIG_TINYDRM_REPAPER)		+= repaper.o
- obj-$(CONFIG_TINYDRM_ST7586)		+= st7586.o
-diff -Naur a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
---- a/drivers/hid/hid-ids.h	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/hid/hid-ids.h	2023-05-02 23:08:15.984926787 -0400
-@@ -1423,4 +1423,8 @@
+diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
+index 9a17e5cc3539..14db36a9017e 100644
+--- a/drivers/hid/hid-ids.h
++++ b/drivers/hid/hid-ids.h
+@@ -1426,4 +1426,8 @@
  #define USB_VENDOR_ID_SIGNOTEC			0x2133
  #define USB_DEVICE_ID_SIGNOTEC_VIEWSONIC_PD1011	0x0018
  
@@ -874,10 +1236,11 @@ diff -Naur a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
 +#define USB_DEVICE_ID_VU7PLUS	0x0705
 +
  #endif
-diff -Naur a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
---- a/drivers/hid/hid-quirks.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/hid/hid-quirks.c	2023-05-02 23:08:15.985926784 -0400
-@@ -879,6 +879,9 @@
+diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
+index f8f20a7c24b1..63b3b7a731f7 100644
+--- a/drivers/hid/hid-quirks.c
++++ b/drivers/hid/hid-quirks.c
+@@ -880,6 +880,9 @@ static const struct hid_device_id hid_ignore_list[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_SYNAPTICS, USB_DEVICE_ID_SYNAPTICS_DPAD) },
  #endif
  	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
@@ -887,8 +1250,39 @@ diff -Naur a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
  	{ }
  };
  
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/input/touchscreen/dwav-usb-mt.c	2023-05-02 23:14:05.595829529 -0400
+diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
+index dc90a3ea51ee..fd31ad28b952 100644
+--- a/drivers/input/touchscreen/Kconfig
++++ b/drivers/input/touchscreen/Kconfig
+@@ -1379,4 +1379,14 @@ config TOUCHSCREEN_ZINITIX
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called zinitix.
+ 
++config TOUCHSCREEN_DWAV_USB_MT
++	tristate "D-WAV Scientific USB MultiTouch"
++	depends on USB_ARCH_HAS_HCD
++	select USB
++	help
++	  Say Y here if you have a D-WAV Scientific USB(HID) based MultiTouch
++	  controller.
++
++	  module will be called dwav-usb-mt.
++
+ endif
+diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
+index 557f84fd2075..68feafadf7fe 100644
+--- a/drivers/input/touchscreen/Makefile
++++ b/drivers/input/touchscreen/Makefile
+@@ -116,3 +116,4 @@ obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
+ obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
+ obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
+ obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
++obj-$(CONFIG_TOUCHSCREEN_DWAV_USB_MT)	+= dwav-usb-mt.o
+diff --git a/drivers/input/touchscreen/dwav-usb-mt.c b/drivers/input/touchscreen/dwav-usb-mt.c
+new file mode 100644
+index 000000000000..2e1dd0f2986f
+--- /dev/null
++++ b/drivers/input/touchscreen/dwav-usb-mt.c
 @@ -0,0 +1,554 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
@@ -1444,10 +1838,11 @@ diff -Naur a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
 +MODULE_LICENSE("GPL");
 +
 +MODULE_ALIAS("dwav_usb_mt");
-diff -Naur a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
---- a/drivers/input/touchscreen/goodix.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/input/touchscreen/goodix.c	2023-05-02 23:08:15.987926778 -0400
-@@ -1347,6 +1347,10 @@
+diff --git a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
+index 25e575183dd1..2be4f2eb98c6 100644
+--- a/drivers/input/touchscreen/goodix.c
++++ b/drivers/input/touchscreen/goodix.c
+@@ -1348,6 +1348,10 @@ static int goodix_ts_probe(struct i2c_client *client,
  			return error;
  	}
  
@@ -1458,37 +1853,11 @@ diff -Naur a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/good
  	error = goodix_i2c_test(client);
  	if (error) {
  		if (!ts->reset_controller_at_probe &&
-diff -Naur a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
---- a/drivers/input/touchscreen/Kconfig	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/input/touchscreen/Kconfig	2023-05-02 23:08:15.986926781 -0400
-@@ -1419,4 +1419,14 @@
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called himax_hx83112b.
- 
-+config TOUCHSCREEN_DWAV_USB_MT
-+	tristate "D-WAV Scientific USB MultiTouch"
-+	depends on USB_ARCH_HAS_HCD
-+	select USB
-+	help
-+	  Say Y here if you have a D-WAV Scientific USB(HID) based MultiTouch
-+	  controller.
-+
-+	  module will be called dwav-usb-mt.
-+
- endif
-diff -Naur a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
---- a/drivers/input/touchscreen/Makefile	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/input/touchscreen/Makefile	2023-05-02 23:08:15.986926781 -0400
-@@ -118,4 +118,5 @@
- obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
- obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
- obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
-+obj-$(CONFIG_TOUCHSCREEN_DWAV_USB_MT)	+= dwav-usb-mt.o
- obj-$(CONFIG_TOUCHSCREEN_HIMAX_HX83112B)	+= himax_hx83112b.o
-diff -Naur a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
---- a/drivers/media/i2c/Kconfig	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/i2c/Kconfig	2023-05-02 23:08:15.995926754 -0400
-@@ -1637,4 +1637,11 @@
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 7806d4b81716..505b16cc7034 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -1595,4 +1595,11 @@ config VIDEO_THS7303
  
  endmenu
  
@@ -1500,8 +1869,21 @@ diff -Naur a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
 +	  lt8619c chip driver.
 +
  endif # VIDEO_DEV
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/media/i2c/lt8619c.c	2023-05-02 23:08:15.988926775 -0400
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index 0a2933103dd9..a953a40f3a67 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -142,3 +142,5 @@ obj-$(CONFIG_VIDEO_VPX3220) += vpx3220.o
+ obj-$(CONFIG_VIDEO_VS6624) += vs6624.o
+ obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
+ obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
++
++obj-$(CONFIG_LT8619C)		+= lt8619c.o
+diff --git a/drivers/media/i2c/lt8619c.c b/drivers/media/i2c/lt8619c.c
+new file mode 100644
+index 000000000000..8c36667eb6e9
+--- /dev/null
++++ b/drivers/media/i2c/lt8619c.c
 @@ -0,0 +1,1030 @@
 +/*
 + * LT8619C HDMI to LVDS converter + TFT-LCD 080-QC4011
@@ -2533,8 +2915,11 @@ diff -Naur a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
 +MODULE_DESCRIPTION("LT8619C HDMI to LVDS Driver for TFT LCD QC4011");
 +MODULE_AUTHOR("Joy Cho <joy.cho@hardkernel.com>");
 +MODULE_LICENSE("GPL");
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/media/i2c/lt8619c.h	2023-05-02 23:08:15.988926775 -0400
+diff --git a/drivers/media/i2c/lt8619c.h b/drivers/media/i2c/lt8619c.h
+new file mode 100644
+index 000000000000..321bb14c803f
+--- /dev/null
++++ b/drivers/media/i2c/lt8619c.h
 @@ -0,0 +1,107 @@
 +/*
 + * LT8619C HDMI to LVDS converter + TFT-LCD 080-QC4011
@@ -2643,19 +3028,11 @@ diff -Naur a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
 +	uint32_t ClkFreqValPrevious;
 +};
 +#endif /* __LT8619C_H */
-diff -Naur a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
---- a/drivers/media/i2c/Makefile	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/i2c/Makefile	2023-05-02 23:08:15.995926754 -0400
-@@ -145,3 +145,5 @@
- obj-$(CONFIG_VIDEO_VS6624) += vs6624.o
- obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
- obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
-+
-+obj-$(CONFIG_LT8619C)		+= lt8619c.o
-diff -Naur a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h b/drivers/media/platform/samsung/exynos-gsc/gsc-core.h
---- a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/platform/samsung/exynos-gsc/gsc-core.h	2023-05-02 23:08:15.996926751 -0400
-@@ -481,9 +481,9 @@
+diff --git a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h b/drivers/media/platform/samsung/exynos-gsc/gsc-core.h
+index 1ea5fa1bf3c8..d8c89452db24 100644
+--- a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h
++++ b/drivers/media/platform/samsung/exynos-gsc/gsc-core.h
+@@ -481,9 +481,9 @@ static inline struct gsc_frame *ctx_get_frame(struct gsc_ctx *ctx,
  {
  	struct gsc_frame *frame;
  
@@ -2667,10 +3044,11 @@ diff -Naur a/drivers/media/platform/samsung/exynos-gsc/gsc-core.h b/drivers/medi
  		frame = &ctx->d_frame;
  	} else {
  		pr_err("Wrong buffer/video queue type (%d)", type);
-diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c
---- a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c	2023-05-02 23:08:15.997926748 -0400
-@@ -1783,6 +1783,31 @@
+diff --git a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c
+index 55814041b8d8..f7316764a06c 100644
+--- a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c
++++ b/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c
+@@ -1783,6 +1783,31 @@ static int exynos3250_jpeg_try_crop(struct s5p_jpeg_ctx *ctx,
   * V4L2 controls
   */
  
@@ -2702,7 +3080,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  static int s5p_jpeg_g_selection(struct file *file, void *priv,
  			 struct v4l2_selection *s)
  {
-@@ -1817,9 +1842,6 @@
+@@ -1817,9 +1842,6 @@ static int s5p_jpeg_g_selection(struct file *file, void *priv,
  	return 0;
  }
  
@@ -2712,7 +3090,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  static int s5p_jpeg_s_selection(struct file *file, void *fh,
  				  struct v4l2_selection *s)
  {
-@@ -2011,6 +2033,8 @@
+@@ -2011,6 +2033,8 @@ static const struct v4l2_ioctl_ops s5p_jpeg_ioctl_ops = {
  	.vidioc_streamon		= v4l2_m2m_ioctl_streamon,
  	.vidioc_streamoff		= v4l2_m2m_ioctl_streamoff,
  
@@ -2721,7 +3099,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  	.vidioc_g_selection		= s5p_jpeg_g_selection,
  	.vidioc_s_selection		= s5p_jpeg_s_selection,
  
-@@ -2457,13 +2481,6 @@
+@@ -2457,13 +2481,6 @@ static int s5p_jpeg_queue_setup(struct vb2_queue *vq,
  
  	size = q_data->size;
  
@@ -2735,7 +3113,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  	*nbuffers = count;
  	*nplanes = 1;
  	sizes[0] = size;
-@@ -2571,6 +2588,7 @@
+@@ -2571,6 +2588,7 @@ static int s5p_jpeg_start_streaming(struct vb2_queue *q, unsigned int count)
  static void s5p_jpeg_stop_streaming(struct vb2_queue *q)
  {
  	struct s5p_jpeg_ctx *ctx = vb2_get_drv_priv(q);
@@ -2743,7 +3121,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  
  	/*
  	 * STREAMOFF is an acknowledgment for resolution change event.
-@@ -2583,6 +2601,11 @@
+@@ -2583,6 +2601,11 @@ static void s5p_jpeg_stop_streaming(struct vb2_queue *q)
  		ctx->state = JPEGCTX_RUNNING;
  	}
  
@@ -2755,7 +3133,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  	pm_runtime_put(ctx->jpeg->dev);
  }
  
-@@ -2682,6 +2705,8 @@
+@@ -2682,6 +2705,8 @@ static irqreturn_t s5p_jpeg_irq(int irq, void *dev_id)
  	v4l2_m2m_buf_done(src_buf, state);
  	if (curr_ctx->mode == S5P_JPEG_ENCODE)
  		vb2_set_plane_payload(&dst_buf->vb2_buf, 0, payload_size);
@@ -2764,10 +3142,11 @@ diff -Naur a/drivers/media/platform/samsung/s5p-jpeg/jpeg-core.c b/drivers/media
  	v4l2_m2m_buf_done(dst_buf, state);
  
  	curr_ctx->subsampling = s5p_jpeg_get_subsampling_mode(jpeg->regs);
-diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c
---- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c	2023-05-02 23:08:15.997926748 -0400
-@@ -873,7 +873,7 @@
+diff --git a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c
+index 007c7dbee037..5b62e1200781 100644
+--- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c
++++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c
+@@ -858,7 +858,7 @@ static int s5p_mfc_open(struct file *file)
  	 * We'll do mostly sequential access, so sacrifice TLB efficiency for
  	 * faster allocation.
  	 */
@@ -2776,7 +3155,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c b/drivers/media/pl
  	q->mem_ops = &vb2_dma_contig_memops;
  	q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
  	ret = vb2_queue_init(q);
-@@ -908,7 +908,7 @@
+@@ -893,7 +893,7 @@ static int s5p_mfc_open(struct file *file)
  	 * We'll do mostly sequential access, so sacrifice TLB efficiency for
  	 * faster allocation.
  	 */
@@ -2785,7 +3164,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c b/drivers/media/pl
  	q->mem_ops = &vb2_dma_contig_memops;
  	q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
  	ret = vb2_queue_init(q);
-@@ -956,6 +956,11 @@
+@@ -941,6 +941,11 @@ static int s5p_mfc_release(struct file *file)
  	mfc_debug_enter();
  	if (dev)
  		mutex_lock(&dev->mfc_mutex);
@@ -2797,10 +3176,11 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc.c b/drivers/media/pl
  	vb2_queue_release(&ctx->vq_src);
  	vb2_queue_release(&ctx->vq_dst);
  	if (dev) {
-diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c
---- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c	2023-05-02 23:08:15.998926746 -0400
-@@ -631,8 +631,8 @@
+diff --git a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c
+index 268ffe4da53c..1f385dcc0d82 100644
+--- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c
++++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c
+@@ -631,8 +631,8 @@ static int vidioc_qbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
  	struct s5p_mfc_ctx *ctx = fh_to_ctx(priv);
  
  	if (ctx->state == MFCINST_ERROR) {
@@ -2811,7 +3191,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c b/drivers/medi
  	}
  	if (buf->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
  		return vb2_qbuf(&ctx->vq_src, NULL, buf);
-@@ -651,8 +651,8 @@
+@@ -651,8 +651,8 @@ static int vidioc_dqbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
  	int ret;
  
  	if (ctx->state == MFCINST_ERROR) {
@@ -2822,10 +3202,11 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_dec.c b/drivers/medi
  	}
  
  	switch (buf->type) {
-diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c
---- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c	2023-05-02 23:08:15.999926743 -0400
-@@ -1214,6 +1214,7 @@
+diff --git a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c
+index f62703cebb77..f171c154d927 100644
+--- a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c
++++ b/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c
+@@ -1214,6 +1214,7 @@ static int enc_post_frame_start(struct s5p_mfc_ctx *ctx)
  {
  	struct s5p_mfc_dev *dev = ctx->dev;
  	struct s5p_mfc_buf *mb_entry;
@@ -2833,7 +3214,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c b/drivers/medi
  	unsigned long enc_y_addr = 0, enc_c_addr = 0;
  	unsigned long mb_y_addr, mb_c_addr;
  	int slice_type;
-@@ -1234,8 +1235,12 @@
+@@ -1234,8 +1235,12 @@ static int enc_post_frame_start(struct s5p_mfc_ctx *ctx)
  					&mb_entry->b->vb2_buf, 0);
  			mb_c_addr = vb2_dma_contig_plane_dma_addr(
  					&mb_entry->b->vb2_buf, 1);
@@ -2846,7 +3227,7 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c b/drivers/medi
  				list_del(&mb_entry->list);
  				ctx->src_queue_cnt--;
  				vb2_buffer_done(&mb_entry->b->vb2_buf,
-@@ -1248,8 +1253,12 @@
+@@ -1248,8 +1253,12 @@ static int enc_post_frame_start(struct s5p_mfc_ctx *ctx)
  					&mb_entry->b->vb2_buf, 0);
  			mb_c_addr = vb2_dma_contig_plane_dma_addr(
  					&mb_entry->b->vb2_buf, 1);
@@ -2859,9 +3240,10 @@ diff -Naur a/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_enc.c b/drivers/medi
  				list_del(&mb_entry->list);
  				ctx->ref_queue_cnt--;
  				vb2_buffer_done(&mb_entry->b->vb2_buf,
-diff -Naur a/drivers/mmc/host/dw_mmc-exynos.h b/drivers/mmc/host/dw_mmc-exynos.h
---- a/drivers/mmc/host/dw_mmc-exynos.h	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/mmc/host/dw_mmc-exynos.h	2023-05-02 23:08:15.988926775 -0400
+diff --git a/drivers/mmc/host/dw_mmc-exynos.h b/drivers/mmc/host/dw_mmc-exynos.h
+index 0280d394a32a..7088e39de5d2 100644
+--- a/drivers/mmc/host/dw_mmc-exynos.h
++++ b/drivers/mmc/host/dw_mmc-exynos.h
 @@ -61,7 +61,7 @@
  /* Fixed clock divider */
  #define EXYNOS4210_FIXED_CIU_CLK_DIV	2
@@ -2871,10 +3253,11 @@ diff -Naur a/drivers/mmc/host/dw_mmc-exynos.h b/drivers/mmc/host/dw_mmc-exynos.h
  
  /* Minimal required clock frequency for cclkin, unit: HZ */
  #define EXYNOS_CCLKIN_MIN	50000000
-diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
---- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c	2023-05-02 23:08:15.988926775 -0400
-@@ -761,16 +761,23 @@
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
+index 35c8dd92d369..77fb5598b729 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
+@@ -761,16 +761,23 @@ static int stmmac_set_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
  	if (wol->wolopts) {
  		pr_info("stmmac: wakeup enable\n");
  		device_set_wakeup_enable(priv->device, 1);
@@ -2900,10 +3283,11 @@ diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/
  	return 0;
  }
  
-diff -Naur a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
---- a/drivers/net/phy/phy_device.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/net/phy/phy_device.c	2023-05-02 23:08:15.989926772 -0400
-@@ -1793,8 +1793,10 @@
+diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
+index 82f74f96eba2..1f073d2384db 100644
+--- a/drivers/net/phy/phy_device.c
++++ b/drivers/net/phy/phy_device.c
+@@ -1781,8 +1781,10 @@ void phy_detach(struct phy_device *phydev)
  	    phy_driver_is_genphy_10g(phydev))
  		device_release_driver(&phydev->mdio.dev);
  
@@ -2916,9 +3300,10 @@ diff -Naur a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
  
  	/*
  	 * The phydev might go away on the put_device() below, so avoid
-diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
---- a/drivers/net/phy/realtek.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/net/phy/realtek.c	2023-05-02 23:08:15.990926769 -0400
+diff --git a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
+index 3d99fd6664d7..1b8e7ad879b9 100644
+--- a/drivers/net/phy/realtek.c
++++ b/drivers/net/phy/realtek.c
 @@ -12,6 +12,7 @@
  #include <linux/phy.h>
  #include <linux/module.h>
@@ -2927,7 +3312,7 @@ diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
  
  #define RTL821x_PHYSR				0x11
  #define RTL821x_PHYSR_DUPLEX			BIT(13)
-@@ -234,7 +235,13 @@
+@@ -234,7 +235,13 @@ static int rtl8211f_config_intr(struct phy_device *phydev)
  
  		val = RTL8211F_INER_LINK_STATUS;
  		err = phy_write_paged(phydev, 0xa42, RTL821x_INER, val);
@@ -2941,7 +3326,7 @@ diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
  		val = 0;
  		err = phy_write_paged(phydev, 0xa42, RTL821x_INER, val);
  		if (err)
-@@ -335,6 +342,34 @@
+@@ -335,6 +342,34 @@ static int rtl8211c_config_init(struct phy_device *phydev)
  			    CTL1000_ENABLE_MASTER | CTL1000_AS_MASTER);
  }
  
@@ -2976,7 +3361,7 @@ diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
  static int rtl8211f_config_init(struct phy_device *phydev)
  {
  	struct rtl821x_priv *priv = phydev->priv;
-@@ -929,6 +964,7 @@
+@@ -929,6 +964,7 @@ static struct phy_driver realtek_drvs[] = {
  		.handle_interrupt = rtl8211f_handle_interrupt,
  		.suspend	= genphy_suspend,
  		.resume		= rtl821x_resume,
@@ -2984,10 +3369,11 @@ diff -Naur a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
  		.read_page	= rtl821x_read_page,
  		.write_page	= rtl821x_write_page,
  	}, {
-diff -Naur a/drivers/regulator/s2mps11.c b/drivers/regulator/s2mps11.c
---- a/drivers/regulator/s2mps11.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/regulator/s2mps11.c	2023-05-02 23:08:15.990926769 -0400
-@@ -1117,6 +1117,57 @@
+diff --git a/drivers/regulator/s2mps11.c b/drivers/regulator/s2mps11.c
+index ebc67e3ddd4f..9239d4f303cc 100644
+--- a/drivers/regulator/s2mps11.c
++++ b/drivers/regulator/s2mps11.c
+@@ -1117,6 +1117,57 @@ static const struct regulator_desc s2mpu02_regulators[] = {
  	regulator_desc_s2mpu02_buck7(7),
  };
  
@@ -3045,7 +3431,7 @@ diff -Naur a/drivers/regulator/s2mps11.c b/drivers/regulator/s2mps11.c
  static int s2mps11_pmic_probe(struct platform_device *pdev)
  {
  	struct sec_pmic_dev *iodev = dev_get_drvdata(pdev->dev.parent);
-@@ -1225,6 +1276,34 @@
+@@ -1225,6 +1276,34 @@ static int s2mps11_pmic_probe(struct platform_device *pdev)
  	return ret;
  }
  
@@ -3080,7 +3466,7 @@ diff -Naur a/drivers/regulator/s2mps11.c b/drivers/regulator/s2mps11.c
  static const struct platform_device_id s2mps11_pmic_id[] = {
  	{ "s2mps11-regulator", S2MPS11X},
  	{ "s2mps13-regulator", S2MPS13X},
-@@ -1240,6 +1319,7 @@
+@@ -1240,6 +1319,7 @@ static struct platform_driver s2mps11_pmic_driver = {
  		.name = "s2mps11-pmic",
  	},
  	.probe = s2mps11_pmic_probe,
@@ -3088,30 +3474,32 @@ diff -Naur a/drivers/regulator/s2mps11.c b/drivers/regulator/s2mps11.c
  	.id_table = s2mps11_pmic_id,
  };
  
-diff -Naur a/drivers/spi/spidev.c b/drivers/spi/spidev.c
---- a/drivers/spi/spidev.c	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/spi/spidev.c	2023-05-02 23:25:41.815434390 -0400
-@@ -713,6 +713,7 @@
+diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
+index 71c3db60e968..4643fe8c1e87 100644
+--- a/drivers/spi/spidev.c
++++ b/drivers/spi/spidev.c
+@@ -700,6 +700,7 @@ static const struct spi_device_id spidev_spi_ids[] = {
+ 	{ .name = "m53cpld" },
+ 	{ .name = "spi-petra" },
  	{ .name = "spi-authenta" },
- 	{ .name = "em3581" },
- 	{ .name = "si3210" },
 +	{ .name = "spidev" },
  	{},
  };
  MODULE_DEVICE_TABLE(spi, spidev_spi_ids);
-@@ -741,6 +742,8 @@
- 	{ .compatible = "semtech,sx1301", .data = &spidev_of_check },
- 	{ .compatible = "silabs,em3581", .data = &spidev_of_check },
- 	{ .compatible = "silabs,si3210", .data = &spidev_of_check },
+@@ -726,6 +727,8 @@ static const struct of_device_id spidev_dt_ids[] = {
+ 	{ .compatible = "menlo,m53cpld", .data = &spidev_of_check },
+ 	{ .compatible = "cisco,spi-petra", .data = &spidev_of_check },
+ 	{ .compatible = "micron,spi-authenta", .data = &spidev_of_check },
 +	/* ODROID Modification */
 +	{ .compatible = "odroid,spidev", .data = &spidev_of_check },
  	{},
  };
  MODULE_DEVICE_TABLE(of, spidev_dt_ids);
-diff -Naur a/drivers/thermal/samsung/exynos_tmu.c b/drivers/thermal/samsung/exynos_tmu.c
---- a/drivers/thermal/samsung/exynos_tmu.c	2023-04-26 08:30:09.000000000 -0400
-+++ b/drivers/thermal/samsung/exynos_tmu.c	2023-05-02 23:08:15.991926766 -0400
-@@ -915,8 +915,6 @@
+diff --git a/drivers/thermal/samsung/exynos_tmu.c b/drivers/thermal/samsung/exynos_tmu.c
+index 51874d0a284c..da622d13f756 100644
+--- a/drivers/thermal/samsung/exynos_tmu.c
++++ b/drivers/thermal/samsung/exynos_tmu.c
+@@ -915,8 +915,6 @@ static int exynos_map_dt_data(struct platform_device *pdev)
  	case SOC_ARCH_EXYNOS4412:
  	case SOC_ARCH_EXYNOS5250:
  	case SOC_ARCH_EXYNOS5260:
@@ -3120,7 +3508,7 @@ diff -Naur a/drivers/thermal/samsung/exynos_tmu.c b/drivers/thermal/samsung/exyn
  		data->tmu_set_trip_temp = exynos4412_tmu_set_trip_temp;
  		data->tmu_set_trip_hyst = exynos4412_tmu_set_trip_hyst;
  		data->tmu_initialize = exynos4412_tmu_initialize;
-@@ -935,6 +933,22 @@
+@@ -935,6 +933,22 @@ static int exynos_map_dt_data(struct platform_device *pdev)
  			data->min_efuse_value = 0;
  		data->max_efuse_value = 100;
  		break;
@@ -3143,10 +3531,11 @@ diff -Naur a/drivers/thermal/samsung/exynos_tmu.c b/drivers/thermal/samsung/exyn
  	case SOC_ARCH_EXYNOS5433:
  		data->tmu_set_trip_temp = exynos5433_tmu_set_trip_temp;
  		data->tmu_set_trip_hyst = exynos5433_tmu_set_trip_hyst;
-diff -Naur a/include/drm/drm_mipi_dbi.h b/include/drm/drm_mipi_dbi.h
---- a/include/drm/drm_mipi_dbi.h	2023-04-26 08:30:09.000000000 -0400
-+++ b/include/drm/drm_mipi_dbi.h	2023-05-02 23:08:15.992926763 -0400
-@@ -193,12 +193,7 @@
+diff --git a/include/drm/drm_mipi_dbi.h b/include/drm/drm_mipi_dbi.h
+index 14eaecb1825c..3b46954cd47b 100644
+--- a/include/drm/drm_mipi_dbi.h
++++ b/include/drm/drm_mipi_dbi.h
+@@ -193,12 +193,7 @@ int mipi_dbi_buf_copy(void *dst, struct drm_framebuffer *fb,
  #define mipi_dbi_command(dbi, cmd, seq...) \
  ({ \
  	const u8 d[] = { seq }; \
@@ -3160,55 +3549,6 @@ diff -Naur a/include/drm/drm_mipi_dbi.h b/include/drm/drm_mipi_dbi.h
  })
  
  #ifdef CONFIG_DEBUG_FS
-diff -Naur a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
---- a/scripts/Makefile.dtbinst	2023-04-26 08:30:09.000000000 -0400
-+++ b/scripts/Makefile.dtbinst	2023-05-02 23:08:15.992926763 -0400
-@@ -18,9 +18,10 @@
- include $(kbuild-file)
- 
- dtbs    := $(addprefix $(dst)/, $(dtb-y) $(if $(CONFIG_OF_ALL_DTBS),$(dtb-)))
-+dtbos   := $(addprefix $(dst)/, $(dtbo-y) $(if $(CONFIG_OF_ALL_DTBS),$(dtb-)))
- subdirs := $(addprefix $(obj)/, $(subdir-y) $(subdir-m))
- 
--__dtbs_install: $(dtbs) $(subdirs)
-+__dtbs_install: $(dtbs) $(dtbos) $(subdirs)
- 	@:
- 
- quiet_cmd_dtb_install = INSTALL $@
-diff -Naur a/scripts/Makefile.lib b/scripts/Makefile.lib
---- a/scripts/Makefile.lib	2023-04-26 08:30:09.000000000 -0400
-+++ b/scripts/Makefile.lib	2023-05-02 23:08:15.999926743 -0400
-@@ -340,12 +340,13 @@
- # DTC
- # ---------------------------------------------------------------------------
- DTC ?= $(objtree)/scripts/dtc/dtc
--DTC_FLAGS += -Wno-interrupt_provider \
-+DTC_FLAGS += -Wno-interrupt_provider --symbol \
- 	-Wno-unique_unit_address
- 
- # Disable noisy checks by default
- ifeq ($(findstring 1,$(KBUILD_EXTRA_WARN)),)
- DTC_FLAGS += -Wno-unit_address_vs_reg \
-+	-Wno-gpios_property \
- 	-Wno-avoid_unnecessary_addr_size \
- 	-Wno-alias_paths \
- 	-Wno-graph_child_address \
-@@ -439,6 +440,18 @@
- $(obj)/%.dtbo: $(src)/%.dtso $(DTC) FORCE
- 	$(call if_changed_dep,dtc)
- 
-+quiet_cmd_dtco = DTCO    $@
-+cmd_dtco = mkdir -p $(dir ${dtc-tmp}) ; \
-+	$(CPP) $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ; \
-+	$(DTC) -@ -H epapr -O dtb -o $@ -b 0 \
-+		-i $(dir $<) $(DTC_FLAGS) \
-+		-Wno-interrupts_property \
-+		-d $(depfile).dtc.tmp $(dtc-tmp) ; \
-+	cat $(depfile).pre.tmp $(depfile).dtc.tmp > $(depfile)
-+
-+$(obj)/%.dtbo: $(obj)/%.dts FORCE
-+	$(call if_changed_dep,dtco)
-+
- dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
- 
- # Bzip2
+-- 
+2.39.2
+

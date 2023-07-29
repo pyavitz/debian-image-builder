@@ -1,5 +1,24 @@
---- /dev/null	2023-07-14 00:04:39.233950735 -0400
-+++ b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt	2023-07-11 23:38:52.000000000 -0400
+From 77a6d72c1ffc9b8e0432abe5d59a5df3e3fbe139 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 29 Jul 2023 10:34:03 -0400
+Subject: [PATCH] gpio bit banged pwm driver
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../devicetree/bindings/pwm/pwm-gpio.txt      |  18 ++
+ MAINTAINERS                                   |   5 +
+ drivers/pwm/Kconfig                           |  15 ++
+ drivers/pwm/Makefile                          |   1 +
+ drivers/pwm/pwm-gpio.c                        | 255 ++++++++++++++++++
+ 5 files changed, 294 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pwm/pwm-gpio.txt
+ create mode 100644 drivers/pwm/pwm-gpio.c
+
+diff --git a/Documentation/devicetree/bindings/pwm/pwm-gpio.txt b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt
+new file mode 100644
+index 000000000000..336f61faa446
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pwm/pwm-gpio.txt
 @@ -0,0 +1,18 @@
 +Generic GPIO bit-banged PWM driver
 +
@@ -19,10 +38,27 @@
 +		pwm-gpios = <&pio 7 1 GPIO_ACTIVE_LOW>;
 +		pwm-gpios = <&pio 7 2 GPIO_ACTIVE_LOW>;
 +	};
-diff -Naur a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
---- a/drivers/pwm/Kconfig	2023-07-11 00:31:05.000000000 -0400
-+++ b/drivers/pwm/Kconfig	2023-07-11 23:38:52.000000000 -0400
-@@ -217,6 +217,21 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 35e19594640d..12a392e31b82 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8615,6 +8615,11 @@ F:	Documentation/i2c/muxes/i2c-mux-gpio.rst
+ F:	drivers/i2c/muxes/i2c-mux-gpio.c
+ F:	include/linux/platform_data/i2c-mux-gpio.h
+ 
++GENERIC GPIO PWM DRIVER
++M:	Olliver Schinagl <oliver@schinagl.nl>
++S:	Maintained
++F:	drivers/pwm/pwm-gpio.c
++
+ GENERIC HDLC (WAN) DRIVERS
+ M:	Krzysztof Halasa <khc@pm.waw.pl>
+ S:	Maintained
+diff --git a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
+index 8df861b1f4a3..cb4b14fe34d8 100644
+--- a/drivers/pwm/Kconfig
++++ b/drivers/pwm/Kconfig
+@@ -217,6 +217,21 @@ config PWM_FSL_FTM
  	  To compile this driver as a module, choose M here: the module
  	  will be called pwm-fsl-ftm.
  
@@ -44,10 +80,11 @@ diff -Naur a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
  config PWM_HIBVT
  	tristate "HiSilicon BVT PWM support"
  	depends on ARCH_HISI || COMPILE_TEST
-diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
---- a/drivers/pwm/Makefile	2023-07-11 00:31:05.000000000 -0400
-+++ b/drivers/pwm/Makefile	2023-07-11 23:38:52.000000000 -0400
-@@ -18,6 +18,7 @@
+diff --git a/drivers/pwm/Makefile b/drivers/pwm/Makefile
+index 19899b912e00..b525aee0802b 100644
+--- a/drivers/pwm/Makefile
++++ b/drivers/pwm/Makefile
+@@ -18,6 +18,7 @@ obj-$(CONFIG_PWM_CROS_EC)	+= pwm-cros-ec.o
  obj-$(CONFIG_PWM_DWC)		+= pwm-dwc.o
  obj-$(CONFIG_PWM_EP93XX)	+= pwm-ep93xx.o
  obj-$(CONFIG_PWM_FSL_FTM)	+= pwm-fsl-ftm.o
@@ -55,8 +92,11 @@ diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
  obj-$(CONFIG_PWM_HIBVT)		+= pwm-hibvt.o
  obj-$(CONFIG_PWM_IMG)		+= pwm-img.o
  obj-$(CONFIG_PWM_IMX1)		+= pwm-imx1.o
---- /dev/null	2023-07-14 00:04:39.233950735 -0400
-+++ b/drivers/pwm/pwm-gpio.c	2023-07-11 23:38:52.000000000 -0400
+diff --git a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
+new file mode 100644
+index 000000000000..b339d4558865
+--- /dev/null
++++ b/drivers/pwm/pwm-gpio.c
 @@ -0,0 +1,255 @@
 +/*
 + * Copyright (c) 2015 Olliver Schinagl <oliver@schinagl.nl>
@@ -313,18 +353,6 @@ diff -Naur a/drivers/pwm/Makefile b/drivers/pwm/Makefile
 +MODULE_AUTHOR("Olliver Schinagl <oliver@schinagl.nl>");
 +MODULE_DESCRIPTION("Generic GPIO bit-banged PWM driver");
 +MODULE_LICENSE("GPL");
-diff -Naur a/MAINTAINERS b/MAINTAINERS
---- a/MAINTAINERS	2023-07-11 00:31:05.000000000 -0400
-+++ b/MAINTAINERS	2023-07-11 23:38:52.000000000 -0400
-@@ -8615,6 +8615,11 @@
- F:	drivers/i2c/muxes/i2c-mux-gpio.c
- F:	include/linux/platform_data/i2c-mux-gpio.h
- 
-+GENERIC GPIO PWM DRIVER
-+M:	Olliver Schinagl <oliver@schinagl.nl>
-+S:	Maintained
-+F:	drivers/pwm/pwm-gpio.c
-+
- GENERIC HDLC (WAN) DRIVERS
- M:	Krzysztof Halasa <khc@pm.waw.pl>
- S:	Maintained
+-- 
+2.39.2
+
