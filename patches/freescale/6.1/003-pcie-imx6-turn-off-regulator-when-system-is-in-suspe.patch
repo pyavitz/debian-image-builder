@@ -1,7 +1,18 @@
-diff -Naur a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
---- a/drivers/pci/controller/dwc/pci-imx6.c	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/pci/controller/dwc/pci-imx6.c	2023-05-02 23:59:30.074434573 -0400
-@@ -966,22 +966,13 @@
+From e30ed2a704b319bf6552c4026a102d9c12eb00d7 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 13:21:24 -0400
+Subject: [PATCH] pcie imx6 turn off regulator when system is in suspend mode
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 47db2d20568e..997f4a812b9b 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -926,22 +926,13 @@ static int imx6_pcie_host_init(struct dw_pcie_rp *pp)
  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
  	int ret;
  
@@ -25,7 +36,7 @@ diff -Naur a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/
  	}
  
  	if (imx6_pcie->phy) {
-@@ -1015,9 +1006,6 @@
+@@ -975,9 +966,6 @@ static int imx6_pcie_host_init(struct dw_pcie_rp *pp)
  		phy_exit(imx6_pcie->phy);
  err_clk_disable:
  	imx6_pcie_clk_disable(imx6_pcie);
@@ -35,7 +46,7 @@ diff -Naur a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/
  	return ret;
  }
  
-@@ -1032,9 +1020,6 @@
+@@ -992,9 +980,6 @@ static void imx6_pcie_host_exit(struct dw_pcie_rp *pp)
  		phy_exit(imx6_pcie->phy);
  	}
  	imx6_pcie_clk_disable(imx6_pcie);
@@ -45,7 +56,7 @@ diff -Naur a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/
  }
  
  static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
-@@ -1403,6 +1388,13 @@
+@@ -1264,6 +1249,13 @@ static int imx6_pcie_probe(struct platform_device *pdev)
  		if (PTR_ERR(imx6_pcie->vpcie) != -ENODEV)
  			return PTR_ERR(imx6_pcie->vpcie);
  		imx6_pcie->vpcie = NULL;
@@ -59,3 +70,6 @@ diff -Naur a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/
  	}
  
  	imx6_pcie->vph = devm_regulator_get_optional(&pdev->dev, "vph");
+-- 
+2.39.2
+
