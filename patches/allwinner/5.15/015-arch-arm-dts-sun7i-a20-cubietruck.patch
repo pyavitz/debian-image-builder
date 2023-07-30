@@ -1,0 +1,94 @@
+From 04a3ee4546e9774383c3bf435603a0ace69e356a Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 08:55:44 -0400
+Subject: [PATCH] arch: arm: dts: sun7i-a20-cubietruck
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/boot/dts/sun7i-a20-cubietruck.dts |  6 ++++--
+ arch/arm/boot/dts/sun7i-a20.dtsi           | 10 ++++++++++
+ drivers/mmc/host/sunxi-mmc.c               |  3 ++-
+ 3 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
+index 52160e368304..93d4599f08f9 100644
+--- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
++++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
+@@ -55,6 +55,7 @@ / {
+ 
+ 	aliases {
+ 		serial0 = &uart0;
++		serial2 = &uart2;
+ 	};
+ 
+ 	chosen {
+@@ -93,6 +94,7 @@ led-2 {
+ 		led-3 {
+ 			label = "cubietruck:green:usr";
+ 			gpios = <&pio 7 7 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "mmc0";
+ 		};
+ 	};
+ 
+@@ -261,14 +263,14 @@ &battery_power_supply {
+ &reg_dcdc2 {
+ 	regulator-always-on;
+ 	regulator-min-microvolt = <1000000>;
+-	regulator-max-microvolt = <1450000>;
++	regulator-max-microvolt = <1500000>;
+ 	regulator-name = "vdd-cpu";
+ };
+ 
+ &reg_dcdc3 {
+ 	regulator-always-on;
+ 	regulator-min-microvolt = <1000000>;
+-	regulator-max-microvolt = <1400000>;
++	regulator-max-microvolt = <1500000>;
+ 	regulator-name = "vdd-int-dll";
+ };
+ 
+diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a20.dtsi
+index 5a40e0280665..7166706e6dd5 100644
+--- a/arch/arm/boot/dts/sun7i-a20.dtsi
++++ b/arch/arm/boot/dts/sun7i-a20.dtsi
+@@ -108,6 +108,11 @@ cpu0: cpu@0 {
+ 			clock-latency = <244144>; /* 8 32k periods */
+ 			operating-points = <
+ 				/* kHz	  uV */
++				1200000 1500000
++				1152000 1500000
++				1104000 1450000
++				1056000 1450000
++				1008000 1450000
+ 				960000	1400000
+ 				912000	1400000
+ 				864000	1300000
+@@ -127,6 +132,11 @@ cpu1: cpu@1 {
+ 			clock-latency = <244144>; /* 8 32k periods */
+ 			operating-points = <
+ 				/* kHz	  uV */
++				1200000 1500000
++				1152000 1500000
++				1104000 1450000
++				1056000 1450000
++				1008000 1450000
+ 				960000	1400000
+ 				912000	1400000
+ 				864000	1300000
+diff --git a/drivers/mmc/host/sunxi-mmc.c b/drivers/mmc/host/sunxi-mmc.c
+index 8207009c9564..70ed6552e4f8 100644
+--- a/drivers/mmc/host/sunxi-mmc.c
++++ b/drivers/mmc/host/sunxi-mmc.c
+@@ -1437,7 +1437,8 @@ static int sunxi_mmc_probe(struct platform_device *pdev)
+ 	 */
+ 	if ((host->cfg->clk_delays || host->use_new_timings) &&
+ 	    !of_device_is_compatible(pdev->dev.of_node,
+-				     "allwinner,sun50i-h5-emmc"))
++				"allwinner,sun50i-h5-emmc") &&
++				!of_machine_is_compatible("allwinner,sun7i-a20"))
+ 		mmc->caps      |= MMC_CAP_1_8V_DDR | MMC_CAP_3_3V_DDR;
+ 
+ 	ret = mmc_of_parse(mmc);
+-- 
+2.39.2
+

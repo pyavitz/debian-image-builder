@@ -1,0 +1,1071 @@
+From 5ec5f2b844f09a1b1f975cb71b87bcee42c0a1ae Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 09:00:15 -0400
+Subject: [PATCH] sound: soc: sunxi: sun9i-hdmi-audio support
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/gpu/drm/sun4i/Kconfig            |  11 +
+ drivers/gpu/drm/sun4i/Makefile           |   3 +
+ drivers/gpu/drm/sun4i/sun4i_hdmi.h       |  37 ++
+ drivers/gpu/drm/sun4i/sun4i_hdmi_audio.c | 450 +++++++++++++++++++++++
+ drivers/gpu/drm/sun4i/sun4i_hdmi_enc.c   |  15 +
+ drivers/gpu/drm/sun4i/sun8i_mixer.c      |  12 +
+ sound/soc/sunxi/Kconfig                  |   8 +
+ sound/soc/sunxi/Makefile                 |   3 +-
+ sound/soc/sunxi/sun4i-codec.c            |  51 ++-
+ sound/soc/sunxi/sun4i-spdif.c            |   7 +
+ sound/soc/sunxi/sun8i-codec-analog.c     |   8 +-
+ sound/soc/sunxi/sun9i-hdmi-audio.c       | 180 +++++++++
+ 12 files changed, 778 insertions(+), 7 deletions(-)
+ create mode 100644 drivers/gpu/drm/sun4i/sun4i_hdmi_audio.c
+ create mode 100644 sound/soc/sunxi/sun9i-hdmi-audio.c
+
+diff --git a/drivers/gpu/drm/sun4i/Kconfig b/drivers/gpu/drm/sun4i/Kconfig
+index 8c796de53222..eebf67dafd32 100644
+--- a/drivers/gpu/drm/sun4i/Kconfig
++++ b/drivers/gpu/drm/sun4i/Kconfig
+@@ -23,6 +23,17 @@ config DRM_SUN4I_HDMI
+ 	  Choose this option if you have an Allwinner SoC with an HDMI
+ 	  controller.
+ 
++config DRM_SUN4I_HDMI_AUDIO
++	bool "Allwinner A10 HDMI Audio Support"
++	default y
++	depends on DRM_SUN4I_HDMI
++	depends on SND_SOC=y || SND_SOC=DRM_SUN4I_HDMI
++	select SND_PCM_ELD
++	select SND_SOC_GENERIC_DMAENGINE_PCM
++	help
++	  Choose this option if you have an Allwinner SoC with an HDMI
++	  controller and want to use audio.
++
+ config DRM_SUN4I_HDMI_CEC
+ 	bool "Allwinner A10 HDMI CEC Support"
+ 	depends on DRM_SUN4I_HDMI
+diff --git a/drivers/gpu/drm/sun4i/Makefile b/drivers/gpu/drm/sun4i/Makefile
+index 0d04f2447b01..492bfd28ad2e 100644
+--- a/drivers/gpu/drm/sun4i/Makefile
++++ b/drivers/gpu/drm/sun4i/Makefile
+@@ -5,6 +5,9 @@ sun4i-frontend-y		+= sun4i_frontend.o
+ sun4i-drm-y			+= sun4i_drv.o
+ sun4i-drm-y			+= sun4i_framebuffer.o
+ 
++ifdef CONFIG_DRM_SUN4I_HDMI_AUDIO
++sun4i-drm-hdmi-y		+= sun4i_hdmi_audio.o
++endif
+ sun4i-drm-hdmi-y		+= sun4i_hdmi_ddc_clk.o
+ sun4i-drm-hdmi-y		+= sun4i_hdmi_enc.o
+ sun4i-drm-hdmi-y		+= sun4i_hdmi_i2c.o
+diff --git a/drivers/gpu/drm/sun4i/sun4i_hdmi.h b/drivers/gpu/drm/sun4i/sun4i_hdmi.h
+index 00ca35f07ba5..d7e6a1f0c80f 100644
+--- a/drivers/gpu/drm/sun4i/sun4i_hdmi.h
++++ b/drivers/gpu/drm/sun4i/sun4i_hdmi.h
+@@ -42,7 +42,32 @@
+ #define SUN4I_HDMI_VID_TIMING_POL_VSYNC		BIT(1)
+ #define SUN4I_HDMI_VID_TIMING_POL_HSYNC		BIT(0)
+ 
++#define SUN4I_HDMI_AUDIO_CTRL_REG	0x040
++#define SUN4I_HDMI_AUDIO_CTRL_ENABLE		BIT(31)
++#define SUN4I_HDMI_AUDIO_CTRL_RESET		BIT(30)
++
++#define SUN4I_HDMI_AUDIO_FMT_REG	0x048
++#define SUN4I_HDMI_AUDIO_FMT_SRC		BIT(31)
++#define SUN4I_HDMI_AUDIO_FMT_LAYOUT		BIT(3)
++#define SUN4I_HDMI_AUDIO_FMT_CH_CFG(n)		((n) - 1)
++#define SUN4I_HDMI_AUDIO_FMT_CH_CFG_MASK	GENMASK(2, 0)
++
++#define SUN4I_HDMI_AUDIO_PCM_REG	0x4c
++#define SUN4I_HDMI_AUDIO_PCM_CH_MAP(n, m)	(((m) - 1) << ((n) * 4))
++#define SUN4I_HDMI_AUDIO_PCM_CH_MAP_MASK(n)	(GENMASK(2, 0) << ((n) * 4))
++
++#define SUN4I_HDMI_AUDIO_CTS_REG	0x050
++#define SUN4I_HDMI_AUDIO_CTS(n)			((n) & GENMASK(19, 0))
++
++#define SUN4I_HDMI_AUDIO_N_REG		0x054
++#define SUN4I_HDMI_AUDIO_N(n)			((n) & GENMASK(19, 0))
++
++#define SUN4I_HDMI_AUDIO_STAT0_REG	0x58
++#define SUN4I_HDMI_AUDIO_STAT0_FREQ(n)		((n) << 24)
++#define SUN4I_HDMI_AUDIO_STAT0_FREQ_MASK	GENMASK(27, 24)
++
+ #define SUN4I_HDMI_AVI_INFOFRAME_REG(n)	(0x080 + (n))
++#define SUN4I_HDMI_AUDIO_INFOFRAME_REG(n)	(0x0a0 + (n))
+ 
+ #define SUN4I_HDMI_PAD_CTRL0_REG	0x200
+ #define SUN4I_HDMI_PAD_CTRL0_BIASEN		BIT(31)
+@@ -242,6 +267,11 @@ struct sun4i_hdmi_variant {
+ 	bool			ddc_fifo_has_dir;
+ };
+ 
++struct sun4i_hdmi_audio {
++	struct snd_soc_card		*card;
++	u8				channels;
++};
++
+ struct sun4i_hdmi {
+ 	struct drm_connector	connector;
+ 	struct drm_encoder	encoder;
+@@ -283,9 +313,14 @@ struct sun4i_hdmi {
+ 	struct regmap_field	*field_ddc_sda_en;
+ 	struct regmap_field	*field_ddc_sck_en;
+ 
++
+ 	struct sun4i_drv	*drv;
+ 
+ 	bool			hdmi_monitor;
++	bool			hdmi_audio;
++
++	struct sun4i_hdmi_audio audio;
++
+ 	struct cec_adapter	*cec_adap;
+ 
+ 	const struct sun4i_hdmi_variant	*variant;
+@@ -294,5 +329,7 @@ struct sun4i_hdmi {
+ int sun4i_ddc_create(struct sun4i_hdmi *hdmi, struct clk *clk);
+ int sun4i_tmds_create(struct sun4i_hdmi *hdmi);
+ int sun4i_hdmi_i2c_create(struct device *dev, struct sun4i_hdmi *hdmi);
++int sun4i_hdmi_audio_create(struct sun4i_hdmi *hdmi);
++void sun4i_hdmi_audio_destroy(struct sun4i_hdmi *hdmi);
+ 
+ #endif /* _SUN4I_HDMI_H_ */
+diff --git a/drivers/gpu/drm/sun4i/sun4i_hdmi_audio.c b/drivers/gpu/drm/sun4i/sun4i_hdmi_audio.c
+new file mode 100644
+index 000000000000..2ac967bfdcc5
+--- /dev/null
++++ b/drivers/gpu/drm/sun4i/sun4i_hdmi_audio.c
+@@ -0,0 +1,450 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2020 Olimex Ltd.
++ *   Author: Stefan Mavrodiev <stefan@olimex.com>
++ */
++#include <linux/dma-mapping.h>
++#include <linux/dmaengine.h>
++#include <linux/module.h>
++#include <linux/of_dma.h>
++#include <linux/regmap.h>
++
++#include <drm/drm_print.h>
++
++#include <sound/dmaengine_pcm.h>
++#include <sound/pcm_drm_eld.h>
++#include <sound/pcm_params.h>
++#include <sound/soc.h>
++
++#include "sun4i_hdmi.h"
++
++static int sun4i_hdmi_audio_ctl_eld_info(struct snd_kcontrol *kcontrol,
++					 struct snd_ctl_elem_info *uinfo)
++{
++	uinfo->type = SNDRV_CTL_ELEM_TYPE_BYTES;
++	uinfo->count = MAX_ELD_BYTES;
++	return 0;
++}
++
++static int sun4i_hdmi_audio_ctl_eld_get(struct snd_kcontrol *kcontrol,
++					struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_component *component = snd_kcontrol_chip(kcontrol);
++	struct snd_soc_card *card = snd_soc_component_get_drvdata(component);
++	struct sun4i_hdmi *hdmi = snd_soc_card_get_drvdata(card);
++
++	memcpy(ucontrol->value.bytes.data,
++	       hdmi->connector.eld,
++	       MAX_ELD_BYTES);
++
++	return 0;
++}
++
++static const struct snd_kcontrol_new sun4i_hdmi_audio_controls[] = {
++	{
++		.access = SNDRV_CTL_ELEM_ACCESS_READ |
++			  SNDRV_CTL_ELEM_ACCESS_VOLATILE,
++		.iface = SNDRV_CTL_ELEM_IFACE_PCM,
++		.name = "ELD",
++		.info = sun4i_hdmi_audio_ctl_eld_info,
++		.get = sun4i_hdmi_audio_ctl_eld_get,
++	},
++};
++
++static const struct snd_soc_dapm_widget sun4i_hdmi_audio_widgets[] = {
++	SND_SOC_DAPM_OUTPUT("TX"),
++};
++
++static const struct snd_soc_dapm_route sun4i_hdmi_audio_routes[] = {
++	{ "TX", NULL, "Playback" },
++};
++
++static const struct snd_soc_component_driver sun4i_hdmi_audio_component = {
++	.controls               = sun4i_hdmi_audio_controls,
++	.num_controls           = ARRAY_SIZE(sun4i_hdmi_audio_controls),
++	.dapm_widgets		= sun4i_hdmi_audio_widgets,
++	.num_dapm_widgets	= ARRAY_SIZE(sun4i_hdmi_audio_widgets),
++	.dapm_routes		= sun4i_hdmi_audio_routes,
++	.num_dapm_routes	= ARRAY_SIZE(sun4i_hdmi_audio_routes),
++};
++
++static int sun4i_hdmi_audio_startup(struct snd_pcm_substream *substream,
++				    struct snd_soc_dai *dai)
++{
++	struct snd_soc_card *card = snd_soc_dai_get_drvdata(dai);
++	struct sun4i_hdmi *hdmi = snd_soc_card_get_drvdata(card);
++	u32 reg;
++	int ret;
++
++	regmap_write(hdmi->regmap, SUN4I_HDMI_AUDIO_CTRL_REG, 0);
++	regmap_write(hdmi->regmap,
++		     SUN4I_HDMI_AUDIO_CTRL_REG,
++		     SUN4I_HDMI_AUDIO_CTRL_RESET);
++	ret = regmap_read_poll_timeout(hdmi->regmap,
++				       SUN4I_HDMI_AUDIO_CTRL_REG,
++				       reg, !reg, 100, 50000);
++	if (ret < 0) {
++		DRM_ERROR("Failed to reset HDMI Audio\n");
++		return ret;
++	}
++
++	regmap_write(hdmi->regmap,
++		     SUN4I_HDMI_AUDIO_CTRL_REG,
++		     SUN4I_HDMI_AUDIO_CTRL_ENABLE);
++
++	return snd_pcm_hw_constraint_eld(substream->runtime,
++					hdmi->connector.eld);
++}
++
++static void sun4i_hdmi_audio_shutdown(struct snd_pcm_substream *substream,
++				      struct snd_soc_dai *dai)
++{
++	struct snd_soc_card *card = snd_soc_dai_get_drvdata(dai);
++	struct sun4i_hdmi *hdmi = snd_soc_card_get_drvdata(card);
++
++	regmap_write(hdmi->regmap, SUN4I_HDMI_AUDIO_CTRL_REG, 0);
++}
++
++static int sun4i_hdmi_setup_audio_infoframes(struct sun4i_hdmi *hdmi)
++{
++	union hdmi_infoframe frame;
++	u8 buffer[14];
++	int i, ret;
++
++	ret = hdmi_audio_infoframe_init(&frame.audio);
++	if (ret < 0) {
++		DRM_ERROR("Failed to init HDMI audio infoframe\n");
++		return ret;
++	}
++
++	frame.audio.coding_type = HDMI_AUDIO_CODING_TYPE_STREAM;
++	frame.audio.sample_frequency = HDMI_AUDIO_SAMPLE_FREQUENCY_STREAM;
++	frame.audio.sample_size = HDMI_AUDIO_SAMPLE_SIZE_STREAM;
++	frame.audio.channels = hdmi->audio.channels;
++
++	ret = hdmi_infoframe_pack(&frame, buffer, sizeof(buffer));
++	if (ret < 0) {
++		DRM_ERROR("Failed to pack HDMI audio infoframe\n");
++		return ret;
++	}
++
++	for (i = 0; i < sizeof(buffer); i++)
++		writeb(buffer[i],
++		       hdmi->base + SUN4I_HDMI_AUDIO_INFOFRAME_REG(i));
++
++	return 0;
++}
++
++static void sun4i_hdmi_audio_set_cts_n(struct sun4i_hdmi *hdmi,
++				       struct snd_pcm_hw_params *params)
++{
++	struct drm_encoder *encoder = &hdmi->encoder;
++	struct drm_crtc *crtc = encoder->crtc;
++	const struct drm_display_mode *mode = &crtc->state->adjusted_mode;
++	u32 rate = params_rate(params);
++	u32 n, cts;
++	u64 tmp;
++
++	/**
++	 * Calculate Cycle Time Stamp (CTS) and Numerator (N):
++	 *
++	 * N = 128 * Samplerate / 1000
++	 * CTS = (Ftdms * N) / (128 * Samplerate)
++	 */
++
++	n = 128 * rate / 1000;
++	tmp = (u64)(mode->clock * 1000) * n;
++	do_div(tmp, 128 * rate);
++	cts = tmp;
++
++	regmap_write(hdmi->regmap,
++		     SUN4I_HDMI_AUDIO_CTS_REG,
++		     SUN4I_HDMI_AUDIO_CTS(cts));
++
++	regmap_write(hdmi->regmap,
++		     SUN4I_HDMI_AUDIO_N_REG,
++		     SUN4I_HDMI_AUDIO_N(n));
++}
++
++static int sun4i_hdmi_audio_set_hw_rate(struct sun4i_hdmi *hdmi,
++					struct snd_pcm_hw_params *params)
++{
++	u32 rate = params_rate(params);
++	u32 val;
++
++	switch (rate) {
++	case 44100:
++		val = 0x0;
++		break;
++	case 48000:
++		val = 0x2;
++		break;
++	case 32000:
++		val = 0x3;
++		break;
++	case 88200:
++		val = 0x8;
++		break;
++	case 96000:
++		val = 0x9;
++		break;
++	case 176400:
++		val = 0xc;
++		break;
++	case 192000:
++		val = 0xe;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	regmap_update_bits(hdmi->regmap,
++			   SUN4I_HDMI_AUDIO_STAT0_REG,
++			   SUN4I_HDMI_AUDIO_STAT0_FREQ_MASK,
++			   SUN4I_HDMI_AUDIO_STAT0_FREQ(val));
++
++	return 0;
++}
++
++static int sun4i_hdmi_audio_set_hw_channels(struct sun4i_hdmi *hdmi,
++					    struct snd_pcm_hw_params *params)
++{
++	u32 channels = params_channels(params);
++
++	if (channels > 8)
++		return -EINVAL;
++
++	hdmi->audio.channels = channels;
++
++	regmap_update_bits(hdmi->regmap,
++			   SUN4I_HDMI_AUDIO_FMT_REG,
++			   SUN4I_HDMI_AUDIO_FMT_LAYOUT,
++			   (channels > 2) ? SUN4I_HDMI_AUDIO_FMT_LAYOUT : 0);
++
++	regmap_update_bits(hdmi->regmap,
++			   SUN4I_HDMI_AUDIO_FMT_REG,
++			   SUN4I_HDMI_AUDIO_FMT_CH_CFG_MASK,
++			   SUN4I_HDMI_AUDIO_FMT_CH_CFG(channels));
++
++	regmap_write(hdmi->regmap, SUN4I_HDMI_AUDIO_PCM_REG, 0x76543210);
++
++	/**
++	 * If only one channel is required, send the same sample
++	 * to the sink device as a left and right channel.
++	 */
++	if (channels == 1)
++		regmap_update_bits(hdmi->regmap,
++				   SUN4I_HDMI_AUDIO_PCM_REG,
++				   SUN4I_HDMI_AUDIO_PCM_CH_MAP_MASK(1),
++				   SUN4I_HDMI_AUDIO_PCM_CH_MAP(1, 1));
++
++	return 0;
++}
++
++static int sun4i_hdmi_audio_hw_params(struct snd_pcm_substream *substream,
++				      struct snd_pcm_hw_params *params,
++				      struct snd_soc_dai *dai)
++{
++	struct snd_soc_card *card = snd_soc_dai_get_drvdata(dai);
++	struct sun4i_hdmi *hdmi = snd_soc_card_get_drvdata(card);
++	int ret;
++
++	ret = sun4i_hdmi_audio_set_hw_rate(hdmi, params);
++	if (ret < 0)
++		return ret;
++
++	ret = sun4i_hdmi_audio_set_hw_channels(hdmi, params);
++	if (ret < 0)
++		return ret;
++
++	sun4i_hdmi_audio_set_cts_n(hdmi, params);
++
++	return 0;
++}
++
++static int sun4i_hdmi_audio_trigger(struct snd_pcm_substream *substream,
++				    int cmd,
++				    struct snd_soc_dai *dai)
++{
++	struct snd_soc_card *card = snd_soc_dai_get_drvdata(dai);
++	struct sun4i_hdmi *hdmi = snd_soc_card_get_drvdata(card);
++	int ret = 0;
++
++	switch (cmd) {
++	case SNDRV_PCM_TRIGGER_START:
++		ret = sun4i_hdmi_setup_audio_infoframes(hdmi);
++		break;
++	default:
++		break;
++	}
++
++	return ret;
++}
++
++static const struct snd_soc_dai_ops sun4i_hdmi_audio_dai_ops = {
++	.startup = sun4i_hdmi_audio_startup,
++	.shutdown = sun4i_hdmi_audio_shutdown,
++	.hw_params = sun4i_hdmi_audio_hw_params,
++	.trigger = sun4i_hdmi_audio_trigger,
++};
++
++static int sun4i_hdmi_audio_dai_probe(struct snd_soc_dai *dai)
++{
++	struct snd_dmaengine_dai_dma_data *dma_data;
++
++	dma_data = devm_kzalloc(dai->dev, sizeof(*dma_data), GFP_KERNEL);
++	if (!dma_data)
++		return -ENOMEM;
++
++	dma_data->addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
++	dma_data->maxburst = 8;
++
++	snd_soc_dai_init_dma_data(dai, dma_data, NULL);
++
++	return 0;
++}
++
++static struct snd_soc_dai_driver sun4i_hdmi_audio_dai = {
++	.name = "HDMI",
++	.ops = &sun4i_hdmi_audio_dai_ops,
++	.probe = sun4i_hdmi_audio_dai_probe,
++	.playback = {
++		.stream_name	= "Playback",
++		.channels_min	= 1,
++		.channels_max	= 8,
++		.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++		.rates		= SNDRV_PCM_RATE_8000_192000,
++	},
++};
++
++static const struct snd_pcm_hardware sun4i_hdmi_audio_pcm_hardware = {
++	.info			= SNDRV_PCM_INFO_INTERLEAVED |
++				  SNDRV_PCM_INFO_BLOCK_TRANSFER |
++				  SNDRV_PCM_INFO_MMAP |
++				  SNDRV_PCM_INFO_MMAP_VALID |
++				  SNDRV_PCM_INFO_PAUSE |
++				  SNDRV_PCM_INFO_RESUME,
++	.formats		= SNDRV_PCM_FMTBIT_S16_LE,
++	.rates                  = SNDRV_PCM_RATE_8000_192000,
++	.rate_min               = 8000,
++	.rate_max               = 192000,
++	.channels_min           = 1,
++	.channels_max           = 8,
++	.buffer_bytes_max	= 128 * 1024,
++	.period_bytes_min	= 4 * 1024,
++	.period_bytes_max	= 32 * 1024,
++	.periods_min		= 2,
++	.periods_max		= 8,
++	.fifo_size		= 128,
++};
++
++static const struct snd_dmaengine_pcm_config sun4i_hdmi_audio_pcm_config = {
++	.chan_names[SNDRV_PCM_STREAM_PLAYBACK] = "audio-tx",
++	.pcm_hardware = &sun4i_hdmi_audio_pcm_hardware,
++	.prealloc_buffer_size = 128 * 1024,
++	.prepare_slave_config = snd_dmaengine_pcm_prepare_slave_config,
++};
++
++struct snd_soc_card sun4i_hdmi_audio_card = {
++	.name = "sun4i-hdmi",
++};
++
++int sun4i_hdmi_audio_create(struct sun4i_hdmi *hdmi)
++{
++	struct snd_soc_card *card = &sun4i_hdmi_audio_card;
++	struct snd_soc_dai_link_component *comp;
++	struct snd_soc_dai_link *link;
++	int ret;
++
++	ret = snd_dmaengine_pcm_register(hdmi->dev,
++					 &sun4i_hdmi_audio_pcm_config, 0);
++	if (ret < 0) {
++		DRM_ERROR("Could not register PCM\n");
++		return ret;
++	}
++
++	ret = snd_soc_register_component(hdmi->dev,
++					 &sun4i_hdmi_audio_component,
++					 &sun4i_hdmi_audio_dai, 1);
++	if (ret < 0) {
++		DRM_ERROR("Could not register DAI\n");
++		goto unregister_pcm;
++	}
++
++	link = devm_kzalloc(hdmi->dev, sizeof(*link), GFP_KERNEL);
++	if (!link) {
++		ret = -ENOMEM;
++		goto unregister_component;
++	}
++
++	comp = devm_kzalloc(hdmi->dev, sizeof(*comp) * 3, GFP_KERNEL);
++	if (!comp) {
++		ret = -ENOMEM;
++		goto unregister_component;
++	}
++
++	link->cpus = &comp[0];
++	link->codecs = &comp[1];
++	link->platforms = &comp[2];
++
++	link->num_cpus = 1;
++	link->num_codecs = 1;
++	link->num_platforms = 1;
++
++	link->playback_only = 1;
++
++	link->name = "SUN4I-HDMI";
++	link->stream_name = "SUN4I-HDMI PCM";
++
++	link->codecs->name = dev_name(hdmi->dev);
++	link->codecs->dai_name	= sun4i_hdmi_audio_dai.name;
++
++	link->cpus->dai_name = dev_name(hdmi->dev);
++
++	link->platforms->name = dev_name(hdmi->dev);
++
++	link->dai_fmt = SND_SOC_DAIFMT_I2S;
++
++	card->dai_link = link;
++	card->num_links = 1;
++	card->dev = hdmi->dev;
++
++	hdmi->audio.card = card;
++
++	/**
++	 * snd_soc_register_card() will overwrite the driver_data pointer.
++	 * So before registering the card, store the original pointer in
++	 * card->drvdata.
++	 */
++	snd_soc_card_set_drvdata(card, hdmi);
++	ret = snd_soc_register_card(card);
++	if (ret)
++		goto unregister_component;
++
++	return 0;
++
++unregister_component:
++	snd_soc_unregister_component(hdmi->dev);
++unregister_pcm:
++	snd_dmaengine_pcm_unregister(hdmi->dev);
++	return ret;
++}
++
++void sun4i_hdmi_audio_destroy(struct sun4i_hdmi *hdmi)
++{
++	struct snd_soc_card *card = hdmi->audio.card;
++	void *data;
++
++	/**
++	 * Before removing the card, restore the previously stored driver_data.
++	 * This will ensure proper removal of the sun4i-hdmi module, since it
++	 * uses dev_get_drvdata() in the unbind function.
++	 */
++	data = snd_soc_card_get_drvdata(card);
++
++	snd_soc_unregister_card(card);
++	snd_soc_unregister_component(hdmi->dev);
++	snd_dmaengine_pcm_unregister(hdmi->dev);
++
++	dev_set_drvdata(hdmi->dev, data);
++}
+diff --git a/drivers/gpu/drm/sun4i/sun4i_hdmi_enc.c b/drivers/gpu/drm/sun4i/sun4i_hdmi_enc.c
+index 2f2c9f0a1071..f75b635502ce 100644
+--- a/drivers/gpu/drm/sun4i/sun4i_hdmi_enc.c
++++ b/drivers/gpu/drm/sun4i/sun4i_hdmi_enc.c
+@@ -24,6 +24,8 @@
+ #include <drm/drm_probe_helper.h>
+ #include <drm/drm_simple_kms_helper.h>
+ 
++#include <sound/soc.h>
++
+ #include "sun4i_backend.h"
+ #include "sun4i_crtc.h"
+ #include "sun4i_drv.h"
+@@ -88,6 +90,11 @@ static void sun4i_hdmi_disable(struct drm_encoder *encoder)
+ 
+ 	DRM_DEBUG_DRIVER("Disabling the HDMI Output\n");
+ 
++#ifdef CONFIG_DRM_SUN4I_HDMI_AUDIO
++   if (hdmi->hdmi_audio)
++	    sun4i_hdmi_audio_destroy(hdmi);
++#endif
++
+ 	val = readl(hdmi->base + SUN4I_HDMI_VID_CTRL_REG);
+ 	val &= ~SUN4I_HDMI_VID_CTRL_ENABLE;
+ 	writel(val, hdmi->base + SUN4I_HDMI_VID_CTRL_REG);
+@@ -115,6 +122,11 @@ static void sun4i_hdmi_enable(struct drm_encoder *encoder)
+ 		val |= SUN4I_HDMI_VID_CTRL_HDMI_MODE;
+ 
+ 	writel(val, hdmi->base + SUN4I_HDMI_VID_CTRL_REG);
++
++#ifdef CONFIG_DRM_SUN4I_HDMI_AUDIO
++	if (hdmi->hdmi_audio && sun4i_hdmi_audio_create(hdmi))
++		DRM_ERROR("Couldn't create the HDMI audio adapter\n");
++#endif
+ }
+ 
+ static void sun4i_hdmi_mode_set(struct drm_encoder *encoder,
+@@ -215,6 +227,9 @@ static int sun4i_hdmi_get_modes(struct drm_connector *connector)
+ 	if (!edid)
+ 		return 0;
+ 
++#ifdef CONFIG_DRM_SUN4I_HDMI_AUDIO
++	hdmi->hdmi_audio = drm_detect_monitor_audio(edid);
++#endif
+ 	hdmi->hdmi_monitor = drm_detect_hdmi_monitor(edid);
+ 	DRM_DEBUG_DRIVER("Monitor is %s monitor\n",
+ 			 hdmi->hdmi_monitor ? "an HDMI" : "a DVI");
+diff --git a/drivers/gpu/drm/sun4i/sun8i_mixer.c b/drivers/gpu/drm/sun4i/sun8i_mixer.c
+index 5b42cf25cc86..fbdb80a27cdc 100644
+--- a/drivers/gpu/drm/sun4i/sun8i_mixer.c
++++ b/drivers/gpu/drm/sun4i/sun8i_mixer.c
+@@ -560,6 +560,14 @@ static const struct sun8i_mixer_cfg sun8i_h3_mixer0_cfg = {
+ 	.vi_num		= 1,
+ };
+ 
++static const struct sun8i_mixer_cfg sun8i_h3_mixer1_cfg = {
++	.ccsc		= 1,
++	.mod_rate	= 432000000,
++	.scaler_mask	= 0xf,
++	.ui_num		= 3,
++	.vi_num		= 1,
++};
++
+ static const struct sun8i_mixer_cfg sun8i_r40_mixer0_cfg = {
+ 	.ccsc		= 0,
+ 	.mod_rate	= 297000000,
+@@ -628,6 +636,10 @@ static const struct of_device_id sun8i_mixer_of_table[] = {
+ 		.compatible = "allwinner,sun8i-h3-de2-mixer-0",
+ 		.data = &sun8i_h3_mixer0_cfg,
+ 	},
++	{
++		.compatible = "allwinner,sun8i-h3-de2-mixer-1",
++		.data = &sun8i_h3_mixer1_cfg,
++	},
+ 	{
+ 		.compatible = "allwinner,sun8i-r40-de2-mixer-0",
+ 		.data = &sun8i_r40_mixer0_cfg,
+diff --git a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
+index ddcaaa98d3cb..150ab2e3de76 100644
+--- a/sound/soc/sunxi/Kconfig
++++ b/sound/soc/sunxi/Kconfig
+@@ -56,6 +56,14 @@ config SND_SUN4I_SPDIF
+ 	  Say Y or M to add support for the S/PDIF audio block in the Allwinner
+ 	  A10 and affiliated SoCs.
+ 
++config SND_SUN9I_HDMI_AUDIO
++	tristate "Allwinner sun9i HDMI Audio Sound Card"
++	depends on OF
++	depends on SND_SUN4I_I2S
++	help
++	  Say Y or M to add support for the HDMI Audio sound card for Allwinner
++	  SoCs with DW-HDMI core.
++
+ config SND_SUN8I_ADDA_PR_REGMAP
+ 	tristate
+ 	select REGMAP
+diff --git a/sound/soc/sunxi/Makefile b/sound/soc/sunxi/Makefile
+index a86be340a076..86bc58a5467f 100644
+--- a/sound/soc/sunxi/Makefile
++++ b/sound/soc/sunxi/Makefile
+@@ -1,8 +1,9 @@
+ # SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_SND_SUN8I_CODEC_ANALOG) += sun8i-codec-analog.o
+ obj-$(CONFIG_SND_SUN4I_CODEC) += sun4i-codec.o
+ obj-$(CONFIG_SND_SUN4I_I2S) += sun4i-i2s.o
+ obj-$(CONFIG_SND_SUN4I_SPDIF) += sun4i-spdif.o
+-obj-$(CONFIG_SND_SUN8I_CODEC_ANALOG) += sun8i-codec-analog.o
+ obj-$(CONFIG_SND_SUN50I_CODEC_ANALOG) += sun50i-codec-analog.o
+ obj-$(CONFIG_SND_SUN8I_CODEC) += sun8i-codec.o
+ obj-$(CONFIG_SND_SUN8I_ADDA_PR_REGMAP) += sun8i-adda-pr-regmap.o
++obj-$(CONFIG_SND_SUN9I_HDMI_AUDIO) += sun9i-hdmi-audio.o
+diff --git a/sound/soc/sunxi/sun4i-codec.c b/sound/soc/sunxi/sun4i-codec.c
+index da597e456beb..bd1ecc18966c 100644
+--- a/sound/soc/sunxi/sun4i-codec.c
++++ b/sound/soc/sunxi/sun4i-codec.c
+@@ -5,6 +5,7 @@
+  * Copyright 2015 Maxime Ripard <maxime.ripard@free-electrons.com>
+  * Copyright 2015 Adam Sampson <ats@offog.org>
+  * Copyright 2016 Chen-Yu Tsai <wens@csie.org>
++ * Copyright 2021 gryzun <gryzun_an@rambler.ru>
+  *
+  * Based on the Allwinner SDK driver, released under the GPL.
+  */
+@@ -676,6 +677,16 @@ static struct snd_soc_dai_driver sun4i_codec_dai = {
+ };
+ 
+ /*** sun4i Codec ***/
++
++static const char *adcis_text[] = {"Line In", "FM In", "Mic1 Mono", "Mic2 Mono",
++			"Mic1,Mic2", "Mic1+2 Mono", "MIX Out", "Line,Mic1"};
++
++static SOC_ENUM_SINGLE_DECL(adcis_mixer, SUN4I_CODEC_ADC_ACTL,
++					SUN4I_CODEC_ADC_ACTL_ADCIS, adcis_text);
++
++static const struct snd_kcontrol_new sun4i_codec_mux_controls =
++	SOC_DAPM_ENUM("Capture Source Capture Route", adcis_mixer);
++
+ static const struct snd_kcontrol_new sun4i_codec_pa_mute =
+ 	SOC_DAPM_SINGLE("Switch", SUN4I_CODEC_DAC_ACTL,
+ 			SUN4I_CODEC_DAC_ACTL_PA_MUTE, 1, 0);
+@@ -689,6 +700,8 @@ static DECLARE_TLV_DB_SCALE(sun4i_codec_fmin_loopback_gain_scale, -450, 150,
+ 			    0);
+ static DECLARE_TLV_DB_SCALE(sun4i_codec_micin_loopback_gain_scale, -450, 150,
+ 			    0);
++static DECLARE_TLV_DB_SCALE(sun4i_codec_capture_gain_scale, -450, 150,
++			    0);
+ static DECLARE_TLV_DB_RANGE(sun4i_codec_micin_preamp_gain_scale,
+ 			    0, 0, TLV_DB_SCALE_ITEM(0, 0, 0),
+ 			    1, 7, TLV_DB_SCALE_ITEM(3500, 300, 0));
+@@ -742,6 +755,9 @@ static const struct snd_kcontrol_new sun7i_codec_controls[] = {
+ 	SOC_SINGLE_TLV("Mic2 Boost Volume", SUN7I_CODEC_AC_MIC_PHONE_CAL,
+ 		       SUN7I_CODEC_AC_MIC_PHONE_CAL_PREG2, 7, 0,
+ 		       sun7i_codec_micin_preamp_gain_scale),
++	SOC_SINGLE_TLV("Capture Boost Capture Volume", SUN4I_CODEC_ADC_ACTL,
++		       SUN4I_CODEC_ADC_ACTL_VADCG, 7, 0,
++		       sun4i_codec_capture_gain_scale),
+ };
+ 
+ static const struct snd_kcontrol_new sun4i_codec_mixer_controls[] = {
+@@ -820,6 +836,13 @@ static const struct snd_soc_dapm_widget sun4i_codec_codec_dapm_widgets[] = {
+ 	SND_SOC_DAPM_PGA("MIC2 Pre-Amplifier", SUN4I_CODEC_ADC_ACTL,
+ 			 SUN4I_CODEC_ADC_ACTL_PREG2EN, 0, NULL, 0),
+ 
++	/* ADC Mux */
++	SND_SOC_DAPM_MUX("Right Capture Source Capture Route", SND_SOC_NOPM, 0, 0,
++		&sun4i_codec_mux_controls),
++
++	SND_SOC_DAPM_MUX("Left Capture Source Capture Route", SND_SOC_NOPM, 0, 0,
++		&sun4i_codec_mux_controls),
++
+ 	/* Power Amplifier */
+ 	SND_SOC_DAPM_MIXER("Power Amplifier", SUN4I_CODEC_ADC_ACTL,
+ 			   SUN4I_CODEC_ADC_ACTL_PA_EN, 0,
+@@ -848,6 +871,30 @@ static const struct snd_soc_dapm_route sun4i_codec_codec_dapm_routes[] = {
+ 	{ "Right ADC", NULL, "ADC" },
+ 	{ "Right DAC", NULL, "DAC" },
+ 
++	/* Left Mux Capture Routes */
++	{ "Left Capture Source Capture Route", "Mic1 Mono", "MIC1 Pre-Amplifier" },
++	{ "Left Capture Source Capture Route", "Mic2 Mono", "MIC2 Pre-Amplifier" },
++	{ "Left Capture Source Capture Route", "Line In", "Line Left" },
++	{ "Left Capture Source Capture Route", "FM In", "FM Left" },
++	{ "Left Capture Source Capture Route", "MIX Out", "Left Mixer" },
++	{ "Left Capture Source Capture Route", "Mic1,Mic2", "MIC1 Pre-Amplifier" },
++	{ "Left Capture Source Capture Route", "Mic1+2 Mono", "MIC1 Pre-Amplifier" },
++	{ "Left Capture Source Capture Route", "Mic1+2 Mono", "MIC2 Pre-Amplifier" },
++	{ "Left Capture Source Capture Route", "Line,Mic1", "Line Left" },
++	{ "Left ADC", NULL, "Left Capture Source Capture Route" },
++
++	/* Right Mux Capture Routes */
++	{ "Right Capture Source Capture Route", "Mic1 Mono", "MIC1 Pre-Amplifier" },
++	{ "Right Capture Source Capture Route", "Mic2 Mono", "MIC2 Pre-Amplifier" },
++	{ "Right Capture Source Capture Route", "Line In", "Line Right" },
++	{ "Right Capture Source Capture Route", "FM In", "FM Right" },
++	{ "Right Capture Source Capture Route", "MIX Out", "Right Mixer" },
++	{ "Right Capture Source Capture Route", "Mic1,Mic2", "MIC2 Pre-Amplifier" },
++	{ "Right Capture Source Capture Route", "Mic1+2 Mono", "MIC1 Pre-Amplifier" },
++	{ "Right Capture Source Capture Route", "Mic1+2 Mono", "MIC2 Pre-Amplifier" },
++	{ "Right Capture Source Capture Route", "Line,Mic1", "MIC1 Pre-Amplifier" },
++	{ "Right ADC", NULL, "Right Capture Source Capture Route" },
++
+ 	/* Right Mixer Routes */
+ 	{ "Right Mixer", NULL, "Mixer Enable" },
+ 	{ "Right Mixer", "Right Mixer Left DAC Playback Switch", "Left DAC" },
+@@ -877,14 +924,10 @@ static const struct snd_soc_dapm_route sun4i_codec_codec_dapm_routes[] = {
+ 	{ "HP Left", NULL, "Power Amplifier Mute" },
+ 
+ 	/* Mic1 Routes */
+-	{ "Left ADC", NULL, "MIC1 Pre-Amplifier" },
+-	{ "Right ADC", NULL, "MIC1 Pre-Amplifier" },
+ 	{ "MIC1 Pre-Amplifier", NULL, "Mic1"},
+ 	{ "Mic1", NULL, "VMIC" },
+ 
+ 	/* Mic2 Routes */
+-	{ "Left ADC", NULL, "MIC2 Pre-Amplifier" },
+-	{ "Right ADC", NULL, "MIC2 Pre-Amplifier" },
+ 	{ "MIC2 Pre-Amplifier", NULL, "Mic2"},
+ 	{ "Mic2", NULL, "VMIC" },
+ };
+diff --git a/sound/soc/sunxi/sun4i-spdif.c b/sound/soc/sunxi/sun4i-spdif.c
+index a10949bf0ca1..5aff40df2ce0 100644
+--- a/sound/soc/sunxi/sun4i-spdif.c
++++ b/sound/soc/sunxi/sun4i-spdif.c
+@@ -175,6 +175,7 @@ struct sun4i_spdif_quirks {
+ 	unsigned int reg_dac_txdata;
+ 	bool has_reset;
+ 	unsigned int val_fctl_ftx;
++	unsigned int mclk_multiplier;
+ };
+ 
+ struct sun4i_spdif_dev {
+@@ -311,6 +312,7 @@ static int sun4i_spdif_hw_params(struct snd_pcm_substream *substream,
+ 	default:
+ 		return -EINVAL;
+ 	}
++	mclk *= host->quirks->mclk_multiplier;
+ 
+ 	ret = clk_set_rate(host->spdif_clk, mclk);
+ 	if (ret < 0) {
+@@ -345,6 +347,7 @@ static int sun4i_spdif_hw_params(struct snd_pcm_substream *substream,
+ 	default:
+ 		return -EINVAL;
+ 	}
++	mclk_div *= host->quirks->mclk_multiplier;
+ 
+ 	reg_val = 0;
+ 	reg_val |= SUN4I_SPDIF_TXCFG_ASS;
+@@ -427,24 +430,28 @@ static struct snd_soc_dai_driver sun4i_spdif_dai = {
+ static const struct sun4i_spdif_quirks sun4i_a10_spdif_quirks = {
+ 	.reg_dac_txdata	= SUN4I_SPDIF_TXFIFO,
+ 	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
++	.mclk_multiplier = 1,
+ };
+ 
+ static const struct sun4i_spdif_quirks sun6i_a31_spdif_quirks = {
+ 	.reg_dac_txdata	= SUN4I_SPDIF_TXFIFO,
+ 	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
+ 	.has_reset	= true,
++	.mclk_multiplier = 1,
+ };
+ 
+ static const struct sun4i_spdif_quirks sun8i_h3_spdif_quirks = {
+ 	.reg_dac_txdata	= SUN8I_SPDIF_TXFIFO,
+ 	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
+ 	.has_reset	= true,
++	.mclk_multiplier = 4,
+ };
+ 
+ static const struct sun4i_spdif_quirks sun50i_h6_spdif_quirks = {
+ 	.reg_dac_txdata = SUN8I_SPDIF_TXFIFO,
+ 	.val_fctl_ftx   = SUN50I_H6_SPDIF_FCTL_FTX,
+ 	.has_reset      = true,
++	.mclk_multiplier = 1,
+ };
+ 
+ static const struct of_device_id sun4i_spdif_of_match[] = {
+diff --git a/sound/soc/sunxi/sun8i-codec-analog.c b/sound/soc/sunxi/sun8i-codec-analog.c
+index be872eefa61e..10387fa9f9c4 100644
+--- a/sound/soc/sunxi/sun8i-codec-analog.c
++++ b/sound/soc/sunxi/sun8i-codec-analog.c
+@@ -729,8 +729,12 @@ static int sun8i_codec_analog_add_mixer(struct snd_soc_component *cmpnt,
+ }
+ 
+ static const struct sun8i_codec_analog_quirks sun8i_v3s_quirks = {
+-	.has_headphone	= true,
+-	.has_hmic	= true,
++	.has_headphone  = true,
++	.has_hmic       = true,
++	.has_linein     = true,
++	.has_lineout    = true,
++	.has_mbias      = true,
++	.has_mic2       = true,
+ };
+ 
+ static int sun8i_codec_analog_cmpnt_probe(struct snd_soc_component *cmpnt)
+diff --git a/sound/soc/sunxi/sun9i-hdmi-audio.c b/sound/soc/sunxi/sun9i-hdmi-audio.c
+new file mode 100644
+index 000000000000..fc8f03d398c0
+--- /dev/null
++++ b/sound/soc/sunxi/sun9i-hdmi-audio.c
+@@ -0,0 +1,180 @@
++// SPDX-License-Identifier: GPL-2.0
++//
++// sun9i hdmi audio sound card
++//
++// Copyright (C) 2021 Jernej Skrabec <jernej.skrabec@gmail.com>
++
++#include <linux/module.h>
++#include <linux/of_platform.h>
++
++#include <sound/soc.h>
++#include <sound/soc-dai.h>
++
++static int sun9i_hdmi_audio_hw_params(struct snd_pcm_substream *substream,
++				      struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
++	unsigned int mclk;
++
++	mclk = params_rate(params) * 128;
++
++	return snd_soc_dai_set_sysclk(asoc_rtd_to_cpu(rtd, 0), 0, mclk,
++				      SND_SOC_CLOCK_OUT);
++}
++
++static const struct snd_soc_ops sun9i_hdmi_audio_ops = {
++	.hw_params = sun9i_hdmi_audio_hw_params,
++};
++
++static int sun9i_hdmi_audio_dai_init(struct snd_soc_pcm_runtime *rtd)
++{
++	int ret;
++
++	/* TODO: switch to custom api once it's implemented in sun4i-i2s */
++	ret = snd_soc_dai_set_tdm_slot(asoc_rtd_to_cpu(rtd, 0), 0, 0, 2, 32);
++	if (ret) {
++		dev_err(asoc_rtd_to_cpu(rtd, 0)->dev,
++			"setting tdm link slots failed\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int sun9i_hdmi_audio_parse_dai(struct device_node *node,
++				      struct snd_soc_dai_link_component *dlc)
++{
++	struct of_phandle_args args;
++	int ret;
++
++	if (!node)
++		return 0;
++
++	ret = of_parse_phandle_with_args(node, "sound-dai",
++					 "#sound-dai-cells", 0, &args);
++	if (ret)
++		return ret;
++
++	ret = snd_soc_get_dai_name(&args, &dlc->dai_name);
++	if (ret < 0) {
++		of_node_put(args.np);
++
++		return ret;
++	}
++
++	dlc->of_node = args.np;
++
++	return 0;
++}
++
++static int sun9i_hdmi_audio_probe(struct platform_device *pdev)
++{
++	struct snd_soc_dai_link_component *dlc;
++	struct device *dev = &pdev->dev;
++	struct snd_soc_dai_link *link;
++	struct snd_soc_card *card;
++	struct device_node *child;
++	int ret;
++
++	card = devm_kzalloc(dev, sizeof(*card), GFP_KERNEL);
++	if (!card)
++		return -ENOMEM;
++
++	link = devm_kzalloc(dev, sizeof(*link), GFP_KERNEL);
++	if (!link)
++		return -ENOMEM;
++
++	dlc = devm_kzalloc(dev, sizeof(*dlc) * 3, GFP_KERNEL);
++	if (!dlc)
++		return -ENOMEM;
++
++	child = of_get_child_by_name(dev->of_node, "codec");
++	if (!child)
++		return -ENODEV;
++
++	ret = sun9i_hdmi_audio_parse_dai(child, &dlc[1]);
++	of_node_put(child);
++	if (ret)
++		return ret;
++
++	child = of_get_child_by_name(dev->of_node, "cpu");
++	if (!child) {
++		ret = -ENODEV;
++		goto out_err;
++	}
++
++	ret = sun9i_hdmi_audio_parse_dai(child, &dlc[0]);
++	of_node_put(child);
++	if (ret)
++		goto out_err;
++
++	dlc[2].of_node = dlc[0].of_node;
++
++	platform_set_drvdata(pdev, card);
++
++	link->cpus = &dlc[0];
++	link->codecs = &dlc[1];
++	link->platforms = &dlc[2];
++
++	link->num_cpus = 1;
++	link->num_codecs = 1;
++	link->num_platforms = 1;
++
++	link->playback_only = 1;
++
++	link->name = "SUN9I-HDMI";
++	link->stream_name = "SUN9I-HDMI PCM";
++
++	link->dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_IF | SND_SOC_DAIFMT_CBS_CFS;
++
++	link->ops = &sun9i_hdmi_audio_ops;
++	link->init = sun9i_hdmi_audio_dai_init;
++
++	card->dai_link = link;
++	card->num_links = 1;
++	card->owner = THIS_MODULE;
++	card->dev = dev;
++	card->name = "sun9i-hdmi";
++
++	ret = devm_snd_soc_register_card(dev, card);
++	if (ret)
++		goto out_err;
++
++	return 0;
++
++out_err:
++	of_node_put(dlc[0].of_node);
++	of_node_put(dlc[1].of_node);
++
++	return ret;
++}
++
++static int sun9i_hdmi_audio_remove(struct platform_device *pdev)
++{
++	struct snd_soc_card *card = platform_get_drvdata(pdev);
++
++	of_node_put(card->dai_link->cpus->of_node);
++	of_node_put(card->dai_link->codecs->of_node);
++
++	return 0;
++}
++
++static const struct of_device_id sun9i_hdmi_audio_match[] = {
++	{ .compatible = "allwinner,sun9i-a80-hdmi-audio" },
++	{}
++};
++MODULE_DEVICE_TABLE(of, sun9i_hdmi_audio_match);
++
++static struct platform_driver sun9i_hdmi_audio_driver = {
++	.probe = sun9i_hdmi_audio_probe,
++	.remove = sun9i_hdmi_audio_remove,
++	.driver = {
++		.name = "sun9i-hdmi-audio",
++		.of_match_table = sun9i_hdmi_audio_match,
++	},
++};
++module_platform_driver(sun9i_hdmi_audio_driver);
++
++MODULE_DESCRIPTION("sun9i HDMI Audio Sound Card");
++MODULE_AUTHOR("Jernej Skrabec <jernej.skrabec@gmail.com>");
++MODULE_LICENSE("GPL v2");
+-- 
+2.39.2
+
