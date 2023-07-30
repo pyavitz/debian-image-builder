@@ -142,7 +142,14 @@ if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
 		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-# rockchip
+# allwinner: all
+if [[ "$FAMILY" == "allwinner" ]] && [[ -d "../../${LINUX_PATCHDIR}/all" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/all/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/all" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# rockchip: all
 if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; then
 	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 		if [[ `ls ../../${LINUX_PATCHDIR}/../all/*.patch` ]] > /dev/null 2>&1; then
