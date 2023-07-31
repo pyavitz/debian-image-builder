@@ -1,0 +1,57 @@
+From 48a124087de999d4b372b9e8a747ba78ea785c72 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 18:49:30 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: meson gx
+
+Le Potato: Increase the max sdcard freq
+Meson GX: Add power management and vrtc
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm64/boot/dts/amlogic/meson-gx.dtsi                | 9 +++++++++
+ .../boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts    | 2 +-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-gx.dtsi b/arch/arm64/boot/dts/amlogic/meson-gx.dtsi
+index 32cc9fab4490..77eaca6a27b1 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-gx.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-gx.dtsi
+@@ -221,6 +221,10 @@ sm: secure-monitor {
+ 		};
+ 	};
+ 
++	system-suspend {
++		compatible = "amlogic,meson-gx-pm";
++	};
++
+ 	efuse: efuse {
+ 		compatible = "amlogic,meson-gx-efuse", "amlogic,meson-gxbb-efuse";
+ 		#address-cells = <1>;
+@@ -459,6 +463,11 @@ clkc_AO: clock-controller {
+ 				};
+ 			};
+ 
++			vrtc: rtc@a8 {
++				compatible = "amlogic,meson-vrtc";
++				reg = <0x0 0x000a8 0x0 0x4>;
++			};
++
+ 			cec_AO: cec@100 {
+ 				compatible = "amlogic,meson-gx-ao-cec";
+ 				reg = <0x0 0x00100 0x0 0x14>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts b/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts
+index 82bfabfbd39c..55fcf49c2c3d 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts
+@@ -308,7 +308,7 @@ &sd_emmc_b {
+ 
+ 	bus-width = <4>;
+ 	cap-sd-highspeed;
+-	max-frequency = <50000000>;
++	max-frequency = <100000000>;
+ 	disable-wp;
+ 
+ 	cd-gpios = <&gpio CARD_6 GPIO_ACTIVE_LOW>;
+-- 
+2.39.2
+
