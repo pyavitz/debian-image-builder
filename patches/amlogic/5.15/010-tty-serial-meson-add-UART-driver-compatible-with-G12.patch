@@ -1,0 +1,285 @@
+From 1f96df897eac7d98d20fe0b3683bb423511a90eb Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 31 Jul 2023 18:35:19 -0400
+Subject: [PATCH] tty: serial: meson: add UART driver compatible with G12A
+
+Linux 5.15: BPI-CM4: Bluetooth
+
+Currently bluetooth doesn't come back on reboots without intervention.
+echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/unbind
+echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/bind
+
+source: https://lore.kernel.org/linux-amlogic/20211221071634.25980-2-yu.tu@amlogic.com/
+source: https://lore.kernel.org/linux-amlogic/20230307222651.2106615-1-martin.blumenstingl@googlemail.com/
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../boot/dts/amlogic/meson-g12-common.dtsi    | 49 +++++++++++--
+ drivers/tty/serial/meson_uart.c               | 73 +++++++++++++++----
+ 2 files changed, 104 insertions(+), 18 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+index 369334076467..262753880619 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+@@ -900,6 +900,22 @@ mux {
+ 						};
+ 					};
+ 
++					pwm_f_z_pins: pwm-f-z {
++						mux {
++							groups = "pwm_f_z";
++							function = "pwm_f";
++							bias-disable;
++						};
++					};
++
++					pwm_f_a_pins: pwm-f-a {
++						mux {
++							groups = "pwm_f_a";
++							function = "pwm_f";
++							bias-disable;
++						};
++					};
++
+ 					pwm_f_x_pins: pwm-f-x {
+ 						mux {
+ 							groups = "pwm_f_x";
+@@ -1941,6 +1957,24 @@ mux {
+ 						};
+ 					};
+ 
++					uart_ao_b_2_3_pins: uart-ao-b-2-3 {
++						mux {
++							groups = "uart_ao_b_tx_2",
++								 "uart_ao_b_rx_3";
++							function = "uart_ao_b";
++							bias-disable;
++						};
++					};
++
++					uart_ao_b_8_9_pins: uart-ao-b-8-9 {
++						mux {
++							groups = "uart_ao_b_tx_8",
++								 "uart_ao_b_rx_9";
++							function = "uart_ao_b";
++							bias-disable;
++						};
++					};
++
+ 					pwm_a_e_pins: pwm-a-e {
+ 						mux {
+ 							groups = "pwm_a_e";
+@@ -2051,7 +2085,8 @@ pwm_AO_cd: pwm@2000 {
+ 			};
+ 
+ 			uart_AO: serial@3000 {
+-				compatible = "amlogic,meson-gx-uart",
++				compatible = "amlogic,meson-g12a-uart",
++					     "amlogic,meson-gx-uart",
+ 					     "amlogic,meson-ao-uart";
+ 				reg = <0x0 0x3000 0x0 0x18>;
+ 				interrupts = <GIC_SPI 193 IRQ_TYPE_EDGE_RISING>;
+@@ -2061,7 +2096,8 @@ uart_AO: serial@3000 {
+ 			};
+ 
+ 			uart_AO_B: serial@4000 {
+-				compatible = "amlogic,meson-gx-uart",
++				compatible = "amlogic,meson-g12a-uart",
++					     "amlogic,meson-gx-uart",
+ 					     "amlogic,meson-ao-uart";
+ 				reg = <0x0 0x4000 0x0 0x18>;
+ 				interrupts = <GIC_SPI 197 IRQ_TYPE_EDGE_RISING>;
+@@ -2298,7 +2334,8 @@ clk_msr: clock-measure@18000 {
+ 			};
+ 
+ 			uart_C: serial@22000 {
+-				compatible = "amlogic,meson-gx-uart";
++				compatible = "amlogic,meson-g12a-uart",
++					     "amlogic,meson-gx-uart";
+ 				reg = <0x0 0x22000 0x0 0x18>;
+ 				interrupts = <GIC_SPI 93 IRQ_TYPE_EDGE_RISING>;
+ 				clocks = <&xtal>, <&clkc CLKID_UART2>, <&xtal>;
+@@ -2307,7 +2344,8 @@ uart_C: serial@22000 {
+ 			};
+ 
+ 			uart_B: serial@23000 {
+-				compatible = "amlogic,meson-gx-uart";
++				compatible = "amlogic,meson-g12a-uart",
++					     "amlogic,meson-gx-uart";
+ 				reg = <0x0 0x23000 0x0 0x18>;
+ 				interrupts = <GIC_SPI 75 IRQ_TYPE_EDGE_RISING>;
+ 				clocks = <&xtal>, <&clkc CLKID_UART1>, <&xtal>;
+@@ -2316,7 +2354,8 @@ uart_B: serial@23000 {
+ 			};
+ 
+ 			uart_A: serial@24000 {
+-				compatible = "amlogic,meson-gx-uart";
++				compatible = "amlogic,meson-g12a-uart",
++					     "amlogic,meson-gx-uart";
+ 				reg = <0x0 0x24000 0x0 0x18>;
+ 				interrupts = <GIC_SPI 26 IRQ_TYPE_EDGE_RISING>;
+ 				clocks = <&xtal>, <&clkc CLKID_UART0>, <&xtal>;
+diff --git a/drivers/tty/serial/meson_uart.c b/drivers/tty/serial/meson_uart.c
+index 62e6c1af1344..43e6ba4ae371 100644
+--- a/drivers/tty/serial/meson_uart.c
++++ b/drivers/tty/serial/meson_uart.c
+@@ -19,6 +19,7 @@
+ #include <linux/serial_core.h>
+ #include <linux/tty.h>
+ #include <linux/tty_flip.h>
++#include <linux/of_device.h>
+ 
+ /* Register offsets */
+ #define AML_UART_WFIFO			0x00
+@@ -68,6 +69,8 @@
+ #define AML_UART_BAUD_MASK		0x7fffff
+ #define AML_UART_BAUD_USE		BIT(23)
+ #define AML_UART_BAUD_XTAL		BIT(24)
++#define AML_UART_BAUD_XTAL_TICK		BIT(26)
++#define AML_UART_BAUD_XTAL_DIV2		BIT(27)
+ 
+ #define AML_UART_PORT_NUM		12
+ #define AML_UART_PORT_OFFSET		6
+@@ -80,6 +83,11 @@ static struct uart_driver meson_uart_driver;
+ 
+ static struct uart_port *meson_ports[AML_UART_PORT_NUM];
+ 
++struct meson_uart_data {
++	/*A clock source that calculates baud rates*/
++	unsigned int xtal_tick_en;
++};
++
+ static void meson_uart_set_mctrl(struct uart_port *port, unsigned int mctrl)
+ {
+ }
+@@ -121,13 +129,12 @@ static void meson_uart_shutdown(struct uart_port *port)
+ 	unsigned long flags;
+ 	u32 val;
+ 
+-	free_irq(port->irq, port);
++	devm_free_irq(port->dev, port->irq, port);
+ 
+ 	spin_lock_irqsave(&port->lock, flags);
+ 
+ 	val = readl(port->membase + AML_UART_CONTROL);
+-	val &= ~AML_UART_RX_EN;
+-	val &= ~(AML_UART_RX_INT_EN | AML_UART_TX_INT_EN);
++	val &= ~(AML_UART_RX_EN | AML_UART_TX_EN);
+ 	writel(val, port->membase + AML_UART_CONTROL);
+ 
+ 	spin_unlock_irqrestore(&port->lock, flags);
+@@ -298,24 +305,37 @@ static int meson_uart_startup(struct uart_port *port)
+ 
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ 
+-	ret = request_irq(port->irq, meson_uart_interrupt, 0,
+-			  port->name, port);
++	ret = devm_request_irq(port->dev, port->irq, meson_uart_interrupt,
++			       IRQF_SHARED, port->name, port);
+ 
+ 	return ret;
+ }
+ 
+ static void meson_uart_change_speed(struct uart_port *port, unsigned long baud)
+ {
++	struct meson_uart_data *uart_data = port->private_data;
+ 	u32 val;
+ 
+ 	while (!meson_uart_tx_empty(port))
+ 		cpu_relax();
+ 
++	val = readl_relaxed(port->membase + AML_UART_REG5);
++	val &= ~AML_UART_BAUD_MASK;
++
+ 	if (port->uartclk == 24000000) {
+-		val = ((port->uartclk / 3) / baud) - 1;
+-		val |= AML_UART_BAUD_XTAL;
++		if (uart_data->xtal_tick_en) {
++			val = (port->uartclk / 2 + baud / 2) / baud  - 1;
++			val |= (AML_UART_BAUD_XTAL | AML_UART_BAUD_XTAL_DIV2);
++		} else {
++			val = ((port->uartclk / 3) + baud / 2) / baud  - 1;
++			val &= (~(AML_UART_BAUD_XTAL_TICK |
++				AML_UART_BAUD_XTAL_DIV2));
++			val |= AML_UART_BAUD_XTAL;
++		}
+ 	} else {
+ 		val = ((port->uartclk * 10 / (baud * 4) + 5) / 10) - 1;
++		val &= (~(AML_UART_BAUD_XTAL | AML_UART_BAUD_XTAL_TICK |
++			AML_UART_BAUD_XTAL_DIV2));
+ 	}
+ 	val |= AML_UART_BAUD_USE;
+ 	writel(val, port->membase + AML_UART_REG5);
+@@ -728,6 +748,7 @@ static int meson_uart_probe(struct platform_device *pdev)
+ {
+ 	struct resource *res_mem, *res_irq;
+ 	struct uart_port *port;
++	struct meson_uart_data *uart_data;
+ 	u32 fifosize = 64; /* Default is 64, 128 for EE UART_0 */
+ 	int ret = 0;
+ 
+@@ -745,6 +766,10 @@ static int meson_uart_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	uart_data = of_device_get_match_data(&pdev->dev);
++	if (!uart_data)
++		return  -EINVAL;
++
+ 	if (pdev->id < 0 || pdev->id >= AML_UART_PORT_NUM)
+ 		return -EINVAL;
+ 
+@@ -788,6 +813,7 @@ static int meson_uart_probe(struct platform_device *pdev)
+ 	port->x_char = 0;
+ 	port->ops = &meson_uart_ops;
+ 	port->fifosize = fifosize;
++	port->private_data = uart_data;
+ 
+ 	meson_ports[pdev->id] = port;
+ 	platform_set_drvdata(pdev, port);
+@@ -816,14 +842,35 @@ static int meson_uart_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct meson_uart_data meson_uart_data = {
++	.xtal_tick_en = 0,
++};
++
++static const struct meson_uart_data g12a_meson_uart_data = {
++	.xtal_tick_en = 1,
++};
++
+ static const struct of_device_id meson_uart_dt_match[] = {
+ 	/* Legacy bindings, should be removed when no more used */
+-	{ .compatible = "amlogic,meson-uart" },
+-	/* Stable bindings */
+-	{ .compatible = "amlogic,meson6-uart" },
+-	{ .compatible = "amlogic,meson8-uart" },
+-	{ .compatible = "amlogic,meson8b-uart" },
+-	{ .compatible = "amlogic,meson-gx-uart" },
++	{	.compatible = "amlogic,meson-uart",
++		.data = &meson_uart_data
++	},
++ 	/* Stable bindings */
++	{	.compatible = "amlogic,meson6-uart",
++		.data = &meson_uart_data
++	},
++	{	.compatible = "amlogic,meson8-uart",
++		.data = &meson_uart_data
++	},
++	{	.compatible = "amlogic,meson8b-uart",
++		.data = &meson_uart_data
++	},
++	{	.compatible = "amlogic,meson-gx-uart",
++		.data = &meson_uart_data
++	},
++	{	.compatible = "amlogic,meson-g12a-uart",
++		.data = &g12a_meson_uart_data
++	},
+ 	{ /* sentinel */ },
+ };
+ MODULE_DEVICE_TABLE(of, meson_uart_dt_match);
+-- 
+2.39.2
+
