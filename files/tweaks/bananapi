@@ -35,4 +35,15 @@ else
 	echo "f" > /sys/class/net/eth0/queues/rx-0/rps_cpus
 fi
 
+# HACK: if linux 5.15; then bring up bluetooth; fi
+KERNEL_RELEASE=`ls /boot/config-* | sed 's/\/boot\/config-//g' | sed 's/....$//'`
+if [[ "$KERNEL_RELEASE" == "5.15" ]]; then
+	if [[ -e "/sys/bus/serial/drivers/hci_uart_h5/serial0-0" ]]; then
+		sleep .50
+		echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/unbind
+		sleep .50
+		echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/bind
+	fi
+fi
+
 exit 0
