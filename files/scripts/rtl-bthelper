@@ -1,0 +1,14 @@
+#!/bin/bash
+# RTL8822CS: Bluetooth helper: Linux 5.15
+
+KERNEL_RELEASE=`uname -r | sed 's/....$//'`
+if [[ "$KERNEL_RELEASE" == "5.15" ]]; then
+	if [[ -e "/sys/bus/serial/drivers/hci_uart_h5/serial0-0" ]]; then
+		sleep .50
+		echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/unbind
+		sleep .50
+		echo -n "serial0-0" > /sys/bus/serial/drivers/hci_uart_h5/bind
+	fi
+fi
+
+exit 0
