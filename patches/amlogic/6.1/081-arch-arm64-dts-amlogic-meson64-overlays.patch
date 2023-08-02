@@ -1,27 +1,33 @@
-From d1354d919453a79ce65b9a7ec4db14088d7e16d5 Mon Sep 17 00:00:00 2001
+From ba5e3a8876a3c548100f350eebfa8492479db386 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 28 Jul 2023 04:40:59 -0400
+Date: Wed, 2 Aug 2023 12:43:35 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson64 overlays
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm64/boot/dts/amlogic/Makefile          |  2 ++
- arch/arm64/boot/dts/amlogic/overlays/Makefile | 10 +++++++
+ arch/arm64/boot/dts/amlogic/overlays/Makefile | 13 ++++++++++
  .../overlays/meson-g12-gxl-cma-pool-896MB.dts | 19 ++++++++++++++
  .../meson-g12a-radxa-zero-gpio-10-led.dts     | 26 +++++++++++++++++++
  .../meson-g12a-radxa-zero-gpio-8-led.dts      | 26 +++++++++++++++++++
  .../overlays/meson-g12b-odroid-n2-spi.dts     | 23 ++++++++++++++++
+ .../overlays/meson-sm1-bananapi-uartA.dts     | 15 +++++++++++
+ .../overlays/meson-sm1-bananapi-uartAO_B.dts  | 14 ++++++++++
+ .../overlays/meson-sm1-bananapi-uartB.dts     | 15 +++++++++++
  .../overlays/meson-sm1-x96-air-rtc.dts        | 11 ++++++++
- 7 files changed, 117 insertions(+)
+ 10 files changed, 164 insertions(+)
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/Makefile
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-radxa-zero-gpio-10-led.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-radxa-zero-gpio-8-led.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12b-odroid-n2-spi.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartA.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartAO_B.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartB.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index e213aeebb774..7af675846c13 100644
+index bd1efd6c7c28..a2911eba74b7 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
 @@ -1,4 +1,6 @@
@@ -33,16 +39,19 @@ index e213aeebb774..7af675846c13 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j110-rev-2.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts/amlogic/overlays/Makefile
 new file mode 100644
-index 000000000000..ee278b242460
+index 000000000000..97bfdf60aae1
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,13 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
 +	meson-g12a-radxa-zero-gpio-8-led.dtbo \
 +	meson-g12a-radxa-zero-gpio-10-led.dtbo \
 +	meson-g12b-odroid-n2-spi.dtbo \
 +	meson-g12-gxl-cma-pool-896MB.dtbo \
++	meson-sm1-bananapi-uartA \
++	meson-sm1-bananapi-uartAO_B \
++	meson-sm1-bananapi-uartB \
 +	meson-sm1-x96-air-rtc.dtbo
 +
 +targets += $(dtbo-y)
@@ -165,6 +174,68 @@ index 000000000000..658afb1fb58d
 +		};
 +	};
 +};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartA.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartA.dts
+new file mode 100644
+index 000000000000..23acf873dc13
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartA.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "bananapi,bpi-m5", "amlogic,sm1";
++
++	fragment@0 {
++		target = <&uart_A>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
++
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartAO_B.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartAO_B.dts
+new file mode 100644
+index 000000000000..efac8a5140b3
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartAO_B.dts
+@@ -0,0 +1,14 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "bananapi,bpi-m5", "bananapi,bpi-m2-pro", "amlogic,sm1";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartB.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartB.dts
+new file mode 100644
+index 000000000000..1b87cebbafdd
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-bananapi-uartB.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "bananapi,bpi-m5", "bananapi,bpi-m2-pro", "amlogic,sm1";
++
++	fragment@0 {
++		target = <&uart_B>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
++
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-x96-air-rtc.dts
 new file mode 100644
 index 000000000000..e803198b5bc5

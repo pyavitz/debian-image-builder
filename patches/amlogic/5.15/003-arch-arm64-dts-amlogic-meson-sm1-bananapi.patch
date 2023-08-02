@@ -1,17 +1,17 @@
-From 198ab70ba22d116a948fec760733d81650f486cc Mon Sep 17 00:00:00 2001
+From 3dfa5273e265d23ffc88b121574b7a8f8ff5e6ed Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sun, 30 Jul 2023 18:30:29 -0400
-Subject: [PATCH] arch: arm64: dts: amlogic: meson sm1 bananapi
+Date: Wed, 2 Aug 2023 12:27:00 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-bananapi
 
-M2 Pro and M5 Upstream Backport
+Linux 5.15.y
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm64/boot/dts/amlogic/Makefile          |   1 +
  .../dts/amlogic/meson-sm1-bananapi-m2-pro.dts |  98 ++++
- .../dts/amlogic/meson-sm1-bananapi-m5.dts     | 448 ++----------------
- .../boot/dts/amlogic/meson-sm1-bananapi.dtsi  | 435 +++++++++++++++++
- 4 files changed, 575 insertions(+), 407 deletions(-)
+ .../dts/amlogic/meson-sm1-bananapi-m5.dts     | 448 ++---------------
+ .../boot/dts/amlogic/meson-sm1-bananapi.dtsi  | 449 ++++++++++++++++++
+ 4 files changed, 589 insertions(+), 407 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
 
@@ -649,10 +649,10 @@ index 38ebe98ba9c6..0b434572a789 100644
  };
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
 new file mode 100644
-index 000000000000..c914f1148185
+index 000000000000..1f7b26f65274
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
-@@ -0,0 +1,435 @@
+@@ -0,0 +1,449 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2021 BayLibre SAS
@@ -680,6 +680,8 @@ index 000000000000..c914f1148185
 +
 +	aliases {
 +		serial0 = &uart_AO;
++		serial2 = &uart_B;
++		serial4 = &uart_AO_B;
 +		ethernet0 = &ethmac;
 +	};
 +
@@ -1073,6 +1075,18 @@ index 000000000000..c914f1148185
 +&uart_AO {
 +	status = "okay";
 +	pinctrl-0 = <&uart_ao_a_pins>;
++	pinctrl-names = "default";
++};
++
++&uart_AO_B {
++	status = "disabled";
++	pinctrl-0 = <&uart_ao_b_pins>;
++	pinctrl-names = "default";
++};
++
++&uart_B {
++	status = "disabled";
++	pinctrl-0 = <&uart_b_pins>;
 +	pinctrl-names = "default";
 +};
 +

@@ -1,14 +1,38 @@
-From abb4d5730e58bc938cba364e0f54d6c7b4929e7c Mon Sep 17 00:00:00 2001
+From 16e7f1e4a730ca0e1692184f2018a1ce902e651c Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Tue, 25 Jul 2023 13:35:25 -0400
-Subject: [PATCH] arch: arm64: dts: amlogic: meson sm1 bananapi
+Date: Wed, 2 Aug 2023 12:50:40 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-bananapi
+
+Linux 6.4.y
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
+ .../boot/dts/amlogic/meson-g12-common.dtsi    |  9 +++
  .../dts/amlogic/meson-sm1-bananapi-m2-pro.dts |  1 +
  .../dts/amlogic/meson-sm1-bananapi-m5.dts     | 60 +++++++++++++++++++
- 2 files changed, 61 insertions(+)
+ .../boot/dts/amlogic/meson-sm1-bananapi.dtsi  | 14 +++++
+ 4 files changed, 84 insertions(+)
 
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+index 0c49655cc90c..016529233345 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+@@ -1899,6 +1899,15 @@ mux {
+ 						};
+ 					};
+ 
++					uart_ao_b_pins: uart-b-ao {
++						mux {
++							groups = "uart_ao_b_tx_8",
++								 "uart_ao_b_rx_9";
++							function = "uart_ao_b";
++							bias-disable;
++						};
++					};
++
+ 					uart_ao_a_cts_rts_pins: uart-ao-a-cts-rts {
+ 						mux {
+ 							groups = "uart_ao_a_cts",
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
 index 586034316ec3..4890d5d9a4f7 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
@@ -110,6 +134,38 @@ index f045bf851638..0b434572a789 100644
 +		device-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
 +	};
 +};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
+index 17045ff81c69..41632c2ae2f9 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
+@@ -25,6 +25,8 @@ button-sw3 {
+ 
+ 	aliases {
+ 		serial0 = &uart_AO;
++		serial2 = &uart_B;
++		serial4 = &uart_AO_B;
+ 		ethernet0 = &ethmac;
+ 	};
+ 
+@@ -421,6 +423,18 @@ &uart_AO {
+ 	pinctrl-names = "default";
+ };
+ 
++&uart_AO_B {
++	status = "disabled";
++	pinctrl-0 = <&uart_ao_b_pins>;
++	pinctrl-names = "default";
++};
++
++&uart_B {
++	status = "disabled";
++	pinctrl-0 = <&uart_b_pins>;
++	pinctrl-names = "default";
++};
++
+ &usb {
+ 	status = "okay";
+ };
 -- 
 2.39.2
 
