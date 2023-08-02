@@ -1,6 +1,6 @@
-From 3dfa5273e265d23ffc88b121574b7a8f8ff5e6ed Mon Sep 17 00:00:00 2001
+From ec7686e7cdd7092c496371333dea30c9acfe5c89 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 2 Aug 2023 12:27:00 -0400
+Date: Wed, 2 Aug 2023 17:47:20 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-bananapi
 
 Linux 5.15.y
@@ -8,10 +8,10 @@ Linux 5.15.y
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm64/boot/dts/amlogic/Makefile          |   1 +
- .../dts/amlogic/meson-sm1-bananapi-m2-pro.dts |  98 ++++
+ .../dts/amlogic/meson-sm1-bananapi-m2-pro.dts |  97 ++++
  .../dts/amlogic/meson-sm1-bananapi-m5.dts     | 448 ++---------------
  .../boot/dts/amlogic/meson-sm1-bananapi.dtsi  | 449 ++++++++++++++++++
- 4 files changed, 589 insertions(+), 407 deletions(-)
+ 4 files changed, 590 insertions(+), 405 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
 
@@ -29,10 +29,10 @@ index 320cd3223812..6413b3b5d911 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-c4.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
 new file mode 100644
-index 000000000000..4890d5d9a4f7
+index 000000000000..586034316ec3
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,97 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2021 BayLibre SAS
@@ -64,7 +64,6 @@ index 000000000000..4890d5d9a4f7
 +		assigned-clock-rates = <294912000>,
 +				       <270950400>,
 +				       <393216000>;
-+		status = "okay";
 +
 +		dai-link-0 {
 +			sound-dai = <&frddr_a>;
@@ -132,7 +131,7 @@ index 000000000000..4890d5d9a4f7
 +	status = "okay";
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
-index 38ebe98ba9c6..0b434572a789 100644
+index 38ebe98ba9c6..5f6071ee84a6 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
 @@ -6,10 +6,7 @@
@@ -228,8 +227,13 @@ index 38ebe98ba9c6..0b434572a789 100644
 -	memory@0 {
 -		device_type = "memory";
 -		reg = <0x0 0x0 0x0 0x40000000>;
--	};
--
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
++		clocks = <&wifi32k>;
++		clock-names = "ext_clock";
+ 	};
+ 
 -	emmc_1v8: regulator-emmc_1v8 {
 -		compatible = "regulator-fixed";
 -		regulator-name = "EMMC_1V8";
@@ -273,13 +277,8 @@ index 38ebe98ba9c6..0b434572a789 100644
 -		gpio = <&gpio GPIOH_8 GPIO_OPEN_DRAIN>;
 -		enable-active-high;
 -		regulator-always-on;
-+	sdio_pwrseq: sdio-pwrseq {
-+		compatible = "mmc-pwrseq-simple";
-+		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
-+		clocks = <&wifi32k>;
-+		clock-names = "ext_clock";
- 	};
- 
+-	};
+-
 -	vddao_1v8: regulator-vddao_1v8 {
 -		compatible = "regulator-fixed";
 -		regulator-name = "VDDAO_1V8";
@@ -335,14 +334,22 @@ index 38ebe98ba9c6..0b434572a789 100644
  	};
  
  	sound {
-@@ -319,68 +164,17 @@ &acodec {
+@@ -233,7 +78,6 @@ sound {
+ 		assigned-clock-rates = <294912000>,
+ 				       <270950400>,
+ 				       <393216000>;
+-		status = "okay";
+ 
+ 		dai-link-0 {
+ 			sound-dai = <&frddr_a>;
+@@ -319,68 +163,16 @@ &acodec {
  	status = "okay";
  };
  
 -&arb {
 -	status = "okay";
 -};
- 
+-
  &clkc_audio {
  	status = "okay";
  };
@@ -404,7 +411,7 @@ index 38ebe98ba9c6..0b434572a789 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -393,190 +187,34 @@ &frddr_c {
+@@ -393,190 +185,40 @@ &frddr_c {
  	status = "okay";
  };
  
@@ -538,11 +545,13 @@ index 38ebe98ba9c6..0b434572a789 100644
 -};
 -
 -&ir {
--	status = "okay";
++&pwm_ef {
+ 	status = "okay";
 -	pinctrl-0 = <&remote_input_ao_pins>;
--	pinctrl-names = "default";
--};
--
++	pinctrl-0 = <&pwm_e_pins>;
+ 	pinctrl-names = "default";
+ };
+ 
 -&pwm_AO_cd {
 -	pinctrl-0 = <&pwm_ao_d_e_pins>;
 -	pinctrl-names = "default";
@@ -614,7 +623,7 @@ index 38ebe98ba9c6..0b434572a789 100644
  };
  
  &tdmif_b {
-@@ -627,21 +265,17 @@ &toddr_c {
+@@ -627,21 +269,17 @@ &toddr_c {
  	status = "okay";
  };
  

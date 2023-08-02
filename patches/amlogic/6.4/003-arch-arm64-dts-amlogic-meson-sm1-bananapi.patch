@@ -1,6 +1,6 @@
-From 16e7f1e4a730ca0e1692184f2018a1ce902e651c Mon Sep 17 00:00:00 2001
+From 2849e11671517289af8e542d670fa843826c623b Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 2 Aug 2023 12:50:40 -0400
+Date: Wed, 2 Aug 2023 18:15:00 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-bananapi
 
 Linux 6.4.y
@@ -8,10 +8,9 @@ Linux 6.4.y
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../boot/dts/amlogic/meson-g12-common.dtsi    |  9 +++
- .../dts/amlogic/meson-sm1-bananapi-m2-pro.dts |  1 +
- .../dts/amlogic/meson-sm1-bananapi-m5.dts     | 60 +++++++++++++++++++
- .../boot/dts/amlogic/meson-sm1-bananapi.dtsi  | 14 +++++
- 4 files changed, 84 insertions(+)
+ .../dts/amlogic/meson-sm1-bananapi-m5.dts     | 66 ++++++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-bananapi.dtsi  | 14 ++++
+ 3 files changed, 88 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
 index 0c49655cc90c..016529233345 100644
@@ -33,20 +32,8 @@ index 0c49655cc90c..016529233345 100644
  					uart_ao_a_cts_rts_pins: uart-ao-a-cts-rts {
  						mux {
  							groups = "uart_ao_a_cts",
-diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
-index 586034316ec3..4890d5d9a4f7 100644
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m2-pro.dts
-@@ -29,6 +29,7 @@ sound {
- 		assigned-clock-rates = <294912000>,
- 				       <270950400>,
- 				       <393216000>;
-+		status = "okay";
- 
- 		dai-link-0 {
- 			sound-dai = <&frddr_a>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
-index f045bf851638..0b434572a789 100644
+index f045bf851638..5f6071ee84a6 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
 @@ -25,6 +25,20 @@ cvbs_connector_in: endpoint {
@@ -70,18 +57,24 @@ index f045bf851638..0b434572a789 100644
  	sound {
  		compatible = "amlogic,axg-sound-card";
  		model = "BPI-M5";
-@@ -64,6 +78,7 @@ sound {
- 		assigned-clock-rates = <294912000>,
- 				       <270950400>,
- 				       <393216000>;
-+		status = "okay";
- 
- 		dai-link-0 {
- 			sound-dai = <&frddr_a>;
-@@ -172,6 +187,36 @@ &frddr_c {
+@@ -149,7 +163,6 @@ &acodec {
  	status = "okay";
  };
  
+-
+ &clkc_audio {
+ 	status = "okay";
+ };
+@@ -172,6 +185,42 @@ &frddr_c {
+ 	status = "okay";
+ };
+ 
++&pwm_ef {
++	status = "okay";
++	pinctrl-0 = <&pwm_e_pins>;
++	pinctrl-names = "default";
++};
++
 +/* SDIO */
 +&sd_emmc_a {
 +	/* enable if WiFi/BT board connected */
@@ -115,7 +108,7 @@ index f045bf851638..0b434572a789 100644
  &tdmif_b {
  	status = "okay";
  };
-@@ -219,3 +264,18 @@ &toddr_b {
+@@ -219,3 +268,18 @@ &toddr_b {
  &toddr_c {
  	status = "okay";
  };
