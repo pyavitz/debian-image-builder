@@ -1,6 +1,23 @@
-diff -Naur a/drivers/regulator/act8865-regulator.c b/drivers/regulator/act8865-regulator.c
---- a/drivers/regulator/act8865-regulator.c	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/regulator/act8865-regulator.c	2023-05-03 00:10:37.675271152 -0400
+From 31440daa43ff2b5f711b23358c7cd89cc2450146 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Thu, 3 Aug 2023 04:22:13 -0400
+Subject: [PATCH] drivers: regulator: act8865-regulator
+
+Patches act8846 regulator providing the proper reset handle and exploit
+the SIPC bit in GLB_POWER_OFF register. Mainly used to reset some rockchip
+boards.
+
+source: <https://patchwork.kernel.org/patch/6409521/>
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/regulator/act8865-regulator.c | 29 +++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/drivers/regulator/act8865-regulator.c b/drivers/regulator/act8865-regulator.c
+index 19b9742c9ecc..40bb70615dcf 100644
+--- a/drivers/regulator/act8865-regulator.c
++++ b/drivers/regulator/act8865-regulator.c
 @@ -20,6 +20,7 @@
  #include <linux/regulator/of_regulator.h>
  #include <linux/regmap.h>
@@ -18,8 +35,8 @@ diff -Naur a/drivers/regulator/act8865-regulator.c b/drivers/regulator/act8865-r
  struct act8865 {
  	struct regmap *regmap;
  	int off_reg;
-@@ -582,6 +585,22 @@
- 	while (1);
+@@ -651,6 +654,22 @@ static int act8600_charger_probe(struct device *dev, struct regmap *regmap)
+ 	return PTR_ERR_OR_ZERO(charger);
  }
  
 +static int act8846_power_cycle(struct notifier_block *this,
@@ -38,10 +55,10 @@ diff -Naur a/drivers/regulator/act8865-regulator.c b/drivers/regulator/act8865-r
 +	.priority = 129,
 +};
 +
- static int act8600_charger_get_status(struct regmap *map)
+ static int act8865_pmic_probe(struct i2c_client *client,
+ 			      const struct i2c_device_id *i2c_id)
  {
- 	unsigned int val;
-@@ -725,6 +744,8 @@
+@@ -725,6 +744,8 @@ static int act8865_pmic_probe(struct i2c_client *client,
  	}
  
  	if (of_device_is_system_power_controller(dev->of_node)) {
@@ -50,7 +67,7 @@ diff -Naur a/drivers/regulator/act8865-regulator.c b/drivers/regulator/act8865-r
  		if (!pm_power_off && (off_reg > 0)) {
  			act8865_i2c_client = client;
  			act8865->off_reg = off_reg;
-@@ -733,6 +754,14 @@
+@@ -733,6 +754,14 @@ static int act8865_pmic_probe(struct i2c_client *client,
  		} else {
  			dev_err(dev, "Failed to set poweroff capability, already defined\n");
  		}
@@ -65,3 +82,6 @@ diff -Naur a/drivers/regulator/act8865-regulator.c b/drivers/regulator/act8865-r
  	}
  
  	/* Finally register devices */
+-- 
+2.39.2
+

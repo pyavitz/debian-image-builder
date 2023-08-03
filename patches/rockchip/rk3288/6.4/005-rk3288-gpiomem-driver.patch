@@ -1,23 +1,40 @@
+From 306df9507e036eac6eb22ffe70c7a61fa14017ee Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Thu, 3 Aug 2023 04:38:42 -0400
+Subject: [PATCH] rk3288 gpiomem driver
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/char/Kconfig                   |   1 +
+ drivers/char/Makefile                  |   2 +
+ drivers/char/rockchip/Kconfig          |  16 ++
+ drivers/char/rockchip/Makefile         |   1 +
+ drivers/char/rockchip/rk3288-gpiomem.c | 303 +++++++++++++++++++++++++
+ 5 files changed, 323 insertions(+)
+ create mode 100644 drivers/char/rockchip/Kconfig
+ create mode 100644 drivers/char/rockchip/Makefile
+ create mode 100644 drivers/char/rockchip/rk3288-gpiomem.c
+
 diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
-index 3143db5..9c18b74 100644
+index 0f378d29dab0..661abdfb7263 100644
 --- a/drivers/char/Kconfig
 +++ b/drivers/char/Kconfig
-@@ -5,6 +5,7 @@
+@@ -6,6 +6,7 @@
  menu "Character devices"
-
+ 
  source "drivers/tty/Kconfig"
 +source "drivers/char/rockchip/Kconfig"
-
- config DEVMEM
- 	bool "/dev/mem virtual device support"
+ 
+ config TTY_PRINTK
+ 	tristate "TTY driver to output user messages via printk"
 diff --git a/drivers/char/Makefile b/drivers/char/Makefile
-index 264eb398f..9fd5f240b 100644
+index 1b35d1724565..542d41d5ceed 100644
 --- a/drivers/char/Makefile
 +++ b/drivers/char/Makefile
-@@ -43,6 +43,8 @@ obj-$(CONFIG_TCG_TPM)		+= tpm/
-
+@@ -42,6 +42,8 @@ obj-$(CONFIG_TCG_TPM)		+= tpm/
+ 
  obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
-
+ 
 +obj-$(CONFIG_ARCH_ROCKCHIP)    += rockchip/
 +
  obj-$(CONFIG_XILLYBUS_CLASS)	+= xillybus/
@@ -25,7 +42,7 @@ index 264eb398f..9fd5f240b 100644
  obj-$(CONFIG_ADI)		+= adi.o
 diff --git a/drivers/char/rockchip/Kconfig b/drivers/char/rockchip/Kconfig
 new file mode 100644
-index 0000000..6e97486
+index 000000000000..6e97486e0e97
 --- /dev/null
 +++ b/drivers/char/rockchip/Kconfig
 @@ -0,0 +1,16 @@
@@ -48,7 +65,7 @@ index 0000000..6e97486
 \ No newline at end of file
 diff --git a/drivers/char/rockchip/Makefile b/drivers/char/rockchip/Makefile
 new file mode 100644
-index 0000000..2287ec2
+index 000000000000..2287ec2b1816
 --- /dev/null
 +++ b/drivers/char/rockchip/Makefile
 @@ -0,0 +1 @@
@@ -56,7 +73,7 @@ index 0000000..2287ec2
 \ No newline at end of file
 diff --git a/drivers/char/rockchip/rk3288-gpiomem.c b/drivers/char/rockchip/rk3288-gpiomem.c
 new file mode 100644
-index 0000000..984471c
+index 000000000000..6e0f87b2dcbb
 --- /dev/null
 +++ b/drivers/char/rockchip/rk3288-gpiomem.c
 @@ -0,0 +1,303 @@
@@ -364,3 +381,6 @@ index 0000000..984471c
 +MODULE_DESCRIPTION("gpiomem driver for accessing GPIO from userspace");
 +MODULE_AUTHOR("Luke Wren <luke@raspberrypi.org>");
 \ No newline at end of file
+-- 
+2.39.2
+
