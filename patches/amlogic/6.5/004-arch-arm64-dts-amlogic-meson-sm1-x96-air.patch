@@ -1,6 +1,6 @@
-From 7237e24db2c3c7ee4f2fcebc5980ddc4a3c1dc27 Mon Sep 17 00:00:00 2001
+From 66bff08cc8c9b9ba5da3ad349e168372dd5fe9d9 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Tue, 25 Jul 2023 06:48:31 -0400
+Date: Fri, 4 Aug 2023 03:19:03 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-x96-air
 
 Added support: spdif jack rtc openvfd jl2xx1
@@ -8,9 +8,9 @@ Added support: spdif jack rtc openvfd jl2xx1
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  15 +-
- .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 204 +++++++++++++++++-
- .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 201 ++++++++++++++++-
- 3 files changed, 407 insertions(+), 13 deletions(-)
+ .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 198 +++++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 195 ++++++++++++++++-
+ 3 files changed, 395 insertions(+), 13 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 index 46a34731f7e2..d2c24efd17e7 100644
@@ -53,7 +53,7 @@ index 46a34731f7e2..d2c24efd17e7 100644
  
  	non-removable;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-index 7e1a74046ba5..b14fa811538b 100644
+index 7e1a74046ba5..c530b55980a3 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 @@ -7,20 +7,45 @@
@@ -126,7 +126,7 @@ index 7e1a74046ba5..b14fa811538b 100644
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,20 +90,88 @@ dai-link-3 {
+@@ -53,20 +90,82 @@ dai-link-3 {
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -205,19 +205,13 @@ index 7e1a74046ba5..b14fa811538b 100644
 + 	};
 +};
 +
-+&vddcpu {
-+	regulator-min-microvolt = <721000>;
-+	regulator-max-microvolt = <1022000>;
-+	pwms = <&pwm_AO_cd 1 1250 0>;
-+};
-+
 +&acodec {
 +	AVDD-supply = <&vddao_1v8>;
 +	status = "okay";
  };
  
  &arb {
-@@ -82,7 +187,7 @@ &ethmac {
+@@ -82,7 +181,7 @@ &ethmac {
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
@@ -226,7 +220,7 @@ index 7e1a74046ba5..b14fa811538b 100644
  	phy-handle = <&external_phy>;
  
  	rx-internal-delay-ps = <800>;
-@@ -90,7 +195,6 @@ &ethmac {
+@@ -90,7 +189,6 @@ &ethmac {
  
  &ext_mdio {
  	external_phy: ethernet-phy@0 {
@@ -234,7 +228,7 @@ index 7e1a74046ba5..b14fa811538b 100644
  		reg = <0>;
  		max-speed = <1000>;
  
-@@ -104,6 +208,12 @@ external_phy: ethernet-phy@0 {
+@@ -104,6 +202,12 @@ external_phy: ethernet-phy@0 {
  	};
  };
  
@@ -247,7 +241,7 @@ index 7e1a74046ba5..b14fa811538b 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -120,14 +230,94 @@ &ir {
+@@ -120,14 +224,94 @@ &ir {
  	linux,rc-map-name = "rc-x96max";
  };
  
@@ -343,7 +337,7 @@ index 7e1a74046ba5..b14fa811538b 100644
 +	};
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-index cd93d798f2a3..6bca3a0fa01c 100644
+index cd93d798f2a3..3088117003e8 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 @@ -7,20 +7,45 @@
@@ -416,7 +410,7 @@ index cd93d798f2a3..6bca3a0fa01c 100644
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -53,20 +90,88 @@ dai-link-3 {
+@@ -53,20 +90,82 @@ dai-link-3 {
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -477,7 +471,7 @@ index cd93d798f2a3..6bca3a0fa01c 100644
 +				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
 +			};
 +		};
- 	};
++	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -486,7 +480,7 @@ index cd93d798f2a3..6bca3a0fa01c 100644
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
-+	};
+ 	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -495,19 +489,13 @@ index cd93d798f2a3..6bca3a0fa01c 100644
 + 	};
 +};
 +
-+&vddcpu {
-+	regulator-min-microvolt = <721000>;
-+	regulator-max-microvolt = <1022000>;
-+	pwms = <&pwm_AO_cd 1 1250 0>;
-+};
-+
 +&acodec {
 +	AVDD-supply = <&vddao_1v8>;
 +	status = "okay";
  };
  
  &arb {
-@@ -83,6 +188,12 @@ &ethmac {
+@@ -83,6 +182,12 @@ &ethmac {
  	phy-mode = "rmii";
  };
  
@@ -520,7 +508,7 @@ index cd93d798f2a3..6bca3a0fa01c 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -99,14 +210,94 @@ &ir {
+@@ -99,14 +204,94 @@ &ir {
  	linux,rc-map-name = "rc-beelink-gs1";
  };
  
