@@ -1,0 +1,72 @@
+From c4309624a1e80c4ff716a2db1ca6db7f87208e86 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 5 Aug 2023 05:51:09 -0400
+Subject: [PATCH] arch: arm64: dts: rockchip: rk3328-rock64
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../arm64/boot/dts/rockchip/rk3328-rock64.dts | 27 ++++++++++---------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
+index f69a38f42d2d..175ee245e6a0 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts
+@@ -5,6 +5,7 @@
+ 
+ /dts-v1/;
+ #include "rk3328.dtsi"
++#include "rk3328-dram-default-timing.dtsi"
+ 
+ / {
+ 	model = "Pine64 Rock64";
+@@ -37,7 +38,8 @@ vcc_sd: sdmmc-regulator {
+ 		vin-supply = <&vcc_io>;
+ 	};
+ 
+-	vcc_host_5v: vcc-host-5v-regulator {
++	// Common enable line for all of the rails mentioned in the labels.
++	vcc_host_5v: vcc_host1_5v: vcc_otg_5v: vcc-host-5v-regulator {
+ 		compatible = "regulator-fixed";
+ 		gpio = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
+ 		pinctrl-names = "default";
+@@ -48,17 +50,6 @@ vcc_host_5v: vcc-host-5v-regulator {
+ 		vin-supply = <&vcc_sys>;
+ 	};
+ 
+-	vcc_host1_5v: vcc_otg_5v: vcc-host1-5v-regulator {
+-		compatible = "regulator-fixed";
+-		gpio = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&usb20_host_drv>;
+-		regulator-name = "vcc_host1_5v";
+-		regulator-always-on;
+-		regulator-boot-on;
+-		vin-supply = <&vcc_sys>;
+-	};
+-
+ 	vcc_sys: vcc-sys {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc_sys";
+@@ -386,6 +377,18 @@ &usbdrd3 {
+ 	status = "okay";
+ };
+ 
++&u3phy {
++	status = "okay";
++};
++
++&u3phy_utmi {
++	status = "okay";
++};
++
++&u3phy_pipe {
++	status = "okay";
++};
++
+ &usb_host0_ehci {
+ 	status = "okay";
+ };
+-- 
+2.39.2
+

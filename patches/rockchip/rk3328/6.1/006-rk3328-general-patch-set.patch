@@ -1,5 +1,48 @@
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml	2023-05-06 11:32:39.454676181 -0400
+From b8ac61c007413ba7edea9dfbd433042127708b2f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 5 Aug 2023 05:54:27 -0400
+Subject: [PATCH] rk3328 general patch set
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../bindings/phy/phy-rockchip-inno-usb3.yaml  |  157 +++
+ .../devicetree/bindings/soc/rockchip/grf.yaml |    1 +
+ drivers/clk/rockchip/clk-ddr.c                |  130 ++
+ drivers/clk/rockchip/clk-rk3328.c             |    7 +-
+ drivers/clk/rockchip/clk.h                    |    3 +-
+ drivers/devfreq/Kconfig                       |   12 +
+ drivers/devfreq/Makefile                      |    1 +
+ drivers/devfreq/event/rockchip-dfi.c          |  554 ++++++++-
+ drivers/devfreq/rk3328_dmc.c                  |  846 +++++++++++++
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c |   12 -
+ drivers/phy/rockchip/Kconfig                  |    9 +
+ drivers/phy/rockchip/Makefile                 |    1 +
+ drivers/phy/rockchip/phy-rockchip-inno-usb3.c | 1107 +++++++++++++++++
+ drivers/usb/dwc3/core.c                       |    2 +
+ drivers/usb/dwc3/core.h                       |    4 +
+ drivers/usb/dwc3/host.c                       |    5 +-
+ drivers/usb/host/xhci-plat.c                  |    3 +
+ drivers/usb/host/xhci-ring.c                  |   17 +
+ drivers/usb/host/xhci.h                       |    5 +
+ include/dt-bindings/clock/rockchip-ddr.h      |   63 +
+ include/dt-bindings/memory/rk3328-dram.h      |  159 +++
+ include/soc/rockchip/rockchip_sip.h           |   11 +
+ kernel/dma/pool.c                             |    7 +-
+ sound/soc/codecs/es8316.c                     |    2 +-
+ sound/soc/codecs/rt5651.c                     |   16 +
+ sound/soc/codecs/rt5651.h                     |    1 +
+ 26 files changed, 3063 insertions(+), 72 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml
+ create mode 100644 drivers/devfreq/rk3328_dmc.c
+ create mode 100644 drivers/phy/rockchip/phy-rockchip-inno-usb3.c
+ create mode 100644 include/dt-bindings/clock/rockchip-ddr.h
+ create mode 100644 include/dt-bindings/memory/rk3328-dram.h
+
+diff --git a/Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml b/Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml
+new file mode 100644
+index 000000000000..f4f28625173a
+--- /dev/null
++++ b/Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml
 @@ -0,0 +1,157 @@
 +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
 +%YAML 1.2
@@ -158,10 +201,11 @@
 +		#phy-cells = <0>;
 +	};
 +};
-diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
---- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2023-04-30 19:26:28.000000000 -0400
-+++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml	2023-05-06 11:32:39.454676181 -0400
-@@ -41,6 +41,7 @@
+diff --git a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
+index 2ed8cca79b59..8fcd845b752b 100644
+--- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
++++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
+@@ -41,6 +41,7 @@ properties:
                - rockchip,rk3308-usb2phy-grf
                - rockchip,rk3328-grf
                - rockchip,rk3328-usb2phy-grf
@@ -169,10 +213,11 @@ diff -Naur a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documenta
                - rockchip,rk3368-grf
                - rockchip,rk3368-pmugrf
                - rockchip,rk3399-grf
-diff -Naur a/drivers/clk/rockchip/clk-ddr.c b/drivers/clk/rockchip/clk-ddr.c
---- a/drivers/clk/rockchip/clk-ddr.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/clk/rockchip/clk-ddr.c	2023-05-06 11:32:39.485675727 -0400
-@@ -87,6 +87,133 @@
+diff --git a/drivers/clk/rockchip/clk-ddr.c b/drivers/clk/rockchip/clk-ddr.c
+index 86718c54e56b..b16b3795f767 100644
+--- a/drivers/clk/rockchip/clk-ddr.c
++++ b/drivers/clk/rockchip/clk-ddr.c
+@@ -87,6 +87,133 @@ static const struct clk_ops rockchip_ddrclk_sip_ops = {
  	.get_parent = rockchip_ddrclk_get_parent,
  };
  
@@ -306,7 +351,7 @@ diff -Naur a/drivers/clk/rockchip/clk-ddr.c b/drivers/clk/rockchip/clk-ddr.c
  struct clk *rockchip_clk_register_ddrclk(const char *name, int flags,
  					 const char *const *parent_names,
  					 u8 num_parents, int mux_offset,
-@@ -114,6 +241,9 @@
+@@ -114,6 +241,9 @@ struct clk *rockchip_clk_register_ddrclk(const char *name, int flags,
  	case ROCKCHIP_DDRCLK_SIP:
  		init.ops = &rockchip_ddrclk_sip_ops;
  		break;
@@ -316,23 +361,11 @@ diff -Naur a/drivers/clk/rockchip/clk-ddr.c b/drivers/clk/rockchip/clk-ddr.c
  	default:
  		pr_err("%s: unsupported ddrclk type %d\n", __func__, ddr_flag);
  		kfree(ddrclk);
-diff -Naur a/drivers/clk/rockchip/clk.h b/drivers/clk/rockchip/clk.h
---- a/drivers/clk/rockchip/clk.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/clk/rockchip/clk.h	2023-05-06 11:32:39.486675713 -0400
-@@ -418,7 +418,8 @@
-  * DDRCLK flags, including method of setting the rate
-  * ROCKCHIP_DDRCLK_SIP: use SIP call to bl31 to change ddrclk rate.
-  */
--#define ROCKCHIP_DDRCLK_SIP		BIT(0)
-+#define ROCKCHIP_DDRCLK_SIP		0x01
-+#define ROCKCHIP_DDRCLK_SIP_V2		0x03
- 
- struct clk *rockchip_clk_register_ddrclk(const char *name, int flags,
- 					 const char *const *parent_names,
-diff -Naur a/drivers/clk/rockchip/clk-rk3328.c b/drivers/clk/rockchip/clk-rk3328.c
---- a/drivers/clk/rockchip/clk-rk3328.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/clk/rockchip/clk-rk3328.c	2023-05-06 11:32:39.486675713 -0400
-@@ -315,9 +315,10 @@
+diff --git a/drivers/clk/rockchip/clk-rk3328.c b/drivers/clk/rockchip/clk-rk3328.c
+index 267ab54937d3..92bfea087cf6 100644
+--- a/drivers/clk/rockchip/clk-rk3328.c
++++ b/drivers/clk/rockchip/clk-rk3328.c
+@@ -315,9 +315,10 @@ static struct rockchip_clk_branch rk3328_clk_branches[] __initdata = {
  			RK3328_CLKGATE_CON(14), 1, GFLAGS),
  
  	/* PD_DDR */
@@ -346,9 +379,59 @@ diff -Naur a/drivers/clk/rockchip/clk-rk3328.c b/drivers/clk/rockchip/clk-rk3328
  	GATE(0, "clk_ddrmsch", "clk_ddr", CLK_IGNORE_UNUSED,
  			RK3328_CLKGATE_CON(18), 6, GFLAGS),
  	GATE(0, "clk_ddrupctl", "clk_ddr", CLK_IGNORE_UNUSED,
-diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockchip-dfi.c
---- a/drivers/devfreq/event/rockchip-dfi.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/devfreq/event/rockchip-dfi.c	2023-05-06 11:32:39.481675786 -0400
+diff --git a/drivers/clk/rockchip/clk.h b/drivers/clk/rockchip/clk.h
+index ee01739e4a7c..c4c392c18873 100644
+--- a/drivers/clk/rockchip/clk.h
++++ b/drivers/clk/rockchip/clk.h
+@@ -418,7 +418,8 @@ struct clk *rockchip_clk_register_mmc(const char *name,
+  * DDRCLK flags, including method of setting the rate
+  * ROCKCHIP_DDRCLK_SIP: use SIP call to bl31 to change ddrclk rate.
+  */
+-#define ROCKCHIP_DDRCLK_SIP		BIT(0)
++#define ROCKCHIP_DDRCLK_SIP		0x01
++#define ROCKCHIP_DDRCLK_SIP_V2		0x03
+ 
+ struct clk *rockchip_clk_register_ddrclk(const char *name, int flags,
+ 					 const char *const *parent_names,
+diff --git a/drivers/devfreq/Kconfig b/drivers/devfreq/Kconfig
+index 9754d8b31621..c3380b360c68 100644
+--- a/drivers/devfreq/Kconfig
++++ b/drivers/devfreq/Kconfig
+@@ -130,6 +130,18 @@ config ARM_MEDIATEK_CCI_DEVFREQ
+ 	  buck voltages and update a proper CCI frequency. Use the notification
+ 	  to get the regulator status.
+ 
++config ARM_RK3328_DMC_DEVFREQ
++	tristate "ARM RK3328 DMC DEVFREQ Driver"
++	depends on ARCH_ROCKCHIP
++	select DEVFREQ_EVENT_ROCKCHIP_DFI
++	select DEVFREQ_GOV_SIMPLE_ONDEMAND
++	select PM_DEVFREQ_EVENT
++	select PM_OPP
++	help
++	  This adds the DEVFREQ driver for the RK3328 DMC(Dynamic Memory Controller).
++	  It sets the frequency for the memory controller and reads the usage counts
++	  from hardware.
++
+ config ARM_RK3399_DMC_DEVFREQ
+ 	tristate "ARM RK3399 DMC DEVFREQ Driver"
+ 	depends on (ARCH_ROCKCHIP && HAVE_ARM_SMCCC) || \
+diff --git a/drivers/devfreq/Makefile b/drivers/devfreq/Makefile
+index bf40d04928d0..08c0738ae439 100644
+--- a/drivers/devfreq/Makefile
++++ b/drivers/devfreq/Makefile
+@@ -13,6 +13,7 @@ obj-$(CONFIG_ARM_IMX_BUS_DEVFREQ)	+= imx-bus.o
+ obj-$(CONFIG_ARM_IMX8M_DDRC_DEVFREQ)	+= imx8m-ddrc.o
+ obj-$(CONFIG_ARM_MEDIATEK_CCI_DEVFREQ)	+= mtk-cci-devfreq.o
+ obj-$(CONFIG_ARM_RK3399_DMC_DEVFREQ)	+= rk3399_dmc.o
++obj-$(CONFIG_ARM_RK3328_DMC_DEVFREQ)	+= rk3328_dmc.o
+ obj-$(CONFIG_ARM_SUN8I_A33_MBUS_DEVFREQ)	+= sun8i-a33-mbus.o
+ obj-$(CONFIG_ARM_TEGRA_DEVFREQ)		+= tegra30-devfreq.o
+ 
+diff --git a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockchip-dfi.c
+index 39ac069cabc7..7d53fc10c63b 100644
+--- a/drivers/devfreq/event/rockchip-dfi.c
++++ b/drivers/devfreq/event/rockchip-dfi.c
 @@ -18,25 +18,66 @@
  #include <linux/list.h>
  #include <linux/of.h>
@@ -356,8 +439,9 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
 -#include <soc/rockchip/rk3399_grf.h>
 -
 -#define RK3399_DMC_NUM_CH	2
+-
 +#define PX30_PMUGRF_OS_REG2		0x208
- 
++
 +#define RK3128_GRF_SOC_CON0		0x140
 +#define RK3128_GRF_OS_REG1		0x1cc
 +#define RK3128_GRF_DFI_WRNUM		0x220
@@ -427,7 +511,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  struct dmc_usage {
  	u32 access;
  	u32 total;
-@@ -50,33 +91,261 @@
+@@ -50,33 +91,261 @@ struct dmc_usage {
  struct rockchip_dfi {
  	struct devfreq_event_dev *edev;
  	struct devfreq_event_desc *desc;
@@ -700,7 +784,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  
  	/* enable count, use software mode */
  	writel_relaxed(SOFTWARE_EN, dfi_regs + DDRMON_CTRL);
-@@ -100,12 +369,22 @@
+@@ -100,12 +369,22 @@ static int rockchip_dfi_get_busier_ch(struct devfreq_event_dev *edev)
  	rockchip_dfi_stop_hardware_counter(edev);
  
  	/* Find out which channel is busier */
@@ -727,7 +811,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  		if (tmp > max) {
  			busier_ch = i;
  			max = tmp;
-@@ -121,7 +400,8 @@
+@@ -121,7 +400,8 @@ static int rockchip_dfi_disable(struct devfreq_event_dev *edev)
  	struct rockchip_dfi *info = devfreq_event_get_drvdata(edev);
  
  	rockchip_dfi_stop_hardware_counter(edev);
@@ -737,7 +821,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  
  	return 0;
  }
-@@ -131,10 +411,13 @@
+@@ -131,10 +411,13 @@ static int rockchip_dfi_enable(struct devfreq_event_dev *edev)
  	struct rockchip_dfi *info = devfreq_event_get_drvdata(edev);
  	int ret;
  
@@ -755,7 +839,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  	}
  
  	rockchip_dfi_start_hardware_counter(edev);
-@@ -151,8 +434,11 @@
+@@ -151,8 +434,11 @@ static int rockchip_dfi_get_event(struct devfreq_event_dev *edev,
  {
  	struct rockchip_dfi *info = devfreq_event_get_drvdata(edev);
  	int busier_ch;
@@ -767,7 +851,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  
  	edata->load_count = info->ch_usage[busier_ch].access;
  	edata->total_count = info->ch_usage[busier_ch].total;
-@@ -167,22 +453,116 @@
+@@ -167,22 +453,116 @@ static const struct devfreq_event_ops rockchip_dfi_ops = {
  	.set_event = rockchip_dfi_set_event,
  };
  
@@ -896,7 +980,7 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  
  	data->regs = devm_platform_ioremap_resource(pdev, 0);
  	if (IS_ERR(data->regs))
-@@ -201,21 +581,97 @@
+@@ -201,21 +581,97 @@ static int rockchip_dfi_probe(struct platform_device *pdev)
  		if (IS_ERR(data->regmap_pmu))
  			return PTR_ERR(data->regmap_pmu);
  	}
@@ -999,41 +1083,11 @@ diff -Naur a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockch
  		return PTR_ERR(data->edev);
  	}
  
-diff -Naur a/drivers/devfreq/Kconfig b/drivers/devfreq/Kconfig
---- a/drivers/devfreq/Kconfig	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/devfreq/Kconfig	2023-05-06 11:32:39.482675771 -0400
-@@ -130,6 +130,18 @@
- 	  buck voltages and update a proper CCI frequency. Use the notification
- 	  to get the regulator status.
- 
-+config ARM_RK3328_DMC_DEVFREQ
-+	tristate "ARM RK3328 DMC DEVFREQ Driver"
-+	depends on ARCH_ROCKCHIP
-+	select DEVFREQ_EVENT_ROCKCHIP_DFI
-+	select DEVFREQ_GOV_SIMPLE_ONDEMAND
-+	select PM_DEVFREQ_EVENT
-+	select PM_OPP
-+	help
-+	  This adds the DEVFREQ driver for the RK3328 DMC(Dynamic Memory Controller).
-+	  It sets the frequency for the memory controller and reads the usage counts
-+	  from hardware.
-+
- config ARM_RK3399_DMC_DEVFREQ
- 	tristate "ARM RK3399 DMC DEVFREQ Driver"
- 	depends on (ARCH_ROCKCHIP && HAVE_ARM_SMCCC) || \
-diff -Naur a/drivers/devfreq/Makefile b/drivers/devfreq/Makefile
---- a/drivers/devfreq/Makefile	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/devfreq/Makefile	2023-05-06 11:32:39.482675771 -0400
-@@ -13,6 +13,7 @@
- obj-$(CONFIG_ARM_IMX8M_DDRC_DEVFREQ)	+= imx8m-ddrc.o
- obj-$(CONFIG_ARM_MEDIATEK_CCI_DEVFREQ)	+= mtk-cci-devfreq.o
- obj-$(CONFIG_ARM_RK3399_DMC_DEVFREQ)	+= rk3399_dmc.o
-+obj-$(CONFIG_ARM_RK3328_DMC_DEVFREQ)	+= rk3328_dmc.o
- obj-$(CONFIG_ARM_SUN8I_A33_MBUS_DEVFREQ)	+= sun8i-a33-mbus.o
- obj-$(CONFIG_ARM_TEGRA_DEVFREQ)		+= tegra30-devfreq.o
- 
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/devfreq/rk3328_dmc.c	2023-05-06 11:32:39.483675757 -0400
+diff --git a/drivers/devfreq/rk3328_dmc.c b/drivers/devfreq/rk3328_dmc.c
+new file mode 100644
+index 000000000000..5dcea91cfae9
+--- /dev/null
++++ b/drivers/devfreq/rk3328_dmc.c
 @@ -0,0 +1,846 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
@@ -1881,10 +1935,11 @@ diff -Naur a/drivers/devfreq/Makefile b/drivers/devfreq/Makefile
 +MODULE_LICENSE("GPL v2");
 +MODULE_AUTHOR("Lin Huang <hl@rock-chips.com>");
 +MODULE_DESCRIPTION("RK3328 dmcfreq driver with devfreq framework");
-diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
---- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c	2023-05-06 11:32:39.468675976 -0400
-@@ -5573,27 +5573,15 @@
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index a07bcb2f5d2e..04a3933fd82f 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -5575,27 +5575,15 @@ static void stmmac_set_rx_mode(struct net_device *dev)
  static int stmmac_change_mtu(struct net_device *dev, int new_mtu)
  {
  	struct stmmac_priv *priv = netdev_priv(dev);
@@ -1912,10 +1967,11 @@ diff -Naur a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/eth
  	if (netif_running(dev)) {
  		netdev_dbg(priv->dev, "restarting interface to change its MTU\n");
  		/* Try to allocate the new DMA conf with the new mtu */
-diff -Naur a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
---- a/drivers/phy/rockchip/Kconfig	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/phy/rockchip/Kconfig	2023-05-06 11:32:39.450676239 -0400
-@@ -74,6 +74,15 @@
+diff --git a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
+index 94360fc96a6f..6e461ac9c288 100644
+--- a/drivers/phy/rockchip/Kconfig
++++ b/drivers/phy/rockchip/Kconfig
+@@ -74,6 +74,15 @@ config PHY_ROCKCHIP_NANENG_COMBO_PHY
  	  Enable this to support the Rockchip PCIe/USB3.0/SATA/QSGMII
  	  combo PHY with NaNeng IP block.
  
@@ -1931,10 +1987,11 @@ diff -Naur a/drivers/phy/rockchip/Kconfig b/drivers/phy/rockchip/Kconfig
  config PHY_ROCKCHIP_PCIE
  	tristate "Rockchip PCIe PHY Driver"
  	depends on (ARCH_ROCKCHIP && OF) || COMPILE_TEST
-diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
---- a/drivers/phy/rockchip/Makefile	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/phy/rockchip/Makefile	2023-05-06 11:32:39.451676224 -0400
-@@ -6,6 +6,7 @@
+diff --git a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
+index 7eab129230d1..dc62d4876738 100644
+--- a/drivers/phy/rockchip/Makefile
++++ b/drivers/phy/rockchip/Makefile
+@@ -6,6 +6,7 @@ obj-$(CONFIG_PHY_ROCKCHIP_INNO_CSIDPHY)	+= phy-rockchip-inno-csidphy.o
  obj-$(CONFIG_PHY_ROCKCHIP_INNO_DSIDPHY)	+= phy-rockchip-inno-dsidphy.o
  obj-$(CONFIG_PHY_ROCKCHIP_INNO_HDMI)	+= phy-rockchip-inno-hdmi.o
  obj-$(CONFIG_PHY_ROCKCHIP_INNO_USB2)	+= phy-rockchip-inno-usb2.o
@@ -1942,8 +1999,11 @@ diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
  obj-$(CONFIG_PHY_ROCKCHIP_NANENG_COMBO_PHY)	+= phy-rockchip-naneng-combphy.o
  obj-$(CONFIG_PHY_ROCKCHIP_PCIE)		+= phy-rockchip-pcie.o
  obj-$(CONFIG_PHY_ROCKCHIP_SNPS_PCIE3)	+= phy-rockchip-snps-pcie3.o
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/phy/rockchip/phy-rockchip-inno-usb3.c	2023-05-06 11:32:39.451676224 -0400
+diff --git a/drivers/phy/rockchip/phy-rockchip-inno-usb3.c b/drivers/phy/rockchip/phy-rockchip-inno-usb3.c
+new file mode 100644
+index 000000000000..31fee8f3a705
+--- /dev/null
++++ b/drivers/phy/rockchip/phy-rockchip-inno-usb3.c
 @@ -0,0 +1,1107 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
@@ -3052,10 +3112,11 @@ diff -Naur a/drivers/phy/rockchip/Makefile b/drivers/phy/rockchip/Makefile
 +MODULE_AUTHOR("William Wu <william.wu@rock-chips.com>");
 +MODULE_DESCRIPTION("Rockchip USB 3.0 PHY driver");
 +MODULE_LICENSE("GPL v2");
-diff -Naur a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
---- a/drivers/usb/dwc3/core.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/dwc3/core.c	2023-05-06 11:32:39.460676093 -0400
-@@ -1551,6 +1551,8 @@
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 3ee70ffaf003..5bf33c1231da 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -1535,6 +1535,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
  				"snps,dis-del-phy-power-chg-quirk");
  	dwc->dis_tx_ipgap_linecheck_quirk = device_property_read_bool(dev,
  				"snps,dis-tx-ipgap-linecheck-quirk");
@@ -3064,10 +3125,11 @@ diff -Naur a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
  	dwc->resume_hs_terminations = device_property_read_bool(dev,
  				"snps,resume-hs-terminations");
  	dwc->parkmode_disable_ss_quirk = device_property_read_bool(dev,
-diff -Naur a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
---- a/drivers/usb/dwc3/core.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/dwc3/core.h	2023-05-06 11:32:39.460676093 -0400
-@@ -1098,6 +1098,9 @@
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 80cc532ba9d5..a7c8eae8c05b 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -1095,6 +1095,9 @@ struct dwc3_scratchpad_array {
   *			change quirk.
   * @dis_tx_ipgap_linecheck_quirk: set if we disable u2mac linestate
   *			check during HS transmit.
@@ -3077,7 +3139,7 @@ diff -Naur a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
   * @resume-hs-terminations: Set if we enable quirk for fixing improper crc
   *			generation after resume from suspend.
   * @parkmode_disable_ss_quirk: set if we need to disable all SuperSpeed
-@@ -1316,6 +1319,7 @@
+@@ -1314,6 +1317,7 @@ struct dwc3 {
  	unsigned		dis_u2_freeclk_exists_quirk:1;
  	unsigned		dis_del_phy_power_chg_quirk:1;
  	unsigned		dis_tx_ipgap_linecheck_quirk:1;
@@ -3085,10 +3147,11 @@ diff -Naur a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
  	unsigned		resume_hs_terminations:1;
  	unsigned		parkmode_disable_ss_quirk:1;
  	unsigned		gfladj_refclk_lpm_sel:1;
-diff -Naur a/drivers/usb/dwc3/host.c b/drivers/usb/dwc3/host.c
---- a/drivers/usb/dwc3/host.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/dwc3/host.c	2023-05-06 11:32:39.461676078 -0400
-@@ -66,7 +66,7 @@
+diff --git a/drivers/usb/dwc3/host.c b/drivers/usb/dwc3/host.c
+index f6f13e7f1ba1..08a52869328d 100644
+--- a/drivers/usb/dwc3/host.c
++++ b/drivers/usb/dwc3/host.c
+@@ -66,7 +66,7 @@ static int dwc3_host_get_irq(struct dwc3 *dwc)
  
  int dwc3_host_init(struct dwc3 *dwc)
  {
@@ -3097,7 +3160,7 @@ diff -Naur a/drivers/usb/dwc3/host.c b/drivers/usb/dwc3/host.c
  	struct platform_device	*xhci;
  	int			ret, irq;
  	int			prop_idx = 0;
-@@ -97,6 +97,9 @@
+@@ -97,6 +97,9 @@ int dwc3_host_init(struct dwc3 *dwc)
  	if (dwc->usb3_lpm_capable)
  		props[prop_idx++] = PROPERTY_ENTRY_BOOL("usb3-lpm-capable");
  
@@ -3107,33 +3170,11 @@ diff -Naur a/drivers/usb/dwc3/host.c b/drivers/usb/dwc3/host.c
  	if (dwc->usb2_lpm_disable)
  		props[prop_idx++] = PROPERTY_ENTRY_BOOL("usb2-lpm-disable");
  
-diff -Naur a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
---- a/drivers/usb/host/xhci.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/host/xhci.h	2023-05-06 11:32:39.462676064 -0400
-@@ -1525,7 +1525,11 @@
- #define TRB_SEGMENT_SIZE	(TRBS_PER_SEGMENT*16)
- #define TRB_SEGMENT_SHIFT	(ilog2(TRB_SEGMENT_SIZE))
- /* TRB buffer pointers can't cross 64KB boundaries */
-+#ifdef CONFIG_ARCH_ROCKCHIP
-+#define TRB_MAX_BUFF_SHIFT		12
-+#else
- #define TRB_MAX_BUFF_SHIFT		16
-+#endif
- #define TRB_MAX_BUFF_SIZE	(1 << TRB_MAX_BUFF_SHIFT)
- /* How much data is left before the 64KB boundary? */
- #define TRB_BUFF_LEN_UP_TO_BOUNDARY(addr)	(TRB_MAX_BUFF_SIZE - \
-@@ -1843,6 +1847,7 @@
- #define XHCI_STATE_HALTED	(1 << 1)
- #define XHCI_STATE_REMOVING	(1 << 2)
- 	unsigned long long	quirks;
-+#define XHCI_TRB_ENT_QUIRK	BIT_ULL(63)
- #define	XHCI_LINK_TRB_QUIRK	BIT_ULL(0)
- #define XHCI_RESET_EP_QUIRK	BIT_ULL(1) /* Deprecated */
- #define XHCI_NEC_HOST		BIT_ULL(2)
-diff -Naur a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
---- a/drivers/usb/host/xhci-plat.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/host/xhci-plat.c	2023-05-06 11:32:39.462676064 -0400
-@@ -301,6 +301,9 @@
+diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
+index 5fb55bf19493..44e3c87d23a7 100644
+--- a/drivers/usb/host/xhci-plat.c
++++ b/drivers/usb/host/xhci-plat.c
+@@ -301,6 +301,9 @@ static int xhci_plat_probe(struct platform_device *pdev)
  		if (device_property_read_bool(tmpdev, "quirk-broken-port-ped"))
  			xhci->quirks |= XHCI_BROKEN_PORT_PED;
  
@@ -3143,10 +3184,11 @@ diff -Naur a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
  		device_property_read_u32(tmpdev, "imod-interval-ns",
  					 &xhci->imod_interval);
  	}
-diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
---- a/drivers/usb/host/xhci-ring.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/host/xhci-ring.c	2023-05-06 11:32:39.464676034 -0400
-@@ -3529,6 +3529,7 @@
+diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
+index 281690c582cb..3b115ddbbaa8 100644
+--- a/drivers/usb/host/xhci-ring.c
++++ b/drivers/usb/host/xhci-ring.c
+@@ -3533,6 +3533,7 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  	bool more_trbs_coming = true;
  	bool need_zero_pkt = false;
  	bool first_trb = true;
@@ -3154,7 +3196,7 @@ diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
  	unsigned int num_trbs;
  	unsigned int start_cycle, num_sgs = 0;
  	unsigned int enqd_len, block_len, trb_buff_len, full_len;
-@@ -3565,6 +3566,13 @@
+@@ -3569,6 +3570,13 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  	if (urb->transfer_flags & URB_ZERO_PACKET && urb_priv->num_tds > 1)
  		need_zero_pkt = true;
  
@@ -3168,7 +3210,7 @@ diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
  	td = &urb_priv->td[0];
  
  	/*
-@@ -3593,6 +3601,13 @@
+@@ -3597,6 +3605,13 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  			first_trb = false;
  			if (start_cycle == 0)
  				field |= TRB_CYCLE;
@@ -3182,7 +3224,7 @@ diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
  		} else
  			field |= ring->cycle_state;
  
-@@ -3601,6 +3616,8 @@
+@@ -3605,6 +3620,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  		 */
  		if (enqd_len + trb_buff_len < full_len) {
  			field |= TRB_CHAIN;
@@ -3191,8 +3233,35 @@ diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
  			if (trb_is_link(ring->enqueue + 1)) {
  				if (xhci_align_td(xhci, urb, enqd_len,
  						  &trb_buff_len,
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/include/dt-bindings/clock/rockchip-ddr.h	2023-05-06 11:32:39.492675625 -0400
+diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
+index 1354310cb37b..5b573082f86a 100644
+--- a/drivers/usb/host/xhci.h
++++ b/drivers/usb/host/xhci.h
+@@ -1525,7 +1525,11 @@ static inline const char *xhci_trb_type_string(u8 type)
+ #define TRB_SEGMENT_SIZE	(TRBS_PER_SEGMENT*16)
+ #define TRB_SEGMENT_SHIFT	(ilog2(TRB_SEGMENT_SIZE))
+ /* TRB buffer pointers can't cross 64KB boundaries */
++#ifdef CONFIG_ARCH_ROCKCHIP
++#define TRB_MAX_BUFF_SHIFT		12
++#else
+ #define TRB_MAX_BUFF_SHIFT		16
++#endif
+ #define TRB_MAX_BUFF_SIZE	(1 << TRB_MAX_BUFF_SHIFT)
+ /* How much data is left before the 64KB boundary? */
+ #define TRB_BUFF_LEN_UP_TO_BOUNDARY(addr)	(TRB_MAX_BUFF_SIZE - \
+@@ -1843,6 +1847,7 @@ struct xhci_hcd {
+ #define XHCI_STATE_HALTED	(1 << 1)
+ #define XHCI_STATE_REMOVING	(1 << 2)
+ 	unsigned long long	quirks;
++#define XHCI_TRB_ENT_QUIRK	BIT_ULL(63)
+ #define	XHCI_LINK_TRB_QUIRK	BIT_ULL(0)
+ #define XHCI_RESET_EP_QUIRK	BIT_ULL(1) /* Deprecated */
+ #define XHCI_NEC_HOST		BIT_ULL(2)
+diff --git a/include/dt-bindings/clock/rockchip-ddr.h b/include/dt-bindings/clock/rockchip-ddr.h
+new file mode 100644
+index 000000000000..b065432e7793
+--- /dev/null
++++ b/include/dt-bindings/clock/rockchip-ddr.h
 @@ -0,0 +1,63 @@
 +/*
 + *
@@ -3257,8 +3326,11 @@ diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
 +#define PAUSE_CPU_STACK_SIZE	16
 +
 +#endif
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/include/dt-bindings/memory/rk3328-dram.h	2023-05-06 11:32:39.492675625 -0400
+diff --git a/include/dt-bindings/memory/rk3328-dram.h b/include/dt-bindings/memory/rk3328-dram.h
+new file mode 100644
+index 000000000000..171f41c256d3
+--- /dev/null
++++ b/include/dt-bindings/memory/rk3328-dram.h
 @@ -0,0 +1,159 @@
 +/*
 + * Copyright (c) 2017 Fuzhou Rockchip Electronics Co., Ltd
@@ -3419,9 +3491,10 @@ diff -Naur a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
 +#define PHY_DDR4_LPDDR3_RON_RTT_20ohm	(31)
 +
 +#endif /*_DT_BINDINGS_DRAM_ROCKCHIP_RK3328_H*/
-diff -Naur a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip_sip.h
---- a/include/soc/rockchip/rockchip_sip.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/include/soc/rockchip/rockchip_sip.h	2023-05-06 11:32:39.489675669 -0400
+diff --git a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip_sip.h
+index c46a9ae2a2ab..fa7e0a2d72cc 100644
+--- a/include/soc/rockchip/rockchip_sip.h
++++ b/include/soc/rockchip/rockchip_sip.h
 @@ -16,5 +16,16 @@
  #define ROCKCHIP_SIP_CONFIG_DRAM_CLR_IRQ	0x06
  #define ROCKCHIP_SIP_CONFIG_DRAM_SET_PARAM	0x07
@@ -3439,10 +3512,11 @@ diff -Naur a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip
 +} share_page_type_t;
  
  #endif
-diff -Naur a/kernel/dma/pool.c b/kernel/dma/pool.c
---- a/kernel/dma/pool.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/kernel/dma/pool.c	2023-05-06 11:32:39.478675830 -0400
-@@ -189,13 +189,10 @@
+diff --git a/kernel/dma/pool.c b/kernel/dma/pool.c
+index 4d40dcce7604..86b3232bcf3a 100644
+--- a/kernel/dma/pool.c
++++ b/kernel/dma/pool.c
+@@ -189,13 +189,10 @@ static int __init dma_atomic_pool_init(void)
  	int ret = 0;
  
  	/*
@@ -3458,10 +3532,11 @@ diff -Naur a/kernel/dma/pool.c b/kernel/dma/pool.c
  	}
  	INIT_WORK(&atomic_pool_work, atomic_pool_work_fn);
  
-diff -Naur a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
---- a/sound/soc/codecs/es8316.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/sound/soc/codecs/es8316.c	2023-05-06 11:32:39.470675947 -0400
-@@ -696,7 +696,7 @@
+diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
+index 87775378362e..a1ce58ac0104 100644
+--- a/sound/soc/codecs/es8316.c
++++ b/sound/soc/codecs/es8316.c
+@@ -701,7 +701,7 @@ static void es8316_disable_jack_detect(struct snd_soc_component *component)
  	snd_soc_component_update_bits(component, ES8316_GPIO_DEBOUNCE,
  				      ES8316_GPIO_ENABLE_INTERRUPT, 0);
  
@@ -3470,9 +3545,10 @@ diff -Naur a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
  		es8316_disable_micbias_for_mic_gnd_short_detect(component);
  		snd_soc_jack_report(es8316->jack, 0, SND_JACK_BTN_0);
  	}
-diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
---- a/sound/soc/codecs/rt5651.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/sound/soc/codecs/rt5651.c	2023-05-06 11:32:39.474675888 -0400
+diff --git a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
+index df90af906563..28e5b6fb9d8f 100644
+--- a/sound/soc/codecs/rt5651.c
++++ b/sound/soc/codecs/rt5651.c
 @@ -24,6 +24,7 @@
  #include <sound/initval.h>
  #include <sound/tlv.h>
@@ -3481,7 +3557,7 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  
  #include "rl6231.h"
  #include "rt5651.h"
-@@ -1511,6 +1512,7 @@
+@@ -1511,6 +1512,7 @@ static int rt5651_set_dai_pll(struct snd_soc_dai *dai, int pll_id, int source,
  static int rt5651_set_bias_level(struct snd_soc_component *component,
  			enum snd_soc_bias_level level)
  {
@@ -3489,7 +3565,7 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  	switch (level) {
  	case SND_SOC_BIAS_PREPARE:
  		if (SND_SOC_BIAS_STANDBY == snd_soc_component_get_bias_level(component)) {
-@@ -1518,6 +1520,13 @@
+@@ -1518,6 +1520,13 @@ static int rt5651_set_bias_level(struct snd_soc_component *component,
  				snd_soc_component_update_bits(component, RT5651_D_MISC,
  						    0xc00, 0xc00);
  		}
@@ -3503,7 +3579,7 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  		break;
  	case SND_SOC_BIAS_STANDBY:
  		if (SND_SOC_BIAS_OFF == snd_soc_component_get_bias_level(component)) {
-@@ -2059,6 +2068,13 @@
+@@ -2059,6 +2068,13 @@ static int rt5651_probe(struct snd_soc_component *component)
  {
  	struct rt5651_priv *rt5651 = snd_soc_component_get_drvdata(component);
  
@@ -3517,10 +3593,11 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  	rt5651->component = component;
  
  	snd_soc_component_update_bits(component, RT5651_PWR_ANLG1,
-diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
---- a/sound/soc/codecs/rt5651.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/sound/soc/codecs/rt5651.h	2023-05-06 11:32:39.475675874 -0400
-@@ -2097,6 +2097,7 @@
+diff --git a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
+index 20c33a3ece37..17524fa9fdfc 100644
+--- a/sound/soc/codecs/rt5651.h
++++ b/sound/soc/codecs/rt5651.h
+@@ -2097,6 +2097,7 @@ struct rt5651_priv {
  
  	int dmic_en;
  	bool hp_mute;
@@ -3528,3 +3605,6 @@ diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
  };
  
  #endif /* __RT5651_H__ */
+-- 
+2.39.2
+
