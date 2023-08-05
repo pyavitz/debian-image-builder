@@ -1,0 +1,49 @@
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Da Xue <da@libre.computer>
+Date: Fri,  4 Aug 2023 16:19:02 -0400
+Subject: [PATCH] [PATCH v2] net: phy: meson-gxl: implement meson_gxl_phy_resume()
+
+After suspend and resume, the meson GXL internal PHY config
+needs to be initialized again or the carrier cannot be found.
+
+Signed-off-by: Luke Lu <luke.lu@libre.computer>
+Reviewed-by: Da Xue <da@libre.computer>
+---
+ drivers/net/phy/meson-gxl.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/phy/meson-gxl.c b/drivers/net/phy/meson-gxl.c
+index bb9b33b6b..2df516ed4 100644
+--- a/drivers/net/phy/meson-gxl.c
++++ b/drivers/net/phy/meson-gxl.c
+@@ -132,6 +132,18 @@ static int meson_gxl_config_init(struct phy_device *phydev)
+ 	return 0;
+ }
+ 
++static int meson_gxl_phy_resume(struct phy_device *phydev)
++{
++	int ret;
++
++	genphy_resume();
++	ret = meson_gxl_config_init(phydev);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
+ /* This function is provided to cope with the possible failures of this phy
+  * during aneg process. When aneg fails, the PHY reports that aneg is done
+  * but the value found in MII_LPA is wrong:
+@@ -196,7 +208,7 @@ static struct phy_driver meson_gxl_phy[] = {
+ 		.config_intr	= smsc_phy_config_intr,
+ 		.handle_interrupt = smsc_phy_handle_interrupt,
+ 		.suspend        = genphy_suspend,
+-		.resume         = genphy_resume,
++		.resume         = meson_gxl_phy_resume,
+ 		.read_mmd	= genphy_read_mmd_unsupported,
+ 		.write_mmd	= genphy_write_mmd_unsupported,
+ 	}, {
+-- 
+2.39.2
+
