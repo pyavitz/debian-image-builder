@@ -15,9 +15,11 @@ fi
 source board.txt
 source userdata.txt
 
+# debug switch
 if [ $VERBOSE -eq 1 ]; then
 	set -x
 fi
+# compile native or cross
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
 	CROSSCOMPILE="0"
 fi
@@ -27,6 +29,7 @@ fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
 	CROSSCOMPILE="1"
 fi
+# github
 if [[ "$FORCE_GITHUB" == "true" ]]; then
 	VERSION="${GITHUB_BRANCH_VERSION}"
 	echo "${GITHUB}" > github.txt
@@ -38,6 +41,7 @@ if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
 fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
+# compiler
 if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then
 		:;

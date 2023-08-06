@@ -1,237 +1,7 @@
 #!/bin/bash
 
-# RTL8812AU
-rtl8812au_download(){
-if [ $AIRCRACK -eq 1 ]; then
-	RTL_88XXAU="aircrack-ng"
-else
-	RTL_88XXAU="pyavitz"
-fi
-if [ $AIRCRACK -eq 1 ]; then
-	if [[ -d "rtl8812au" ]]; then
-		echo -en "${PNK}[${FIN}${WHT}aircrack${FIN}${PNK}]${FIN} "
-		rm -fdr rtl8812au
-	fi
-fi
-if [[ -d "rtl8812au" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl8812au
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/${RTL_88XXAU}/rtl8812au.git rtl8812au
-fi
-}
-
-rtl8812au(){
-rm -fdr drivers/net/wireless/rtl8812au
-mkdir -p drivers/net/wireless/rtl8812au
-cp -R ../rtl8812au/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8812au
-cp -R ../rtl8812au/Makefile drivers/net/wireless/rtl8812au/Makefile
-cp -R ../rtl8812au/Kconfig drivers/net/wireless/rtl8812au/Kconfig
-if [[ "$REPO" == "hardkernel" ]]; then
-	sed -i 's/source "drivers\/net\/wireless\/rtl8812au\/Kconfig"//g' drivers/net/wireless/Kconfig
-	sed -i 's/obj-$(CONFIG_RTL8812AU) += rtl8812au\///g' drivers/net/wireless/Makefile
-fi
-echo "obj-\$(CONFIG_88XXAU) += rtl8812au/" >> "drivers/net/wireless/Makefile"
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8812au\/Kconfig"' drivers/net/wireless/Kconfig
-}
-
-
-rtl8812au_module(){
-if [ $RTL88XXAU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_88XXAU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-# RTL8811CU
-rtl8811cu_download(){
-if [[ -d "rtl8811cu" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl8811cu
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/morrownr/8821cu-20210916.git rtl8811cu
-fi
-}
-
-rtl8811cu(){
-if [[ "$REPO" == "hardkernel" ]]; then
-	rm -fdr drivers/net/wireless/{rtl8821cu,rtl8821CU}
-fi
-rm -fdr drivers/net/wireless/rtl8811cu
-mkdir -p drivers/net/wireless/rtl8811cu
-cp -R ../rtl8811cu/{core,hal,include,os_dep,platform,rtl8821c.mk,halmac.mk} drivers/net/wireless/rtl8811cu
-cp -R ../rtl8811cu/Makefile drivers/net/wireless/rtl8811cu/Makefile
-cp -R ../rtl8811cu/Kconfig drivers/net/wireless/rtl8811cu/Kconfig
-sed -i 's/---help---/help/g' drivers/net/wireless/rtl8811cu/Kconfig
-sed -i "s/^CONFIG_RTW_DEBUG.*/CONFIG_RTW_DEBUG = n/" drivers/net/wireless/rtl8811cu/Makefile
-sed -i "s/^CONFIG_MP_VHT_HW_TX_MODE.*/CONFIG_MP_VHT_HW_TX_MODE = n/" drivers/net/wireless/rtl8811cu/Makefile
-if [[ "$REPO" == "hardkernel" ]]; then
-	sed -i 's/source "drivers\/net\/wireless\/rtl8821cu\/Kconfig"//g' drivers/net/wireless/Kconfig;
-	sed -i 's/obj-$(CONFIG_RTL8821CU) += rtl8821cu\///g' drivers/net/wireless/Makefile;
-	sed -i 's/source "drivers\/net\/wireless\/rtl8821CU\/Kconfig"//g' drivers/net/wireless/Kconfig;
-	sed -i 's/obj-$(CONFIG_RTL8821CU) += rtl8821CU\///g' drivers/net/wireless/Makefile;
-fi
-echo "obj-\$(CONFIG_RTL8821CU) += rtl8811cu/" >> drivers/net/wireless/Makefile
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8811cu\/Kconfig"' drivers/net/wireless/Kconfig
-}
-
-rtl8811cu_module(){
-if [ $RTL88XXCU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8821CU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-# RTL88X2CS
-rtl88x2cs_download(){
-if [[ -d "rtl88x2cs" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl88x2cs
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/pyavitz/rtl88x2cs.git rtl88x2cs
-fi
-}
-
-rtl88x2cs(){
-rm -fdr drivers/net/wireless/rtl88x2cs
-mkdir -p drivers/net/wireless/rtl88x2cs
-cp -R ../rtl88x2cs/{core,hal,include,os_dep,platform,halmac.mk,ifcfg-wlan0,rtl8822c.mk,runwpa,wlan0dhcp} drivers/net/wireless/rtl88x2cs
-cp -R ../rtl88x2cs/Makefile drivers/net/wireless/rtl88x2cs/Makefile
-cp -R ../rtl88x2cs/Kconfig drivers/net/wireless/rtl88x2cs/Kconfig
-sed -i 's/---help---/help/g' drivers/net/wireless/rtl88x2cs/Kconfig
-sed -i "s/include \/rtl8822c.mk/include \/drivers\/net\/wireless\/rtl88x2cs\/rtl8822c.mk/" drivers/net/wireless/rtl88x2cs/Makefile
-sed -i "s/^CONFIG_RTW_DEBUG.*/CONFIG_RTW_DEBUG = n/" drivers/net/wireless/rtl88x2cs/Makefile
-echo "obj-\$(CONFIG_RTL8822CS) += rtl88x2cs/" >> drivers/net/wireless/Makefile
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl88x2cs\/Kconfig"' drivers/net/wireless/Kconfig
-}
-
-rtl88x2cs_module(){
-if [[ "$BOARD" == "x96air" || "$FAMILY_EXT" == "bananapi" ]] \
-	&& [[ "$LINUX_VERSION" == "5.15" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8822CS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-# RTL88X2BU
-# Other sources
-# https://github.com/morrownr/88x2bu-20210702.git
-rtl88x2bu_download(){
-if [[ -d "rtl88x2bu" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl88x2bu
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/RinCat/RTL88x2BU-Linux-Driver.git rtl88x2bu
-fi
-}
-
-rtl88x2bu(){
-rm -fdr drivers/net/wireless/rtl88x2bu
-mkdir -p drivers/net/wireless/rtl88x2bu/
-cp -R ../rtl88x2bu/{core,hal,include,os_dep,platform,halmac.mk,rtl8822b.mk} drivers/net/wireless/rtl88x2bu
-cp -f ../rtl88x2bu/Makefile drivers/net/wireless/rtl88x2bu/Makefile
-cp -f ../rtl88x2bu/Kconfig drivers/net/wireless/rtl88x2bu/Kconfig
-sed -i 's/---help---/help/g' drivers/net/wireless/rtl88x2bu/Kconfig
-sed -i 's/include $(src)\/rtl8822b.mk /include $(TopDIR)\/drivers\/net\/wireless\/rtl88x2bu\/rtl8822b.mk/' drivers/net/wireless/rtl88x2bu/Makefile
-echo "obj-\$(CONFIG_RTL8822BU) += rtl88x2bu/" >> drivers/net/wireless/Makefile
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl88x2bu\/Kconfig"' drivers/net/wireless/Kconfig
-}
-
-rtl88x2bu_module(){
-if [ $RTL88X2BU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8822BU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-# RTL8188EU
-rtl8188eu_download(){
-if [[ -d "rtl8188eu" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl8188eu
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/lwfinger/rtl8188eu.git rtl8188eu
-fi
-}
-
-rtl8188eu(){
-rm -fdr drivers/net/wireless/rtl8188eu
-mkdir -p drivers/net/wireless/rtl8188eu
-cp -R ../rtl8188eu/{core,hal,include,os_dep} drivers/net/wireless/rtl8188eu
-cp -R ../rtl8188eu/Makefile drivers/net/wireless/rtl8188eu/Makefile
-echo "obj-\$(CONFIG_RTL8188EU) += rtl8188eu/" >> "drivers/net/wireless/Makefile"
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8188eu\/Kconfig"' drivers/net/wireless/Kconfig
-echo "config RTL8188EU" > drivers/net/wireless/rtl8188eu/Kconfig
-echo "	tristate "'"RTL8188EU USB WiFi"'"" >> drivers/net/wireless/rtl8188eu/Kconfig
-echo "	depends on USB" >> drivers/net/wireless/rtl8188eu/Kconfig
-echo "	help" >> drivers/net/wireless/rtl8188eu/Kconfig
-echo "	  Help message of RTL8188EU" >> drivers/net/wireless/rtl8188eu/Kconfig
-}
-
-rtl8188eu_module(){
-if [ $RTL8188EU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8188EU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-# RTL8723DS
-rtl8723ds_download(){
-if [[ -d "rtl8723ds" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl8723ds
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/lwfinger/rtl8723ds.git rtl8723ds
-fi
-}
-
-rtl8723ds(){
-rm -fdr drivers/net/wireless/rtl8723ds
-mkdir -p drivers/net/wireless/rtl8723ds
-cp -R ../rtl8723ds/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8723ds
-cp -R ../rtl8723ds/Makefile drivers/net/wireless/rtl8723ds/Makefile
-echo "obj-\$(CONFIG_RTL8723DS) += rtl8723ds/" >> "drivers/net/wireless/Makefile"
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8723ds\/Kconfig"' drivers/net/wireless/Kconfig
-echo "config RTL8723DS" > drivers/net/wireless/rtl8723ds/Kconfig
-echo "	tristate "'"RTL8723DS USB WiFi"'"" >> drivers/net/wireless/rtl8723ds/Kconfig
-echo "	depends on USB" >> drivers/net/wireless/rtl8723ds/Kconfig
-echo "	help" >> drivers/net/wireless/rtl8723ds/Kconfig
-echo "	  Help message of RTL8723DS" >> drivers/net/wireless/rtl8723ds/Kconfig
-}
-
-rtl8723ds_module(){
-if [[ "$BOARD" == "tinker" ]] && [[ "$LINUX_VERSION" == "5.15" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8723DS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
 # RTL8189ES
-rtl8189es_download(){
+rtl8189es_download(){ # lib:function:wireless -> extra_wireless
 if [[ -d "rtl8189es" ]]; then
 	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
 	cd rtl8189es
@@ -245,7 +15,7 @@ else
 fi
 }
 
-rtl8189es(){
+rtl8189es(){ # lib:function:linux -> setup
 rm -fdr drivers/net/wireless/rtl8189es
 mkdir -p drivers/net/wireless/rtl8189es
 cp -R ../rtl8189es/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8189es
@@ -256,64 +26,19 @@ sed -i 's/---help---/help/g' drivers/net/wireless/rtl8189es/Kconfig
 sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8189es\/Kconfig"' drivers/net/wireless/Kconfig
 }
 
-rtl8189es_module(){
-if [[ "$BOARD" == "orangepir1" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8189ES=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-# RTL8189ES
-rtl8723bs_download(){
-if [[ -d "rtl8723bs" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl8723bs
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/pyavitz/rtl8723bs.git rtl8723bs
-fi
-}
-
-rtl8723bs(){
-rm -fdr drivers/net/wireless/rtl8723bs
-mkdir -p drivers/net/wireless/rtl8723bs
-cp -R ../rtl8723bs/{core,hal,include,os_dep,platform,ifcfg-wlan0,runwpa,wlan0dhcp} drivers/net/wireless/rtl8723bs
-cp -R ../rtl8723bs/Makefile drivers/net/wireless/rtl8723bs/Makefile
-cp -R ../rtl8723bs/Kconfig drivers/net/wireless/rtl8723bs/Kconfig
-echo "obj-\$(CONFIG_RTL8723BS) += rtl8723bs/" >> drivers/net/wireless/Makefile
-sed -i 's/---help---/help/g' drivers/net/wireless/rtl8723bs/Kconfig
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8723bs\/Kconfig"' drivers/net/wireless/Kconfig
-sed -i 's/export TopDIR ?= $(shell pwd)/export TopDIR ?= $(srctree)\/$(src)/g' drivers/net/wireless/rtl8723bs/Makefile
-}
-
-rtl8723bs_module(){
-if [[ "$BOARD" == "tinker" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8723BS=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
-}
-
-extra_wireless(){
-if [ $RTL88XXAU -eq 1 ]; then
-	echo -en "${WHT}Realtek 88XXAU${FIN} "
-	rtl8812au_download
-	echo_bdone
-fi
-if [ $RTL88X2BU -eq 1 ]; then
-	echo -en "${WHT}Realtek 88X2BU${FIN} "
-	rtl88x2bu_download
-	echo_bdone
-fi
-if [ $RTL88XXCU -eq 1 ]; then
-	echo -en "${WHT}Realtek 88XXCU${FIN} "
-	rtl8811cu_download
-	echo_bdone
-fi
+extra_wireless(){ # lib:function:linux -> stable/mainline_download
 if [[ "$BOARD" == "orangepir1" ]]; then
 	echo -en "${WHT}Realtek 8189ES${FIN} "
 	rtl8189es_download
 	echo_bdone
+fi
+}
+
+enable_wireless_module(){ # lib:function:linux -> bconfig
+if [ $RTL88XXAU -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	echo "CONFIG_RTL88XXAU=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
+fi
+if [[ "$BOARD" == "orangepir1" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	echo "CONFIG_RTL8189ES=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
 }

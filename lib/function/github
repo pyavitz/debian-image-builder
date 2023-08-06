@@ -29,7 +29,6 @@ else
 	${DOWNLOAD} https://github.com/${GITHUB}/${GITHUB_REPO}/archive/refs/heads/${GITHUB_BRANCH}-${VERSION}.tar.gz
 	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 fi
-extra_wireless
 }
 
 report_github_tarball_error (){
@@ -53,16 +52,6 @@ fi
 }
 
 vendor_setup(){
-cd ${KERNEL}-${VERSION}
-if [ RTL88XXAU -eq 1 ]; then
-	rtl8812au
-fi
-if [ $RTL88X2BU -eq 1 ]; then
-	rtl88x2bu
-fi
-if [ $RTL88XXCU -eq 1 ]; then
-	rtl8811cu
-fi
 export ARCH=${ARCH}
 if [[ "$VERSION" == "4.9.y" ]]; then
 	# remove builddeb script
@@ -94,9 +83,6 @@ if [ -f arch/${ARCH}/configs/${LINUX_DEFCONFIG} ]; then
 else
 	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
 fi
-rtl8812au_module
-rtl88x2bu_module
-rtl8811cu_module
 if [ $CROSSCOMPILE -eq 1 ]; then
 	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC=${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG}
 else

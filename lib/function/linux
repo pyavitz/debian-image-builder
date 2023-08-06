@@ -129,15 +129,6 @@ fi
 setup(){
 sleep 1s
 cd ${KERNEL}-${VERSION}
-if [ $RTL88XXAU -eq 1 ]; then
-	rtl8812au
-fi
-if [ $RTL88X2BU -eq 1 ]; then
-	rtl88x2bu
-fi
-if [ $RTL88XXCU -eq 1 ]; then
-	rtl8811cu
-fi
 if [[ "$BOARD" == "orangepir1" ]]; then
 	rtl8189es
 fi
@@ -184,14 +175,16 @@ else
 	read -p "Press enter to continue."
 	exit 1
 fi
+
+# odroid defconfig for linux 5.15
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
 	rm -f arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 	cp -f ../${DEF}/odroid-lts_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
-rtl8812au_module
-rtl88x2bu_module
-rtl8811cu_module
-rtl8189es_module
+
+# enable module in the defconfig
+enable_wireless_module
+
 if [ $LTO_CLANG_THIN -eq 1 ]; then
 	echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
