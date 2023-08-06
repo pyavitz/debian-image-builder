@@ -126,16 +126,24 @@ if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 		for i in ../../${LPATCHESALL}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-if [[ -d "../../${WIRELESSPATCHES}/${LINUX_VERSION}" ]]; then
-	if [[ `ls ../../${WIRELESSPATCHES}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-		echo "# ${WIRELESSPATCHES}/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-		for i in ../../${WIRELESSPATCHES}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+# wireless
+if [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
-	if [[ `ls ../../${WIRELESSPATCHES}/hack/*.patch` ]] > /dev/null 2>&1; then
-		echo "# ${WIRELESSPATCHES}/hack" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-		for i in ../../${WIRELESSPATCHES}/hack/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/hack/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/rtw88/hack" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/rtw88/hack/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
+if [ $RTL88XXAU -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtl88xxau/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/rtl88xxau/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/rtl88xxau/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/rtl88xxau/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# general
 if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
