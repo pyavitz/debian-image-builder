@@ -1,35 +1,51 @@
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Date: Tue, 7 Mar 2023 09:12:30 +0100
-Subject: [PATCH] ARM: dts: import initial DT for BPI-CM4 module with BPI-CM4IO
-baseboard
+From a355735a0d6fc81214ef9f64ec727025f93eafc1 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 06:51:47 -0400
+Subject: [PATCH] arch: arm: dts: meson-g12b-bananapi-cm4
 
-Import initial support for BPI-CM4 module with BPI-CM4IO baseboard
-from the Linux submission applied at [1].
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/dts/Makefile                         |   1 +
+ .../meson-g12b-bananapi-cm4-cm4io-u-boot.dtsi |   6 +
+ .../arm/dts/meson-g12b-bananapi-cm4-cm4io.dts | 165 ++++++++
+ arch/arm/dts/meson-g12b-bananapi-cm4.dtsi     | 388 ++++++++++++++++++
+ board/amlogic/u200/MAINTAINERS                |   1 +
+ configs/bananapi-cm4-cm4io_defconfig          |  85 ++++
+ 6 files changed, 646 insertions(+)
+ create mode 100644 arch/arm/dts/meson-g12b-bananapi-cm4-cm4io-u-boot.dtsi
+ create mode 100644 arch/arm/dts/meson-g12b-bananapi-cm4-cm4io.dts
+ create mode 100644 arch/arm/dts/meson-g12b-bananapi-cm4.dtsi
+ create mode 100644 configs/bananapi-cm4-cm4io_defconfig
 
-The BananaPi BPI-CM4 module follows the CM4 specifications at [2],
-but with a single HDMI port and a single DSI output.
-
-The current CM4IO baseboard DT should work fine on the Raspberry CM4
-baseboard and other derivatives baseboards, but proper DT should
-be written for other baseboards.
-
-[1] https://git.kernel.org/amlogic/c/0262f2736978b1763363224698f47112a148dab0
-[2] https://datasheets.raspberrypi.com/cm4io/cm4io-datasheet.pdf
-
-Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
---- a/arch/arm/dts/Makefile	2023-04-03 16:38:50.000000000 -0400
-+++ b/arch/arm/dts/Makefile	2023-05-17 14:03:04.571720752 -0400
-@@ -212,6 +212,7 @@
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 43951a7731..0937a6639b 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -200,6 +200,7 @@ dtb-$(CONFIG_ARCH_MESON) += \
+ 	meson-g12b-gsking-x.dtb \
  	meson-g12b-odroid-n2.dtb \
- 	meson-g12b-odroid-n2l.dtb \
  	meson-g12b-odroid-n2-plus.dtb \
 +	meson-g12b-bananapi-cm4-cm4io.dtb \
  	meson-sm1-bananapi-m5.dtb \
  	meson-sm1-khadas-vim3l.dtb \
  	meson-sm1-odroid-c4.dtb \
---- /dev/null	2023-05-17 00:16:46.669453699 -0400
-+++ b/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io.dts	2023-05-17 14:03:04.571720752 -0400
+diff --git a/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io-u-boot.dtsi b/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io-u-boot.dtsi
+new file mode 100644
+index 0000000000..a60ba27806
+--- /dev/null
++++ b/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io-u-boot.dtsi
+@@ -0,0 +1,6 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2023 Neil Armstrong <neil.armstrong@linaro.org>
++ */
++
++#include "meson-g12-common-u-boot.dtsi"
+diff --git a/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io.dts b/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io.dts
+new file mode 100644
+index 0000000000..1b0c3881c6
+--- /dev/null
++++ b/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io.dts
 @@ -0,0 +1,165 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -196,17 +212,11 @@ diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
 +
 +	status = "okay";
 +};
---- /dev/null	2023-05-17 00:16:46.669453699 -0400
-+++ b/arch/arm/dts/meson-g12b-bananapi-cm4-cm4io-u-boot.dtsi	2023-05-17 14:03:04.576720710 -0400
-@@ -0,0 +1,6 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2023 Neil Armstrong <neil.armstrong@linaro.org>
-+ */
-+
-+#include "meson-g12-common-u-boot.dtsi"
---- /dev/null	2023-05-17 00:16:46.669453699 -0400
-+++ b/arch/arm/dts/meson-g12b-bananapi-cm4.dtsi	2023-05-17 14:03:04.572720744 -0400
+diff --git a/arch/arm/dts/meson-g12b-bananapi-cm4.dtsi b/arch/arm/dts/meson-g12b-bananapi-cm4.dtsi
+new file mode 100644
+index 0000000000..97e522921b
+--- /dev/null
++++ b/arch/arm/dts/meson-g12b-bananapi-cm4.dtsi
 @@ -0,0 +1,388 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -596,10 +606,11 @@ diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
 +	phys = <&usb2_phy0>, <&usb2_phy1>;
 +	phy-names = "usb2-phy0", "usb2-phy1";
 +};
-diff -Naur a/board/amlogic/u200/MAINTAINERS b/board/amlogic/u200/MAINTAINERS
---- a/board/amlogic/u200/MAINTAINERS	2023-04-03 16:38:50.000000000 -0400
-+++ b/board/amlogic/u200/MAINTAINERS	2023-05-17 14:03:04.576720710 -0400
-@@ -4,6 +4,7 @@
+diff --git a/board/amlogic/u200/MAINTAINERS b/board/amlogic/u200/MAINTAINERS
+index 47cec234a1..7535e489d1 100644
+--- a/board/amlogic/u200/MAINTAINERS
++++ b/board/amlogic/u200/MAINTAINERS
+@@ -4,6 +4,7 @@ S:	Maintained
  L:	u-boot-amlogic@groups.io
  F:	board/amlogic/u200/
  F:	configs/u200_defconfig
@@ -607,8 +618,11 @@ diff -Naur a/board/amlogic/u200/MAINTAINERS b/board/amlogic/u200/MAINTAINERS
  F:	configs/bananapi-m5_defconfig
  F:	configs/radxa-zero_defconfig
  F:	doc/board/amlogic/u200.rst
---- /dev/null	2023-05-17 00:16:46.669453699 -0400
-+++ b/configs/bananapi-cm4-cm4io_defconfig	2023-05-17 14:03:04.576720710 -0400
+diff --git a/configs/bananapi-cm4-cm4io_defconfig b/configs/bananapi-cm4-cm4io_defconfig
+new file mode 100644
+index 0000000000..2eb20a8891
+--- /dev/null
++++ b/configs/bananapi-cm4-cm4io_defconfig
 @@ -0,0 +1,85 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_MESON=y
@@ -695,14 +709,6 @@ diff -Naur a/board/amlogic/u200/MAINTAINERS b/board/amlogic/u200/MAINTAINERS
 +CONFIG_BMP_24BPP=y
 +CONFIG_BMP_32BPP=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
-diff -Naur a/doc/board/amlogic/index.rst b/doc/board/amlogic/index.rst
---- a/doc/board/amlogic/index.rst	2023-04-03 16:38:50.000000000 -0400
-+++ b/doc/board/amlogic/index.rst	2023-05-17 14:02:24.527053091 -0400
-@@ -22,6 +22,7 @@
- |                               |           | JetHub J80      |              |             |            | Odroid-Go-  | BananaPi-M5  |
- |                               |           |                 |              |             |            | Ultra       |              |
- |                               |           |                 |              |             |            | Odroid-N2L  |              |
-+|                               |           |                 |              |             |            | BPI-CM4     |              |
- +-------------------------------+-----------+-----------------+--------------+-------------+------------+-------------+--------------+
- | UART                          | **Yes**   | **Yes**         | **Yes**      | **Yes**     | **Yes**    | **Yes**     | **Yes**      |
- +-------------------------------+-----------+-----------------+--------------+-------------+------------+-------------+--------------+
+-- 
+2.39.2
+
