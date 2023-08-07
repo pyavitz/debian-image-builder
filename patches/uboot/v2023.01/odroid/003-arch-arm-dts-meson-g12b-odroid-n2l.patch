@@ -1,7 +1,27 @@
-diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
---- a/arch/arm/dts/Makefile	2023-01-09 11:07:33.000000000 -0500
-+++ b/arch/arm/dts/Makefile	2023-01-24 09:03:07.471675890 -0500
-@@ -199,6 +199,7 @@
+From bc220b41a116c0c56d81b37e2a6923c5c18432fe Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 08:23:52 -0400
+Subject: [PATCH] arch: arm: dts: meson-g12b-odroid-n2l support
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/dts/Makefile                         |   1 +
+ arch/arm/dts/meson-g12b-odroid-n2.dtsi        | 410 +---------------
+ .../arm/dts/meson-g12b-odroid-n2l-u-boot.dtsi |  13 +
+ arch/arm/dts/meson-g12b-odroid-n2l.dts        | 125 +++++
+ arch/arm/dts/meson-g12b-odroid.dtsi           | 445 ++++++++++++++++++
+ configs/odroid-n2l_defconfig                  |  70 +++
+ 6 files changed, 666 insertions(+), 398 deletions(-)
+ create mode 100644 arch/arm/dts/meson-g12b-odroid-n2l-u-boot.dtsi
+ create mode 100644 arch/arm/dts/meson-g12b-odroid-n2l.dts
+ create mode 100644 arch/arm/dts/meson-g12b-odroid.dtsi
+ create mode 100644 configs/odroid-n2l_defconfig
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index c7ebbca6f8..49547725af 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -199,6 +199,7 @@ dtb-$(CONFIG_ARCH_MESON) += \
  	meson-g12b-gtking-pro.dtb \
  	meson-g12b-gsking-x.dtb \
  	meson-g12b-odroid-n2.dtb \
@@ -9,153 +29,10 @@ diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
  	meson-g12b-odroid-n2-plus.dtb \
  	meson-sm1-bananapi-m5.dtb \
  	meson-sm1-khadas-vim3l.dtb \
---- /dev/null	2023-01-21 16:34:14.959185139 -0500
-+++ b/arch/arm/dts/meson-g12b-odroid-n2l-u-boot.dtsi	2023-01-22 05:28:10.000000000 -0500
-@@ -0,0 +1,13 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2019 BayLibre, SAS.
-+ * Author: Neil Armstrong <narmstrong@baylibre.com>
-+ */
-+
-+#include "meson-g12-common-u-boot.dtsi"
-+
-+/* SARADC is needed for proper board variant detection */
-+&saradc {
-+	status = "okay";
-+	vref-supply = <&vddao_1v8>;
-+};
---- /dev/null	2023-01-21 16:34:14.959185139 -0500
-+++ b/arch/arm/dts/meson-g12b-odroid-n2l.dts	2023-01-23 19:12:39.823883690 -0500
-@@ -0,0 +1,125 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
-+ */
-+
-+/dts-v1/;
-+
-+/* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
-+#include "meson-g12b-a311d.dtsi"
-+#include "meson-g12b-odroid-n2.dtsi"
-+
-+/ {
-+	compatible = "hardkernel,odroid-n2l", "amlogic,s922x", "amlogic,g12b";
-+	model = "Hardkernel ODROID-N2L";
-+
-+	sound {
-+		compatible = "amlogic,axg-sound-card";
-+		model = "ODROID-N2L";
-+		audio-aux-devs = <&tdmout_b>, <&tdmin_a>, <&tdmin_b>,
-+				 <&tdmin_c>, <&tdmin_lb>;
-+		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
-+				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
-+				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
-+				"TDM_B Playback", "TDMOUT_B OUT",
-+				"TDMIN_A IN 4", "TDM_B Loopback",
-+				"TDMIN_B IN 4", "TDM_B Loopback",
-+				"TDMIN_C IN 4", "TDM_B Loopback",
-+				"TDMIN_LB IN 1", "TDM_B Loopback",
-+				"TODDR_A IN 0", "TDMIN_A OUT",
-+				"TODDR_B IN 0", "TDMIN_A OUT",
-+				"TODDR_C IN 0", "TDMIN_A OUT",
-+				"TODDR_A IN 1", "TDMIN_B OUT",
-+				"TODDR_B IN 1", "TDMIN_B OUT",
-+				"TODDR_C IN 1", "TDMIN_B OUT",
-+				"TODDR_A IN 2", "TDMIN_C OUT",
-+				"TODDR_B IN 2", "TDMIN_C OUT",
-+				"TODDR_C IN 2", "TDMIN_C OUT",
-+				"TODDR_A IN 6", "TDMIN_LB OUT",
-+				"TODDR_B IN 6", "TDMIN_LB OUT",
-+				"TODDR_C IN 6", "TDMIN_LB OUT";
-+
-+		assigned-clocks = <&clkc CLKID_MPLL2>,
-+				  <&clkc CLKID_MPLL0>,
-+				  <&clkc CLKID_MPLL1>;
-+		assigned-clock-parents = <0>, <0>, <0>;
-+		assigned-clock-rates = <294912000>,
-+				       <270950400>,
-+				       <393216000>;
-+		status = "okay";
-+
-+		dai-link-0 {
-+			sound-dai = <&frddr_a>;
-+		};
-+
-+		dai-link-1 {
-+			sound-dai = <&frddr_b>;
-+		};
-+
-+		dai-link-2 {
-+			sound-dai = <&frddr_c>;
-+		};
-+
-+		dai-link-3 {
-+			sound-dai = <&toddr_a>;
-+		};
-+
-+		dai-link-4 {
-+			sound-dai = <&toddr_b>;
-+		};
-+
-+		dai-link-5 {
-+			sound-dai = <&toddr_c>;
-+		};
-+
-+		/* 8ch hdmi interface */
-+		dai-link-6 {
-+			sound-dai = <&tdmif_b>;
-+			dai-format = "i2s";
-+			dai-tdm-slot-tx-mask-0 = <1 1>;
-+			dai-tdm-slot-tx-mask-1 = <1 1>;
-+			dai-tdm-slot-tx-mask-2 = <1 1>;
-+			dai-tdm-slot-tx-mask-3 = <1 1>;
-+			mclk-fs = <256>;
-+
-+			codec {
-+				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
-+			};
-+		};
-+
-+		/* hdmi glue */
-+		dai-link-7 {
-+			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
-+
-+			codec {
-+				sound-dai = <&hdmi_tx>;
-+			};
-+		};
-+	};
-+};
-+
-+&eth_phy {
-+	status = "disabled";
-+};
-+
-+&vddcpu_a {
-+	regulator-min-microvolt = <680000>;
-+	regulator-max-microvolt = <1040000>;
-+
-+	pwms = <&pwm_ab 0 1500 0>;
-+};
-+
-+&vddcpu_b {
-+	regulator-min-microvolt = <680000>;
-+	regulator-max-microvolt = <1040000>;
-+
-+	pwms = <&pwm_AO_cd 1 1500 0>;
-+};
-+
-+&usb2_phy0 {
-+	vbus-supply = <&usb_pwr_en>;
-+};
-+
-+&usb2_phy1 {
-+	phy-supply = <&usb_pwr_en>;
-+};
-diff -Naur a/arch/arm/dts/meson-g12b-odroid-n2.dtsi b/arch/arm/dts/meson-g12b-odroid-n2.dtsi
---- a/arch/arm/dts/meson-g12b-odroid-n2.dtsi	2023-01-09 11:07:33.000000000 -0500
-+++ b/arch/arm/dts/meson-g12b-odroid-n2.dtsi	2023-01-24 09:00:12.011910494 -0500
+diff --git a/arch/arm/dts/meson-g12b-odroid-n2.dtsi b/arch/arm/dts/meson-g12b-odroid-n2.dtsi
+index 344573e157..24d0442dff 100644
+--- a/arch/arm/dts/meson-g12b-odroid-n2.dtsi
++++ b/arch/arm/dts/meson-g12b-odroid-n2.dtsi
 @@ -4,20 +4,14 @@
   * Author: Neil Armstrong <narmstrong@baylibre.com>
   */
@@ -653,8 +530,161 @@ diff -Naur a/arch/arm/dts/meson-g12b-odroid-n2.dtsi b/arch/arm/dts/meson-g12b-od
  &usb2_phy1 {
  	/* Enable the hub which is connected to this port */
  	phy-supply = <&hub_5v>;
---- /dev/null	2023-01-21 16:34:14.959185139 -0500
-+++ b/arch/arm/dts/meson-g12b-odroid.dtsi	2023-01-24 09:24:20.149750503 -0500
+diff --git a/arch/arm/dts/meson-g12b-odroid-n2l-u-boot.dtsi b/arch/arm/dts/meson-g12b-odroid-n2l-u-boot.dtsi
+new file mode 100644
+index 0000000000..a92f9e9ff1
+--- /dev/null
++++ b/arch/arm/dts/meson-g12b-odroid-n2l-u-boot.dtsi
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2019 BayLibre, SAS.
++ * Author: Neil Armstrong <narmstrong@baylibre.com>
++ */
++
++#include "meson-g12-common-u-boot.dtsi"
++
++/* SARADC is needed for proper board variant detection */
++&saradc {
++	status = "okay";
++	vref-supply = <&vddao_1v8>;
++};
+diff --git a/arch/arm/dts/meson-g12b-odroid-n2l.dts b/arch/arm/dts/meson-g12b-odroid-n2l.dts
+new file mode 100644
+index 0000000000..3d8f41d63e
+--- /dev/null
++++ b/arch/arm/dts/meson-g12b-odroid-n2l.dts
+@@ -0,0 +1,125 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2022 Dongjin Kim <tobetter@gmail.com>
++ */
++
++/dts-v1/;
++
++/* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
++#include "meson-g12b-a311d.dtsi"
++#include "meson-g12b-odroid-n2.dtsi"
++
++/ {
++	compatible = "hardkernel,odroid-n2l", "amlogic,s922x", "amlogic,g12b";
++	model = "Hardkernel ODROID-N2L";
++
++	sound {
++		compatible = "amlogic,axg-sound-card";
++		model = "ODROID-N2L";
++		audio-aux-devs = <&tdmout_b>, <&tdmin_a>, <&tdmin_b>,
++				 <&tdmin_c>, <&tdmin_lb>;
++		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
++				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
++				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
++				"TDM_B Playback", "TDMOUT_B OUT",
++				"TDMIN_A IN 4", "TDM_B Loopback",
++				"TDMIN_B IN 4", "TDM_B Loopback",
++				"TDMIN_C IN 4", "TDM_B Loopback",
++				"TDMIN_LB IN 1", "TDM_B Loopback",
++				"TODDR_A IN 0", "TDMIN_A OUT",
++				"TODDR_B IN 0", "TDMIN_A OUT",
++				"TODDR_C IN 0", "TDMIN_A OUT",
++				"TODDR_A IN 1", "TDMIN_B OUT",
++				"TODDR_B IN 1", "TDMIN_B OUT",
++				"TODDR_C IN 1", "TDMIN_B OUT",
++				"TODDR_A IN 2", "TDMIN_C OUT",
++				"TODDR_B IN 2", "TDMIN_C OUT",
++				"TODDR_C IN 2", "TDMIN_C OUT",
++				"TODDR_A IN 6", "TDMIN_LB OUT",
++				"TODDR_B IN 6", "TDMIN_LB OUT",
++				"TODDR_C IN 6", "TDMIN_LB OUT";
++
++		assigned-clocks = <&clkc CLKID_MPLL2>,
++				  <&clkc CLKID_MPLL0>,
++				  <&clkc CLKID_MPLL1>;
++		assigned-clock-parents = <0>, <0>, <0>;
++		assigned-clock-rates = <294912000>,
++				       <270950400>,
++				       <393216000>;
++		status = "okay";
++
++		dai-link-0 {
++			sound-dai = <&frddr_a>;
++		};
++
++		dai-link-1 {
++			sound-dai = <&frddr_b>;
++		};
++
++		dai-link-2 {
++			sound-dai = <&frddr_c>;
++		};
++
++		dai-link-3 {
++			sound-dai = <&toddr_a>;
++		};
++
++		dai-link-4 {
++			sound-dai = <&toddr_b>;
++		};
++
++		dai-link-5 {
++			sound-dai = <&toddr_c>;
++		};
++
++		/* 8ch hdmi interface */
++		dai-link-6 {
++			sound-dai = <&tdmif_b>;
++			dai-format = "i2s";
++			dai-tdm-slot-tx-mask-0 = <1 1>;
++			dai-tdm-slot-tx-mask-1 = <1 1>;
++			dai-tdm-slot-tx-mask-2 = <1 1>;
++			dai-tdm-slot-tx-mask-3 = <1 1>;
++			mclk-fs = <256>;
++
++			codec {
++				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
++			};
++		};
++
++		/* hdmi glue */
++		dai-link-7 {
++			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
++
++			codec {
++				sound-dai = <&hdmi_tx>;
++			};
++		};
++	};
++};
++
++&eth_phy {
++	status = "disabled";
++};
++
++&vddcpu_a {
++	regulator-min-microvolt = <680000>;
++	regulator-max-microvolt = <1040000>;
++
++	pwms = <&pwm_ab 0 1500 0>;
++};
++
++&vddcpu_b {
++	regulator-min-microvolt = <680000>;
++	regulator-max-microvolt = <1040000>;
++
++	pwms = <&pwm_AO_cd 1 1500 0>;
++};
++
++&usb2_phy0 {
++	vbus-supply = <&usb_pwr_en>;
++};
++
++&usb2_phy1 {
++	phy-supply = <&usb_pwr_en>;
++};
+diff --git a/arch/arm/dts/meson-g12b-odroid.dtsi b/arch/arm/dts/meson-g12b-odroid.dtsi
+new file mode 100644
+index 0000000000..9e12a34b28
+--- /dev/null
++++ b/arch/arm/dts/meson-g12b-odroid.dtsi
 @@ -0,0 +1,445 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -1101,8 +1131,11 @@ diff -Naur a/arch/arm/dts/meson-g12b-odroid-n2.dtsi b/arch/arm/dts/meson-g12b-od
 +&usb2_phy0 {
 +	phy-supply = <&vcc_5v>;
 +};
---- /dev/null	2023-01-21 16:34:14.959185139 -0500
-+++ b/configs/odroid-n2l_defconfig	2023-01-22 05:28:10.000000000 -0500
+diff --git a/configs/odroid-n2l_defconfig b/configs/odroid-n2l_defconfig
+new file mode 100644
+index 0000000000..7f9e64d942
+--- /dev/null
++++ b/configs/odroid-n2l_defconfig
 @@ -0,0 +1,70 @@
 +CONFIG_ARM=y
 +CONFIG_SYS_BOARD="w400"
@@ -1174,3 +1207,6 @@ diff -Naur a/arch/arm/dts/meson-g12b-odroid-n2.dtsi b/arch/arm/dts/meson-g12b-od
 +CONFIG_BMP_24BPP=y
 +CONFIG_BMP_32BPP=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
+-- 
+2.39.2
+

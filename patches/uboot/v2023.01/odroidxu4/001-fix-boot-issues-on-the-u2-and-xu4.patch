@@ -1,0 +1,40 @@
+From 5a66bbbab1f9ae228652e52b21819864dfc453f4 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 08:25:50 -0400
+Subject: [PATCH] fix boot issues on the u2 and xu4
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ board/samsung/common/board.c | 2 +-
+ drivers/mmc/s5p_sdhci.c      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/board/samsung/common/board.c b/board/samsung/common/board.c
+index 943b498293..2e3af49d9d 100644
+--- a/board/samsung/common/board.c
++++ b/board/samsung/common/board.c
+@@ -223,7 +223,7 @@ int board_late_init(void)
+ 	char mmcbootdev_str[16];
+ 
+ 	ret = uclass_first_device_err(UCLASS_CROS_EC, &dev);
+-	if (ret && ret != -ENODEV) {
++	if (ret && ret != -ENODEV && ret != -EPFNOSUPPORT) {
+ 		/* Force console on */
+ 		gd->flags &= ~GD_FLG_SILENT;
+ 
+diff --git a/drivers/mmc/s5p_sdhci.c b/drivers/mmc/s5p_sdhci.c
+index dee84263c3..3b74feae68 100644
+--- a/drivers/mmc/s5p_sdhci.c
++++ b/drivers/mmc/s5p_sdhci.c
+@@ -90,7 +90,7 @@ static int s5p_sdhci_core_init(struct sdhci_host *host)
+ 	host->name = S5P_NAME;
+ 
+ 	host->quirks = SDHCI_QUIRK_NO_HISPD_BIT | SDHCI_QUIRK_BROKEN_VOLTAGE |
+-		SDHCI_QUIRK_32BIT_DMA_ADDR |
++		SDHCI_QUIRK_BROKEN_R1B | SDHCI_QUIRK_32BIT_DMA_ADDR |
+ 		SDHCI_QUIRK_WAIT_SEND_CMD | SDHCI_QUIRK_USE_WIDE8;
+ 	host->max_clk = 52000000;
+ 	host->voltages = MMC_VDD_32_33 | MMC_VDD_33_34 | MMC_VDD_165_195;
+-- 
+2.39.2
+

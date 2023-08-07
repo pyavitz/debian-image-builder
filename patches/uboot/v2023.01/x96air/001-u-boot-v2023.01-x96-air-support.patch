@@ -1,6 +1,30 @@
---- a/arch/arm/dts/Makefile	2022-10-03 15:25:32.000000000 -0400
-+++ b/arch/arm/dts/Makefile	2023-02-02 06:25:44.836450986 -0500
-@@ -204,7 +204,8 @@
+From f143f63d353c38241d0c2badc7c5e3c2757622b5 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 08:41:38 -0400
+Subject: [PATCH] u-boot: v2023.01: x96-air support
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/dts/Makefile                         |   3 +-
+ arch/arm/dts/meson-sm1-ac2xx.dtsi             | 300 ++++++++++++++++++
+ .../dts/meson-sm1-x96-air-gbit-u-boot.dtsi    |   7 +
+ arch/arm/dts/meson-sm1-x96-air-gbit.dts       | 257 +++++++++++++++
+ board/amlogic/ac2xx/Makefile                  |   7 +
+ board/amlogic/ac2xx/ac2xx.c                   |  51 +++
+ configs/x96air-gbit_defconfig                 |  82 +++++
+ 7 files changed, 706 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm/dts/meson-sm1-ac2xx.dtsi
+ create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
+ create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit.dts
+ create mode 100644 board/amlogic/ac2xx/Makefile
+ create mode 100644 board/amlogic/ac2xx/ac2xx.c
+ create mode 100644 configs/x96air-gbit_defconfig
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 43951a7731..bac3399e9b 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -204,7 +204,8 @@ dtb-$(CONFIG_ARCH_MESON) += \
  	meson-sm1-khadas-vim3l.dtb \
  	meson-sm1-odroid-c4.dtb \
  	meson-sm1-odroid-hc4.dtb \
@@ -10,8 +34,11 @@
  dtb-$(CONFIG_ARCH_TEGRA) += tegra20-harmony.dtb \
  	tegra20-medcom-wide.dtb \
  	tegra20-paz00.dtb \
---- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/arch/arm/dts/meson-sm1-ac2xx.dtsi	2023-02-02 06:25:44.838450932 -0500
+diff --git a/arch/arm/dts/meson-sm1-ac2xx.dtsi b/arch/arm/dts/meson-sm1-ac2xx.dtsi
+new file mode 100644
+index 0000000000..46a34731f7
+--- /dev/null
++++ b/arch/arm/dts/meson-sm1-ac2xx.dtsi
 @@ -0,0 +1,300 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -313,8 +340,24 @@
 +	status = "okay";
 +	dr_mode = "otg";
 +};
---- /dev/null	2023-02-04 12:50:16.972877948 -0500
-+++ b/arch/arm/dts/meson-sm1-x96-air-gbit.dts	2023-02-06 05:44:01.498860221 -0500
+diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
+new file mode 100644
+index 0000000000..8ebc1caa4a
+--- /dev/null
++++ b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
+@@ -0,0 +1,7 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2019 BayLibre, SAS.
++ * Author: Neil Armstrong <narmstrong@baylibre.com>
++ */
++
++#include "meson-sm1-u-boot.dtsi"
+diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit.dts b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
+new file mode 100644
+index 0000000000..6a7cd084e9
+--- /dev/null
++++ b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
 @@ -0,0 +1,257 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -573,18 +616,24 @@
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
---- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi	2023-02-02 06:25:44.839450905 -0500
+diff --git a/board/amlogic/ac2xx/Makefile b/board/amlogic/ac2xx/Makefile
+new file mode 100644
+index 0000000000..8a28ac2f24
+--- /dev/null
++++ b/board/amlogic/ac2xx/Makefile
 @@ -0,0 +1,7 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2019 BayLibre, SAS.
-+ * Author: Neil Armstrong <narmstrong@baylibre.com>
-+ */
++# SPDX-License-Identifier: GPL-2.0+
++#
++# (C) Copyright 2020 BayLibre, SAS
++# Author: Neil Armstrong <narmstrong@baylibre.com>
++# Editor: flippy <flippy@sina.com>
 +
-+#include "meson-sm1-u-boot.dtsi"
---- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/board/amlogic/ac2xx/ac2xx.c	2023-02-02 06:25:44.839450905 -0500
++obj-y	:= ac2xx.o
+diff --git a/board/amlogic/ac2xx/ac2xx.c b/board/amlogic/ac2xx/ac2xx.c
+new file mode 100644
+index 0000000000..8734d6b9ed
+--- /dev/null
++++ b/board/amlogic/ac2xx/ac2xx.c
 @@ -0,0 +1,51 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
@@ -637,18 +686,11 @@
 +
 +	return 0;
 +}
---- /dev/null	2023-01-25 00:39:00.102640905 -0500
-+++ b/board/amlogic/ac2xx/Makefile	2023-02-02 06:25:44.839450905 -0500
-@@ -0,0 +1,7 @@
-+# SPDX-License-Identifier: GPL-2.0+
-+#
-+# (C) Copyright 2020 BayLibre, SAS
-+# Author: Neil Armstrong <narmstrong@baylibre.com>
-+# Editor: flippy <flippy@sina.com>
-+
-+obj-y	:= ac2xx.o
---- /dev/null	2023-02-04 12:50:16.972877948 -0500
-+++ b/configs/x96air-gbit_defconfig	2023-02-06 07:08:16.394401764 -0500
+diff --git a/configs/x96air-gbit_defconfig b/configs/x96air-gbit_defconfig
+new file mode 100644
+index 0000000000..866d12371a
+--- /dev/null
++++ b/configs/x96air-gbit_defconfig
 @@ -0,0 +1,82 @@
 +CONFIG_ARM=y
 +CONFIG_SYS_BOARD="ac2xx"
@@ -732,3 +774,6 @@
 +CONFIG_BMP_24BPP=y
 +CONFIG_BMP_32BPP=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
+-- 
+2.39.2
+

@@ -1,6 +1,19 @@
-diff -Naur a/arch/arm/dts/rk3328.dtsi b/arch/arm/dts/rk3328.dtsi
---- a/arch/arm/dts/rk3328.dtsi	2022-10-03 15:25:32.000000000 -0400
-+++ b/arch/arm/dts/rk3328.dtsi	2022-10-14 14:02:40.235202727 -0400
+From 28dd7f12f0bfcc90be0f40a5ec504c5b8ed0a0a2 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 08:31:41 -0400
+Subject: [PATCH] rk3328: u-boot v2023-01
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/dts/rk3328.dtsi        | 21 ++++++++
+ drivers/misc/rockchip-efuse.c   | 85 ++++++++++++++++++++++++++++++++-
+ include/configs/rk3328_common.h |  4 ++
+ 3 files changed, 108 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/dts/rk3328.dtsi b/arch/arm/dts/rk3328.dtsi
+index 27e45d5886..4b7b7db72f 100644
+--- a/arch/arm/dts/rk3328.dtsi
++++ b/arch/arm/dts/rk3328.dtsi
 @@ -856,6 +856,8 @@
  		clocks = <&cru HCLK_SDMMC>, <&cru SCLK_SDMMC>,
  			 <&cru SCLK_SDMMC_DRV>, <&cru SCLK_SDMMC_SAMPLE>;
@@ -45,9 +58,10 @@ diff -Naur a/arch/arm/dts/rk3328.dtsi b/arch/arm/dts/rk3328.dtsi
  		status = "disabled";
  	};
  
-diff -Naur a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
---- a/drivers/misc/rockchip-efuse.c	2022-10-03 15:25:32.000000000 -0400
-+++ b/drivers/misc/rockchip-efuse.c	2022-10-14 14:02:40.236202735 -0400
+diff --git a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
+index 083ee65e0a..40a7db6278 100644
+--- a/drivers/misc/rockchip-efuse.c
++++ b/drivers/misc/rockchip-efuse.c
 @@ -13,8 +13,18 @@
  #include <dm.h>
  #include <linux/bitops.h>
@@ -77,7 +91,7 @@ diff -Naur a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
  struct rockchip_efuse_regs {
  	u32 ctrl;      /* 0x00  efuse control register */
  	u32 dout;      /* 0x04  efuse data out register */
-@@ -35,6 +48,10 @@
+@@ -35,6 +48,10 @@ struct rockchip_efuse_regs {
  	u32 jtag_pass; /* 0x10  JTAG password */
  	u32 strobe_finish_ctrl;
  		       /* 0x14	efuse strobe finish control register */
@@ -88,7 +102,7 @@ diff -Naur a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
  };
  
  struct rockchip_efuse_plat {
-@@ -83,6 +100,57 @@
+@@ -83,6 +100,57 @@ U_BOOT_CMD(
  );
  #endif
  
@@ -146,7 +160,7 @@ diff -Naur a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
  static int rockchip_rk3399_efuse_read(struct udevice *dev, int offset,
  				      void *buf, int size)
  {
-@@ -130,7 +198,13 @@
+@@ -130,7 +198,13 @@ static int rockchip_rk3399_efuse_read(struct udevice *dev, int offset,
  static int rockchip_efuse_read(struct udevice *dev, int offset,
  			       void *buf, int size)
  {
@@ -161,7 +175,7 @@ diff -Naur a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
  }
  
  static const struct misc_ops rockchip_efuse_ops = {
-@@ -146,7 +220,14 @@
+@@ -146,7 +220,14 @@ static int rockchip_efuse_of_to_plat(struct udevice *dev)
  }
  
  static const struct udevice_id rockchip_efuse_ids[] = {
@@ -177,9 +191,10 @@ diff -Naur a/drivers/misc/rockchip-efuse.c b/drivers/misc/rockchip-efuse.c
  	{}
  };
  
-diff -Naur a/include/configs/rk3328_common.h b/include/configs/rk3328_common.h
---- a/include/configs/rk3328_common.h	2022-10-03 15:25:32.000000000 -0400
-+++ b/include/configs/rk3328_common.h	2022-10-14 14:01:58.339839522 -0400
+diff --git a/include/configs/rk3328_common.h b/include/configs/rk3328_common.h
+index 1e214e4ebe..62870d433e 100644
+--- a/include/configs/rk3328_common.h
++++ b/include/configs/rk3328_common.h
 @@ -10,6 +10,10 @@
  
  #define CONFIG_IRAM_BASE		0xff090000
@@ -191,3 +206,6 @@ diff -Naur a/include/configs/rk3328_common.h b/include/configs/rk3328_common.h
  /* FAT sd card locations. */
  #define CONFIG_SYS_SDRAM_BASE		0
  #define SDRAM_MAX_SIZE			0xff000000
+-- 
+2.39.2
+

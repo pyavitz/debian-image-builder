@@ -1,6 +1,19 @@
-diff -Naur a/board/rockchip/evb_rk3399/evb-rk3399.c b/board/rockchip/evb_rk3399/evb-rk3399.c
---- a/board/rockchip/evb_rk3399/evb-rk3399.c	2023-01-09 11:07:33.000000000 -0500
-+++ b/board/rockchip/evb_rk3399/evb-rk3399.c	2023-03-13 09:36:14.780018484 -0400
+From e64c977a9b240fa6427d73897cf5d661f377260b Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 08:16:15 -0400
+Subject: [PATCH] rk3399-nanopi-r4s: add ethaddr and serial number init
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ board/rockchip/evb_rk3399/evb-rk3399.c | 121 +++++++++++++++++++++++++
+ configs/nanopi-r4s-rk3399_defconfig    |   4 +
+ drivers/misc/Makefile                  |   2 +-
+ 3 files changed, 126 insertions(+), 1 deletion(-)
+
+diff --git a/board/rockchip/evb_rk3399/evb-rk3399.c b/board/rockchip/evb_rk3399/evb-rk3399.c
+index f56b379b93..11fc283abc 100644
+--- a/board/rockchip/evb_rk3399/evb-rk3399.c
++++ b/board/rockchip/evb_rk3399/evb-rk3399.c
 @@ -5,11 +5,17 @@
  
  #include <common.h>
@@ -19,7 +32,7 @@ diff -Naur a/board/rockchip/evb_rk3399/evb-rk3399.c b/board/rockchip/evb_rk3399/
  #include <power/regulator.h>
  
  #define ROCKPI4_UPDATABLE_IMAGES	2
-@@ -24,6 +30,9 @@
+@@ -24,6 +30,9 @@ struct efi_capsule_update_info update_info = {
  u8 num_image_type_guids = ROCKPI4_UPDATABLE_IMAGES;
  #endif
  
@@ -29,7 +42,7 @@ diff -Naur a/board/rockchip/evb_rk3399/evb-rk3399.c b/board/rockchip/evb_rk3399/
  #ifndef CONFIG_SPL_BUILD
  int board_early_init_f(void)
  {
-@@ -83,3 +92,115 @@
+@@ -83,3 +92,115 @@ void rockchip_capsule_update_board_setup(void)
  }
  #endif /* CONFIG_EFI_HAVE_CAPSULE_SUPPORT && CONFIG_EFI_PARTITION */
  #endif /* !CONFIG_SPL_BUILD */
@@ -146,10 +159,10 @@ diff -Naur a/board/rockchip/evb_rk3399/evb-rk3399.c b/board/rockchip/evb_rk3399/
 +	serialnr->low = (u32)(serial & 0xffffffff);
 +}
 diff --git a/configs/nanopi-r4s-rk3399_defconfig b/configs/nanopi-r4s-rk3399_defconfig
-index 46ba07f4d5..aa89ac5854 100644
+index 2185f87d7d..57c0469b4a 100644
 --- a/configs/nanopi-r4s-rk3399_defconfig
 +++ b/configs/nanopi-r4s-rk3399_defconfig
-@@ -63,3 +63,7 @@ CONFIG_VIDEO_ROCKCHIP=y
+@@ -71,3 +71,7 @@ CONFIG_VIDEO_ROCKCHIP=y
  CONFIG_DISPLAY_ROCKCHIP_HDMI=y
  CONFIG_SPL_TINY_MEMSET=y
  CONFIG_ERRNO_STR=y
@@ -158,10 +171,10 @@ index 46ba07f4d5..aa89ac5854 100644
 +CONFIG_ROCKCHIP_EFUSE=y
 +CONFIG_ROCKCHIP_OTP=y
 diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index b9c54bdd99..a2ce9e737c 100644
+index d494639cd9..1e83325f0c 100644
 --- a/drivers/misc/Makefile
 +++ b/drivers/misc/Makefile
-@@ -64,7 +64,7 @@ obj-$(CONFIG_QFW_PIO) += qfw_pio.o
+@@ -68,7 +68,7 @@ obj-$(CONFIG_QFW_PIO) += qfw_pio.o
  obj-$(CONFIG_QFW_MMIO) += qfw_mmio.o
  obj-$(CONFIG_SANDBOX) += qfw_sandbox.o
  endif
@@ -171,4 +184,5 @@ index b9c54bdd99..a2ce9e737c 100644
  obj-$(CONFIG_SANDBOX) += syscon_sandbox.o misc_sandbox.o
  obj-$(CONFIG_SIFIVE_OTP) += sifive-otp.o
 -- 
-2.36.2
+2.39.2
+
