@@ -1,6 +1,34 @@
-diff -Naur a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
---- a/Documentation/admin-guide/kernel-parameters.txt	2023-04-30 19:26:28.000000000 -0400
-+++ b/Documentation/admin-guide/kernel-parameters.txt	2023-05-06 13:03:38.705770121 -0400
+From bdcc0af550f942005f0eb7eb0a48ded584c916de Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 20:57:01 -0400
+Subject: [PATCH] rk3399 general patch set
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../admin-guide/kernel-parameters.txt         |   8 +
+ drivers/clk/rockchip/clk-half-divider.c       |   2 +-
+ drivers/clk/rockchip/clk-rk3399.c             |   2 +-
+ drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c   |  34 ++++-
+ drivers/pci/controller/pcie-rockchip-host.c   |  25 ++++
+ drivers/pci/controller/pcie-rockchip.c        |   9 +-
+ drivers/pci/controller/pcie-rockchip.h        |   2 +
+ drivers/phy/rockchip/phy-rockchip-typec.c     |  17 +++
+ drivers/tty/serdev/core.c                     |  11 ++
+ drivers/usb/typec/altmodes/displayport.c      |  51 ++++++-
+ drivers/usb/typec/bus.c                       |   8 +-
+ drivers/usb/typec/tcpm/tcpm.c                 | 140 +++++++++++++++++-
+ include/dt-bindings/clock/rk3399-cru.h        |   1 +
+ include/linux/serdev.h                        |   1 +
+ kernel/dma/pool.c                             |   7 +-
+ sound/soc/codecs/es8316.c                     |   2 +-
+ sound/soc/codecs/rt5651.c                     |  16 ++
+ sound/soc/codecs/rt5651.h                     |   1 +
+ 18 files changed, 316 insertions(+), 21 deletions(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 6b838869554b..bbf04579f5ed 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
 @@ -4358,6 +4358,14 @@
  		nomsi	Do not use MSI for native PCIe PME signaling (this makes
  			all PCIe root ports use INTx for all services).
@@ -16,10 +44,11 @@ diff -Naur a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/adm
  	pcmv=		[HW,PCMCIA] BadgePAD 4
  
  	pd_ignore_unused
-diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-half-divider.c
---- a/drivers/clk/rockchip/clk-half-divider.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/clk/rockchip/clk-half-divider.c	2023-05-06 13:03:38.695770277 -0400
-@@ -166,7 +166,7 @@
+diff --git a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-half-divider.c
+index 64f7faad2148..9d2dd8931217 100644
+--- a/drivers/clk/rockchip/clk-half-divider.c
++++ b/drivers/clk/rockchip/clk-half-divider.c
+@@ -166,7 +166,7 @@ struct clk *rockchip_clk_register_halfdiv(const char *name,
  					  unsigned long flags,
  					  spinlock_t *lock)
  {
@@ -28,10 +57,11 @@ diff -Naur a/drivers/clk/rockchip/clk-half-divider.c b/drivers/clk/rockchip/clk-
  	struct clk_mux *mux = NULL;
  	struct clk_gate *gate = NULL;
  	struct clk_divider *div = NULL;
-diff -Naur a/drivers/clk/rockchip/clk-rk3399.c b/drivers/clk/rockchip/clk-rk3399.c
---- a/drivers/clk/rockchip/clk-rk3399.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/clk/rockchip/clk-rk3399.c	2023-05-06 13:03:38.687770402 -0400
-@@ -624,7 +624,7 @@
+diff --git a/drivers/clk/rockchip/clk-rk3399.c b/drivers/clk/rockchip/clk-rk3399.c
+index 9ebd6c451b3d..4b9a3e1217aa 100644
+--- a/drivers/clk/rockchip/clk-rk3399.c
++++ b/drivers/clk/rockchip/clk-rk3399.c
+@@ -624,7 +624,7 @@ static struct rockchip_clk_branch rk3399_clk_branches[] __initdata = {
  	GATE(SCLK_I2S2_8CH, "clk_i2s2", "clk_i2s2_mux", CLK_SET_RATE_PARENT,
  			RK3399_CLKGATE_CON(8), 11, GFLAGS),
  
@@ -40,10 +70,11 @@ diff -Naur a/drivers/clk/rockchip/clk-rk3399.c b/drivers/clk/rockchip/clk-rk3399
  			RK3399_CLKSEL_CON(31), 0, 2, MFLAGS),
  	COMPOSITE_NODIV(SCLK_I2S_8CH_OUT, "clk_i2sout", mux_i2sout_p, CLK_SET_RATE_PARENT,
  			RK3399_CLKSEL_CON(31), 2, 1, MFLAGS,
-diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
---- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c	2023-05-06 13:03:38.729769746 -0400
-@@ -74,6 +74,7 @@
+diff --git a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+index ae857bf8bd62..d5eea37b8581 100644
+--- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
++++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+@@ -74,6 +74,7 @@ struct rockchip_hdmi {
  	struct regmap *regmap;
  	struct rockchip_encoder encoder;
  	const struct rockchip_hdmi_chip_data *chip_data;
@@ -51,29 +82,29 @@ diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockc
  	struct clk *ref_clk;
  	struct clk *grf_clk;
  	struct dw_hdmi *hdmi;
-@@ -161,6 +162,12 @@
+@@ -160,6 +161,12 @@ static const struct dw_hdmi_mpll_config rockchip_mpll_cfg[] = {
+ 			{ 0x214c, 0x0003},
  			{ 0x4064, 0x0003}
  		},
- 	}, {
++	}, {
 +		340000000, {
 +			{ 0x0052, 0x0003 },
 +			{ 0x214d, 0x0003 },
 +			{ 0x4065, 0x0003 },
 +		},
-+	}, {
+ 	}, {
  		~0UL, {
  			{ 0x00a0, 0x000a },
- 			{ 0x2001, 0x000f },
-@@ -186,6 +193,8 @@
+@@ -185,6 +192,8 @@ static const struct dw_hdmi_curr_ctrl rockchip_cur_ctr[] = {
+ 		146250000, { 0x0038, 0x0038, 0x0038 },
  	}, {
  		148500000, { 0x0000, 0x0038, 0x0038 },
- 	}, {
-+		600000000, { 0x0000, 0x0000, 0x0000 },
 +	}, {
++		600000000, { 0x0000, 0x0000, 0x0000 },
+ 	}, {
  		~0UL,      { 0x0000, 0x0000, 0x0000},
  	}
- };
-@@ -241,23 +250,32 @@
+@@ -241,23 +250,32 @@ static int rockchip_hdmi_parse_dt(struct rockchip_hdmi *hdmi)
  }
  
  static enum drm_mode_status
@@ -113,7 +144,7 @@ diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockc
  }
  
  static void dw_hdmi_rockchip_encoder_disable(struct drm_encoder *encoder)
-@@ -546,8 +564,10 @@
+@@ -546,8 +564,10 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
  		return -ENOMEM;
  
  	hdmi->dev = &pdev->dev;
@@ -124,47 +155,10 @@ diff -Naur a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockc
  	encoder = &hdmi->encoder.encoder;
  
  	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm, dev->of_node);
-diff -Naur a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
---- a/drivers/pci/controller/pcie-rockchip.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/pci/controller/pcie-rockchip.c	2023-05-06 13:03:38.706770105 -0400
-@@ -118,8 +118,7 @@
- 	}
- 
- 	if (rockchip->is_rc) {
--		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep",
--							    GPIOD_OUT_HIGH);
-+		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep", GPIOD_OUT_HIGH);
- 		if (IS_ERR(rockchip->ep_gpio))
- 			return dev_err_probe(dev, PTR_ERR(rockchip->ep_gpio),
- 					     "failed to get ep GPIO\n");
-@@ -149,6 +148,12 @@
- 		return PTR_ERR(rockchip->clk_pcie_pm);
- 	}
- 
-+	err = of_property_read_u32(node, "bus-scan-delay-ms", &rockchip->bus_scan_delay);
-+	if (err) {
-+		dev_info(dev, "no bus scan delay, default to 0 ms\n");
-+		rockchip->bus_scan_delay = 0;
-+	}
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
-diff -Naur a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
---- a/drivers/pci/controller/pcie-rockchip.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/pci/controller/pcie-rockchip.h	2023-05-06 13:03:38.707770090 -0400
-@@ -299,6 +299,8 @@
- 	phys_addr_t msg_bus_addr;
- 	bool is_rc;
- 	struct resource *mem_res;
-+	/* Bus scan delay is a workaround for some pcie devices causing crashes */
-+	u32 bus_scan_delay;
- };
- 
- static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
-diff -Naur a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
---- a/drivers/pci/controller/pcie-rockchip-host.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/pci/controller/pcie-rockchip-host.c	2023-05-06 13:03:38.706770105 -0400
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 7352b5ff8d35..bd68830619b5 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
 @@ -24,6 +24,7 @@
  #include <linux/kernel.h>
  #include <linux/mfd/syscon.h>
@@ -183,7 +177,7 @@ diff -Naur a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controlle
  static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
  {
  	u32 status;
-@@ -933,6 +937,7 @@
+@@ -933,6 +937,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
  	struct device *dev = &pdev->dev;
  	struct pci_host_bridge *bridge;
  	int err;
@@ -191,7 +185,7 @@ diff -Naur a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controlle
  
  	if (!dev->of_node)
  		return -ENODEV;
-@@ -982,6 +987,26 @@
+@@ -982,6 +987,26 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
  	bridge->sysdata = rockchip;
  	bridge->ops = &rockchip_pcie_ops;
  
@@ -218,9 +212,50 @@ diff -Naur a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controlle
  	err = rockchip_pcie_setup_irq(rockchip);
  	if (err)
  		goto err_remove_irq_domain;
-diff -Naur a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/phy-rockchip-typec.c
---- a/drivers/phy/rockchip/phy-rockchip-typec.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/phy/rockchip/phy-rockchip-typec.c	2023-05-06 13:03:38.709770059 -0400
+diff --git a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
+index 1aa84035a8bc..7f2836bd2de5 100644
+--- a/drivers/pci/controller/pcie-rockchip.c
++++ b/drivers/pci/controller/pcie-rockchip.c
+@@ -119,8 +119,7 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	}
+ 
+ 	if (rockchip->is_rc) {
+-		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep",
+-							    GPIOD_OUT_HIGH);
++		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep", GPIOD_OUT_HIGH);
+ 		if (IS_ERR(rockchip->ep_gpio))
+ 			return dev_err_probe(dev, PTR_ERR(rockchip->ep_gpio),
+ 					     "failed to get ep GPIO\n");
+@@ -150,6 +149,12 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		return PTR_ERR(rockchip->clk_pcie_pm);
+ 	}
+ 
++	err = of_property_read_u32(node, "bus-scan-delay-ms", &rockchip->bus_scan_delay);
++	if (err) {
++		dev_info(dev, "no bus scan delay, default to 0 ms\n");
++		rockchip->bus_scan_delay = 0;
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
+diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
+index fe0333778fd9..befb64392b14 100644
+--- a/drivers/pci/controller/pcie-rockchip.h
++++ b/drivers/pci/controller/pcie-rockchip.h
+@@ -318,6 +318,8 @@ struct rockchip_pcie {
+ 	phys_addr_t msg_bus_addr;
+ 	bool is_rc;
+ 	struct resource *mem_res;
++	/* Bus scan delay is a workaround for some pcie devices causing crashes */
++	u32 bus_scan_delay;
+ };
+ 
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+diff --git a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/phy-rockchip-typec.c
+index 39db8acde61a..4886c6a4321f 100644
+--- a/drivers/phy/rockchip/phy-rockchip-typec.c
++++ b/drivers/phy/rockchip/phy-rockchip-typec.c
 @@ -40,6 +40,7 @@
  #include <linux/clk-provider.h>
  #include <linux/delay.h>
@@ -229,7 +264,7 @@ diff -Naur a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/ph
  #include <linux/io.h>
  #include <linux/iopoll.h>
  #include <linux/kernel.h>
-@@ -1157,6 +1158,22 @@
+@@ -1157,6 +1158,22 @@ static int rockchip_typec_phy_probe(struct platform_device *pdev)
  				dev_err(dev, "Invalid or missing extcon\n");
  			return PTR_ERR(tcphy->extcon);
  		}
@@ -252,10 +287,11 @@ diff -Naur a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/ph
  	}
  
  	pm_runtime_enable(dev);
-diff -Naur a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
---- a/drivers/tty/serdev/core.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/tty/serdev/core.c	2023-05-06 13:03:38.710770043 -0400
-@@ -430,11 +430,22 @@
+diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
+index 0180e1e4e75d..70b9b9c21da3 100644
+--- a/drivers/tty/serdev/core.c
++++ b/drivers/tty/serdev/core.c
+@@ -430,11 +430,22 @@ static void serdev_drv_remove(struct device *dev)
  	dev_pm_domain_detach(dev, true);
  }
  
@@ -278,9 +314,10 @@ diff -Naur a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
  };
  
  /**
-diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
---- a/drivers/usb/typec/altmodes/displayport.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/typec/altmodes/displayport.c	2023-05-06 13:03:38.711770027 -0400
+diff --git a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
+index 7cdf83f4c811..44e383cd9b74 100644
+--- a/drivers/usb/typec/altmodes/displayport.c
++++ b/drivers/usb/typec/altmodes/displayport.c
 @@ -9,6 +9,8 @@
   */
  
@@ -290,7 +327,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  #include <linux/mutex.h>
  #include <linux/module.h>
  #include <linux/property.h>
-@@ -68,6 +70,8 @@
+@@ -68,6 +70,8 @@ struct dp_altmode {
  	struct fwnode_handle *connector_fwnode;
  };
  
@@ -299,7 +336,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  static int dp_altmode_notify(struct dp_altmode *dp)
  {
  	unsigned long conf;
-@@ -76,7 +80,9 @@
+@@ -76,7 +80,9 @@ static int dp_altmode_notify(struct dp_altmode *dp)
  	if (dp->data.conf) {
  		state = get_count_order(DP_CONF_GET_PIN_ASSIGN(dp->data.conf));
  		conf = TYPEC_MODAL_STATE(state);
@@ -309,7 +346,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  		conf = TYPEC_STATE_USB;
  	}
  
-@@ -156,6 +162,40 @@
+@@ -156,6 +162,40 @@ static int dp_altmode_status_update(struct dp_altmode *dp)
  	return ret;
  }
  
@@ -350,7 +387,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  static int dp_altmode_configured(struct dp_altmode *dp)
  {
  	sysfs_notify(&dp->alt->dev.kobj, "displayport", "configuration");
-@@ -225,6 +265,8 @@
+@@ -225,6 +265,8 @@ static void dp_altmode_work(struct work_struct *work)
  	case DP_STATE_EXIT:
  		if (typec_altmode_exit(dp->alt))
  			dev_err(&dp->alt->dev, "Exit Mode Failed!\n");
@@ -359,7 +396,7 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  		break;
  	default:
  		break;
-@@ -542,8 +584,13 @@
+@@ -546,8 +588,13 @@ int dp_altmode_probe(struct typec_altmode *alt)
  	if (!(DP_CAP_PIN_ASSIGN_DFP_D(port->vdo) &
  	      DP_CAP_PIN_ASSIGN_UFP_D(alt->vdo)) &&
  	    !(DP_CAP_PIN_ASSIGN_UFP_D(port->vdo) &
@@ -375,10 +412,11 @@ diff -Naur a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmod
  
  	ret = sysfs_create_group(&alt->dev.kobj, &dp_altmode_group);
  	if (ret)
-diff -Naur a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
---- a/drivers/usb/typec/bus.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/typec/bus.c	2023-05-06 13:03:38.711770027 -0400
-@@ -156,8 +156,14 @@
+diff --git a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
+index 31c2a3130cad..09d1bcc0f9f2 100644
+--- a/drivers/usb/typec/bus.c
++++ b/drivers/usb/typec/bus.c
+@@ -156,8 +156,14 @@ EXPORT_SYMBOL_GPL(typec_altmode_exit);
   */
  void typec_altmode_attention(struct typec_altmode *adev, u32 vdo)
  {
@@ -394,9 +432,10 @@ diff -Naur a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
  	if (pdev->ops && pdev->ops->attention)
  		pdev->ops->attention(pdev, vdo);
  }
-diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
---- a/drivers/usb/typec/tcpm/tcpm.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/drivers/usb/typec/tcpm/tcpm.c	2023-05-06 13:03:38.713769996 -0400
+diff --git a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
+index 524099634a1d..d65ffde9ed45 100644
+--- a/drivers/usb/typec/tcpm/tcpm.c
++++ b/drivers/usb/typec/tcpm/tcpm.c
 @@ -8,6 +8,7 @@
  #include <linux/completion.h>
  #include <linux/debugfs.h>
@@ -405,7 +444,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  #include <linux/hrtimer.h>
  #include <linux/jiffies.h>
  #include <linux/kernel.h>
-@@ -483,6 +484,12 @@
+@@ -483,6 +484,12 @@ struct tcpm_port {
  	 * SNK_READY for non-pd link.
  	 */
  	bool slow_charger_loop;
@@ -418,7 +457,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  #ifdef CONFIG_DEBUG_FS
  	struct dentry *dentry;
  	struct mutex logbuffer_lock;	/* log buffer access lock */
-@@ -870,6 +877,35 @@
+@@ -870,6 +877,35 @@ static void tcpm_ams_finish(struct tcpm_port *port)
  	port->ams = NONE_AMS;
  }
  
@@ -454,7 +493,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  static int tcpm_pd_transmit(struct tcpm_port *port,
  			    enum tcpm_transmit_type type,
  			    const struct pd_message *msg)
-@@ -1081,6 +1117,8 @@
+@@ -1081,6 +1117,8 @@ static int tcpm_set_roles(struct tcpm_port *port, bool attached,
  	port->data_role = data;
  	typec_set_data_role(port->typec_port, data);
  	typec_set_pwr_role(port->typec_port, role);
@@ -463,7 +502,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  
  	return 0;
  }
-@@ -1539,7 +1577,7 @@
+@@ -1553,7 +1591,7 @@ static void svdm_consume_modes(struct tcpm_port *port, const u32 *p, int cnt)
  		paltmode->mode = i;
  		paltmode->vdo = p[i];
  
@@ -472,7 +511,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  			 pmdata->altmodes, paltmode->svid,
  			 paltmode->mode, paltmode->vdo);
  
-@@ -1560,6 +1598,8 @@
+@@ -1574,6 +1612,8 @@ static void tcpm_register_partner_altmodes(struct tcpm_port *port)
  			tcpm_log(port, "Failed to register partner SVID 0x%04x",
  				 modep->altmode_desc[i].svid);
  			altmode = NULL;
@@ -481,7 +520,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  		}
  		port->partner_altmode[i] = altmode;
  	}
-@@ -1694,9 +1734,11 @@
+@@ -1708,9 +1748,11 @@ static int tcpm_pd_svdm(struct tcpm_port *port, struct typec_altmode *adev,
  			modep->svid_index++;
  			if (modep->svid_index < modep->nsvids) {
  				u16 svid = modep->svids[modep->svid_index];
@@ -493,7 +532,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  				tcpm_register_partner_altmodes(port);
  			}
  			break;
-@@ -3692,6 +3734,7 @@
+@@ -3706,6 +3748,7 @@ static int tcpm_src_attach(struct tcpm_port *port)
  static void tcpm_typec_disconnect(struct tcpm_port *port)
  {
  	if (port->connected) {
@@ -501,7 +540,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  		typec_partner_set_usb_power_delivery(port->partner, NULL);
  		typec_unregister_partner(port->partner);
  		port->partner = NULL;
-@@ -3778,6 +3821,8 @@
+@@ -3792,6 +3835,8 @@ static void tcpm_detach(struct tcpm_port *port)
  	}
  
  	tcpm_reset_port(port);
@@ -510,7 +549,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  }
  
  static void tcpm_src_detach(struct tcpm_port *port)
-@@ -6010,6 +6055,64 @@
+@@ -6024,6 +6069,64 @@ void tcpm_tcpc_reset(struct tcpm_port *port)
  }
  EXPORT_SYMBOL_GPL(tcpm_tcpc_reset);
  
@@ -575,7 +614,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  static void tcpm_port_unregister_pd(struct tcpm_port *port)
  {
  	usb_power_delivery_unregister_capabilities(port->port_sink_caps);
-@@ -6082,6 +6185,23 @@
+@@ -6096,6 +6199,23 @@ static int tcpm_fw_get_caps(struct tcpm_port *port,
  	if (!fwnode)
  		return -EINVAL;
  
@@ -599,7 +638,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  	/*
  	 * This fwnode has a "compatible" property, but is never populated as a
  	 * struct device. Instead we simply parse it to read the properties.
-@@ -6514,6 +6634,18 @@
+@@ -6528,6 +6648,18 @@ struct tcpm_port *tcpm_register_port(struct device *dev, struct tcpc_dev *tcpc)
  		goto out_destroy_wq;
  
  	port->try_role = port->typec_caps.prefer_role;
@@ -618,7 +657,7 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  
  	port->typec_caps.fwnode = tcpc->fwnode;
  	port->typec_caps.revision = 0x0120;	/* Type-C spec release 1.2 */
-@@ -6554,6 +6686,12 @@
+@@ -6568,6 +6700,12 @@ struct tcpm_port *tcpm_register_port(struct device *dev, struct tcpc_dev *tcpc)
  				     port->port_altmode, ALTMODE_DISCOVERY_MAX);
  	port->registered = true;
  
@@ -631,9 +670,10 @@ diff -Naur a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
  	mutex_lock(&port->lock);
  	tcpm_init(port);
  	mutex_unlock(&port->lock);
-diff -Naur a/include/dt-bindings/clock/rk3399-cru.h b/include/dt-bindings/clock/rk3399-cru.h
---- a/include/dt-bindings/clock/rk3399-cru.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/include/dt-bindings/clock/rk3399-cru.h	2023-05-06 13:03:38.687770402 -0400
+diff --git a/include/dt-bindings/clock/rk3399-cru.h b/include/dt-bindings/clock/rk3399-cru.h
+index 44e0a319f077..b7b07dfda0fc 100644
+--- a/include/dt-bindings/clock/rk3399-cru.h
++++ b/include/dt-bindings/clock/rk3399-cru.h
 @@ -19,6 +19,7 @@
  #define ARMCLKB				9
  
@@ -642,10 +682,11 @@ diff -Naur a/include/dt-bindings/clock/rk3399-cru.h b/include/dt-bindings/clock/
  #define SCLK_I2C1			65
  #define SCLK_I2C2			66
  #define SCLK_I2C3			67
-diff -Naur a/include/linux/serdev.h b/include/linux/serdev.h
---- a/include/linux/serdev.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/include/linux/serdev.h	2023-05-06 13:03:38.713769996 -0400
-@@ -64,6 +64,7 @@
+diff --git a/include/linux/serdev.h b/include/linux/serdev.h
+index 66f624fc618c..4821bb4e9757 100644
+--- a/include/linux/serdev.h
++++ b/include/linux/serdev.h
+@@ -64,6 +64,7 @@ struct serdev_device_driver {
  	struct device_driver driver;
  	int	(*probe)(struct serdev_device *);
  	void	(*remove)(struct serdev_device *);
@@ -653,10 +694,11 @@ diff -Naur a/include/linux/serdev.h b/include/linux/serdev.h
  };
  
  static inline struct serdev_device_driver *to_serdev_device_driver(struct device_driver *d)
-diff -Naur a/kernel/dma/pool.c b/kernel/dma/pool.c
---- a/kernel/dma/pool.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/kernel/dma/pool.c	2023-05-06 13:03:38.682770481 -0400
-@@ -189,13 +189,10 @@
+diff --git a/kernel/dma/pool.c b/kernel/dma/pool.c
+index 4d40dcce7604..86b3232bcf3a 100644
+--- a/kernel/dma/pool.c
++++ b/kernel/dma/pool.c
+@@ -189,13 +189,10 @@ static int __init dma_atomic_pool_init(void)
  	int ret = 0;
  
  	/*
@@ -672,10 +714,11 @@ diff -Naur a/kernel/dma/pool.c b/kernel/dma/pool.c
  	}
  	INIT_WORK(&atomic_pool_work, atomic_pool_work_fn);
  
-diff -Naur a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
---- a/sound/soc/codecs/es8316.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/sound/soc/codecs/es8316.c	2023-05-06 13:03:38.675770590 -0400
-@@ -696,7 +696,7 @@
+diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
+index 87775378362e..a1ce58ac0104 100644
+--- a/sound/soc/codecs/es8316.c
++++ b/sound/soc/codecs/es8316.c
+@@ -701,7 +701,7 @@ static void es8316_disable_jack_detect(struct snd_soc_component *component)
  	snd_soc_component_update_bits(component, ES8316_GPIO_DEBOUNCE,
  				      ES8316_GPIO_ENABLE_INTERRUPT, 0);
  
@@ -684,9 +727,10 @@ diff -Naur a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
  		es8316_disable_micbias_for_mic_gnd_short_detect(component);
  		snd_soc_jack_report(es8316->jack, 0, SND_JACK_BTN_0);
  	}
-diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
---- a/sound/soc/codecs/rt5651.c	2023-04-30 19:26:28.000000000 -0400
-+++ b/sound/soc/codecs/rt5651.c	2023-05-06 13:03:38.678770543 -0400
+diff --git a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
+index df90af906563..28e5b6fb9d8f 100644
+--- a/sound/soc/codecs/rt5651.c
++++ b/sound/soc/codecs/rt5651.c
 @@ -24,6 +24,7 @@
  #include <sound/initval.h>
  #include <sound/tlv.h>
@@ -695,7 +739,7 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  
  #include "rl6231.h"
  #include "rt5651.h"
-@@ -1511,6 +1512,7 @@
+@@ -1511,6 +1512,7 @@ static int rt5651_set_dai_pll(struct snd_soc_dai *dai, int pll_id, int source,
  static int rt5651_set_bias_level(struct snd_soc_component *component,
  			enum snd_soc_bias_level level)
  {
@@ -703,7 +747,7 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  	switch (level) {
  	case SND_SOC_BIAS_PREPARE:
  		if (SND_SOC_BIAS_STANDBY == snd_soc_component_get_bias_level(component)) {
-@@ -1518,6 +1520,13 @@
+@@ -1518,6 +1520,13 @@ static int rt5651_set_bias_level(struct snd_soc_component *component,
  				snd_soc_component_update_bits(component, RT5651_D_MISC,
  						    0xc00, 0xc00);
  		}
@@ -717,7 +761,7 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  		break;
  	case SND_SOC_BIAS_STANDBY:
  		if (SND_SOC_BIAS_OFF == snd_soc_component_get_bias_level(component)) {
-@@ -2059,6 +2068,13 @@
+@@ -2059,6 +2068,13 @@ static int rt5651_probe(struct snd_soc_component *component)
  {
  	struct rt5651_priv *rt5651 = snd_soc_component_get_drvdata(component);
  
@@ -731,10 +775,11 @@ diff -Naur a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
  	rt5651->component = component;
  
  	snd_soc_component_update_bits(component, RT5651_PWR_ANLG1,
-diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
---- a/sound/soc/codecs/rt5651.h	2023-04-30 19:26:28.000000000 -0400
-+++ b/sound/soc/codecs/rt5651.h	2023-05-06 13:03:38.679770527 -0400
-@@ -2097,6 +2097,7 @@
+diff --git a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
+index 20c33a3ece37..17524fa9fdfc 100644
+--- a/sound/soc/codecs/rt5651.h
++++ b/sound/soc/codecs/rt5651.h
+@@ -2097,6 +2097,7 @@ struct rt5651_priv {
  
  	int dmic_en;
  	bool hp_mute;
@@ -742,3 +787,6 @@ diff -Naur a/sound/soc/codecs/rt5651.h b/sound/soc/codecs/rt5651.h
  };
  
  #endif /* __RT5651_H__ */
+-- 
+2.39.2
+

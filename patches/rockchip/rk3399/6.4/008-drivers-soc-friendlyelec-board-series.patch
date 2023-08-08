@@ -1,5 +1,69 @@
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/soc/friendlyelec/board.c	2023-05-06 10:45:33.569896272 -0400
+From ff4a60d0c5f558098ecf1f9339561c7c369d53ca Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 20:58:24 -0400
+Subject: [PATCH] drivers: soc: friendlyelec: board series
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/soc/Kconfig               |   1 +
+ drivers/soc/Makefile              |   1 +
+ drivers/soc/friendlyelec/Kconfig  |  11 +++
+ drivers/soc/friendlyelec/Makefile |   1 +
+ drivers/soc/friendlyelec/board.c  | 143 ++++++++++++++++++++++++++++++
+ 5 files changed, 157 insertions(+)
+ create mode 100644 drivers/soc/friendlyelec/Kconfig
+ create mode 100644 drivers/soc/friendlyelec/Makefile
+ create mode 100644 drivers/soc/friendlyelec/board.c
+
+diff --git a/drivers/soc/Kconfig b/drivers/soc/Kconfig
+index e461c071189b..a65fa9f4fe94 100644
+--- a/drivers/soc/Kconfig
++++ b/drivers/soc/Kconfig
+@@ -27,5 +27,6 @@ source "drivers/soc/ti/Kconfig"
+ source "drivers/soc/ux500/Kconfig"
+ source "drivers/soc/versatile/Kconfig"
+ source "drivers/soc/xilinx/Kconfig"
++source "drivers/soc/friendlyelec/Kconfig"
+ 
+ endmenu
+diff --git a/drivers/soc/Makefile b/drivers/soc/Makefile
+index 69ba6508cf2c..16ac169006a0 100644
+--- a/drivers/soc/Makefile
++++ b/drivers/soc/Makefile
+@@ -33,3 +33,4 @@ obj-y				+= ti/
+ obj-$(CONFIG_ARCH_U8500)	+= ux500/
+ obj-$(CONFIG_PLAT_VERSATILE)	+= versatile/
+ obj-y				+= xilinx/
++obj-$(CONFIG_VENDOR_FRIENDLYELEC)	+= friendlyelec/
+diff --git a/drivers/soc/friendlyelec/Kconfig b/drivers/soc/friendlyelec/Kconfig
+new file mode 100644
+index 000000000000..9e21c663e6c8
+--- /dev/null
++++ b/drivers/soc/friendlyelec/Kconfig
+@@ -0,0 +1,11 @@
++#
++# Machine drivers
++#
++
++if ARCH_ROCKCHIP
++
++config VENDOR_FRIENDLYELEC
++	bool "FriendlyElec board based on RK33XX SoCs"
++	default n
++
++endif
+diff --git a/drivers/soc/friendlyelec/Makefile b/drivers/soc/friendlyelec/Makefile
+new file mode 100644
+index 000000000000..13c9f37b6f8b
+--- /dev/null
++++ b/drivers/soc/friendlyelec/Makefile
+@@ -0,0 +1 @@
+++obj-$(CONFIG_VENDOR_FRIENDLYELEC)	+= board.o
+diff --git a/drivers/soc/friendlyelec/board.c b/drivers/soc/friendlyelec/board.c
+new file mode 100644
+index 000000000000..886a8e1f7dc0
+--- /dev/null
++++ b/drivers/soc/friendlyelec/board.c
 @@ -0,0 +1,143 @@
 +/*
 + * Copyright (C) Guangzhou FriendlyELEC Computer Tech. Co., Ltd.
@@ -144,39 +208,6 @@
 +MODULE_AUTHOR("support@friendlyarm.com");
 +MODULE_DESCRIPTION("FriendlyElec NanoPi Series Machine Driver");
 +MODULE_LICENSE("GPL v2");
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/soc/friendlyelec/Kconfig	2023-05-06 10:45:33.569896272 -0400
-@@ -0,0 +1,11 @@
-+#
-+# Machine drivers
-+#
-+
-+if ARCH_ROCKCHIP
-+
-+config VENDOR_FRIENDLYELEC
-+	bool "FriendlyElec board based on RK33XX SoCs"
-+	default n
-+
-+endif
---- /dev/null	2023-04-29 08:31:15.023562380 -0400
-+++ b/drivers/soc/friendlyelec/Makefile	2023-05-06 10:45:33.569896272 -0400
-@@ -0,0 +1 @@
-++obj-$(CONFIG_VENDOR_FRIENDLYELEC)	+= board.o
-diff -Naur a/drivers/soc/Kconfig b/drivers/soc/Kconfig
---- a/drivers/soc/Kconfig	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/soc/Kconfig	2023-05-06 10:45:33.569896272 -0400
-@@ -30,5 +30,6 @@
- source "drivers/soc/ux500/Kconfig"
- source "drivers/soc/versatile/Kconfig"
- source "drivers/soc/xilinx/Kconfig"
-+source "drivers/soc/friendlyelec/Kconfig"
- 
- endmenu
-diff -Naur a/drivers/soc/Makefile b/drivers/soc/Makefile
---- a/drivers/soc/Makefile	2023-04-30 19:32:26.000000000 -0400
-+++ b/drivers/soc/Makefile	2023-05-06 10:45:33.569896272 -0400
-@@ -36,3 +36,4 @@
- obj-$(CONFIG_ARCH_U8500)	+= ux500/
- obj-$(CONFIG_PLAT_VERSATILE)	+= versatile/
- obj-y				+= xilinx/
-+obj-$(CONFIG_VENDOR_FRIENDLYELEC)	+= friendlyelec/
+-- 
+2.39.2
+

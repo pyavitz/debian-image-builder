@@ -1,0 +1,68 @@
+From ff0d2f772c9514ec9e98aa2e671666ed6ffba8c6 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 20:55:27 -0400
+Subject: [PATCH] arch: arm64: dts: rockchip: rk3399-rockpro64
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtsi | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtsi b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtsi
+index 78157521e944..ccfbaab4ba42 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtsi
+@@ -17,6 +17,7 @@ aliases {
+ 	};
+ 
+ 	chosen {
++		bootargs = "mmc_cmdqueue=0 earlycon=uart8250,mmio32,0xff1a0000";
+ 		stdout-path = "serial2:1500000n8";
+ 	};
+ 
+@@ -65,7 +66,7 @@ leds {
+ 
+ 		work_led: led-0 {
+ 			label = "work";
+-			default-state = "on";
++			linux,default-trigger = "heartbeat";
+ 			gpios = <&gpio0 RK_PB3 GPIO_ACTIVE_HIGH>;
+ 		};
+ 
+@@ -307,7 +308,7 @@ &gmac {
+ 	snps,reset-active-low;
+ 	snps,reset-delays-us = <0 10000 50000>;
+ 	tx_delay = <0x28>;
+-	rx_delay = <0x11>;
++	rx_delay = <0x20>;
+ 	status = "okay";
+ };
+ 
+@@ -669,6 +670,7 @@ &pcie0 {
+ 	pinctrl-0 = <&pcie_perst>;
+ 	vpcie12v-supply = <&vcc12v_dcin>;
+ 	vpcie3v3-supply = <&vcc3v3_pcie>;
++	bus-scan-delay-ms = <1000>;
+ 	status = "okay";
+ };
+ 
+@@ -820,6 +822,7 @@ &sdmmc {
+ 
+ &sdhci {
+ 	bus-width = <8>;
++	keep-power-in-suspend;
+ 	mmc-hs200-1_8v;
+ 	non-removable;
+ 	status = "okay";
+@@ -841,7 +844,7 @@ &spi1 {
+ 	flash@0 {
+ 		compatible = "jedec,spi-nor";
+ 		reg = <0>;
+-		spi-max-frequency = <10000000>;
++		spi-max-frequency = <3000000>;
+ 	};
+ };
+ 
+-- 
+2.39.2
+
