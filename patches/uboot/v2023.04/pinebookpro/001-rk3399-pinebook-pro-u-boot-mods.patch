@@ -1,0 +1,152 @@
+From e4394ac8ba3ea070354ee4b0a867f03406aa35b9 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 7 Aug 2023 08:27:18 -0400
+Subject: [PATCH] rk3399-pinebook-pro: u-boot mods
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/dts/rk3399-pinebook-pro.dts               |  2 +-
+ arch/arm/mach-rockchip/rk3399/rk3399.c             | 14 ++++++++++++++
+ .../pinebook-pro-rk3399/pinebook-pro-rk3399.c      | 10 +++++++++-
+ drivers/mmc/Kconfig                                |  7 +++++++
+ drivers/mmc/sdhci.c                                |  6 +++---
+ 5 files changed, 34 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/dts/rk3399-pinebook-pro.dts b/arch/arm/dts/rk3399-pinebook-pro.dts
+index d6b68d77d6..475a2e5039 100644
+--- a/arch/arm/dts/rk3399-pinebook-pro.dts
++++ b/arch/arm/dts/rk3399-pinebook-pro.dts
+@@ -943,7 +943,7 @@
+ 	disable-wp;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_bus4>;
+-	sd-uhs-sdr104;
++	sd-uhs-sdr50;
+ 	vmmc-supply = <&vcc3v0_sd>;
+ 	vqmmc-supply = <&vcc_sdio>;
+ 	status = "okay";
+diff --git a/arch/arm/mach-rockchip/rk3399/rk3399.c b/arch/arm/mach-rockchip/rk3399/rk3399.c
+index a7cc91a952..405dd19cff 100644
+--- a/arch/arm/mach-rockchip/rk3399/rk3399.c
++++ b/arch/arm/mach-rockchip/rk3399/rk3399.c
+@@ -21,6 +21,7 @@
+ #include <asm/arch-rockchip/hardware.h>
+ #include <linux/bitops.h>
+ #include <power/regulator.h>
++#include <dt-bindings/pinctrl/rockchip.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+@@ -158,6 +159,19 @@ void board_debug_uart_init(void)
+ 				  GPIO_PULL_NORMAL);
+ 	}
+ 
++	{
++		/*
++		 * Temporary (and ugly) hack to turn the Pinebook Pro's
++		 * RGB status LED on as early as possible during boot:
++		 * - Set GPIO0_A2/B3 to GPIO_ACTIVE_HIGH
++		 * - Set GPIO0_A2/B3 to OUTPUT
++		 */
++		int mask = (1UL << RK_PA2) | (1UL << RK_PB3);
++
++		setbits_le32(&gpio->swport_dr, mask);
++		setbits_le32(&gpio->swport_ddr, mask);
++	}
++
+ 	/* Enable early UART2 channel C on the RK3399 */
+ 	rk_clrsetreg(&grf->gpio4c_iomux,
+ 		     GRF_GPIO4C3_SEL_MASK,
+diff --git a/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c b/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c
+index 516292aaa5..ff9c916bcb 100644
+--- a/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c
++++ b/board/pine64/pinebook-pro-rk3399/pinebook-pro-rk3399.c
+@@ -7,13 +7,15 @@
+ #include <common.h>
+ #include <dm.h>
+ #include <syscon.h>
++#include <linux/delay.h>
++#include <asm/gpio.h>
+ #include <asm/io.h>
+ #include <asm/arch-rockchip/clock.h>
+ #include <asm/arch-rockchip/grf_rk3399.h>
++#include <asm/arch-rockchip/gpio.h>
+ #include <asm/arch-rockchip/hardware.h>
+ #include <asm/arch-rockchip/misc.h>
+ #include <power/regulator.h>
+-
+ #define GRF_IO_VSEL_BT565_SHIFT 0
+ #define PMUGRF_CON0_VSEL_SHIFT 8
+ 
+@@ -59,6 +61,7 @@ int misc_init_r(void)
+ 	const u32 cpuid_length = 0x10;
+ 	u8 cpuid[cpuid_length];
+ 	int ret;
++	unsigned int gpio;
+ 
+ 	setup_iodomain();
+ 
+@@ -70,6 +73,11 @@ int misc_init_r(void)
+ 	if (ret)
+ 		return ret;
+ 
++	gpio_lookup_name("B22", NULL, NULL, &gpio);
++	gpio_direction_output(gpio, 0);
++	udelay(500000);
++	gpio_direction_output(gpio, 1);
++
+ 	return ret;
+ }
+ #endif
+diff --git a/drivers/mmc/Kconfig b/drivers/mmc/Kconfig
+index bf4d994ff6..6a959db956 100644
+--- a/drivers/mmc/Kconfig
++++ b/drivers/mmc/Kconfig
+@@ -471,6 +471,13 @@ config MMC_SDHCI_SDMA
+ 	  This enables support for the SDMA (Single Operation DMA) defined
+ 	  in the SD Host Controller Standard Specification Version 1.00 .
+ 
++config SPL_MMC_SDHCI_SDMA
++	bool "Support SDHCI SDMA in SPL"
++	depends on MMC_SDHCI
++	help
++	  This enables support for the SDMA (Single Operation DMA) defined
++	  in the SD Host Controller Standard Specification Version 1.00 in SPL.
++
+ config MMC_SDHCI_ADMA
+ 	bool "Support SDHCI ADMA2"
+ 	depends on MMC_SDHCI
+diff --git a/drivers/mmc/sdhci.c b/drivers/mmc/sdhci.c
+index a80ad8329a..3c44e5d8d4 100644
+--- a/drivers/mmc/sdhci.c
++++ b/drivers/mmc/sdhci.c
+@@ -70,7 +70,7 @@ static void sdhci_transfer_pio(struct sdhci_host *host, struct mmc_data *data)
+ 	}
+ }
+ 
+-#if (defined(CONFIG_MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
++#if (CONFIG_IS_ENABLED(MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
+ static void sdhci_prepare_dma(struct sdhci_host *host, struct mmc_data *data,
+ 			      int *is_aligned, int trans_bytes)
+ {
+@@ -177,7 +177,7 @@ static int sdhci_transfer_data(struct sdhci_host *host, struct mmc_data *data)
+ 		}
+ 	} while (!(stat & SDHCI_INT_DATA_END));
+ 
+-#if (defined(CONFIG_MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
++#if (CONFIG_IS_ENABLED(MMC_SDHCI_SDMA) || CONFIG_IS_ENABLED(MMC_SDHCI_ADMA))
+ 	dma_unmap_single(host->start_addr, data->blocks * data->blocksize,
+ 			 mmc_get_dma_dir(data));
+ #endif
+@@ -856,7 +856,7 @@ int sdhci_setup_cfg(struct mmc_config *cfg, struct sdhci_host *host,
+ #endif
+ 	debug("%s, caps: 0x%x\n", __func__, caps);
+ 
+-#ifdef CONFIG_MMC_SDHCI_SDMA
++#if CONFIG_IS_ENABLED(MMC_SDHCI_SDMA)
+ 	if ((caps & SDHCI_CAN_DO_SDMA)) {
+ 		host->flags |= USE_SDMA;
+ 	} else {
+-- 
+2.39.2
+
