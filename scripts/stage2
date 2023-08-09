@@ -15,9 +15,8 @@ set -o pipefail
 set -o nounset
 
 if [ $NETWORKMANAGER -eq 0 ]; then
-	if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
-		# systemd-resolved breaks static ip when using ifupdown
-		# it will be disabled on jammy jellyfish
+	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+		# systemd-resolved breaks static ip when using ifupdown, disable on jammy jellyfish
 		unlink /etc/resolv.conf;
 		if [ -f /etc/resolv.conf ]; then
 			rm -f /etc/resolv.conf;
@@ -75,13 +74,13 @@ if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" == "focal" || "$ARCH" == "arm" ]]; then
 		UBUNTU_FW=""
 	fi
-	if [[ "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
+	if [[ "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" || "$DISTRO_VERSION" == "mantic" ]]; then
 		apt install -y ${PKGS} ${USER_PKGS} systemd-resolved rng-tools5 ${UBUNTU_FW} ${NETWORKING}
 	else
 		apt install -y ${PKGS} ${USER_PKGS} openresolv rng-tools5 ${UBUNTU_FW} ${NETWORKING}
 	fi
 	if [ $NETWORKMANAGER -eq 0 ]; then
-		if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
+		if [[ "$DISTRO_VERSION" == "jammy" ]]; then
 			# disable systemd-networkd and mask systemd-networkd-wait-online
 			systemctl disable systemd-networkd
 			systemctl mask systemd-networkd-wait-online

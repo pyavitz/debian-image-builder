@@ -46,11 +46,6 @@ else
 	dpkg -i $FILE
 	rm -f $FILE
 fi
-if [[ -f "/usr/share/debootstrap/scripts/${DISTRO_VERSION}" ]]; then
-	:;
-else
-	ln -sr /usr/share/debootstrap/scripts/sid /usr/share/debootstrap/scripts/${DISTRO_VERSION}
-fi
 }
 
 kali_keyring(){
@@ -109,16 +104,17 @@ else
 	dpkg -i *.deb
 	rm -f *.deb
 fi
-if [[ "$DISTRO_VERSION" == "jammy" || "$DISTRO_VERSION" == "kinetic" || "$DISTRO_VERSION" == "lunar" ]]; then
-	if [[ -f "/usr/share/debootstrap/scripts/${DISTRO_VERSION}" ]]; then
-		:;
-	else
-		ln -sr /usr/share/debootstrap/scripts/gutsy /usr/share/debootstrap/scripts/${DISTRO_VERSION}
-	fi
-fi
 }
 
 run_debootstrap(){
+if [[ "$DISTRO" == "devuan" ]]; then DEBOOTSTRAP_SCRIPT="sid"; fi
+if [[ "$DISTRO" == "ubuntu" ]]; then DEBOOTSTRAP_SCRIPT="gutsy"; fi
+if [[ -f "/usr/share/debootstrap/scripts/${DISTRO_VERSION}" ]]; then
+	:;
+else
+	ln -sr /usr/share/debootstrap/scripts/${DEBOOTSTRAP_SCRIPT} /usr/share/debootstrap/scripts/${DISTRO_VERSION}
+	sleep .50
+fi
 KEY_DIR="/usr/share/keyrings"
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "ubuntu" ]]; then
 	debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} ${ROOT}

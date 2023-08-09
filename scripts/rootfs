@@ -12,10 +12,7 @@ source board.txt
 source userdata.txt
 
 # clean
-if [[ -d "sysroot" ]]; then
-	make cleanup
-	clear -x
-fi
+if [[ -d "sysroot" ]] || [[ -d "p1" ]]; then make cleanup; clear -x; fi
 
 # verbosity
 if [ $VERBOSE -eq 1 ]; then
@@ -123,8 +120,6 @@ if [ $DEVROOTFS -eq 1 ]; then
 		umount "${ROOTFS_FOLDER}"
 	fi
 	rmdir "${ROOTFS_FOLDER}"
-	# just in case
-	make cleanup > /dev/null 2>&1
 fi
 
 if [[ -d "${ROOT}" ]]; then
@@ -132,6 +127,7 @@ if [[ -d "${ROOT}" ]]; then
 fi
 
 if [[ "$HOST_MACHINE" == "Debian" || "$HOST_MACHINE" == "Ubuntu" ]]; then
+	# devuan releases
 	if [[ -f "/usr/share/debootstrap/scripts/chimaera" ]]; then
 		rm -f /usr/share/debootstrap/scripts/chimaera
 	fi
