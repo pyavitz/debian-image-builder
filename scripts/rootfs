@@ -41,9 +41,7 @@ if [[ "$ROOTFS_ARCH" == "rootfs-armel" || "$ROOTFS_ARCH" == "rootfs-arm64" ]] &&
 	exit 0
 fi
 # keyrings and setups
-if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" ]]; then
-	${DISTRO}_keyring
-fi
+if [[ "$DISTRO" == "devuan" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" ]]; then ${DISTRO}_keyring; fi
 if [[ "$HOST_MACHINE" == "Ubuntu" ]]; then
 	:;
 else
@@ -122,9 +120,7 @@ if [ $DEVROOTFS -eq 1 ]; then
 	rmdir "${ROOTFS_FOLDER}"
 fi
 
-if [[ -d "${ROOT}" ]]; then
-	rm -fdr ${ROOT}
-fi
+if [[ -d "${ROOT}" ]]; then unmount ${ROOT}; sleep .50; rm -fdr ${ROOT}; fi
 
 if [[ "$HOST_MACHINE" == "Debian" || "$HOST_MACHINE" == "Ubuntu" ]]; then
 	# devuan releases
@@ -136,6 +132,6 @@ if [[ "$HOST_MACHINE" == "Debian" || "$HOST_MACHINE" == "Ubuntu" ]]; then
 	fi
 fi
 
-clear -x
+if [ $VERBOSE -eq 0 ]; then clear -x; fi
 
 exit 0
