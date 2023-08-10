@@ -196,19 +196,20 @@ if [[ "$DISTRO" == "devuan" ]]; then
 		sed -i 's/DO_SYSLOG=${DO_SYSLOG:-yes}/DO_SYSLOG=${DO_SYSLOG:-no}/g' /etc/default/network-test
 	fi
 fi
-if [[ "$DISTRO_VERSION" == "jammy" ]]; then
-	# /etc/network/if-down.d/resolved: 12: mystatedir: not found
-	# /etc/network/if-up.d/resolved: 12: mystatedir: not found
-	if [[ -e "/etc/network/if-down.d/resolved" ]]; then
-		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-down.d/resolved
-		sed -i 's/return/exit 0/g' /etc/network/if-down.d/resolved
-	fi
-	if [[ -e "/etc/network/if-up.d/resolved" ]]; then
-		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-up.d/resolved
-		sed -i 's/return/exit 0/g' /etc/network/if-up.d/resolved
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
+		# /etc/network/if-down.d/resolved: 12: mystatedir: not found
+		# /etc/network/if-up.d/resolved: 12: mystatedir: not found
+		if [[ -e "/etc/network/if-down.d/resolved" ]]; then
+			sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-down.d/resolved
+			sed -i 's/return/exit 0/g' /etc/network/if-down.d/resolved
+		fi
+		if [[ -e "/etc/network/if-up.d/resolved" ]]; then
+			sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-up.d/resolved
+			sed -i 's/return/exit 0/g' /etc/network/if-up.d/resolved
+		fi
 	fi
 fi
-
 # ifupdown interfaces and wpa_supplicant files
 tee /etc/network/interfaces <<EOF
 # Interfaces
