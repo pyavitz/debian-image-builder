@@ -106,14 +106,23 @@ else
 fi
 }
 
-run_debootstrap(){
-if [[ "$DISTRO" == "devuan" ]]; then DEBOOTSTRAP_SCRIPT="sid"; fi
-if [[ "$DISTRO" == "ubuntu" ]]; then DEBOOTSTRAP_SCRIPT="gutsy"; fi
+debootstrap_script(){
 if [[ -f "/usr/share/debootstrap/scripts/${DISTRO_VERSION}" ]]; then
 	:;
 else
 	ln -sr /usr/share/debootstrap/scripts/${DEBOOTSTRAP_SCRIPT} /usr/share/debootstrap/scripts/${DISTRO_VERSION}
 	sleep .50
+fi
+}
+
+run_debootstrap(){
+if [[ "$DISTRO" == "devuan" ]]; then
+	DEBOOTSTRAP_SCRIPT="sid"
+	debootstrap_script
+fi
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	DEBOOTSTRAP_SCRIPT="gutsy"
+	debootstrap_script
 fi
 KEY_DIR="/usr/share/keyrings"
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "ubuntu" ]]; then
