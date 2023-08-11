@@ -1,7 +1,12 @@
-## Notice
+
+<details>
+<summary>Notice</summary>
+
 * Requested [images](https://github.com/pyavitz/binary/releases/tag/images)
 * Overlay [changes](https://github.com/pyavitz/debian-image-builder/commit/67eafb34cedd24cb68da57ac318f85b94ec4af86)
 * Extra wireless [changes](https://github.com/pyavitz/debian-image-builder/commit/688d441efce0c22314a59b1baa283d56883a72d5)
+
+</details>
 
 ## Boards
 ```sh
@@ -124,12 +129,6 @@ userdata.txt file.
 
 ```sh
 Patches "-p1" placed in patches/userpatches are applied during compilation.
-```
-#### Amlogic eMMC boot (u-boot only)
-
-```sh
-# change from 0 to 1
-EMMC=0
 ```
 
 ## Usage
