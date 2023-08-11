@@ -1,6 +1,5 @@
-
 <details>
-<summary>Notice</summary>
+<summary><h3>Notice</h3></summary>
 
 * Requested [images](https://github.com/pyavitz/binary/releases/tag/images)
 * Overlay [changes](https://github.com/pyavitz/debian-image-builder/commit/67eafb34cedd24cb68da57ac318f85b94ec4af86)
@@ -8,7 +7,9 @@
 
 </details>
 
-## Boards
+<details open>
+<summary><h3>Boards</h3></summary>
+
 ```sh
 Allwinner:      # NanoPi M1/NEO/Plus2/R1, OrangePi One/PC/R1 and Tritium
 Amlogic:        # BananaPi CM4IO/M2S, Le Potato, Odroid C4/HC4/N2/N2L/N2+ and Radxa Zero
@@ -20,6 +21,7 @@ WIP:		# Cubietruck, Cubox-i, BananaPi M2Pro/M5 M2/P2 Zero, Khadas Edge2
 		# NanoPi R4S/R4SE/R5S/R5C, Odroid C1, OrangePi 5, Pinebook Pro
 		# Indiedroid Nova, and Radxa E25/Rock5b
 ```
+</details>
 
 ### Host dependencies for Debian Bullseye / Bookworm and Ubuntu Jammy Jellyfish
 * **Debian Bullseye** (recommended)
