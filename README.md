@@ -7,19 +7,61 @@
 
 </details>
 
-<details open>
+<details>
 <summary><h3>Boards</h3></summary>
 
-```sh
-Allwinner:      # NanoPi M1/NEO/Plus2/R1, OrangePi One/PC/R1 and Tritium
-Amlogic:        # BananaPi CM4IO/M2S, Le Potato, Odroid C4/HC4/N2/N2L/N2+ and Radxa Zero
-Broadcom:       # Raspberry Pi 0W/2B/3B+/4B
-Rockchip:       # NanoPC-T4, Odroid M1, Renegade, ROCK64, ROCKPro64 and Tinkerboard
-Samsung:        # Odroid XU4
+```py
+(*) Work in progress
 
-WIP:		# Cubietruck, Cubox-i, BananaPi M2Pro/M5 M2/P2 Zero, Khadas Edge2
-		# NanoPi R4S/R4SE/R5S/R5C, Odroid C1, OrangePi 5, Pinebook Pro
-		# Indiedroid Nova, and Radxa E25/Rock5b
+BananaPi CM4			# Amlogic
+BananaPi M2 Pro			# Amlogic
+BananaPi M2S			# Amlogic
+BananaPi M2 Zero		# Allwinner (*)
+BananaPi M5			# Amlogic
+BananaPi P2 Zero		# Allwinner (*)
+Cubietruck			# Allwinner (*)
+Cubox-I				# Freescale (*)
+FT20				# Freescale (*)
+Indiedroid Nova			# Rockchip (*)
+Khadas Edge2			# Rockchip (*)
+Le Potato			# Amlogic
+NanoPC-T4			# Rockchip
+NanoPi M1			# Allwinner
+NanoPi NEO			# Allwinner
+NanoPi NEO Plus2		# Allwinner
+NanoPi R1			# Allwinner
+NanoPi R4S			# Rockchip (*)
+NanoPi R4SE			# Rockchip (*)
+NanoPi R5C			# Rockchip (*)
+NanoPi R5S			# Rockchip (*)
+Odroid C1			# Amlogic (*)
+Odroid C4			# Amlogic
+Odroid HC4			# Amlogic
+Odroid M1			# Rockchip (*)
+Odroid N2			# Amlogic
+Odroid N2L			# Amlogic
+Odroid N2+			# Amlogic
+Odroid XU4			# Samsung
+OrangePi 5			# Rockchip (*)
+OrangePi One			# Allwinner
+OrangePi PC			# Allwinner
+OrangePi R1			# Allwinner (*)
+PineA64+			# Allwinner
+Pinebook Pro			# Rockchip (*)
+Radxa E25			# Rockchip (*)
+Radxa Zero			# Amlogic
+Raspberry Pi 2B			# Broadcom
+Raspberry Pi 3B			# Broadcom
+Raspberry Pi 3B			# Broadcom
+Raspberry Pi 4B			# Broadcom
+Raspberry Pi Zero		# Broadcom
+Renegade			# Rockchip
+Rock 5B				# Rockchip (*)
+ROCK64				# Rockchip
+ROCKPro64			# Rockchip (*)
+Tinkerboard			# Rockchip
+Tritium				# Allwinner
+X96-AIR				# Amlogic
 ```
 </details>
 
