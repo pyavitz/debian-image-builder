@@ -13,55 +13,65 @@
 ```py
 (*) Work in progress
 
-BananaPi CM4			# Amlogic
-BananaPi M2 Pro			# Amlogic
-BananaPi M2S			# Amlogic
-BananaPi M2 Zero		# Allwinner (*)
-BananaPi M5			# Amlogic
-BananaPi P2 Zero		# Allwinner (*)
-Cubietruck			# Allwinner (*)
-Cubox-I				# Freescale (*)
-FT20				# Freescale (*)
-Indiedroid Nova			# Rockchip (*)
-Khadas Edge2			# Rockchip (*)
-Le Potato			# Amlogic
-NanoPC-T4			# Rockchip
-NanoPi M1			# Allwinner
-NanoPi NEO			# Allwinner
-NanoPi NEO Plus2		# Allwinner
-NanoPi R1			# Allwinner
-NanoPi R4S			# Rockchip (*)
-NanoPi R4SE			# Rockchip (*)
-NanoPi R5C			# Rockchip (*)
-NanoPi R5S			# Rockchip (*)
-Odroid C1			# Amlogic (*)
-Odroid C4			# Amlogic
-Odroid HC4			# Amlogic
-Odroid M1			# Rockchip (*)
-Odroid N2			# Amlogic
-Odroid N2L			# Amlogic
-Odroid N2+			# Amlogic
-Odroid XU4			# Samsung
-OrangePi 5			# Rockchip (*)
-OrangePi One			# Allwinner
-OrangePi PC			# Allwinner
-OrangePi R1			# Allwinner (*)
-PineA64+			# Allwinner
-Pinebook Pro			# Rockchip (*)
-Radxa E25			# Rockchip (*)
-Radxa Zero			# Amlogic
-Raspberry Pi 2B			# Broadcom
-Raspberry Pi 3B			# Broadcom
-Raspberry Pi 3B			# Broadcom
-Raspberry Pi 4B			# Broadcom
-Raspberry Pi Zero		# Broadcom
-Renegade			# Rockchip
-Rock 5B				# Rockchip (*)
-ROCK64				# Rockchip
-ROCKPro64			# Rockchip (*)
-Tinkerboard			# Rockchip
-Tritium				# Allwinner
-X96-AIR				# Amlogic
+# ALLWINNER
+BananaPi M2 Zero (*)
+BananaPi P2 Zero (*)
+Cubietruck (*)
+NanoPi M1	
+NanoPi NEO	
+NanoPi NEO Plus2
+NanoPi R1	
+OrangePi One	
+OrangePi PC	
+OrangePi R1 (*)
+PineA64+	
+Tritium		
+
+# AMLOGIC
+BananaPi CM4
+BananaPi M2 Pro
+BananaPi M2S
+BananaPi M5
+Le Potato
+Odroid C1 (*)
+Odroid C4
+Odroid HC4
+Odroid N2
+Odroid N2L
+Odroid N2+
+Radxa Zero
+X96-AIR	
+
+# BROADCOM
+Raspberry Pi 2B
+Raspberry Pi 3B
+Raspberry Pi 4B
+Raspberry Pi Zero
+
+# FREESCALE
+Cubox-I (*)
+FT20 (*)
+
+# ROCKCHIP
+Indiedroid Nova (*)
+Khadas Edge2 (*)
+NanoPC-T4
+NanoPi R4S (*)
+NanoPi R4SE (*)
+NanoPi R5C (*)
+NanoPi R5S (*)
+Odroid M1 (*)
+OrangePi 5 (*)
+Pinebook Pro (*)
+Radxa E25 (*)
+Renegade
+Rock 5B	(*)
+ROCK64	
+ROCKPro64 (*)
+Tinkerboard
+
+# SAMSUNG
+Odroid XU4
 ```
 </details>
 
