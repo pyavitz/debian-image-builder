@@ -1,5 +1,3 @@
-<img src="https://github.com/pyavitz/binary/blob/misc/arm.png" alt="isolated" width="480"/>
-
 <details>
 <summary><h3>Notice</h3></summary>
 
