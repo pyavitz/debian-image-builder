@@ -83,20 +83,20 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
 		RK35="../../files/boot/rk35"
-		#if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "nanopir5c" ]]; then
-		#	cp ../${FAMILY_EXT}-arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
-		#fi
-		if [[ "$BOARD" == "nanopir5s" || "$BOARD" == "nanopir5c" || "$BOARD" == "odroidm1" || "$BOARD" == "radxae25" ]]; then
+		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
 			cp -f ${RK35}/${RKBIN_ELF} bl31.elf
+			cp -f ${RK35}/${RKBIN_ELF} atf-bl31
+			cp -f ${RK35}/${RKBIN_RAM} .
+			cp -f ${RKBIN_RAM} ram_init.bin
+		else
+			report_atf_error
 		fi
-		cp -f ${RK35}/${RKBIN_RAM} .
-		cp -f ${RKBIN_RAM} ram_init.bin
+		if [[ "$UBOOT_VERSION" == "v2023.07.02" ]]; then
+			#export BL31="bl31.elf"
+			export ROCKCHIP_TPL="${RKBIN_RAM}"
+		fi
 	fi
 fi
-#if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ "$UBOOT_VERSION" == "v2023.04" ]]; then
-#	#export BL31="bl31.elf"
-#	export ROCKCHIP_TPL="${RKBIN_RAM}"
-#fi
 }
 
 u-boot(){
