@@ -163,6 +163,9 @@ FSTYPE="ext4"
 # UEFI Options: true false
 ENABLE_EFI="false"
 
+# Default Image Size: 3072MB
+IMGSIZE="3072MB"
+
 # Shrink Image (EXT4 Only): true false
 ENABLE_SHRINK="true"
 
