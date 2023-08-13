@@ -10,7 +10,7 @@ if [[ -e "/sys/class/i2c-adapter/i2c-1/new_device" ]]; then
 	hwclock -w
 fi
 
-if [[ "$SYNC_CLK" == "true" ]]; then
+if [[ "$SYNC_CLK" == "true" ]] && [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
 	while ! [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]
 	do
 		sleep 1
@@ -20,11 +20,7 @@ if [[ "$SYNC_CLK" == "true" ]]; then
 		date -s "$(curl -s --head http://google.com | grep ^Date: | sed 's/Date: //g')"
 		sleep 5
 		RTC_TIME=`date +%F_%T | sed 's/_/ /g'`
-		if [[ "$DISTRO" == "Devuan" ]]; then
-			hwclock --systohc --localtime
-		else
-			timedatectl set-time "$RTC_TIME"
-		fi
+		timedatectl set-time "$RTC_TIME"
 	fi
 fi
 

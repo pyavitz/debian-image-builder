@@ -499,6 +499,8 @@ esac
 EOF
 	fi
 	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
+		#sudo sed -i 's/# Required-Start:/# Required-Start: $all/g' /etc/init.d/rtc-ds1307
+		#sudo sed -i 's/case "" in/case "$1" in/g' /etc/init.d/rtc-ds1307
 		sleep .25
 		sudo chmod +x /etc/init.d/rtc-ds1307
 		sleep .25
@@ -691,31 +693,25 @@ case $CHOICE in
 				fi
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 					if [[ "$BOARD" == "tinker" ]]; then
-						if [[ "$DISTRO" == "Devuan" ]]; then
-							sudo sed -i 's/SYNC_CLK="false"/SYNC_CLK="true"/g' /usr/local/sbin/rtc-ds1307
-							sleep .50
-						fi
 						tinker_rtc_ds1307
-						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
-							while true; do
-								export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-									if (whiptail --backtitle "Menu Interface: Sync Clock: Confirm" --title "Confirm" --yesno "    Keep System Time and RTC in sync?" 0 0); then
-										sudo sed -i 's/SYNC_CLK="false"/SYNC_CLK="true"/g' /usr/local/sbin/rtc-ds1307
-										sleep .50
-										sudo systemctl enable rtc-ds1307.service
-										sudo systemctl start rtc-ds1307.service
-										sudo systemctl set-default multi-user.target
-										whiptail --backtitle "Menu Interface: Sync Clock: Confirmation" --title "Confirmation" --msgbox "    Enabled." 0 0
-									else
-										sleep .50
-										sudo systemctl enable rtc-ds1307.service
-										sudo systemctl start rtc-ds1307.service
-										sudo systemctl set-default multi-user.target
-										whiptail --title "Clock Not Synced" --msgbox "    Hit enter to return to menu." 0 0
-									fi
-								break
-							done
-						fi
+						while true; do
+							export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+								if (whiptail --backtitle "Menu Interface: Sync Clock: Confirm" --title "Confirm" --yesno "    Keep System Time and RTC in sync?" 0 0); then
+									sudo sed -i 's/SYNC_CLK="false"/SYNC_CLK="true"/g' /usr/local/sbin/rtc-ds1307
+									sleep .50
+									sudo systemctl enable rtc-ds1307.service
+									sudo systemctl start rtc-ds1307.service
+									sudo systemctl set-default multi-user.target
+									whiptail --backtitle "Menu Interface: Sync Clock: Confirmation" --title "Confirmation" --msgbox "    Enabled." 0 0
+								else
+									sleep .50
+									sudo systemctl enable rtc-ds1307.service
+									sudo systemctl start rtc-ds1307.service
+									sudo systemctl set-default multi-user.target
+									whiptail --title "Clock Not Synced" --msgbox "    Hit enter to return to menu." 0 0
+								fi
+							break
+						done
 					else
 						export NEWT_COLORS='root=,black'
 						whiptail --msgbox "    Your board is not supported." 0 0
