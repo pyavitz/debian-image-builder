@@ -70,10 +70,17 @@ if [[ "$VFAT" == "true" ]]; then
 		if [[ "$FAMILY" == "boardcom" ]]; then :; else parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 esp on; fi
 	fi
 else
-	parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
-	mklabel msdos \
-	mkpart primary ext2 ${IMG_OFFSET} 256MiB \
-	mkpart primary ext2 256MiB 100%
+	if [[ "$GPT" == "true" ]]; then
+		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
+		mklabel gpt \
+		mkpart 1 ext2 ${IMG_OFFSET} 256MiB \
+		mkpart 2 ext2 256MiB 100%
+	else
+		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
+		mklabel msdos \
+		mkpart primary ext2 ${IMG_OFFSET} 256MiB \
+		mkpart primary ext2 256MiB 100%
+	fi
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
