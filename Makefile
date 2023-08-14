@@ -175,7 +175,6 @@ endif
 	$(call build_image)
 
 all:
-	# - - - - - - - -
 	# Compiling u-boot
 	$(call build_uboot)
 	# Compiling kernel
@@ -237,7 +236,6 @@ endif
 	$(call create_rootfs)
 
 cleanup:
-	# Cleaning up
 	@chmod +x ${CLN}
 	@${CLEAN}
 
