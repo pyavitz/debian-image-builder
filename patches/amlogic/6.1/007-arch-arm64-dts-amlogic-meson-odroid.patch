@@ -1,7 +1,7 @@
-From f4092d0a4ee209bc5209a391a610f1a7f3597779 Mon Sep 17 00:00:00 2001
+From aac4416dfe2da9e1fead59d7262a48f3bd4278d7 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 26 Jul 2023 00:52:19 -0400
-Subject: [PATCH] arch: arm64: dts: amlogic: meson odroid
+Date: Mon, 14 Aug 2023 07:49:43 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-odroid
 
 Odroid C4 / HC4
 Odroid N2 / N2 Plus / N2L
@@ -20,10 +20,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../boot/dts/amlogic/meson64_odroidc4.dts     |  71 ++++
  .../boot/dts/amlogic/meson64_odroidhc4.dts    |  81 +++++
  .../boot/dts/amlogic/meson64_odroidn2.dts     | 191 +++++++++++
- .../boot/dts/amlogic/meson64_odroidn2.dtsi    | 308 ++++++++++++++++++
+ .../boot/dts/amlogic/meson64_odroidn2.dtsi    | 314 ++++++++++++++++++
  .../dts/amlogic/meson64_odroidn2_plus.dts     | 134 ++++++++
  .../boot/dts/amlogic/meson64_odroidn2l.dts    | 140 ++++++++
- 15 files changed, 1231 insertions(+), 7 deletions(-)
+ 15 files changed, 1237 insertions(+), 7 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson64_odroidc2.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson64_odroidc4.dts
@@ -34,10 +34,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index 8772aff98656..ee452ba74cba 100644
+index 852b0a52c229..bd1efd6c7c28 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
-@@ -14,6 +14,7 @@ dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking-pro.dtb
+@@ -16,6 +16,7 @@ dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking-pro.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-odroid-n2-plus.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-odroid-n2.dtb
@@ -45,7 +45,7 @@ index 8772aff98656..ee452ba74cba 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-bananapi-m2s.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-khadas-vim3.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6.dtb
-@@ -68,3 +69,10 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
+@@ -71,3 +72,10 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
@@ -57,10 +57,10 @@ index 8772aff98656..ee452ba74cba 100644
 +dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2l.dtb
 +dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2_plus.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
-index 88b848c65b0d..7e086c506537 100644
+index 6b9bd1e22852..bcec5e51c742 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
-@@ -1884,6 +1884,15 @@ mux {
+@@ -1916,6 +1916,15 @@ mux {
  						};
  					};
  
@@ -861,10 +861,10 @@ index 000000000000..465f438156b6
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi
 new file mode 100644
-index 000000000000..c245293ff60e
+index 000000000000..9948ed91b094
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/meson64_odroidn2.dtsi
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,314 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2021 Dongjin Kim <tobetter@gmail.com>
@@ -1048,9 +1048,15 @@ index 000000000000..c245293ff60e
 +};
 +
 +&i2c3 {
-+	status = "disabled";
-+	pinctrl-names = "default";
++	status = "okay";
 +	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
++	pinctrl-names = "default";
++
++	rtc: rtc@51 {
++		compatible = "nxp,pcf8563";
++		reg = <0x51>;
++		wakeup-source;
++	};
 +};
 +
 +&sd_emmc_b {
