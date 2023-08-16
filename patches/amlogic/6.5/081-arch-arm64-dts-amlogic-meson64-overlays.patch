@@ -1,12 +1,13 @@
-From 90b7522ebf6125540ad00004cb43947040402b2d Mon Sep 17 00:00:00 2001
+From a914c825e28387717aa44a03aa2fc3291dda41d3 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 14 Aug 2023 17:03:34 -0400
+Date: Wed, 16 Aug 2023 17:03:25 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson64 overlays
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm64/boot/dts/amlogic/Makefile          |  2 +
- arch/arm64/boot/dts/amlogic/overlays/Makefile | 15 ++++
+ arch/arm64/boot/dts/amlogic/overlays/Makefile | 16 ++++
+ .../meson-a311d-bananapi-cm4io-i2c2.dts       | 16 ++++
  .../overlays/meson-g12-bananapi-rtl8822cs.dts | 23 +++++
  .../overlays/meson-g12-gxl-cma-pool-896MB.dts | 19 +++++
  .../meson-g12a-radxa-zero-gpio-10-led.dts     | 26 ++++++
@@ -17,8 +18,9 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../overlays/meson-sm1-bananapi-uartB.dts     | 15 ++++
  .../meson-sm1-odroid-c4-rtl8822cs.dts         | 83 +++++++++++++++++++
  .../overlays/meson-sm1-x96-air-rtc.dts        | 11 +++
- 12 files changed, 272 insertions(+)
+ 13 files changed, 289 insertions(+)
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/Makefile
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-a311d-bananapi-cm4io-i2c2.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12-bananapi-rtl8822cs.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12-gxl-cma-pool-896MB.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/overlays/meson-g12a-radxa-zero-gpio-10-led.dts
@@ -43,12 +45,13 @@ index 427b2e2d32de..80844eccc39c 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j100.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/Makefile b/arch/arm64/boot/dts/amlogic/overlays/Makefile
 new file mode 100644
-index 000000000000..eec687ab6f19
+index 000000000000..6eb49937fb93
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/Makefile
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,16 @@
 +# SPDX-License-Identifier: GPL-2.0
 +dtbo-y += \
++	meson-a311d-bananapi-cm4io-i2c2.dtbo \
 +	meson-g12a-radxa-zero-gpio-8-led.dtbo \
 +	meson-g12a-radxa-zero-gpio-10-led.dtbo \
 +	meson-g12-bananapi-rtl8822cs.dtbo \
@@ -62,6 +65,28 @@ index 000000000000..eec687ab6f19
 +
 +targets += $(dtbo-y)
 +always-y := $(dtbo-y)
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-a311d-bananapi-cm4io-i2c2.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-a311d-bananapi-cm4io-i2c2.dts
+new file mode 100644
+index 000000000000..0fdcc227b0c3
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/meson-a311d-bananapi-cm4io-i2c2.dts
+@@ -0,0 +1,16 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "bananapi,bpi-cm4io", "bananapi,bpi-cm4", "amlogic,a311d";
++
++	/* Main I2C bus */
++	fragment@0 {
++		target = <&i2c2>;
++
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
++
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-g12-bananapi-rtl8822cs.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-g12-bananapi-rtl8822cs.dts
 new file mode 100644
 index 000000000000..f9d014f03789
@@ -273,7 +298,7 @@ index 000000000000..1b87cebbafdd
 +
 diff --git a/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-odroid-c4-rtl8822cs.dts b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-odroid-c4-rtl8822cs.dts
 new file mode 100644
-index 000000000000..64292ba1122e
+index 000000000000..abd92b48dc1b
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/overlays/meson-sm1-odroid-c4-rtl8822cs.dts
 @@ -0,0 +1,83 @@
