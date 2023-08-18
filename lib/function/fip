@@ -2,12 +2,13 @@
 
 # DOWNLOAD
 amlogic-boot-fips(){
-FIPURL="https://github.com/pyavitz/debian-image-builder/releases/download/amlogic-boot-fip"
+SHA256URL="https://github.com/pyavitz/debian-image-builder/releases/download/amlogic-boot-fip"
+FIPURL="https://github.com/pyavitz/amlogic-boot-fip/archive/refs/heads/"
 if [[ -f "amlogic-boot-fip-master.sha256" ]]; then
 	rm -f amlogic-boot-fip-master.sha256
-	wget -cq ${FIPURL}/amlogic-boot-fip-master.sha256
+	wget -cq ${SHA256URL}/amlogic-boot-fip-master.sha256
 else
-	wget -cq ${FIPURL}/amlogic-boot-fip-master.sha256
+	wget -cq ${SHA256URL}/amlogic-boot-fip-master.sha256
 fi
 if [[ -f "amlogic-boot-fip-master.tar.gz" ]] && [[ -f "amlogic-boot-fip-master.sha256" ]] && [[ `sha256sum --check amlogic-boot-fip-master.sha256 | grep "OK"` ]]; then
 	echo -en "${WHT}amlogic-boot-fip-master${FIN} "
@@ -16,7 +17,7 @@ else
 	rm -f amlogic-boot-fip-master.tar.gz
 	echo -en "${WHT}amlogic-boot-fip-master${FIN} "
 	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-	aria2c -q ${FIPURL}/amlogic-boot-fip-master.tar.gz
+	aria2c -q ${FIPURL}/master.tar.gz
 	echo_bdone
 fi
 }
@@ -635,7 +636,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 x96air_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -fr ../amlogic-boot-fip-master/x96air-gbit/* fip/
+cp -fr ../amlogic-boot-fip-master/x96air/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
