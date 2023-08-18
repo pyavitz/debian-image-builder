@@ -148,15 +148,27 @@ done
 }
 
 overclock(){
-echo 'overclock="1"' | sudo tee /etc/opt/overclock.txt
+if [ $CURRENT_CLOCK -eq 0 ]; then
+	echo 'overclock="1"' | sudo tee /etc/opt/overclock.txt
+else
+	echo 'overclock="0"' | sudo tee /etc/opt/overclock.txt
+fi
 sudo service tweaks restart
 }
 
 overclocking(){
+CURRENT_CLOCK=`cat /etc/opt/overclock.txt | sed 's/overclock="//g' | sed 's/"//g'`
+if [ $CURRENT_CLOCK -eq 0 ]; then
+	CLK_QUESTION="Overclock"
+	CLOCKING="Overclocking"
+else
+	CLK_QUESTION="Downclock"
+	CLOCKING="Downclocking"
+fi
 if [ $SUPPORTED_OC -eq 1 ] > /dev/null 2>&1; then
-	if (whiptail --backtitle "Board: $DEFAULT_MOTD" --title "$DEFAULT_MOTD" --yesno "   Overclock?" 0 0); then
+	if (whiptail --backtitle "Board: $DEFAULT_MOTD" --title "$DEFAULT_MOTD" --yesno "   ${CLK_QUESTION}?" 0 0); then
 		echo ""
-		echo -e "Overclocking: $DEFAULT_MOTD "
+		echo -e "${CLOCKING}: $DEFAULT_MOTD "
 		echo ""
 		echo -en "Running service: "
 		overclock > /dev/null 2>&1
