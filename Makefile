@@ -11,7 +11,9 @@ ROOTFS=sudo ./scripts/rootfs
 CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
+# purge
 PURGE=$(shell sudo rm -fdr sources)
+PURGELOG=$(shell sudo rm -fdr output/logs)
 PURGEALL=$(shell sudo rm -fdr sources output)
 
 # logger
@@ -242,6 +244,10 @@ cleanup:
 purge:
 	# Removing sources directory
 	@${PURGE}
+
+purge-log:
+	# Removing all logs
+	@${PURGELOG}
 
 purge-all:
 	# Removing sources and output directory
