@@ -1,21 +1,21 @@
-From 007deeadf17d80cd3e7b54883d23679105806bc7 Mon Sep 17 00:00:00 2001
+From 0a8a50bdf97a09bd08e007570b603a2c9d28aec3 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 18 Aug 2023 08:29:04 -0400
+Date: Fri, 18 Aug 2023 18:17:08 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-odroid
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm64/boot/dts/amlogic/Makefile          |   1 +
- .../dts/amlogic/meson-g12b-odroid-n2-plus.dts |  56 ++
- .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |  13 +
+ .../dts/amlogic/meson-g12b-odroid-n2-plus.dts |  51 ++
+ .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |   8 +
  .../dts/amlogic/meson-g12b-odroid-n2.dtsi     | 406 +--------------
  .../dts/amlogic/meson-g12b-odroid-n2l.dts     | 177 +++++++
  .../boot/dts/amlogic/meson-g12b-odroid.dtsi   | 486 ++++++++++++++++++
- .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  |  57 +-
- .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts |  32 +-
+ .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  |  52 +-
+ .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts |  27 +-
  .../boot/dts/amlogic/meson-sm1-odroid.dtsi    |  47 +-
  arch/arm64/boot/dts/amlogic/meson-sm1.dtsi    |   9 +
- 10 files changed, 869 insertions(+), 415 deletions(-)
+ 10 files changed, 849 insertions(+), 415 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
 
@@ -32,10 +32,10 @@ index 852b0a52c229..ecfd8b1fbf91 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-khadas-vim3.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
-index ce1198ad34e4..66954111fbab 100644
+index ce1198ad34e4..b49fcaa1a10d 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
-@@ -9,10 +9,39 @@
+@@ -9,10 +9,34 @@
  /* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
  #include "meson-g12b-a311d.dtsi"
  #include "meson-g12b-odroid-n2.dtsi"
@@ -62,11 +62,6 @@ index ce1198ad34e4..66954111fbab 100644
 +	};
 +};
 +
-+&ethmac {
-+	/delete-property/	resets;
-+	/delete-property/	reset-names;
-+};
-+
 +&gpu_opp_table {
 +	opp-999999984 {
 +		opp-hz = /bits/ 64 <999999984>;
@@ -75,7 +70,7 @@ index ce1198ad34e4..66954111fbab 100644
  };
  
  &vddcpu_a {
-@@ -29,3 +58,30 @@ &vddcpu_b {
+@@ -29,3 +53,30 @@ &vddcpu_b {
  	pwms = <&pwm_AO_cd 1 1500 0>;
  };
  
@@ -107,10 +102,10 @@ index ce1198ad34e4..66954111fbab 100644
 +	};
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
-index a198a91259ec..091b1cf2a5d2 100644
+index a198a91259ec..38b6d322221b 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
-@@ -8,8 +8,21 @@
+@@ -8,8 +8,16 @@
  
  #include "meson-g12b-s922x.dtsi"
  #include "meson-g12b-odroid-n2.dtsi"
@@ -120,11 +115,6 @@ index a198a91259ec..091b1cf2a5d2 100644
  	compatible = "hardkernel,odroid-n2", "amlogic,s922x", "amlogic,g12b";
  	model = "Hardkernel ODROID-N2";
  };
-+
-+&ethmac {
-+	/delete-property/	resets;
-+	/delete-property/	reset-names;
-+};
 +
 +&gpu_opp_table {
 +	opp-999999984 {
@@ -1290,10 +1280,10 @@ index 000000000000..598635ecd70f
 +	phy-supply = <&vcc_5v>;
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
-index 8c30ce63686e..8d97e208745f 100644
+index 8c30ce63686e..b51498ce93b3 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
-@@ -26,23 +26,54 @@ led-blue {
+@@ -26,23 +26,49 @@ led-blue {
  	sound {
  		model = "ODROID-C4";
  	};
@@ -1341,11 +1331,6 @@ index 8c30ce63686e..8d97e208745f 100644
  	linux,rc-map-name = "rc-odroid";
  };
 +
-+&ethmac {
-+	/delete-property/	resets;
-+	/delete-property/	reset-names;
-+};
-+
 +&external_phy {
 +	/delete-property/	interrupts;
 +	/delete-property/	interrupts-parent;
@@ -1362,10 +1347,10 @@ index 8c30ce63686e..8d97e208745f 100644
 +	regulator-max-microvolt = <1030000>;
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
-index 3d642d739c35..fcb1cab9832b 100644
+index 3d642d739c35..9c5701a1fc49 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
-@@ -139,10 +139,34 @@ flash@0 {
+@@ -139,10 +139,29 @@ flash@0 {
  };
  
  &usb {
@@ -1377,11 +1362,6 @@ index 3d642d739c35..fcb1cab9832b 100644
  
 -&usb2_phy0 {
 -	status = "disabled";
-+&ethmac {
-+	/delete-property/	resets;
-+	/delete-property/	reset-names;
-+};
-+
 +&external_phy {
 +	/delete-property/	interrupts;
 +	/delete-property/	interrupts-parent;
