@@ -35,20 +35,16 @@ whiptail --msgbox "    ${REPORT}" 0 0
 exit 0
 }
 
-# verify supported device and set device node variable
-if [[ -f "/etc/opt/board.txt" ]]; then
-	if [[ -d "/usr/lib/u-boot" ]]; then
-		DIR="/usr/lib/u-boot"
-	else
-		REPORT="Could not find u-boot directory."
-		error_prompt
-	fi
-	MMC=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
-	. /etc/opt/board.txt
+# check for u-boot directory
+if [[ -d "/usr/lib/u-boot" ]]; then
+	DIR="/usr/lib/u-boot"
 else
-	REPORT="Your board is not supported."
+	REPORT="Could not find u-boot directory."
 	error_prompt
 fi
+
+# set device node variable
+MMC=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 
 # locate target device node
 if [[ -e "${MMC}boot0" ]]; then
@@ -71,7 +67,6 @@ echo -e "$MMC"
 extlinux_conf () {
 ROOTFS=`findmnt -v -n -o SOURCE /`
 FSTYPE=`findmnt -v -n -o FSTYPE /`
-ROOT_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 if [[ "$FSTYPE" == "ext4" ]]; then
 	ROOT_FSTYPE="rootfstype=ext4"
 fi
@@ -83,7 +78,7 @@ if [[ "$FSTYPE" == "xfs" ]]; then
 fi
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${NEW_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
 rm -f /boot/extlinux/extlinux.conf
 tee /boot/extlinux/extlinux.conf <<EOF
 label default
@@ -96,13 +91,13 @@ label default
 EOF
 }
 
+flash_uboot(){
 # allwinner
 if [[ "$FAMILY" == "allwinner" ]] && [[ -f "${DIR}/u-boot-sunxi-with-spl.bin" ]]; then
 	target_device
 	sleep .50
 	# flash binary
 	dd if="${DIR}/u-boot-sunxi-with-spl.bin" of="${MMC}" conv=fsync bs=1024 seek=8
-	echo -e "You may now reboot."
 fi
 
 # amlogic / emmc
@@ -111,7 +106,6 @@ if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 1 ] && [[ -f "${DIR}/u-boot.bin" 
 	sleep .50
 	# flash binary
 	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=512 seek=1
-	echo -e "You may now reboot."
 fi
 # amlogic / sdcard
 if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 0 ] && [[ -f "${DIR}/u-boot.bin.sd.bin" ]]; then
@@ -120,7 +114,6 @@ if [[ "$FAMILY" == "amlogic" ]] && [ $EMMC -eq 0 ] && [[ -f "${DIR}/u-boot.bin.s
 	# flash binary
 	dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=1 count=442
 	dd if="${DIR}/u-boot.bin.sd.bin" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
-	echo -e "You may now reboot."
 fi
 
 # freescale
@@ -130,14 +123,12 @@ if [[ "$FAMILY" == "freescale" ]] && [[ "$ARCH" == "arm" ]] && [[ -f "${DIR}/spl
 	# flash loader and binary
 	dd if="${DIR}/sploader.bin" of="${MMC}" bs=1k seek=1 conv=sync
 	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=1k seek=69 conv=sync
-	echo -e "You may now reboot."
 fi
 if [[ "$FAMILY" == "freescale" ]] && [[ "$ARCH" == "arm64" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
 	target_device
 	sleep .50
 	# flash binary
 	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=1k seek=33
-	echo -e "You may now reboot."
 fi
 
 # rockchip
@@ -147,7 +138,6 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${
 	# flash loader and binary
 	dd if="${DIR}/idbloader.bin" of="${MMC}" seek=64
 	dd if="${DIR}/u-boot.itb" of="${MMC}" seek=16384
-	echo -e "You may now reboot."
 fi
 
 # samsung / odroid xu4 / emmc
@@ -178,13 +168,29 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 		dd if="/dev/zero" of="${MMC}" seek=2015 bs=512 count=32 conv=fsync
 	fi
 fi
+}
 
-if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
-	if [ $VERBOSITY -eq 1 ]; then
-		extlinux_conf
-	else
-		extlinux_conf > /dev/null 2>&1
-	fi
+CUR_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
+CHK_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
+echo OLD_PARTUUID='"'$CUR_PARTUUID'"' > /etc/opt/part-uuid.txt
+sleep .25
+flash_uboot
+sleep .25
+echo NEW_PARTUUID='"'$CHK_PARTUUID'"' >> /etc/opt/part-uuid.txt
+source /etc/opt/part-uuid.txt
+if [[ "$OLD_PARTUUID" == "$NEW_PARTUUID" ]]; then
+	rm -f /etc/opt/part-uuid.txt
+	echo -e ""
+	echo -e "You may now reboot."
+	exit 0
+else
+	echo -e ""
+	echo -e "Generating new extlinux.conf"
+	extlinux_conf
+	rm -f /etc/opt/part-uuid.txt
+	echo -e ""
+	echo -e "You may now reboot."
+	exit 0
 fi
 
 exit 0
