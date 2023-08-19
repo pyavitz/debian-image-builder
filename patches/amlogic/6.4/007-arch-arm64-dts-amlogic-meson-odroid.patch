@@ -1,100 +1,47 @@
-From 0f725b1128d7080f72da45691720b3d1d44c3d85 Mon Sep 17 00:00:00 2001
+From 5a5e47ceedaeb69b1bf580f553d8f5eb23e60072 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 18 Aug 2023 18:22:25 -0400
+Date: Sat, 19 Aug 2023 17:00:22 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-odroid
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- .../dts/amlogic/meson-g12b-odroid-n2-plus.dts | 51 ++++++++++++++++++
- .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |  8 +++
- .../dts/amlogic/meson-g12b-odroid-n2l.dts     | 54 ++++++++++++++++++-
- .../boot/dts/amlogic/meson-g12b-odroid.dtsi   | 37 ++++++++++++-
- .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  | 16 ++++++
- .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts | 23 ++++++++
- .../boot/dts/amlogic/meson-sm1-odroid.dtsi    | 38 +++++++++++++
- 7 files changed, 225 insertions(+), 2 deletions(-)
+ .../dts/amlogic/meson-g12b-odroid-n2-plus.dts |  8 +++-
+ .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |  7 ++++
+ .../dts/amlogic/meson-g12b-odroid-n2l.dts     |  9 ++++-
+ .../boot/dts/amlogic/meson-g12b-odroid.dtsi   | 37 +++++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  | 16 ++++++++
+ .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts | 23 +++++++++++
+ .../boot/dts/amlogic/meson-sm1-odroid.dtsi    | 38 +++++++++++++++++++
+ 7 files changed, 135 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
-index ce1198ad34e4..b49fcaa1a10d 100644
+index ce1198ad34e4..72cd79119def 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
-@@ -9,10 +9,34 @@
- /* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
- #include "meson-g12b-a311d.dtsi"
- #include "meson-g12b-odroid-n2.dtsi"
-+#include <dt-bindings/pwm/pwm.h>
- 
- / {
- 	compatible = "hardkernel,odroid-n2-plus", "amlogic,s922x", "amlogic,g12b";
+@@ -15,6 +15,13 @@ / {
  	model = "Hardkernel ODROID-N2Plus";
-+
-+	pwmgpio: pwmgpio {
-+		compatible = "pwm-gpio";
-+		#pwm-cells = <3>;
-+		pwm-gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
-+		status = "okay";
-+	};
-+
-+	pwmfan: pwmfan {
-+		compatible = "pwm-fan";
-+		pwms = <&pwmgpio 0 40000 PWM_POLARITY_INVERTED>;
-+		cooling-min-state = <0>;
-+		cooling-max-state = <3>;
-+		#cooling-cells = <2>;
-+		cooling-levels = <0 120 170 220>;
-+	};
-+};
-+
+ };
+ 
 +&gpu_opp_table {
 +	opp-999999984 {
 +		opp-hz = /bits/ 64 <999999984>;
 +		opp-microvolt = <800000>;
 +	};
- };
- 
++};
++
  &vddcpu_a {
-@@ -29,3 +53,30 @@ &vddcpu_b {
+ 	regulator-min-microvolt = <680000>;
+ 	regulator-max-microvolt = <1040000>;
+@@ -28,4 +35,3 @@ &vddcpu_b {
+ 
  	pwms = <&pwm_AO_cd 1 1500 0>;
  };
- 
-+&cpu_thermal {
-+	trips {
-+		fan_0: trip-point@0 {
-+			temperature = <65000>;
-+			hysteresis = <5000>;
-+			type = "active";
-+		};
-+
-+		fan_1: trip-point@1 {
-+			temperature = <75000>;
-+			hysteresis = <5000>;
-+			type = "active";
-+		};
-+	};
-+
-+	cooling-maps {
-+		fan_cooling_map0 {
-+			trip = <&fan_0>;
-+			cooling-device = <&pwmfan THERMAL_NO_LIMIT 2>;
-+		};
-+
-+		fan_cooling_map1 {
-+			trip = <&fan_1>;
-+			cooling-device = <&pwmfan 2 THERMAL_NO_LIMIT>;
-+		};
-+	};
-+};
+-
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
-index a198a91259ec..38b6d322221b 100644
+index a198a91259ec..b77b2c425d9e 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
-@@ -8,8 +8,16 @@
- 
- #include "meson-g12b-s922x.dtsi"
- #include "meson-g12b-odroid-n2.dtsi"
-+#include <dt-bindings/pwm/pwm.h>
- 
- / {
+@@ -13,3 +13,10 @@ / {
  	compatible = "hardkernel,odroid-n2", "amlogic,s922x", "amlogic,g12b";
  	model = "Hardkernel ODROID-N2";
  };
@@ -106,16 +53,10 @@ index a198a91259ec..38b6d322221b 100644
 +	};
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
-index 70919f40d597..613feddb0e9c 100644
+index 70919f40d597..037aa4fe0de0 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
-@@ -8,11 +8,32 @@
- /* The Amlogic S922X Rev. C supports the same OPPs as the A311D variant */
- #include "meson-g12b-a311d.dtsi"
- #include "meson-g12b-odroid.dtsi"
-+#include <dt-bindings/pwm/pwm.h>
- 
- / {
+@@ -13,6 +13,10 @@ / {
  	compatible = "hardkernel,odroid-n2l", "amlogic,s922x", "amlogic,g12b";
  	model = "Hardkernel ODROID-N2L";
  
@@ -123,26 +64,10 @@ index 70919f40d597..613feddb0e9c 100644
 +		/delete-property/ rtc0;
 +	};
 +
-+	pwmgpio: pwmgpio {
-+		compatible = "pwm-gpio";
-+		#pwm-cells = <3>;
-+		pwm-gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
-+		status = "okay";
-+	};
-+
-+	pwmfan: pwmfan {
-+		compatible = "pwm-fan";
-+		pwms = <&pwmgpio 0 40000 PWM_POLARITY_INVERTED>;
-+		cooling-min-state = <0>;
-+		cooling-max-state = <3>;
-+		#cooling-cells = <2>;
-+		cooling-levels = <0 120 170 220>;
-+	};
-+
  	sound {
  		compatible = "amlogic,axg-sound-card";
  		model = "ODROID-N2L";
-@@ -46,7 +67,6 @@ sound {
+@@ -46,7 +50,6 @@ sound {
  		assigned-clock-rates = <294912000>,
  				       <270950400>,
  				       <393216000>;
@@ -150,39 +75,7 @@ index 70919f40d597..613feddb0e9c 100644
  
  		dai-link-0 {
  			sound-dai = <&frddr_a>;
-@@ -98,10 +118,42 @@ codec {
- 	};
- };
- 
-+&cpu_thermal {
-+	trips {
-+		fan_0: trip-point@0 {
-+			temperature = <65000>;
-+			hysteresis = <5000>;
-+			type = "active";
-+		};
-+
-+		fan_1: trip-point@1 {
-+			temperature = <75000>;
-+			hysteresis = <5000>;
-+			type = "active";
-+		};
-+	};
-+
-+	cooling-maps {
-+		fan_cooling_map0 {
-+			trip = <&fan_0>;
-+			cooling-device = <&pwmfan THERMAL_NO_LIMIT 2>;
-+		};
-+
-+		fan_cooling_map1 {
-+			trip = <&fan_1>;
-+			cooling-device = <&pwmfan 2 THERMAL_NO_LIMIT>;
-+		};
-+	};
-+};
-+
- &eth_phy {
+@@ -102,6 +105,10 @@ &eth_phy {
  	status = "disabled";
  };
  
