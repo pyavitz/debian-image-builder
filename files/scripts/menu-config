@@ -285,41 +285,62 @@ clear -x
 
 install_fanctrl(){
 if [[ `command -v fan-ctrl` ]]; then
+	# remove old fan-ctrl script
+	echo -e "Removing old fan-ctrl script"
+	sudo rm -f $(command -v fan-ctrl)
+fi
+if [[ `command -v fanctrl` ]]; then
 	:;
 else
-	sudo wget https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl -P /usr/local/bin
-	sudo chmod +x $(command -v fan-ctrl)
+	sudo wget -cq --show-progress https://raw.githubusercontent.com/pyavitz/scripts/master/fanctrl -P /usr/local/bin
+	sudo chmod +x $(command -v fanctrl)
 fi
 }
 
 systemd_fanctrl(){
 if [[ -f "/etc/systemd/system/fan-ctrl.service" ]]; then
+	# remove old fan-ctrl service
+	echo -e "Removing old systemd service"
+	sudo rm -f "/etc/systemd/system/fan-ctrl.service"
+	sleep .25
+	sudo systemctl daemon-reload
+	sleep .50
+fi
+if [[ -f "/etc/systemd/system/fanctrl.service" ]]; then
 	:;
 else
-	sudo tee /etc/systemd/system/fan-ctrl.service <<EOF
+	sudo tee /etc/systemd/system/fanctrl.service <<EOF
 [Unit]
 Description=Fan Control
-ConditionPathExists=/usr/local/bin/fan-ctrl
+ConditionPathExists=/usr/local/bin/fanctrl
 
 [Service]
-ExecStart=/usr/local/bin/fan-ctrl -r &>/dev/null
+ExecStart=/usr/local/bin/fanctrl run &>/dev/null
 Type=oneshot
 RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
 EOF
-	sudo systemctl enable fan-ctrl
+	sudo systemctl enable fanctrl
 fi
 }
 
 sysvinit_fanctrl(){
 if [[ -f "/etc/init.d/fan-ctrl" ]]; then
+	# remove old fan-ctrl init
+	echo -e "Removing old service init"
+	sudo update-rc.d -f fan-ctrl remove
+	sleep .25
+	sudo rm -f "/etc/init.d/fan-ctrl"
+	sleep .50
+fi
+if [[ -f "/etc/init.d/fanctrl" ]]; then
 	:;
 else
-	sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fan-ctrl.init -P /etc/init.d -O /etc/init.d/fan-ctrl
-	sudo chmod +x /etc/init.d/fan-ctrl
-	sudo update-rc.d fan-ctrl defaults 2
+	sudo wget -cq https://raw.githubusercontent.com/pyavitz/scripts/master/fanctrl.init -P /etc/init.d -O /etc/init.d/fanctrl
+	sudo chmod +x /etc/init.d/fanctrl
+	sudo update-rc.d fanctrl defaults 2
 fi
 }
 
@@ -648,21 +669,21 @@ case $CHOICE in
 					supported_list
 					if [ $FAN_CTRL -eq 1 ] > /dev/null 2>&1; then
 						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
-							if [[ `command -v fan-ctrl` ]]; then
-								fan-ctrl -m
+							if [[ `command -v fanctrl` ]]; then
+								fanctrl menu
 							else
-								systemd_fanctrl > /dev/null 2>&1
-								install_fanctrl > /dev/null 2>&1
-								fan-ctrl -m
+								install_fanctrl
+								systemd_fanctrl
+								fan-ctrl menu
 							fi
 						fi
 						if [[ "$DISTRO" == "Devuan" ]]; then
-							if [[ `command -v fan-ctrl` ]]; then
-								fan-ctrl -m
+							if [[ `command -v fanctrl` ]]; then
+								fanctrl menu
 							else
-								sysvinit_fanctrl > /dev/null 2>&1
-								install_fanctrl > /dev/null 2>&1
-								fan-ctrl -m
+								install_fanctrl
+								sysvinit_fanctrl
+								fanctrl menu
 							fi
 						fi
 					else
