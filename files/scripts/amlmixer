@@ -16,17 +16,21 @@ else
 		exit 0
 	fi
 fi
-if [[ `command -v amixer` ]] && [[ `command -v whiptail` ]]; then
+if [[ `command -v amixer` ]]; then
 	:;
 else
-	apt update
-	apt install alsa-utils whiptail -y
-fi 
+	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+		apt update
+		apt install alsa-utils -y
+	else
+		echo -e "Missing depends: alsa-utils"
+		exit 0
+	fi
+fi
 
 warning (){
-WARNING_MSG="Your board is not supported."
-export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-whiptail --msgbox "    $WARNING_MSG" 0 0
+WARNING_MSG="Argument is not supported."
+echo -e "$WARNING_MSG"
 exit 0
 }
 
@@ -114,7 +118,13 @@ if [ $# -eq 0 ]; then
 	>&2 echo -e "Arguments: hdmi analog spdif"
 	exit 1
 fi
-
+case $1 in
+	hdmi|analog|spdif)
+	;;
+	*)
+	echo -e "Arguments: hdmi analog spdif" >&2
+	exit 1
+esac
 AMLMIXER=`echo $1`
 $AMLMIXER
 
