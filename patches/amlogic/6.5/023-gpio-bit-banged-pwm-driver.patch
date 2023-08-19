@@ -1,6 +1,6 @@
-From 50d5ae69c2d6b029c2494038cf42078f2bdc18d9 Mon Sep 17 00:00:00 2001
+From f40fc9eca1c05b1edde66b96c35a90242200d3ab Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 26 Jul 2023 01:20:49 -0400
+Date: Sat, 19 Aug 2023 09:48:22 -0400
 Subject: [PATCH] gpio bit-banged pwm driver
 
 Some platforms do not offer any hardware PWM capabilities but do have
@@ -16,8 +16,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  MAINTAINERS                                   |   5 +
  drivers/pwm/Kconfig                           |  15 ++
  drivers/pwm/Makefile                          |   1 +
+ drivers/pwm/core.c                            |  83 +++++-
  drivers/pwm/pwm-gpio.c                        | 255 ++++++++++++++++++
- 5 files changed, 294 insertions(+)
+ include/linux/pwm.h                           |  12 +
+ 7 files changed, 387 insertions(+), 2 deletions(-)
  create mode 100644 Documentation/devicetree/bindings/pwm/pwm-gpio.txt
  create mode 100644 drivers/pwm/pwm-gpio.c
 
@@ -99,6 +101,116 @@ index 19899b912e00..b525aee0802b 100644
  obj-$(CONFIG_PWM_HIBVT)		+= pwm-hibvt.o
  obj-$(CONFIG_PWM_IMG)		+= pwm-img.o
  obj-$(CONFIG_PWM_IMX1)		+= pwm-imx1.o
+diff --git a/drivers/pwm/core.c b/drivers/pwm/core.c
+index 3dacceaef4a9..1411f7da028b 100644
+--- a/drivers/pwm/core.c
++++ b/drivers/pwm/core.c
+@@ -240,8 +240,18 @@ EXPORT_SYMBOL_GPL(pwm_get_chip_data);
+ 
+ static bool pwm_ops_check(const struct pwm_chip *chip)
+ {
++
+ 	const struct pwm_ops *ops = chip->ops;
+ 
++	/* driver supports legacy, non-atomic operation */
++	if (ops->config && ops->enable && ops->disable) {
++		if (IS_ENABLED(CONFIG_PWM_DEBUG))
++			dev_warn(chip->dev,
++				 "Driver needs updating to atomic API\n");
++
++		return true;
++	}
++
+ 	if (!ops->apply)
+ 		return false;
+ 
+@@ -491,6 +501,73 @@ static void pwm_apply_state_debug(struct pwm_device *pwm,
+ 	}
+ }
+ 
++static int pwm_apply_legacy(struct pwm_chip *chip, struct pwm_device *pwm,
++			    const struct pwm_state *state)
++{
++	int err;
++	struct pwm_state initial_state = pwm->state;
++
++	if (state->polarity != pwm->state.polarity) {
++		if (!chip->ops->set_polarity)
++			return -EINVAL;
++
++		/*
++		 * Changing the polarity of a running PWM is only allowed when
++		 * the PWM driver implements ->apply().
++		 */
++		if (pwm->state.enabled) {
++			chip->ops->disable(chip, pwm);
++
++			/*
++			 * Update pwm->state already here in case
++			 * .set_polarity() or another callback depend on that.
++			 */
++			pwm->state.enabled = false;
++		}
++
++		err = chip->ops->set_polarity(chip, pwm, state->polarity);
++		if (err)
++			goto rollback;
++
++		pwm->state.polarity = state->polarity;
++	}
++
++	if (!state->enabled) {
++		if (pwm->state.enabled)
++			chip->ops->disable(chip, pwm);
++
++		return 0;
++	}
++
++	/*
++	 * We cannot skip calling ->config even if state->period ==
++	 * pwm->state.period && state->duty_cycle == pwm->state.duty_cycle
++	 * because we might have exited early in the last call to
++	 * pwm_apply_state because of !state->enabled and so the two values in
++	 * pwm->state might not be configured in hardware.
++	 */
++	err = chip->ops->config(pwm->chip, pwm,
++				state->duty_cycle,
++				state->period);
++	if (err)
++		goto rollback;
++
++	pwm->state.period = state->period;
++	pwm->state.duty_cycle = state->duty_cycle;
++
++	if (!pwm->state.enabled) {
++		err = chip->ops->enable(chip, pwm);
++		if (err)
++			goto rollback;
++	}
++
++	return 0;
++
++rollback:
++	pwm->state = initial_state;
++	return err;
++}
++
+ /**
+  * pwm_apply_state() - atomically apply a new state to a PWM device
+  * @pwm: PWM device
+@@ -523,8 +600,10 @@ int pwm_apply_state(struct pwm_device *pwm, const struct pwm_state *state)
+ 	    state->usage_power == pwm->state.usage_power)
+ 		return 0;
+ 
+-	err = chip->ops->apply(chip, pwm, state);
+-	trace_pwm_apply(pwm, state, err);
++	if (chip->ops->apply)
++		err = chip->ops->apply(chip, pwm, state);
++	else
++		err = pwm_apply_legacy(chip, pwm, state);
+ 	if (err)
+ 		return err;
+ 
 diff --git a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
 new file mode 100644
 index 000000000000..b339d4558865
@@ -360,6 +472,36 @@ index 000000000000..b339d4558865
 +MODULE_AUTHOR("Olliver Schinagl <oliver@schinagl.nl>");
 +MODULE_DESCRIPTION("Generic GPIO bit-banged PWM driver");
 +MODULE_LICENSE("GPL");
+diff --git a/include/linux/pwm.h b/include/linux/pwm.h
+index 04ae1d9073a7..a283a006bc61 100644
+--- a/include/linux/pwm.h
++++ b/include/linux/pwm.h
+@@ -268,6 +268,10 @@ struct pwm_capture {
+  *	       called once per PWM device when the PWM chip is
+  *	       registered.
+  * @owner: helps prevent removal of modules exporting active PWMs
++ * @config: configure duty cycles and period length for this PWM
++ * @set_polarity: configure the polarity of this PWM
++ * @enable: enable PWM output toggling
++ * @disable: disable PWM output toggling
+  */
+ struct pwm_ops {
+ 	int (*request)(struct pwm_chip *chip, struct pwm_device *pwm);
+@@ -279,6 +283,14 @@ struct pwm_ops {
+ 	int (*get_state)(struct pwm_chip *chip, struct pwm_device *pwm,
+ 			 struct pwm_state *state);
+ 	struct module *owner;
++
++	/* Only used by legacy drivers */
++	int (*config)(struct pwm_chip *chip, struct pwm_device *pwm,
++		      int duty_ns, int period_ns);
++	int (*set_polarity)(struct pwm_chip *chip, struct pwm_device *pwm,
++			    enum pwm_polarity polarity);
++	int (*enable)(struct pwm_chip *chip, struct pwm_device *pwm);
++	void (*disable)(struct pwm_chip *chip, struct pwm_device *pwm);
+ };
+ 
+ /**
 -- 
 2.39.2
 
