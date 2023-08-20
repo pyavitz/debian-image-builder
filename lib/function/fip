@@ -2,22 +2,24 @@
 
 # DOWNLOAD
 amlogic-boot-fips(){
-SHA256URL="https://github.com/pyavitz/debian-image-builder/releases/download/amlogic-boot-fip"
-FIPURL="https://github.com/pyavitz/amlogic-boot-fip/archive/refs/heads/"
-if [[ -f "amlogic-boot-fip-master.sha256" ]]; then
-	rm -f amlogic-boot-fip-master.sha256
-	wget -cq ${SHA256URL}/amlogic-boot-fip-master.sha256
+# check for old method of dealing with fips and remove it
+if [[ -f "amlogic-boot-fip-master.sha256" ]]; then rm -f amlogic-boot-fip-master.sha256; fi
+if [[ -f "amlogic-boot-fip-master.tar.gz" ]]; then rm -f amlogic-boot-fip-master.tar.gz; fi
+if [[ -d "amlogic-boot-fip-master" ]]; then rm -fdr amlogic-boot-fip-master; fi
+# git clone or pull
+if [[ -d "amlogic-boot-fip" ]]; then
+	echo -en "${WHT}amlogic-boot-fip${FIN} "
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+	cd amlogic-boot-fip
+	git config pull.rebase false
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+	git pull -q
+	cd ..
+	echo_bdone
 else
-	wget -cq ${SHA256URL}/amlogic-boot-fip-master.sha256
-fi
-if [[ -f "amlogic-boot-fip-master.tar.gz" ]] && [[ -f "amlogic-boot-fip-master.sha256" ]] && [[ `sha256sum --check amlogic-boot-fip-master.sha256 | grep "OK"` ]]; then
-	echo -en "${WHT}amlogic-boot-fip-master${FIN} "
-	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
-else
-	rm -f amlogic-boot-fip-master.tar.gz
-	echo -en "${WHT}amlogic-boot-fip-master${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-	aria2c -q ${FIPURL}/master.tar.gz
+	echo -en "${WHT}amlogic-boot-fip${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+	git clone -q https://github.com/pyavitz/amlogic-boot-fip.git
 	echo_bdone
 fi
 }
@@ -26,7 +28,7 @@ fi
 bananapicm4io_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/bananapi-cm4io/* fip/
+cp -f ../amlogic-boot-fip/bananapi-cm4io/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -82,7 +84,7 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 bananapim2pro_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/bananapi-m2-pro/* fip/
+cp -f ../amlogic-boot-fip/bananapi-m2-pro/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -138,7 +140,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 bananapim2s_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/bananapi-m2s/* fip/
+cp -f ../amlogic-boot-fip/bananapi-m2s/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -194,7 +196,7 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 bananapim5_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/bananapi-m5/* fip/
+cp -f ../amlogic-boot-fip/bananapi-m5/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -250,7 +252,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 lepotato_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/lepotato/* fip/
+cp -f ../amlogic-boot-fip/lepotato/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -300,7 +302,7 @@ $FIPDIR/aml_encrypt_gxl --bootmk \
 odroidc4_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/odroid-c4/* fip/
+cp -f ../amlogic-boot-fip/odroid-c4/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -356,7 +358,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 odroidhc4_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/odroid-hc4/* fip/
+cp -f ../amlogic-boot-fip/odroid-hc4/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -412,7 +414,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 odroidn2_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/odroid-n2/* fip/
+cp -f ../amlogic-boot-fip/odroid-n2/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -468,7 +470,7 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 odroidn2l_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/odroid-n2l/* fip/
+cp -f ../amlogic-boot-fip/odroid-n2l/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -524,7 +526,7 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 odroidn2plus_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/odroid-n2-plus/* fip/
+cp -f ../amlogic-boot-fip/odroid-n2-plus/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -580,7 +582,7 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 radxazero_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -f ../amlogic-boot-fip-master/radxa-zero/* fip/
+cp -f ../amlogic-boot-fip/radxa-zero/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -636,7 +638,7 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 x96air_fip(){
 export FIPDIR=$PWD/fip
 mkdir -p fip
-cp -fr ../amlogic-boot-fip-master/x96air-gbit/* fip/
+cp -fr ../amlogic-boot-fip/x96air-gbit/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
