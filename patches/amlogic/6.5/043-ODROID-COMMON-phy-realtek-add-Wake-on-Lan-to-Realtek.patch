@@ -1,6 +1,6 @@
-From 865d757d2a93798b397761ead5d4ab33f30a0209 Mon Sep 17 00:00:00 2001
+From 5214a8deb866b7c7ed640186b4bb7e7bad2474c1 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 21 Aug 2023 16:09:21 -0400
+Date: Wed, 23 Aug 2023 06:28:55 -0400
 Subject: [PATCH] ODROID-COMMON: phy/realtek: add Wake-on-Lan to Realtek PHY
 
 Wake-On-Lan can set with 'ethtool'
@@ -53,10 +53,10 @@ index 2ae73ab842d4..e319e9c45efc 100644
  }
  
 diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
-index 2c4e6de8f4d9..f9921637b650 100644
+index c7cf61fe41cf..8e6ae9109ac0 100644
 --- a/drivers/net/phy/phy_device.c
 +++ b/drivers/net/phy/phy_device.c
-@@ -1833,8 +1833,10 @@ void phy_detach(struct phy_device *phydev)
+@@ -1831,8 +1831,10 @@ void phy_detach(struct phy_device *phydev)
  	    phy_driver_is_genphy_10g(phydev))
  		device_release_driver(&phydev->mdio.dev);
  
@@ -70,18 +70,18 @@ index 2c4e6de8f4d9..f9921637b650 100644
  	/*
  	 * The phydev might go away on the put_device() below, so avoid
 diff --git a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
-index 3d99fd6664d7..1b8e7ad879b9 100644
+index 894172a3e15f..2ddec1bc3a35 100644
 --- a/drivers/net/phy/realtek.c
 +++ b/drivers/net/phy/realtek.c
-@@ -12,6 +12,7 @@
- #include <linux/phy.h>
+@@ -13,6 +13,7 @@
  #include <linux/module.h>
  #include <linux/delay.h>
+ #include <linux/clk.h>
 +#include <linux/etherdevice.h>
  
  #define RTL821x_PHYSR				0x11
  #define RTL821x_PHYSR_DUPLEX			BIT(13)
-@@ -234,7 +235,13 @@ static int rtl8211f_config_intr(struct phy_device *phydev)
+@@ -241,7 +242,13 @@ static int rtl8211f_config_intr(struct phy_device *phydev)
  
  		val = RTL8211F_INER_LINK_STATUS;
  		err = phy_write_paged(phydev, 0xa42, RTL821x_INER, val);
@@ -95,7 +95,7 @@ index 3d99fd6664d7..1b8e7ad879b9 100644
  		val = 0;
  		err = phy_write_paged(phydev, 0xa42, RTL821x_INER, val);
  		if (err)
-@@ -335,6 +342,34 @@ static int rtl8211c_config_init(struct phy_device *phydev)
+@@ -342,6 +349,34 @@ static int rtl8211c_config_init(struct phy_device *phydev)
  			    CTL1000_ENABLE_MASTER | CTL1000_AS_MASTER);
  }
  
@@ -130,14 +130,14 @@ index 3d99fd6664d7..1b8e7ad879b9 100644
  static int rtl8211f_config_init(struct phy_device *phydev)
  {
  	struct rtl821x_priv *priv = phydev->priv;
-@@ -929,6 +964,7 @@ static struct phy_driver realtek_drvs[] = {
+@@ -957,6 +992,7 @@ static struct phy_driver realtek_drvs[] = {
  		.handle_interrupt = rtl8211f_handle_interrupt,
- 		.suspend	= genphy_suspend,
+ 		.suspend	= rtl821x_suspend,
  		.resume		= rtl821x_resume,
 +		.set_wol	= rtl8211f_set_wol,
  		.read_page	= rtl821x_read_page,
  		.write_page	= rtl821x_write_page,
- 	}, {
+ 		.flags		= PHY_ALWAYS_CALL_SUSPEND,
 -- 
 2.39.2
 
