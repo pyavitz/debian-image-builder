@@ -195,9 +195,11 @@ amlogic-boot-fips
 u-boot
 if [[ ! -z $RUN_FIP ]] && [[ -f "u-boot.bin" ]]; then
 	if [[ "$BOARD" == "x96air" ]]; then
+		mkdir -p ../../${OUTPUT}/
 		cp -f u-boot.bin ../../${OUTPUT}/chainload.bin
 	fi
-	echo "$DEFAULT_MOTD : Firmware Image Package" | sed 's/ :/:/g'
+	echo -en "Firmware Image Package ${PNK}[${FIN}${WHT}"${RUN_FIP}"${FIN}${PNK}]${FIN} "
+	echo -e "${PNK}[${FIN}${WHT}"${BOARD_FIP}"${FIN}${PNK}]${FIN}"
 	${RUN_FIP}
 else
 	report_error
