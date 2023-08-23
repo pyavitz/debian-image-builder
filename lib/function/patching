@@ -130,7 +130,7 @@ if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 	fi
 fi
 # wireless
-if [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
+if [ $RTW88 -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
@@ -169,14 +169,6 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; t
 		fi
 	fi
 fi
-# amlogic: hacks: meson-gx-mmc: set core clock phase to 270
-#if [[ "$FAMILY" == "amlogic" ]] && [[ "$BOARD" == "bananapim2pro" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]] \
-#	&& [[ -d "../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}" ]]; then
-#	if [[ `ls ../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-#		echo "# ${LINUX_PATCHDIR}/hack/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-#		for i in ../../${LINUX_PATCHDIR}/hack/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
-#	fi
-#fi
 }
 
 linux_patching(){
