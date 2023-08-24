@@ -197,15 +197,17 @@ echo ""
 }
 
 save_defconfig (){
-echo ""
-mkdir -p ../../$OUTPUT/
-# minimal
-cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
-# full
-cp -f .config ../../$OUTPUT/${BOARD}-config_defconfig
-# path to files
-ls -ls ../../$OUTPUT/${BOARD}_defconfig | sed 's/..\/..\///g'
-ls -ls ../../$OUTPUT/${BOARD}-config_defconfig | sed 's/..\/..\///g'
+if [[ -f "defconfig" ]]; then
+	echo ""
+	mkdir -p ../../$OUTPUT/
+	# minimal
+	cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
+	# full
+	cp -f .config ../../$OUTPUT/${BOARD}-config_defconfig
+	# path to files
+	ls -ls ../../$OUTPUT/${BOARD}_defconfig | sed 's/..\/..\///g'
+	ls -ls ../../$OUTPUT/${BOARD}-config_defconfig | sed 's/..\/..\///g'
+fi
 }
 
 menuconfig (){
@@ -231,7 +233,6 @@ do
 			break
 			;;
 		"Quit")
-			if [[ -f "defconfig" ]]; then
 			save_defconfig
 			exit 0
 			;;
