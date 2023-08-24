@@ -1,30 +1,32 @@
 #!/bin/bash
 
-uboot-source(){
+sources_dir (){
 mkdir -p ${SRC}
-if [[ -f "board.txt" ]]; then
-	# I don't think this is needed
-	cp -f board.txt ${SRC}/
-fi
 cd ${SRC}
 if [[ -d "u-boot-${UBOOT_VERSION}" ]]; then
 	rm -fdr u-boot-${UBOOT_VERSION}
 fi
-rm -fdr {amlogic-boot-fip-master,imx-mkimage,rkbin-master,blobs/amlogic-u-boot,u-boot}
+rm -fdr {imx-mkimage,u-boot}
 }
 
-uboot_search(){
+report_error (){
+echo "Something went wrong? Please report."
+echo ""
+exit 0
+}
+
+download_uboot (){
 if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
 	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
 	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz
 	echo_bdone
 else
-	uboot_searching
+	download_uboot_denx
 fi
 }
 
-uboot_searching(){
+download_uboot_denx (){
 if [[ `wget -S --spider https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
 	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
@@ -37,76 +39,16 @@ else
 fi
 }
 
-crust_firmware(){
-# https://github.com/crust-firmware/crust
-# apt install gcc-or1k-elf
-# The package isn't currently available in the Debian Bullseye repo.
-# For the time being we will use precompiled binaries.
-if [[ "$SERIES" == "sun50i-a64" || "$SERIES" == "sun50i-h5" ]]; then
-	cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
-fi
-}
-
-report_atf_error (){
-echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
-echo ""
-exit 0
-}
-
-atf_function(){ # place bl31 file.
-if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
-	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin" ]]; then
-		cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
-	else
-		report_atf_error
-	fi
-	crust_firmware
-fi
-if [[ "$FAMILY_EXT" == "imx8" ]]; then
-	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin" ]]; then
-		cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin bl31.bin
-	else
-		report_atf_error
-	fi
-	cp ../firmware-imx-8.17/firmware/ddr/synopsys/lpddr4*.bin .
-	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_hdmi_imx8m.bin .
-	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_dp_imx8m.bin .
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-		if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
-			cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
-			cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
-		else
-			report_atf_error
-		fi
-	fi
-	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-		RK35="../../files/boot/rk35"
-		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
-			cp -f ${RK35}/${RKBIN_ELF} bl31.elf
-			cp -f ${RK35}/${RKBIN_ELF} atf-bl31
-			cp -f ${RK35}/${RKBIN_RAM} .
-			cp -f ${RKBIN_RAM} ram_init.bin
-		else
-			report_atf_error
-		fi
-		if [[ "$UBOOT_VERSION" == "v2023.07.02" ]]; then
-			#export BL31="bl31.elf"
-			export ROCKCHIP_TPL="${RKBIN_RAM}"
-		fi
-	fi
-fi
-}
-
-u-boot(){
+download (){
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
 	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
 else
-	uboot_search
+	download_uboot
 fi
-# extract
+}
+
+extract (){
 echo ""
 echo_extract
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
@@ -116,15 +58,10 @@ else
 	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
 	exit 0
 fi
-cp board.txt u-boot/
-cd u-boot
-# arm trusted firmware
-atf_function
-# patching
-uboot_patching
-# make defconfig
+}
+
+make_defconfig (){
 export ARCH=${ARCH}
-uboot_configs
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
@@ -132,17 +69,19 @@ else
 	echo -e "${GRN}  NC${FIN}"
 	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG}
 fi
-# menuconfig
-if [ $MENUCONFIG -eq 1 ]; then
-	if [ $CROSSCOMPILE -eq 1 ]; then
-		echo -e "${GRN}  CC${FIN}"
-		make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
-	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} CC=${NATIVE} menuconfig
-	fi
+}
+
+menuconfig (){
+if [ $CROSSCOMPILE -eq 1 ]; then
+	echo -e "${GRN}  CC${FIN}"
+	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
+else
+	echo -e "${GRN}  NC${FIN}"
+	make -j${CORES} CC=${NATIVE} menuconfig
 fi
-# compile
+}
+
+compile (){
 echo ""
 echo_cuboot
 if [[ "$FAMILY_EXT" == "imx8" ]]; then
@@ -165,19 +104,33 @@ else
 fi
 }
 
-report_error (){
-echo "Something went wrong? Please report."
-echo ""
-exit 0
+uboot_run (){
+download
+extract
+if [[ -d "u-boot" ]]; then cd u-boot; else report_error; fi
+# lib/function/atf
+if [[ "$FAMILY" == "allwinner" || "$FAMILY_EXT" == "imx8" || "$FAMILY" == "rockchip" ]]; then
+	atf_bl31
+fi
+# lib/function/patching
+uboot_patching
+# lib/function/modconfig
+uboot_configs
+# end
+make_defconfig
+if [ $MENUCONFIG -eq 1 ]; then
+	menuconfig
+fi
+compile
 }
 
 # allwinner
-allwinner-uboot-string(){
-uboot-source
+allwinner_uboot_run (){
+sources_dir
 if [[ "$ARCH" == "arm64" ]]; then
-	arm-trusted-firmware
+	arm_trusted_firmware
 fi
-u-boot
+uboot_run
 if [[ -f "u-boot-sunxi-with-spl.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot-sunxi-with-spl.bin ../../${OUTPUT}/
@@ -189,10 +142,10 @@ fi
 }
 
 # amlogic
-amlogic-uboot-string(){
-uboot-source
-amlogic-boot-fips
-u-boot
+amlogic_uboot_run (){
+sources_dir
+download_fip
+uboot_run
 if [[ ! -z $RUN_FIP ]] && [[ -f "u-boot.bin" ]]; then
 	if [[ "$BOARD" == "x96air" ]]; then
 		mkdir -p ../../${OUTPUT}/
@@ -216,9 +169,9 @@ fi
 }
 
 # broadcom
-broadcom-uboot-string(){
-uboot-source
-u-boot
+broadcom_uboot_run (){
+sources_dir
+uboot_run
 if [[ -f "u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot.bin ../../${OUTPUT}/
@@ -230,10 +183,10 @@ fi
 }
 
 # freescale
-freescale-uboot-string(){
-uboot-source
+freescale_uboot_run (){
+sources_dir
 if [[ "$ARCH" == "arm64" ]]; then
-	arm-trusted-firmware
+	arm_trusted_firmware
 	if [[ -f "firmware-imx-8.17.bin" ]] && [[ -d "firmware-imx-8.17" ]]; then
 		echo -en "${WHT}firmware-imx${FIN} "
 		echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
@@ -244,7 +197,7 @@ if [[ "$ARCH" == "arm64" ]]; then
 		bash firmware-imx-8.17.bin --auto-accept
 	fi
 fi
-u-boot
+uboot_run
 if [[ "$ARCH" == "arm" ]]; then
 	if [[ -f "u-boot.img" ]]; then
 		mkdir -p ../../${OUTPUT}
@@ -270,12 +223,12 @@ fi
 }
 
 # rockchip
-rockchip-uboot-string(){
-uboot-source
+rockchip_uboot_run (){
+sources_dir
 if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-	arm-trusted-firmware
+	arm_trusted_firmware
 fi
-u-boot
+uboot_run
 if [[ -f "idbloader.img" ]]; then
 	mkdir -p ../../${OUTPUT}
 	if [[ "$ARCH" == "arm" ]]; then
@@ -296,9 +249,9 @@ fi
 }
 
 # samsung
-samsung-uboot-string(){
-uboot-source
-u-boot
+samsung_uboot_run (){
+sources_dir
+uboot_run
 if [[ -f "u-boot.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot.bin ../../${OUTPUT}/

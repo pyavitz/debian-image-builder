@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ATF
-arm-trusted-firmware(){
+arm_trusted_firmware(){
 if [[ "$FAMILY_EXT" == "imx8" || "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	if [[ -d "arm-trusted-firmware" ]]; then
 		echo -en "${WHT}arm trusted firmware${FIN} "
@@ -21,25 +21,6 @@ if [[ "$FAMILY_EXT" == "imx8" || "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "
 		echo_bdone
 	fi
 fi
-if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-	if [[ -d "${FAMILY_EXT}-arm-trusted-firmware" ]]; then
-		echo -en "${WHT}arm trusted firmware${FIN} "
-		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-		cd ${FAMILY_EXT}-arm-trusted-firmware
-		make realclean > /dev/null 2>&1
-		git config pull.rebase false
-		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-		git pull -q
-		echo_bdone
-	else
-		echo -en "${WHT}arm trusted firmware${FIN} "
-		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-		git clone -q https://github.com/pyavitz/arm-trusted-firmware.git ${FAMILY_EXT}-arm-trusted-firmware
-		cd ${FAMILY_EXT}-arm-trusted-firmware
-		make realclean > /dev/null 2>&1
-		echo_bdone
-	fi
-fi
 echo ""
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
@@ -51,5 +32,67 @@ else
 	make -j${CORES} CC=${NATIVE} ${ATF_EXT}
 fi
 cd ..
-if [ -f u-boot-${UBOOT_VERSION}.tar.gz ]; then echo ""; else :; fi 
+if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
+}
+
+crust_firmware(){
+# https://github.com/crust-firmware/crust
+# apt install gcc-or1k-elf
+# The package isn't currently available in the Debian Bullseye repo.
+# For the time being we will use precompiled binaries.
+if [[ "$SERIES" == "sun50i-a64" || "$SERIES" == "sun50i-h5" ]]; then
+	cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
+fi
+}
+
+report_atf_error (){
+echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
+echo ""
+exit 0
+}
+
+atf_bl31(){ # place bl31 file.
+if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
+	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin" ]]; then
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
+	else
+		report_atf_error
+	fi
+	crust_firmware
+fi
+if [[ "$FAMILY_EXT" == "imx8" ]]; then
+	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin" ]]; then
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin bl31.bin
+	else
+		report_atf_error
+	fi
+	cp ../firmware-imx-8.17/firmware/ddr/synopsys/lpddr4*.bin .
+	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_hdmi_imx8m.bin .
+	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_dp_imx8m.bin .
+fi
+if [[ "$FAMILY" == "rockchip" ]]; then
+	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
+		if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
+			cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
+			cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
+		else
+			report_atf_error
+		fi
+	fi
+	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+		RK35="../../files/boot/rk35"
+		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
+			cp -f ${RK35}/${RKBIN_ELF} bl31.elf
+			cp -f ${RK35}/${RKBIN_ELF} atf-bl31
+			cp -f ${RK35}/${RKBIN_RAM} .
+			cp -f ${RKBIN_RAM} ram_init.bin
+		else
+			report_atf_error
+		fi
+		if [[ "$UBOOT_VERSION" == "v2023.07.02" ]]; then
+			#export BL31="bl31.elf"
+			export ROCKCHIP_TPL="${RKBIN_RAM}"
+		fi
+	fi
+fi
 }
