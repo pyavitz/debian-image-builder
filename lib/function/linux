@@ -3,14 +3,14 @@
 
 DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 
-kernel_source(){
+sources_dir (){
 mkdir -p ${SRC}
 cp -f board.txt ${SRC}/
 cd ${SRC}
 }
 
 # Firmware
-rpi_firmware(){
+rpi_firmware (){
 BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
 mkdir -p firmware
 rm -fr firmware/*
@@ -56,7 +56,7 @@ fi
 }
 
 # mainline
-download(){
+download (){
 MLURL="https://git.kernel.org/torvalds/t/"
 if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	mainline_download
@@ -67,7 +67,7 @@ fi
 }
 
 # lts / stable
-check_stable(){
+check_stable (){
 RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
 STBURL="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
 if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
@@ -78,7 +78,7 @@ else
 fi
 }
 
-stable_download(){
+stable_download (){
 if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
 	:;
 else
@@ -89,7 +89,7 @@ fi
 extra_wireless
 }
 
-mainline_download(){
+mainline_download (){
 if  [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
 	:;
 else
@@ -106,7 +106,7 @@ echo ""
 exit 0
 }
 
-stable_extract(){
+stable_extract (){
 echo ""
 if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
 	echo_extract
@@ -116,7 +116,7 @@ else
 fi
 }
 
-mainline_extract(){
+mainline_extract (){
 echo ""
 if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
 	echo_extract
@@ -126,7 +126,7 @@ else
 fi
 }
 
-setup(){
+setup (){
 sleep 1s
 cd ${KERNEL}-${VERSION}
 if [[ "$BOARD" == "orangepir1" ]]; then
@@ -143,7 +143,7 @@ cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 chmod +x scripts/package/{builddeb,mkdebian}
 }
 
-cconfig(){
+cconfig (){
 echo_cconfig
 if [[ -f "../${DEF}/${MYCONFIG}" ]]; then
 	cp -f ../${DEF}/${MYCONFIG} arch/${ARCH}/configs/
@@ -163,7 +163,7 @@ fi
 echo ""
 }
 
-bconfig(){
+bconfig (){
 echo_defconfig
 if [[ -f "../${DEF}/${LINUX_DEFCONFIG}" ]]; then
 	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
@@ -196,7 +196,19 @@ fi
 echo ""
 }
 
-menuconfig(){
+save_defconfig (){
+echo ""
+mkdir -p ../../$OUTPUT/
+# minimal
+cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
+# full
+cp -f .config ../../$OUTPUT/${BOARD}-config_defconfig
+# path to files
+ls -ls ../../$OUTPUT/${BOARD}_defconfig | sed 's/..\/..\///g'
+ls -ls ../../$OUTPUT/${BOARD}-config_defconfig | sed 's/..\/..\///g'
+}
+
+menuconfig (){
 echo ""
 echo_menuconfig
 sleep 1s
@@ -215,28 +227,12 @@ select opt in "${options[@]}"
 do
 	case $opt in
 		"Continue")
-			if [[ -f "defconfig" ]]; then
-				echo ""
-				mkdir -p ../../$OUTPUT/
-				# minimal
-				cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
-				# full
-				cp -f .config ../../$OUTPUT/${BOARD}-config_defconfig
-			fi
+			save_defconfig
 			break
 			;;
 		"Quit")
 			if [[ -f "defconfig" ]]; then
-				echo ""
-				mkdir -p ../../$OUTPUT/
-				# minimal
-				cp -f defconfig ../../$OUTPUT/${BOARD}_defconfig
-				# full
-				cp -f .config ../../$OUTPUT/${BOARD}-config_defconfig
-				# path to files
-				ls -ls ../../$OUTPUT/${BOARD}_defconfig
-				ls -ls ../../$OUTPUT/${BOARD}-config_defconfig
-			fi
+			save_defconfig
 			exit 0
 			;;
 		*) echo "invalid option $REPLY";;
@@ -244,14 +240,14 @@ do
 done
 }
 
-ccompile(){
+ccompile (){
 echo -e "${GRN}  CC${FIN}"
 #echo -e "  GCC     ${DEST}/${COMPILER}"
 echo ${BUILD_VERSION} > .version
 echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} ${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} bindeb-pkg
 }
 
-ncompile(){
+ncompile (){
 echo -e "${GRN}  NC${FIN}"
 #echo -e "  GCC     ${DEST}/${COMPILER}"
 echo ${BUILD_VERSION} > .version
