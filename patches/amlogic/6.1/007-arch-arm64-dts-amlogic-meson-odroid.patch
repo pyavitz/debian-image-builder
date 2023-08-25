@@ -1,26 +1,26 @@
-From e8ba516b228c13efe817c15f7055d88adbeab517 Mon Sep 17 00:00:00 2001
+From 83eb7f5a62cef02189087655660ecb79310d726c Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sat, 19 Aug 2023 16:48:33 -0400
+Date: Fri, 25 Aug 2023 19:48:23 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-odroid
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm64/boot/dts/amlogic/Makefile          |   1 +
+ arch/arm64/boot/dts/amlogic/Makefile          |   7 +
  .../dts/amlogic/meson-g12b-odroid-n2-plus.dts |   8 +-
  .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |   7 +
  .../dts/amlogic/meson-g12b-odroid-n2.dtsi     | 406 +--------------
  .../dts/amlogic/meson-g12b-odroid-n2l.dts     | 132 +++++
- .../boot/dts/amlogic/meson-g12b-odroid.dtsi   | 486 ++++++++++++++++++
+ .../boot/dts/amlogic/meson-g12b-odroid.dtsi   | 480 ++++++++++++++++++
  .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  |  52 +-
  .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts |  27 +-
- .../boot/dts/amlogic/meson-sm1-odroid.dtsi    |  47 +-
+ .../boot/dts/amlogic/meson-sm1-odroid.dtsi    |  40 +-
  arch/arm64/boot/dts/amlogic/meson-sm1.dtsi    |   9 +
- 10 files changed, 759 insertions(+), 416 deletions(-)
+ 10 files changed, 752 insertions(+), 416 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index 852b0a52c229..ecfd8b1fbf91 100644
+index 852b0a52c229..1e83933a11ab 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
 @@ -16,6 +16,7 @@ dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking-pro.dtb
@@ -31,6 +31,16 @@ index 852b0a52c229..ecfd8b1fbf91 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-bananapi-m2s.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-khadas-vim3.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6.dtb
+@@ -71,3 +72,9 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
++
++dtb-$(CONFIG_ARCH_MESON) += meson64_odroidc4.dtb
++dtb-$(CONFIG_ARCH_MESON) += meson64_odroidhc4.dtb
++dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2.dtb
++dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2l.dtb
++dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2_plus.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
 index ce1198ad34e4..72cd79119def 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
@@ -691,10 +701,10 @@ index 000000000000..037aa4fe0de0
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
 new file mode 100644
-index 000000000000..598635ecd70f
+index 000000000000..b549852d3d40
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
-@@ -0,0 +1,486 @@
+@@ -0,0 +1,480 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre, SAS
@@ -728,12 +738,6 @@ index 000000000000..598635ecd70f
 +		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
 +		sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
 +		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	gpiomem {
-+		compatible = "amlogic, gpiomem";
-+		reg = <0x0 0xff634000 0x0 0x1000>; /* PERIPHS_REG */
-+		status = "okay";
 +	};
 +
 +	memory@0 {
@@ -1287,7 +1291,7 @@ index 3d642d739c35..9c5701a1fc49 100644
 +	regulator-max-microvolt = <1030000>;
  };
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
-index ddb1b345397f..dd03c809c251 100644
+index ddb1b345397f..aa6bdb84817a 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
 @@ -11,6 +11,10 @@
@@ -1301,7 +1305,7 @@ index ddb1b345397f..dd03c809c251 100644
  		ethernet0 = &ethmac;
  	};
  
-@@ -18,6 +22,23 @@ chosen {
+@@ -18,6 +22,16 @@ chosen {
  		stdout-path = "serial0:115200n8";
  	};
  
@@ -1315,17 +1319,10 @@ index ddb1b345397f..dd03c809c251 100644
 +		sd-vmmc = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
 +	};
 +
-+	gpiomem {
-+		compatible = "amlogic, gpiomem";
-+		reg = <0x0 0xff634000 0x0 0x1000>,	/* GPIO banks */
-+			<0x0 0xff800000 0x0 0x1000>;	/* GPIO_AO bank */
-+		status = "okay";
-+	};
-+
  	memory@0 {
  		device_type = "memory";
  		reg = <0x0 0x0 0x0 0x40000000>;
-@@ -48,7 +69,7 @@ tf_io: gpio-regulator-tf_io {
+@@ -48,7 +62,7 @@ tf_io: gpio-regulator-tf_io {
  		regulator-max-microvolt = <3300000>;
  		vin-supply = <&vcc_5v>;
  
@@ -1334,7 +1331,7 @@ index ddb1b345397f..dd03c809c251 100644
  		enable-active-high;
  		regulator-always-on;
  
-@@ -450,12 +471,36 @@ &tohdmitx {
+@@ -450,12 +464,36 @@ &tohdmitx {
  	status = "okay";
  };
  
