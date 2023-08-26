@@ -1,11 +1,11 @@
-From 83eb7f5a62cef02189087655660ecb79310d726c Mon Sep 17 00:00:00 2001
+From c06a8a54737315057bce179ce1283af29cb2fd18 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 25 Aug 2023 19:48:23 -0400
+Date: Fri, 25 Aug 2023 19:58:26 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-odroid
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm64/boot/dts/amlogic/Makefile          |   7 +
+ arch/arm64/boot/dts/amlogic/Makefile          |   1 +
  .../dts/amlogic/meson-g12b-odroid-n2-plus.dts |   8 +-
  .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |   7 +
  .../dts/amlogic/meson-g12b-odroid-n2.dtsi     | 406 +--------------
@@ -15,12 +15,12 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts |  27 +-
  .../boot/dts/amlogic/meson-sm1-odroid.dtsi    |  40 +-
  arch/arm64/boot/dts/amlogic/meson-sm1.dtsi    |   9 +
- 10 files changed, 752 insertions(+), 416 deletions(-)
+ 10 files changed, 746 insertions(+), 416 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index 852b0a52c229..1e83933a11ab 100644
+index 852b0a52c229..ecfd8b1fbf91 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
 @@ -16,6 +16,7 @@ dtb-$(CONFIG_ARCH_MESON) += meson-g12b-gtking-pro.dtb
@@ -31,16 +31,6 @@ index 852b0a52c229..1e83933a11ab 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-bananapi-m2s.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-s922x-khadas-vim3.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6.dtb
-@@ -71,3 +72,9 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
-+
-+dtb-$(CONFIG_ARCH_MESON) += meson64_odroidc4.dtb
-+dtb-$(CONFIG_ARCH_MESON) += meson64_odroidhc4.dtb
-+dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2.dtb
-+dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2l.dtb
-+dtb-$(CONFIG_ARCH_MESON) += meson64_odroidn2_plus.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
 index ce1198ad34e4..72cd79119def 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
