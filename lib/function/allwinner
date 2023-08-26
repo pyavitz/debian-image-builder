@@ -11,12 +11,12 @@ echo -e ""
 if [[ "$BOARD" == "bananapim2zero" || "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" ]]; then
 	echo "Adding $DEFAULT_MOTD firmware ..."
 	cd ~
-	git clone -b nanopi https://github.com/pyavitz/firmware.git
+	git clone -q -b nanopi https://github.com/pyavitz/firmware.git
 fi
 if [[ "$BOARD" == "cubietruck" ]]; then
 	echo "Adding $DEFAULT_MOTD firmware ..."
 	cd ~
-	git clone -b $BOARD https://github.com/pyavitz/firmware.git
+	git clone -q -b $BOARD https://github.com/pyavitz/firmware.git
 fi
 if [[ -f "firmware/README.md" ]]; then rm -f firmware/README.md; fi
 cp -fr firmware/* /lib/firmware
@@ -39,6 +39,7 @@ if [[ -f "UPDATE.mem" ]]; then
 	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 	rm -f UPDATE.mem
 fi
+if [[ -d "firmware" ]]; then rm -fdr firmware; fi
 git clone -q -b realtek https://github.com/pyavitz/firmware.git
 cp -fr firmware/* /lib/firmware
 rm -fdr firmware
