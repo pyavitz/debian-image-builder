@@ -1,4 +1,5 @@
 #!/bin/bash
+# NANOPI NEO PLUS2 BLUETOOTH HELPER SCRIPT
 
 chip="ap6212"
 uart_dev="ttyS3"
@@ -10,7 +11,7 @@ if [ -f ${BTWAKE} ]; then
 	echo "0" > ${BTWAKE}
 fi
 
-index=`rfkill list | grep $1 | cut -f 1 -d":"` 
+index=`rfkill list | grep $1 | cut -f 1 -d":"`
 if [[ -n ${index}} ]]; then
 	rfkill block ${index}
 	sleep 1
@@ -37,16 +38,16 @@ if [ -d /sys/class/rfkill/rfkill${index} ]; then
 	if [ -f /sys/bus/nvmem/devices/sunxi-sid0/nvmem ]; then
 		MACADDRESS=`md5sum /sys/bus/nvmem/devices/sunxi-sid0/nvmem | cut -b 1-12 | sed -r ':1;s/(.*[^:])([^:]{2})/\1:\2/;t1'`
 	else
-	MACADDRESS=`md5sum /sys/class/sunxi_info/sys_info | cut -b 1-12 | sed -r ':1;s/(.*[^:])([^:]{2})/\1:\2/;t1'`
+		MACADDRESS=`md5sum /sys/class/sunxi_info/sys_info | cut -b 1-12 | sed -r ':1;s/(.*[^:])([^:]{2})/\1:\2/;t1'`
 	fi
 	echo ${MACADDRESS} >/tmp/bt_macaddress
 
-let TIMEOUT=90
+	let TIMEOUT=90
 	while [ ${TIMEOUT} -gt 0 ]; do
-	killall -9 /bin/brcm_patchram_plus
-	/bin/brcm_patchram_plus -d --patchram /lib/firmware/${chip}/bcm43438a1.hcd --enable_hci --bd_addr ${MACADDRESS} --no2bytes --tosleep 5000 /dev/${uart_dev} >${brcm_log} 2>&1 &
-	sleep 30
-	cur_time=`date "+%H-%M-%S"`
+		killall -9 /bin/brcm_patchram_plus
+		/bin/brcm_patchram_plus -d --patchram /lib/firmware/${chip}/bcm43438a1.hcd --enable_hci --bd_addr ${MACADDRESS} --no2bytes --tosleep 5000 /dev/${uart_dev} >${brcm_log} 2>&1 &
+		sleep 30
+		cur_time=`date "+%H-%M-%S"`
 		if grep "Done setting line discpline" ${brcm_log}; then
 			echo "${cur_time}: bt firmware download ok($((TIMEOUT/30)))" >> ${brcm_try_log}
 			if ! grep "fail" ${brcm_try_log}; then
@@ -55,11 +56,11 @@ let TIMEOUT=90
 				hciconfig >> ${brcm_try_log}
 			fi
 				break
-			else
-				echo "${cur_time}: bt firmware download fail($((TIMEOUT/30)))" >> ${brcm_try_log}
-				cp ${brcm_log} ${brcm_err_log}
-				reset_bt "sunxi-bt"
-			fi
+		else
+			echo "${cur_time}: bt firmware download fail($((TIMEOUT/30)))" >> ${brcm_try_log}
+			cp ${brcm_log} ${brcm_err_log}
+			reset_bt "sunxi-bt"
+		fi
 		TIMEOUT=$((TIMEOUT-30))
 	done
 fi
