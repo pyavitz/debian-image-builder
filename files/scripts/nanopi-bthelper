@@ -1,100 +1,88 @@
 #!/bin/bash
 # NANOPI NEO PLUS2 BLUETOOTH HELPER SCRIPT
 
-chip="ap6212"
-uart_dev="ttyS3"
-index=`rfkill list | grep "sunxi-bt" | cut -f 1 -d":"`
+CHIP="ap6212"
+UART_DEV="ttyS3"
+INDEX=`rfkill list | grep "sunxi-bt" | cut -f 1 -d":"`
 
-reset_bt(){
+reset (){
 BTWAKE="/proc/bluetooth/sleep/btwake"
-if [ -f ${BTWAKE} ]; then
+if [[ -f "${BTWAKE}" ]]; then
 	echo "0" > ${BTWAKE}
 fi
-
-index=`rfkill list | grep $1 | cut -f 1 -d":"`
-if [[ -n ${index}} ]]; then
-	rfkill block ${index}
+INDEX=`rfkill list | grep $1 | cut -f 1 -d":"`
+if [[ -n ${INDEX} ]]; then
+	rfkill block ${INDEX}
 	sleep 1
-	rfkill unblock ${index}
+	rfkill unblock ${INDEX}
 	sleep 1
 fi
 }
 
-start_bt(){
+start (){
 rm -rf /var/log/brcm
-brcm_try_log="/var/log/brcm/brcm_try.log"
-brcm_log="/var/log/brcm/brcm.log"
-brcm_err_log="/var/log/brcm/brcm_err.log"
-[ -d /var/log/brcm ] || mkdir -p /var/log/brcm
+BRCM_TRY_LOG="/var/log/brcm/brcm_try.log"
+BRCM_LOG="/var/log/brcm/brcm.log"
+BRCM_ERR_LOG="/var/log/brcm/brcm_err.log"
+[[ -d "/var/log/brcm" ]] || mkdir -p "/var/log/brcm"
 
-if [ -d /sys/class/rfkill/rfkill${index} ]; then
-	reset_bt "sunxi-bt"
-	chmod 0660 /sys/class/rfkill/rfkill${index}/state
-	chmod 0660 /sys/class/rfkill/rfkill${index}/type
-	chgrp dialout /sys/class/rfkill/rfkill${index}/state
-	chgrp dialout /sys/class/rfkill/rfkill${index}/type
+if [[ -d "/sys/class/rfkill/rfkill${INDEX}" ]]; then
+	reset "sunxi-bt"
+	chmod 0660 /sys/class/rfkill/rfkill${INDEX}/state
+	chmod 0660 /sys/class/rfkill/rfkill${INDEX}/type
+	chgrp dialout /sys/class/rfkill/rfkill${INDEX}/state
+	chgrp dialout /sys/class/rfkill/rfkill${INDEX}/type
 
-	# generate MAC address
-	if [ -f /sys/bus/nvmem/devices/sunxi-sid0/nvmem ]; then
-		MACADDRESS=`md5sum /sys/bus/nvmem/devices/sunxi-sid0/nvmem | cut -b 1-12 | sed -r ':1;s/(.*[^:])([^:]{2})/\1:\2/;t1'`
+	if [[ -f "/sys/bus/nvmem/devices/sunxi-sid0/nvmem" ]]; then
+		MACADDR=`md5sum /sys/bus/nvmem/devices/sunxi-sid0/nvmem | cut -b 1-12 | sed -r ':1;s/(.*[^:])([^:]{2})/\1:\2/;t1'`
 	else
-		MACADDRESS=`md5sum /sys/class/sunxi_info/sys_info | cut -b 1-12 | sed -r ':1;s/(.*[^:])([^:]{2})/\1:\2/;t1'`
+		MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 	fi
-	echo ${MACADDRESS} >/tmp/bt_macaddress
+	echo ${MACADDR} > /tmp/bt_macaddress
 
 	let TIMEOUT=90
 	while [ ${TIMEOUT} -gt 0 ]; do
 		killall -9 /bin/brcm_patchram_plus
-		/bin/brcm_patchram_plus -d --patchram /lib/firmware/${chip}/bcm43438a1.hcd --enable_hci --bd_addr ${MACADDRESS} --no2bytes --tosleep 5000 /dev/${uart_dev} >${brcm_log} 2>&1 &
+		/bin/brcm_patchram_plus -d --patchram /lib/firmware/${CHIP}/bcm43438a1.hcd --enable_hci --bd_addr ${MACADDR} --no2bytes --tosleep 5000 /dev/${UART_DEV} >${BRCM_LOG} 2>&1 &
 		sleep 30
-		cur_time=`date "+%H-%M-%S"`
-		if grep "Done setting line discpline" ${brcm_log}; then
-			echo "${cur_time}: bt firmware download ok($((TIMEOUT/30)))" >> ${brcm_try_log}
-			if ! grep "fail" ${brcm_try_log}; then
-				reset_bt "hci0"
+		CUR_TIME=`date "+%H-%M-%S"`
+		if [[ `grep "Done setting line discpline" "${BRCM_LOG}"` ]]; then
+			echo "${CUR_TIME}: bt firmware download ok($((TIMEOUT/30)))" >> ${BRCM_TRY_LOG}
+			if [[ ! `grep "fail" "${BRCM_TRY_LOG}"` ]]; then
+				reset "hci0"
+				hciconfig hci0 down
+				sleep .50
 				hciconfig hci0 up
-				hciconfig >> ${brcm_try_log}
+				hciconfig >> ${BRCM_TRY_LOG}
 			fi
 				break
 		else
-			echo "${cur_time}: bt firmware download fail($((TIMEOUT/30)))" >> ${brcm_try_log}
-			cp ${brcm_log} ${brcm_err_log}
-			reset_bt "sunxi-bt"
+			echo "${CUR_TIME}: bt firmware download fail($((TIMEOUT/30)))" >> ${BRCM_TRY_LOG}
+			cp ${BRCM_LOG} ${BRCM_ERR_LOG}
+			reset
 		fi
 		TIMEOUT=$((TIMEOUT-30))
 	done
 fi
 }
 
-kill_bt(){
+stop (){
 kill `ps --no-headers -C brcm_patchram_plus -o pid`
 }
 
-# commands
 if [ $# -eq 0 ]; then
-	echo "Missing options!"
-	echo "(run $0 -h for help)"
-	echo ""
-	exit 0
+	>&2 echo -e "Arguments: start stop"
+	exit 1
 fi
+case $1 in
+	start|stop)
+	;;
+	*)
+	echo -e "Arguments: start stop" >&2
+	exit 1
+esac
 
-while getopts "skh" OPTION; do
-	case $OPTION in
+BTHELPER=`echo $1`
+$BTHELPER
 
-		s)
-			start_bt
-			;;
-		k)
-			kill_bt
-			;;
-		h)
-			echo -e ""
-			echo -e "NanoPi NEO Plus2"
-			echo -e ""
-			echo -e "\t-s\tStart bluetooth"
-			echo -e "\t-k\tStop bluetooth"
-			echo -e ""
-			exit 0
-			;;
-	esac
-done
+exit 0

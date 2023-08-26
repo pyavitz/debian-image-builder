@@ -13,15 +13,15 @@
 # update-rc.d bthelper defaults 2
 
 . /lib/lsb/init-functions
+. /etc/opt/board.txt
 
 case "$1" in
 	start)
 		log_daemon_msg "Bluetooth helper"
-		#if [ -f /usr/local/sbin/pine64-bthelper ]; then
-		#	/usr/local/sbin/pine64-bthelper 2>/dev/null;
-		#fi
-		if [ -f /usr/local/sbin/nanopi-bthelper ]; then
-			/usr/local/sbin/nanopi-bthelper -s 2>/dev/null;
+		if [[ "$BOARD" == "nanopineoplus2" ]]; then
+			if [ -f /usr/local/sbin/bthelper ]; then
+				/usr/local/sbin/bthelper start 2>/dev/null;
+			fi
 		fi
 		log_end_msg $?
 		;;
