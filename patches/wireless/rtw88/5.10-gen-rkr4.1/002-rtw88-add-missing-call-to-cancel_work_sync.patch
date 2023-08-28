@@ -1,0 +1,32 @@
+From 6ca4a142edc40e7f23a8a34a5fb89ef6c86e7652 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 15 Aug 2023 17:09:37 -0400
+Subject: [PATCH] wifi: rtw88: add missing call to cancel_work_sync()
+
+Add missing call to 'cancel_work_sync()' in 'rtw_core_stop()'.
+
+Fixes: 5c831644e1f4 ("rtw88: handle and recover when firmware crash")
+
+https://lore.kernel.org/linux-wireless/20230815142908.92257-1-dmantipov@yandex.ru/T/#u
+
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 081d6fd9e057..c6f06765e4f7 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1622,6 +1622,7 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
+ 	mutex_unlock(&rtwdev->mutex);
+ 
+ 	cancel_work_sync(&rtwdev->c2h_work);
++	cancel_work_sync(&rtwdev->fw_recovery_work);
+ 	cancel_work_sync(&rtwdev->update_beacon_work);
+ 	cancel_delayed_work_sync(&rtwdev->watch_dog_work);
+ 	cancel_delayed_work_sync(&coex->bt_relink_work);
+-- 
+2.39.2
+

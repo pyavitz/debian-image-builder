@@ -1,9 +1,9 @@
-From 13c4d2146439241b745d23fbeb117cc3591b2c55 Mon Sep 17 00:00:00 2001
+From afb317892459b8478494c1d415a5c436132ca16f Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 31 Jul 2023 10:11:16 -0400
+Date: Sun, 27 Aug 2023 20:56:21 -0400
 Subject: [PATCH] drivers: net: wireless: realtek: rtw88: upstream wireless
 
-linux-next backport: linux-5.15.y
+wireless-next backport: linux-5.15.y
 source: https://github.com/lwfinger/rtw88
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -19,18 +19,18 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/net/wireless/realtek/rtw88/debug.c    |  239 ++-
  drivers/net/wireless/realtek/rtw88/debug.h    |    4 +
  drivers/net/wireless/realtek/rtw88/efuse.c    |    4 +-
- drivers/net/wireless/realtek/rtw88/fw.c       |  708 ++++++++-
+ drivers/net/wireless/realtek/rtw88/fw.c       |  710 ++++++++-
  drivers/net/wireless/realtek/rtw88/fw.h       |  224 +++
  drivers/net/wireless/realtek/rtw88/hci.h      |    9 +-
  drivers/net/wireless/realtek/rtw88/mac.c      |  117 +-
  drivers/net/wireless/realtek/rtw88/mac.h      |    1 -
  drivers/net/wireless/realtek/rtw88/mac80211.c |  283 +++-
- drivers/net/wireless/realtek/rtw88/main.c     |  755 +++++++--
- drivers/net/wireless/realtek/rtw88/main.h     |  355 ++++-
+ drivers/net/wireless/realtek/rtw88/main.c     |  758 +++++++--
+ drivers/net/wireless/realtek/rtw88/main.h     |  364 ++++-
  drivers/net/wireless/realtek/rtw88/pci.c      |  108 +-
  drivers/net/wireless/realtek/rtw88/phy.c      |  259 ++-
  drivers/net/wireless/realtek/rtw88/phy.h      |    5 +-
- drivers/net/wireless/realtek/rtw88/ps.c       |   60 +-
+ drivers/net/wireless/realtek/rtw88/ps.c       |   62 +-
  drivers/net/wireless/realtek/rtw88/ps.h       |    3 +
  drivers/net/wireless/realtek/rtw88/reg.h      |   22 +
  drivers/net/wireless/realtek/rtw88/regd.c     |  755 +++++----
@@ -70,14 +70,14 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../wireless/realtek/rtw88/suspend_rtw8821ce  |    6 +
  .../wireless/realtek/rtw88/suspend_rtw8822be  |    6 +
  .../wireless/realtek/rtw88/suspend_rtw8822ce  |    6 +
- drivers/net/wireless/realtek/rtw88/tx.c       |  225 ++-
+ drivers/net/wireless/realtek/rtw88/tx.c       |  227 ++-
  drivers/net/wireless/realtek/rtw88/tx.h       |  134 +-
- drivers/net/wireless/realtek/rtw88/usb.c      |  931 +++++++++++
- drivers/net/wireless/realtek/rtw88/usb.h      |  107 ++
- drivers/net/wireless/realtek/rtw88/util.c     |  107 +-
- drivers/net/wireless/realtek/rtw88/util.h     |   12 +-
+ drivers/net/wireless/realtek/rtw88/usb.c      |  916 +++++++++++
+ drivers/net/wireless/realtek/rtw88/usb.h      |  100 ++
+ drivers/net/wireless/realtek/rtw88/util.c     |  104 +-
+ drivers/net/wireless/realtek/rtw88/util.h     |   11 +-
  drivers/net/wireless/realtek/rtw88/wow.c      |    2 +-
- 69 files changed, 9251 insertions(+), 988 deletions(-)
+ 69 files changed, 9226 insertions(+), 1005 deletions(-)
  create mode 100644 drivers/net/wireless/realtek/rtw88/bitfield.h
  create mode 100644 drivers/net/wireless/realtek/rtw88/compiler.h
  delete mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.h
@@ -2685,7 +2685,7 @@ index c266c84ef233..b85075cd68d0 100644
  	u32 phy_size = efuse->physical_size;
  	u32 log_size = efuse->logical_size;
 diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index a384fc3a4f2b..ccfcd3eebce2 100644
+index a384fc3a4f2b..071e8ec2f879 100644
 --- a/drivers/net/wireless/realtek/rtw88/fw.c
 +++ b/drivers/net/wireless/realtek/rtw88/fw.c
 @@ -14,6 +14,8 @@
@@ -2722,6 +2722,15 @@ index a384fc3a4f2b..ccfcd3eebce2 100644
  }
  
  static void rtw_fw_ra_report_handle(struct rtw_dev *rtwdev, u8 *payload,
+@@ -132,7 +144,7 @@ struct rtw_beacon_filter_iter_data {
+ 	u8 *payload;
+ };
+ 
+-static void rtw_fw_bcn_filter_notify_vif_iter(void *data, u8 *mac,
++static void rtw_fw_bcn_filter_notify_vif_iter(void *data,
+ 					      struct ieee80211_vif *vif)
+ {
+ 	struct rtw_beacon_filter_iter_data *iter_data = data;
 @@ -183,6 +195,28 @@ static void rtw_fw_scan_result(struct rtw_dev *rtwdev, u8 *payload,
  		dm_info->scan_density);
  }
@@ -4974,7 +4983,7 @@ index 6f5629852416..c5640681563f 100644
  	.suspend		= rtw_ops_suspend,
  	.resume			= rtw_ops_resume,
 diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index d7b7b2cce974..081d6fd9e057 100644
+index d7b7b2cce974..f58902994a35 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.c
 +++ b/drivers/net/wireless/realtek/rtw88/main.c
 @@ -17,12 +17,22 @@
@@ -5027,7 +5036,15 @@ index d7b7b2cce974..081d6fd9e057 100644
  u16 rtw_desc_to_bitrate(u8 desc_rate)
  {
  	struct ieee80211_rate rate;
-@@ -162,7 +192,11 @@ static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
+@@ -155,14 +185,17 @@ static void rtw_dynamic_csi_rate(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
+ 		bf_info->cur_csi_rpt_rate = new_csi_rate_idx;
+ }
+ 
+-static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
+-				   struct ieee80211_vif *vif)
++static void rtw_vif_watch_dog_iter(void *data, struct ieee80211_vif *vif)
+ {
+ 	struct rtw_watch_dog_iter_data *iter_data = data;
  	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
  
  	if (vif->type == NL80211_IFTYPE_STATION)
@@ -5039,7 +5056,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  			iter_data->rtwvif = rtwvif;
  
  	rtw_dynamic_csi_rate(iter_data->rtwdev, rtwvif);
-@@ -198,6 +232,9 @@ static void rtw_watch_dog_work(struct work_struct *work)
+@@ -198,6 +231,9 @@ static void rtw_watch_dog_work(struct work_struct *work)
  	else
  		clear_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags);
  
@@ -5049,7 +5066,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	if (busy_traffic != test_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags))
  		rtw_coex_wl_status_change_notify(rtwdev, 0);
  
-@@ -229,20 +266,22 @@ static void rtw_watch_dog_work(struct work_struct *work)
+@@ -229,20 +265,22 @@ static void rtw_watch_dog_work(struct work_struct *work)
  	rtw_phy_dynamic_mechanism(rtwdev);
  
  	data.rtwdev = rtwdev;
@@ -5077,7 +5094,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  		rtw_enter_lps(rtwdev, data.rtwvif->port);
  
  	rtwdev->watch_dog_cnt++;
-@@ -263,6 +302,16 @@ static void rtw_c2h_work(struct work_struct *work)
+@@ -263,6 +301,16 @@ static void rtw_c2h_work(struct work_struct *work)
  	}
  }
  
@@ -5094,7 +5111,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  static u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
  {
  	unsigned long mac_id;
-@@ -274,30 +323,50 @@ static u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
+@@ -274,30 +322,50 @@ static u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
  	return mac_id;
  }
  
@@ -5148,7 +5165,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	return 0;
  }
-@@ -308,6 +377,8 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
+@@ -308,6 +376,8 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
  	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
  	int i;
  
@@ -5157,7 +5174,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	rtw_release_macid(rtwdev, si->mac_id);
  	if (fw_exist)
  		rtw_fw_media_status_report(rtwdev, si->mac_id, false);
-@@ -318,8 +389,8 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
+@@ -318,8 +388,8 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
  	kfree(si->mask);
  
  	rtwdev->sta_cnt--;
@@ -5168,7 +5185,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  }
  
  struct rtw_fwcd_hdr {
-@@ -331,7 +402,7 @@ struct rtw_fwcd_hdr {
+@@ -331,7 +401,7 @@ struct rtw_fwcd_hdr {
  
  static int rtw_fwcd_prep(struct rtw_dev *rtwdev)
  {
@@ -5177,7 +5194,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	struct rtw_fwcd_desc *desc = &rtwdev->fw.fwcd_desc;
  	const struct rtw_fwcd_segs *segs = chip->fwcd_segs;
  	u32 prep_size = chip->fw_rxff_size + sizeof(struct rtw_fwcd_hdr);
-@@ -503,8 +574,18 @@ EXPORT_SYMBOL(rtw_dump_reg);
+@@ -503,8 +573,18 @@ EXPORT_SYMBOL(rtw_dump_reg);
  void rtw_vif_assoc_changed(struct rtw_vif *rtwvif,
  			   struct ieee80211_bss_conf *conf)
  {
@@ -5196,7 +5213,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  		rtwvif->net_type = RTW_NET_MGD_LINKED;
  	} else {
  		rtwvif->aid = 0;
-@@ -556,6 +637,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
+@@ -556,6 +636,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
  	int ret = 0;
  
  	set_bit(RTW_FLAG_RESTARTING, rtwdev->flags);
@@ -5204,7 +5221,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	ret = rtw_fwcd_prep(rtwdev);
  	if (ret)
-@@ -579,6 +661,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
+@@ -579,6 +660,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
  	rcu_read_unlock();
  	rtw_iterate_stas_atomic(rtwdev, rtw_reset_sta_iter, rtwdev);
  	rtw_iterate_vifs_atomic(rtwdev, rtw_reset_vif_iter, rtwdev);
@@ -5212,7 +5229,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	rtw_enter_ips(rtwdev);
  }
  
-@@ -628,67 +711,145 @@ static void rtw_txq_ba_work(struct work_struct *work)
+@@ -628,67 +710,145 @@ static void rtw_txq_ba_work(struct work_struct *work)
  	rtw_iterate_stas_atomic(rtwdev, rtw_txq_ba_iter, &data);
  }
  
@@ -5388,7 +5405,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  		}
  		break;
  	default:
-@@ -698,40 +859,33 @@ void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
+@@ -698,40 +858,33 @@ void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
  
  	chan_params->center_chan = center_chan;
  	chan_params->bandwidth = bandwidth;
@@ -5439,7 +5456,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	if (hal->current_band_type == RTW_BAND_5G) {
  		rtw_coex_switchband_notify(rtwdev, COEX_SWITCH_TO_5G);
-@@ -754,7 +908,7 @@ void rtw_set_channel(struct rtw_dev *rtwdev)
+@@ -754,7 +907,7 @@ void rtw_set_channel(struct rtw_dev *rtwdev)
  
  void rtw_chip_prepare_tx(struct rtw_dev *rtwdev)
  {
@@ -5448,7 +5465,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	if (rtwdev->need_rfk) {
  		rtwdev->need_rfk = false;
-@@ -823,8 +977,8 @@ static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
+@@ -823,8 +976,8 @@ static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
  
  static void rtw_hw_config_rf_ant_num(struct rtw_dev *rtwdev, u8 hw_ant_num)
  {
@@ -5458,7 +5475,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	if (hw_ant_num == EFUSE_HW_CAP_IGNORE ||
  	    hw_ant_num >= hal->rf_path_num)
-@@ -848,7 +1002,11 @@ static void rtw_hw_config_rf_ant_num(struct rtw_dev *rtwdev, u8 hw_ant_num)
+@@ -848,7 +1001,11 @@ static void rtw_hw_config_rf_ant_num(struct rtw_dev *rtwdev, u8 hw_ant_num)
  static u64 get_vht_ra_mask(struct ieee80211_sta *sta)
  {
  	u64 ra_mask = 0;
@@ -5470,7 +5487,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	u8 vht_mcs_cap;
  	int i, nss;
  
-@@ -968,37 +1126,52 @@ static u8 get_rate_id(u8 wireless_set, enum rtw_bandwidth bw_mode, u8 tx_num)
+@@ -968,37 +1125,52 @@ static u8 get_rate_id(u8 wireless_set, enum rtw_bandwidth bw_mode, u8 tx_num)
  #define RA_MASK_VHT_RATES	(RA_MASK_VHT_RATES_1SS | \
  				 RA_MASK_VHT_RATES_2SS | \
  				 RA_MASK_VHT_RATES_3SS)
@@ -5544,7 +5561,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	if (!si->use_cfg_mask)
  		return ra_mask;
-@@ -1034,7 +1207,8 @@ static u64 rtw_update_rate_mask(struct rtw_dev *rtwdev,
+@@ -1034,7 +1206,8 @@ static u64 rtw_update_rate_mask(struct rtw_dev *rtwdev,
  	return ra_mask;
  }
  
@@ -5554,7 +5571,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  {
  	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
  	struct ieee80211_sta *sta = si->sta;
-@@ -1048,16 +1222,38 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+@@ -1048,16 +1221,38 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
  	u8 ldpc_en = 0;
  	u8 tx_num = 1;
  	u64 ra_mask = 0;
@@ -5593,7 +5610,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	} else if (sta->ht_cap.ht_supported) {
  		ra_mask |= (sta->ht_cap.mcs.rx_mask[1] << 20) |
  			   (sta->ht_cap.mcs.rx_mask[0] << 12);
-@@ -1065,17 +1261,31 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+@@ -1065,17 +1260,31 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
  			stbc_en = HT_STBC_EN;
  		if (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING)
  			ldpc_en = HT_LDPC_EN;
@@ -5626,7 +5643,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  			ra_mask &= RA_MASK_HT_RATES | RA_MASK_OFDM_IN_HT_5G;
  			wireless_set = WIRELESS_OFDM | WIRELESS_HT;
  		} else {
-@@ -1083,58 +1293,105 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+@@ -1083,75 +1292,125 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
  		}
  		dm_info->rrsr_val_init = RRSR_INIT_5G;
  	} else if (hal->current_band_type == RTW_BAND_2G) {
@@ -5734,7 +5751,11 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	si->bw_mode = bw_mode;
  	si->stbc_en = stbc_en;
-@@ -1146,12 +1403,16 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ 	si->ldpc_en = ldpc_en;
+ 	si->rf_type = rf_type;
+-	si->wireless_set = wireless_set;
+ 	si->sgi_enable = is_support_sgi;
+ 	si->vht_enable = is_vht_enable;
  	si->ra_mask = ra_mask;
  	si->rate_id = rate_id;
  
@@ -5752,7 +5773,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	struct rtw_fw_state *fw;
  
  	fw = &rtwdev->fw;
-@@ -1172,7 +1433,7 @@ static int rtw_wait_firmware_completion(struct rtw_dev *rtwdev)
+@@ -1172,7 +1431,7 @@ static int rtw_wait_firmware_completion(struct rtw_dev *rtwdev)
  static enum rtw_lps_deep_mode rtw_update_lps_deep_mode(struct rtw_dev *rtwdev,
  						       struct rtw_fw_state *fw)
  {
@@ -5761,7 +5782,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	if (rtw_disable_lps_deep_mode || !chip->lps_deep_mode_supported ||
  	    !fw->feature)
-@@ -1191,7 +1452,7 @@ static enum rtw_lps_deep_mode rtw_update_lps_deep_mode(struct rtw_dev *rtwdev,
+@@ -1191,7 +1450,7 @@ static enum rtw_lps_deep_mode rtw_update_lps_deep_mode(struct rtw_dev *rtwdev,
  
  static int rtw_power_on(struct rtw_dev *rtwdev)
  {
@@ -5770,7 +5791,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	struct rtw_fw_state *fw = &rtwdev->fw;
  	bool wifi_only;
  	int ret;
-@@ -1269,6 +1530,57 @@ void rtw_core_fw_scan_notify(struct rtw_dev *rtwdev, bool start)
+@@ -1269,6 +1528,57 @@ void rtw_core_fw_scan_notify(struct rtw_dev *rtwdev, bool start)
  	}
  }
  
@@ -5828,7 +5849,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  int rtw_core_start(struct rtw_dev *rtwdev)
  {
  	int ret;
-@@ -1310,6 +1622,7 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
+@@ -1310,6 +1620,7 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
  	mutex_unlock(&rtwdev->mutex);
  
  	cancel_work_sync(&rtwdev->c2h_work);
@@ -5836,7 +5857,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	cancel_delayed_work_sync(&rtwdev->watch_dog_work);
  	cancel_delayed_work_sync(&coex->bt_relink_work);
  	cancel_delayed_work_sync(&coex->bt_reenable_work);
-@@ -1328,6 +1641,7 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
+@@ -1328,6 +1639,7 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
  static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
  			    struct ieee80211_sta_ht_cap *ht_cap)
  {
@@ -5844,7 +5865,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	struct rtw_efuse *efuse = &rtwdev->efuse;
  
  	ht_cap->ht_supported = true;
-@@ -1346,7 +1660,7 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
+@@ -1346,7 +1658,7 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
  				IEEE80211_HT_CAP_DSSSCCK40 |
  				IEEE80211_HT_CAP_SGI_40;
  	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
@@ -5853,7 +5874,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
  	if (efuse->hw_cap.nss > 1) {
  		ht_cap->mcs.rx_mask[0] = 0xFF;
-@@ -1410,8 +1724,23 @@ static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
+@@ -1410,8 +1722,23 @@ static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
  	vht_cap->vht_mcs.tx_highest = highest;
  }
  
@@ -5878,7 +5899,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  {
  	struct rtw_dev *rtwdev = hw->priv;
  	struct ieee80211_supported_band *sband;
-@@ -1443,12 +1772,55 @@ static void rtw_set_supported_band(struct ieee80211_hw *hw,
+@@ -1443,12 +1770,55 @@ static void rtw_set_supported_band(struct ieee80211_hw *hw,
  }
  
  static void rtw_unset_supported_band(struct ieee80211_hw *hw,
@@ -5935,7 +5956,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  static void __update_firmware_feature(struct rtw_dev *rtwdev,
  				      struct rtw_fw_state *fw)
  {
-@@ -1458,6 +1830,10 @@ static void __update_firmware_feature(struct rtw_dev *rtwdev,
+@@ -1458,6 +1828,10 @@ static void __update_firmware_feature(struct rtw_dev *rtwdev,
  
  	feature = le32_to_cpu(fw_hdr->feature);
  	fw->feature = feature & FW_FEATURE_SIG ? feature : 0;
@@ -5946,7 +5967,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  }
  
  static void __update_firmware_info(struct rtw_dev *rtwdev,
-@@ -1510,7 +1886,8 @@ static void rtw_load_firmware_cb(const struct firmware *firmware, void *context)
+@@ -1510,7 +1884,8 @@ static void rtw_load_firmware_cb(const struct firmware *firmware, void *context)
  	update_firmware_info(rtwdev, fw);
  	complete_all(&fw->completion);
  
@@ -5956,7 +5977,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  		 fw->version, fw->sub_version, fw->sub_index, fw->h2c_version);
  }
  
-@@ -1536,6 +1913,7 @@ static int rtw_load_firmware(struct rtw_dev *rtwdev, enum rtw_fw_type type)
+@@ -1536,6 +1911,7 @@ static int rtw_load_firmware(struct rtw_dev *rtwdev, enum rtw_fw_type type)
  		return -ENOENT;
  	}
  
@@ -5964,7 +5985,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	fw->rtwdev = rtwdev;
  	init_completion(&fw->completion);
  
-@@ -1551,7 +1929,7 @@ static int rtw_load_firmware(struct rtw_dev *rtwdev, enum rtw_fw_type type)
+@@ -1551,7 +1927,7 @@ static int rtw_load_firmware(struct rtw_dev *rtwdev, enum rtw_fw_type type)
  
  static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
  {
@@ -5973,7 +5994,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	struct rtw_hal *hal = &rtwdev->hal;
  	struct rtw_efuse *efuse = &rtwdev->efuse;
  
-@@ -1560,6 +1938,14 @@ static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
+@@ -1560,6 +1936,14 @@ static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
  		rtwdev->hci.rpwm_addr = 0x03d9;
  		rtwdev->hci.cpwm_addr = 0x03da;
  		break;
@@ -5988,7 +6009,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	default:
  		rtw_err(rtwdev, "unsupported hci type\n");
  		return -EINVAL;
-@@ -1750,7 +2136,7 @@ static int rtw_chip_board_info_setup(struct rtw_dev *rtwdev)
+@@ -1750,7 +2134,7 @@ static int rtw_chip_board_info_setup(struct rtw_dev *rtwdev)
  	if (!rfe_def)
  		return -ENODEV;
  
@@ -5997,7 +6018,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	rtw_phy_init_tx_power(rtwdev);
  	if (rfe_def->agc_btg_tbl)
-@@ -1809,15 +2195,21 @@ static void rtw_stats_init(struct rtw_dev *rtwdev)
+@@ -1809,15 +2193,21 @@ static void rtw_stats_init(struct rtw_dev *rtwdev)
  
  int rtw_core_init(struct rtw_dev *rtwdev)
  {
@@ -6020,7 +6041,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	rtwdev->tx_wq = alloc_workqueue("rtw_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
  	if (!rtwdev->tx_wq) {
  		rtw_warn(rtwdev, "alloc_workqueue rtw_tx_wq failed\n");
-@@ -1836,19 +2228,18 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+@@ -1836,19 +2226,18 @@ int rtw_core_init(struct rtw_dev *rtwdev)
  	INIT_DELAYED_WORK(&coex->wl_ccklock_work, rtw_coex_wl_ccklock_work);
  	INIT_WORK(&rtwdev->tx_work, rtw_tx_work);
  	INIT_WORK(&rtwdev->c2h_work, rtw_c2h_work);
@@ -6042,7 +6063,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	mutex_init(&rtwdev->hal.tx_power_mutex);
  
  	init_waitqueue_head(&rtwdev->coex.wait);
-@@ -1857,6 +2248,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+@@ -1857,6 +2246,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
  
  	rtwdev->sec.total_cam_num = 32;
  	rtwdev->hal.current_channel = 1;
@@ -6050,7 +6071,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	set_bit(RTW_BC_MC_MACID, rtwdev->mac_id_map);
  
  	rtw_stats_init(rtwdev);
-@@ -1907,9 +2299,15 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
+@@ -1907,9 +2297,15 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
  		release_firmware(wow_fw->firmware);
  
  	destroy_workqueue(rtwdev->tx_wq);
@@ -6066,7 +6087,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
  
  	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list,
-@@ -1919,7 +2317,6 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
+@@ -1919,7 +2315,6 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
  	}
  
  	mutex_destroy(&rtwdev->mutex);
@@ -6074,7 +6095,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	mutex_destroy(&rtwdev->hal.tx_power_mutex);
  }
  EXPORT_SYMBOL(rtw_core_deinit);
-@@ -1930,9 +2327,11 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+@@ -1930,9 +2325,11 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
  	int max_tx_headroom = 0;
  	int ret;
  
@@ -6087,7 +6108,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  	hw->extra_tx_headroom = max_tx_headroom;
  	hw->queues = IEEE80211_NUM_ACS;
  	hw->txq_data_size = sizeof(struct rtw_txq);
-@@ -1950,6 +2349,7 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+@@ -1950,6 +2347,7 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
  	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
  	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
  	ieee80211_hw_set(hw, TX_AMSDU);
@@ -6095,7 +6116,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
  				     BIT(NL80211_IFTYPE_AP) |
-@@ -1962,8 +2362,17 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+@@ -1962,8 +2360,17 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
  			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
  
  	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
@@ -6113,7 +6134,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  #ifdef CONFIG_PM
  	hw->wiphy->wowlan = rtwdev->chip->wowlan_stub;
-@@ -1972,7 +2381,15 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+@@ -1972,7 +2379,15 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
  	rtw_set_supported_band(hw, rtwdev->chip);
  	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
  
@@ -6130,7 +6151,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	ret = ieee80211_register_hw(hw);
  	if (ret) {
-@@ -1980,8 +2397,11 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+@@ -1980,8 +2395,11 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
  		return ret;
  	}
  
@@ -6144,7 +6165,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  
  	rtw_debugfs_init(rtwdev);
  
-@@ -1994,13 +2414,140 @@ EXPORT_SYMBOL(rtw_register_hw);
+@@ -1994,13 +2412,139 @@ EXPORT_SYMBOL(rtw_register_hw);
  
  void rtw_unregister_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
  {
@@ -6188,7 +6209,7 @@ index d7b7b2cce974..081d6fd9e057 100644
 +	struct rtw_vif *rtwvif_ap;
 +};
 +
-+static void rtw_port_switch_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++static void rtw_port_switch_iter(void *data, struct ieee80211_vif *vif)
 +{
 +	struct rtw_iter_port_switch_data *iter_data = data;
 +	struct rtw_dev *rtwdev = iter_data->rtwdev;
@@ -6240,8 +6261,7 @@ index d7b7b2cce974..081d6fd9e057 100644
 +	rtw_iterate_vifs(rtwdev, rtw_port_switch_iter, &iter_data);
 +}
 +
-+static void rtw_check_sta_active_iter(void *data, u8 *mac,
-+				      struct ieee80211_vif *vif)
++static void rtw_check_sta_active_iter(void *data, struct ieee80211_vif *vif)
 +{
 +	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
 +	bool *active = data;
@@ -6287,7 +6307,7 @@ index d7b7b2cce974..081d6fd9e057 100644
  MODULE_DESCRIPTION("Realtek 802.11ac wireless core module");
  MODULE_LICENSE("Dual BSD/GPL");
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 56812127a053..f09046df3b5a 100644
+index 56812127a053..d4714c5a5abc 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
 @@ -5,23 +5,57 @@
@@ -6479,8 +6499,16 @@ index 56812127a053..f09046df3b5a 100644
  enum rtw_wow_flags {
  	RTW_WOW_FLAG_EN_MAGIC_PKT,
  	RTW_WOW_FLAG_EN_REKEY_PKT,
-@@ -507,12 +611,8 @@ struct rtw_timer_list {
+@@ -499,20 +603,10 @@ struct rtw_txpwr_idx {
+ 	struct rtw_5g_txpwr_idx pwr_idx_5g;
+ };
  
+-struct rtw_timer_list {
+-	struct timer_list timer;
+-	void (*function)(void *data);
+-	void *args;
+-};
+-
  struct rtw_channel_params {
  	u8 center_chan;
 +	u8 primary_chan;
@@ -6493,7 +6521,7 @@ index 56812127a053..f09046df3b5a 100644
  };
  
  struct rtw_hw_reg {
-@@ -545,6 +645,11 @@ struct rtw_rf_sipi_addr {
+@@ -545,6 +639,11 @@ struct rtw_rf_sipi_addr {
  	u32 lssi_read_pi;
  };
  
@@ -6505,7 +6533,7 @@ index 56812127a053..f09046df3b5a 100644
  struct rtw_backup_info {
  	u8 len;
  	u32 reg;
-@@ -571,6 +676,7 @@ struct rtw_tx_pkt_info {
+@@ -571,6 +670,7 @@ struct rtw_tx_pkt_info {
  	u32 tx_pkt_size;
  	u8 offset;
  	u8 pkt_offset;
@@ -6513,7 +6541,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 mac_id;
  	u8 rate_id;
  	u8 rate;
-@@ -622,6 +728,8 @@ struct rtw_rx_pkt_stat {
+@@ -622,6 +722,8 @@ struct rtw_rx_pkt_stat {
  	s8 rx_snr[RTW_RF_PATH_MAX];
  	u8 rx_evm[RTW_RF_PATH_MAX];
  	s8 cfo_tail[RTW_RF_PATH_MAX];
@@ -6522,7 +6550,16 @@ index 56812127a053..f09046df3b5a 100644
  
  	struct rtw_sta_info *si;
  	struct ieee80211_vif *vif;
-@@ -727,6 +835,7 @@ struct rtw_txq {
+@@ -718,15 +820,14 @@ struct rtw_ra_report {
+ 
+ struct rtw_txq {
+ 	struct list_head list;
+-
+ 	unsigned long flags;
+-	unsigned long last_push;
+ };
+ 
+ #define RTW_BC_MC_MACID 1
  DECLARE_EWMA(rssi, 10, 16);
  
  struct rtw_sta_info {
@@ -6530,7 +6567,12 @@ index 56812127a053..f09046df3b5a 100644
  	struct ieee80211_sta *sta;
  	struct ieee80211_vif *vif;
  
-@@ -742,7 +851,6 @@ struct rtw_sta_info {
+@@ -737,12 +838,10 @@ struct rtw_sta_info {
+ 	u8 rate_id;
+ 	enum rtw_bandwidth bw_mode;
+ 	enum rtw_rf_type rf_type;
+-	enum rtw_wireless_set wireless_set;
+ 	u8 stbc_en:2;
  	u8 ldpc_en:2;
  	bool sgi_enable;
  	bool vht_enable;
@@ -6538,7 +6580,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 init_ra_lv;
  	u64 ra_mask;
  
-@@ -752,6 +860,8 @@ struct rtw_sta_info {
+@@ -752,6 +851,8 @@ struct rtw_sta_info {
  
  	bool use_cfg_mask;
  	struct cfg80211_bitrate_mask *mask;
@@ -6547,7 +6589,7 @@ index 56812127a053..f09046df3b5a 100644
  };
  
  enum rtw_bfee_role {
-@@ -785,6 +895,7 @@ struct rtw_bf_info {
+@@ -785,6 +886,7 @@ struct rtw_bf_info {
  struct rtw_vif {
  	enum rtw_net_type net_type;
  	u16 aid;
@@ -6555,7 +6597,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 mac_addr[ETH_ALEN];
  	u8 bssid[ETH_ALEN];
  	u8 port;
-@@ -792,6 +903,8 @@ struct rtw_vif {
+@@ -792,6 +894,8 @@ struct rtw_vif {
  	struct list_head rsvd_page_list;
  	struct ieee80211_tx_queue_params tx_params[IEEE80211_NUM_ACS];
  	const struct rtw_vif_port *conf;
@@ -6564,7 +6606,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	struct rtw_traffic_stats stats;
  
-@@ -800,8 +913,22 @@ struct rtw_vif {
+@@ -800,8 +904,22 @@ struct rtw_vif {
  
  struct rtw_regulatory {
  	char alpha2[2];
@@ -6589,7 +6631,7 @@ index 56812127a053..f09046df3b5a 100644
  };
  
  struct rtw_chip_ops {
-@@ -839,12 +966,20 @@ struct rtw_chip_ops {
+@@ -839,12 +957,20 @@ struct rtw_chip_ops {
  			      struct ieee80211_bss_conf *conf);
  	void (*cfg_csi_rate)(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
  			     u8 fixrate_en, u8 *new_rate);
@@ -6610,7 +6652,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	/* for coex */
  	void (*coex_set_init)(struct rtw_dev *rtwdev);
-@@ -1138,6 +1273,7 @@ struct rtw_chip_info {
+@@ -1138,6 +1264,7 @@ struct rtw_chip_info {
  	u32 txff_size;
  	u32 rxff_size;
  	u32 fw_rxff_size;
@@ -6618,7 +6660,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 band;
  	u8 page_size;
  	u8 csi_buf_pg_num;
-@@ -1148,6 +1284,7 @@ struct rtw_chip_info {
+@@ -1148,6 +1275,7 @@ struct rtw_chip_info {
  	bool rx_ldpc;
  	bool tx_stbc;
  	u8 max_power_index;
@@ -6626,7 +6668,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	u16 fw_fifo_addr[RTW_FW_FIFO_MAX];
  	const struct rtw_fwcd_segs *fwcd_segs;
-@@ -1194,12 +1331,14 @@ struct rtw_chip_info {
+@@ -1194,12 +1322,14 @@ struct rtw_chip_info {
  	u8 bfer_su_max_num;
  	u8 bfer_mu_max_num;
  
@@ -6644,7 +6686,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	/* coex paras */
  	u32 coex_para_ver;
-@@ -1207,6 +1346,7 @@ struct rtw_chip_info {
+@@ -1207,6 +1337,7 @@ struct rtw_chip_info {
  	bool scbd_support;
  	bool new_scbd10_def; /* true: fix 2M(8822c) */
  	bool ble_hid_profile_support;
@@ -6652,7 +6694,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 pstdma_type; /* 0: LPSoff, 1:LPSon */
  	u8 bt_rssi_type;
  	u8 ant_isolation;
-@@ -1319,6 +1459,42 @@ struct rtw_coex_dm {
+@@ -1319,6 +1450,42 @@ struct rtw_coex_dm {
  #define COEX_BTINFO_LENGTH_MAX	10
  #define COEX_BTINFO_LENGTH	7
  
@@ -6695,7 +6737,7 @@ index 56812127a053..f09046df3b5a 100644
  struct rtw_coex_stat {
  	bool bt_disabled;
  	bool bt_disabled_pre;
-@@ -1349,6 +1525,8 @@ struct rtw_coex_stat {
+@@ -1349,6 +1516,8 @@ struct rtw_coex_stat {
  	bool bt_slave;
  	bool bt_418_hid_exist;
  	bool bt_ble_hid_exist;
@@ -6704,7 +6746,7 @@ index 56812127a053..f09046df3b5a 100644
  	bool bt_mailbox_reply;
  
  	bool wl_under_lps;
-@@ -1369,6 +1547,7 @@ struct rtw_coex_stat {
+@@ -1369,6 +1538,7 @@ struct rtw_coex_stat {
  	bool wl_connecting;
  	bool wl_slot_toggle;
  	bool wl_slot_toggle_change; /* if toggle to no-toggle */
@@ -6712,7 +6754,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	u32 bt_supported_version;
  	u32 bt_supported_feature;
-@@ -1426,11 +1605,12 @@ struct rtw_coex_stat {
+@@ -1426,11 +1596,12 @@ struct rtw_coex_stat {
  
  	u32 darfrc;
  	u32 darfrch;
@@ -6727,7 +6769,7 @@ index 56812127a053..f09046df3b5a 100644
  	struct sk_buff_head queue;
  	wait_queue_head_t wait;
  
-@@ -1542,6 +1722,20 @@ struct rtw_gapk_info {
+@@ -1542,6 +1713,20 @@ struct rtw_gapk_info {
  	u8 channel;
  };
  
@@ -6748,7 +6790,7 @@ index 56812127a053..f09046df3b5a 100644
  struct rtw_cfo_track {
  	bool is_adjust;
  	u8 crystal_cap;
-@@ -1589,6 +1783,7 @@ struct rtw_dm_info {
+@@ -1589,6 +1774,7 @@ struct rtw_dm_info {
  	u8 cck_gi_u_bnd;
  	u8 cck_gi_l_bnd;
  
@@ -6756,7 +6798,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 tx_rate;
  	u32 rrsr_val_init;
  	u32 rrsr_mask_min;
-@@ -1633,6 +1828,8 @@ struct rtw_dm_info {
+@@ -1633,6 +1819,8 @@ struct rtw_dm_info {
  	struct rtw_gapk_info gapk;
  	bool is_bt_iqk_timeout;
  
@@ -6765,7 +6807,7 @@ index 56812127a053..f09046df3b5a 100644
  	u8 scan_density;
  };
  
-@@ -1761,6 +1958,35 @@ struct rtw_fw_state {
+@@ -1761,6 +1949,35 @@ struct rtw_fw_state {
  	u8 sub_index;
  	u16 h2c_version;
  	u32 feature;
@@ -6801,7 +6843,7 @@ index 56812127a053..f09046df3b5a 100644
  };
  
  struct rtw_hal {
-@@ -1770,12 +1996,16 @@ struct rtw_hal {
+@@ -1770,12 +1987,16 @@ struct rtw_hal {
  	u8 cut_version;
  	u8 mp_chip;
  	u8 oem_id;
@@ -6818,7 +6860,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	/* center channel for different available bandwidth,
  	 * val of (bw > current_band_width) is invalid
-@@ -1789,6 +2019,7 @@ struct rtw_hal {
+@@ -1789,6 +2010,7 @@ struct rtw_hal {
  	u32 antenna_tx;
  	u32 antenna_rx;
  	u8 bfee_sts_cap;
@@ -6826,7 +6868,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	/* protect tx power section */
  	struct mutex tx_power_mutex;
-@@ -1810,6 +2041,12 @@ struct rtw_hal {
+@@ -1810,6 +2032,12 @@ struct rtw_hal {
  			  [RTW_MAX_CHANNEL_NUM_5G];
  	s8 tx_pwr_tbl[RTW_RF_PATH_MAX]
  		     [DESC_RATE_MAX];
@@ -6839,7 +6881,7 @@ index 56812127a053..f09046df3b5a 100644
  };
  
  struct rtw_path_div {
-@@ -1820,20 +2057,46 @@ struct rtw_path_div {
+@@ -1820,20 +2048,46 @@ struct rtw_path_div {
  	u16 path_b_cnt;
  };
  
@@ -6888,7 +6930,7 @@ index 56812127a053..f09046df3b5a 100644
  	struct rtw_bf_info bf_info;
  
  	struct rtw_dm_info dm_info;
-@@ -1842,9 +2105,6 @@ struct rtw_dev {
+@@ -1842,9 +2096,6 @@ struct rtw_dev {
  	/* ensures exclusive access from mac80211 callbacks */
  	struct mutex mutex;
  
@@ -6898,7 +6940,7 @@ index 56812127a053..f09046df3b5a 100644
  	/* watch dog every 2 sec */
  	struct delayed_work watch_dog_work;
  	u32 watch_dog_cnt;
-@@ -1854,7 +2114,9 @@ struct rtw_dev {
+@@ -1854,7 +2105,9 @@ struct rtw_dev {
  	/* c2h cmd queue & handler work */
  	struct sk_buff_head c2h_queue;
  	struct work_struct c2h_work;
@@ -6908,7 +6950,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	/* used to protect txqs list */
  	spinlock_t txq_lock;
-@@ -1866,10 +2128,8 @@ struct rtw_dev {
+@@ -1866,10 +2119,8 @@ struct rtw_dev {
  	struct rtw_tx_report tx_report;
  
  	struct {
@@ -6920,7 +6962,7 @@ index 56812127a053..f09046df3b5a 100644
  		u32 seq;
  	} h2c;
  
-@@ -1884,6 +2144,7 @@ struct rtw_dev {
+@@ -1884,6 +2135,7 @@ struct rtw_dev {
  	u8 sta_cnt;
  	u32 rts_threshold;
  
@@ -6928,7 +6970,7 @@ index 56812127a053..f09046df3b5a 100644
  	DECLARE_BITMAP(mac_id_map, RTW_MAX_MAC_ID_NUM);
  	DECLARE_BITMAP(flags, NUM_OF_RTW_FLAGS);
  
-@@ -1895,6 +2156,7 @@ struct rtw_dev {
+@@ -1895,6 +2147,7 @@ struct rtw_dev {
  
  	bool need_rfk;
  	struct completion fw_scan_density;
@@ -6936,7 +6978,7 @@ index 56812127a053..f09046df3b5a 100644
  
  	/* hci related data, must be last */
  	u8 priv[] __aligned(sizeof(void *));
-@@ -1978,6 +2240,22 @@ static inline int rtw_chip_dump_fw_crash(struct rtw_dev *rtwdev)
+@@ -1978,6 +2231,22 @@ static inline int rtw_chip_dump_fw_crash(struct rtw_dev *rtwdev)
  	return 0;
  }
  
@@ -6959,7 +7001,7 @@ index 56812127a053..f09046df3b5a 100644
  void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
  			    struct rtw_channel_params *ch_param);
  bool check_hw_ready(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 target);
-@@ -1990,8 +2268,17 @@ void rtw_set_channel(struct rtw_dev *rtwdev);
+@@ -1990,8 +2259,17 @@ void rtw_set_channel(struct rtw_dev *rtwdev);
  void rtw_chip_prepare_tx(struct rtw_dev *rtwdev);
  void rtw_vif_port_config(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif,
  			 u32 config);
@@ -6978,7 +7020,7 @@ index 56812127a053..f09046df3b5a 100644
  int rtw_core_start(struct rtw_dev *rtwdev);
  void rtw_core_stop(struct rtw_dev *rtwdev);
  int rtw_chip_info_setup(struct rtw_dev *rtwdev);
-@@ -2011,5 +2298,11 @@ void rtw_core_fw_scan_notify(struct rtw_dev *rtwdev, bool start);
+@@ -2011,5 +2289,11 @@ void rtw_core_fw_scan_notify(struct rtw_dev *rtwdev, bool start);
  int rtw_dump_fw(struct rtw_dev *rtwdev, const u32 ocp_src, u32 size,
  		u32 fwcd_item);
  int rtw_dump_reg(struct rtw_dev *rtwdev, const u32 addr, const u32 size);
@@ -7855,7 +7897,7 @@ index 112ed125970a..ccfcbd3ced03 100644
  
  void
 diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
-index 3f0ac33156d6..6358de77e84b 100644
+index 3f0ac33156d6..15454dd27fff 100644
 --- a/drivers/net/wireless/realtek/rtw88/ps.c
 +++ b/drivers/net/wireless/realtek/rtw88/ps.c
 @@ -18,15 +18,16 @@ static int rtw_ips_pwr_up(struct rtw_dev *rtwdev)
@@ -7877,7 +7919,17 @@ index 3f0ac33156d6..6358de77e84b 100644
  
  	rtw_coex_ips_notify(rtwdev, COEX_IPS_ENTER);
  
-@@ -50,6 +51,9 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
+@@ -36,8 +37,7 @@ int rtw_enter_ips(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
+-static void rtw_restore_port_cfg_iter(void *data, u8 *mac,
+-				      struct ieee80211_vif *vif)
++static void rtw_restore_port_cfg_iter(void *data, struct ieee80211_vif *vif)
+ {
+ 	struct rtw_dev *rtwdev = data;
+ 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+@@ -50,6 +50,9 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
  {
  	int ret;
  
@@ -7887,7 +7939,7 @@ index 3f0ac33156d6..6358de77e84b 100644
  	rtw_hci_link_ps(rtwdev, false);
  
  	ret = rtw_ips_pwr_up(rtwdev);
-@@ -58,9 +62,7 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
+@@ -58,9 +61,7 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
  		return ret;
  	}
  
@@ -7898,7 +7950,7 @@ index 3f0ac33156d6..6358de77e84b 100644
  
  	return 0;
  }
-@@ -83,6 +85,9 @@ void rtw_power_mode_change(struct rtw_dev *rtwdev, bool enter)
+@@ -83,6 +84,9 @@ void rtw_power_mode_change(struct rtw_dev *rtwdev, bool enter)
  	/* Each request require an ack from firmware */
  	request |= POWER_MODE_ACK;
  
@@ -7908,7 +7960,7 @@ index 3f0ac33156d6..6358de77e84b 100644
  	rtw_write8(rtwdev, rtwdev->hci.rpwm_addr, request);
  
  	/* Check firmware get the power requset and ack via cpwm register */
-@@ -293,3 +298,48 @@ void rtw_leave_lps_deep(struct rtw_dev *rtwdev)
+@@ -293,3 +297,47 @@ void rtw_leave_lps_deep(struct rtw_dev *rtwdev)
  
  	__rtw_leave_lps_deep(rtwdev);
  }
@@ -7934,8 +7986,7 @@ index 3f0ac33156d6..6358de77e84b 100644
 +	data->found_vif = vif;
 +}
 +
-+static void rtw_vif_recalc_lps_iter(void *data, u8 *mac,
-+				    struct ieee80211_vif *vif)
++static void rtw_vif_recalc_lps_iter(void *data, struct ieee80211_vif *vif)
 +{
 +	__rtw_vif_recalc_lps(data, vif);
 +}
@@ -13276,7 +13327,7 @@ index 000000000000..0ac11fa51059
 +  modprobe -v rtw_8822ce
 +fi
 diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 3a101aa139ed..58effc86e6e1 100644
+index 3a101aa139ed..77a8114b06d2 100644
 --- a/drivers/net/wireless/realtek/rtw88/tx.c
 +++ b/drivers/net/wireless/realtek/rtw88/tx.c
 @@ -34,45 +34,67 @@ void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
@@ -13600,7 +13651,16 @@ index 3a101aa139ed..58effc86e6e1 100644
  	struct sk_buff *skb;
  	u32 tx_pkt_desc_sz;
  	u32 length;
-@@ -592,9 +684,8 @@ static void rtw_txq_push(struct rtw_dev *rtwdev,
+@@ -549,8 +641,6 @@ static int rtw_txq_push_skb(struct rtw_dev *rtwdev,
+ 		rtw_err(rtwdev, "failed to write TX skb to HCI\n");
+ 		return ret;
+ 	}
+-	rtwtxq->last_push = jiffies;
+-
+ 	return 0;
+ }
+ 
+@@ -592,9 +682,8 @@ static void rtw_txq_push(struct rtw_dev *rtwdev,
  	rcu_read_unlock();
  }
  
@@ -13611,7 +13671,7 @@ index 3a101aa139ed..58effc86e6e1 100644
  	struct rtw_txq *rtwtxq, *tmp;
  
  	spin_lock_bh(&rtwdev->txq_lock);
-@@ -615,6 +706,13 @@ void rtw_tx_work(struct work_struct *w)
+@@ -615,6 +704,13 @@ void rtw_tx_work(struct work_struct *w)
  	spin_unlock_bh(&rtwdev->txq_lock);
  }
  
@@ -13625,7 +13685,7 @@ index 3a101aa139ed..58effc86e6e1 100644
  void rtw_txq_init(struct rtw_dev *rtwdev, struct ieee80211_txq *txq)
  {
  	struct rtw_txq *rtwtxq;
-@@ -639,3 +737,44 @@ void rtw_txq_cleanup(struct rtw_dev *rtwdev, struct ieee80211_txq *txq)
+@@ -639,3 +735,44 @@ void rtw_txq_cleanup(struct rtw_dev *rtwdev, struct ieee80211_txq *txq)
  		list_del_init(&rtwtxq->list);
  	spin_unlock_bh(&rtwdev->txq_lock);
  }
@@ -13829,10 +13889,10 @@ index 56371eff9f7f..324189606257 100644
  #endif
 diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
 new file mode 100644
-index 000000000000..4a57efdba97b
+index 000000000000..f9add1ec33a9
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -0,0 +1,931 @@
+@@ -0,0 +1,916 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
 + */
@@ -13977,7 +14037,6 @@ index 000000000000..4a57efdba97b
 +	struct usb_host_interface *host_interface = &interface->altsetting[0];
 +	struct usb_interface_descriptor *interface_desc = &host_interface->desc;
 +	struct usb_endpoint_descriptor *endpoint;
-+	struct usb_device *usbd = interface_to_usbdev(interface);
 +	int num_out_pipes = 0;
 +	int i;
 +	u8 num;
@@ -14017,22 +14076,6 @@ index 000000000000..4a57efdba97b
 +
 +			rtwusb->out_ep[num_out_pipes++] = num;
 +		}
-+	}
-+
-+	switch (usbd->speed) {
-+	case USB_SPEED_LOW:
-+	case USB_SPEED_FULL:
-+		rtwusb->bulkout_size = RTW_USB_FULL_SPEED_BULK_SIZE;
-+		break;
-+	case USB_SPEED_HIGH:
-+		rtwusb->bulkout_size = RTW_USB_HIGH_SPEED_BULK_SIZE;
-+		break;
-+	case USB_SPEED_SUPER:
-+		rtwusb->bulkout_size = RTW_USB_SUPER_SPEED_BULK_SIZE;
-+		break;
-+	default:
-+		rtw_err(rtwdev, "failed to detect usb speed\n");
-+		return -EINVAL;
 +	}
 +
 +	rtwdev->hci.bulkout_num = num_out_pipes;
@@ -14489,7 +14532,6 @@ index 000000000000..4a57efdba97b
 +	for (i = 0; i < RTW_USB_RXCB_NUM; i++) {
 +		struct rx_usb_ctrl_block *rxcb = &rtwusb->rx_cb[i];
 +
-+		rxcb->n = i;
 +		rxcb->rtwdev = rtwusb->rtwdev;
 +		rxcb->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
 +		if (!rxcb->rx_urb)
@@ -14679,7 +14721,7 @@ index 000000000000..4a57efdba97b
 +
 +	ret = rtw_core_init(rtwdev);
 +	if (ret)
-+		goto err_release_hw;
++		goto err_free_rx_bufs;
 +
 +	ret = rtw_usb_intf_init(rtwdev, intf);
 +	if (ret) {
@@ -14725,6 +14767,9 @@ index 000000000000..4a57efdba97b
 +err_deinit_core:
 +	rtw_core_deinit(rtwdev);
 +
++err_free_rx_bufs:
++	rtw_usb_free_rx_bufs(rtwusb);
++
 +err_release_hw:
 +	ieee80211_free_hw(hw);
 +
@@ -14766,10 +14811,10 @@ index 000000000000..4a57efdba97b
 +MODULE_LICENSE("Dual BSD/GPL");
 diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
 new file mode 100644
-index 000000000000..ad1d7955c6a5
+index 000000000000..86697a5c0103
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,100 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright(c) 2018-2019  Realtek Corporation
 + */
@@ -14789,10 +14834,6 @@ index 000000000000..ad1d7955c6a5
 +#define RTW_USB_CMD_REQ			0x05
 +
 +#define RTW_USB_VENQT_CMD_IDX		0x00
-+
-+#define RTW_USB_SUPER_SPEED_BULK_SIZE	1024
-+#define RTW_USB_HIGH_SPEED_BULK_SIZE	512
-+#define RTW_USB_FULL_SPEED_BULK_SIZE	64
 +
 +#define RTW_USB_TX_SEL_HQ		BIT(0)
 +#define RTW_USB_TX_SEL_LQ		BIT(1)
@@ -14830,7 +14871,6 @@ index 000000000000..ad1d7955c6a5
 +	struct rtw_dev *rtwdev;
 +	struct urb *rx_urb;
 +	struct sk_buff *rx_skb;
-+	int n;
 +};
 +
 +struct rtw_usb_tx_data {
@@ -14846,12 +14886,10 @@ index 000000000000..ad1d7955c6a5
 +	__le32 *usb_data;
 +	unsigned int usb_data_index;
 +
-+	u32 bulkout_size;
 +	u8 pipe_interrupt;
 +	u8 pipe_in;
 +	u8 out_ep[RTW_USB_EP_MAX];
 +	int qsel_to_ep[TX_DESC_QSEL_MAX];
-+	u8 usb_txagg_num;
 +
 +	struct workqueue_struct *txwq, *rxwq;
 +
@@ -14878,7 +14916,7 @@ index 000000000000..ad1d7955c6a5
 +
 +#endif
 diff --git a/drivers/net/wireless/realtek/rtw88/util.c b/drivers/net/wireless/realtek/rtw88/util.c
-index 2c515af214e7..ff3c269fb1a7 100644
+index 2c515af214e7..e222d3c01a77 100644
 --- a/drivers/net/wireless/realtek/rtw88/util.c
 +++ b/drivers/net/wireless/realtek/rtw88/util.c
 @@ -23,7 +23,7 @@ EXPORT_SYMBOL(check_hw_ready);
@@ -14899,7 +14937,7 @@ index 2c515af214e7..ff3c269fb1a7 100644
  	const struct rtw_ltecoex_addr *ltecoex = chip->ltecoex_addr;
  
  	if (!check_hw_ready(rtwdev, ltecoex->ctrl, LTECOEX_READY, 1))
-@@ -105,3 +105,106 @@ void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
+@@ -105,3 +105,103 @@ void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
  		*mcs = rate - DESC_RATEMCS0;
  	}
  }
@@ -14957,7 +14995,6 @@ index 2c515af214e7..ff3c269fb1a7 100644
 +struct rtw_vifs_entry {
 +	struct list_head list;
 +	struct ieee80211_vif *vif;
-+	u8 mac[ETH_ALEN];
 +};
 +
 +struct rtw_iter_vifs_data {
@@ -14975,13 +15012,11 @@ index 2c515af214e7..ff3c269fb1a7 100644
 +		return;
 +
 +	vifs_entry->vif = vif;
-+	ether_addr_copy(vifs_entry->mac, mac);
 +	list_add_tail(&vifs_entry->list, &iter_stas->list);
 +}
 +
 +void rtw_iterate_vifs(struct rtw_dev *rtwdev,
-+		      void (*iterator)(void *data, u8 *mac,
-+				       struct ieee80211_vif *vif),
++		      void (*iterator)(void *data, struct ieee80211_vif *vif),
 +		      void *data)
 +{
 +	struct rtw_iter_vifs_data iter_data;
@@ -15002,12 +15037,12 @@ index 2c515af214e7..ff3c269fb1a7 100644
 +	list_for_each_entry_safe(vif_entry, tmp, &iter_data.list,
 +				 list) {
 +		list_del_init(&vif_entry->list);
-+		iterator(data, vif_entry->mac, vif_entry->vif);
++		iterator(data, vif_entry->vif);
 +		kfree(vif_entry);
 +	}
 +}
 diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
-index 0c23b5069be0..dc8965525400 100644
+index 0c23b5069be0..f8399128a9a3 100644
 --- a/drivers/net/wireless/realtek/rtw88/util.h
 +++ b/drivers/net/wireless/realtek/rtw88/util.h
 @@ -7,9 +7,6 @@
@@ -15020,13 +15055,12 @@ index 0c23b5069be0..dc8965525400 100644
  #define rtw_iterate_vifs_atomic(rtwdev, iterator, data)                        \
  	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,                 \
  			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
-@@ -20,6 +17,15 @@ struct rtw_dev;
+@@ -20,6 +17,14 @@ struct rtw_dev;
  #define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
  	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
  
 +void rtw_iterate_vifs(struct rtw_dev *rtwdev,
-+		      void (*iterator)(void *data, u8 *mac,
-+				       struct ieee80211_vif *vif),
++		      void (*iterator)(void *data, struct ieee80211_vif *vif),
 +		      void *data);
 +void rtw_iterate_stas(struct rtw_dev *rtwdev,
 +		      void (*iterator)(void *data,
