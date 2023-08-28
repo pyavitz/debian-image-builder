@@ -2,7 +2,7 @@
 
 filesystem(){
 if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; else EXTFS="ext4"; fi
-if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs.vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
+if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$EFI" == "true" ]]; then BOOT_LABEL="EFI"; else BOOT_LABEL="BOOT"; fi
 if [[ "$P_VALUE" == "p2" ]]; then MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${IMAGE_LOOP_DEV_BOOT}"; fi
 if [[ "$FSTYPE" == "ext4" ]]; then
@@ -65,7 +65,7 @@ if [[ "$VFAT" == "true" ]]; then
 		mklabel msdos \
 		mkpart primary fat32 ${IMG_OFFSET} 256MiB \
 		mkpart primary ext2 256MiB 100%
-		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 lba off
+		#parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 lba off
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 boot on
 	fi
 	if [[ "$EFI" == "true" ]]; then
