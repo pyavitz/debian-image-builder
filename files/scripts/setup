@@ -7,29 +7,12 @@ else
 fi
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
-audio_mixer(){
-sudo amixer -c 0 set 'TOHDMITX' 'on'
-sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
-sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
-sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
-sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
-sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
-sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
-	sudo amixer -c 0 set 'ACODEC' '85%'
-fi
-# Save
-sudo alsactl store
-echo "Done."
-echo ""
-}
-
-confirm(){
+amlogic_audio(){
 echo -e "Setup audio ..?"
 echo -e ""
 read -p "Continue (y/n)?" choice
 case "$choice" in 
-	y|Y ) echo ""; audio_mixer;;
+	y|Y ) echo ""; amlmixer hdmi;;
 	n|N ) echo && echo -e "Skipping audio setup ..."; echo "";;
 	* ) echo && echo -e "Invalid choice."; echo ""; confirm;;
 esac
@@ -53,7 +36,7 @@ while getopts "rh" OPTION; do
 			sleep .50
 			if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
 				if [[ "$DISTRO" == "Ubuntu" ]]; then echo ""; fi
-				echo "Reconfiguring debconf ..."
+				echo "Configuring debconf ..."
 				if [[ `command -v tasksel` ]]; then
 					:;
 				else
@@ -70,7 +53,7 @@ while getopts "rh" OPTION; do
 			sleep .50
 
 			if [[ "$BOARD" == "radxazero" || "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "x96air" ]]; then
-				confirm
+				amlogic_audio
 			fi
 			sleep .50
 			sudo update-ca-certificates -f
