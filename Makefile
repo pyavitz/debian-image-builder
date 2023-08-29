@@ -121,6 +121,10 @@ uboot:
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
 endif
+# VERBOSE
+ifdef verbose
+	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
+endif
 	# Compiling u-boot
 	$(call build_uboot)
 
@@ -157,6 +161,10 @@ endif
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
 endif
+# VERBOSE
+ifdef verbose
+	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
+endif
 	# Compiling kernel
 	$(call build_kernel)
 
@@ -172,6 +180,10 @@ endif
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
+endif
+# VERBOSE
+ifdef verbose
+	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
 endif
 	# Creating image
 	$(call build_image)
@@ -233,6 +245,10 @@ endif
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
+endif
+# VERBOSE
+ifdef verbose
+	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
 endif
 	# Root Filesystem
 	$(call create_rootfs)

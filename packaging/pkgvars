@@ -1,10 +1,37 @@
 #!/bin/bash
 
-# variables
+# compression
 COMPRESSION="xz"
 
-# functions
-linux_packaging(){ # lib/boards/$board
+# linux packaging
+linux_packaging(){
+# debian package name
+LINUX_IMAGE="linux-image-${SERIES}"
+LINUX_HEADERS="linux-headers-${SERIES}"
+# locate device tree source
+DTS=`echo ${DEVICETREE} | sed 's/.dtb/.dts/g'`
+if [[ -f "arch/${ARCH}/boot/dts/${PLATFORM}/${DTS}" ]]; then
+	LINUX_PATH="usr/lib/${LINUX_IMAGE}/${PLATFORM}"
+	LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${PLATFORM}/${DEVICETREE}"
+	LINUX_OLYS="usr/lib/${LINUX_IMAGE}/${PLATFORM}/overlays"
+else
+	if [[ -f "arch/${ARCH}/boot/dts/${DTS}" ]]; then
+		LINUX_PATH="usr/lib/${LINUX_IMAGE}"
+		LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
+		LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
+	else
+		echo ""
+		echo "NOTICE: $DTS could not be found in the source-tree!"
+		echo "Check that the $BOARD file is setup correctly and try again."
+		echo ""
+		read -p "Press enter to continue."
+		exit 1
+	fi
+fi
+# install target
+INSTALL_DTB="boot/${PLATFORM}/${DEVICETREE}"
+INSTALL_OLYS="boot/${PLATFORM}/"
+# create packaging variables
 echo "# packaging variables" > "scripts/package/pkgvars"
 echo device_tree='"'$DEVICETREE'"' >> "scripts/package/pkgvars"
 echo device_tree_2='"'$DEVICETREE2'"' >> "scripts/package/pkgvars"
@@ -24,6 +51,7 @@ echo "# packaging compression" >> "scripts/package/pkgvars"
 echo compression='"'$COMPRESSION'"' >> "scripts/package/pkgvars"
 }
 
+# u-boot packaging
 uboot_packaging(){
 PKGNAME="u-boot-${SERIES}"
 PKGVERSION=`echo $UBOOT_VERSION | sed 's/v//g'`
@@ -136,6 +164,7 @@ if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
 fi
 }
 
+# u-boot precompiled packaging
 uboot_precompiled_packaging(){
 PKGNAME="u-boot-${SERIES}"
 BV="${BUILD_VERSION}"

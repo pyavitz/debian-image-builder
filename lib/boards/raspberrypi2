@@ -1,20 +1,22 @@
+#!/bin/bash
+
 # architecture
 ARCH="arm"
-ARCH_EXT="armel"
-DEBARCH="${ARCH_EXT}"
-CROSS_COMPILE="arm-linux-gnueabi-"
+ARCH_EXT="armhf"
+DEBARCH=""
+CROSS_COMPILE="arm-linux-gnueabihf-"
 ROOTFS_ARCH="rootfs-${ARCH_EXT}"
 STATIC="qemu-arm-static"
 
 # device information
-SERIES="bcm2835"
+SERIES="bcm2836"
 FAMILY="broadcom"
 FAMILY_EXT="${SERIES}"
-DTB="${SERIES}-rpi-zero-w"
+DTB="${SERIES}-rpi-2-b"
 
 # default config
-LINUX_DEFCONFIG="bcmrpi_defconfig"
-UBOOT_DEFCONFIG="rpi_0_w_defconfig"
+LINUX_DEFCONFIG="bcm2709_defconfig"
+UBOOT_DEFCONFIG="rpi_2_defconfig"
 
 # partition scheme
 GPT="false"
@@ -30,7 +32,7 @@ BOOTINI="false"
 BOOTCMD="false"
 
 # output
-BOARD="raspizero"
+BOARD="raspberrypi2"
 OUTPUT="output/${BOARD}"
 
 # cmdline
@@ -38,7 +40,7 @@ CONSOLE="console=tty1 console=ttyS0,115200 console=both 8250.nr_uarts=1"
 EXTRA="logo.nologo net.ifnames=0 firmware_class.path=/lib/firmware/updates/brcm"
 
 # motd
-DEFAULT_MOTD="Raspberry Pi Zero"
+DEFAULT_MOTD="Raspberry Pi 2B"
 
 # patches
 LINUX_PATCHING="true"
@@ -70,18 +72,7 @@ FORCE_UBOOT_VERSION=""
 
 # devicetree and platform
 DEVICETREE="${DTB}.dtb"
-DEVICETREE2="${SERIES}-rpi-zero.dtb"
-DEVICETREE3="bcm2708-rpi-zero-w.dtb"
-DEVICETREE4="bcm2708-rpi-zero.dtb"
+DEVICETREE2="bcm2709-rpi-2-b.dtb"
+DEVICETREE3=""
+DEVICETREE4=""
 PLATFORM="${FAMILY}"
-
-# linux packaging
-LINUX_IMAGE="linux-image-${SERIES}"
-LINUX_HEADERS="linux-headers-${SERIES}"
-LINUX_PATH="usr/lib/${LINUX_IMAGE}"
-LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
-LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
-
-# install target
-INSTALL_DTB="boot/${PLATFORM}/${DEVICETREE}"
-INSTALL_OLYS="boot/${PLATFORM}/"
