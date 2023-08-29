@@ -5,28 +5,19 @@ COMPRESSION="xz"
 
 # linux packaging
 linux_packaging(){
+DTS=`echo ${DEVICETREE} | sed 's/.dtb/.dts/g'`
 # debian package name
 LINUX_IMAGE="linux-image-${SERIES}"
 LINUX_HEADERS="linux-headers-${SERIES}"
-# locate device tree source
-DTS=`echo ${DEVICETREE} | sed 's/.dtb/.dts/g'`
-if [[ -f "arch/${ARCH}/boot/dts/${PLATFORM}/${DTS}" ]]; then
+if [[ "$ARCH" == "arm" ]]; then
+	LINUX_PATH="usr/lib/${LINUX_IMAGE}"
+	LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
+	LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
+fi
+if [[ "$ARCH" == "arm64" ]]; then
 	LINUX_PATH="usr/lib/${LINUX_IMAGE}/${PLATFORM}"
 	LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${PLATFORM}/${DEVICETREE}"
 	LINUX_OLYS="usr/lib/${LINUX_IMAGE}/${PLATFORM}/overlays"
-else
-	if [[ -f "arch/${ARCH}/boot/dts/${DTS}" ]]; then
-		LINUX_PATH="usr/lib/${LINUX_IMAGE}"
-		LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
-		LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
-	else
-		echo ""
-		echo "NOTICE: $DTS could not be found in the source-tree!"
-		echo "Check that the $BOARD file is setup correctly and try again."
-		echo ""
-		read -p "Press enter to continue."
-		exit 1
-	fi
 fi
 # install target
 INSTALL_DTB="boot/${PLATFORM}/${DEVICETREE}"
