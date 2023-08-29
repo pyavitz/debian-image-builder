@@ -1,0 +1,559 @@
+From 7ed2d47ba891ff1a66a9c14b4097dd785e496ca7 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 29 Aug 2023 14:27:56 -0400
+Subject: [PATCH] arch: arm: arm64: dts: allwinner overlays
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/boot/dts/allwinner/Makefile          |  2 +
+ arch/arm/boot/dts/allwinner/overlays/Makefile | 16 +++++++
+ .../dts/allwinner/overlays/sun8i-h3-i2c0.dts  | 20 +++++++++
+ .../dts/allwinner/overlays/sun8i-h3-i2c1.dts  | 20 +++++++++
+ .../dts/allwinner/overlays/sun8i-h3-i2c2.dts  | 20 +++++++++
+ .../overlays/sun8i-h3-spi-add-cs1.dts         | 41 ++++++++++++++++++
+ .../overlays/sun8i-h3-spi-jedec-nor.dts       | 42 +++++++++++++++++++
+ .../overlays/sun8i-h3-spi-spidev.dts          | 42 +++++++++++++++++++
+ .../dts/allwinner/overlays/sun8i-h3-uart1.dts | 22 ++++++++++
+ .../dts/allwinner/overlays/sun8i-h3-uart2.dts | 22 ++++++++++
+ .../dts/allwinner/overlays/sun8i-h3-uart3.dts | 22 ++++++++++
+ .../allwinner/overlays/sunxi-h3-h5-ir-tx.dts  | 33 +++++++++++++++
+ .../overlays/sunxi-h3-h5-overclock.dts        | 18 ++++++++
+ arch/arm64/boot/dts/allwinner/Makefile        |  2 +
+ .../boot/dts/allwinner/overlays/Makefile      |  8 ++++
+ .../overlays/sunxi-a64-overclock.dts          | 18 ++++++++
+ .../allwinner/overlays/sunxi-h3-h5-ir-tx.dts  | 33 +++++++++++++++
+ .../overlays/sunxi-h3-h5-overclock.dts        | 18 ++++++++
+ 18 files changed, 399 insertions(+)
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/Makefile
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c0.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c1.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c2.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-add-cs1.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-jedec-nor.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-spidev.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart1.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart2.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart3.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+ create mode 100644 arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+ create mode 100644 arch/arm64/boot/dts/allwinner/overlays/Makefile
+ create mode 100644 arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
+ create mode 100644 arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+ create mode 100644 arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+
+diff --git a/arch/arm/boot/dts/allwinner/Makefile b/arch/arm/boot/dts/allwinner/Makefile
+index 43df20bb8436..d25da77b6c80 100644
+--- a/arch/arm/boot/dts/allwinner/Makefile
++++ b/arch/arm/boot/dts/allwinner/Makefile
+@@ -1,4 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
++subdir-y += overlays
++
+ dtb-$(CONFIG_MACH_SUN4I) += \
+ 	sun4i-a10-a1000.dtb \
+ 	sun4i-a10-ba10-tvbox.dtb \
+diff --git a/arch/arm/boot/dts/allwinner/overlays/Makefile b/arch/arm/boot/dts/allwinner/overlays/Makefile
+new file mode 100644
+index 000000000000..f0afd8e78177
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/Makefile
+@@ -0,0 +1,16 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	sun8i-h3-i2c0.dtbo \
++	sun8i-h3-i2c1.dtbo \
++	sun8i-h3-i2c2.dtbo \
++	sun8i-h3-spi-add-cs1.dtbo \
++	sun8i-h3-spi-jedec-nor.dtbo \
++	sun8i-h3-spi-spidev.dtbo \
++	sun8i-h3-uart1.dtbo \
++	sun8i-h3-uart2.dtbo \
++	sun8i-h3-uart3.dtbo \
++	sunxi-h3-h5-ir-tx.dtbo \
++	sunxi-h3-h5-overclock.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c0.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c0.dts
+new file mode 100644
+index 000000000000..b457ac717fe3
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c0.dts
+@@ -0,0 +1,20 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			i2c0 = "/soc/i2c@01c2ac00";
++		};
++	};
++
++	fragment@1 {
++		target = <&i2c0>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c1.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c1.dts
+new file mode 100644
+index 000000000000..fd0928a1827e
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c1.dts
+@@ -0,0 +1,20 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			i2c1 = "/soc/i2c@01c2b000";
++		};
++	};
++
++	fragment@1 {
++		target = <&i2c1>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c2.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c2.dts
+new file mode 100644
+index 000000000000..25b75b71c833
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-i2c2.dts
+@@ -0,0 +1,20 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			i2c2 = "/soc/i2c@01c2b400";
++		};
++	};
++
++	fragment@1 {
++		target = <&i2c2>;
++		__overlay__ {
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-add-cs1.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-add-cs1.dts
+new file mode 100644
+index 000000000000..bd8e2561729d
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-add-cs1.dts
+@@ -0,0 +1,41 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target = <&pio>;
++		__overlay__ {
++			spi0_cs1: spi0_cs1 {
++				pins = "PA21";
++				function = "gpio_out";
++				output-high;
++			};
++
++			spi1_cs1: spi1_cs1 {
++				pins = "PA10";
++				function = "gpio_out";
++				output-high;
++			};
++		};
++	};
++
++	fragment@1 {
++		target = <&spi0>;
++		__overlay__ {
++			pinctrl-names = "default", "default";
++			pinctrl-1 = <&spi0_cs1>;
++			cs-gpios = <0>, <&pio 0 21 0>; /* PA21 */
++		};
++	};
++
++	fragment@2 {
++		target = <&spi1>;
++		__overlay__ {
++			pinctrl-names = "default", "default";
++			pinctrl-1 = <&spi1_cs1>;
++			cs-gpios = <0>, <&pio 0 10 0>; /* PA10 */
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-jedec-nor.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-jedec-nor.dts
+new file mode 100644
+index 000000000000..95fa5f2ca1ef
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-jedec-nor.dts
+@@ -0,0 +1,42 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			spi0 = "/soc/spi@1c68000";
++			spi1 = "/soc/spi@1c69000";
++		};
++	};
++
++	fragment@1 {
++		target = <&spi0>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spiflash@0 {
++				compatible = "jedec,spi-nor";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++				status = "disabled";
++			};
++		};
++	};
++
++	fragment@2 {
++		target = <&spi1>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spiflash@0 {
++				compatible = "jedec,spi-nor";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++				status = "disabled";
++			};
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-spidev.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-spidev.dts
+new file mode 100644
+index 000000000000..180979e0b521
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-spi-spidev.dts
+@@ -0,0 +1,42 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			spi0 = "/soc/spi@01c68000";
++			spi1 = "/soc/spi@01c69000";
++		};
++	};
++
++	fragment@1 {
++		target = <&spi0>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++			};
++		};
++	};
++
++	fragment@2 {
++		target = <&spi1>;
++		__overlay__ {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <1000000>;
++			};
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart1.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart1.dts
+new file mode 100644
+index 000000000000..8a4f7e49b5b5
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart1.dts
+@@ -0,0 +1,22 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			serial1 = "/soc/serial@01c28400";
++		};
++	};
++
++	fragment@1 {
++		target = <&uart1>;
++		 __overlay__ {
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart1_pins>;
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart2.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart2.dts
+new file mode 100644
+index 000000000000..499a1b496afd
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart2.dts
+@@ -0,0 +1,22 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			serial2 = "/soc/serial@01c28800";
++		};
++	};
++
++	fragment@1 {
++		target = <&uart2>;
++		 __overlay__ {
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart2_pins>;
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart3.dts b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart3.dts
+new file mode 100644
+index 000000000000..b5734c5bfb6f
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sun8i-h3-uart3.dts
+@@ -0,0 +1,22 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3";
++
++	fragment@0 {
++		target-path = "/aliases";
++		__overlay__ {
++			serial3 = "/soc/serial@01c28c00";
++		};
++	};
++
++	fragment@1 {
++		target = <&uart3>;
++		 __overlay__ {
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart3_pins>;
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+new file mode 100644
+index 000000000000..1391c64438f4
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+@@ -0,0 +1,33 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++
++	/*
++	 * This fragment is needed only for the internal pull-up activation,
++	 * external pull-up resistor is highly recommended if using long wires
++	 */
++	fragment@0 {
++		target = <&pio>;
++		__overlay__ {
++			ir_tx1_pins: ir-tx1-pins {
++				pins = "PA10";
++				function = "gpio_out";
++			};
++		};
++	};
++
++	fragment@1 {
++		target-path = "/";
++		__overlay__ {
++			gpio_ir_tx1: gpio-ir-transmitter-1 {
++				compatible = "gpio-ir-tx";
++				pinctrl-names = "default";
++				pinctrl-0 = <&ir_tx1_pins>;
++				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
++				status = "okay";
++			};
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+new file mode 100644
+index 000000000000..752759f04332
+--- /dev/null
++++ b/arch/arm/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+@@ -0,0 +1,18 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
++	fragment@0 {
++		target-path = "/opp-table-cpu";
++		__overlay__ {
++			opp-1368000000 {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++				clock-latency-ns = <244144>; /* 8 32k periods */
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
+index 6a96494a2e0a..1b0d1bdbef8e 100644
+--- a/arch/arm64/boot/dts/allwinner/Makefile
++++ b/arch/arm64/boot/dts/allwinner/Makefile
+@@ -1,4 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
++subdir-y += overlays
++
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-amarula-relic.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-bananapi-m64.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
+diff --git a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/dts/allwinner/overlays/Makefile
+new file mode 100644
+index 000000000000..c55192160337
+--- /dev/null
++++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile
+@@ -0,0 +1,8 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	sunxi-a64-overclock.dtbo \
++	sunxi-h3-h5-ir-tx.dtbo \
++	sunxi-h3-h5-overclock.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff --git a/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
+new file mode 100644
+index 000000000000..757d4872abde
+--- /dev/null
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
+@@ -0,0 +1,18 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun50i-a64";
++	
++	fragment@0 {
++		target-path = "/opp-table-cpu";
++		__overlay__ {
++			opp-1368000000 {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++				clock-latency-ns = <244144>; /* 8 32k periods */
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+new file mode 100644
+index 000000000000..1391c64438f4
+--- /dev/null
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+@@ -0,0 +1,33 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++
++	/*
++	 * This fragment is needed only for the internal pull-up activation,
++	 * external pull-up resistor is highly recommended if using long wires
++	 */
++	fragment@0 {
++		target = <&pio>;
++		__overlay__ {
++			ir_tx1_pins: ir-tx1-pins {
++				pins = "PA10";
++				function = "gpio_out";
++			};
++		};
++	};
++
++	fragment@1 {
++		target-path = "/";
++		__overlay__ {
++			gpio_ir_tx1: gpio-ir-transmitter-1 {
++				compatible = "gpio-ir-tx";
++				pinctrl-names = "default";
++				pinctrl-0 = <&ir_tx1_pins>;
++				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
++				status = "okay";
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+new file mode 100644
+index 000000000000..752759f04332
+--- /dev/null
++++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+@@ -0,0 +1,18 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
++	fragment@0 {
++		target-path = "/opp-table-cpu";
++		__overlay__ {
++			opp-1368000000 {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++				clock-latency-ns = <244144>; /* 8 32k periods */
++			};
++		};
++	};
++};
+-- 
+2.39.2
+

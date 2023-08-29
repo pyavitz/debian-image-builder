@@ -1,0 +1,204 @@
+From 3b25c78f92268d44d0c3c8201a302f49a841c0a1 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 09:56:56 -0400
+Subject: [PATCH] arch: arm: dts: sunxi-h3-h5
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/boot/dts/allwinner/sun5i.dtsi       | 13 ++++++-
+ arch/arm/boot/dts/allwinner/sun8i-h3.dtsi    | 55 ++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/allwinner/sunxi-h3-h5.dtsi | 24 +++++++++++++
+ 3 files changed, 91 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/allwinner/sun5i.dtsi b/arch/arm/boot/dts/allwinner/sun5i.dtsi
+index 250d6b87ab4d..e440f162f1d6 100644
+--- a/arch/arm/boot/dts/allwinner/sun5i.dtsi
++++ b/arch/arm/boot/dts/allwinner/sun5i.dtsi
+@@ -51,6 +51,12 @@ / {
+ 	#address-cells = <1>;
+ 	#size-cells = <1>;
+ 
++	aliases {
++		mmc0 = &mmc0;
++		mmc1 = &mmc1;
++		mmc2 = &mmc2;
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -123,7 +129,7 @@ default-pool {
+ 		};
+ 	};
+ 
+-	soc {
++	soc: soc {
+ 		compatible = "simple-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+@@ -648,6 +654,11 @@ rtp: rtp@1c25000 {
+ 			reg = <0x01c25000 0x100>;
+ 			interrupts = <29>;
+ 			#thermal-sensor-cells = <0>;
++
++			rtp_adc: adc {
++				compatible = "allwinner,sun5i-a13-gpadc-iio";
++				#io-channel-cells = <1>;
++			};
+ 		};
+ 
+ 		uart0: serial@1c28000 {
+diff --git a/arch/arm/boot/dts/allwinner/sun8i-h3.dtsi b/arch/arm/boot/dts/allwinner/sun8i-h3.dtsi
+index eac2349a2380..30d72d3b670e 100644
+--- a/arch/arm/boot/dts/allwinner/sun8i-h3.dtsi
++++ b/arch/arm/boot/dts/allwinner/sun8i-h3.dtsi
+@@ -44,10 +44,22 @@
+ #include <dt-bindings/thermal/thermal.h>
+ 
+ / {
++	aliases {
++		mmc0 = &mmc0;
++		mmc1 = &mmc1;
++		mmc2 = &mmc2;
++	};
++
+ 	cpu0_opp_table: opp-table-cpu {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
++		opp-480000000 {
++			opp-hz = /bits/ 64 <480000000>;
++			opp-microvolt = <1040000 1040000 1300000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
+ 		opp-648000000 {
+ 			opp-hz = /bits/ 64 <648000000>;
+ 			opp-microvolt = <1040000 1040000 1300000>;
+@@ -60,11 +72,41 @@ opp-816000000 {
+ 			clock-latency-ns = <244144>; /* 8 32k periods */
+ 		};
+ 
++		opp-960000000 {
++			opp-hz = /bits/ 64 <960000000>;
++			opp-microvolt = <1200000 1200000 1300000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
+ 		opp-1008000000 {
+ 			opp-hz = /bits/ 64 <1008000000>;
+ 			opp-microvolt = <1200000 1200000 1300000>;
+ 			clock-latency-ns = <244144>; /* 8 32k periods */
+ 		};
++
++		opp-1104000000 {
++			opp-hz = /bits/ 64 <1104000000>;
++			opp-microvolt = <1320000 1320000 1320000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++			opp-microvolt = <1320000 1320000 1320000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
++		opp-1296000000 {
++			opp-hz = /bits/ 64 <1296000000>;
++			opp-microvolt = <1340000 1340000 1340000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
++
++		opp-1368000000 {
++			opp-hz = /bits/ 64 <1368000000>;
++			opp-microvolt = <1400000 1400000 1400000>;
++			clock-latency-ns = <244144>; /* 8 32k periods */
++		};
+ 	};
+ 
+ 	cpus {
+@@ -170,6 +212,19 @@ syscon: system-control@1c00000 {
+ 			#size-cells = <1>;
+ 			ranges;
+ 
++			sram_a2: sram@40000 {
++				compatible = "mmio-sram";
++				reg = <0x00040000 0xc000>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0 0x00040000 0xc000>;
++
++				scpi_sram: scp-shmem@bc00 {
++					compatible = "arm,scp-shmem";
++					reg = <0xbc00 0x200>;
++				};
++			};
++
+ 			sram_c: sram@1d00000 {
+ 				compatible = "mmio-sram";
+ 				reg = <0x01d00000 0x80000>;
+diff --git a/arch/arm/boot/dts/allwinner/sunxi-h3-h5.dtsi b/arch/arm/boot/dts/allwinner/sunxi-h3-h5.dtsi
+index 09aefb4e90f8..42947eeaef90 100644
+--- a/arch/arm/boot/dts/allwinner/sunxi-h3-h5.dtsi
++++ b/arch/arm/boot/dts/allwinner/sunxi-h3-h5.dtsi
+@@ -100,12 +100,33 @@ osc32k: osc32k_clk {
+ 		};
+ 	};
+ 
++	sound_hdmi: sound_hdmi {
++		compatible = "allwinner,sun9i-a80-hdmi-audio",
++			     "allwinner,sun8i-h3-hdmi-audio";
++		status = "disabled";
++
++		codec {
++			sound-dai = <&hdmi>;
++		};
++
++		cpu {
++			sound-dai = <&i2s2>;
++		};
++	};
++
+ 	de: display-engine {
+ 		compatible = "allwinner,sun8i-h3-display-engine";
+ 		allwinner,pipelines = <&mixer0>;
+ 		status = "disabled";
+ 	};
+ 
++	scpi_protocol: scpi {
++		compatible = "arm,scpi";
++		mboxes = <&msgbox 2>, <&msgbox 3>;
++		mbox-names = "tx", "rx";
++		shmem = <&scpi_sram>;
++	};
++
+ 	soc {
+ 		compatible = "simple-bus";
+ 		#address-cells = <1>;
+@@ -389,6 +410,7 @@ ccu: clock@1c20000 {
+ 			reg = <0x01c20000 0x400>;
+ 			clocks = <&osc24M>, <&rtc CLK_OSC32K>;
+ 			clock-names = "hosc", "losc";
++			protected-clocks = <CLK_BUS_MSGBOX>;
+ 			#clock-cells = <1>;
+ 			#reset-cells = <1>;
+ 		};
+@@ -814,6 +836,7 @@ csi: camera@1cb0000 {
+ 		};
+ 
+ 		hdmi: hdmi@1ee0000 {
++			#sound-dai-cells = <0>;
+ 			compatible = "allwinner,sun8i-h3-dw-hdmi",
+ 				     "allwinner,sun8i-a83t-dw-hdmi";
+ 			reg = <0x01ee0000 0x10000>;
+@@ -883,6 +906,7 @@ r_ccu: clock@1f01400 {
+ 			clocks = <&osc24M>, <&rtc CLK_OSC32K>, <&rtc CLK_IOSC>,
+ 				 <&ccu CLK_PLL_PERIPH0>;
+ 			clock-names = "hosc", "losc", "iosc", "pll-periph";
++			protected-clocks = <CLK_APB0_TWD>;
+ 			#clock-cells = <1>;
+ 			#reset-cells = <1>;
+ 		};
+-- 
+2.39.2
+

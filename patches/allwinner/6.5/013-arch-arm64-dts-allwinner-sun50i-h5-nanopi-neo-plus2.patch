@@ -1,0 +1,107 @@
+From e30e757eb295548c2463f840d2a574e089aedc5c Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 10:07:08 -0400
+Subject: [PATCH] arch: arm64: dts: allwinner: sun50i-h5-nanopi-neo-plus2
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../allwinner/sun50i-h5-nanopi-neo-plus2.dts  | 39 +++++++++++++++++--
+ 1 file changed, 35 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+index 4c3921ac236c..8abe48fced6c 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+@@ -4,6 +4,7 @@
+ 
+ /dts-v1/;
+ #include "sun50i-h5.dtsi"
++#include "sun50i-h5-cpu-opp.dtsi"
+ 
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
+@@ -16,6 +17,7 @@ / {
+ 	aliases {
+ 		ethernet0 = &emac;
+ 		serial0 = &uart0;
++		serial3 = &uart3;
+ 	};
+ 
+ 	chosen {
+@@ -27,13 +29,14 @@ leds {
+ 
+ 		led-0 {
+ 			label = "nanopi:green:pwr";
+-			gpios = <&r_pio 0 10 GPIO_ACTIVE_HIGH>;
+-			default-state = "on";
++			gpios = <&r_pio 0 10 GPIO_ACTIVE_HIGH>; /* PL10 */
++			linux,default-trigger = "default-on";
+ 		};
+ 
+ 		led-1 {
+ 			label = "nanopi:red:status";
+-			gpios = <&pio 0 20 GPIO_ACTIVE_HIGH>;
++			gpios = <&pio 0 10 GPIO_ACTIVE_HIGH>; /* PA10 */
++			linux,default-trigger = "heartbeat";
+ 		};
+ 	};
+ 
+@@ -63,7 +66,7 @@ vdd_cpux: gpio-regulator {
+ 		regulator-min-microvolt = <1100000>;
+ 		regulator-max-microvolt = <1300000>;
+ 		regulator-ramp-delay = <50>; /* 4ms */
+-		gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>;
++		gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>; /* PL6 */
+ 		gpios-states = <0x1>;
+ 		states = <1100000 0>, <1300000 1>;
+ 	};
+@@ -73,6 +76,21 @@ wifi_pwrseq: wifi_pwrseq {
+ 		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>; /* PL7 */
+ 		post-power-on-delay-ms = <200>;
+ 	};
++
++	rfkill_bt {
++		compatible = "rfkill-gpio";
++		pinctrl-names = "default";
++		pinctrl-0 = <&bt_pwr_pin>;
++		reset-gpios = <&pio 6 13 GPIO_ACTIVE_HIGH>; /* PG13 */
++		clocks = <&osc32k>;
++		clock-frequency = <32768>;
++		rfkill-name = "sunxi-bt";
++		rfkill-type = "bluetooth";
++	};
++};
++
++&cpu0 {
++	cpu-supply = <&vdd_cpux>;
+ };
+ 
+ &codec {
+@@ -152,11 +170,24 @@ &uart0 {
+ 	status = "okay";
+ };
+ 
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart3_pins>, <&uart3_rts_cts_pins>;
++	status = "okay";
++};
++
+ &usb_otg {
+ 	dr_mode = "host";
+ 	status = "okay";
+ };
+ 
++&pio {
++	bt_pwr_pin: bt_pwr_pin@0 {
++	pins = "PG13";
++	function = "gpio_out";
++	};
++};
++
+ &usbphy {
+ 	/* USB Type-A ports' VBUS is always on */
+ 	status = "okay";
+-- 
+2.39.2
+

@@ -1,0 +1,85 @@
+From c765984d8641581c809563f3766cdb34ade032f0 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 09:58:15 -0400
+Subject: [PATCH] arch: arm: dts: sun8i-h3-nanopi
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/boot/dts/allwinner/sun8i-h3-nanopi-m1.dts |  8 ++++++++
+ arch/arm/boot/dts/allwinner/sun8i-h3-nanopi.dtsi   | 23 +++++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
+
+diff --git a/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi-m1.dts b/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi-m1.dts
+index 69243dcb30a6..9393779f33b6 100644
+--- a/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi-m1.dts
++++ b/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi-m1.dts
+@@ -91,6 +91,10 @@ hdmi_out_con: endpoint {
+ 	};
+ };
+ 
++&i2s2 {
++	status = "okay";
++};
++
+ &ir {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&r_ir_rx_pin>;
+@@ -104,3 +108,7 @@ &ohci1 {
+ &ohci2 {
+ 	status = "okay";
+ };
++
++&sound_hdmi {
++	status = "okay";
++};
+diff --git a/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi.dtsi b/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi.dtsi
+index cf8413fba6c1..57d5f75133fd 100644
+--- a/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi.dtsi
++++ b/arch/arm/boot/dts/allwinner/sun8i-h3-nanopi.dtsi
+@@ -59,6 +59,8 @@ chosen {
+ 
+ 	leds {
+ 		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&leds_npi>, <&leds_r_npi>;
+ 
+ 		led-0 {
+ 			label = "nanopi:blue:status";
+@@ -75,6 +77,8 @@ led-1 {
+ 
+ 	gpio-keys {
+ 		compatible = "gpio-keys";
++		pinctrl-names = "default";
++		pinctrl-0 = <&sw_r_npi>;
+ 
+ 		key-0 {
+ 			label = "k1";
+@@ -100,6 +104,25 @@ &ohci3 {
+ 	status = "okay";
+ };
+ 
++&pio {
++	leds_npi: led_pins {
++		pins = "PA10";
++		function = "gpio_out";
++	};
++};
++
++&r_pio {
++	leds_r_npi: led_pins {
++		pins = "PL10";
++		function = "gpio_out";
++	};
++
++	sw_r_npi: key_pins {
++		pins = "PL3";
++		function = "gpio_in";
++	};
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pa_pins>;
+-- 
+2.39.2
+

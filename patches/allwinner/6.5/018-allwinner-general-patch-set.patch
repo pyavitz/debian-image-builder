@@ -1,0 +1,52 @@
+From bb3ba2025db7e5b750ede586aa4545064ec5e34f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 29 Aug 2023 14:22:27 -0400
+Subject: [PATCH] allwinner: general patch set
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/kernel/topology.c                        | 2 +-
+ drivers/cpufreq/sun50i-cpufreq-nvmem.c            | 1 +
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/kernel/topology.c b/arch/arm/kernel/topology.c
+index ef0058de432b..b87be5d007bf 100644
+--- a/arch/arm/kernel/topology.c
++++ b/arch/arm/kernel/topology.c
+@@ -121,7 +121,7 @@ static void __init parse_dt_topology(void)
+ 
+ 		rate = of_get_property(cn, "clock-frequency", &len);
+ 		if (!rate || len != 4) {
+-			pr_err("%pOF missing clock-frequency property\n", cn);
++			//pr_err("%pOF missing clock-frequency property\n", cn);
+ 			continue;
+ 		}
+ 
+diff --git a/drivers/cpufreq/sun50i-cpufreq-nvmem.c b/drivers/cpufreq/sun50i-cpufreq-nvmem.c
+index 4321d7bbe769..cbbe4769ceac 100644
+--- a/drivers/cpufreq/sun50i-cpufreq-nvmem.c
++++ b/drivers/cpufreq/sun50i-cpufreq-nvmem.c
+@@ -102,6 +102,7 @@ static int sun50i_cpufreq_nvmem_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	snprintf(name, MAX_NAME_LEN, "speed%d", speed);
++	pr_info("Using CPU speed bin %s\n", name);
+ 
+ 	for_each_possible_cpu(cpu) {
+ 		struct device *cpu_dev = get_cpu_device(cpu);
+diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+index 2ae7843abdf7..e3dc60dabce6 100644
+--- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+@@ -1936,6 +1936,7 @@ void rtw_cfg80211_indicate_sta_assoc(struct adapter *padapter, u8 *pmgmt_frame,
+ 			ie_offset = _REASOCREQ_IE_OFFSET_;
+ 
+ 		sinfo.filled = 0;
++		sinfo.pertid = 0;
+ 		sinfo.assoc_req_ies = pmgmt_frame + WLAN_HDR_A3_LEN + ie_offset;
+ 		sinfo.assoc_req_ies_len = frame_len - WLAN_HDR_A3_LEN - ie_offset;
+ 		cfg80211_new_sta(ndev, GetAddr2Ptr(pmgmt_frame), &sinfo, GFP_ATOMIC);
+-- 
+2.39.2
+
