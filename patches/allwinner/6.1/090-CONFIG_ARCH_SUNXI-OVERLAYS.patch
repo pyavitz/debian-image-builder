@@ -1,12 +1,12 @@
-From 3090ad046ac2c8dfeb70156fbaf7b0ba0d459684 Mon Sep 17 00:00:00 2001
+From 590790b21b6134b312f0553f6e2e5748a385b269 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sun, 30 Jul 2023 09:17:51 -0400
-Subject: [PATCH] arch: arm: arm64: dts: allwinner overlays
+Date: Wed, 30 Aug 2023 09:48:17 -0400
+Subject: [PATCH] CONFIG_ARCH_SUNXI OVERLAYS
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm/boot/dts/Makefile                    |  2 +
- arch/arm/boot/dts/overlays/Makefile           | 16 +++++++
+ arch/arm/boot/dts/overlays/Makefile           | 19 +++++++++
  arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts  | 20 +++++++++
  arch/arm/boot/dts/overlays/sun8i-h3-i2c1.dts  | 20 +++++++++
  arch/arm/boot/dts/overlays/sun8i-h3-i2c2.dts  | 20 +++++++++
@@ -18,12 +18,12 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  arch/arm/boot/dts/overlays/sun8i-h3-uart3.dts | 22 ++++++++++
  .../boot/dts/overlays/sunxi-h3-h5-ir-tx.dts   | 33 +++++++++++++++
  .../dts/overlays/sunxi-h3-h5-overclock.dts    | 18 ++++++++
- arch/arm64/boot/dts/allwinner/Makefile        |  2 +
- .../boot/dts/allwinner/overlays/Makefile      |  8 ++++
- .../overlays/sunxi-a64-overclock.dts          | 18 ++++++++
- .../allwinner/overlays/sunxi-h3-h5-ir-tx.dts  | 33 +++++++++++++++
- .../overlays/sunxi-h3-h5-overclock.dts        | 18 ++++++++
- 18 files changed, 399 insertions(+)
+ arch/arm64/boot/dts/Makefile                  |  2 +
+ arch/arm64/boot/dts/overlays/Makefile         | 11 +++++
+ .../boot/dts/overlays/sunxi-a64-overclock.dts | 18 ++++++++
+ .../boot/dts/overlays/sunxi-h3-h5-ir-tx.dts   | 33 +++++++++++++++
+ .../dts/overlays/sunxi-h3-h5-overclock.dts    | 18 ++++++++
+ 18 files changed, 405 insertions(+)
  create mode 100644 arch/arm/boot/dts/overlays/Makefile
  create mode 100644 arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts
  create mode 100644 arch/arm/boot/dts/overlays/sun8i-h3-i2c1.dts
@@ -36,30 +36,29 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/arm/boot/dts/overlays/sun8i-h3-uart3.dts
  create mode 100644 arch/arm/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
  create mode 100644 arch/arm/boot/dts/overlays/sunxi-h3-h5-overclock.dts
- create mode 100644 arch/arm64/boot/dts/allwinner/overlays/Makefile
- create mode 100644 arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
- create mode 100644 arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
- create mode 100644 arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+ create mode 100644 arch/arm64/boot/dts/overlays/Makefile
+ create mode 100644 arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts
+ create mode 100644 arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
+ create mode 100644 arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts
 
 diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
-index 01a4bd83578f..35a52bfec268 100644
+index 6aa7dc4db2fc..087777e3f3ee 100644
 --- a/arch/arm/boot/dts/Makefile
 +++ b/arch/arm/boot/dts/Makefile
-@@ -1,4 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
-+subdir-y += overlays
+@@ -1633,3 +1633,5 @@ dtb-$(CONFIG_ARCH_ASPEED) += \
+ 	aspeed-bmc-vegman-n110.dtb \
+ 	aspeed-bmc-vegman-rx20.dtb \
+ 	aspeed-bmc-vegman-sx20.dtb
 +
- dtb-$(CONFIG_ARCH_ALPINE) += \
- 	alpine-db.dtb
- dtb-$(CONFIG_MACH_ARTPEC6) += \
++subdir-y += overlays
 diff --git a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
 new file mode 100644
-index 000000000000..f0afd8e78177
+index 000000000000..3a9710e58cd3
 --- /dev/null
 +++ b/arch/arm/boot/dts/overlays/Makefile
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,19 @@
 +# SPDX-License-Identifier: GPL-2.0
-+dtbo-y += \
++dtbo-$(CONFIG_ARCH_SUNXI) += \
 +	sun8i-h3-i2c0.dtbo \
 +	sun8i-h3-i2c1.dtbo \
 +	sun8i-h3-i2c2.dtbo \
@@ -72,8 +71,11 @@ index 000000000000..f0afd8e78177
 +	sunxi-h3-h5-ir-tx.dtbo \
 +	sunxi-h3-h5-overclock.dtbo
 +
++targets += dtbs dtbs_install
 +targets += $(dtbo-y)
-+always-y := $(dtbo-y)
++
++always-y	:= $(dtbo-y)
++clean-files	:= *.dtbo
 diff --git a/arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts b/arch/arm/boot/dts/overlays/sun8i-h3-i2c0.dts
 new file mode 100644
 index 000000000000..b457ac717fe3
@@ -442,36 +444,38 @@ index 000000000000..752759f04332
 +		};
 +	};
 +};
-diff --git a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
-index a96d9d2d8dd8..8e2c4a86a270 100644
---- a/arch/arm64/boot/dts/allwinner/Makefile
-+++ b/arch/arm64/boot/dts/allwinner/Makefile
-@@ -1,4 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
-+subdir-y += overlays
+diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
+index 7b107fa7414b..12e6e2876ea6 100644
+--- a/arch/arm64/boot/dts/Makefile
++++ b/arch/arm64/boot/dts/Makefile
+@@ -32,3 +32,5 @@ subdir-y += tesla
+ subdir-y += ti
+ subdir-y += toshiba
+ subdir-y += xilinx
 +
- dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-amarula-relic.dtb
- dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-bananapi-m64.dtb
- dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
-diff --git a/arch/arm64/boot/dts/allwinner/overlays/Makefile b/arch/arm64/boot/dts/allwinner/overlays/Makefile
++subdir-y += overlays
+diff --git a/arch/arm64/boot/dts/overlays/Makefile b/arch/arm64/boot/dts/overlays/Makefile
 new file mode 100644
-index 000000000000..c55192160337
+index 000000000000..dc39ea68e6e9
 --- /dev/null
-+++ b/arch/arm64/boot/dts/allwinner/overlays/Makefile
-@@ -0,0 +1,8 @@
++++ b/arch/arm64/boot/dts/overlays/Makefile
+@@ -0,0 +1,11 @@
 +# SPDX-License-Identifier: GPL-2.0
-+dtbo-y += \
++dtbo-$(CONFIG_ARCH_SUNXI) += \
 +	sunxi-a64-overclock.dtbo \
 +	sunxi-h3-h5-ir-tx.dtbo \
 +	sunxi-h3-h5-overclock.dtbo
 +
++targets += dtbs dtbs_install
 +targets += $(dtbo-y)
-+always-y := $(dtbo-y)
-diff --git a/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
++
++always-y	:= $(dtbo-y)
++clean-files	:= *.dtbo
+diff --git a/arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts b/arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts
 new file mode 100644
 index 000000000000..757d4872abde
 --- /dev/null
-+++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-a64-overclock.dts
++++ b/arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts
 @@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
@@ -491,11 +495,11 @@ index 000000000000..757d4872abde
 +		};
 +	};
 +};
-diff --git a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
+diff --git a/arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
 new file mode 100644
 index 000000000000..1391c64438f4
 --- /dev/null
-+++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-ir-tx.dts
++++ b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
 @@ -0,0 +1,33 @@
 +/dts-v1/;
 +/plugin/;
@@ -530,11 +534,11 @@ index 000000000000..1391c64438f4
 +		};
 +	};
 +};
-diff --git a/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
+diff --git a/arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts
 new file mode 100644
 index 000000000000..752759f04332
 --- /dev/null
-+++ b/arch/arm64/boot/dts/allwinner/overlays/sunxi-h3-h5-overclock.dts
++++ b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts
 @@ -0,0 +1,18 @@
 +/dts-v1/;
 +/plugin/;
