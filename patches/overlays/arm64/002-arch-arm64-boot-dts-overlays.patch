@@ -1,34 +1,10 @@
-From 9479860a8b8c33c5e04935c713d9b731b9df51fa Mon Sep 17 00:00:00 2001
+From 1c7ac2e4c77b8be32f6f0f5e952e7e88be35bd24 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Thu, 31 Aug 2023 05:40:01 -0400
-Subject: [PATCH] CONFIG_ARCH_MESON OVERLAYS
+Date: Fri, 1 Sep 2023 10:09:43 -0400
+Subject: [PATCH] arch: arm64: boot: dts: overlays
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm64/boot/dts/Makefile | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
-index 7b107fa7414b..12e6e2876ea6 100644
---- a/arch/arm64/boot/dts/Makefile
-+++ b/arch/arm64/boot/dts/Makefile
-@@ -32,3 +32,5 @@ subdir-y += tesla
- subdir-y += ti
- subdir-y += toshiba
- subdir-y += xilinx
-+
-+subdir-y += overlays
--- 
-2.39.2
-
-From c22edaee5cd39a94c8f81ecf5c5c312f94fd0a31 Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Thu, 31 Aug 2023 05:42:08 -0400
-Subject: [PATCH] meson g12a g12b gxl and sm1 overlays
-
-Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
----
- arch/arm64/boot/dts/overlays/Makefile         | 30 +++++++
  .../overlays/meson-g12-bananapi-rtl8822cs.dts | 23 +++++
  .../overlays/meson-g12-gxl-cma-pool-896MB.dts | 19 +++++
  .../meson-g12a-radxa-zero-gpio-10-led.dts     | 26 ++++++
@@ -51,8 +27,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../overlays/meson-sm1-odroid-c4-uart2.dts    | 13 +++
  .../overlays/meson-sm1-odroid-c4-uart3.dts    | 13 +++
  .../dts/overlays/meson-sm1-x96-air-rtc.dts    | 11 +++
- 23 files changed, 463 insertions(+)
- create mode 100644 arch/arm64/boot/dts/overlays/Makefile
+ .../boot/dts/overlays/sunxi-a64-overclock.dts | 18 ++++
+ .../boot/dts/overlays/sunxi-h3-h5-ir-tx.dts   | 33 ++++++++
+ .../dts/overlays/sunxi-h3-h5-overclock.dts    | 18 ++++
+ 25 files changed, 502 insertions(+)
  create mode 100644 arch/arm64/boot/dts/overlays/meson-g12-bananapi-rtl8822cs.dts
  create mode 100644 arch/arm64/boot/dts/overlays/meson-g12-gxl-cma-pool-896MB.dts
  create mode 100644 arch/arm64/boot/dts/overlays/meson-g12a-radxa-zero-gpio-10-led.dts
@@ -75,43 +53,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/arm64/boot/dts/overlays/meson-sm1-odroid-c4-uart2.dts
  create mode 100644 arch/arm64/boot/dts/overlays/meson-sm1-odroid-c4-uart3.dts
  create mode 100644 arch/arm64/boot/dts/overlays/meson-sm1-x96-air-rtc.dts
+ create mode 100644 arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts
+ create mode 100644 arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
+ create mode 100644 arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts
 
-diff --git a/arch/arm64/boot/dts/overlays/Makefile b/arch/arm64/boot/dts/overlays/Makefile
-new file mode 100644
-index 000000000000..aa95e240d522
---- /dev/null
-+++ b/arch/arm64/boot/dts/overlays/Makefile
-@@ -0,0 +1,30 @@
-+# SPDX-License-Identifier: GPL-2.0
-+dtbo-$(CONFIG_ARCH_MESON) += \
-+	meson-g12a-radxa-zero-gpio-8-led.dtbo \
-+	meson-g12a-radxa-zero-gpio-10-led.dtbo \
-+	meson-g12-bananapi-rtl8822cs.dtbo \
-+	meson-g12b-odroid-n2-i2c0.dtbo \
-+	meson-g12b-odroid-n2-i2c1.dtbo \
-+	meson-g12b-odroid-n2-spidev.dtbo \
-+	meson-g12b-odroid-n2-spi.dtbo \
-+	meson-g12b-odroid-n2-uart0.dtbo \
-+	meson-g12b-odroid-n2-uart1.dtbo \
-+	meson-g12-gxl-cma-pool-896MB.dtbo \
-+	meson-sm1-bananapi-uartA.dtbo \
-+	meson-sm1-bananapi-uartAO_B.dtbo \
-+	meson-sm1-bananapi-uartB.dtbo \
-+	meson-sm1-odroid-c4-i2c0.dtbo \
-+	meson-sm1-odroid-c4-i2c1.dtbo \
-+	meson-sm1-odroid-c4-rtl8822cs.dtbo \
-+	meson-sm1-odroid-c4-spidev.dtbo \
-+	meson-sm1-odroid-c4-uart0.dtbo \
-+	meson-sm1-odroid-c4-uart1.dtbo \
-+	meson-sm1-odroid-c4-uart2.dtbo \
-+	meson-sm1-odroid-c4-uart3.dtbo \
-+	meson-sm1-x96-air-rtc.dtbo
-+
-+targets += dtbs dtbs_install
-+targets += $(dtbo-y)
-+
-+always-y	:= $(dtbo-y)
-+clean-files	:= *.dtbo
 diff --git a/arch/arm64/boot/dts/overlays/meson-g12-bananapi-rtl8822cs.dts b/arch/arm64/boot/dts/overlays/meson-g12-bananapi-rtl8822cs.dts
 new file mode 100644
 index 000000000000..f9d014f03789
@@ -674,6 +619,93 @@ index 000000000000..e803198b5bc5
 +		target = <&i2c1>;
 +		__overlay__ {
 +			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts b/arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts
+new file mode 100644
+index 000000000000..757d4872abde
+--- /dev/null
++++ b/arch/arm64/boot/dts/overlays/sunxi-a64-overclock.dts
+@@ -0,0 +1,18 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun50i-a64";
++	
++	fragment@0 {
++		target-path = "/opp-table-cpu";
++		__overlay__ {
++			opp-1368000000 {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++				clock-latency-ns = <244144>; /* 8 32k periods */
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
+new file mode 100644
+index 000000000000..1391c64438f4
+--- /dev/null
++++ b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-ir-tx.dts
+@@ -0,0 +1,33 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++
++	/*
++	 * This fragment is needed only for the internal pull-up activation,
++	 * external pull-up resistor is highly recommended if using long wires
++	 */
++	fragment@0 {
++		target = <&pio>;
++		__overlay__ {
++			ir_tx1_pins: ir-tx1-pins {
++				pins = "PA10";
++				function = "gpio_out";
++			};
++		};
++	};
++
++	fragment@1 {
++		target-path = "/";
++		__overlay__ {
++			gpio_ir_tx1: gpio-ir-transmitter-1 {
++				compatible = "gpio-ir-tx";
++				pinctrl-names = "default";
++				pinctrl-0 = <&ir_tx1_pins>;
++				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
++				status = "okay";
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts
+new file mode 100644
+index 000000000000..752759f04332
+--- /dev/null
++++ b/arch/arm64/boot/dts/overlays/sunxi-h3-h5-overclock.dts
+@@ -0,0 +1,18 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	/* if the board is actually regulated this will not work */
++	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
++	
++	fragment@0 {
++		target-path = "/opp-table-cpu";
++		__overlay__ {
++			opp-1368000000 {
++				opp-hz = /bits/ 64 <1368000000>;
++				opp-microvolt = <1300000 1300000 1300000>;
++				clock-latency-ns = <244144>; /* 8 32k periods */
++			};
 +		};
 +	};
 +};

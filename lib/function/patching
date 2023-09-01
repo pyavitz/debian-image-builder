@@ -169,6 +169,19 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; t
 		fi
 	fi
 fi
+# overlays
+if [[ -d "../../${OVERLAYPATCHES}/${LINUX_VERSION}" ]] && [[ -d "../../${OVERLAYPATCHES}/${ARCH}" ]]; then
+	if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "amlogic" || "$FAMILY" == "samsung" ]]; then
+		if [[ `ls ../../${OVERLAYPATCHES}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+			echo "# ${OVERLAYPATCHES}/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+			for i in ../../${OVERLAYPATCHES}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+		fi
+		if [[ `ls ../../${OVERLAYPATCHES}/${ARCH}/*.patch` ]] > /dev/null 2>&1; then
+			echo "# ${OVERLAYPATCHES}/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+			for i in ../../${OVERLAYPATCHES}/${ARCH}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+		fi
+	fi
+fi
 }
 
 linux_patching(){
