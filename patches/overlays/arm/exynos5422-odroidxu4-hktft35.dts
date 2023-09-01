@@ -1,0 +1,55 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	fragment@0 {
+		target-path = "/";
+
+		__overlay__ {
+			hktft35: hktft35 {
+				status = "okay";
+				compatible = "odroid,hktft35";
+				pinctrl-names = "default";
+				pinctrl-0 = <&hktft35_pins>;
+
+				rotate = <270>;
+				bgr;
+				fps = <20>;
+				bpp = <16>;
+				reset-gpios = <&gpa0 3 GPIO_ACTIVE_HIGH>;
+				dc-gpios = <&gpx2 4 GPIO_ACTIVE_HIGH>;
+				wr-gpios = <&gpa2 5 GPIO_ACTIVE_HIGH>;
+				cs-gpios = <&gpa0 2 GPIO_ACTIVE_HIGH>;
+				led-gpios = <&gpx2 7 GPIO_ACTIVE_HIGH>;
+				db-gpios = <&gpx1 7 GPIO_ACTIVE_HIGH>,
+					<&gpx2 0 GPIO_ACTIVE_HIGH>,
+					<&gpx1 3 GPIO_ACTIVE_HIGH>,
+					<&gpa2 4 GPIO_ACTIVE_HIGH>,
+					<&gpa2 6 GPIO_ACTIVE_HIGH>,
+					<&gpa2 7 GPIO_ACTIVE_HIGH>,
+					<&gpx1 6 GPIO_ACTIVE_HIGH>,
+					<&gpx1 5 GPIO_ACTIVE_HIGH>;
+				debug = <0>;
+
+				hktft35_pins: hktft35_pins {
+					samsung,pins = "gpa0-3", /* reset */
+						"gpx2-4", /* dc */
+						"gpa2-5", /* wr */
+						"gpa0-2", /* cs */
+						"gpx2-7", /* led */
+						"gpx1-7", /* db00 */
+						"gpx2-0", /* db01 */
+						"gpx1-3", /* db02 */
+						"gpa2-4", /* db03 */
+						"gpa2-6", /* db04 */
+						"gpa2-7", /* db05 */
+						"gpx1-6", /* db06 */
+						"gpx1-5"; /* db07 */
+					samsung,pin-function = <1>;
+				};
+			};
+		};
+	};
+};

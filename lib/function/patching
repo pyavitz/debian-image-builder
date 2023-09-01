@@ -176,9 +176,11 @@ if [[ -d "../../${OVERLAYPATCHES}/${LINUX_VERSION}" ]] && [[ -d "../../${OVERLAY
 			echo "# ${OVERLAYPATCHES}/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 			for i in ../../${OVERLAYPATCHES}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 		fi
-		if [[ `ls ../../${OVERLAYPATCHES}/${ARCH}/*.patch` ]] > /dev/null 2>&1; then
+		if [[ `ls ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+			mkdir -p arch/${ARCH}/boot/dts/overlays
 			echo "# ${OVERLAYPATCHES}/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-			for i in ../../${OVERLAYPATCHES}/${ARCH}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+			ls ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts} | sed 's/..\/..\///g' >> ${LOG_FILE}
+			cp -fr ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts} arch/${ARCH}/boot/dts/overlays/
 		fi
 	fi
 fi

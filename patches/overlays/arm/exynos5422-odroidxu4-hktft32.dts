@@ -1,0 +1,46 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	fragment@0 {
+		// spi_1 aliased with spi0
+		target = <&spi_1>;
+
+		__overlay__ {
+			status = "okay";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			hktft32: hktft32@0 {
+				status = "okay";
+				compatible = "odroid,hktft32";
+				reg = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&hktft32_pins>;
+
+				spi-max-frequency = <40000000>;
+				rotate = <90>;
+				bgr;
+				backlight;
+				fps = <20>;
+				bpp = <16>;
+				reset-gpios = <&gpx1 5 GPIO_ACTIVE_HIGH>;
+				dc-gpios = <&gpx1 6 GPIO_ACTIVE_HIGH>;
+				debug = <0>;
+
+				hktft32_pins: hktft32_pins {
+					samsung,pins = "gpx1-5", /* reset */
+						"gpx1-6"; /* dc */
+				};
+
+				controller-data {
+					cs-gpio = <&gpa2 5 GPIO_ACTIVE_HIGH>;
+					samsung,spi-feedback-delay = <0>;
+				};
+			};
+		};
+	};
+};

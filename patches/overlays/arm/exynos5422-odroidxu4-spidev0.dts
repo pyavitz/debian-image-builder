@@ -1,0 +1,30 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	fragment@0 {
+		// spi_1 aliased with spi0
+		target = <&spi_1>;
+
+		__overlay__ {
+			status = "okay";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			spidev: spidev@0 {
+				status = "okay";
+				reg = <0>;
+				compatible = "odroid,spidev";
+				spi-max-frequency = <1000000>;
+
+				controller-data {
+					cs-gpio = <&gpa2 5 GPIO_ACTIVE_HIGH>;
+					samsung,spi-feedback-delay = <0>;
+				};
+			};
+		};
+	};
+};

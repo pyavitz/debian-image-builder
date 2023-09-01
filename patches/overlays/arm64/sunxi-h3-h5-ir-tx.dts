@@ -1,0 +1,33 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "allwinner,sun8i-h3", "allwinner,sun50i-h5";
+
+	/*
+	 * This fragment is needed only for the internal pull-up activation,
+	 * external pull-up resistor is highly recommended if using long wires
+	 */
+	fragment@0 {
+		target = <&pio>;
+		__overlay__ {
+			ir_tx1_pins: ir-tx1-pins {
+				pins = "PA10";
+				function = "gpio_out";
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			gpio_ir_tx1: gpio-ir-transmitter-1 {
+				compatible = "gpio-ir-tx";
+				pinctrl-names = "default";
+				pinctrl-0 = <&ir_tx1_pins>;
+				gpios = <&pio 0 10 0>; /* PA10 Active_HIGH */
+				status = "okay";
+			};
+		};
+	};
+};

@@ -1,0 +1,58 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/samsung.h>
+
+/ {
+	fragment@0 {
+		// spi_1 aliased with spi0
+		target = <&spi_1>;
+
+		__overlay__ {
+			status = "okay";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			ads7846: ads7846@1 {
+				status = "okay";
+
+				reg = <1>;
+				compatible = "ti,ads7846";
+				interrupt-parent = <&gpa0>;
+				interrupts = <3 0>;
+				spi-max-frequency = <1000000>;
+
+				/* GPA0.3 Pull-up enable */
+				pinctrl-0 = <&ts_pendown_gpio>;
+				pinctrl-names = "default";
+
+				pendown-gpio = <&gpa0 3 GPIO_ACTIVE_HIGH>;
+				vcc-supply = <&ldo30_reg>;
+
+				ti,swap-xy = <1>;
+				ti,x-min = /bits/ 16 <0>;
+				ti,x-max = /bits/ 16 <8000>;
+				ti,y-min = /bits/ 16 <0>;
+				ti,y-max = /bits/ 16 <4800>;
+				ti,x-plate-ohms = /bits/ 16 <40>;
+				ti,pressure-max = /bits/ 16 <255>;
+
+				linux,wakeup;
+
+				ts_pendown_gpio: ts-pendown-gpio {
+					samsung,pins = "gpa0-3";
+					samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
+					samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
+					samsung,pin-drv = <EXYNOS5420_PIN_DRV_LV1>;
+				};
+
+				controller-data {
+					cs-gpio = <&gpx2 1 GPIO_ACTIVE_HIGH>;
+					samsung,spi-feedback-delay = <0>;
+				};
+			};
+		};
+	};
+};
