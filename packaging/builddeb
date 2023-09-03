@@ -237,66 +237,36 @@ EOF
 	chmod 755 "$tmpdir/DEBIAN/$script"
 done
 
-if [ "$platform" = "broadcom" ]; then
-	cat <<EOF > "$tmpdir/DEBIAN/preinst"
+cat <<EOF > "$tmpdir/DEBIAN/preinst"
 #!/bin/bash
-set -e
 
-# clean boot directory
+set -e
+# prep boot directory
 if [ -f /boot/Image ]; then
-	rm -fr /boot/{Image,vmlinuz-*,System.map-*,config-*};
+	rm -fr /boot/{Image,vmlinuz-*,System.map-*,config-*}
 fi
-if [ -f /boot/initrd.gz ]; then
-	rm -fr /boot/{initrd.gz,uInitrd,initrd.img-*};
+if [ -f /boot/initrd.gz ] || [ -f /boot/uInitrd ]; then
+	rm -fr /boot/{initrd.gz,uInitrd,initrd.img-*}
 fi
+# prep bsp boot directory
 if [ -f /boot/$platform/Image ]; then
-	rm -fr /boot/$platform/Image;
+	rm -f /boot/$platform/Image
 fi
 if [ -f /boot/$platform/initrd.gz ]; then
-	rm -fr /boot/$platform/initrd.gz;
+	rm -f /boot/$platform/initrd.gz
 fi
+# prep boot platform directory
 if [ -f /boot/$platform/$device_tree ]; then
-	rm -fr /boot/$platform/{*.dtb,bootcode.bin,fixup*.dat,start*.elf,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux};
+	rm -fr /boot/$platform/{*.dtb,bootcode.bin,fixup*.dat,start*.elf,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux}
 	if [ -d /boot/$platform/overlays ]; then
-		rm -fdr /boot/$platform/overlays;
+		rm -fdr /boot/$platform/overlays
 	fi
 fi
 
+sync
 exit 0
 EOF
-	chmod 755 "$tmpdir/DEBIAN/preinst"
-else
-	cat <<EOF > "$tmpdir/DEBIAN/preinst"
-#!/bin/bash
-set -e
-
-# clean boot directory
-if [ -f /boot/Image ]; then
-	rm -fr /boot/{Image,vmlinuz-*,System.map-*,config-*};
-fi
-if [ -f /boot/uInitrd ]; then
-	rm -fr /boot/{uInitrd,initrd.img-*};
-fi
-if [ -f /boot/initrd.gz ]; then
-	rm -fr /boot/{initrd.gz,initrd.img-*};
-fi
-if [ -f /boot/$device_tree ]; then
-	rm -fr /boot/*.dtb;
-	if [ -d /boot/overlays ]; then
-		rm -fdr /boot/overlays;
-	fi
-fi
-if [ -f /boot/$platform/$device_tree ]; then
-	rm -fr /boot/$platform/*.dtb;
-	if [ -d /boot/$platform/overlays ]; then
-		rm -fdr /boot/$platform/overlays;
-	fi
-fi
-
-exit 0
-EOF
-	chmod 755 "$tmpdir/DEBIAN/preinst"
-fi
+chmod 755 "$tmpdir/DEBIAN/preinst"
 
 # Build kernel header package
 (cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
@@ -327,22 +297,22 @@ if [ -f headers-byteshift.patch ]; then
 #!/bin/bash
 set -e
 
-clean_headers(){
+clean_headers (){
 find -type f -exec touch {} +
 if grep -w "Linux/arm" ".config"; then
-	echo 'y' | make ARCH=arm M=scripts clean;
+	echo 'y' | make ARCH=arm M=scripts clean
 else
-	echo 'y' | make M=scripts clean;
+	echo 'y' | make M=scripts clean
 fi
 patch -p1 < headers-byteshift.patch
 if [ -f scripts/module.lds ]; then :; else install -m 0644 module.lds scripts/; fi
 rm -f {headers-byteshift.patch,module.lds}
 if grep -w "Linux/arm" ".config"; then
-	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
-	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
+	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts
+	echo 'y' | make ARCH=arm -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/
 else
-	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts;
-	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/;
+	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts
+	echo 'y' | make -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/
 fi
 if [ -f .config.old ]; then rm -f .config.old; fi
 }
@@ -350,8 +320,9 @@ if [ -f .config.old ]; then rm -f .config.old; fi
 # compile headers
 cd /usr/src/linux-headers-$version
 echo -e "Compiling headers ..."
-clean_headers > /dev/null 2>&1;
+clean_headers > /dev/null 2>&1
 
+sync
 exit 0
 EOF
 	chmod 755 "$kernel_headers_dir/DEBIAN/postinst"
@@ -359,12 +330,13 @@ fi
 
 mkdir -p $kernel_headers_dir/DEBIAN
 cat <<EOF > "$kernel_headers_dir/DEBIAN/preinst"
-#!/bin/sh
+#!/bin/bash
+
 set -e
-
 # remove old linux headers
-rm -fdr /usr/src/linux-headers-* > /dev/null 2>&1
+rm -fdr /usr/src/linux-headers-*
 
+sync
 exit 0
 EOF
 chmod 755 "$kernel_headers_dir/DEBIAN/preinst"
