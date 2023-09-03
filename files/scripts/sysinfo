@@ -3,9 +3,18 @@
 # Destination: /usr/local/bin/sysinfo
 
 export LANG=$LANG:C
-if [[ $EUID -ne 0 ]]; then
-	sudo "$0" "$@" 
-	exit 
+if [[ "$USER" == "root" ]]; then
+	:;
+else
+	if [[ `command -v sudo` ]]; then
+		if [[ $EUID -ne 0 ]]; then
+			sudo "$0" "$@"
+			exit
+		fi
+	else
+		echo "Please run this as root or with sudo privileges."
+		exit 0
+	fi
 fi
 
 PRESENT=`cat /sys/devices/system/cpu/present`
