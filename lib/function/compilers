@@ -36,16 +36,18 @@ else
 	CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
 fi
 if [ $CLANG -eq 1 ]; then
+	if [[ "$ARCH_EXT" == "armel" ]]; then
+		echo ""
+		echo -e "The builder does not support using clang to build ${ARCH_EXT}."
+		exit 0
+	fi
 	if [[ "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
 		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then
-			NATIVE="${CLANG_VERSION}"
-			if [[ "$ARCH_EXT" == "armel" ]]; then
-				CROSS="${DEST}/${CLANG_VERSION}"
-			else
-				CROSS="${CLANG_VERSION}"
-			fi
+			NATIVE="${DEST}/${CLANG_VERSION}"
+			CROSS="${DEST}/${CLANG_VERSION}"
 		fi
 	else
+		echo ""
 		echo -e "${HOST_CODENAME} is not supported."
 		exit 0
 	fi
