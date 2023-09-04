@@ -1,6 +1,6 @@
 #!/bin/bash
 
-uboot_configs(){
+uboot_configs (){
 # boot logo
 LOGODIR="drivers/video"
 BOOTLOGO="files/boot/uboot/u_boot_logo.bmp"
@@ -112,5 +112,20 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 			echo "CONFIG_SPL_MMC_UHS_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
 		fi
 	fi
+fi
+}
+
+linux_configs (){
+#if [ $CCACHE -eq 0 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+#	if [[ `grep -w "CONFIG_GCC_PLUGINS=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGINS=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#	if [[ `grep -w "CONFIG_GCC_PLUGIN_LATENT_ENTROPY=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGIN_LATENT_ENTROPY=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#	if [[ `grep -w "CONFIG_RANDSTRUCT=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_RANDSTRUCT=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#	if [[ `grep -w "CONFIG_RANDSTRUCT_FULL=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_RANDSTRUCT_FULL=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#	if [[ `grep -w "CONFIG_GCC_PLUGIN_RANDSTRUCT=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGIN_RANDSTRUCT=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#	if [[ `grep -w "CONFIG_HAVE_ARCH_STACKLEAK=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_HAVE_ARCH_STACKLEAK=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#	if [[ `grep -w "CONFIG_GCC_PLUGIN_STRUCTLEAK=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGIN_STRUCTLEAK=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+#fi
+if [ $LTO_CLANG_THIN -eq 1 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_LTO_CLANG_THIN=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
 fi
 }

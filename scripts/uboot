@@ -6,6 +6,7 @@ source packaging/pkgvars
 source lib/function/uboot
 source lib/function/patching
 source lib/function/modconfig
+source lib/function/compilers
 # override the board file
 if [[ -f "override.txt" ]]; then
 	. override.txt
@@ -13,12 +14,10 @@ if [[ -f "override.txt" ]]; then
 fi
 source board.txt
 source userdata.txt
-
 # force precompiled u-boot package if host machine is running debian bookworm
 if [[ "$BOARD" == "lepotato" ]] && [[ "$HOST_CODENAME" == "bookworm" ]]; then
 	PRECOMPILED_UBOOT="true"
 fi
-
 # debug switch
 if [ $VERBOSE -eq 1 ]; then
 	set -x
@@ -38,20 +37,7 @@ if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_UBOOT_VERSION ]; then :; else UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
 fi
 # compiler
-if [ $CCACHE -eq 1 ]; then
-	if [[ `command -v ccache` ]]; then
-		:;
-	else
-		apt install -y ccache
-	fi
-fi
-if [ $CCACHE -eq 1 ]; then
-	DEST="/usr/lib/ccache"
-else
-	DEST="/usr/bin"
-fi
-NATIVE="${DEST}/${COMPILER}"
-CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
+uboot_compilers
 # boards
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then

@@ -64,20 +64,20 @@ make_defconfig (){
 export ARCH=${ARCH}
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
+	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
 else
 	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC=${NATIVE} ${UBOOT_DEFCONFIG}
+	make -j${CORES} CC="${NATIVE}" ${UBOOT_DEFCONFIG}
 fi
 }
 
 menuconfig (){
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
+	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig
 else
 	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC=${NATIVE} menuconfig
+	make -j${CORES} CC="${NATIVE}" menuconfig
 fi
 }
 
@@ -90,16 +90,16 @@ fi
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	echo -e "  GCC     ${DEST}/${COMPILER}"
-	make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE}
+	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE}
 	if [[ "$FAMILY_EXT" == "imx8" ]]; then
-		make -j${CORES} CC=${CROSS} CROSS_COMPILE=${CROSS_COMPILE} flash.bin
+		make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} flash.bin
 	fi
 else
 	echo -e "${GRN}  NC${FIN}"
 	echo -e "  GCC     ${DEST}/${COMPILER}"
-	make -j${CORES} CC=${NATIVE}
+	make -j${CORES} CC="${NATIVE}"
 	if [[ "$FAMILY_EXT" == "imx8" ]]; then
-		make -j${CORES} CC=${NATIVE} flash.bin
+		make -j${CORES} CC="${NATIVE}" flash.bin
 	fi
 fi
 }
