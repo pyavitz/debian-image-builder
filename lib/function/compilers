@@ -1,0 +1,53 @@
+#!/bin/bash
+
+uboot_compilers (){
+# install compiler
+if [ $CCACHE -eq 1 ]; then
+	if [[ `command -v ccache` ]]; then :; else apt install -y ccache; fi
+fi
+# compiler
+DEST="/usr/bin"
+if [ $CCACHE -eq 1 ]; then
+	NATIVE="ccache ${COMPILER}"
+	CROSS="ccache ${CROSS_COMPILE}${COMPILER}"
+else
+	NATIVE="${DEST}/${COMPILER}"
+	CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
+fi
+}
+
+linux_compilers (){
+# install compilers
+if [ $CCACHE -eq 1 ]; then
+	if [[ `command -v ccache` ]]; then :; else apt install -y ccache; fi
+fi
+if [ $CLANG -eq 1 ]; then
+	if [[ "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
+		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then :; else apt install -y clang clang-14 clang-15 lld lld-14 lld-15 llvm; fi
+	fi
+fi
+# compiler
+DEST="/usr/bin"
+if [ $CCACHE -eq 1 ]; then
+	NATIVE="ccache ${COMPILER}"
+	CROSS="ccache ${CROSS_COMPILE}${COMPILER}"
+else
+	NATIVE="${DEST}/${COMPILER}"
+	CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
+fi
+if [ $CLANG -eq 1 ]; then
+	if [[ "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
+		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then
+			NATIVE="${CLANG_VERSION}"
+			if [[ "$ARCH_EXT" == "armel" ]]; then
+				CROSS="${DEST}/${CLANG_VERSION}"
+			else
+				CROSS="${CLANG_VERSION}"
+			fi
+		fi
+	else
+		echo -e "${HOST_CODENAME} is not supported."
+		exit 0
+	fi
+fi
+}

@@ -143,6 +143,22 @@ cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 chmod +x scripts/package/{builddeb,mkdebian}
 }
 
+cross_compile (){
+if [ $CLANG -eq 1 ]; then
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${CLANG_LLVM} $1
+else
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} $1
+fi
+}
+
+native_compile (){
+if [ $CLANG -eq 1 ]; then
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" ${CLANG_LLVM} $1
+else
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" $1
+fi
+}
+
 cconfig (){
 echo_cconfig
 if [[ -f "../${DEF}/${MYCONFIG}" ]]; then
@@ -156,9 +172,9 @@ else
 	exit 1
 fi
 if [ $CROSSCOMPILE -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${MYCONFIG}
+	cross_compile "${MYCONFIG}"
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${NATIVE} CFLAGS="${CFLAGS}" ${MYCONFIG}
+	native_compile "${MYCONFIG}"
 fi
 echo ""
 }
@@ -185,13 +201,13 @@ fi
 # enable module in the defconfig
 enable_wireless_module
 
-if [ $LTO_CLANG_THIN -eq 1 ]; then
-	echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-fi
+# lib/function/modconfig
+linux_configs
+
 if [ $CROSSCOMPILE -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${LINUX_DEFCONFIG}
+	cross_compile "${LINUX_DEFCONFIG}"
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${NATIVE} CFLAGS="${CFLAGS}" ${LINUX_DEFCONFIG}
+	native_compile "${LINUX_DEFCONFIG}"
 fi
 echo ""
 }
@@ -215,13 +231,13 @@ echo ""
 echo_menuconfig
 sleep 1s
 if [ $CROSSCOMPILE -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig
+	cross_compile "menuconfig"
 	sleep .25
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} savedefconfig
+	cross_compile "savedefconfig"
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${NATIVE} CFLAGS="${CFLAGS}" menuconfig
+	native_compile "menuconfig"
 	sleep .25
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} ${NATIVE} CFLAGS="${CFLAGS}" savedefconfig
+	native_compile "savedefconfig"
 fi
 echo "# ${DEFAULT_MOTD} defconfig saved."
 options=("Continue" "Quit")
@@ -245,12 +261,12 @@ ccompile (){
 echo -e "${GRN}  CC${FIN}"
 #echo -e "  GCC     ${DEST}/${COMPILER}"
 echo ${BUILD_VERSION} > .version
-echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} ${CROSS} CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} bindeb-pkg
+echo 'y' | cross_compile "KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} bindeb-pkg"
 }
 
 ncompile (){
 echo -e "${GRN}  NC${FIN}"
 #echo -e "  GCC     ${DEST}/${COMPILER}"
 echo ${BUILD_VERSION} > .version
-echo 'y' | make -j${CORES} KBUILD_DEBARCH=${DEBARCH} KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} ARCH=${ARCH} ${NATIVE} CFLAGS="${CFLAGS}" bindeb-pkg
+echo 'y' | native_compile "KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} bindeb-pkg"
 }

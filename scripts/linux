@@ -7,6 +7,8 @@ source lib/function/linux
 source lib/function/github
 source lib/function/patching
 source lib/function/wireless
+source lib/function/modconfig
+source lib/function/compilers
 # override the board file
 if [[ -f "override.txt" ]]; then
 	. override.txt
@@ -14,7 +16,6 @@ if [[ -f "override.txt" ]]; then
 fi
 source board.txt
 source userdata.txt
-
 # debug switch
 if [ $VERBOSE -eq 1 ]; then
 	set -x
@@ -42,41 +43,7 @@ if [[ "$FORCE_VERSION" == "true" ]]; then
 fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 # compiler
-if [ $CCACHE -eq 1 ]; then
-	if [[ `command -v ccache` ]]; then
-		:;
-	else
-		apt install -y ccache
-	fi
-fi
-if [ $CLANG -eq 1 ]; then
-	if [[ "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
-		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then
-			:;
-		else
-			apt install -y clang clang-14 clang-15 lld lld-14 lld-15 llvm
-		fi
-	else
-		echo -e "${HOST_CODENAME} is not supported."
-		exit 0
-	fi
-fi
-if [ $CCACHE -eq 1 ]; then
-	DEST="/usr/lib/ccache"
-else
-	DEST="/usr/bin"
-fi
-NATIVE="CC=${DEST}/${COMPILER}"
-CROSS="CC=${DEST}/${CROSS_COMPILE}${COMPILER}"
-if [ $CLANG -eq 1 ]; then
-	NATIVE="CC=${CLANG_VERSION} ${CLANG_LLVM}"
-	if [[ "$ARCH_EXT" == "armel" ]]; then
-		DEST="/usr/bin"
-		CROSS="CC=${DEST}/${CLANG_VERSION}"
-	else
-		CROSS="CC=${CLANG_VERSION} ${CLANG_LLVM}"
-	fi
-fi
+linux_compilers
 # sources directory
 sources_dir
 if [[ -d "${KERNEL}-${VERSION}" ]]; then
