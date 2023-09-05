@@ -143,19 +143,12 @@ cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 chmod +x scripts/package/{builddeb,mkdebian}
 }
 
-cross_compile (){
-if [ $CLANG -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${CLANG_LLVM} $1
+kbuild (){
+if [ $CLANG -eq 1 ]; then CLANG_FLAGS="${CLANG_LLVM}"; fi
+if [ $CROSSCOMPILE -eq 1 ]; then
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${CLANG_FLAGS} $1
 else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} $1
-fi
-}
-
-native_compile (){
-if [ $CLANG -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" ${CLANG_LLVM} $1
-else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" $1
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" ${CLANG_FLAGS} $1
 fi
 }
 
@@ -171,11 +164,7 @@ else
 	read -p "Press enter to continue."
 	exit 1
 fi
-if [ $CROSSCOMPILE -eq 1 ]; then
-	cross_compile "${MYCONFIG}"
-else
-	native_compile "${MYCONFIG}"
-fi
+kbuild "${MYCONFIG}"
 echo ""
 }
 
@@ -191,24 +180,16 @@ else
 	read -p "Press enter to continue."
 	exit 1
 fi
-
 # odroid defconfig for linux 5.15
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
 	rm -f arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 	cp -f ../${DEF}/odroid-lts_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
-
 # enable module in the defconfig
 enable_wireless_module
-
 # lib/function/modconfig
 linux_configs
-
-if [ $CROSSCOMPILE -eq 1 ]; then
-	cross_compile "${LINUX_DEFCONFIG}"
-else
-	native_compile "${LINUX_DEFCONFIG}"
-fi
+kbuild "${LINUX_DEFCONFIG}"
 echo ""
 }
 
@@ -229,16 +210,10 @@ fi
 menuconfig (){
 echo ""
 echo_menuconfig
-sleep 1s
-if [ $CROSSCOMPILE -eq 1 ]; then
-	cross_compile "menuconfig"
-	sleep .25
-	cross_compile "savedefconfig"
-else
-	native_compile "menuconfig"
-	sleep .25
-	native_compile "savedefconfig"
-fi
+sleep .50
+kbuild "menuconfig"
+sleep .25
+kbuild "savedefconfig"
 echo "# ${DEFAULT_MOTD} defconfig saved."
 options=("Continue" "Quit")
 select opt in "${options[@]}"
@@ -257,16 +232,8 @@ do
 done
 }
 
-ccompile (){
-echo -e "${GRN}  CC${FIN}"
-#echo -e "  GCC     ${DEST}/${COMPILER}"
+builddeb (){
+if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
 echo ${BUILD_VERSION} > .version
-echo 'y' | cross_compile "KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} bindeb-pkg"
-}
-
-ncompile (){
-echo -e "${GRN}  NC${FIN}"
-#echo -e "  GCC     ${DEST}/${COMPILER}"
-echo ${BUILD_VERSION} > .version
-echo 'y' | native_compile "KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} bindeb-pkg"
+echo 'y' | kbuild "KBUILD_BUILD_USER=${KBUSER} KBUILD_BUILD_HOST=${KBHOST} bindeb-pkg"
 }

@@ -17,19 +17,11 @@ fi
 source board.txt
 source userdata.txt
 # debug switch
-if [ $VERBOSE -eq 1 ]; then
-	set -x
-fi
+if [ $VERBOSE -eq 1 ]; then set -x; fi
 # compile native or cross
-if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then
-	CROSSCOMPILE="0"
-fi
-if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then
-	CROSSCOMPILE="1"
-fi
-if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then
-	CROSSCOMPILE="1"
-fi
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then CROSSCOMPILE="1"; fi
+if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then CROSSCOMPILE="1"; fi
 # github
 if [[ "$FORCE_GITHUB" == "true" ]]; then
 	VERSION="${GITHUB_BRANCH_VERSION}"
@@ -56,39 +48,19 @@ fi
 # download and extract
 download
 # setup
-if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
-	vendor_setup
-else
-	setup
-fi
+if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then vendor_setup; else setup; fi
 # patching
-if [[ ! -z $FAMILY ]]; then
-	linux_patching
-fi
+if [[ ! -z $FAMILY ]]; then linux_patching; fi
 # defconfig
 if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
-	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then
-		cconfig
-	else
-		vendor_config
-	fi
+	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else vendor_config; fi
 else
-	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then
-		cconfig
-	else
-		bconfig
-	fi
+	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else bconfig; fi
 fi
 # menuconfig
-if [ $MENUCONFIG -eq 1 ]; then
-	menuconfig
-fi
+if [ $MENUCONFIG -eq 1 ]; then menuconfig; fi
 # builddeb
-if [ $CROSSCOMPILE -eq 1 ]; then
-	ccompile
-else
-	ncompile
-fi
+builddeb
 echo ""
 # finish
 cd ..

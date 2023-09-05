@@ -6,13 +6,12 @@ if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then :; else apt install -y ccache; fi
 fi
 # compiler
-DEST="/usr/bin"
 if [ $CCACHE -eq 1 ]; then
 	NATIVE="ccache ${COMPILER}"
 	CROSS="ccache ${CROSS_COMPILE}${COMPILER}"
 else
-	NATIVE="${DEST}/${COMPILER}"
-	CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
+	NATIVE="${COMPILER}"
+	CROSS="${CROSS_COMPILE}${COMPILER}"
 fi
 }
 
@@ -27,13 +26,12 @@ if [ $CLANG -eq 1 ]; then
 	fi
 fi
 # compiler
-DEST="/usr/bin"
 if [ $CCACHE -eq 1 ]; then
 	NATIVE="ccache ${COMPILER}"
 	CROSS="ccache ${CROSS_COMPILE}${COMPILER}"
 else
-	NATIVE="${DEST}/${COMPILER}"
-	CROSS="${DEST}/${CROSS_COMPILE}${COMPILER}"
+	NATIVE="${COMPILER}"
+	CROSS="${CROSS_COMPILE}${COMPILER}"
 fi
 if [ $CLANG -eq 1 ]; then
 	if [[ "$ARCH_EXT" == "armel" ]]; then
@@ -42,8 +40,8 @@ if [ $CLANG -eq 1 ]; then
 	fi
 	if [[ "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
 		if [[ `command -v clang-14` ]] && [[ `command -v clang-15` ]]; then
-			NATIVE="${DEST}/${CLANG_VERSION}"
-			CROSS="${DEST}/${CLANG_VERSION}"
+			NATIVE="${CLANG_VERSION}"
+			CROSS="${CLANG_VERSION}"
 		fi
 	else
 		echo -e "${HOST_CODENAME} is not supported."
