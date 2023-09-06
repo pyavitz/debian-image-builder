@@ -126,21 +126,27 @@ else
 fi
 }
 
+report_dir_error (){
+echo "NOTICE: Directory ${KERNEL}-${VERSION} is MIA. Please make a report."
+echo ""
+exit 0
+}
+
 setup (){
 sleep 1s
-cd ${KERNEL}-${VERSION}
-if [[ "$BOARD" == "orangepir1" ]]; then
-	rtl8189es
+if [[ -d "${KERNEL}-${VERSION}" ]]; then
+	cd ${KERNEL}-${VERSION}
+	if [[ "$BOARD" == "orangepir1" ]]; then rtl8189es; fi
+	if [[ "$FAMILY" == "broadcom" ]]; then rpi_firmware; fi
+	export ARCH=${ARCH}
+	# remove builddeb and mkdebian scripts
+	rm -f scripts/package/{builddeb,mkdebian}
+	# add custom builddeb and mkdebian scripts
+	cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
+	chmod +x scripts/package/{builddeb,mkdebian}
+else
+	report_dir_error
 fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	rpi_firmware
-fi
-export ARCH=${ARCH}
-# remove builddeb and mkdebian scripts
-rm -f scripts/package/{builddeb,mkdebian}
-# add custom builddeb and mkdebian scripts
-cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
-chmod +x scripts/package/{builddeb,mkdebian}
 }
 
 cconfig (){

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # github
-check_github(){
+check_github (){
 if [[ -f "../github.txt" ]]; then
 	if [[ "$VERSION" == "4.9.y" || "$VERSION" == "4.19.y" || "$VERSION" == "4.19-rock3" ]]; then
 		SETUP="vendor"
@@ -21,7 +21,7 @@ else
 fi
 }
 
-vendor_download(){
+vendor_download (){
 if [[ -f "${VENDOR_KERNEL}-${VERSION}.tar.gz" ]]; then
 	:;
 else
@@ -37,7 +37,7 @@ echo ""
 exit 0
 }
 
-vendor_extract(){
+vendor_extract (){
 echo ""
 if [[ -f "${VENDOR_KERNEL}-${VERSION}.tar.gz" ]]; then
 	echo_extract
@@ -51,26 +51,30 @@ if [[ -e "linux-${VERSION}/debian" ]]; then
 fi
 }
 
-vendor_setup(){
-export ARCH=${ARCH}
-if [[ "$VERSION" == "4.9.y" ]]; then
-	# remove builddeb script
-	rm -f scripts/package/builddeb
-	# add custom builddeb script
-	cp -fr ../../packaging/builddeb-4.9 scripts/package/builddeb
-	chmod +x scripts/package/builddeb
-fi
-if [[ "$VERSION" == "4.19.y" || "$VERSION" == "4.19-rock3" ]]; then
-	# remove builddeb and mkdebian scripts
-	rm -f scripts/package/{builddeb,mkdebian}
-	# add custom builddeb and mkdebian scripts
-	cp -fr ../../packaging/builddeb-4.19 scripts/package/builddeb
-	cp -fr ../../packaging/mkdebian-4.19 scripts/package/mkdebian
-	chmod +x scripts/package/{builddeb,mkdebian}
+vendor_setup (){
+if [[ -d "${KERNEL}-${VERSION}" ]]; then
+	export ARCH=${ARCH}
+	if [[ "$VERSION" == "4.9.y" ]]; then
+		# remove builddeb script
+		rm -f scripts/package/builddeb
+		# add custom builddeb script
+		cp -fr ../../packaging/builddeb-4.9 scripts/package/builddeb
+		chmod +x scripts/package/builddeb
+	fi
+	if [[ "$VERSION" == "4.19.y" || "$VERSION" == "4.19-rock3" ]]; then
+		# remove builddeb and mkdebian scripts
+		rm -f scripts/package/{builddeb,mkdebian}
+		# add custom builddeb and mkdebian scripts
+		cp -fr ../../packaging/builddeb-4.19 scripts/package/builddeb
+		cp -fr ../../packaging/mkdebian-4.19 scripts/package/mkdebian
+		chmod +x scripts/package/{builddeb,mkdebian}
+	fi
+else
+	report_dir_error
 fi
 }
 
-vendor_config(){
+vendor_config (){
 echo_defconfig
 if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$VERSION" == "4.9.y" ]]; then
 	cp -f ../${DEF}/${FAMILY_EXT}-${VERSION}_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
