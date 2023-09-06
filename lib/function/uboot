@@ -60,48 +60,27 @@ else
 fi
 }
 
-make_defconfig (){
-export ARCH=${ARCH}
-if [ $CROSSCOMPILE -eq 1 ]; then
-	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} ${UBOOT_DEFCONFIG}
-else
-	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC="${NATIVE}" ${UBOOT_DEFCONFIG}
-fi
+defconfig (){
+ubuild "${UBOOT_DEFCONFIG}"
 }
 
 menuconfig (){
-if [ $CROSSCOMPILE -eq 1 ]; then
-	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} menuconfig
-else
-	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} CC="${NATIVE}" menuconfig
-fi
+ubuild "menuconfig"
 }
 
-compile (){
+builddeb (){
 echo ""
 echo_cuboot
-if [[ "$FAMILY_EXT" == "imx8" ]]; then
-	export ATF_LOAD_ADDR=0x920000
-fi
+if [[ "$FAMILY_EXT" == "imx8" ]]; then export ATF_LOAD_ADDR=0x920000; fi
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	echo -e "  GCC     ${CROSS_COMPILE}${COMPILER}"
-	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE}
-	if [[ "$FAMILY_EXT" == "imx8" ]]; then
-		make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} flash.bin
-	fi
 else
 	echo -e "${GRN}  NC${FIN}"
 	echo -e "  GCC     ${COMPILER}"
-	make -j${CORES} CC="${NATIVE}"
-	if [[ "$FAMILY_EXT" == "imx8" ]]; then
-		make -j${CORES} CC="${NATIVE}" flash.bin
-	fi
 fi
+ubuild ""
+if [[ "$FAMILY_EXT" == "imx8" ]]; then ubuild "flash.bin"; fi
 }
 
 uboot_run (){
@@ -117,11 +96,10 @@ uboot_patching
 # lib/function/modconfig
 uboot_configs
 # end
-make_defconfig
-if [ $MENUCONFIG -eq 1 ]; then
-	menuconfig
-fi
-compile
+export ARCH=${ARCH}
+defconfig
+if [ $MENUCONFIG -eq 1 ]; then menuconfig; fi
+builddeb
 }
 
 # allwinner

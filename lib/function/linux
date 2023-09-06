@@ -143,15 +143,6 @@ cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 chmod +x scripts/package/{builddeb,mkdebian}
 }
 
-kbuild (){
-if [ $CLANG -eq 1 ]; then CLANG_FLAGS="${CLANG_LLVM}"; fi
-if [ $CROSSCOMPILE -eq 1 ]; then
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${CLANG_FLAGS} $1
-else
-	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" ${CLANG_FLAGS} $1
-fi
-}
-
 cconfig (){
 echo_cconfig
 if [[ -f "../${DEF}/${MYCONFIG}" ]]; then
@@ -185,7 +176,7 @@ if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
 	rm -f arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 	cp -f ../${DEF}/odroid-lts_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
 fi
-# enable module in the defconfig
+# lib/function/wireless
 enable_wireless_module
 # lib/function/modconfig
 linux_configs

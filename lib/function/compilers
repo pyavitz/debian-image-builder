@@ -49,3 +49,20 @@ if [ $CLANG -eq 1 ]; then
 	fi
 fi
 }
+
+ubuild (){
+if [ $CROSSCOMPILE -eq 1 ]; then
+	make -j${CORES} CC="${CROSS}" CROSS_COMPILE=${CROSS_COMPILE} $1
+else
+	make -j${CORES} CC="${NATIVE}" $1
+fi
+}
+
+kbuild (){
+if [ $CLANG -eq 1 ]; then CLANG_FLAGS="${CLANG_LLVM}"; fi
+if [ $CROSSCOMPILE -eq 1 ]; then
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${CROSS}" CFLAGS="${CFLAGS}" CROSS_COMPILE=${CROSS_COMPILE} ${CLANG_FLAGS} $1
+else
+	make -j${CORES} KBUILD_DEBARCH=${DEBARCH} ARCH=${ARCH} CC="${NATIVE}" CFLAGS="${CFLAGS}" ${CLANG_FLAGS} $1
+fi
+}
