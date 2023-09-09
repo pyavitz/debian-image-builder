@@ -64,9 +64,9 @@ UBUNTU_FW="linux-firmware-mediatek-aiot"
 # user scripts (stage1 and stage2)
 uscripts_pre-stage1(){
 if [[ -f "files/userscripts/uscripts" ]]; then
-	if [[ `grep -w "run_function0" "files/userscripts/uscripts"` ]]; then
-		source files/userscripts/uscripts;
-		run_function0;
+	source files/userscripts/uscripts
+	if [[ `type run_function0` ]] &>/dev/null; then
+		run_function0
 	fi
 fi
 }
@@ -78,29 +78,31 @@ if [[ -f "files/userscripts/uscripts" ]]; then
 	if [[ -f "${P_VALUE}/root/userscripts/README.md" ]]; then
 		rm -f ${P_VALUE}/root/userscripts/README.md;
 	fi
-	if [[ `grep -w "run_function1" "files/userscripts/uscripts"` ]]; then
-		if [[ `grep -w "run_function0" "files/userscripts/uscripts"` ]]; then
-			# file already sourced
-			:;
-		else
-			source files/userscripts/uscripts;
-		fi
-		run_function1;
+	if [[ `type run_function1` ]] &>/dev/null; then
+		run_function1
 	fi
 fi
 }
 
 uscripts_stage2(){
 if [[ -f "/root/userscripts/uscripts" ]]; then
-	if [[ `grep -w "run_function2" "/root/userscripts/uscripts"` ]]; then
-		echo -e "\033[1mRunning user scripts\e[0m.";
-		source /root/userscripts/uscripts;
-		run_function2;
-		echo -e "\033[1mDone\e[0m.";
+	source /root/userscripts/uscripts
+	if [[ `type run_function2` ]] &>/dev/null; then
+		echo ""
+		echo -e "\033[1mRunning user scripts\e[0m ..."
+		run_function2
+		echo -e "\033[1mDone\e[0m."
 	fi
 fi
-if [ -e /root/userscripts ]; then
-	rm -fdr /root/userscripts;
+if [[ -e "/root/userscripts" ]]; then rm -fdr /root/userscripts; fi
+}
+
+uscripts_fin-stage1(){
+if [[ -f "files/userscripts/uscripts" ]]; then
+	source files/userscripts/uscripts
+	if [[ `type run_function3` ]] &>/dev/null; then
+		run_function3
+	fi
 fi
 }
 

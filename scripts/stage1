@@ -137,30 +137,30 @@ if [ $USERACCT -eq 1 ]; then
 	cp -r files/useracct/* ${P_VALUE}/root/useracct;
 fi
 # user scripts stage1
-if [ $USCRIPTS -eq 1 ]; then
-	uscripts_stage1;
-fi
+if [ $USCRIPTS -eq 1 ]; then uscripts_stage1; fi
 echo ""
 echo -e "${WHT}Starting chroot${FIN} ..."
 # mount and chroot p1
 if [[ "$P_VALUE" == "p1" ]]; then
-	mount -o bind /dev p1/dev;
-	mount -o bind /dev/pts p1/dev/pts;
-	chroot p1 /root/stage2;
+	mount -o bind /dev p1/dev
+	mount -o bind /dev/pts p1/dev/pts
+	chroot p1 /root/stage2
 	# unmount
-	umount p1/dev/pts;
-	umount p1/dev;
+	umount p1/dev/pts
+	umount p1/dev
 	if [[ -f "p1/usr/bin/${STATIC}" ]]; then
 		rm -f p1/usr/bin/${STATIC}
 	fi
-	cp -f p1/root/kernel.txt .;
-	rm p1/root/stage2;
-	rm -f p1/root/*.txt;
-	rm -fdr p1/var/cache/debconf/*;
+	cp -f p1/root/kernel.txt .
+	rm p1/root/stage2
+	rm -f p1/root/*.txt
+	rm -fdr p1/var/cache/debconf/*
+	# user scripts fin-stage1
+	if [ $USCRIPTS -eq 1 ]; then uscripts_fin-stage1; fi
 	if [ -n "$PROXY" ]; then
-		rm p1/etc/apt/apt.conf.d/30proxy;
+		rm p1/etc/apt/apt.conf.d/30proxy
 	fi
-	rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
+	rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 	if [[ -f "kernel.txt" ]]; then source kernel.txt; fi
 	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
@@ -204,39 +204,41 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		else
 			P_EFI="p2/boot/efi"
 		fi
-		mkdir -p ${P_EFI};
-		mount -o bind p1 ${P_EFI};
+		mkdir -p ${P_EFI}
+		mount -o bind p1 ${P_EFI}
 	else
 		if [[ "$FAMILY" == "broadcom" ]]; then
 			P_NORM="p2/boot/${FAMILY}"
 		else
 			P_NORM="p2/boot"
 		fi
-		mkdir -p ${P_NORM};
-		mount -o bind p1 ${P_NORM};
+		mkdir -p ${P_NORM}
+		mount -o bind p1 ${P_NORM}
 	fi
-	mount -o bind /dev p2/dev;
-	mount -o bind /dev/pts p2/dev/pts;
-	chroot p2 /root/stage2;
+	mount -o bind /dev p2/dev
+	mount -o bind /dev/pts p2/dev/pts
+	chroot p2 /root/stage2
 	# unmount
-	umount p2/dev/pts;
-	umount p2/dev;
+	umount p2/dev/pts
+	umount p2/dev
 	if [[ "$EFI" == "true" ]]; then
-		umount ${P_EFI};
+		umount ${P_EFI}
 	else
-		umount ${P_NORM};
+		umount ${P_NORM}
 	fi
 	if [[ -f "p2/usr/bin/${STATIC}" ]]; then
 		rm -f p2/usr/bin/${STATIC}
 	fi
-	cp -f p2/root/kernel.txt .;
-	rm p2/root/stage2;
-	rm -f p2/root/*.txt;
-	rm -fdr p2/var/cache/debconf/*;
+	cp -f p2/root/kernel.txt .
+	rm p2/root/stage2
+	rm -f p2/root/*.txt
+	rm -fdr p2/var/cache/debconf/*
+	# user scripts fin-stage1
+	if [ $USCRIPTS -eq 1 ]; then uscripts_fin-stage1; fi
 	if [ -n "$PROXY" ]; then
-		rm p2/etc/apt/apt.conf.d/30proxy;
+		rm p2/etc/apt/apt.conf.d/30proxy
 	fi
-	rm p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io;
+	rm p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 	if [[ -f "kernel.txt" ]]; then source kernel.txt; fi
 	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
 	if [[ "$FSTYPE" == "btrfs" ]]; then btrfs filesystem defragment -f -r ${P_VALUE}; fi

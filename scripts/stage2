@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 source /root/userdata.txt
-if [ $VERBOSE -eq 1 ]; then
-	set -x;
-fi
+if [ $VERBOSE -eq 1 ]; then set -x; fi
 source /root/source.txt
 source /root/board.txt
 source /root/services.txt
@@ -41,16 +39,16 @@ fi
 apt-get update
 apt-get install -y apt-utils
 
-# Locales
+# locales
 set_locales
 
-# Timezone
+# timezone
 set_timezone
 
 apt upgrade -y
 apt dist-upgrade -y
 apt autoremove -y
-# Set network variables
+# network variables
 if [ $NETWORKMANAGER -eq 1 ]; then
 	NETWORKING="network-manager";
 	if [[ "$DISTRO" == "devuan" ]]; then
@@ -62,7 +60,7 @@ else
 		NETWORKING_EXTRA="ifupdown-extra"
 	fi
 fi
-# Install base and extra packages
+# install base and extra packages
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "raspbian" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} resolvconf haveged ${NETWORKING}
 fi
@@ -173,16 +171,11 @@ if [ $USERACCT -eq 1 ]; then
 		rm -fdr /root/useracct;
 	fi
 fi
-if [ $ROOTPASSWD -eq 1 ]; then
-	# enable root:toor
-	echo "root:toor" | chpasswd
-fi
-# User scripts stage2
-if [ $USCRIPTS -eq 1 ]; then
-	echo "";
-	uscripts_stage2;
-fi
-# Initrd / uInitrd
+# set root:toor password
+if [ $ROOTPASSWD -eq 1 ]; then echo "root:toor" | chpasswd; fi
+# user scripts stage2
+if [ $USCRIPTS -eq 1 ]; then uscripts_stage2; fi
+# initrd / uinitrd
 cd ~
 if [[ -f "/root/99-initrd" ]]; then
 	mkdir -p /etc/initramfs/post-update.d/
@@ -206,7 +199,7 @@ else
 	rm -f /root/{99-uefi,99-uefi-brcm};
 fi
 
-# Alsa asound.state file
+# alsa asound.state file
 if [[ -f "/root/asound.state" ]]; then
 	mkdir -p /var/lib/alsa
 	mv -f /root/asound.state /var/lib/alsa/asound.state
@@ -216,14 +209,14 @@ if [[ -f "/root/asound.conf" ]]; then
 	mv -f /root/asound.conf /etc/asound.conf
 fi
 
-# LED triggers
+# led triggers
 if [[ -f "/root/led-trigger" ]]; then
 	mv -f /root/led-trigger /usr/local/sbin/led-trigger;
 	chmod +x /usr/local/sbin/led-trigger;
 	chown -R root:root /usr/local/sbin/;
 fi
 
-# Bluetooth helper
+# bluetooth helper
 if [[ "$BOARD" == "pinea64plus" ]]; then
 	pine64_bthelper
 	if [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" || "$DISTRO" == "kali" ]]; then
@@ -231,7 +224,7 @@ if [[ "$BOARD" == "pinea64plus" ]]; then
 	fi
 fi
 
-# Brcm patchram
+# brcm patchram
 if [[ "$BOARD" == "nanopineoplus2" ]]; then
 	echo ""
 	echo "Installing brcm patchram plus ..."
@@ -249,12 +242,12 @@ if [[ "$BOARD" == "nanopineoplus2" ]]; then
 	echo "hci_uart" >> /etc/modules
 fi
 
-# Cubietruck blacklist hci_uart / bluetooth
+# cubietruck blacklist hci_uart / bluetooth
 if [[ "$BOARD" == "cubietruck" ]]; then
 	ct_blacklist;
 fi
 
-# Board information
+# board information
 if [[ -f "/etc/opt/board.txt" ]]; then
 	:;
 else
@@ -262,7 +255,7 @@ else
 	cp /root/board.txt /etc/opt/
 fi
 
-# eMMC flash tools
+# write2mmc script
 cd ~
 mv -f write2mmc /usr/local/bin/
 echo 'DISCLAIMER="true"' | tee /etc/default/write2mmc > /dev/null 2>&1
@@ -270,7 +263,7 @@ echo 'VERBOSITY="1"' | tee -a /etc/default/write2mmc > /dev/null 2>&1
 chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
 
-# Scripts
+# scripts
 echo ""
 echo "Moving scripts ..."
 sleep 1s
@@ -280,11 +273,11 @@ mv -f {add-overlay,bootcmd,menu-config,menu-config-update,setup,smon,sysinfo} /u
 if [[ "$SERIES" == "meson-g12a" || "$SERIES" == "meson-g12b" || "$SERIES" == "meson-sm1" ]] && [[ -f "/root/amlmixer" ]]; then
 	mv -f amlmixer /usr/local/bin/
 fi
-# Tweaks
+# tweaks
 if [[ -f "/usr/bin/tweaks" ]]; then
 	tweaks_service > /dev/null 2>&1
 fi
-# X96-AIR flash recovery script
+# tvbox flash recovery script
 if [[ "$BOARD" == "x96air" ]]; then
 	mv -f flash-recovery /usr/local/sbin/
 	chmod +x /usr/local/sbin/flash-recovery
@@ -336,7 +329,7 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	fi
 fi
 
-# MOTD
+# motd
 mkdir -p /etc/update-motd.d
 if [[ -f "/etc/update-motd.d/10-uname" ]]; then
 	rm -f /etc/update-motd.d/10-uname
@@ -361,17 +354,17 @@ rm -f /etc/motd
 echo "" > /etc/motd
 chown root:root /etc/motd
 
-# Kali tweaks service
+# kali tweaks service
 if [[ "$DISTRO" == "kali" ]] && [[ -f "/root/kali-tweaks" ]]; then
 	mv -f /root/kali-tweaks /usr/local/sbin/kali-tweaks
 	chmod +x /usr/local/sbin/kali-tweaks
 	kali_tweaks > /dev/null 2>&1
 fi
 
-# Clean
+# clean
 rm -f {amlmixer,asound.conf,asound.state,*-tweaks,*-bthelper,sysinfo,20-sysinfo,write2mmc,*.init,99-initrd,99-uefi,bootcmd,add-overlay,smon,flash-recovery,rtc-ds1307}
 
-# Move mc skins
+# move mc skins
 mkdir -p /usr/share/mc/skins
 mv -f darkgreen.ini /usr/share/mc/skins/darkgreen.ini
 mv -f darkred.ini /usr/share/mc/skins/darkred.ini
@@ -386,7 +379,7 @@ if [ $USERACCT -eq 0 ]; then
 	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 fi
 
-# Firmware
+# firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
 	if [[ "$BOARD" == "bananapim2zero" || "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" || "$BOARD" == "cubietruck" ]]; then
 		alt_firmware
@@ -408,7 +401,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	brcm_firmware
 fi
 
-# Network Setup
+# network setup
 if [ $VERBOSE -eq 1 ]; then
 	realtek_conf
 	if [ $NETWORKMANAGER -eq 1 ]; then
@@ -437,17 +430,17 @@ else
 	fi
 fi
 
-# Allocate zramswap
+# allocate zramswap
 if [[ -f "/etc/default/zramswap" ]]; then
 	sed -i 's/#ALLOCATION=256/ALLOCATION=1024/g' /etc/default/zramswap
 	sed -i 's/#SIZE=256/SIZE=1024/g' /etc/default/zramswap
 	sed -i 's/#PRIORITY=100/PRIORITY=100/g' /etc/default/zramswap
 fi
 
-# Regulatory db
+# wireless regulatory db
 wireless_regdb
 
-# Raspberry Pi
+# raspberry Pi
 if [[ "$FAMILY" == "broadcom" ]]; then
 	mkdir -p /etc/udev/rules.d/
 	mkdir -p /lib/udev/rules.d/
@@ -461,7 +454,7 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 	if [[ -f "/root/60-rpi.gpio-common.rules" ]]; then
 		mv -f 60-rpi.gpio-common.rules /lib/udev/rules.d/
 	fi
-	# Sys-mods
+	# sys-mods
 	echo ""
 	echo "Installing raspi-sys-mods ..."
 	sleep .50
@@ -491,19 +484,19 @@ if [[ "$FAMILY" == "broadcom" ]]; then
 		rm -f /etc/apt/preferences.d/3rd_parties.pref
 	fi
 	echo "Done."
-	# Userland
+	# userland
 	rpi_userland
-	# Eeprom
+	# eeprom
 	if [[ "$SERIES" == "bcm2711" ]]; then
 		${SERIES}_eeprom
 	fi
-	# Modules
+	# modules
 	brcm_modules > /dev/null 2>&1
-	# Clean misc files
+	# clean misc files
 	rm -f {*.patch,*led*,*eeprom*,*.rules}
 fi
 
-# Sudoers file
+# sudoers file
 if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then
 	rm -f /etc/sudoers.d/010_pi-nopasswd
 fi
@@ -514,17 +507,17 @@ ${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
 fi
 
-# Remove zstd compression (not supported by vednor kernels)
+# remove zstd compression (not supported by vednor kernels)
 if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
 	sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf
 fi
 
-# uImage
+# uimage
 if [[ "$BOARD" == "odroidc1" ]]; then
 	make_uimage
 fi
 
-# Kernel
+# u-boot and kernel packages
 echo ""
 echo "Installing linux and u-boot package ..."
 apt update
@@ -559,7 +552,7 @@ if [[ -f "/etc/systemd/journald.conf" ]]; then
 	sed -i 's/#SystemMaxFiles=100/SystemMaxFiles=5/g' /etc/systemd/journald.conf
 fi
 
-# Whiptail color palette
+# whiptail color palette
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	mkdir -p /etc/newt
 	cat <<EOF > "/etc/newt/palette.dark"
@@ -588,7 +581,7 @@ if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopi
 	router_udev_rules
 fi
 
-# Services
+# services
 if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
 	sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged
 fi
@@ -629,7 +622,7 @@ else
 	enable_systemd > /dev/null 2>&1
 fi
 
-# Own it
+# own it
 if [ $USERACCT -eq 0 ]; then
 	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
 fi
@@ -638,7 +631,7 @@ chown -R root:root /usr/local/bin/
 chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 
-# Finish
+# finish
 echo ""
 echo "Finalizing ..."
 echo ""
