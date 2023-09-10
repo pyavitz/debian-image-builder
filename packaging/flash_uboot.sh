@@ -132,6 +132,12 @@ if [[ "$FAMILY" == "freescale" ]] && [[ "$ARCH" == "arm64" ]] && [[ -f "${DIR}/u
 fi
 
 # rockchip
+if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/u-boot-rockchip.bin" ]]; then
+	target_device
+	sleep .50
+	# flash binary
+	dd if="${DIR}/u-boot-rockchip.bin" of="${MMC}" seek=64
+fi
 if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${DIR}/u-boot.itb" ]]; then
 	target_device
 	sleep .50
@@ -193,4 +199,5 @@ else
 	exit 0
 fi
 
+sync
 exit 0

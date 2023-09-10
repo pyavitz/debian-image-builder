@@ -2,8 +2,13 @@
 
 # rockchip flash u-boot
 flash_uboot(){
-dd if=${OUTPUT}/idbloader.bin of="${IMAGE_LOOP_DEV}" seek=64
-dd if=${OUTPUT}/u-boot.itb of="${IMAGE_LOOP_DEV}" seek=16384
+if [[ "$ARCH" == "arm" ]]; then
+	dd if="${OUTPUT}/u-boot-rockchip.bin" of="${IMAGE_LOOP_DEV}" seek=64
+fi
+if [[ "$ARCH" == "arm64" ]]; then
+	dd if="${OUTPUT}/idbloader.bin" of="${IMAGE_LOOP_DEV}" seek=64
+	dd if="${OUTPUT}/u-boot.itb" of="${IMAGE_LOOP_DEV}" seek=16384
+fi
 }
 
 rk3288_udev_rules(){

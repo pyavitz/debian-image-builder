@@ -207,22 +207,27 @@ if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	arm_trusted_firmware
 fi
 uboot_run
-if [[ -f "idbloader.img" ]]; then
-	mkdir -p ../../${OUTPUT}
-	if [[ "$ARCH" == "arm" ]]; then
+if [[ "$ARCH" == "arm" ]]; then
+	# u-boot v2023.07.02
+	if [[ -f "u-boot-rockchip.bin" ]]; then
+		mkdir -p ../../${OUTPUT}
+		cp -f u-boot-rockchip.bin ../../${OUTPUT}/
+		uboot_packaging
+		echo ""
+	else
+		report_error
+	fi
+fi
+if [[ "$ARCH" == "arm64" ]]; then
+	if [[ -f "idbloader.img" ]]; then
+		mkdir -p ../../${OUTPUT}
 		cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
-		cp -f u-boot.bin u-boot.itb
 		cp -f u-boot.itb ../../${OUTPUT}/
 		uboot_packaging
 		echo ""
 	else
-		cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
-		cp -f u-boot.itb ../../${OUTPUT}/
-		uboot_packaging
-		echo ""
+		report_error
 	fi
-else
-	report_error
 fi
 }
 
