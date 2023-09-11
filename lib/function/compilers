@@ -6,8 +6,8 @@ if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then :; else apt install -y ccache; fi
 fi
 if [[ "$COMPILER" == "clang" || "$COMPILER" == "clang-14" || "$COMPILER" == "clang-15" ]]; then
-	echo -e "$COMPILER is not supported by u-boot."
-	exit 0
+	GCC=`ls -ls /usr/bin/gcc | sed 's/.*\(..\)/\1/' | sed 's/ //g'`
+	COMPILER="gcc-${GCC}"
 fi
 # compiler
 if [ $CCACHE -eq 1 ]; then
