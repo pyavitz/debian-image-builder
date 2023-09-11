@@ -1,0 +1,332 @@
+From e2abff99483f582ea909e0aec6a846f88c966123 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Fri, 28 Jul 2023 04:23:59 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: radxa zero overlays
+
+Vendor overlays
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm64/boot/dts/amlogic/Makefile          |  1 +
+ .../dts/amlogic/overlays/radxazero/Makefile   | 16 ++++++++
+ ...meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts | 15 ++++++++
+ .../meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts  | 15 ++++++++
+ ...meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts | 15 ++++++++
+ ...meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts | 15 ++++++++
+ .../radxazero/meson-g12a-pwm-c-on-gpiox-8.dts | 17 +++++++++
+ .../meson-g12a-pwmao-a-on-gpioao-11.dts       | 17 +++++++++
+ .../radxazero/meson-g12a-spi-spidev.dts       | 38 +++++++++++++++++++
+ ...on-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts | 15 ++++++++
+ ...on-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts | 15 ++++++++
+ ...on-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts | 15 ++++++++
+ .../radxazero/meson-g12a-uart-ee-c.dts        | 15 ++++++++
+ 13 files changed, 209 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/Makefile
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwm-c-on-gpiox-8.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwmao-a-on-gpioao-11.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-spi-spidev.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ee-c.dts
+
+diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+index f5bfefcd3e62..bb34ba612b3f 100644
+--- a/arch/arm64/boot/dts/amlogic/Makefile
++++ b/arch/arm64/boot/dts/amlogic/Makefile
+@@ -1,5 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
+ subdir-y += overlays
++subdir-y += overlays/radxazero
+ 
+ dtb-$(CONFIG_ARCH_MESON) += amlogic-c3-c302x-aw409.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
+-- 
+2.39.2
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/Makefile b/arch/arm64/boot/dts/amlogic/overlays/radxazero/Makefile
+new file mode 100644
+index 000000000000..6867d23a654f
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/Makefile
+@@ -0,0 +1,16 @@
++# SPDX-License-Identifier: GPL-2.0
++dtbo-y += \
++	meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dtbo \
++	meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dtbo \
++	meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dtbo \
++	meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dtbo \
++	meson-g12a-pwmao-a-on-gpioao-11.dtbo \
++	meson-g12a-pwm-c-on-gpiox-8.dtbo \
++	meson-g12a-spi-spidev.dtbo \
++	meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dtbo \
++	meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
++	meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
++	meson-g12a-uart-ee-c.dtbo
++
++targets += $(dtbo-y)
++always-y := $(dtbo-y)
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
+new file mode 100644
+index 000000000000..259d716a3032
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ao-m0-gpioao-2-gpioao-3.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c_AO>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c_ao_sck_pins &i2c_ao_sda_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
+new file mode 100644
+index 000000000000..0e90126470d5
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpioh-6-gpioh-7.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c1>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c1_sda_h6_pins &i2c1_sck_h7_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
+new file mode 100644
+index 000000000000..2fc602fdce3c
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m1-gpiox-10-gpiox-11.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c1>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c1_sda_x_pins &i2c1_sck_x_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
+new file mode 100644
+index 000000000000..8353308cd850
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-i2c-ee-m3-gpioa-14-gpioa-15.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&i2c3>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&i2c3_sck_a_pins &i2c3_sda_a_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwm-c-on-gpiox-8.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwm-c-on-gpiox-8.dts
+new file mode 100644
+index 000000000000..e73604e07e97
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwm-c-on-gpiox-8.dts
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&pwm_cd>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&pwm_c_x8_pins>;
++			pinctrl-names = "default";
++			clocks = <&xtal>;
++			clock-names = "clkin2";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwmao-a-on-gpioao-11.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwmao-a-on-gpioao-11.dts
+new file mode 100644
+index 000000000000..0739d6710b16
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-pwmao-a-on-gpioao-11.dts
+@@ -0,0 +1,17 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&pwm_AO_ab>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&pwm_ao_a_pins>;
++			pinctrl-names = "default";
++			clocks = <&xtal>;
++			clock-names = "clkin3";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-spi-spidev.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-spi-spidev.dts
+new file mode 100644
+index 000000000000..2cca485b09c9
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-spi-spidev.dts
+@@ -0,0 +1,38 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&spicc0>;
++		__overlays__ {
++			pinctrl-0 = <&spicc0_x_pins &spicc0_ss0_x_pins>;
++			pinctrl-names = "default";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev@0 {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <10000000>;
++			};
++		};
++	};
++
++	fragment@1 {
++		target = <&spicc1>;
++		__overlays__ {
++			pinctrl-0 = <&spicc1_pins &spicc1_ss0_pins>;
++			pinctrl-names = "default";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			spidev@0 {
++				compatible = "spidev";
++				status = "disabled";
++				reg = <0>;
++				spi-max-frequency = <10000000>;
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
+new file mode 100644
+index 000000000000..9a5ac2a24993
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-a-on-gpioao-0-gpioao-1.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_a_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
+new file mode 100644
+index 000000000000..e794e7c69928
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-2-gpioao-3.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_b_tx_2_rx_3_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
+new file mode 100644
+index 000000000000..ccbc84aea2f4
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ao-b-on-gpioao-8-gpioao-9.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_AO_B>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_ao_b_tx_8_rx_9_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ee-c.dts b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ee-c.dts
+new file mode 100644
+index 000000000000..0e467530e75f
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/overlays/radxazero/meson-g12a-uart-ee-c.dts
+@@ -0,0 +1,15 @@
++/dts-v1/;
++/plugin/;
++
++/ {
++	compatible = "radxa,zero", "amlogic,g12a";
++
++	fragment@0 {
++		target = <&uart_C>;
++		__overlays__ {
++			status = "okay";
++			pinctrl-0 = <&uart_c_pins &uart_c_cts_rts_pins>;
++			pinctrl-names = "default";
++		};
++	};
++};
+-- 
+2.39.2
+
