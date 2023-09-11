@@ -134,8 +134,8 @@ U-Boot:			# Supported: v2023.01
 Branch:			# Supported: 5.15 / 6.1 and "maybe" current stable
 Build:			# Kernel build version number
 Menuconfig:		# Run uboot and kernel menuconfig
-Compiler:		# GNU Compiler Collection
-Caching on:		# Ccache
+Compiler:		# GNU Compiler Collection / Clang
+Ccache:			# Compiler cache
 
 Customize
 Defconfig:		# User defconfig

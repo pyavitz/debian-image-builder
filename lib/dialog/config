@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # builder version
-BUILDER="5.11"
+BUILDER="5.12"
 
 # script
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
@@ -91,8 +91,8 @@ VALUES=$(dialog --ok-label "Submit" --no-cancel \
 	" Branch:"   		12 1    "$VERSION"		12 10 10 0 \
 	" Build:"   		13 1    "$BUILD_VERSION"	13 9 4 0 \
 	" Menuconfig:"		14 1	"$MENUCONFIG"		14 14 2 0 \
-	" Compiler:"		15 1	"$COMPILER"		15 12 9 0 \
-	" Caching on:"		16 1	"$CCACHE"	 	16 14 2 0 \
+	" Compiler:"		15 1	"$COMPILER"		15 12 11 0 \
+	" Ccache:"		16 1	"$CCACHE"	 	16 14 2 0 \
 	" "			17 1	""			17 14 0 0 \
 	" Customize"		18 1	""			18 14 0 0 \
 	" Defconfig:"		19 1	"$CUSTOM_DEFCONFIG"	19 13 2 0 \
@@ -136,9 +136,6 @@ echo USERACCT= >> tmp0
 echo 'EMMC="0"' >> tmp0
 echo 'ROOTPASSWD="0"' >> tmp0
 echo 'USER_PKGS="htop libsensors-dev"' >> tmp0
-echo 'CLANG="0"' >> tmp0
-echo 'CLANG_VERSION="clang-15"' >> tmp0
-echo 'CLANG_LLVM="LLVM=-15 LLVM_IAS=1"' >> tmp0
 echo CORES=\`nproc\` >> tmp0
 echo 'CFLAGS=""' >> tmp0
 echo 'KBUSER="marvin"' >> tmp0
@@ -183,12 +180,12 @@ sed -i '6i### DISTRIBUTION AND RELEASE' userdata.txt
 sed -i '10i### UBOOT AND LINUX KERNEL' userdata.txt
 sed -i '17i### CUSTOM' userdata.txt
 sed -i '29i### COMPILER TUNING' userdata.txt
-sed -i '35i### WHOAMI AND HOST' userdata.txt
-sed -i '38i### EXTRA WIRELESS' userdata.txt
-sed -i '41i### LOCALES' userdata.txt
-sed -i '49i### TIMEZONE' userdata.txt
-sed -i '54i### NAME SERVER' userdata.txt
-sed -i '57i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '32i### WHOAMI AND HOST' userdata.txt
+sed -i '35i### EXTRA WIRELESS' userdata.txt
+sed -i '38i### LOCALES' userdata.txt
+sed -i '46i### TIMEZONE' userdata.txt
+sed -i '51i### NAME SERVER' userdata.txt
+sed -i '54i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # customize your image
 custom_txt(){
@@ -233,7 +230,6 @@ clear -x
 if [[ -f "userdata.txt" ]]; then
 	sed -i 's/=0/="0"/g' userdata.txt
 	sed -i 's/=1/="1"/g' userdata.txt
-	sed -i 's/LLVM_IAS="1"/LLVM_IAS=1/g' userdata.txt
 	echo -e "userdata.txt file created."
 	exit 0
 fi
