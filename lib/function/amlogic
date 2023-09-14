@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # STAGE1
-flash_uboot(){
+flash_uboot (){
 if [ $EMMC -eq 1 ]; then
 	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
 else
@@ -10,7 +10,7 @@ else
 fi
 }
 
-flash_vendor-uboot(){
+flash_vendor-uboot (){
 if [[ "$BOARD" == "odroidc1" ]]; then
 	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync;
 	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync;
@@ -23,7 +23,7 @@ fi
 }
 
 # STAGE2
-radxazero_firmware(){
+radxazero_firmware (){
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 echo ""
 echo "Adding Radxa Zero firmware ..."
@@ -70,9 +70,8 @@ chown -R root:root /lib/firmware/ene-ub6250
 cd ~
 }
 
-odroid_udev_rules(){
+odroid_udev_rules (){
 tee /etc/udev/rules.d/10-odroid.rules <<EOF
-# Misc video rules
 KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
 
 # Automatic Disk Scheduler
@@ -82,7 +81,13 @@ ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}=="0",ATTR{qu
 EOF
 }
 
-ac2xx_udev_rules(){
+aml_gpiomem_rules (){
+tee /etc/udev/rules.d/10-aml-gpiomem.rules <<EOF
+SUBSYSTEM=="aml-gpiomem", GROUP="gpio", MODE="0660"
+EOF
+}
+
+ac2xx_udev_rules (){
 # udev rules
 echo "# SDCARD" > /etc/udev/rules.d/10-openvfd-led.rules
 echo 'ACTION=="add", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
@@ -113,7 +118,7 @@ sed -i 's/grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"/`grep -
 chmod +x /usr/local/sbin/hdmi-led-trigger
 }
 
-make_uimage(){
+make_uimage (){
 mkdir -p /etc/initramfs/post-update.d/
 cat <<EOF > "/etc/initramfs/post-update.d/99-uimage"
 #!/bin/bash
