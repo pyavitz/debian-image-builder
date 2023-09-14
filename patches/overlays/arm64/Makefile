@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
 dtbo-$(CONFIG_ARCH_MESON) += \
+	meson-aml-gpiomem.dtbo \
 	meson-g12a-radxa-zero-gpio-8-led.dtbo \
 	meson-g12a-radxa-zero-gpio-10-led.dtbo \
 	meson-g12b-bananapi-m2s-rtl8822cs.dtbo \
@@ -12,8 +13,8 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12-gxl-cma-pool-896MB.dtbo \
 	meson-sm1-bananapi-m5-rtl8822cs.dtbo \
 	meson-sm1-bananapi-uartA.dtbo \
+	meson-sm1-bananapi-uartA_cts_rts.dtbo \
 	meson-sm1-bananapi-uartAO_B.dtbo \
-	meson-sm1-bananapi-uartB.dtbo \
 	meson-sm1-odroid-c4-i2c0.dtbo \
 	meson-sm1-odroid-c4-i2c1.dtbo \
 	meson-sm1-odroid-c4-rtl8822cs.dtbo \
