@@ -1,14 +1,14 @@
-From ebe856d062697349e844304f1c5ced6a0ea95391 Mon Sep 17 00:00:00 2001
+From 97d0caf4408b64f8a1bb410ec1e0272870d4566e Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 28 Jul 2023 18:12:26 -0400
+Date: Fri, 15 Sep 2023 05:34:03 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-g12a-radxa-zero
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- .../boot/dts/amlogic/meson-g12-common.dtsi    | 32 ++++++++++++
- .../dts/amlogic/meson-g12a-radxa-zero.dts     | 49 ++++++++++++++++++-
- arch/arm64/boot/dts/amlogic/meson-g12a.dtsi   |  6 +++
- 3 files changed, 86 insertions(+), 1 deletion(-)
+ .../boot/dts/amlogic/meson-g12-common.dtsi    | 32 +++++++++
+ .../dts/amlogic/meson-g12a-radxa-zero.dts     | 65 ++++++++++++++++++-
+ arch/arm64/boot/dts/amlogic/meson-g12a.dtsi   |  6 ++
+ 3 files changed, 102 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
 index 88b848c65b0d..6b9bd1e22852 100644
@@ -68,10 +68,29 @@ index 88b848c65b0d..6b9bd1e22852 100644
  						mux {
  							groups = "pwm_e";
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
-index cf0a9be83fc4..45b18f1f383a 100644
+index cf0a9be83fc4..dcccdba2e99e 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
-@@ -60,6 +60,17 @@ sdio_pwrseq: sdio-pwrseq {
+@@ -15,6 +15,18 @@ / {
+ 
+ 	aliases {
+ 		serial0 = &uart_AO;
++		serial1 = &uart_AO_B;
++		serial2 = &uart_A;
++		serial3 = &uart_B;
++		serial4 = &uart_C;
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c_AO;
++		spi0 = &spicc0;
++		spi1 = &spicc1;
++		spi2 = &spifc;
+ 	};
+ 
+ 	chosen {
+@@ -60,6 +72,17 @@ sdio_pwrseq: sdio-pwrseq {
  		clock-names = "ext_clock";
  	};
  
@@ -89,7 +108,7 @@ index cf0a9be83fc4..45b18f1f383a 100644
  	ao_5v: regulator-ao_5v {
  		compatible = "regulator-fixed";
  		regulator-name = "AO_5V";
-@@ -191,6 +202,18 @@ wifi32k: wifi32k {
+@@ -191,6 +214,18 @@ wifi32k: wifi32k {
  	};
  };
  
@@ -108,11 +127,15 @@ index cf0a9be83fc4..45b18f1f383a 100644
  &arb {
  	status = "okay";
  };
-@@ -278,6 +301,22 @@ &ir {
+@@ -278,6 +313,26 @@ &ir {
  	pinctrl-names = "default";
  };
  
-+&i2c_AO {
++&i2c3 {
++	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
 +	fusb302@22 {
 +		compatible = "fcs,fusb302";
 +		reg = <0x22>;
@@ -131,7 +154,7 @@ index cf0a9be83fc4..45b18f1f383a 100644
  &pwm_AO_cd {
  	pinctrl-0 = <&pwm_ao_d_e_pins>;
  	pinctrl-names = "default";
-@@ -310,7 +349,7 @@ &sd_emmc_a {
+@@ -310,7 +365,7 @@ &sd_emmc_a {
  
  	bus-width = <4>;
  	cap-sd-highspeed;
@@ -140,7 +163,7 @@ index cf0a9be83fc4..45b18f1f383a 100644
  	max-frequency = <100000000>;
  
  	non-removable;
-@@ -402,3 +441,11 @@ &uart_AO {
+@@ -402,3 +457,11 @@ &uart_AO {
  &usb {
  	status = "okay";
  };
