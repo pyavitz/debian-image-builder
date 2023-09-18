@@ -1,7 +1,54 @@
 #!/bin/bash
 
+# Firmware
+rpi_firmware (){
+RPIURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
+mkdir -p firmware
+rm -fr firmware/*
+cd firmware
+echo ""
+echo -en "Firmware"
+echo -en " ${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN}"
+aria2c -q ${RPIURL}LICENCE.broadcom
+aria2c -q ${RPIURL}COPYING.linux
+if [[ "$SERIES" == "bcm2711" ]]; then
+	aria2c -q ${RPIURL}fixup4.dat
+	aria2c -q ${RPIURL}fixup4cd.dat
+	aria2c -q ${RPIURL}fixup4db.dat
+	aria2c -q ${RPIURL}fixup4x.dat
+	aria2c -q ${RPIURL}start4.elf
+	aria2c -q ${RPIURL}start4cd.elf
+	aria2c -q ${RPIURL}start4db.elf
+	aria2c -q ${RPIURL}start4x.elf
+	cd ..
+	if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	else
+		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
+		exit 0
+	fi
+else
+	aria2c -q ${RPIURL}bootcode.bin
+	aria2c -q ${RPIURL}fixup.dat
+	aria2c -q ${RPIURL}fixup_cd.dat
+	aria2c -q ${RPIURL}fixup_db.dat
+	aria2c -q ${RPIURL}fixup_x.dat
+	aria2c -q ${RPIURL}start.elf
+	aria2c -q ${RPIURL}start_cd.elf
+	aria2c -q ${RPIURL}start_db.elf
+	aria2c -q ${RPIURL}start_x.elf
+	cd ..
+	if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	else
+		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
+		exit 0
+	fi
+fi
+}
+
 # check log and report
-check_log(){
+check_log (){
 if [[ -f "${LOG_FILE}" ]]; then
 	PATHTOFILE=`echo ${LOG_FILE} | sed 's/..\/..\///g'`
 	if [[ `grep "Skipping patch" "${LOG_FILE}"` ]]; then
@@ -32,7 +79,7 @@ fi
 }
 
 # uboot patch log
-uboot_log(){
+uboot_log (){
 LOG_DIR="../../output/logs"
 LOG_FILE="${LOG_DIR}/${BOARD}-u-boot-patch.log"
 if [[ -f "${LOG_FILE}" ]]; then
@@ -47,7 +94,7 @@ fi
 }
 
 # linux patch log
-linux_log(){
+linux_log (){
 LOG_DIR="../../output/logs"
 LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
 if [[ -f "${LOG_FILE}" ]]; then
@@ -62,7 +109,7 @@ fi
 }
 
 # linux user patch log
-linux_user_log(){
+linux_user_log (){
 LOG_DIR="../../output/logs"
 LOG_FILE="${LOG_DIR}/${BOARD}-user-patch.log"
 if [[ -f "${LOG_FILE}" ]]; then
@@ -77,7 +124,7 @@ fi
 }
 
 # user patches
-user_patches(){
+user_patches (){
 if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
 	linux_user_log
 	echo "" >> ${LOG_FILE}
@@ -89,7 +136,7 @@ fi
 }
 
 # u-boot patching
-uboot_patching(){
+uboot_patching (){
 # apply patches
 if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
 	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
@@ -118,7 +165,7 @@ echo -e ""
 }
 
 # linux apply patches
-apply(){
+apply (){
 linux_log
 echo ""
 echo "" >> ${LOG_FILE}
@@ -186,7 +233,7 @@ if [[ -d "../../${OVERLAYPATCHES}/${LINUX_VERSION}" ]] && [[ -d "../../${OVERLAY
 fi
 }
 
-linux_patching(){
+linux_patching (){
 # packaging
 linux_packaging
 # patching

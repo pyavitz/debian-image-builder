@@ -9,95 +9,10 @@ cp -f board.txt ${SRC}/
 cd ${SRC}
 }
 
-# Firmware
-rpi_firmware (){
-BINURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
-mkdir -p firmware
-rm -fr firmware/*
-cd firmware
+report_dir_error (){
+echo "NOTICE: Directory ${KERNEL}-${VERSION} is MIA. Please make a report."
 echo ""
-echo_firm
-${DOWNLOAD} ${BINURL}LICENCE.broadcom
-${DOWNLOAD} ${BINURL}COPYING.linux
-if [[ "$SERIES" == "bcm2711" ]]; then
-	${DOWNLOAD} ${BINURL}fixup4.dat
-	${DOWNLOAD} ${BINURL}fixup4cd.dat
-	${DOWNLOAD} ${BINURL}fixup4db.dat
-	${DOWNLOAD} ${BINURL}fixup4x.dat
-	${DOWNLOAD} ${BINURL}start4.elf
-	${DOWNLOAD} ${BINURL}start4cd.elf
-	${DOWNLOAD} ${BINURL}start4db.elf
-	${DOWNLOAD} ${BINURL}start4x.elf
-	cd ..
-	if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-	else
-		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
-		exit 0
-	fi
-else
-	${DOWNLOAD} ${BINURL}bootcode.bin
-	${DOWNLOAD} ${BINURL}fixup.dat
-	${DOWNLOAD} ${BINURL}fixup_cd.dat
-	${DOWNLOAD} ${BINURL}fixup_db.dat
-	${DOWNLOAD} ${BINURL}fixup_x.dat
-	${DOWNLOAD} ${BINURL}start.elf
-	${DOWNLOAD} ${BINURL}start_cd.elf
-	${DOWNLOAD} ${BINURL}start_db.elf
-	${DOWNLOAD} ${BINURL}start_x.elf
-	cd ..
-	if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-	else
-		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
-		exit 0
-	fi
-fi
-}
-
-# mainline
-download (){
-MLURL="https://git.kernel.org/torvalds/t/"
-if [[ `wget -S --spider ${MLURL}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	mainline_download
-	mainline_extract
-else
-	check_stable
-fi
-}
-
-# lts / stable
-check_stable (){
-RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
-STBURL="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
-if [[ `wget -S --spider ${STBURL}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	stable_download
-	stable_extract
-else
-	check_github
-fi
-}
-
-stable_download (){
-if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-	:;
-else
-	echo_stable
-	${DOWNLOAD} ${STBURL}${KERNEL}-${VERSION}.tar.xz
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-fi
-extra_wireless
-}
-
-mainline_download (){
-if  [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
-	:;
-else
-	echo_mainline
-	${DOWNLOAD} ${MLURL}${KERNEL}-${VERSION}.tar.gz
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-fi
-extra_wireless
+exit 0
 }
 
 report_tarball_error (){
@@ -106,17 +21,54 @@ echo ""
 exit 0
 }
 
-stable_extract (){
-echo ""
-if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-	echo_extract
-	pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+# mainline
+downloading (){
+KERNELORG="https://git.kernel.org/torvalds/t/"
+if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] || \
+	[[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
+	download
+	extract
 else
-	report_tarball_error
+	search
 fi
 }
 
-mainline_extract (){
+# lts / stable
+search (){
+RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
+KERNELORG="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
+if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] || \
+	[[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+	download_stable
+	extract_stable
+else
+	search_github
+fi
+}
+
+download (){
+if  [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
+	:;
+else
+	echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
+	${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.gz
+	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+fi
+extra_wireless
+}
+
+download_stable (){
+if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+	:;
+else
+	echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
+	${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.xz
+	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+fi
+extra_wireless
+}
+
+extract (){
 echo ""
 if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
 	echo_extract
@@ -126,10 +78,14 @@ else
 fi
 }
 
-report_dir_error (){
-echo "NOTICE: Directory ${KERNEL}-${VERSION} is MIA. Please make a report."
+extract_stable (){
 echo ""
-exit 0
+if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+	echo_extract
+	pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+else
+	report_tarball_error
+fi
 }
 
 setup (){
