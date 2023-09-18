@@ -24,8 +24,8 @@ exit 0
 # mainline
 downloading (){
 KERNELORG="https://git.kernel.org/torvalds/t/"
-if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] || \
-	[[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
+if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]] || \
+	[[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download
 	extract
 else
@@ -37,8 +37,8 @@ fi
 search (){
 RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
 KERNELORG="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
-if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] || \
-	[[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]] || \
+	[[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_stable
 	extract_stable
 else
