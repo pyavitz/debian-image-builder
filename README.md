@@ -124,7 +124,7 @@ Hostname:		# Set custom system hostname
 
 Distribution
 Distro:			# Supported: debian, devuan and ubuntu
-Release:		# Debian: bullseye, bookworm, testing, unstable and sid
+Release:		# Debian: bullseye, bookworm, trixie, testing, unstable and sid
 			# Devuan: chimaera, daedalus, excalibur, testing, unstable and ceres
 			# Ubuntu: focal and jammy
 Network Manager		# 1 networkmanager | 0 ifupdown
