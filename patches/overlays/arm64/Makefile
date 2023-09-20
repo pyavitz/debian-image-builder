@@ -14,7 +14,6 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
 	meson-g12a-radxa-zero-uart-ee-c.dtbo \
-	meson-g12b-bananapi-cm4-waveshare-usb.dtbo \
 	meson-g12b-bananapi-m2s-rtl8822cs.dtbo \
 	meson-g12b-odroid-n2-i2c0.dtbo \
 	meson-g12b-odroid-n2-i2c1.dtbo \
@@ -22,6 +21,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12b-odroid-n2-spi.dtbo \
 	meson-g12b-odroid-n2-uart0.dtbo \
 	meson-g12b-odroid-n2-uart1.dtbo \
+	meson-g12b-waveshare-cm4-io-base-usb.dtbo \
 	meson-g12-gxl-cma-pool-896MB.dtbo \
 	meson-sm1-bananapi-m5-rtl8822cs.dtbo \
 	meson-sm1-bananapi-uartA.dtbo \
