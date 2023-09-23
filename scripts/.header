@@ -8,9 +8,16 @@ TXT="\033[1m"
 FIN="\e[0m"
 
 BUILDER=`figlet -f term -l "Debian Image Builder"`
-BRANCH=`git branch`
+GIT_BRANCH=`git branch`
 
-echo -en "${TXT}${BUILDER}${FIN} ${PNK}[${FIN}${GRN}${BRANCH}${FIN}${PNK}]${FIN}"
+if [[ -f "userdata.txt" ]]; then
+	VERSION=`grep "builder=" "userdata.txt" | sed 's/builder=//g'`
+	BUILDER_VER=" ${PNK}(${FIN}${GRN}${VERSION}${FIN}${PNK})${FIN}"
+else
+	BUILDER_VER=""
+fi
+
+echo -en "${TXT}${BUILDER}${FIN} ${PNK}(${FIN}${GRN}${GIT_BRANCH}${FIN}${PNK})${FIN}${BUILDER_VER}"
 echo ""
 
 exit 0
