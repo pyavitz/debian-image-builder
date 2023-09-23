@@ -1,3 +1,6 @@
+# header
+HEADER=./scripts/.header
+
 # menu
 MENU=./lib/dialog/menu
 GMENU=./lib/dialog/general
@@ -79,8 +82,7 @@ endef
 # USAGE
 help:
 	@echo ""
-	@echo "\t\t\t\e[1;31mDebian Image Builder\e[0m"
-	@echo "\t\t\t\e[1;37m********************\e[0m"
+	@${HEADER}
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
 	@echo "  make ccompile                Install x86_64 dependencies"
