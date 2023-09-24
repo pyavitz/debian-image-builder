@@ -9,6 +9,12 @@ if [[ "$COMPILER" == "clang" || "$COMPILER" == "clang-14" || "$COMPILER" == "cla
 	GCC=`ls -ls /usr/bin/gcc | sed 's/.*\(..\)/\1/' | sed 's/ //g'`
 	COMPILER="gcc-${GCC}"
 fi
+if [[ "$HOST_CODENAME" == "jammy" || "$HOST_CODENAME" == "bookworm" ]]; then
+	# ATF errors using gcc-12 when compiling for sun50i-a64 and sun50i-h5, so force gcc-11.
+	if [[ "$SERIES" = "sun50i-a64" || "$SERIES" = "sun50i-h5" ]]; then
+		if [[ "$COMPILER" == "gcc-12" ]]; then COMPILER="gcc-11"; fi
+	fi
+fi
 # compiler
 if [ $CCACHE -eq 1 ]; then
 	NATIVE="ccache ${COMPILER}"
