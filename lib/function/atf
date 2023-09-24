@@ -2,21 +2,27 @@
 
 # ATF
 arm_trusted_firmware (){
+TAG="lts-v2.8.8"
 if [[ "$FAMILY_EXT" == "imx8" || "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	if [[ -d "arm-trusted-firmware" ]]; then
 		echo -en "${WHT}arm trusted firmware${FIN} "
 		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
 		cd arm-trusted-firmware
-		make realclean > /dev/null 2>&1
 		git config pull.rebase false
+		git config advice.detachedHead false
+		git checkout ${TAG} &> /dev/null
+		make realclean > /dev/null 2>&1
 		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-		git pull -q
+		git pull -q https://github.com/ARM-software/arm-trusted-firmware.git ${TAG} &> /dev/null
 		echo_bdone
 	else
 		echo -en "${WHT}arm trusted firmware${FIN} "
 		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-		git clone -q https://github.com/ARM-software/arm-trusted-firmware.git
+		git clone -q https://github.com/ARM-software/arm-trusted-firmware.git -b ${TAG} &> /dev/null
 		cd arm-trusted-firmware
+		git config pull.rebase false
+		git config advice.detachedHead false
+		git checkout ${TAG} &> /dev/null
 		make realclean > /dev/null 2>&1
 		echo_bdone
 	fi
@@ -40,16 +46,47 @@ crust_firmware (){
 # apt install gcc-or1k-elf
 # The package isn't currently available in the Debian Bullseye repo.
 # For the time being we will use precompiled binaries.
-if [[ "$SERIES" == "sun50i-a64" || "$SERIES" == "sun50i-h5" ]]; then
-	cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
-	if [[ "$BOARD" == "tritium" ]]; then
-		rm -f scp.bin
+if [[ "$FAMILY_EXT" == "sun50i" ]]; then
+	if [[ -d "crust" ]]; then
+		echo -en "${WHT}crust${FIN} "
+		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+		cd crust
+		make clean
+		git config pull.rebase false
+		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+		git pull -q
+		echo_bdone
+	else
+		echo -en "${WHT}crust${FIN} "
+		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+		git clone -q https://github.com/crust-firmware/crust.git
+		cd crust
+		make clean
+		echo_bdone
 	fi
 fi
+echo ""
+if [ $CROSSCOMPILE -eq 1 ]; then
+	echo -e "${GRN}  CC${FIN}"
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+else
+	echo -e "${GRN}  NC${FIN}"
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+fi
+cd ..
+echo ""
 }
 
 report_atf_error (){
 echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
+echo ""
+exit 0
+}
+
+report_crust_error (){
+echo "Missing crust scp.bin blob. Please report build errors."
 echo ""
 exit 0
 }
@@ -61,7 +98,16 @@ if [[ "$FAMILY" == "allwinner" ]] && [[ "$ARCH" == "arm64" ]]; then
 	else
 		report_atf_error
 	fi
-	crust_firmware
+	if [[ "$HOST_CODENAME" == "bullseye" ]]; then
+		cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
+		if [[ "$BOARD" == "tritium" ]]; then rm -f scp.bin; fi
+	else
+		if [[ -f "../crust/build/scp/scp.bin" ]]; then
+			cp ../crust/build/scp/scp.bin scp.bin
+		else
+			report_crust_error
+		fi
+	fi
 fi
 if [[ "$FAMILY_EXT" == "imx8" ]]; then
 	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin" ]]; then
