@@ -1,0 +1,104 @@
+From 36a001455c54ed81f050acb7dceb2601ec6596cb Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 24 Sep 2023 23:27:35 -0400
+Subject: [PATCH] arch: arm64: dts: allwinner: h6: add and enable hdmi sound
+ card
+
+H6 supports HDMI audio. Add a sound card node for it.
+
+Signed-off-by: Jernej Skrabec <jernej.skrabec@gmail.com>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../boot/dts/allwinner/sun50i-h6-orangepi-3.dts   |  8 ++++++++
+ .../boot/dts/allwinner/sun50i-h6-orangepi.dtsi    |  8 ++++++++
+ arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi      | 15 +++++++++++++++
+ 3 files changed, 31 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+index 6fc65e8db220..3d264de784de 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+@@ -128,6 +128,10 @@ hdmi_out_con: endpoint {
+ 	};
+ };
+ 
++&i2s1 {
++	status = "okay";
++};
++
+ &mmc0 {
+ 	vmmc-supply = <&reg_cldo1>;
+ 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
+@@ -299,6 +303,10 @@ &rtc {
+ 	clocks = <&ext_osc32k>;
+ };
+ 
++&sound_hdmi {
++	status = "okay";
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_ph_pins>;
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi.dtsi
+index 92745128fcfe..b019bbaae21d 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi.dtsi
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi.dtsi
+@@ -91,6 +91,10 @@ hdmi_out_con: endpoint {
+ 	};
+ };
+ 
++&i2s1 {
++	status = "okay";
++};
++
+ &mmc0 {
+ 	vmmc-supply = <&reg_cldo1>;
+ 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;
+@@ -244,6 +248,10 @@ &rtc {
+ 	clocks = <&ext_osc32k>;
+ };
+ 
++&sound_hdmi {
++	status = "okay";
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_ph_pins>;
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi
+index ca1d287a0a01..6b2d54b6950c 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi
+@@ -89,6 +89,20 @@ psci {
+ 		method = "smc";
+ 	};
+ 
++	sound_hdmi: sound_hdmi {
++		compatible = "allwinner,sun9i-a80-hdmi-audio",
++			     "allwinner,sun50i-h6-hdmi-audio";
++		status = "disabled";
++
++		codec {
++			sound-dai = <&hdmi>;
++		};
++
++		cpu {
++			sound-dai = <&i2s1>;
++		};
++	};
++
+ 	timer {
+ 		compatible = "arm,armv8-timer";
+ 		arm,no-tick-in-suspend;
+@@ -781,6 +795,7 @@ ohci3: usb@5311400 {
+ 		};
+ 
+ 		hdmi: hdmi@6000000 {
++			#sound-dai-cells = <0>;
+ 			compatible = "allwinner,sun50i-h6-dw-hdmi";
+ 			reg = <0x06000000 0x10000>;
+ 			reg-io-width = <1>;
+-- 
+2.39.2
+
