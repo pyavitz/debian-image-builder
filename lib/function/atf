@@ -41,6 +41,15 @@ cd ..
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
 }
 
+crust_defconfig (){
+if [[ "$BOARD" == "orangepi3lts" ]]; then
+	echo "CONFIG_PLATFORM_H6=y" > configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_CIR=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_I2C_PINS_PL0_PL1=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_MFD_AXP20X=y" >> configs/${UBOOT_DEFCONFIG}
+fi
+}
+
 crust_firmware (){
 # https://github.com/crust-firmware/crust
 # apt install gcc-or1k-elf
@@ -66,6 +75,7 @@ if [[ "$FAMILY_EXT" == "sun50i" ]]; then
 	fi
 fi
 echo ""
+crust_defconfig
 if [ $CROSSCOMPILE -eq 1 ]; then
 	echo -e "${GRN}  CC${FIN}"
 	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}

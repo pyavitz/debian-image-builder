@@ -16,15 +16,17 @@
 BananaPi M2 Zero (*)
 BananaPi P2 Zero (*)
 Cubietruck (*)
-NanoPi M1	
-NanoPi NEO	
+NanoPi M1
+NanoPi NEO
 NanoPi NEO Plus2
-NanoPi R1	
-OrangePi One	
-OrangePi PC	
+NanoPi R1
+OrangePi 3 (*)
+OrangePi 3 LTS (*)
+OrangePi One
+OrangePi PC
 OrangePi R1 (*)
-PineA64+	
-Tritium		
+PineA64+
+Tritium
 
 # AMLOGIC
 BananaPi CM4

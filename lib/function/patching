@@ -198,6 +198,12 @@ if [ $RTL88XXAU -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtl88xxau" ]]; then
 		fi
 	fi
 fi
+if [[ "$BOARD" == "orangepi3lts" ]] && [[ -d "../../${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
 # general
 if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
