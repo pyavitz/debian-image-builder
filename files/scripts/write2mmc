@@ -162,7 +162,7 @@ if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1 || \
 	fi
 else
 	$EE ""
-	$EE "There are no available drives to tranfer to."
+	$EE "There are no available drives to transfer to."
 	exit 0
 fi
 
@@ -225,54 +225,66 @@ if [[ "$P_VALUE" == "p1" ]]; then
 		P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
 	fi
 fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	if [[ "$B_FSTYPE" == "vfat" ]]; then
-		BOOTFS="mkfs.vfat -n"
-		BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+if [[ "$B_FSTYPE" == "vfat" || "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+	if [[ "$P_VALUE" == "p2" ]]; then
+		if [[ "$B_FSTYPE" == "vfat" ]]; then
+			BOOTFS="mkfs.vfat -n"
+			BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+		fi
+		if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+			EXTFS="${B_FSTYPE}"
+			BOOTFS="mkfs.${EXTFS} -L"
+			BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
+		fi
+		P_BOOT="p1"
+		P_ROOTFS="p2"
+		BOOT_LABEL="BOOT"
+		if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
+			P_BOOT=`echo $P_BOOT | sed 's/p//g'`
+			P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
+		fi
+		MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${DEVICE_NODE}${P_BOOT}"
 	fi
-	if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
-		EXTFS="${B_FSTYPE}"
-		BOOTFS="mkfs.${EXTFS} -L"
-		BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
-	fi
-	P_BOOT="p1"
-	P_ROOTFS="p2"
-	BOOT_LABEL="BOOT"
-	if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
-		P_BOOT=`echo $P_BOOT | sed 's/p//g'`
-		P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
-	fi
-	MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${DEVICE_NODE}${P_BOOT}"
+else
+	$EE ""
+	$EE "Filesystem: ${R_FSTYPE} is not supported or invalid."
+	exit 0
 fi
 
 # ROOT PARTITION VARIABLES
-if [[ "$R_FSTYPE" == "btrfs" ]]; then
-	MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-	MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
-	ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-	RESIZEFS="btrfs filesystem resize max /mnt/${P_ROOTFS}"
-fi
-if [[ "$R_FSTYPE" == "ext4" ]]; then
-	MAKE_ROOTFS="mkfs.ext4 -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-	MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
-	ROOTFS_TABLE="ext4	defaults,noatime,commit=600,errors=remount-ro 0 1"
-	ROOT_FSTYPE="rootfstype=ext4"
-	RESIZEFS="resize2fs ${DEVICE_NODE}${P_ROOTFS}"
-fi
-if [[ "$R_FSTYPE" == "f2fs" ]]; then
-	MAKE_ROOTFS="mkfs.f2fs -f -l ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-	MOUNT_ROOTFS="mount -o rw,acl,active_logs=6,background_gc=on,user_xattr ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
-	ROOTFS_TABLE="f2fs	rw,acl,active_logs=6,background_gc=on,user_xattr 0 0"
-	ROOT_FSTYPE="rootfstype=f2fs"
-	RESIZEFS="resize.f2fs ${DEVICE_NODE}${P_ROOTFS}"
-fi
-if [[ "$R_FSTYPE" == "xfs" ]]; then
-	MAKE_ROOTFS="mkfs.xfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-	MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
-	ROOTFS_TABLE="xfs	defaults,noatime 0 1"
-	ROOT_FSTYPE="rootfstype=xfs"
-	RESIZEFS="xfs_growfs -d /mnt/${P_ROOTFS}"
+if [[ "$R_FSTYPE" == "btrfs" || "$R_FSTYPE" == "ext4" || "$R_FSTYPE" == "f2fs" || "$R_FSTYPE" == "xfs" ]]; then
+	if [[ "$R_FSTYPE" == "btrfs" ]]; then
+		MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
+		ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+		RESIZEFS="btrfs filesystem resize max /mnt/${P_ROOTFS}"
+	fi
+	if [[ "$R_FSTYPE" == "ext4" ]]; then
+		MAKE_ROOTFS="mkfs.ext4 -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		ROOTFS_TABLE="ext4	defaults,noatime,commit=600,errors=remount-ro 0 1"
+		ROOT_FSTYPE="rootfstype=ext4"
+		RESIZEFS="resize2fs ${DEVICE_NODE}${P_ROOTFS}"
+	fi
+	if [[ "$R_FSTYPE" == "f2fs" ]]; then
+		MAKE_ROOTFS="mkfs.f2fs -f -l ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o rw,acl,active_logs=6,background_gc=on,user_xattr ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		ROOTFS_TABLE="f2fs	rw,acl,active_logs=6,background_gc=on,user_xattr 0 0"
+		ROOT_FSTYPE="rootfstype=f2fs"
+		RESIZEFS="resize.f2fs ${DEVICE_NODE}${P_ROOTFS}"
+	fi
+	if [[ "$R_FSTYPE" == "xfs" ]]; then
+		MAKE_ROOTFS="mkfs.xfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		ROOTFS_TABLE="xfs	defaults,noatime 0 1"
+		ROOT_FSTYPE="rootfstype=xfs"
+		RESIZEFS="xfs_growfs -d /mnt/${P_ROOTFS}"
+	fi
+else
+	$EE ""
+	$EE "Filesystem: ${R_FSTYPE} is not supported or invalid."
+	exit 0
 fi
 
 # SUMMARY
