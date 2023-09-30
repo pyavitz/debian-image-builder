@@ -1,0 +1,58 @@
+#!/bin/bash
+
+crust_defconfig (){
+if [[ "$BOARD" == "orangepi3lts" ]]; then
+	echo "CONFIG_PLATFORM_H6=y" > configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_CIR=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_I2C_PINS_PL0_PL1=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_MFD_AXP20X=y" >> configs/${UBOOT_DEFCONFIG}
+fi
+}
+
+crust_firmware (){
+# https://github.com/crust-firmware/crust
+# apt install gcc-or1k-elf
+# The package isn't currently available in the Debian Bullseye repo.
+# For the time being we will use precompiled binaries.
+if [[ "$FAMILY_EXT" == "sun50i" ]]; then
+	if [[ -d "crust" ]]; then
+		echo -en "${WHT}crust${FIN} "
+		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+		cd crust
+		make clean
+		git config pull.rebase false
+		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+		git pull -q
+		echo_bdone
+	else
+		echo -en "${WHT}crust${FIN} "
+		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+		git clone -q https://github.com/crust-firmware/crust.git
+		cd crust
+		make clean
+		echo_bdone
+	fi
+fi
+echo ""
+crust_defconfig
+if [ $CROSSCOMPILE -eq 1 ]; then
+	echo -e "${GRN}  CC${FIN}"
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+else
+	echo -e "${GRN}  NC${FIN}"
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
+	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+fi
+if [[ "$BOARD" == "orangepi3lts" ]]; then
+	rm -f configs/${UBOOT_DEFCONFIG}
+fi
+cd ..
+echo ""
+}
+
+report_crust_error (){
+echo "Missing crust scp.bin blob. Please report build errors."
+echo ""
+exit 0
+}

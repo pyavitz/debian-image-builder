@@ -41,52 +41,9 @@ cd ..
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
 }
 
-crust_firmware (){
-# https://github.com/crust-firmware/crust
-# apt install gcc-or1k-elf
-# The package isn't currently available in the Debian Bullseye repo.
-# For the time being we will use precompiled binaries.
-if [[ "$FAMILY_EXT" == "sun50i" ]]; then
-	if [[ -d "crust" ]]; then
-		echo -en "${WHT}crust${FIN} "
-		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-		cd crust
-		make clean
-		git config pull.rebase false
-		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-		git pull -q
-		echo_bdone
-	else
-		echo -en "${WHT}crust${FIN} "
-		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-		git clone -q https://github.com/crust-firmware/crust.git
-		cd crust
-		make clean
-		echo_bdone
-	fi
-fi
-echo ""
-if [ $CROSSCOMPILE -eq 1 ]; then
-	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
-else
-	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
-fi
-cd ..
-echo ""
-}
 
 report_atf_error (){
 echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
-echo ""
-exit 0
-}
-
-report_crust_error (){
-echo "Missing crust scp.bin blob. Please report build errors."
 echo ""
 exit 0
 }
