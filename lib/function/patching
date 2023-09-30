@@ -1,6 +1,14 @@
 #!/bin/bash
 
-# Firmware
+# firmware
+atf_patching (){
+if [[ -d "../../patches/atf" ]]; then
+	if [[ `ls ../../patches/atf/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../patches/atf/*.patch; do patch -N -p1 < $i; done
+	fi
+fi
+}
+
 rpi_firmware (){
 RPIURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
 mkdir -p firmware
