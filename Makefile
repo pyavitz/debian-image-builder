@@ -125,7 +125,7 @@ ifdef arch
 endif
 # FORCE COMPILE
 ifdef precompile
-	@echo 'PRECOMPILED_UBOOT="$(compile)"' >> override.txt
+	@echo 'PRECOMPILED_UBOOT="$(precompile)"' >> override.txt
 endif
 # VERBOSE
 ifdef verbose
