@@ -123,6 +123,10 @@ uboot:
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
 endif
+# FORCE COMPILE
+ifdef precompile
+	@echo 'PRECOMPILED_UBOOT="$(compile)"' >> override.txt
+endif
 # VERBOSE
 ifdef verbose
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
