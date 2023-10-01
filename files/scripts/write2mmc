@@ -224,31 +224,32 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
 		P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
 	fi
-fi
-if [[ "$B_FSTYPE" == "vfat" || "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
-	if [[ "$P_VALUE" == "p2" ]]; then
-		if [[ "$B_FSTYPE" == "vfat" ]]; then
-			BOOTFS="mkfs.vfat -n"
-			BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
-		fi
-		if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
-			EXTFS="${B_FSTYPE}"
-			BOOTFS="mkfs.${EXTFS} -L"
-			BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
-		fi
-		P_BOOT="p1"
-		P_ROOTFS="p2"
-		BOOT_LABEL="BOOT"
-		if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
-			P_BOOT=`echo $P_BOOT | sed 's/p//g'`
-			P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
-		fi
-		MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${DEVICE_NODE}${P_BOOT}"
-	fi
 else
-	$EE ""
-	$EE "Filesystem ${B_FSTYPE} is not supported or invalid."
-	exit 0
+	if [[ "$B_FSTYPE" == "vfat" || "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+		if [[ "$P_VALUE" == "p2" ]]; then
+			if [[ "$B_FSTYPE" == "vfat" ]]; then
+				BOOTFS="mkfs.vfat -n"
+				BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+			fi
+			if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+				EXTFS="${B_FSTYPE}"
+				BOOTFS="mkfs.${EXTFS} -L"
+				BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
+			fi
+			P_BOOT="p1"
+			P_ROOTFS="p2"
+			BOOT_LABEL="BOOT"
+			if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
+				P_BOOT=`echo $P_BOOT | sed 's/p//g'`
+				P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
+			fi
+			MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${DEVICE_NODE}${P_BOOT}"
+		fi
+	else
+		$EE ""
+		$EE "Filesystem ${B_FSTYPE} is not supported or invalid."
+		exit 0
+	fi
 fi
 
 # ROOT PARTITION VARIABLES
