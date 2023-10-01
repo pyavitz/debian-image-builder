@@ -130,7 +130,7 @@ fi
 bananapi_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=BPI Specific System Tweaks
+Description=BananaPi System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=rc-local.service
@@ -152,7 +152,7 @@ systemctl enable tweaks
 lepotato_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=Le Potato Specific System Tweaks
+Description=Le Potato System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=network.target network-online.target ifup@.service
 
@@ -173,7 +173,7 @@ systemctl enable tweaks
 odroid_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=ODROID Specific System Tweaks
+Description=ODROID System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=network.target network-online.target
 
@@ -213,7 +213,7 @@ fi
 rockchip_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=Rockchip Specific System Tweaks
+Description=Rockchip System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=network.target bluetooth.target rc-local.service
@@ -235,7 +235,7 @@ systemctl enable tweaks
 radxazero_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=Radxa Zero Specific System Tweaks
+Description=Radxa Zero System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target network.target bluetooth.target
 
@@ -256,7 +256,7 @@ systemctl enable tweaks
 nanopi5_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=NanoPi Specific System Tweaks
+Description=NanoPi System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=network.target
@@ -278,7 +278,7 @@ systemctl enable tweaks
 cubietruck_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=Cubietruck Specific System Tweaks
+Description=Cubietruck System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=rc-local.service
@@ -300,7 +300,7 @@ systemctl enable tweaks
 cuboxi_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=Cubox-i Specific System Tweaks
+Description=Cubox-i System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target
 Before=rc-local.service
@@ -322,9 +322,31 @@ systemctl enable tweaks
 x96air_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
-Description=X96-AIR Specific System Tweaks
+Description=X96-AIR System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=network.target network-online.target ifup@.service bluetooth.target leds.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/tweaks
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
+orangepi3lts_systemd(){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=OrangePi System Tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
 
 [Service]
 Type=forking
@@ -359,7 +381,8 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	chmod +x /etc/init.d/tweaks
 	chown root:root /etc/init.d/tweaks
 else
-	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
+	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "orangepi3lts" || \
+	"$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
 		${BOARD}_systemd
 	fi
 	if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
