@@ -1,0 +1,63 @@
+From 0155ff361af9a27ab7573c9896cdac3c7f26d221 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 30 Sep 2023 16:41:45 -0400
+Subject: [PATCH] fix spreadtrum (sprd) broken bluetooth park link status
+
+Signed-off-by: Paolo Sabatino <paolo.sabatino@gmail.com>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/bluetooth/hci_ldisc.c | 6 ++++++
+ include/net/bluetooth/hci.h   | 6 ++++++
+ net/bluetooth/hci_sync.c      | 2 +-
+ 3 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bluetooth/hci_ldisc.c b/drivers/bluetooth/hci_ldisc.c
+index 865112e96ff9..61ccf31ee715 100644
+--- a/drivers/bluetooth/hci_ldisc.c
++++ b/drivers/bluetooth/hci_ldisc.c
+@@ -658,6 +658,12 @@ static int hci_uart_register_dev(struct hci_uart *hu)
+ 	hdev->setup = hci_uart_setup;
+ 	SET_HCIDEV_DEV(hdev, hu->tty->dev);
+ 
++	// Set the broken Park link status quirk, specific for spreadtrum (sprd)
++	// bluetooth devices
++	if (hdev->manufacturer == 0xffff && hu->tty->driver &&
++		strncmp(hu->tty->driver->name, "ttyBT", 5) == 0)
++		set_bit(HCI_QUIRK_BROKEN_PARK_LINK_STATUS, &hdev->quirks);
++
+ 	if (test_bit(HCI_UART_RAW_DEVICE, &hu->hdev_flags))
+ 		set_bit(HCI_QUIRK_RAW_DEVICE, &hdev->quirks);
+ 
+diff --git a/include/net/bluetooth/hci.h b/include/net/bluetooth/hci.h
+index a674221d151d..084de932597b 100644
+--- a/include/net/bluetooth/hci.h
++++ b/include/net/bluetooth/hci.h
+@@ -309,6 +309,12 @@ enum {
+ 	 * to support it.
+ 	 */
+ 	HCI_QUIRK_BROKEN_SET_RPA_TIMEOUT,
++
++       /*
++        * Device declares that support Park link status, but it really
++       * does not support it and fails to initialize
++       */
++       HCI_QUIRK_BROKEN_PARK_LINK_STATUS,
+ };
+ 
+ /* HCI device flags */
+diff --git a/net/bluetooth/hci_sync.c b/net/bluetooth/hci_sync.c
+index 2ae038dfc39f..a906c70620aa 100644
+--- a/net/bluetooth/hci_sync.c
++++ b/net/bluetooth/hci_sync.c
+@@ -3907,7 +3907,7 @@ static int hci_setup_link_policy_sync(struct hci_dev *hdev)
+ 		link_policy |= HCI_LP_HOLD;
+ 	if (lmp_sniff_capable(hdev))
+ 		link_policy |= HCI_LP_SNIFF;
+-	if (lmp_park_capable(hdev))
++	if (lmp_park_capable(hdev) && !test_bit(HCI_QUIRK_BROKEN_PARK_LINK_STATUS, &hdev->quirks))
+ 		link_policy |= HCI_LP_PARK;
+ 
+ 	cp.policy = cpu_to_le16(link_policy);
+-- 
+2.39.2
+
