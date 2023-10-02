@@ -340,7 +340,7 @@ EOF
 systemctl enable tweaks
 }
 
-orangepi3lts_systemd(){
+orangepi3_systemd(){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=OrangePi System Tweaks
@@ -381,9 +381,9 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	chmod +x /etc/init.d/tweaks
 	chown root:root /etc/init.d/tweaks
 else
-	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "orangepi3lts" || \
-	"$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
-		${BOARD}_systemd
+	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "orangepi3" || \
+		"$BOARD" == "orangepi3lts" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
+		${BOARD}_systemd | sed 's/lts//g'
 	fi
 	if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
 		nanopi5_systemd
