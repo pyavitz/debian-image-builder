@@ -124,8 +124,8 @@ ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
 endif
 # FORCE COMPILE
-ifdef precompile
-	@echo 'PRECOMPILED_UBOOT="$(precompile)"' >> override.txt
+ifdef precompiled
+	@echo 'PRECOMPILED_UBOOT="$(precompiled)"' >> override.txt
 endif
 # FORCE VERSION
 ifdef force_version
