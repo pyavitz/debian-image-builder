@@ -119,6 +119,16 @@ ncompile:
 # COMMANDS
 uboot:
 	@rm -f override.txt
+# USERDATA DOT TXT
+ifdef build
+	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
+endif
+ifdef menuconfig
+	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"${menuconfig}"'"/" userdata.txt)
+endif
+ifdef version
+	@$(shell sed -i "s/^UBOOT_VERSION=.*/UBOOT_VERSION="'"${version}"'"/" userdata.txt)
+endif
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
@@ -141,6 +151,7 @@ endif
 kernel:
 	@rm -f github.txt
 	@rm -f override.txt
+# USERDATA DOT TXT
 ifdef build
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
 endif
