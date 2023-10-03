@@ -127,6 +127,10 @@ endif
 ifdef precompile
 	@echo 'PRECOMPILED_UBOOT="$(precompile)"' >> override.txt
 endif
+# FORCE VERSION
+ifdef force_version
+	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
+endif
 # VERBOSE
 ifdef verbose
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
@@ -166,6 +170,10 @@ endif
 # ARCHITECTURE
 ifdef arch
 	@echo 'ARCH_EXT="$(arch)"' > override.txt
+endif
+# FORCE VERSION
+ifdef force_version
+	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
 endif
 # VERBOSE
 ifdef verbose
