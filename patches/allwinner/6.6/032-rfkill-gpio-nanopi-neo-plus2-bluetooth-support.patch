@@ -1,0 +1,73 @@
+From 492bab2ed0764ddc4949ab9c37fc93ccf004c3e2 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 7 Oct 2023 06:39:41 -0400
+Subject: [PATCH] net: rfkill: rfkill-gpio.c: nanopi neo plus2 bluetooth
+ support
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ net/rfkill/rfkill-gpio.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index e9d1b2f2ff0a..51fc22ddf7b2 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -24,6 +24,7 @@ struct rfkill_gpio_data {
+ 	struct rfkill		*rfkill_dev;
+ 	struct clk		*clk;
+ 
++	int			clk_frequency;
+ 	bool			clk_enabled;
+ };
+ 
+@@ -32,13 +33,13 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
+ 	if (!blocked && !IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+-		clk_enable(rfkill->clk);
++		clk_prepare_enable(rfkill->clk);
+ 
+ 	gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
+ 	gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
+ 
+ 	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+-		clk_disable(rfkill->clk);
++		clk_disable_unprepare(rfkill->clk);
+ 
+ 	rfkill->clk_enabled = !blocked;
+ 
+@@ -92,8 +93,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		name_property = "name";
+ 		type_property = "type";
+ 	}
+-	device_property_read_string(&pdev->dev, name_property, &rfkill->name);
+-	device_property_read_string(&pdev->dev, type_property, &type_name);
++	device_property_read_string(&pdev->dev, "rfkill-name", &rfkill->name);
++	device_property_read_string(&pdev->dev, "rfkill-type", &type_name);
++	device_property_read_u32(&pdev->dev, "clock-frequency", &rfkill->clk_frequency);
+ 
+ 	if (!rfkill->name)
+ 		rfkill->name = dev_name(&pdev->dev);
+@@ -107,6 +109,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
++	if (!IS_ERR(rfkill->clk) && rfkill->clk_frequency > 0) {
++		clk_set_rate(rfkill->clk, rfkill->clk_frequency); 
++	}
+ 
+ 	gpio = devm_gpiod_get_optional(&pdev->dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpio))
+@@ -167,7 +172,7 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
+ #endif
+ 
+-static const struct of_device_id rfkill_of_match[] __maybe_unused = {
++static const struct of_device_id rfkill_of_match[] = { 
+ 	{ .compatible = "rfkill-gpio", },
+ 	{ },
+ };
+-- 
+2.39.2
+

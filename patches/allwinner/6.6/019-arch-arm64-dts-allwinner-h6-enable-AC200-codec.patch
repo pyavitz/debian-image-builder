@@ -1,0 +1,66 @@
+From e45b4a30cf673741e0297c9312452dadc4a643bd Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 26 Sep 2023 17:20:31 -0400
+Subject: [PATCH] arch: arm64: dts: allwinner: h6: enable AC200 codec
+
+Enable AC200 analog codec on H6 based boards where present.
+
+Signed-off-by: Jernej Skrabec <jernej.skrabec@gmail.com>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 25 +++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+index ead12d861e12..1e2f9ef900a0 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+@@ -103,6 +103,19 @@ wifi_pwrseq: wifi-pwrseq {
+ 	};
+ };
+ 
++&ac200_codec {
++	avcc-supply = <&reg_aldo2>;
++	status = "okay";
++};
++
++&ac200_pwm_clk {
++	status = "okay";
++};
++
++&analog {
++	status = "okay";
++};
++
+ &cpu0 {
+ 	cpu-supply = <&reg_dcdca>;
+ };
+@@ -171,6 +184,14 @@ &i2s1 {
+ 	status = "okay";
+ };
+ 
++&i2c3 {
++	status = "okay";
++};
++
++&i2s3 {
++	status = "okay";
++};
++
+ &mmc0 {
+ 	vmmc-supply = <&reg_cldo1>;
+ 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
+@@ -218,6 +239,10 @@ &pio {
+ 	vcc-pg-supply = <&reg_vcc_wifi_io>;
+ };
+ 
++&pwm {
++	status = "okay";
++};
++
+ &r_ir {
+ 	status = "okay";
+ };
+-- 
+2.39.2
+
