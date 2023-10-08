@@ -147,6 +147,28 @@ StandardError=journal+console
 WantedBy=multi-user.target
 EOF
 systemctl enable tweaks
+
+if [[ "$BOARD" == "bananapicm4" ]]; then
+	tee /etc/systemd/system/bpi-fanctrl.service <<EOF
+[Unit]
+Description=BananaPi Fan Control
+ConditionFileIsExecutable=/usr/local/bin/bpi-fanctrl
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/bpi-fanctrl
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+	systemctl enable bpi-fanctrl
+fi
 }
 
 lepotato_systemd(){
