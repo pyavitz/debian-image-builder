@@ -46,18 +46,23 @@ else
 	echo 'VERBOSITY="1"' | tee -a /etc/default/write2mmc > /dev/null 2>&1
 	. /etc/default/write2mmc
 fi
-if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-	:;
-else
-	WARNING_MSG="The write2mmc script requires an internet connection."
-	WARNING
-fi
 if [[ -f "/etc/opt/progressbar.txt" ]]; then
 	:;
 else
-	mkdir -p /etc/opt
-	wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/
-	mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt
+	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+		mkdir -p /etc/opt
+		wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/
+		if [[ -f "/etc/opt/progress_bar.sh" ]]; then
+			mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt
+			sed -i 's/ETA_ENABLED="false"/ETA_ENABLED="true"/g' /etc/opt/progressbar.txt
+		else
+			WARNING_MSG="The write2mmc script requires an internet connection. ERR -1"
+			WARNING
+		fi
+	else
+		WARNING_MSG="The write2mmc script requires an internet connection. ERR -2"
+		WARNING
+	fi
 fi
 if [[ `command -v mkfs.f2fs` ]]; then :; else apt install -y f2fs-tools; fi
 if [[ `command -v kpartx` ]]; then :; else apt install -y kpartx; fi
@@ -173,6 +178,13 @@ $EN "you want to transfer the current install to:${FIN} "
 $EN "/dev/"
 read NODE
 DEVICE_NODE="/dev/${NODE}"
+if [[ -e "$DEVICE_NODE" ]]; then
+	:;
+else
+	$EE
+	$EE "${BLD}WARNING:${FIN} The drive you selected is not available or invalid."
+	exit 0
+fi
 if [[ "$HD_CHK" == "$DEVICE_NODE" || "$NVME_CHK" == "$DEVICE_NODE" || "$MMC_CHK" == "$DEVICE_NODE" ]]; then
 	$EE
 	$EE "${BLD}WARNING:${FIN} The drive you selected is currently in use."
