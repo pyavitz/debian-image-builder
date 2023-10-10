@@ -509,7 +509,8 @@ do
 done
 destroy_scroll_area
 
-# WRITE U-BOOT
+# FLASH U-BOOT
+flash_uboot (){
 $EE "Writing u-boot ..."
 sleep .75
 if [[ "$FAMILY" == "allwinner" ]]; then
@@ -548,7 +549,15 @@ if [[ "$FAMILY" == "samsung" ]]; then
 		dd if="/dev/zero" of="${DEVICE_NODE}" seek=2015 bs=512 count=32 conv=fsync
 	fi
 fi
+}
 
+if [[ "$VERBOSITY" = "1" ]]; then
+	flash_uboot
+else
+	flash_uboot > /dev/null 2>&1
+fi
+
+# FINISH
 p1_boot (){
 $EE
 $EE "extlinux.conf"
