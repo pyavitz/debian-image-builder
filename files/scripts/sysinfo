@@ -36,6 +36,13 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
+if [[ -f "/sys/class/hwmon/hwmon2/fan1_input" ]] && [[ "/sys/class/hwmon/hwmon2/pwm1" ]]; then
+	HWMON="hwmon2"
+else
+	if [[ -f "/sys/class/hwmon/hwmon3/fan1_input" ]] && [[ "/sys/class/hwmon/hwmon3/pwm1" ]]; then
+		HWMON="hwmon3"
+	fi
+fi
 
 # functions
 count_high(){
@@ -58,6 +65,12 @@ if [[ "$PRESENT" == "0-3" || "$PRESENT" == "0-1" || "$PRESENT" == "0" ]]; then
 fi
 }
 
+fan_pwr (){
+RPM=`cat /sys/class/hwmon/${HWMON}/fan1_input`
+PWM=`cat /sys/class/hwmon/${HWMON}/pwm1`
+echo -e "Fan:         ${RPM} RPM ($PWM)"
+}
+
 run(){
 if [[ -f "/proc/device-tree/model" ]]; then
 	MODEL=$(tr -d '\0' </proc/device-tree/model)
@@ -68,6 +81,7 @@ echo -e "CPU usage:  " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'`
 if [[ -f "/sys/devices/system/cpu/present" ]]; then
 	cpu_hwinfo;
 fi
+if [[ "$HWMON" == "hwmon2" || "$HWMON" == "hwmon3" ]]; then fan_pwr; fi
 echo -e "Online:     " $(lscpu | grep -w "On-line CPU(s) list:" | sed "s/On-line CPU(s) list:/ /g" | sed -e "s/\s\{3,\}//g")
 echo -e "Governor:   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "Memory:     " $(free -h | sed 's/i//g' | sed 's/Mem://g' | awk '{print $1" "$2}' | sed -n 'n;p')
