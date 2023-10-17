@@ -3,6 +3,9 @@
 # Depends on prerequisites defined by P. Yavitz
 # URL: https://github.com/pyavitz/debian-image-builder
 
+ROOTFS=`findmnt -v -n -o SOURCE /`
+FSTYPE=`findmnt -v -n -o FSTYPE /`
+
 # developer debug switch
 VERBOSITY="0"
 if [ $VERBOSITY -eq 1 ]; then
@@ -65,8 +68,6 @@ echo -e "$MMC"
 }
 
 extlinux_conf () {
-ROOTFS=`findmnt -v -n -o SOURCE /`
-FSTYPE=`findmnt -v -n -o FSTYPE /`
 if [[ "$FSTYPE" == "ext4" ]]; then
 	ROOT_FSTYPE="rootfstype=ext4"
 fi
