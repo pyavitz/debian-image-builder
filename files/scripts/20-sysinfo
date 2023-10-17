@@ -20,6 +20,13 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
+if [[ -f "/sys/class/hwmon/hwmon2/fan1_input" ]] && [[ "/sys/class/hwmon/hwmon2/pwm1" ]]; then
+	HWMON="hwmon2"
+else
+	if [[ -f "/sys/class/hwmon/hwmon3/fan1_input" ]] && [[ "/sys/class/hwmon/hwmon3/pwm1" ]]; then
+		HWMON="hwmon3"
+	fi
+fi
 NETWORK=$(ip -o -4 -br a | grep -v '^lo'| sed 's/^/ /' | sed 's/\/..//' | sed -r '1s/\s+/ /g' | sed -r '2s/\s+/ /g')
 ETH=`echo -e Wired:`
 WLAN=`echo -e Wireless:`
@@ -28,24 +35,30 @@ HA=`echo -e Hassio:`
 DOCKER=`echo -e Docker:`
 
 # functions
-count_high(){
+count_high (){
 echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C";
 echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C";
 echo -en "Cur freq:   " $CPU0C; echo -en "MHz $CPU1C"; echo -e "MHz"
 }
 
-count_low(){
+count_low (){
 echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C";
 echo -en "Cur freq:   " $CPU0C; echo -e "MHz";
 }
 
-cpu_hwinfo(){
+cpu_hwinfo (){
 if [[ "$PRESENT" == "0-7" || "$PRESENT" == "0-5" ]]; then
 	count_high;
 fi
 if [[ "$PRESENT" == "0-3" || "$PRESENT" == "0-1" || "$PRESENT" == "0" ]]; then
 	count_low;
 fi
+}
+
+fan_pwr (){
+RPM=`cat /sys/class/hwmon/${HWMON}/fan1_input`
+PWM=`cat /sys/class/hwmon/${HWMON}/pwm1`
+echo -e "Fan:         ${RPM} RPM ($PWM)"
 }
 
 # display
@@ -60,6 +73,7 @@ echo -e "== SYSTEM"
 if [[ -f "/sys/devices/system/cpu/present" ]]; then
 	cpu_hwinfo;
 fi
+if [[ "$HWMON" == "hwmon2" || "$HWMON" == "hwmon3" ]]; then fan_pwr; fi
 echo -e "Online:     " $(lscpu | grep -w "On-line CPU(s) list:" | sed "s/On-line CPU(s) list:/ /g" | sed -e "s/\s\{3,\}//g")
 echo -e "Governor:   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "Memory:     " $(free -h | sed 's/i//g' | sed 's/Mem://g' | awk '{print $1" "$2}' | sed -n 'n;p')
