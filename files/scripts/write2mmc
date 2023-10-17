@@ -110,11 +110,13 @@ do
 				MMC_TARGET="ff520000.mmc"
 				SOC_FAMILY="dwmmc_rockchip"
 			fi
-			echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
-			sleep .75
-			echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
-			sleep .75
-			#lsblk -dno NAME,SIZE
+			if [[ "$BOARD" == "lepotato" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "renegade" || "$BOARD" == "rock64" ]]; then
+				echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
+				sleep .75
+				echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
+				sleep .75
+				#lsblk -dno NAME,SIZE
+			fi
 			break
 			;;
 		"Skip")
@@ -383,13 +385,13 @@ if [[ "$B_FSTYPE" == "vfat" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${DEVICE_NODE}" \
 		mklabel gpt \
-		mkpart 1 fat32 ${IMG_OFFSET} 256MiB \
-		mkpart 2 ext2 256MiB 100%
+		mkpart 1 fat32 ${IMG_OFFSET} 512MiB \
+		mkpart 2 ext2 512MiB 100%
 	else
 		parted --script "${DEVICE_NODE}" \
 		mklabel msdos \
-		mkpart primary fat32 ${IMG_OFFSET} 256MiB \
-		mkpart primary ext2 256MiB 100%
+		mkpart primary fat32 ${IMG_OFFSET} 512MiB \
+		mkpart primary ext2 512MiB 100%
 		parted --script "${DEVICE_NODE}" set 1 boot on
 	fi
 	if [[ "$EFI" == "true" ]]; then
@@ -400,13 +402,13 @@ if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${DEVICE_NODE}" \
 		mklabel gpt \
-		mkpart 1 ext2 ${IMG_OFFSET} 256MiB \
-		mkpart 2 ext2 256MiB 100%
+		mkpart 1 ext2 ${IMG_OFFSET} 512MiB \
+		mkpart 2 ext2 512MiB 100%
 	else
 		parted --script "${DEVICE_NODE}" \
 		mklabel msdos \
-		mkpart primary ext2 ${IMG_OFFSET} 256MiB \
-		mkpart primary ext2 256MiB 100%
+		mkpart primary ext2 ${IMG_OFFSET} 512MiB \
+		mkpart primary ext2 512MiB 100%
 	fi
 fi
 partprobe "${DEVICE_NODE}"
