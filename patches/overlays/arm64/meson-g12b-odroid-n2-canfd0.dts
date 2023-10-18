@@ -1,0 +1,42 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/meson-g12a-gpio.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			canfd0_clk: canfd0-clk {
+				compatible = "fixed-clock";
+				clock-frequency = <20000000>;
+				clock-output-names = "canfd0_clk";
+				#clock-cells = <0>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&spicc0>;
+		__overlay__ {
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			num_chipselect = <1>;
+			cs-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_LOW>;
+
+			can0: can@0 {
+				compatible = "microchip,mcp2517fd";
+				reg = <0>;
+				clocks = <&canfd0_clk>;
+				interrupt-parent = <&gpio_intc>;
+				/* GPIOX_3 */
+				interrupts = <80 IRQ_TYPE_EDGE_FALLING>;
+				spi-max-frequency = <10000000>;
+				status = "okay";
+			};
+		};
+	};
+};
