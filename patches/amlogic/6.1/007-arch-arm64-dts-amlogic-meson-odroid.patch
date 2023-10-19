@@ -1,6 +1,6 @@
-From c06a8a54737315057bce179ce1283af29cb2fd18 Mon Sep 17 00:00:00 2001
+From b30e78fcf61c9cdcfbf0e30cf42557387d7b5579 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 25 Aug 2023 19:58:26 -0400
+Date: Wed, 18 Oct 2023 23:22:30 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-odroid
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -14,8 +14,8 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  |  52 +-
  .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts |  27 +-
  .../boot/dts/amlogic/meson-sm1-odroid.dtsi    |  40 +-
- arch/arm64/boot/dts/amlogic/meson-sm1.dtsi    |   9 +
- 10 files changed, 746 insertions(+), 416 deletions(-)
+ arch/arm64/boot/dts/amlogic/meson-sm1.dtsi    |   1 +
+ 10 files changed, 738 insertions(+), 416 deletions(-)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
 
@@ -1359,7 +1359,7 @@ index ddb1b345397f..aa6bdb84817a 100644
  	status = "okay";
  	vbus-supply = <&usb_pwr_en>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi
-index 0147195b9caa..7ed0c9b56cb1 100644
+index 0147195b9caa..2f6612db7dd8 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1.dtsi
 @@ -88,6 +88,7 @@ cpu3: cpu@3 {
@@ -1370,31 +1370,12 @@ index 0147195b9caa..7ed0c9b56cb1 100644
  		};
  	};
  
-@@ -536,6 +537,10 @@ &pcie {
- 	power-domains = <&pwrc PWRC_SM1_PCIE_ID>;
- };
- 
-+//&pmu {
-+//	compatible = "amlogic,sm1-ddr-pmu";
-+//};
-+
- &pwrc {
- 	compatible = "amlogic,meson-sm1-pwrc";
- };
-@@ -559,3 +564,7 @@ &vpu {
- &usb {
- 	power-domains = <&pwrc PWRC_SM1_USB_ID>;
- };
-+
-+//&npu {
-+//	power-domains = <&pwrc PWRC_SM1_NNA_ID>;
-+//};
 -- 
 2.39.2
 
-From a1be15ffcfce9355de9644b9607025c804929bb3 Mon Sep 17 00:00:00 2001
+From 6d058da189240a56609c41799bd9c8e40d558320 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Thu, 17 Aug 2023 22:30:22 -0400
+Date: Wed, 18 Oct 2023 23:23:37 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: legacy meson64_odroid
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -1413,10 +1394,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 120000 arch/arm64/boot/dts/amlogic/meson64_odroidn2l.dts
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index e213aeebb774..52bc576b9221 100644
+index ecfd8b1fbf91..1e83933a11ab 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
-@@ -67,3 +67,9 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
+@@ -72,3 +72,9 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
  dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
@@ -1466,6 +1447,80 @@ index 000000000000..1d044acb5787
 @@ -0,0 +1 @@
 +meson-g12b-odroid-n2l.dts
 \ No newline at end of file
+-- 
+2.39.2
+
+From f25304d80905b14d73a7e192324586669340203b Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Thu, 12 Oct 2023 06:13:39 -0400
+Subject: [PATCH] arm64: dts: amlogic: Used onboard usb hub reset on odroid n2
+
+On Odroid n2/n2+ previously use gpio-hog to reset the usb hub,
+switch to used on-board usb hub reset to enable the usb hub
+and enable power to hub.
+
+https://lore.kernel.org/linux-amlogic/20231011051152.133257-2-linux.amoon@gmail.com/T/#u
+
+Signed-off-by: Anand Moon <linux.amoon@gmail.com>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../dts/amlogic/meson-g12b-odroid-n2.dtsi     | 36 ++++++++++++-------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
+index 24d0442dffb2..e4aa9bd2909e 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
+@@ -31,6 +31,30 @@ hub_5v: regulator-hub_5v {
+ 		enable-active-high;
+ 	};
+ 
++	/* USB hub supports both USB 2.0 and USB 3.0 root hub */
++	usb-hub {
++		dr_mode = "host";
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		/* 2.0 hub on port 1 */
++		hub_2_0: hub@1 {
++			compatible = "usb5e3,610";
++			reg = <1>;
++			peer-hub = <&hub_3_0>;
++			vdd-supply = <&usb_pwr_en>;
++		};
++
++		/* 3.0 hub on port 4 */
++		hub_3_0: hub@2 {
++			compatible = "usb5e3,620";
++			reg = <2>;
++			peer-hub = <&hub_2_0>;
++			reset-gpios = <&gpio GPIOH_4 GPIO_ACTIVE_LOW>;
++			vdd-supply = <&vcc_5v>;
++		};
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "ODROID-N2";
+@@ -235,18 +259,6 @@ &gpio {
+ 		"PIN_3",  /* GPIOX_17 */
+ 		"PIN_5",  /* GPIOX_18 */
+ 		"PIN_36"; /* GPIOX_19 */
+-	/*
+-	 * WARNING: The USB Hub on the Odroid-N2 needs a reset signal
+-	 * to be turned high in order to be detected by the USB Controller
+-	 * This signal should be handled by a USB specific power sequence
+-	 * in order to reset the Hub when USB bus is powered down.
+-	 */
+-	hog-0 {
+-		gpio-hog;
+-		gpios = <GPIOH_4 GPIO_ACTIVE_HIGH>;
+-		output-high;
+-		line-name = "usb-hub-reset";
+-	};
+ };
+ 
+ &i2c3 {
 -- 
 2.39.2
 
