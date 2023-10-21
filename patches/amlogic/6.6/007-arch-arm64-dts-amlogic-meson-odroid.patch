@@ -431,3 +431,91 @@ index 24d0442dffb2..e4aa9bd2909e 100644
 -- 
 2.39.2
 
+From 8ab89d16a292b525d279cc7164ffbe7ea0d5137f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 21 Oct 2023 05:35:48 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-odroid: add missing nodes
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../boot/dts/amlogic/meson-sm1-odroid-c4.dts    | 17 +++++++++++++++++
+ .../boot/dts/amlogic/meson-sm1-odroid.dtsi      | 15 +++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
+index b51498ce93b3..be90c5f7bd13 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
+@@ -11,6 +11,11 @@ / {
+ 	compatible = "hardkernel,odroid-c4", "amlogic,sm1";
+ 	model = "Hardkernel ODROID-C4";
+ 
++	aliases {
++		i2c0 = &i2c2;
++		i2c1 = &i2c3;
++	};
++
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+@@ -62,6 +67,18 @@ &external_phy {
+ 	/delete-property/	interrupts-parent;
+ };
+ 
++&i2c2 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c2_sda_x_pins>, <&i2c2_sck_x_pins>;
++};
++
++&i2c3 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
++};
++
+ &gpu_opp_table {
+ 	opp-999999984 {
+ 		opp-hz = /bits/ 64 <999999984>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
+index aa6bdb84817a..cf031f2081d0 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
+@@ -10,12 +10,18 @@
+ 
+ / {
+ 	aliases {
++		i2c0 = &i2c2;
++		i2c1 = &i2c3;
++		i2c2 = &i2c0;
++		i2c3 = &i2c1;
++		i2c4 = &i2c_AO;
+ 		serial0 = &uart_AO;
+ 		serial1 = &uart_A;
+ 		serial2 = &uart_B;
+ 		serial3 = &uart_C;
+ 		serial4 = &uart_AO_B;
+ 		ethernet0 = &ethmac;
++		spi0 = &spicc0;
+ 	};
+ 
+ 	chosen {
+@@ -452,6 +458,15 @@ &sd_emmc_c {
+ 	vqmmc-supply = <&flash_1v8>;
+ };
+ 
++&spicc0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&spicc0_x_pins>;
++	status = "disabled";
++	num_chipselect = <2>;
++
++	cs-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_LOW>, <&gpio GPIOH_6 GPIO_ACTIVE_LOW>;
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+-- 
+2.39.2
+
