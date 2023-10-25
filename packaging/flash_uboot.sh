@@ -3,9 +3,6 @@
 # Depends on prerequisites defined by P. Yavitz
 # URL: https://github.com/pyavitz/debian-image-builder
 
-ROOTFS=`findmnt -v -n -o SOURCE /`
-FSTYPE=`findmnt -v -n -o FSTYPE /`
-
 # developer debug switch
 VERBOSITY="0"
 if [ $VERBOSITY -eq 1 ]; then
@@ -65,31 +62,6 @@ else
 	echo -en "== SDCARD: "
 fi
 echo -e "$MMC"
-}
-
-extlinux_conf () {
-if [[ "$FSTYPE" == "ext4" ]]; then
-	ROOT_FSTYPE="rootfstype=ext4"
-fi
-if [[ "$FSTYPE" == "btrfs" ]]; then
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-fi
-if [[ "$FSTYPE" == "xfs" ]]; then
-	ROOT_FSTYPE="rootfstype=xfs"
-fi
-FDT="../${FAMILY}/${DTB}.dtb"
-FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${NEW_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
-rm -f /boot/extlinux/extlinux.conf
-tee /boot/extlinux/extlinux.conf <<EOF
-label default
-	kernel ../Image
-	initrd ../uInitrd
-	fdtdir ${FDTDIR}
-	fdt ${FDT}
-	#fdtoverlays
-	${CMDLINE}
-EOF
 }
 
 flash_uboot(){
@@ -177,28 +149,16 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 fi
 }
 
-CUR_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-CHK_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-echo OLD_PARTUUID='"'$CUR_PARTUUID'"' > /etc/opt/part-uuid.txt
+ROOTFS=`findmnt -v -n -o SOURCE /`
+PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 sleep .25
 flash_uboot
 sleep .25
-echo NEW_PARTUUID='"'$CHK_PARTUUID'"' >> /etc/opt/part-uuid.txt
-source /etc/opt/part-uuid.txt
-if [[ "$OLD_PARTUUID" == "$NEW_PARTUUID" ]]; then
-	rm -f /etc/opt/part-uuid.txt
-	echo -e ""
-	echo -e "You may now reboot."
-	exit 0
-else
-	echo -e ""
-	echo -e "Generating new extlinux.conf"
-	extlinux_conf
-	rm -f /etc/opt/part-uuid.txt
-	echo -e ""
-	echo -e "You may now reboot."
-	exit 0
+if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
+	sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/extlinux/extlinux.conf
 fi
+echo -e ""
+echo -e "You may now reboot."
 
 sync
 exit 0

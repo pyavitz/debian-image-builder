@@ -25,61 +25,21 @@ else
 	exit 0
 fi
 
-STORE="/etc/opt"
 ROOTFS=`findmnt -v -n -o SOURCE /`
-FSTYPE=`findmnt -v -n -o FSTYPE /`
-CUR_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-CHK_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-
-extlinux_conf(){
-if [[ "$FSTYPE" == "ext4" ]]; then
-	ROOT_FSTYPE="rootfstype=ext4"
-fi
-if [[ "$FSTYPE" == "btrfs" ]]; then
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-fi
-if [[ "$FSTYPE" == "xfs" ]]; then
-	ROOT_FSTYPE="rootfstype=xfs"
-fi
-FDT="../${FAMILY}/${DTB}.dtb"
-FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${NEW_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
-rm -f /boot/extlinux/extlinux.conf
-tee /boot/extlinux/extlinux.conf <<EOF
-label default
-	kernel ../Image
-	initrd ../uInitrd
-	fdtdir ${FDTDIR}
-	fdt ${FDT}
-	#fdtoverlays
-	${CMDLINE}
-EOF
-}
-
+PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 if [[ "$BOARD" == "x96air" ]] && [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; then
-	echo OLD_PARTUUID='"'$CUR_PARTUUID'"' > ${STORE}/part-uuid.txt
-	echo ""
-	echo "Flashing Vendor U-Boot ..."
+	echo -e ""
+	echo -e "Flashing Vendor U-Boot ..."
 	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=1 count=442
 	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
-	echo "Done."
-	echo NEW_PARTUUID='"'$CHK_PARTUUID'"' >> ${STORE}/part-uuid.txt
-	source ${STORE}/part-uuid.txt
-	if [[ "$OLD_PARTUUID" == "$NEW_PARTUUID" ]]; then
-		sleep .50
-		rm -f ${STORE}/part-uuid.txt
-		echo ""
-		echo "You may now power down the board and enter recovery mode."
-	else
-		sleep .50
-		echo ""
-		echo "Generating new extlinux.conf"
-		extlinux_conf
-		rm -f ${STORE}/part-uuid.txt
-		echo ""
-		echo "You may now power down the board and enter recovery mode."
-		exit 0
+	if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
+		sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/extlinux/extlinux.conf
+	fi
+	echo -e "Done."
+	echo -e ""
+	echo "You may now power down the board and enter recovery mode."
 	fi
 fi
 
+sync
 exit 0
