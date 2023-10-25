@@ -47,6 +47,12 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 	else
 		JACK_AUDIO="0"
 	fi
+	# amlogic g12/sm1 series analog audio
+	if [[ "$BOARD" == "x96air" ]]; then
+		SPDIF_AUDIO="1"
+	else
+		SPDIF_AUDIO="0"
+	fi
 	# fan control
 	if [[ "$BOARD" == "bananapicm4" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || "$BOARD" == "odroidxu4" ]]; then
 		FAN_CTRL="1"
@@ -99,6 +105,25 @@ if [ $VERBOSITY -eq 1 ]; then
 fi
 }
 
+amlogic_spdif(){
+sudo amixer -c 0 set 'TOHDMITX' 'on'
+sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
+sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
+sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
+sudo amixer -c 0 set 'FRDDR_A SRC 3 EN' 'on'
+sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
+sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
+sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 3'
+sudo amixer -c 0 set 'SPDIFOUT_A SRC SEL' 'IN 0'
+sudo amixer -c 0 set 'ACODEC' '85%'
+# Save
+sudo alsactl store
+if [ $VERBOSITY -eq 1 ]; then
+	echo ""
+	read -p "Press enter to continue."
+fi
+}
+
 amlogic_audio(){
 while [ 1 ]
 do
@@ -107,6 +132,7 @@ export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 whiptail --backtitle "AMLOGIC: Audio Output" --title "Choose" --menu "" --nocancel 0 0 0 \
 	"1)" "HDMI                      HDMI Audio" \
 	"2)" "Analog                    3.5mm Jack Audio" \
+	"3)" "SPDIF                     Digital Optical Audio" \
 	"E)" "Exit .." 3>&2 2>&1 1>&3
 )
 case $SOUND_MIXER in
@@ -132,6 +158,20 @@ case $SOUND_MIXER in
 			if (whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirm" --yesno "    Apply Analog Audio Settings?" 0 0); then
 				amlogic_analog
 				whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0
+			else
+				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
+			fi
+		else
+			export NEWT_COLORS='root=,black'
+			whiptail --msgbox "    Your board is not supported." 0 0
+		fi
+	"3)")
+		supported_list
+		if [ $SPDIF_AUDIO -eq 1 ]; then
+			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
+			if (whiptail --backtitle "Digital Optical Audio" --title "Confirm" --yesno "    Apply SPDIF Audio Settings?" 0 0); then
+				amlogic_spdif
+				whiptail --backtitle "Digital Optical Audio" --title "Confirmation" --msgbox "    Applied successfully." 0 0
 			else
 				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
 			fi
