@@ -41,27 +41,15 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		echo "CONFIG_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_SPL_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
-	if [[ "$BOARD" == "x96air" ]] && [[ "$UBOOT_VERSION" == "v2023.01" ]]; then
-		echo "CONFIG_SYS_CONSOLE_IS_IN_ENV=y" >> configs/${UBOOT_DEFCONFIG}
-		if [[ -f "../../${PRECOMPILED_UBOOT_DIR}/${FAMILY_EXT}.bmp" ]]; then
-			cp ../../${PRECOMPILED_UBOOT_DIR}/${FAMILY_EXT}.bmp tools/logos/
-		fi
-	fi
 fi
 # freescale
 if [[ "$FAMILY_EXT" == "imx8" ]]; then
 	if [[ "$BOARD" == "ft20" ]]; then
 		echo 'CONFIG_IMX_CONFIG="board/freescale/imx8mp_evk/imximage-8mp-lpddr4.cfg"' >> configs/${UBOOT_DEFCONFIG}
-		# part of the original suggested commit
-		#sed -i 's/CONFIG_ENV_SIZE=0x1000/CONFIG_ENV_SIZE=0x4000/g' configs/${UBOOT_DEFCONFIG}
-		#sed -i 's/CONFIG_ENV_OFFSET=0x400000/CONFIG_ENV_OFFSET=0x700000/g' configs/${UBOOT_DEFCONFIG}
 	fi
 fi
 # rockchip
 if [[ "$FAMILY" == "rockchip" ]]; then
-	#if [[ "$FAMILY_EXT" == "rk3288" ]]; then
-	#	echo "CONFIG_DM_RESET=y" >> configs/${UBOOT_DEFCONFIG}
-	#fi
 	if [[ "$BOARD" == "renegade" ]]; then
 		echo "CONFIG_USE_PREBOOT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_BOARD_LATE_INIT=y" >> configs/${UBOOT_DEFCONFIG}
@@ -106,15 +94,6 @@ fi
 }
 
 linux_configs (){
-#if [ $CCACHE -eq 0 ] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-#	if [[ `grep -w "CONFIG_GCC_PLUGINS=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGINS=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#	if [[ `grep -w "CONFIG_GCC_PLUGIN_LATENT_ENTROPY=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGIN_LATENT_ENTROPY=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#	if [[ `grep -w "CONFIG_RANDSTRUCT=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_RANDSTRUCT=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#	if [[ `grep -w "CONFIG_RANDSTRUCT_FULL=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_RANDSTRUCT_FULL=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#	if [[ `grep -w "CONFIG_GCC_PLUGIN_RANDSTRUCT=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGIN_RANDSTRUCT=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#	if [[ `grep -w "CONFIG_HAVE_ARCH_STACKLEAK=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_HAVE_ARCH_STACKLEAK=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#	if [[ `grep -w "CONFIG_GCC_PLUGIN_STRUCTLEAK=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_GCC_PLUGIN_STRUCTLEAK=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-#fi
 if [ $CLANG -eq 1 ] && [[ "$ARCH" == "arm64" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	if [[ `grep -w "CONFIG_LTO_CLANG_THIN=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
 fi
