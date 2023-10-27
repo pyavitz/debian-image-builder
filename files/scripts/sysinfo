@@ -36,11 +36,19 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
-if [[ -f "/sys/class/hwmon/hwmon2/fan1_input" ]] && [[ "/sys/class/hwmon/hwmon2/pwm1" ]]; then
-	HWMON="hwmon2"
+if [[ -f "/sys/class/hwmon/hwmon0/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon0/pwm1" ]]; then
+	HWMON="hwmon0"
 else
-	if [[ -f "/sys/class/hwmon/hwmon3/fan1_input" ]] && [[ "/sys/class/hwmon/hwmon3/pwm1" ]]; then
-		HWMON="hwmon3"
+	if [[ -f "/sys/class/hwmon/hwmon1/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon1/pwm1" ]]; then
+		HWMON="hwmon1"
+	else
+		if [[ -f "/sys/class/hwmon/hwmon2/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon2/pwm1" ]]; then
+			HWMON="hwmon2"
+		else
+			if [[ -f "/sys/class/hwmon/hwmon3/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon3/pwm1" ]]; then
+				HWMON="hwmon3"
+			fi
+		fi
 	fi
 fi
 
