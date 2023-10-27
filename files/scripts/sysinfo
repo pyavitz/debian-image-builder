@@ -76,7 +76,17 @@ fi
 fan_pwr (){
 RPM=`cat /sys/class/hwmon/${HWMON}/fan1_input`
 PWM=`cat /sys/class/hwmon/${HWMON}/pwm1`
-echo -e "Fan:         ${RPM} RPM ($PWM)"
+if [[ "$MODEL" == "BananaPi BPI-CM4IO Baseboard with BPI-CM4 Module" ]] || \
+	[[ "$MODEL" == "Waveshare CM4-IO-BASE-B with BPI-CM4 Module" ]] || \
+	[[ "$MODEL" == "Waveshare CM4-IO Baseboard with BPI-CM4 Module" ]]; then
+	echo -e "Fan:         RPM ${RPM}, PWR ${PWM}"
+else
+	if [[ "$RPM" == "1" ]]; then
+		echo -e "Fan:         ON ${RPM}, PWR ${PWM}"
+	else
+		echo -e "Fan:         OFF ${RPM}, PWR ${PWM}"
+	fi
+fi
 }
 
 run (){
