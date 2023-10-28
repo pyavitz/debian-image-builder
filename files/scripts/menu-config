@@ -697,7 +697,7 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
-			"FC)" "Fan Control              Set trip point" \
+			"FC)" "Fan Control              Install fanctrl script and service" \
 			"DC)" "Debconf                  Reconfigure ${DISTRO} configuration system" \
 			"TB)" "Tinkerboard R2.0         Enable DS1307 RTC" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
@@ -715,11 +715,19 @@ case $CHOICE in
 					if [ $FAN_CTRL -eq 1 ] > /dev/null 2>&1; then
 						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
 							if [[ `command -v fanctrl` ]]; then
-								fanctrl menu
+								echo ""
+								echo -e "Fan control is already installed. Run 'fanctrl' in a terminal for options."
+								echo ""
+								read -p "Press enter to continue."
+								clear -x
 							else
 								install_fanctrl
 								systemd_fanctrl
-								fan-ctrl menu
+								echo ""
+								echo -e "Run 'fanctrl' in a terminal for options."
+								echo ""
+								read -p "Press enter to continue."
+								clear -x
 							fi
 						fi
 						if [[ "$DISTRO" == "Devuan" ]]; then
