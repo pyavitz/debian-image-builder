@@ -1,0 +1,182 @@
+From 825e2b5594e8fdc9f7676aebc0d70c24a773b06f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 31 Oct 2023 10:38:32 -0400
+Subject: [PATCH] arch: arm: dts: rockchip: rk3288-tinker
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/boot/dts/rockchip/rk3288-tinker.dtsi | 40 +++++++++++++++++--
+ arch/arm/boot/dts/rockchip/rk3288.dtsi        | 16 +++-----
+ 2 files changed, 42 insertions(+), 14 deletions(-)
+
+diff --git a/arch/arm/boot/dts/rockchip/rk3288-tinker.dtsi b/arch/arm/boot/dts/rockchip/rk3288-tinker.dtsi
+index 09618bb7d872..409f0e2ceb13 100644
+--- a/arch/arm/boot/dts/rockchip/rk3288-tinker.dtsi
++++ b/arch/arm/boot/dts/rockchip/rk3288-tinker.dtsi
+@@ -60,20 +60,25 @@ pwr_led: led-2 {
+ 		};
+ 	};
+ 
++	gpiomem: rk3288-gpiomem@ff750000 {
++		compatible = "rockchip,rk3288-gpiomem";
++		reg = <0x0 0xff750000 0x0 0x1000>;
++		status = "disabled";
++	};
++
+ 	sdio_pwrseq: sdio-pwrseq {
+ 		compatible = "mmc-pwrseq-simple";
+ 		clocks = <&rk808 RK808_CLKOUT1>;
+ 		clock-names = "ext_clock";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&wifi_enable>;
+-		reset-gpios = <&gpio4 RK_PD3 GPIO_ACTIVE_LOW>,
+-			<&gpio4 RK_PD4 GPIO_ACTIVE_LOW>;
++		reset-gpios = <&gpio4 RK_PD3 GPIO_ACTIVE_LOW>, <&gpio4 RK_PD4 GPIO_ACTIVE_LOW>;
+ 	};
+ 
+ 	sound {
+ 		compatible = "simple-audio-card";
+ 		simple-audio-card,format = "i2s";
+-		simple-audio-card,name = "rockchip,tinker-codec";
++		simple-audio-card,name = "HDMI";
+ 		simple-audio-card,mclk-fs = <512>;
+ 
+ 		simple-audio-card,codec {
+@@ -342,10 +347,22 @@ regulator-state-mem {
+ 	};
+ };
+ 
++&i2c1 {
++	status = "okay";
++};
++ 
+ &i2c2 {
+ 	status = "okay";
+ };
+ 
++&i2c3 {
++	status = "okay";
++};
++
++&i2c4 {
++	status = "okay";
++};
++
+ &i2c5 {
+ 	status = "okay";
+ };
+@@ -357,7 +374,6 @@ &i2s {
+ 
+ &io_domains {
+ 	status = "okay";
+-
+ 	sdcard-supply = <&vccio_sd>;
+ 	wifi-supply = <&vcc_18>;
+ };
+@@ -478,6 +494,8 @@ &sdio0 {
+ 	sd-uhs-sdr12;
+ 	sd-uhs-sdr25;
+ 	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	supports-sd;
+ 	vmmc-supply = <&vcc_io>;
+ 	vqmmc-supply = <&vcc_18>;
+ 	status = "okay";
+@@ -491,6 +509,16 @@ &tsadc {
+ 
+ &uart0 {
+ 	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_xfer &uart0_cts &uart0_rts>;
++	uart-has-rtscts;
++
++	bluetooth {
++		compatible = "realtek,rtl8723bs-bt";
++		enable-gpios = <&gpio4 RK_PD5 GPIO_ACTIVE_HIGH>;
++		device-wake-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
++		host-wake-gpios = <&gpio4 RK_PD7 GPIO_ACTIVE_HIGH>;
++	};
+ };
+ 
+ &uart1 {
+@@ -544,3 +572,7 @@ &vopl_mmu {
+ &wdt {
+ 	status = "okay";
+ };
++
++&gpiomem {
++	status = "okay";
++};
+diff --git a/arch/arm/boot/dts/rockchip/rk3288.dtsi b/arch/arm/boot/dts/rockchip/rk3288.dtsi
+index cb9cdaddffd4..e3163ffd7195 100644
+--- a/arch/arm/boot/dts/rockchip/rk3288.dtsi
++++ b/arch/arm/boot/dts/rockchip/rk3288.dtsi
+@@ -311,7 +311,7 @@ spi2: spi@ff130000 {
+ 		dma-names = "tx", "rx";
+ 		interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
+ 		pinctrl-names = "default";
+-		pinctrl-0 = <&spi2_clk &spi2_tx &spi2_rx &spi2_cs0>;
++		pinctrl-0 = <&spi2_clk &spi2_tx &spi2_rx &spi2_cs0 &spi2_cs1>;
+ 		reg = <0x0 0xff130000 0x0 0x1000>;
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -378,8 +378,6 @@ uart0: serial@ff180000 {
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART0>, <&cru PCLK_UART0>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 1>, <&dmac_peri 2>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart0_xfer>;
+ 		status = "disabled";
+@@ -393,8 +391,6 @@ uart1: serial@ff190000 {
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART1>, <&cru PCLK_UART1>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 3>, <&dmac_peri 4>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart1_xfer>;
+ 		status = "disabled";
+@@ -421,8 +417,6 @@ uart3: serial@ff1b0000 {
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART3>, <&cru PCLK_UART3>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 7>, <&dmac_peri 8>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart3_xfer>;
+ 		status = "disabled";
+@@ -436,8 +430,6 @@ uart4: serial@ff1c0000 {
+ 		reg-io-width = <4>;
+ 		clocks = <&cru SCLK_UART4>, <&cru PCLK_UART4>;
+ 		clock-names = "baudclk", "apb_pclk";
+-		dmas = <&dmac_peri 9>, <&dmac_peri 10>;
+-		dma-names = "tx", "rx";
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&uart4_xfer>;
+ 		status = "disabled";
+@@ -990,8 +982,8 @@ iep_mmu: iommu@ff900800 {
+ 		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&cru ACLK_IEP>, <&cru HCLK_IEP>;
+ 		clock-names = "aclk", "iface";
++		power-domains = <&power RK3288_PD_VIO>;
+ 		#iommu-cells = <0>;
+-		status = "disabled";
+ 	};
+ 
+ 	isp_mmu: iommu@ff914000 {
+@@ -1320,6 +1312,10 @@ opp-400000000 {
+ 			opp-hz = /bits/ 64 <400000000>;
+ 			opp-microvolt = <1100000>;
+ 		};
++		opp-500000000 {
++			opp-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <1200000>;
++		};
+ 		opp-600000000 {
+ 			opp-hz = /bits/ 64 <600000000>;
+ 			opp-microvolt = <1250000>;
+-- 
+2.39.2
+
