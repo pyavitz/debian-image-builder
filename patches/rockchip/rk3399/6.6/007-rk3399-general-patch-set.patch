@@ -326,32 +326,6 @@ index 59e0218a8bc5..d54004b56817 100644
  
  	ret = sysfs_create_group(&alt->dev.kobj, &dp_altmode_group);
  	if (ret)
-diff --git a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
-index e95ec7e382bb..69c7be760cef 100644
---- a/drivers/usb/typec/bus.c
-+++ b/drivers/usb/typec/bus.c
-@@ -185,14 +185,14 @@ EXPORT_SYMBOL_GPL(typec_altmode_exit);
-  */
- int typec_altmode_attention(struct typec_altmode *adev, u32 vdo)
- {
--	struct altmode *partner = to_altmode(adev)->partner;
- 	struct typec_altmode *pdev;
--
--	if (!partner)
--		return -ENODEV;
--
--	pdev = &partner->adev;
--
-+	WARN_ONCE(!adev, "typec bus attention: adev is NULL!");
-+	WARN_ONCE(!to_altmode(adev)->partner, "typec bus attention: partner is NULL!");
-+	if(!adev || !to_altmode(adev)->partner) {
-+		return;
-+	}
-+ 
-+	pdev = &to_altmode(adev)->partner->adev;
- 	if (pdev->ops && pdev->ops->attention)
- 		pdev->ops->attention(pdev, vdo);
- 
 diff --git a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
 index d962f67c95ae..12466f6db4b1 100644
 --- a/drivers/usb/typec/tcpm/tcpm.c
