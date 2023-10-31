@@ -1,0 +1,29 @@
+From 092256a23cbca8bc6df206f5bb7f752d0d51dd16 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sun, 30 Jul 2023 13:11:06 -0400
+Subject: [PATCH] HRNG in CAAM isn't working properly on IMX6 SoloX
+
+https://lore.kernel.org/lkml/YSy%2FPFrem+a7npBy@gmail.com/
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/crypto/caam/caamrng.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/crypto/caam/caamrng.c b/drivers/crypto/caam/caamrng.c
+index 50eb55da45c2..ded0c3eba55e 100644
+--- a/drivers/crypto/caam/caamrng.c
++++ b/drivers/crypto/caam/caamrng.c
+@@ -69,8 +69,7 @@ static u32 *caam_init_desc(u32 *desc, dma_addr_t dst_dma)
+ {
+ 	init_job_desc(desc, 0);	/* + 1 cmd_sz */
+ 	/* Generate random bytes: + 1 cmd_sz */
+-	append_operation(desc, OP_ALG_ALGSEL_RNG | OP_TYPE_CLASS1_ALG |
+-			 OP_ALG_PR_ON);
++	append_operation(desc, OP_ALG_ALGSEL_RNG | OP_TYPE_CLASS1_ALG);
+ 	/* Store bytes: + 1 cmd_sz + caam_ptr_sz  */
+ 	append_fifo_store(desc, dst_dma,
+ 			  CAAM_RNG_MAX_FIFO_STORE_SIZE, FIFOST_TYPE_RNGSTORE);
+-- 
+2.39.2
+
