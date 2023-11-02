@@ -36,20 +36,11 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
-if [[ -f "/sys/class/hwmon/hwmon0/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon0/pwm1" ]]; then
-	HWMON="hwmon0"
+if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input` ]] && [[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1` ]] > /dev/null 2>&1; then
+	FAN="true"
+	HWMON=`ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input | grep -ohE 'hwmon[0-9][^ ]' | sed 's/.$//'`
 else
-	if [[ -f "/sys/class/hwmon/hwmon1/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon1/pwm1" ]]; then
-		HWMON="hwmon1"
-	else
-		if [[ -f "/sys/class/hwmon/hwmon2/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon2/pwm1" ]]; then
-			HWMON="hwmon2"
-		else
-			if [[ -f "/sys/class/hwmon/hwmon3/fan1_input" ]] && [[ -f "/sys/class/hwmon/hwmon3/pwm1" ]]; then
-				HWMON="hwmon3"
-			fi
-		fi
-	fi
+	FAN="false"
 fi
 
 # functions
@@ -94,93 +85,13 @@ if [[ -f "/proc/device-tree/model" ]]; then
 	echo -e " (`uname -r`)"
 fi
 echo -e "CPU usage:  " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'`
-if [[ -f "/sys/devices/system/cpu/present" ]]; then
-	cpu_hwinfo;
-fi
-if [[ ! -z "$HWMON" ]]; then fan_pwr; fi
+if [[ -f "/sys/devices/system/cpu/present" ]]; then cpu_hwinfo; fi
+if [[ "$FAN" == "true" ]]; then fan_pwr; fi
 echo -e "Online:     " $(lscpu | grep -w "On-line CPU(s) list:" | sed "s/On-line CPU(s) list:/ /g" | sed -e "s/\s\{3,\}//g")
 echo -e "Governor:   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "Memory:     " $(free -h | sed 's/i//g' | sed 's/Mem://g' | awk '{print $1" "$2}' | sed -n 'n;p')
 echo -e "Entropy:    " $(cat /proc/sys/kernel/random/entropy_avail)
 echo -e "Uptime:     " $(uptime)
-}
-
-update_sysinfo (){
-if [[ -f "/usr/local/bin/sysinfo" ]]; then
-	mv /usr/local/bin/sysinfo /usr/local/bin/sysinfo.orig;
-	mv /usr/local/bin/smon /usr/local/bin/smon.orig;
-	wget -cq ${GHURL}/scripts/sysinfo -P /usr/local/bin/;
-	wget -cq ${GHURL}/scripts/smon -P /usr/local/bin/;
-	if [[ -f "/usr/local/bin/sysinfo" ]]; then
-		chmod +x /usr/local/bin/sysinfo;
-		rm -f /usr/local/bin/sysinfo.orig;
-		ls -ls /usr/local/bin/sysinfo;
-	else
-		mv /usr/local/bin/sysinfo.orig /usr/local/bin/sysinfo;
-	fi
-	if [[ -f "/usr/local/bin/smon" ]]; then
-		chmod +x /usr/local/bin/smon;
-		rm -f /usr/local/bin/smon.orig;
-		ls -ls /usr/local/bin/smon;
-	else
-		mv /usr/local/bin/smon.orig /usr/local/bin/smon;
-	fi
-fi
-}
-
-update_motd (){
-# remove
-if [[ -f "/etc/default/dynamic-motd" ]]; then
-	rm -f /etc/default/dynamic-motd;
-fi
-if [[ -f "/etc/update-motd.d/00-header" ]]; then
-	rm -f /etc/update-motd.d/00-header;
-fi
-if [[ -f "/etc/update-motd.d/10-uname" ]]; then
-	rm -f /etc/update-motd.d/10-uname;
-fi
-if [[ -f "/etc/update-motd.d/15-brand" ]]; then
-	rm -f /etc/update-motd.d/15-brand;
-fi
-if [[ -f "/etc/update-motd.d/20-sysinfo" ]]; then
-	rm -f /etc/update-motd.d/20-sysinfo;
-fi
-if [[ -f "/etc/update-motd.d/90-dynamic-motd" ]]; then
-	rm -f /etc/update-motd.d/90-dynamic-motd;
-fi
-# download
-wget -cq $GHURL/scripts/00-header -P /etc/update-motd.d/
-wget -cq $GHURL/scripts/15-brand -P /etc/update-motd.d/
-wget -cq $GHURL/scripts/20-sysinfo -P /etc/update-motd.d/
-wget -cq $GHURL/scripts/90-dynamic-motd -P /etc/update-motd.d/
-# check
-if [[ -f "/etc/update-motd.d/00-header" ]]; then
-	chmod +x /etc/update-motd.d/00-header;
-	ls -ls /etc/update-motd.d/00-header;
-fi
-if [[ -f "/etc/update-motd.d/15-brand" ]]; then
-	chmod +x /etc/update-motd.d/15-brand;
-	ls -ls /etc/update-motd.d/15-brand;
-fi
-if [[ -f "/etc/update-motd.d/20-sysinfo" ]]; then
-	chmod +x /etc/update-motd.d/20-sysinfo;
-	ls -ls /etc/update-motd.d/20-sysinfo;
-fi
-if [[ -f "/etc/update-motd.d/90-dynamic-motd" ]]; then
-	chmod +x /etc/update-motd.d/90-dynamic-motd;
-	ls -ls /etc/update-motd.d/90-dynamic-motd;
-fi
-# default dynamic motd
-echo "# DYNAMIC MOTD VARIABLES" | tee /etc/default/dynamic-motd
-echo 'H_POS="-c"' | tee -a /etc/default/dynamic-motd
-echo 'B_POS="-r"' | tee -a /etc/default/dynamic-motd
-echo 'BRANDING="false"' | tee -a /etc/default/dynamic-motd
-echo 'T_FONT="small"' | tee -a /etc/default/dynamic-motd
-echo 'T_FILTER="metal"' | tee -a /etc/default/dynamic-motd
-echo 'MENUCONFIG="false"' | tee -a /etc/default/dynamic-motd
-if [[ -f "/etc/default/dynamic-motd" ]]; then
-	ls -ls /etc/default/dynamic-motd;
-fi
 }
 
 if [ $# -eq 0 ]; then
@@ -190,7 +101,7 @@ if [ $# -eq 0 ]; then
 	exit 0
 fi
 
-while getopts "eruh" OPTION; do
+while getopts "erh" OPTION; do
 	case $OPTION in
 
 		e)
@@ -198,16 +109,6 @@ while getopts "eruh" OPTION; do
 			;;
 		r)
 			run
-			;;
-		u)
-			if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-				GHURL="https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files"
-				update_sysinfo;
-				update_motd;
-			else
-				echo -e "Requires a internet connection."
-				exit 0;
-			fi
 			;;
 		h)
 			echo ""
