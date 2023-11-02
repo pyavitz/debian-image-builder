@@ -20,7 +20,8 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
-if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input` ]] && [[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1` ]] > /dev/null 2>&1; then
+if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input` ]] > /dev/null 2>&1 \
+	&& [[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1` ]] > /dev/null 2>&1; then
 	FAN="true"
 	HWMON=`ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input | grep -ohE 'hwmon[0-9][^ ]' | sed 's/.$//'`
 else
