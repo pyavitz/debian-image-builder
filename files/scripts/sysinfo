@@ -36,14 +36,15 @@ fi
 if [[ -f "/sys/class/thermal/thermal_zone1/temp" ]]; then
 	CPU1T=$(cat /sys/class/thermal/thermal_zone1/temp|cut -c1-2);
 fi
-if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input` ]] > /dev/null 2>&1 \
-	&& [[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1` ]] > /dev/null 2>&1; then
-	FAN="true"
-	HWMON=`ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input | grep -ohE 'hwmon[0-9][^ ]' | sed 's/.$//'`
+if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1` ]] > /dev/null 2>&1; then
+	if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/fan1_input` ]] > /dev/null 2>&1 || \
+	[[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1_enable` ]] > /dev/null 2>&1; then
+		FAN="true"
+		HWMON=`ls /sys/class/hwmon/hwmon*[0-9]*/pwm1 | grep -ohE 'hwmon[0-9][^ ]' | sed 's/.$//'`
+	fi
 else
 	FAN="false"
 fi
-
 # functions
 count_high (){
 echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C";
@@ -66,15 +67,15 @@ fi
 }
 
 fan_pwr (){
-RPM=`cat /sys/class/hwmon/${HWMON}/fan1_input`
 PWM=`cat /sys/class/hwmon/${HWMON}/pwm1`
 if [[ "$MODEL" == "Waveshare CM4-IO-BASE-B with BPI-CM4 Module" ]]; then
+	RPM=`cat /sys/class/hwmon/${HWMON}/fan1_input`
 	echo -e "Fan:         RPM ${RPM}, PWR ${PWM}"
 else
-	if [[ "$RPM" == "1" ]]; then
-		echo -e "Fan:         ON, PWR ${PWM}"
-	else
+	if [[ "$PWM" == "0" ]]; then
 		echo -e "Fan:         OFF, PWR ${PWM}"
+	else
+		echo -e "Fan:         ON, PWR ${PWM}"
 	fi
 fi
 }
