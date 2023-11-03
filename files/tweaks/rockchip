@@ -43,6 +43,17 @@ if [[ "$BOARD" == "tinker" ]] && [[ -f "/sys/devices/system/cpu/cpufreq/policy0/
 	fi
 fi
 
+# Restart auto-negotiation on ethernet
+if [[ "$BOARD" == "tinker" ]]; then
+	if [[ -f "/sys/class/net/eth0/carrier" ]] && [[ `grep "1" /sys/class/net/eth0/carrier` ]]; then
+		if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+			:;
+		else
+			sleep 5; ethtool -r eth0;
+		fi
+	fi
+fi
+
 # NanoPi R4SE Networking Tweak
 if [[ "$BOARD" == "nanopir4se" ]]; then
 	MACDEV=`findmnt -v -n -o SOURCE / | sed 's/dev//g' | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##' | sed 's/p1//g' | sed 's/p2//'`
