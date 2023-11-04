@@ -345,11 +345,11 @@ sleep 1
 if [[ "$GPT" == "true" ]]; then
 	parted --script "${DEVICE_NODE}" \
 	mklabel gpt \
-	mkpart 1 ext2 ${IMG_OFFSET} 100%
+	mkpart 1 ext2 ${PART_OFFSET} 100%
 else
 	parted --script "${DEVICE_NODE}" \
 	mklabel msdos \
-	mkpart primary ext2 ${IMG_OFFSET} 100%
+	mkpart primary ext2 ${PART_OFFSET} 100%
 fi
 partprobe "${DEVICE_NODE}"
 sleep 1.25
@@ -385,13 +385,13 @@ if [[ "$B_FSTYPE" == "vfat" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${DEVICE_NODE}" \
 		mklabel gpt \
-		mkpart 1 fat32 ${IMG_OFFSET} 512MiB \
-		mkpart 2 ext2 512MiB 100%
+		mkpart 1 fat32 ${PART_OFFSET} ${BSIZE} \
+		mkpart 2 ext2 ${BSIZE} 100%
 	else
 		parted --script "${DEVICE_NODE}" \
 		mklabel msdos \
-		mkpart primary fat32 ${IMG_OFFSET} 512MiB \
-		mkpart primary ext2 512MiB 100%
+		mkpart primary fat32 ${PART_OFFSET} ${BSIZE} \
+		mkpart primary ext2 ${BSIZE} 100%
 		parted --script "${DEVICE_NODE}" set 1 boot on
 	fi
 	if [[ "$EFI" == "true" ]]; then
@@ -402,13 +402,13 @@ if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${DEVICE_NODE}" \
 		mklabel gpt \
-		mkpart 1 ext2 ${IMG_OFFSET} 512MiB \
-		mkpart 2 ext2 512MiB 100%
+		mkpart 1 ext2 ${PART_OFFSET} ${BSIZE} \
+		mkpart 2 ext2 ${BSIZE} 100%
 	else
 		parted --script "${DEVICE_NODE}" \
 		mklabel msdos \
-		mkpart primary ext2 ${IMG_OFFSET} 512MiB \
-		mkpart primary ext2 512MiB 100%
+		mkpart primary ext2 ${PART_OFFSET} ${BSIZE} \
+		mkpart primary ext2 ${BSIZE} 100%
 	fi
 fi
 partprobe "${DEVICE_NODE}"
@@ -444,13 +444,11 @@ else
 fi
 }
 
-# PARTED OFFSET CONVERSION
-if [[ "$OFFSET" == "4096" || "$OFFSET" == "8192" ]]; then
-	IMG_OFFSET="4MiB"
-fi
-if [[ "$OFFSET" == "32768" ]]; then
-	IMG_OFFSET="16MiB"
-fi
+# OFFSET FIRST PARTITION BY
+if [[ "$OFFSET" == "4096" || "$OFFSET" == "8192" ]]; then PART_OFFSET="4MiB"; fi
+if [[ "$OFFSET" == "32768" ]]; then PART_OFFSET="16MiB"; fi
+# BOOT PARTITION SIZE
+if [[ "$EFI" == "true" ]]; then BSIZE="128MiB"; else BSIZE="512MiB"; fi
 # SETUP PARTITIONS
 if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then

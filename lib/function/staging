@@ -34,7 +34,7 @@ if [[ "$GPT" == "true" ]]; then
 else
 	parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 	mklabel msdos \
-	mkpart primary ext2 ${IMG_OFFSET} 100%
+	mkpart primary ext2 ${PART_OFFSET} 100%
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
 IMAGE_LOOP_DEV_ROOTFS="${IMAGE_LOOP_DEV}${P_ROOTFS}"
@@ -58,13 +58,13 @@ if [[ "$VFAT" == "true" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 		mklabel gpt \
-		mkpart 1 fat32 ${IMG_OFFSET} 512MiB \
-		mkpart 2 ext2 512MiB 100%
+		mkpart 1 fat32 ${PART_OFFSET} ${BSIZE} \
+		mkpart 2 ext2 ${BSIZE} 100%
 	else
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 		mklabel msdos \
-		mkpart primary fat32 ${IMG_OFFSET} 512MiB \
-		mkpart primary ext2 512MiB 100%
+		mkpart primary fat32 ${PART_OFFSET} ${BSIZE} \
+		mkpart primary ext2 ${BSIZE} 100%
 		#parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 lba off
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 boot on
 	fi
@@ -75,13 +75,13 @@ else
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 		mklabel gpt \
-		mkpart 1 ext2 ${IMG_OFFSET} 512MiB \
-		mkpart 2 ext2 512MiB 100%
+		mkpart 1 ext2 ${PART_OFFSET} ${BSIZE} \
+		mkpart 2 ext2 ${BSIZE} 100%
 	else
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 		mklabel msdos \
-		mkpart primary ext2 ${IMG_OFFSET} 512MiB \
-		mkpart primary ext2 512MiB 100%
+		mkpart primary ext2 ${PART_OFFSET} ${BSIZE} \
+		mkpart primary ext2 ${BSIZE} 100%
 	fi
 fi
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${IMAGE_FILE_NAME})"
@@ -108,13 +108,11 @@ $MOUNT_ROOTFS
 }
 
 partition(){
-# parted offset conversion
-if [[ "$OFFSET" == "4096" || "$OFFSET" == "8192" ]]; then
-	IMG_OFFSET="4MiB"
-fi
-if [[ "$OFFSET" == "32768" ]]; then
-	IMG_OFFSET="16MiB"
-fi
+# offset first partition by
+if [[ "$OFFSET" == "4096" || "$OFFSET" == "8192" ]]; then PART_OFFSET="4MiB"; fi
+if [[ "$OFFSET" == "32768" ]]; then PART_OFFSET="16MiB"; fi
+# boot partition size
+if [[ "$EFI" == "true" ]]; then BSIZE="128MiB"; else BSIZE="512MiB"; fi
 # partition values
 if [[ "$P_VALUE" == "p1" ]]; then
 	P_ROOTFS="p1"
