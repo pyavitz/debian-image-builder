@@ -646,25 +646,26 @@ index 000000000000..3295649664d7
 -- 
 2.39.2
 
-From 2c57e13bd0423c7d1698bf8d5c5e2fa727920067 Mon Sep 17 00:00:00 2001
+From f30ce9d85c25cb404d51aad1636d6f9b455b13e6 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 6 Nov 2023 08:31:45 -0500
-Subject: [PATCH] arch: arm64: dts: amlogic: meson-g12b-bananapi-m2s: fan control
+Date: Mon, 6 Nov 2023 08:53:24 -0500
+Subject: [PATCH] v2: arch: arm64: dts: amlogic: meson-g12b-bananapi-m2s: fan
+ control
 
-The fan on the unit is constantly running. So lets set thermal trip points and
-add the ability to control when we want it to kick on. By default it is set to
-power on at 60*C.
+The fan on the unit is constantly running. So lets set thermal
+trip points and add the ability to control when we want it to
+kick on. By default it is set to power on at 60*C.
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- .../boot/dts/amlogic/meson-g12b-bananapi.dtsi | 34 +++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ .../boot/dts/amlogic/meson-g12b-bananapi.dtsi   | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi.dtsi
-index af102061d1d7..c9ddd7071a91 100644
+index af102061d1d7..5f0272269e4c 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi.dtsi
 +++ b/arch/arm64/boot/dts/amlogic/meson-g12b-bananapi.dtsi
-@@ -315,6 +315,40 @@ &cpu103 {
+@@ -315,6 +315,23 @@ &cpu103 {
  	clock-latency = <50000>;
  };
  
@@ -680,23 +681,6 @@ index af102061d1d7..c9ddd7071a91 100644
 +	cooling-maps {
 +		map {
 +			trip = <&cpu_active>;
-+			cooling-device = <&fan0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-+		};
-+	};
-+};
-+
-+&ddr_thermal {
-+	trips {
-+		ddr_active: ddr-active {
-+			temperature = <60000>; /* millicelsius */
-+			hysteresis = <2000>; /* millicelsius */
-+			type = "active";
-+		};
-+	};
-+
-+	cooling-maps {
-+		map {
-+			trip = <&ddr_active>;
 +			cooling-device = <&fan0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 +		};
 +	};
