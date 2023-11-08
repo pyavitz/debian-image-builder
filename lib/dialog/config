@@ -22,13 +22,13 @@ else
 		fi
 	fi	
 fi
-if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 3p | grep -w 6.1` ]]; then
+if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 3p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g' | cut -c 1-3  | grep -w "6.1"` ]]; then
 	LTS2_L="3p"
 else
-	if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | grep -w 6.1` ]]; then
+	if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 4p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g' | cut -c 1-3  | grep -w "6.1"` ]]; then
 		LTS2_L="4p"
 	else
-		if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 5p | grep -w 6.1` ]]; then
+		if [[ `curl -Ls $JSON_FILE | grep -w "version" | sed -n 5p | sed -r 's/"version"://g' | sed -r '1s/\s+//g' | sed 's/,//g' | sed 's/\"//g' | cut -c 1-3  | grep -w "6.1"` ]]; then
 			LTS2_L="5p"
 		fi
 	fi
