@@ -14,6 +14,13 @@ if [[ -f "override.txt" ]]; then
 	. override.txt
 	override_board
 fi
+# create dtc list
+FIND=`cat board.txt | grep -w SERIES= | sed 's/SERIES=//g' | sed 's/"//g'`
+rm -f dtclist.txt
+for f in lib/boards/*; do
+	. $f
+	echo -e ${DEVICETREE} | grep "$FIND" | tr ' ' '\n' | tee -a dtclist.txt > /dev/null 2>&1
+done
 source board.txt
 source userdata.txt
 # debug switch
@@ -77,9 +84,7 @@ if [[ `ls *linux*.deb` ]] > /dev/null 2>&1; then
 	echo_done
 	exit 0
 else
-	if [[ -f "../github.txt" ]]; then
-		rm -f ../github.txt
-	fi
+	rm -f ../{github.txt,dtc.txt}
 	echo ""
 	echo -e "${KERNEL} ${VERSION} [FAILED]"
 	read -p "Press enter to continue."

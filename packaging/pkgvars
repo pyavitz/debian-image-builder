@@ -5,38 +5,27 @@ COMPRESSION="xz"
 
 # linux packaging
 linux_packaging(){
-DTS=`echo ${DEVICETREE} | sed 's/.dtb/.dts/g'`
 # debian package name
 LINUX_IMAGE="linux-image-${SERIES}"
 LINUX_HEADERS="linux-headers-${SERIES}"
 # install target
 if [[ "$ARCH" == "arm" ]]; then
 	LINUX_PATH="usr/lib/${LINUX_IMAGE}"
-	LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${DEVICETREE}"
 fi
 if [[ "$ARCH" == "arm64" ]]; then
 	LINUX_PATH="usr/lib/${LINUX_IMAGE}/${PLATFORM}"
-	LINUX_DTREE="usr/lib/${LINUX_IMAGE}/${PLATFORM}/${DEVICETREE}"
 fi
-LINUX_OLYS="usr/lib/${LINUX_IMAGE}/overlays"
-INSTALL_DTB="boot/${PLATFORM}/${DEVICETREE}"
-INSTALL_OLYS="boot/${PLATFORM}/"
+OVERLAY_PATH="usr/lib/${LINUX_IMAGE}/overlays"
+INSTALL_PATH="boot/${PLATFORM}/"
 # create packaging variables
 echo "# packaging variables" > "scripts/package/pkgvars"
-echo device_tree='"'$DEVICETREE'"' >> "scripts/package/pkgvars"
-echo device_tree_2='"'$DEVICETREE2'"' >> "scripts/package/pkgvars"
-echo device_tree_3='"'$DEVICETREE3'"' >> "scripts/package/pkgvars"
-echo device_tree_4='"'$DEVICETREE4'"' >> "scripts/package/pkgvars"
 echo platform='"'$PLATFORM'"' >> "scripts/package/pkgvars"
 echo series_name='"'$SERIES'"' >> "scripts/package/pkgvars"
 echo linux_name='"'$LINUX_IMAGE'"' >> "scripts/package/pkgvars"
 echo headers_name='"'$LINUX_HEADERS'"' >> "scripts/package/pkgvars"
 echo linux_path='"'$LINUX_PATH'"' >> "scripts/package/pkgvars"
-echo dtb_path='"'$LINUX_DTREE'"' >> "scripts/package/pkgvars"
-echo overlays_path='"'$LINUX_OLYS'"' >> "scripts/package/pkgvars"
-echo boot_path='"'$INSTALL_OLYS'"' >> "scripts/package/pkgvars"
-echo install_devicetree='"'$INSTALL_DTB'"' >> "scripts/package/pkgvars"
-echo install_overlays='"'$INSTALL_OLYS'"' >> "scripts/package/pkgvars"
+echo overlays_path='"'$OVERLAY_PATH'"' >> "scripts/package/pkgvars"
+echo boot_path='"'$INSTALL_PATH'"' >> "scripts/package/pkgvars"
 echo "# packaging compression" >> "scripts/package/pkgvars"
 echo compression='"'$COMPRESSION'"' >> "scripts/package/pkgvars"
 }
