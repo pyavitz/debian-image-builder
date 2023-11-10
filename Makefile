@@ -186,6 +186,10 @@ endif
 ifdef force_version
 	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
 endif
+# PATCHING
+ifdef patching
+	@echo 'LINUX_PATCHING="$(patching)"' >> override.txt
+endif
 # VERBOSE
 ifdef verbose
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
