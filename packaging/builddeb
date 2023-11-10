@@ -177,11 +177,15 @@ fi
 
 # update dtc list
 list=`cat dtclist.txt`
-echo "  DTC     updating list"
-cd "$tmpdir/$linux_path"; ls $list 2>/dev/null | tee -a dtclist.txt > /dev/null 2>&1; cd "../../../../../../"
+echo "  DTC     installing"
+cd "$tmpdir/$linux_path"; ls $list 2>/dev/null | tee -a dtclist.txt > /dev/null 2>&1
+# FIX ME! change directory to root of source-tree
+if [ -f "../../../../../dtclist.txt" ]; then cd "../../../../../"; else
+	if [ -f "../../../../../../dtclist.txt" ]; then cd "../../../../../../"; fi
+fi
 rm -f "dtclist.txt"; mv "$tmpdir/$linux_path/dtclist.txt" "dtclist.txt"
 
-# variables set by pkgvars
+# installing
 if [ -d $tmpdir/$linux_path ]; then
 	# install dtc
 	mkdir -p "$tmpdir/$boot_path"
@@ -203,7 +207,6 @@ if [ -d $tmpdir/$linux_path ]; then
 		fi
 	fi
 fi
-# end of pkgvars
 
 # Install the maintainer scripts
 debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
