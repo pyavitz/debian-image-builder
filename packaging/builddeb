@@ -51,10 +51,9 @@ dbg_dir="$objtree/debian/dbgtmp"
 libc_headers_packagename=linux-libc-dev
 dbg_packagename=$packagename-dbg
 
-# variables set by pkgvars
+# Variables set by pkgvars
 packagename=$linux_name
 kernel_headers_packagename=$headers_name
-# end of pkgvars
 
 if [ "$ARCH" = "um" ] ; then
 	packagename=user-mode-linux-$version
@@ -175,21 +174,14 @@ if [ "$ARCH" != "um" ]; then
 	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
 fi
 
-# update dtc list
-list=`cat dtclist.txt`
-echo "  DTC     $boot_path"
-cd "$tmpdir/$linux_path"; ls $list 2>/dev/null | tee -a dtclist.txt > /dev/null 2>&1
-# FIX ME! change directory to root of source-tree
-if [ -f "../../../../../dtclist.txt" ]; then cd "../../../../../"; else
-	if [ -f "../../../../../../dtclist.txt" ]; then cd "../../../../../../"; fi
-fi
-rm -f "dtclist.txt"; mv "$tmpdir/$linux_path/dtclist.txt" "dtclist.txt"
+# Update dtb list
+for dtclist in `cat dtclist.txt`; do ls $tmpdir/$linux_path/$dtclist 2>/dev/null | tee -a dtclist.new > /dev/null 2>&1; done
+rm -f "dtclist.txt"; mv -f "dtclist.new" "dtclist.txt"
 
-# installing
+# Installing dtb files
 if [ -d $tmpdir/$linux_path ]; then
-	# install dtc
 	mkdir -p "$tmpdir/$boot_path"
-	for dtclist in `cat dtclist.txt`; do cp -r $tmpdir/$linux_path/$dtclist 2>/dev/null $tmpdir/$boot_path; done
+	for dtclist in `cat dtclist.txt`; do cp -r "$dtclist" 2>/dev/null "$tmpdir/$boot_path"; done
 	rm -f dtclist.txt
 	# install overlays
 	if ls "$tmpdir/$linux_path/*.dtbo" > /dev/null 2>&1; then
