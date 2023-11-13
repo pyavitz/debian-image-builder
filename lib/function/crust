@@ -1,6 +1,12 @@
 #!/bin/bash
 
 crust_defconfig (){
+if [[ "$BOARD" == "tritium" ]]; then
+	mv -f configs/${UBOOT_DEFCONFIG} configs/${UBOOT_DEFCONFIG}.orig
+	echo "CONFIG_PLATFORM_A64=y" > configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_SOC_H5=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_CIR=y" >> configs/${UBOOT_DEFCONFIG}
+fi
 if [[ "$BOARD" == "orangepi3lts" ]]; then
 	echo "CONFIG_PLATFORM_H6=y" > configs/${UBOOT_DEFCONFIG}
 	echo "CONFIG_CIR=y" >> configs/${UBOOT_DEFCONFIG}
@@ -43,6 +49,10 @@ else
 	echo -e "${GRN}  NC${FIN}"
 	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
 	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+fi
+if [[ "$BOARD" == "tritium" ]]; then
+	rm -f configs/${UBOOT_DEFCONFIG}
+	mv -f configs/${UBOOT_DEFCONFIG}.orig configs/${UBOOT_DEFCONFIG}
 fi
 if [[ "$BOARD" == "orangepi3lts" ]]; then
 	rm -f configs/${UBOOT_DEFCONFIG}
