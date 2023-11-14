@@ -19,22 +19,29 @@ validation(){
 BUILDER=`grep "builder=" "userdata.txt" | sed 's/builder=//g'`
 UD="userdata.txt"
 if [ -f "$UD" ]; then
-	echo "";
+	echo -e ""
 else 
-	echo "";
-	echo "Create a $UD file";
+	echo -e ""
+	echo -e "Create a $UD file"
 	while [ true ]; do
 		read -t 10 -n 1
-		if [ $? = 0 ]; then
-			exit 0;
-		fi
+		if [ $? = 0 ]; then exit 0; fi
 	done
 fi
 if [[ "$BUILDER" == "5.14" ]]; then
 	:;
 else
 	echo -e "The ${WHT}$UD${FIN} file has expired. Please create a new one."
-	exit 0;
+	exit 0
+fi
+if [[ -f "board.txt" ]]; then
+	:;
+else
+	echo "OOPS! Something went wrong."
+	echo ""
+	read -p "Press enter to continue."
+	make list
+	exit 0
 fi
 }
 
