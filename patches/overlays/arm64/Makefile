@@ -42,7 +42,10 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-a64-overclock.dtbo \
 	sunxi-h3-h5-ir-tx.dtbo \
-	sunxi-h3-h5-overclock.dtbo
+	sunxi-h3-h5-overclock.dtbo \
+	sunxi-h5-i2c0.dtbo \
+	sunxi-h5-i2c1.dtbo \
+	sunxi-h5-i2c2.dtbo
 
 targets += dtbs dtbs_install
 targets += $(dtbo-y)
