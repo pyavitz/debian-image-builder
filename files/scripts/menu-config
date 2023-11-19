@@ -389,6 +389,43 @@ else
 fi
 }
 
+systemd_binfmt_fixups (){
+if [[ -f "/etc/systemd/system/binfmt-fixups.service" ]]; then
+	echo ""
+	echo -e "Binfmt fixups service is already installed."
+	echo ""
+	read -p "Press enter to continue."
+	clear -x
+else
+	if [[ -f "/usr/local/sbin/systemd-binfmt-fixups" ]]; then sudo rm -f /usr/local/sbin/systemd-binfmt-fixups; fi
+	echo -e "Installing binfmt-support ...";
+	sudo apt install -y binfmt-support
+	sleep .75
+	sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/systemd-binfmt-fixups -P /usr/local/sbin
+	sudo chmod +x /usr/local/sbin/systemd-binfmt-fixups
+	sudo tee /etc/systemd/system/binfmt-fixups.service <<EOF
+[Unit]
+Description=Systemd Binfmt Fixups
+ConditionFileIsExecutable=/usr/local/sbin/systemd-binfmt-fixups
+After=rc-local.service
+
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/systemd-binfmt-fixups
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+	sudo systemctl enable binfmt-fixups.service
+	sudo systemctl start binfmt-fixups.service
+	clear -x
+fi
+}
+
 HA_NOTES="The following install has been tested on the Odroid N2+ and Raspberry Pi 4B. \
 An individual also reported success on Banana Pi M5 by selecting odroid N2 in response \
 to the actual HA supervisor install script. I do not use audio out of my smart home \
@@ -697,8 +734,9 @@ case $CHOICE in
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		whiptail --backtitle "Miscellaneous Options" --title "Miscellaneous" --menu "" --nocancel 0 0 0 \
 			"AA)" "Amlogic Audio            Amlogic audio mixer settings" \
-			"FC)" "Fan Control              Install fanctrl script and service" \
+			"BF)" "Binfmt Support           Debian Bookworm systemd fixups" \
 			"DC)" "Debconf                  Reconfigure ${DISTRO} configuration system" \
+			"FC)" "Fan Control              Install fanctrl script and service" \
 			"TB)" "Tinkerboard              Enable DS1307 RTC" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
@@ -707,6 +745,39 @@ case $CHOICE in
 				clear -x
 				supported_list
 				amlogic_audio
+				;;
+			"BF)")
+				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					clear -x
+					systemd_binfmt_fixups
+				else
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    This requires a internet connection." 0 0
+				fi
+				;;
+			"DC)")
+				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+					clear -x
+					echo -e "Reconfiguring ...";
+					if [[ `command -v tasksel` ]]; then
+						:;
+					else
+						sudo apt update
+						sudo apt install -y tasksel
+					fi
+					sleep .75
+					sudo apt-get update
+					sudo apt-get install --reinstall debconf
+					sudo dpkg-reconfigure tasksel
+					echo ""
+					echo -e "To use tasksel, run 'sudo tasksel --new-install' in a terminal"
+					echo ""
+					read -p "Press enter to continue."
+					clear -x
+				else
+					export NEWT_COLORS='root=,black'
+					whiptail --msgbox "    This requires a internet connection." 0 0
+				fi
 				;;
 			"FC)")
 				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
@@ -743,30 +814,6 @@ case $CHOICE in
 						export NEWT_COLORS='root=,black'
 						whiptail --msgbox "    Your board is not supported." 0 0
 					fi
-				else
-					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0
-				fi
-				;;
-			"DC)")
-				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-					clear -x
-					echo -e "Reconfiguring ...";
-					if [[ `command -v tasksel` ]]; then
-						:;
-					else
-						sudo apt update
-						sudo apt install -y tasksel
-					fi
-					sleep .75
-					sudo apt-get update
-					sudo apt-get install --reinstall debconf
-					sudo dpkg-reconfigure tasksel
-					echo ""
-					echo -e "To use tasksel, run 'sudo tasksel --new-install' in a terminal"
-					echo ""
-					read -p "Press enter to continue."
-					clear -x
 				else
 					export NEWT_COLORS='root=,black'
 					whiptail --msgbox "    This requires a internet connection." 0 0
