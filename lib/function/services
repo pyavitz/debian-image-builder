@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # rc-local
-rc-local_service(){
+rc-local_service (){
 tee /etc/systemd/system/rc-local.service <<EOF
 [Unit]
 Description=/etc/rc.local
@@ -38,8 +38,30 @@ EOF
 chmod +x /etc/rc.local
 }
 
+# binfmt fixups (bookworm)
+binfmt_fixups_service (){
+tee /etc/systemd/system/binfmt-fixups.service <<EOF
+[Unit]
+Description=Systemd Binfmt Fixups
+ConditionFileIsExecutable=/usr/local/sbin/systemd-binfmt-fixups
+After=rc-local.service
+
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/systemd-binfmt-fixups
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable binfmt-fixups.service
+}
+
 # governor
-governor_service(){
+governor_service (){
 tee /etc/systemd/system/governor.service <<EOF
 [Unit]
 Description=Governor
@@ -57,7 +79,7 @@ EOF
 }
 
 # pine64 bluetooth
-pine64_bt_service(){
+pine64_bt_service (){
 tee /etc/systemd/system/bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
@@ -76,7 +98,7 @@ EOF
 }
 
 # nanopi bluetooth
-nanopi_bt_service(){
+nanopi_bt_service (){
 tee /etc/systemd/system/bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
@@ -96,7 +118,7 @@ systemctl enable bthelper
 }
 
 # leds
-led_service(){
+led_service (){
 tee /etc/systemd/system/leds.service <<EOF
 [Unit]
 Description=LEDs
@@ -116,7 +138,7 @@ systemctl enable leds
 }
 
 # tweaks
-tweaks_service(){
+tweaks_service (){
 cd ~
 echo "overclock=0" > /etc/opt/overclock.txt
 chmod +x /usr/bin/tweaks
@@ -127,7 +149,7 @@ if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2
 	chown root:root /usr/bin/irq-tweaks
 fi
 
-bananapi_systemd(){
+bananapi_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=BananaPi System Tweaks
@@ -149,7 +171,7 @@ EOF
 systemctl enable tweaks
 }
 
-lepotato_systemd(){
+lepotato_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Le Potato System Tweaks
@@ -170,7 +192,7 @@ EOF
 systemctl enable tweaks
 }
 
-odroid_systemd(){
+odroid_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=ODROID System Tweaks
@@ -210,7 +232,7 @@ EOF
 fi
 }
 
-rockchip_systemd(){
+rockchip_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Rockchip System Tweaks
@@ -232,7 +254,7 @@ EOF
 systemctl enable tweaks
 }
 
-radxazero_systemd(){
+radxazero_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Radxa Zero System Tweaks
@@ -253,7 +275,7 @@ EOF
 systemctl enable tweaks
 }
 
-nanopi5_systemd(){
+nanopi5_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=NanoPi System Tweaks
@@ -275,7 +297,7 @@ EOF
 systemctl enable tweaks
 }
 
-cubietruck_systemd(){
+cubietruck_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Cubietruck System Tweaks
@@ -297,7 +319,7 @@ EOF
 systemctl enable tweaks
 }
 
-cuboxi_systemd(){
+cuboxi_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Cubox-i System Tweaks
@@ -319,7 +341,7 @@ EOF
 systemctl enable tweaks
 }
 
-x96air_systemd(){
+x96air_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=X96-AIR System Tweaks
@@ -340,7 +362,7 @@ EOF
 systemctl enable tweaks
 }
 
-orangepi3_systemd(){
+orangepi3_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=OrangePi System Tweaks
@@ -362,7 +384,7 @@ EOF
 systemctl enable tweaks
 }
 
-restart_tweaks(){
+restart_tweaks (){
 tee /usr/bin/restart-tweaks <<EOF
 #!/bin/bash
 
@@ -392,7 +414,7 @@ fi
 }
 
 # credentials
-credentials_service(){
+credentials_service (){
 tee /etc/systemd/system/credentials.service <<EOF
 [Unit]
 Description=Credentials
@@ -412,7 +434,7 @@ systemctl enable credentials
 }
 
 # first boot
-firstboot_service(){
+firstboot_service (){
 tee /etc/systemd/system/firstboot.service <<EOF
 [Unit]
 Description=Resize ROOTFS partition
@@ -433,7 +455,7 @@ EOF
 }
 
 # kali force start services
-kali_tweaks(){
+kali_tweaks (){
 tee /etc/systemd/system/kali-tweaks.service <<EOF
 [Unit]
 Description=Kali Tweaks
@@ -451,7 +473,7 @@ EOF
 systemctl enable kali-tweaks
 }
 
-enable_sysvinit(){
+enable_sysvinit (){
 if [[ -f "/etc/init.d/tweaks" ]]; then
 	chmod +x /etc/init.d/tweaks
 	update-rc.d tweaks defaults 2
@@ -479,7 +501,7 @@ update-rc.d zramswap defaults 2
 update-rc.d credentials defaults 2
 }
 
-enable_systemd(){
+enable_systemd (){
 systemctl enable rc-local
 systemctl enable ifplugd
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" ]]; then
