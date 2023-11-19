@@ -747,12 +747,17 @@ case $CHOICE in
 				amlogic_audio
 				;;
 			"BF)")
-				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-					clear -x
-					systemd_binfmt_fixups
+				if [[ "$DISTRO_CODENAME" == "bookworm" ]]; then
+					if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
+						clear -x
+						systemd_binfmt_fixups
+					else
+						export NEWT_COLORS='root=,black'
+						whiptail --msgbox "    This requires a internet connection." 0 0
+					fi
 				else
 					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0
+					whiptail --msgbox "    $DISTRO $DISTRO_CODENAME is not supported." 0 0
 				fi
 				;;
 			"DC)")
