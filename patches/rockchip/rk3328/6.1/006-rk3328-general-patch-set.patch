@@ -1,6 +1,6 @@
-From b8ac61c007413ba7edea9dfbd433042127708b2f Mon Sep 17 00:00:00 2001
+From 03a6b1e7d7bd1caf611e5b2e14b3f5291da7af00 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sat, 5 Aug 2023 05:54:27 -0400
+Date: Mon, 20 Nov 2023 11:08:33 -0500
 Subject: [PATCH] rk3328 general patch set
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -12,7 +12,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/clk/rockchip/clk.h                    |    3 +-
  drivers/devfreq/Kconfig                       |   12 +
  drivers/devfreq/Makefile                      |    1 +
- drivers/devfreq/event/rockchip-dfi.c          |  554 ++++++++-
+ drivers/devfreq/event/rockchip-dfi.c          |  553 +++++++-
  drivers/devfreq/rk3328_dmc.c                  |  846 +++++++++++++
  .../net/ethernet/stmicro/stmmac/stmmac_main.c |   12 -
  drivers/phy/rockchip/Kconfig                  |    9 +
@@ -31,7 +31,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  sound/soc/codecs/es8316.c                     |    2 +-
  sound/soc/codecs/rt5651.c                     |   16 +
  sound/soc/codecs/rt5651.h                     |    1 +
- 26 files changed, 3063 insertions(+), 72 deletions(-)
+ 26 files changed, 3062 insertions(+), 72 deletions(-)
  create mode 100644 Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml
  create mode 100644 drivers/devfreq/rk3328_dmc.c
  create mode 100644 drivers/phy/rockchip/phy-rockchip-inno-usb3.c
@@ -429,7 +429,7 @@ index bf40d04928d0..08c0738ae439 100644
  obj-$(CONFIG_ARM_TEGRA_DEVFREQ)		+= tegra30-devfreq.o
  
 diff --git a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockchip-dfi.c
-index 39ac069cabc7..7d53fc10c63b 100644
+index 74893c06aa08..d0adb3e5be9f 100644
 --- a/drivers/devfreq/event/rockchip-dfi.c
 +++ b/drivers/devfreq/event/rockchip-dfi.c
 @@ -18,25 +18,66 @@
@@ -980,12 +980,11 @@ index 39ac069cabc7..7d53fc10c63b 100644
  
  	data->regs = devm_platform_ioremap_resource(pdev, 0);
  	if (IS_ERR(data->regs))
-@@ -201,21 +581,97 @@ static int rockchip_dfi_probe(struct platform_device *pdev)
- 		if (IS_ERR(data->regmap_pmu))
- 			return PTR_ERR(data->regmap_pmu);
- 	}
+@@ -202,21 +582,96 @@ static int rockchip_dfi_probe(struct platform_device *pdev)
+ 	if (IS_ERR(data->regmap_pmu))
+ 		return PTR_ERR(data->regmap_pmu);
+ 
 -	data->dev = dev;
-+
 +	regmap_read(data->regmap_pmu, PMUGRF_OS_REG2, &val);
 +	data->dram_type = READ_DRAMTYPE_INFO(val);
 +	data->ch_msk = READ_CH_INFO(val);
@@ -1936,10 +1935,10 @@ index 000000000000..5dcea91cfae9
 +MODULE_AUTHOR("Lin Huang <hl@rock-chips.com>");
 +MODULE_DESCRIPTION("RK3328 dmcfreq driver with devfreq framework");
 diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-index a07bcb2f5d2e..04a3933fd82f 100644
+index 1559a4dafd41..9b393518f58b 100644
 --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
 +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-@@ -5575,27 +5575,15 @@ static void stmmac_set_rx_mode(struct net_device *dev)
+@@ -5577,27 +5577,15 @@ static void stmmac_set_rx_mode(struct net_device *dev)
  static int stmmac_change_mtu(struct net_device *dev, int new_mtu)
  {
  	struct stmmac_priv *priv = netdev_priv(dev);
@@ -3113,10 +3112,10 @@ index 000000000000..31fee8f3a705
 +MODULE_DESCRIPTION("Rockchip USB 3.0 PHY driver");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 3ee70ffaf003..5bf33c1231da 100644
+index 57e2f4cc744f..864a480c31be 100644
 --- a/drivers/usb/dwc3/core.c
 +++ b/drivers/usb/dwc3/core.c
-@@ -1535,6 +1535,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+@@ -1572,6 +1572,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
  				"snps,dis-del-phy-power-chg-quirk");
  	dwc->dis_tx_ipgap_linecheck_quirk = device_property_read_bool(dev,
  				"snps,dis-tx-ipgap-linecheck-quirk");
@@ -3171,7 +3170,7 @@ index f6f13e7f1ba1..08a52869328d 100644
  		props[prop_idx++] = PROPERTY_ENTRY_BOOL("usb2-lpm-disable");
  
 diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
-index 5fb55bf19493..44e3c87d23a7 100644
+index c9a101f0e8d0..5089288130f0 100644
 --- a/drivers/usb/host/xhci-plat.c
 +++ b/drivers/usb/host/xhci-plat.c
 @@ -301,6 +301,9 @@ static int xhci_plat_probe(struct platform_device *pdev)
@@ -3185,7 +3184,7 @@ index 5fb55bf19493..44e3c87d23a7 100644
  					 &xhci->imod_interval);
  	}
 diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
-index 281690c582cb..3b115ddbbaa8 100644
+index 1239e06dfe41..7bf80d59bc47 100644
 --- a/drivers/usb/host/xhci-ring.c
 +++ b/drivers/usb/host/xhci-ring.c
 @@ -3533,6 +3533,7 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
@@ -3533,7 +3532,7 @@ index 4d40dcce7604..86b3232bcf3a 100644
  	INIT_WORK(&atomic_pool_work, atomic_pool_work_fn);
  
 diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
-index 87775378362e..a1ce58ac0104 100644
+index c4e4ab93fdb6..8c822d7578e6 100644
 --- a/sound/soc/codecs/es8316.c
 +++ b/sound/soc/codecs/es8316.c
 @@ -701,7 +701,7 @@ static void es8316_disable_jack_detect(struct snd_soc_component *component)

@@ -1,6 +1,6 @@
-From e97f959cdff140814648e4f5542f47aca4e18b17 Mon Sep 17 00:00:00 2001
+From a5ee5ebdcec611f2231cb5a14b480c76ea6589bc Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sat, 5 Aug 2023 06:07:38 -0400
+Date: Mon, 20 Nov 2023 11:15:43 -0500
 Subject: [PATCH] rk3328 general patch set
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -12,7 +12,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/clk/rockchip/clk.h                    |    3 +-
  drivers/devfreq/Kconfig                       |   12 +
  drivers/devfreq/Makefile                      |    1 +
- drivers/devfreq/event/rockchip-dfi.c          |  554 ++++++++-
+ drivers/devfreq/event/rockchip-dfi.c          |  553 +++++++-
  drivers/devfreq/rk3328_dmc.c                  |  846 +++++++++++++
  .../net/ethernet/stmicro/stmmac/stmmac_main.c |   12 -
  drivers/phy/rockchip/Kconfig                  |    9 +
@@ -31,7 +31,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  sound/soc/codecs/es8316.c                     |    2 +-
  sound/soc/codecs/rt5651.c                     |   16 +
  sound/soc/codecs/rt5651.h                     |    1 +
- 26 files changed, 3063 insertions(+), 72 deletions(-)
+ 26 files changed, 3062 insertions(+), 72 deletions(-)
  create mode 100644 Documentation/devicetree/bindings/phy/phy-rockchip-inno-usb3.yaml
  create mode 100644 drivers/devfreq/rk3328_dmc.c
  create mode 100644 drivers/phy/rockchip/phy-rockchip-inno-usb3.c
@@ -202,10 +202,10 @@ index 000000000000..f4f28625173a
 +	};
 +};
 diff --git a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
-index 65a2d5a4f28d..b699f5065bf7 100644
+index e4fa6a07b4fa..f511f079a9e1 100644
 --- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
 +++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
-@@ -46,6 +46,7 @@ properties:
+@@ -47,6 +47,7 @@ properties:
                - rockchip,rk3308-usb2phy-grf
                - rockchip,rk3328-grf
                - rockchip,rk3328-usb2phy-grf
@@ -429,7 +429,7 @@ index bf40d04928d0..08c0738ae439 100644
  obj-$(CONFIG_ARM_TEGRA_DEVFREQ)		+= tegra30-devfreq.o
  
 diff --git a/drivers/devfreq/event/rockchip-dfi.c b/drivers/devfreq/event/rockchip-dfi.c
-index 39ac069cabc7..7d53fc10c63b 100644
+index 74893c06aa08..d0adb3e5be9f 100644
 --- a/drivers/devfreq/event/rockchip-dfi.c
 +++ b/drivers/devfreq/event/rockchip-dfi.c
 @@ -18,25 +18,66 @@
@@ -980,12 +980,11 @@ index 39ac069cabc7..7d53fc10c63b 100644
  
  	data->regs = devm_platform_ioremap_resource(pdev, 0);
  	if (IS_ERR(data->regs))
-@@ -201,21 +581,97 @@ static int rockchip_dfi_probe(struct platform_device *pdev)
- 		if (IS_ERR(data->regmap_pmu))
- 			return PTR_ERR(data->regmap_pmu);
- 	}
+@@ -202,21 +582,96 @@ static int rockchip_dfi_probe(struct platform_device *pdev)
+ 	if (IS_ERR(data->regmap_pmu))
+ 		return PTR_ERR(data->regmap_pmu);
+ 
 -	data->dev = dev;
-+
 +	regmap_read(data->regmap_pmu, PMUGRF_OS_REG2, &val);
 +	data->dram_type = READ_DRAMTYPE_INFO(val);
 +	data->ch_msk = READ_CH_INFO(val);
@@ -1936,10 +1935,10 @@ index 000000000000..5dcea91cfae9
 +MODULE_AUTHOR("Lin Huang <hl@rock-chips.com>");
 +MODULE_DESCRIPTION("RK3328 dmcfreq driver with devfreq framework");
 diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-index b74946bbee3c..0ffbc9fb3f06 100644
+index e840cadb2d75..2cd26226666e 100644
 --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
 +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-@@ -5601,27 +5601,15 @@ static void stmmac_set_rx_mode(struct net_device *dev)
+@@ -5607,27 +5607,15 @@ static void stmmac_set_rx_mode(struct net_device *dev)
  static int stmmac_change_mtu(struct net_device *dev, int new_mtu)
  {
  	struct stmmac_priv *priv = netdev_priv(dev);
@@ -3113,10 +3112,10 @@ index 000000000000..31fee8f3a705
 +MODULE_DESCRIPTION("Rockchip USB 3.0 PHY driver");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 99963e724b71..6570a1575de6 100644
+index 343d2570189f..0c8f17f55cb8 100644
 --- a/drivers/usb/dwc3/core.c
 +++ b/drivers/usb/dwc3/core.c
-@@ -1490,6 +1490,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+@@ -1527,6 +1527,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
  				"snps,dis-del-phy-power-chg-quirk");
  	dwc->dis_tx_ipgap_linecheck_quirk = device_property_read_bool(dev,
  				"snps,dis-tx-ipgap-linecheck-quirk");
@@ -3126,10 +3125,10 @@ index 99963e724b71..6570a1575de6 100644
  				"snps,resume-hs-terminations");
  	dwc->ulpi_ext_vbus_drv = device_property_read_bool(dev,
 diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 59a31cac3082..a7e65f9ef787 100644
+index a69ac67d89fe..436ab723e12d 100644
 --- a/drivers/usb/dwc3/core.h
 +++ b/drivers/usb/dwc3/core.h
-@@ -1096,6 +1096,9 @@ struct dwc3_scratchpad_array {
+@@ -1098,6 +1098,9 @@ struct dwc3_scratchpad_array {
   *			change quirk.
   * @dis_tx_ipgap_linecheck_quirk: set if we disable u2mac linestate
   *			check during HS transmit.
@@ -3139,7 +3138,7 @@ index 59a31cac3082..a7e65f9ef787 100644
   * @resume_hs_terminations: Set if we enable quirk for fixing improper crc
   *			generation after resume from suspend.
   * @ulpi_ext_vbus_drv: Set to confiure the upli chip to drives CPEN pin
-@@ -1316,6 +1319,7 @@ struct dwc3 {
+@@ -1318,6 +1321,7 @@ struct dwc3 {
  	unsigned		dis_u2_freeclk_exists_quirk:1;
  	unsigned		dis_del_phy_power_chg_quirk:1;
  	unsigned		dis_tx_ipgap_linecheck_quirk:1;
@@ -3171,10 +3170,10 @@ index 61f57fe5bb78..48c311df7041 100644
  		props[prop_idx++] = PROPERTY_ENTRY_BOOL("usb2-lpm-disable");
  
 diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
-index f36633fa8362..f463ddc915eb 100644
+index 5fabd14e49a0..0bb3a486ff1a 100644
 --- a/drivers/usb/host/xhci-plat.c
 +++ b/drivers/usb/host/xhci-plat.c
-@@ -255,6 +255,9 @@ int xhci_plat_probe(struct platform_device *pdev, struct device *sysdev, const s
+@@ -250,6 +250,9 @@ int xhci_plat_probe(struct platform_device *pdev, struct device *sysdev, const s
  		if (device_property_read_bool(tmpdev, "quirk-broken-port-ped"))
  			xhci->quirks |= XHCI_BROKEN_PORT_PED;
  
@@ -3185,10 +3184,10 @@ index f36633fa8362..f463ddc915eb 100644
  					 &xhci->imod_interval);
  	}
 diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
-index ad70f6359309..912a3b616b05 100644
+index 3e5dc0723a8f..97aa11033c63 100644
 --- a/drivers/usb/host/xhci-ring.c
 +++ b/drivers/usb/host/xhci-ring.c
-@@ -3534,6 +3534,7 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
+@@ -3549,6 +3549,7 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  	bool more_trbs_coming = true;
  	bool need_zero_pkt = false;
  	bool first_trb = true;
@@ -3196,7 +3195,7 @@ index ad70f6359309..912a3b616b05 100644
  	unsigned int num_trbs;
  	unsigned int start_cycle, num_sgs = 0;
  	unsigned int enqd_len, block_len, trb_buff_len, full_len;
-@@ -3570,6 +3571,13 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
+@@ -3585,6 +3586,13 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  	if (urb->transfer_flags & URB_ZERO_PACKET && urb_priv->num_tds > 1)
  		need_zero_pkt = true;
  
@@ -3210,7 +3209,7 @@ index ad70f6359309..912a3b616b05 100644
  	td = &urb_priv->td[0];
  
  	/*
-@@ -3598,6 +3606,13 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
+@@ -3613,6 +3621,13 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  			first_trb = false;
  			if (start_cycle == 0)
  				field |= TRB_CYCLE;
@@ -3224,7 +3223,7 @@ index ad70f6359309..912a3b616b05 100644
  		} else
  			field |= ring->cycle_state;
  
-@@ -3606,6 +3621,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
+@@ -3621,6 +3636,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
  		 */
  		if (enqd_len + trb_buff_len < full_len) {
  			field |= TRB_CHAIN;
@@ -3234,7 +3233,7 @@ index ad70f6359309..912a3b616b05 100644
  				if (xhci_align_td(xhci, urb, enqd_len,
  						  &trb_buff_len,
 diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
-index 4474d540f6b4..092ce40e2bd8 100644
+index 5df370482521..785f59ca6138 100644
 --- a/drivers/usb/host/xhci.h
 +++ b/drivers/usb/host/xhci.h
 @@ -1528,7 +1528,11 @@ static inline const char *xhci_trb_type_string(u8 type)
@@ -3249,7 +3248,7 @@ index 4474d540f6b4..092ce40e2bd8 100644
  #define TRB_MAX_BUFF_SIZE	(1 << TRB_MAX_BUFF_SHIFT)
  /* How much data is left before the 64KB boundary? */
  #define TRB_BUFF_LEN_UP_TO_BOUNDARY(addr)	(TRB_MAX_BUFF_SIZE - \
-@@ -1849,6 +1853,7 @@ struct xhci_hcd {
+@@ -1848,6 +1852,7 @@ struct xhci_hcd {
  #define XHCI_STATE_HALTED	(1 << 1)
  #define XHCI_STATE_REMOVING	(1 << 2)
  	unsigned long long	quirks;
@@ -3533,7 +3532,7 @@ index 1acec2e22827..0b15e2fa9994 100644
  	INIT_WORK(&atomic_pool_work, atomic_pool_work_fn);
  
 diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
-index ccecfdf70064..bc1535cc190e 100644
+index 65e497b455d3..fdc79ce5460f 100644
 --- a/sound/soc/codecs/es8316.c
 +++ b/sound/soc/codecs/es8316.c
 @@ -701,7 +701,7 @@ static void es8316_disable_jack_detect(struct snd_soc_component *component)
@@ -3546,7 +3545,7 @@ index ccecfdf70064..bc1535cc190e 100644
  		snd_soc_jack_report(es8316->jack, 0, SND_JACK_BTN_0);
  	}
 diff --git a/sound/soc/codecs/rt5651.c b/sound/soc/codecs/rt5651.c
-index df90af906563..28e5b6fb9d8f 100644
+index 0cee4fd1c84b..90b08604e615 100644
 --- a/sound/soc/codecs/rt5651.c
 +++ b/sound/soc/codecs/rt5651.c
 @@ -24,6 +24,7 @@
