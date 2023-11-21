@@ -16,22 +16,21 @@ HOST_ARCH=`uname -m`
 
 # validate
 validation(){
-BUILDER=`grep "builder=" "userdata.txt" | sed 's/builder=//g'`
-UD="userdata.txt"
-if [ -f "$UD" ]; then
+BUILDER=`grep "BUILDER=" "userdata.txt" | sed 's/BUILDER=//g'`
+if [[ -f "userdata.txt" ]]; then
 	echo -e ""
 else 
 	echo -e ""
-	echo -e "Create a $UD file"
+	echo -e "Create a userdata.txt file"
 	while [ true ]; do
 		read -t 10 -n 1
 		if [ $? = 0 ]; then exit 0; fi
 	done
 fi
-if [[ "$BUILDER" == "6.0" ]]; then
+if [[ "$BUILDER" == "6.1" ]]; then
 	:;
 else
-	echo -e "The ${WHT}$UD${FIN} file has expired. Please create a new one."
+	echo -e "The ${WHT}userdata.txt${FIN} file has expired. Please create a new one."
 	exit 0
 fi
 }

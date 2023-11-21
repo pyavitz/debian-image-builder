@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# customize your image
+custom_txt (){
+cat <<EOF > "custom.txt"
+# Boot Partition: true false
+ENABLE_VFAT="false"
+
+# Root Filesystem Types: ext4 btrfs xfs
+FSTYPE="ext4"
+
+# UEFI Options: true false
+ENABLE_EFI="false"
+
+# Petitboot (ODROID): true false
+ENABLE_PETITBOOT="false"
+
+# Image Size: 3072MB 3584MB 4096MB
+IMGSIZE="4096MB"
+
+# Shrink Image (EXT4 Only): true false
+ENABLE_SHRINK="true"
+
+# Compression Types: xz zst
+IMG_COMPRESSION="xz"
+
+### DO NOT EDIT BELOW THIS LINE
+CUSTOM="$BUILDER"
+EOF
+}
+
+profile_txt (){
+cat <<EOF > "profile.txt"
+# User data defaults
+#NAME="$MYNAME"
+#USERNAME="$USER"
+#PASSWORD="board"
+#VERSION="$LTS2"
+#CCACHE="$CCACHE"
+#NETWORKMANAGER="$NETWORKMANAGER"
+#RTW88="$RTW88"
+#RTL88XXAU="$RTL88XXAU"
+#USERACCT="$USERACCT"
+#USER_PKGS="$USER_PKGS"
+#LOCALE="$LOCALE"
+#LOCALE_LC_ALL="$LOCALE_LC_ALL"
+#TIMEZONE="$TIMEZONE" 
+#NAMESERVER1="$NAMESERVER1"
+#NAMESERVER2="$NAMESERVER2"
+
+### DO NOT EDIT BELOW THIS LINE
+USER_PROFILE="$PROFILE"
+EOF
+sed -i "s/^#VERSION=.*/#VERSION="'"$LTS2"'"/" profile.txt
+}
