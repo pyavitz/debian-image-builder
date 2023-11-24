@@ -16,10 +16,12 @@ if [[ -f "override.txt" ]]; then
 fi
 # create dtc list
 FIND=`cat board.txt | grep -w SERIES= | sed 's/SERIES=//g' | sed 's/"//g'`
-rm -f dtclist.txt
+if [[ -f "dtclist.txt" ]]; then rm -f dtclist.txt; fi
 for f in lib/boards/*; do
 	. $f
-	echo -e ${DEVICETREE} | grep "$FIND" | tr ' ' '\n' | tee -a dtclist.txt > /dev/null 2>&1
+	if [[ "$SERIES" == "$FIND" ]]; then
+		echo -e ${DEVICETREE} | tr ' ' '\n' | tee -a dtclist.txt > /dev/null 2>&1
+	fi
 done
 source board.txt
 source userdata.txt
