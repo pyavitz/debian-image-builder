@@ -6,8 +6,13 @@ COMPRESSION="xz"
 # linux packaging
 linux_packaging(){
 # debian package name
-LINUX_IMAGE="linux-image-${SERIES}"
-LINUX_HEADERS="linux-headers-${SERIES}"
+if [[ "$COMMON_PKG" == "true" ]]; then
+	LINUX_IMAGE="linux-image-${COMMON_PKGNAME}"
+	LINUX_HEADERS="linux-headers-${COMMON_PKGNAME}"
+else
+	LINUX_IMAGE="linux-image-${SERIES}"
+	LINUX_HEADERS="linux-headers-${SERIES}"
+fi
 # install target
 if [[ "$ARCH" == "arm" ]]; then
 	LINUX_PATH="usr/lib/${LINUX_IMAGE}"
@@ -32,7 +37,7 @@ echo compression='"'$COMPRESSION'"' >> "scripts/package/pkgvars"
 
 # u-boot packaging
 uboot_packaging(){
-PKGNAME="u-boot-${SERIES}"
+PKGNAME="u-boot-${SERIES}-${BOARD}"
 PKGVERSION=`echo $UBOOT_VERSION | sed 's/v//g'`
 BV="${BUILD_VERSION}"
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN
@@ -150,7 +155,7 @@ fi
 
 # u-boot precompiled packaging
 uboot_precompiled_packaging(){
-PKGNAME="u-boot-${SERIES}"
+PKGNAME="u-boot-${SERIES}-${BOARD}"
 BV="${BUILD_VERSION}"
 mkdir -p ${OUTPUT}/
 echo -e "Using precompiled binaries."
