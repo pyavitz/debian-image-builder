@@ -4,7 +4,7 @@ source lib/source
 validation
 source packaging/pkgvars
 source lib/function/linux
-source lib/function/github
+source lib/function/git
 source lib/function/patching
 source lib/function/wireless
 source lib/function/modconfig
@@ -34,13 +34,6 @@ if [ $VERBOSE -eq 1 ]; then set -x; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then CROSSCOMPILE="1"; fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then CROSSCOMPILE="1"; fi
-# github
-if [[ "$FORCE_GITHUB" == "true" ]]; then
-	VERSION="${GITHUB_BRANCH_VERSION}"
-	echo "${GITHUB}" > github.txt
-	echo "${GITHUB_REPO}" >> github.txt
-	echo "${GITHUB_BRANCH}" >> github.txt
-fi
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
@@ -50,24 +43,20 @@ LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | s
 linux_compilers
 # sources directory
 sources_dir
-if [[ -d "${KERNEL}-${VERSION}" ]]; then
+if [[ -d "${KERNEL}-${VERSION}" ]] && [[ "$FORCE_GIT" == "false" ]]; then
 	echo -en "${KERNEL}-${VERSION}"
 	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
 	rm -fdr ${KERNEL}-${VERSION}
 	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 fi
-# download and extract
-downloading
+# download source
+if [[ "$FORCE_GIT" == "true" ]]; then git_download; else download; fi
 # setup
-if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then vendor_setup; else setup; fi
+if [[ "$FORCE_GIT" == "true" ]]; then git_setup; else setup; fi
 # patching
 if [[ ! -z $FAMILY ]]; then linux_patching; fi
 # defconfig
-if [[ -v SETUP ]] && [[ "$SETUP" == "vendor" ]]; then
-	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else vendor_config; fi
-else
-	if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else bconfig; fi
-fi
+if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else bconfig; fi
 # menuconfig
 if [ $MENUCONFIG -eq 1 ]; then menuconfig; fi
 # builddeb

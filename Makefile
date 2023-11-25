@@ -149,7 +149,6 @@ endif
 	$(call build_uboot)
 
 kernel:
-	@rm -f github.txt
 	@rm -f override.txt
 # USERDATA DOT TXT
 ifdef build
@@ -165,22 +164,13 @@ endif
 ifdef version
 	@$(shell sed -i "s/^VERSION=.*/VERSION="'"${version}"'"/" userdata.txt)
 endif
-# GITHUB
-ifdef github
-	@echo "$(github)" > github.txt
-endif
-ifdef repo
-	@echo "$(repo)" >> github.txt
-endif
-ifdef branch
-	@echo "$(branch)" >> github.txt
-endif
-ifdef force_github
-	@echo 'FORCE_GITHUB="$(force_github)"' > override.txt
+# GIT
+ifdef force_git
+	@echo 'FORCE_GIT="$(force_git)"' > override.txt
 endif
 # ARCHITECTURE
 ifdef arch
-	@echo 'ARCH_EXT="$(arch)"' > override.txt
+	@echo 'ARCH_EXT="$(arch)"' >> override.txt
 endif
 # FORCE VERSION
 ifdef force_version

@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# download source
+git_download (){
+if [[ `wget -S --spider ${GIT_URL}/${GIT_OWN}/${GIT_REPO}/${GIT_BLOB}/${GIT_BRANCH}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -d "${GIT_REPO}-${GIT_BRANCH}.backup" ]]; then
+		echo -en "${GIT_REPO}-${GIT_BRANCH}"
+		echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
+		rm -fdr ${GIT_REPO}-${GIT_BRANCH}
+		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
+		mv -f ${GIT_REPO}-${GIT_BRANCH}.backup ${GIT_REPO}-${GIT_BRANCH}
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		cd ${GIT_REPO}-${GIT_BRANCH}; git pull; make clean; cd ..
+	else
+		echo -e "This may take a while ..."
+		echo ""
+		git clone -b ${GIT_BRANCH} ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}
+		sleep .50
+		cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean; cd ..
+		echo ""
+		echo -en "${GIT_REPO}-${GIT_BRANCH}"
+		echo -en " ${PNK}[${FIN}${YLW}creating backup${FIN}${PNK}]${FIN}"
+		cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	fi
+else
+	echo ""
+	echo -e "${WHT}The git branch ${GIT_BRANCH} is not available${FIN}?"
+	exit 0
+fi
+}
+
+# setup source
+git_setup (){
+sleep .75
+if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]]; then
+	cd ${GIT_REPO}-${GIT_BRANCH}
+	if [[ "$FAMILY" == "broadcom" ]]; then rpi_firmware; fi
+	export ARCH=${ARCH}
+	# remove builddeb and mkdebian scripts
+	rm -f scripts/package/{builddeb,mkdebian}
+	# add custom builddeb and mkdebian scripts
+	cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
+	chmod +x scripts/package/{builddeb,mkdebian}
+else
+	echo "NOTICE: Directory ${GIT_REPO}-${GIT_BRANCH} is MIA. Please make a report."
+	echo ""
+	exit 0
+fi
+}
