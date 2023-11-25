@@ -116,6 +116,21 @@ else
 fi
 }
 
+# linux git patch log
+linux_git_log (){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+if [[ -f "${LOG_FILE}" ]]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+else
+	mkdir -p ${LOG_DIR}
+	echo "${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+fi
+}
+
 # linux user patch log
 linux_user_log (){
 LOG_DIR="../../output/logs"
@@ -253,7 +268,7 @@ fi
 }
 
 git_apply (){
-linux_log
+linux_git_log
 echo ""
 echo "" >> ${LOG_FILE}
 echo "# APPLYING PATCHES" >> ${LOG_FILE}
