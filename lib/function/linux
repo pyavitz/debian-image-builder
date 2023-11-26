@@ -41,8 +41,6 @@ if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]] || \
 	[[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_stable
 	extract_stable
-else
-	search_github
 fi
 }
 
@@ -89,7 +87,7 @@ fi
 }
 
 setup (){
-sleep 1s
+sleep .75
 if [[ -d "${KERNEL}-${VERSION}" ]]; then
 	cd ${KERNEL}-${VERSION}
 	if [[ "$BOARD" == "orangepir1" ]]; then rtl8189es; fi
@@ -133,11 +131,6 @@ else
 	read -p "Press enter to continue."
 	exit 1
 fi
-# odroid defconfig for linux 5.15
-#if [[ "$FAMILY_EXT" == "odroid" ]] && [[ "$LINUX_VERSION" == "5.15" ]]; then
-#	rm -f arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-#	cp -f ../${DEF}/odroid-lts_defconfig arch/${ARCH}/configs/${LINUX_DEFCONFIG}
-#fi
 # lib/function/wireless
 enable_wireless_module
 # lib/function/modconfig

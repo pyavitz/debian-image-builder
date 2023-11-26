@@ -116,6 +116,21 @@ else
 fi
 }
 
+# linux git patch log
+linux_git_log (){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+if [[ -f "${LOG_FILE}" ]]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+else
+	mkdir -p ${LOG_DIR}
+	echo "${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+fi
+}
+
 # linux user patch log
 linux_user_log (){
 LOG_DIR="../../output/logs"
@@ -252,23 +267,29 @@ if [[ -d "../../${OVERLAYPATCHES}/${LINUX_VERSION}" ]] && [[ -d "../../${OVERLAY
 fi
 }
 
+git_apply (){
+linux_git_log
+echo ""
+echo "" >> ${LOG_FILE}
+echo "# APPLYING PATCHES" >> ${LOG_FILE}
+echo -en "${WHT}Patches${FIN} ${PNK}[${FIN}${WHT}applying${FIN}${PNK}]${FIN}"
+if [[ -d "../../${GIT_PATCHDIR}" ]]; then
+	if [[ `ls ../../${GIT_PATCHDIR}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${GIT_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+}
+
+
 linux_patching (){
 # packaging
 linux_packaging
 # patching
-if [[ "$FORCE_GITHUB" = "true" ]] && [[ "$LINUX_PATCHING" == "true" ]]; then
-	# Allow patching against the vendor source tree.
-	# As this is a special use case both variables need to be set
-	# to true to enable the feature. This requires user attention
-	# and knowledge of patch creation.
-	#
-	# Where to place patches? 'patches/$FAMILY/$GITHUB_BRANCH_VERSION'
-	# This may vary depending on the platform so review the LINUX_PATCHDIR
-	# variable in the $board file.
-	LINUX_VERSION="${GITHUB_BRANCH_VERSION}"
-fi
-if [[ "$LINUX_PATCHING" == "true" ]]; then
+if [[ "$LINUX_PATCHING" == "true" ]] && [[ "$FORCE_GIT" == "false" ]] && [[ "$GIT_PATCHING" == "false" ]]; then
 	apply; check_log
+fi
+if [[ "$LINUX_PATCHING" == "false" ]] && [[ "$FORCE_GIT" == "true" ]] && [[ "$GIT_PATCHING" == "true" ]]; then
+	git_apply; check_log
 fi
 user_patches
 # clean
