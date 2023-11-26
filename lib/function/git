@@ -54,7 +54,8 @@ fi
 
 git_option (){
 if [[ -f "../.cache/git_fast" ]]; then
-	:;
+	source ../.cache/git_fast
+	if [[ "$GIT_FAST" == "true" ]]; then GIT_OPT="--depth 1"; else GIT_OPT=""; fi
 else
 	echo -e "How would you like to handle downloads?"
 	options=("fast" "slow")
@@ -64,12 +65,14 @@ else
 			"fast")
 				mkdir -p ../.cache
 				echo 'GIT_FAST="true"' > ../.cache/git_fast
+				GIT_OPT="--depth 1"
 				echo -e ""
 				break
 				;;
 			"slow")
 				mkdir -p .cache
 				echo 'GIT_FAST="false"' > ../.cache/git_fast
+				GIT_OPT=""
 				echo -e ""
 				break
 				;;
@@ -78,9 +81,5 @@ else
 				;;
 		esac
 	done
-fi
-if [[ -f "../.cache/git_fast" ]]; then
-	source ../.cache/git_fast
-	if [[ "$GIT_FAST" == "true" ]]; then GIT_OPT="--depth 1"; else GIT_OPT=""; fi
 fi
 }
