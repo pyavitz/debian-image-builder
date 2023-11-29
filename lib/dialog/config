@@ -2,7 +2,7 @@
 
 source lib/function/config
 # builder and profile versions
-BUILDER="6.1"
+BUILDER="6.2"
 PROFILE="1.0"
 
 # depends
@@ -171,9 +171,17 @@ sed -i '44i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 # custom dot txt
 if [[ -f "custom.txt" ]]; then
 	. custom.txt
-	if [[ "$CUSTOM" == "${BUILDER}" ]]; then :; else custom_txt; fi
+	if [[ "$CUSTOM" == "$BUILDER" ]]; then :; else custom_txt; fi
 else
 	custom_txt
+fi
+
+# kernel preferences
+if [[ -f "kernel.txt" ]]; then
+	. kernel.txt
+	if [[ "$KERNEL_PREFERENCES" == "$BUILDER" ]]; then :; else kernel_txt; fi
+else
+	kernel_txt
 fi
 
 # clear screen

@@ -29,6 +29,31 @@ CUSTOM="$BUILDER"
 EOF
 }
 
+kernel_txt (){
+cat <<EOF > "kernel.txt"
+### ADVANCED KERNEL OPTIONS
+
+# Kernel dot org
+#GIT_KERNELORG="false"
+#LINUX_PATCHING="false"
+
+# Github / Gitlab
+#FORCE_GIT="false"
+#GIT_OWN=""
+#GIT_REPO=""
+#GIT_BRANCH=""
+#GIT_URL=""
+#GIT_BLOB="blob"
+# Patching
+#GIT_PATCHING="false"
+#GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
+
+### DO NOT EDIT BELOW THIS LINE
+KERNEL_PREFERENCES="$BUILDER"
+EOF
+sed -i "s/^#GIT_PATCHDIR=.*/#GIT_PATCHDIR="'"patches\/git\/${BOARD}\/${GIT_REPO}-${GIT_BRANCH}"'"/" kernel.txt
+}
+
 profile_txt (){
 cat <<EOF > "profile.txt"
 # User data defaults
