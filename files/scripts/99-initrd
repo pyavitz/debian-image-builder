@@ -1,29 +1,23 @@
 #!/bin/bash
-# Place file in /etc/initramfs/post-update.d/ and make it executable
 
-# variables
-uInitrd="/boot/uInitrd"
-initrd="/boot/initrd.gz"
-brcmdir="/boot/broadcom"
+UINITRD="/boot/uInitrd"
+INITRD="/boot/initrd.gz"
+BCM_INITRD="/boot/broadcom/initrd.gz"
 
-# functions
-failed(){
+failed (){
 echo >&2 "Error: $@"
 echo >&2 "uInitrd generation failed - exiting."
 exit 1
 }
 
-# uinitrd
-if [ -f ${uInitrd} ]; then
-	rm -f ${uInitrd}
-fi
+if [[ -f "${UINITRD}" ]]; then rm -f ${UINITRD}; fi
 
 echo "Generating uInitrd for U-Boot:"
 if [ "$#" -eq 2 ]; then
 	if [ ! -z "$1" ] && [ -f "$2" ]; then
 		name="initramfs-$1"
 		file="$2"
-		mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${uInitrd}
+		mkimage -A arm -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${name} -d ${file} ${UINITRD}
 	else
 		failed
 	fi
@@ -31,15 +25,14 @@ else
 	failed
 fi
 
-# initrd.gz
-echo "Creating initrd.gz."
-rm -f /boot/{initrd.gz,initrd.img-*-bak}
-cp -f /boot/initrd.img-* ${initrd}
-
-# raspberry pi
-if [ -d ${brcmdir} ]; then
-	if [ -f ${brcmdir}/initrd.gz ]; then
-		rm -f ${brcmdir}/initrd.gz
+if [[ -d "/boot" ]]; then
+	if [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
+		echo "Generating ${INITRD}"
+		rm -fr /boot/{initrd.gz,initrd.img-*-bak}
+		cp -f /boot/initrd.img-* ${INITRD}
+		if [[ -d "/boot/broadcom" ]]; then
+			rm -fr /boot/broadcom/{initrd.gz,initrd.img-*-bak}
+			cp -f /boot/initrd.img-* ${BCM_INITRD}
+		fi
 	fi
-	cp -f ${initrd} ${brcmdir}/
 fi
