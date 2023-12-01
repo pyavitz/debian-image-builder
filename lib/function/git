@@ -11,7 +11,11 @@ if [[ `wget -S --spider ${GIT_URL}/${GIT_OWN}/${GIT_REPO}/${GIT_BLOB}/${GIT_BRAN
 		rm -fdr ${GIT_REPO}-${GIT_BRANCH}
 		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
 		mv -f ${GIT_REPO}-${GIT_BRANCH}.backup ${GIT_REPO}-${GIT_BRANCH}
-		cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean; cd ..
+		if [[ "$GIT_FAST" == "false" ]]; then
+			cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean; cd ..
+		else
+			cd ${GIT_REPO}-${GIT_BRANCH}; make clean; cd ..
+		fi
 		echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 		cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
@@ -20,7 +24,7 @@ if [[ `wget -S --spider ${GIT_URL}/${GIT_OWN}/${GIT_REPO}/${GIT_BLOB}/${GIT_BRAN
 		echo ""
 		git clone ${GIT_OPT} -b ${GIT_BRANCH} ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}
 		sleep .50
-		cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean; cd ..
+		cd ${GIT_REPO}-${GIT_BRANCH}; make clean; cd ..
 		echo ""
 		echo -en "${GIT_REPO}-${GIT_BRANCH}"
 		echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
