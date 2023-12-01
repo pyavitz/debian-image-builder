@@ -295,10 +295,13 @@ user_patches
 # clean
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
-# add dtc list
-mv ../../dtclist.txt dtclist.txt
-# change some of the data types to userspace patch
-cp -f ../../packaging/headers-byteshift.patch headers-byteshift.patch
+# add dtclist initrd and headers-byteshift.patch
+if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]]; then
+	mv ../../dtclist.txt dtclist.txt; cp ../../packaging/initrd initrd; cp ../../packaging/headers-byteshift.patch headers-byteshift.patch
+else
+	echo -e "An essential builddeb file is missing."
+	exit 0
+fi
 # firmware
 if [[ "$BOARD" == "odroidxu4" ]] && [[ -e "../../files/firmware/edid" ]]; then
 	mkdir -p firmware

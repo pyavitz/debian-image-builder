@@ -203,6 +203,13 @@ if [ -d $tmpdir/$linux_path ]; then
 	fi
 fi
 
+# Install initramfs post-update script
+if [ -f "initrd" ]; then
+	mkdir -p "$tmpdir/etc/initramfs/post-update.d"
+	mv -f "initrd" "$tmpdir/etc/initramfs/post-update.d/99-initrd"
+	chmod 755 "$tmpdir/etc/initramfs/post-update.d/99-initrd"
+fi
+
 # Install the maintainer scripts
 debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
 for script in postinst postrm preinst prerm ; do
@@ -248,6 +255,10 @@ if [ -d /boot/$platform ]; then
 	if [ -d /boot/$platform/overlays ]; then
 		rm -fdr /boot/$platform/overlays
 	fi
+fi
+# prep initramfs post-update directory
+if [ -f /etc/initramfs/post-update.d/99-initrd ]; then
+	rm -f /etc/initramfs/post-update.d/99-initrd
 fi
 
 sync
