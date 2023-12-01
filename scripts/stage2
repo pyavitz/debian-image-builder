@@ -54,24 +54,14 @@ apt upgrade -y
 apt dist-upgrade -y
 apt autoremove -y
 # network variables
-if [ $NETWORKMANAGER -eq 1 ]; then
-	NETWORKING="network-manager";
-	if [[ "$DISTRO" == "devuan" ]]; then
-		NETWORKING_EXTRA=""
-	fi
-else
-	NETWORKING="ifupdown";
-	if [[ "$DISTRO" == "devuan" ]]; then
-		NETWORKING_EXTRA="ifupdown-extra"
-	fi
-fi
+if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager"; else NETWORKING="ifupdown"; fi
 # install base and extra packages
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "raspbian" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} resolvconf haveged ${NETWORKING}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
-	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} openresolv haveged ${NETWORKING} ${NETWORKING_EXTRA}
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} openresolv haveged ${NETWORKING}
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" == "focal" || "$ARCH" == "arm" ]]; then
@@ -629,11 +619,7 @@ fi
 echo ""
 echo "Enabling Services ..."
 if [[ "$BOARD" == "nanopineoplus2" ]]; then
-	if [[ "$DISTRO" == "devuan" ]]; then
-		:;
-	else
-		nanopi_bt_service > /dev/null 2>&1
-	fi
+	if [[ "$DISTRO" == "devuan" ]]; then :; else nanopi_bt_service > /dev/null 2>&1; fi
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	echo "== Sysvinit"
