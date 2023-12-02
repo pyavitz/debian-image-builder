@@ -2,40 +2,56 @@
 # Destination: /usr/local/bin/menu-config-update
 
 #github sites supporting scripts for distro are pulled from
-REPO_URLS=("https://github.com/pyavitz/debian-image-builder/trunk/files/scripts" \
-            "https://github.com/pyavitz/scripts/trunk")
+
+REPO_INFO=("files/scripts@https://github.com/pyavitz/debian-image-builder" \
+            "-@https://github.com/pyavitz/scripts")
+
 
 # location for pulling down scripts from github
 WORKING_DIR="/var/tmp"
 
-# Get in directory where we'll temporarily store things. 
-cd $WORKING_DIR
-
-# We use subversion to pull files out of git so it's not installed, install it
-if [[ ! `dpkg --list |grep "^ii\s*subversion\s"` ]]; then
-    echo Installing Subversion
-    sudo apt -qq -y install subversion
+# We use git to pull files out of git so it's not installed, install it
+if [[ ! `dpkg --list |grep "^ii\s*git\s"` ]]; then
+    echo Installing git
+    sudo apt -qq -y install git
 fi
 
-# for each repo
-for str in ${REPO_URLS[@]}; do
-  # pull the directory of files from git
-  svn export $str 2>&1 > /dev/null
+for str in ${REPO_INFO[@]}; do
+  # Get in directory where we'll temporarily store things. 
+  cd $WORKING_DIR
+  IFS='@'                   # set separator to split REPO_INFO column
+  read -ra items <<< "$str" # Slit into an array
+  url=${items[1]}           # Second element is url 
+  repo_dir=$(basename $url)
+  #echo repo_dir = $repo_dir
+  directory=${items[0]}     # first element is directory
+  if [[ "$directory" == "-" ]]
+  then
+    directory=""  # change to null string as variable is used later for a file path
+    #echo Need to clone complete structure for $url
+    git clone --quiet $url &> /dev/null
+  else
+    #echo pull $directory from $url
+    git clone --quiet -n --depth=1 --filter=tree:0 $url &> /dev/null
+    cd $repo_dir
+    git sparse-checkout set --no-cone --quiet $directory &> /dev/null
+    git checkout --quiet &> /dev/null
+    cd ..
+  fi
 
-  # svn stores files under final part of path we pulled from git
-  directory=$(basename $str)
-  # echo Working on $directory
+  path_to_files=$WORKING_DIR/$repo_dir/$directory
+  #echo file location is $path_to_files
 
   # only do the work if we've pulled some files 
-  if [ -d $WORKING_DIR/$directory ]; then 
+  if [ -d $path_to_files ]; then 
     updates=() 
-    for filename in $WORKING_DIR/$directory/*; do
+    for filename in $path_to_files/*; do
       #echo filename is $filename
 
       # Script needs to include location being updated to be worked
       dest=`grep "^#\sDestination" $filename | cut -d ":" -f 2 | xargs`
       if [ ! -z "$dest" ]; then
-        # echo Doing some work on $filename with dest $dest !!!!!!
+        #echo File $filename has a destination so could be update to dest $dest !!!!!!
 
         # Script must already installed to be updated
         if [ -f "$dest" ]; then
@@ -53,6 +69,7 @@ for str in ${REPO_URLS[@]}; do
               desc=`grep "^#\sDescription" $filename|cut -d ":" -f 2- |xargs`
               # add file to list that uses select to identify file to be updated
               updates+=( "$dest" "$desc" "off" )
+              #echo Update canidate: "$dest" "$desc" "off"
             fi
           fi
         fi
@@ -71,9 +88,8 @@ for str in ${REPO_URLS[@]}; do
           dest="${dest#\"}"
           dest="${dest%\"}"
           filename=$(basename $dest)
-          src=$WORKING_DIR/$directory/$(basename $filename)
-          echo Source when making move is $src
-          #sudo mv $dest $dest.org
+          src=$path_to_files/$(basename $filename)
+          #echo Source when making move is $src
           sudo mv $src $dest
           sudo chown root: $dest
           sudo chmod +x $dest 
@@ -93,11 +109,11 @@ for str in ${REPO_URLS[@]}; do
         done
       fi
     fi
-    # remove all the remaining files that we pulled that we not previously installed 
-    rm -r -f $WORKING_DIR/$directory
+    # remove all the remaining files that we pulled that we didn't just install
+    rm -r -f $WORKING_DIR/$repo_dir
   else
-    # svn didn't pull anything
-    echo $WORKING_DIR/$directory doesnt exist
+    # git didn't pull anything
+    echo $path_to_files doesnt exist
   fi
 done
 
