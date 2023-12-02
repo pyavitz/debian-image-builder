@@ -11,39 +11,9 @@ ROOTFS=`findmnt -v -n -o SOURCE /`
 BLOCK=`findmnt -v -n -o SOURCE / | sed 's/\/dev\///' | sed 's/..$//'`
 PART=`findmnt -v -n -o SOURCE / | sed 's/.*\(.\)/\1/'`
 FSTYPE=`findmnt -v -n -o FSTYPE /`
+PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 
-# Functions
-partition_uuid(){
-ROOT_PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' > /etc/opt/part-uuid.txt
-}
-
-extlinux_conf(){
-if [[ "$FSTYPE" == "ext4" ]]; then
-	ROOT_FSTYPE="rootfstype=ext4"
-fi
-if [[ "$FSTYPE" == "btrfs" ]]; then
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-fi
-if [[ "$FSTYPE" == "xfs" ]]; then
-	ROOT_FSTYPE="rootfstype=xfs"
-fi
-FDT="../${FAMILY}/${DTB}.dtb"
-FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=1 init=/sbin/init"
-rm -f /boot/extlinux/extlinux.conf
-tee /boot/extlinux/extlinux.conf <<EOF
-label default
-	kernel ../Image
-	initrd ../uInitrd
-	fdtdir ${FDTDIR}
-	fdt ${FDT}
-	#fdtoverlays
-	${CMDLINE}
-EOF
-}
-
-# Expand root filesystem
+# expand root filesystem
 if [[ "$DISTRO" == "Devuan" ]]; then
 	echo ""
 	echo -e " \033[1mExpanding root filesystem\033[0m ..."
@@ -75,20 +45,21 @@ if [[ ! -z `mount | grep "on / type ext4 (ro,"` ]]; then
 	reboot
 fi
 
-# Fix PARTUUID
+# fix PARTUUID
 if [[ -f "/etc/opt/board.txt" ]] && [[ "$ARCH" == "arm" ]]; then
-	partition_uuid > /dev/null 2>&1
-	. /etc/opt/part-uuid.txt
+	sleep .25
 	if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
-		extlinux_conf > /dev/null 2>&1
+		sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/extlinux/extlinux.conf
 	fi
 	if [[ -f "/boot/boot.ini" ]]; then
-		sed -i '3s/.*/setenv uuid "'"root=PARTUUID=${ROOT_PARTUUID}"'"/' /boot/boot.ini
+		sed -i '3s/.*/setenv uuid "'"root=PARTUUID=${PARTUUID}"'"/' /boot/boot.ini
 	fi
-	rm -f /etc/opt/part-uuid.txt
+	if [[ -f "/boot/${FAMILY}/cmdline.txt" ]]; then
+		sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/${FAMILY}/cmdline.txt
+	fi
 fi
 
-# Fsck fat partition
+# fsck fat partition
 if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
 	BOOT=`findmnt -v -n -o SOURCE /boot`
 	umount /boot
@@ -114,7 +85,7 @@ if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
 	mount /boot/broadcom
 fi
 
-### Clean up
+# clean
 if [[ "$DISTRO" == "Devuan" ]]; then
 	update-rc.d firstboot remove
 	rm -f /etc/init.d/firstboot
