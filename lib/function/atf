@@ -4,44 +4,52 @@
 arm_trusted_firmware (){
 TAG="v2.9.0"
 if [[ "$FAMILY_EXT" == "imx8" || "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-	if [[ -d "arm-trusted-firmware" ]]; then
-		echo -en "${WHT}arm trusted firmware${FIN} "
-		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-		cd arm-trusted-firmware
-		git config pull.rebase false
-		git config advice.detachedHead false
-		git checkout ${TAG} &> /dev/null
-		make realclean > /dev/null 2>&1
-		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-		git pull -q https://github.com/ARM-software/arm-trusted-firmware.git ${TAG} &> /dev/null
-		echo_bdone
+	atf_download; cd arm-trusted-firmware; atf_patching; echo ""
+	if [ $CROSSCOMPILE -eq 1 ]; then
+		echo -e "${GRN}  CC${FIN}"
+		export CROSS_COMPILE=${CROSS_COMPILE}
+		make -j${CORES} CC="${CROSS}" ${ATF_EXT}
 	else
-		echo -en "${WHT}arm trusted firmware${FIN} "
-		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-		git clone -q https://github.com/ARM-software/arm-trusted-firmware.git -b ${TAG} &> /dev/null
-		cd arm-trusted-firmware
-		git config pull.rebase false
-		git config advice.detachedHead false
-		git checkout ${TAG} &> /dev/null
-		make realclean > /dev/null 2>&1
-		echo_bdone
-		atf_patching
+		echo -e "${GRN}  NC${FIN}"
+		export ARCH=${ARCH}
+		make -j${CORES} CC="${NATIVE}" ${ATF_EXT}
 	fi
+	cd ..
+	if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
 fi
-echo ""
-if [ $CROSSCOMPILE -eq 1 ]; then
-	echo -e "${GRN}  CC${FIN}"
-	export CROSS_COMPILE=${CROSS_COMPILE}
-	make -j${CORES} CC="${CROSS}" ${ATF_EXT}
-else
-	echo -e "${GRN}  NC${FIN}"
-	export ARCH=${ARCH}
-	make -j${CORES} CC="${NATIVE}" ${ATF_EXT}
-fi
-cd ..
-if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
 }
 
+atf_download (){
+if [[ `wget -S --spider https://github.com/ARM-software/arm-trusted-firmware/blob/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -d "arm-trusted-firmware" ]] && [[ -d "arm-trusted-firmware.backup" ]]; then
+		echo -en "${WHT}arm trusted firmware${FIN}"
+		echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
+		rm -fdr arm-trusted-firmware
+		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
+		mv -f arm-trusted-firmware.backup arm-trusted-firmware
+		cd arm-trusted-firmware
+		#git config pull.rebase false
+		#git config advice.detachedHead false
+		git checkout ${TAG} &> /dev/null
+		make realclean > /dev/null 2>&1
+		cd ..
+		echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+		cp -r arm-trusted-firmware arm-trusted-firmware.backup
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	else
+		if [[ -d "arm-trusted-firmware" ]]; then rm -fdr arm-trusted-firmware; fi
+		echo -en "${WHT}arm trusted firmware${FIN}"
+		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+		git clone -q -c advice.detachedHead=false https://github.com/ARM-software/arm-trusted-firmware.git -b ${TAG}
+		cd arm-trusted-firmware
+		make realclean > /dev/null 2>&1
+		cd ..
+		echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+		cp -r arm-trusted-firmware arm-trusted-firmware.backup
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	fi
+fi
+}
 
 report_atf_error (){
 echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
