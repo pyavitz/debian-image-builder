@@ -58,77 +58,62 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		exit 0
 	fi
 else
-	if [[ -d "${KERNEL}-${VERSION}" ]]; then
-		echo -en "${KERNEL}-${VERSION}"
-		echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
-		rm -fdr ${KERNEL}-${VERSION}
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-		echo ""
-	fi
-	KERNELORG="https://git.kernel.org/torvalds/t/"
-	if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]] || \
-		[[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-		download
-		extract
-	else
-		search
-	fi
+	download_tarball
 fi
 }
 
-search (){
-RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
-KERNELORG="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
-if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]] || \
-	[[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	download_stable
-	extract_stable
-else
+download_tarball (){
+if [[ -d "${KERNEL}-${VERSION}" ]]; then
+	echo -en "${KERNEL}-${VERSION}"
+	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
+	rm -fdr ${KERNEL}-${VERSION}
+	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	echo ""
-	echo -e "${KERNEL}-${VERSION} is not available."
-	exit 0
 fi
-}
-
-download (){
-if  [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
-	:;
+KERNELORG="https://git.kernel.org/torvalds/t/"
+if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
+		extra_wireless
+		echo_extract
+		pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+	else
+		echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
+		${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.gz
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		extra_wireless
+		if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
+			echo ""
+			echo_extract
+			pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
+		else
+			report_tarball_error
+		fi
+	fi
 else
-	echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
-	${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.gz
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-fi
-extra_wireless
-}
-
-download_stable (){
-if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-	:;
-else
-	echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
-	${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.xz
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-fi
-extra_wireless
-}
-
-extract (){
-echo ""
-if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
-	echo_extract
-	pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-else
-	report_tarball_error
-fi
-}
-
-extract_stable (){
-echo ""
-if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-	echo_extract
-	pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
-else
-	report_tarball_error
+	RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
+	KERNELORG="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
+	if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+		if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+			extra_wireless
+			echo_extract
+			pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+		else
+			echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
+			${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.xz
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			extra_wireless
+			if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
+				echo ""
+				echo_extract
+				pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
+			else
+				report_tarball_error
+			fi
+		fi
+	else
+		echo -e "${KERNEL}-${VERSION} is not available."
+		exit 0
+	fi
 fi
 }
 
