@@ -13,9 +13,10 @@ KERNEL="linux"
 HOST_MACHINE=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 HOST_CODENAME=`cat /etc/os-release | grep -w "VERSION_CODENAME" | sed 's/VERSION_CODENAME=//g'`
 HOST_ARCH=`uname -m`
+EXPIRED="The userdata.txt file has expired. Create a new one."
 
 # validate
-validation(){
+validation (){
 BUILDER=`grep "BUILDER=" "userdata.txt" | sed 's/BUILDER=//g'`
 if [[ -f "userdata.txt" ]]; then
 	echo -e ""
@@ -27,12 +28,7 @@ else
 		if [ $? = 0 ]; then exit 0; fi
 	done
 fi
-if [[ "$BUILDER" == "6.2" ]]; then
-	:;
-else
-	echo -e "The ${WHT}userdata.txt${FIN} file has expired. Please create a new one."
-	exit 0
-fi
+if [[ "$BUILDER" == "6.2" ]]; then :; else echo -e "${EXPIRED}"; exit 0; fi
 }
 
 # base packages
@@ -45,8 +41,8 @@ PKGS="tzdata keyboard-configuration sudo man-db dbus initramfs-tools zip unzip \
 	bison flex libssl-dev zram-tools python3 python3-setuptools avahi-utils iw \
 	libncursesw5-dev autopoint autoconf automake pkg-config libtool fake-hwclock \
 	lsb-release libell0 wireless-regdb bluez bluez-tools irqbalance ethtool i2c-tools \
-	python3-libgpiod python-is-python3 subversion btrfs-progs xfsprogs ir-keytable \
-	f2fs-tools kpartx mtd-utils whiptail mtools"
+	python3-libgpiod python-is-python3 btrfs-progs xfsprogs ir-keytable f2fs-tools \
+	kpartx mtd-utils whiptail mtools"
 
 # raspberry pi packages
 RPI="curl cmake help2man debhelper d-shlibs"
@@ -59,7 +55,7 @@ DEBIAN_FW="firmware-linux-nonfree firmware-linux bluez-firmware \
 UBUNTU_FW="linux-firmware-mediatek-aiot"
 
 # user scripts (stage1 and stage2)
-uscripts_pre-stage1(){
+uscripts_pre-stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then
 	source files/userscripts/uscripts
 	if [[ `type run_function0` ]] &>/dev/null; then
@@ -68,7 +64,7 @@ if [[ -f "files/userscripts/uscripts" ]]; then
 fi
 }
 
-uscripts_stage1(){
+uscripts_stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then
 	mkdir -p ${P_VALUE}/root/userscripts;
 	cp -fr files/userscripts/* ${P_VALUE}/root/userscripts/;
@@ -81,7 +77,7 @@ if [[ -f "files/userscripts/uscripts" ]]; then
 fi
 }
 
-uscripts_stage2(){
+uscripts_stage2 (){
 if [[ -f "/root/userscripts/uscripts" ]]; then
 	source /root/userscripts/uscripts
 	if [[ `type run_function2` ]] &>/dev/null; then
@@ -94,7 +90,7 @@ fi
 if [[ -e "/root/userscripts" ]]; then rm -fdr /root/userscripts; fi
 }
 
-uscripts_fin-stage1(){
+uscripts_fin-stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then
 	source files/userscripts/uscripts
 	if [[ `type run_function3` ]] &>/dev/null; then
@@ -103,7 +99,7 @@ if [[ -f "files/userscripts/uscripts" ]]; then
 fi
 }
 
-override_board(){
+override_board (){
 if [[ -z "$ARCH_EXT" ]]; then
 	:;
 else
