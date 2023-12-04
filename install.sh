@@ -13,12 +13,20 @@ echo ""
 echo -en "${TXT}Debian Image Builder:${FIN}"
 echo -e " ${PNK}[${FIN}${GRN}${GIT_BRANCH}${FIN}${PNK}]${FIN}"
 
+if [[ `command -v sudo` ]]; then
+	:;
+else
+	echo ""
+	echo -e "Missing dependency: sudo"
+	echo -e "https://wiki.debian.org/sudo"
+	exit 0
+fi
 if [[ `command -v curl` ]]; then
 	:;
 else
 	echo ""
 	echo -e "Missing dependency: curl"
-	exit 0
+	sudo apt install -y curl wget
 fi
 echo -en "${TXT}Checking Internet Connection:${FIN} "
 if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
