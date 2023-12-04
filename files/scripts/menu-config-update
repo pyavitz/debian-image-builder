@@ -16,11 +16,13 @@ if [[ ! `dpkg --list |grep "^ii\s*git\s"` ]]; then
     sudo apt -qq -y install git
 fi
 
+default_IFS="$IFS"
 for str in ${REPO_INFO[@]}; do
   # Get in directory where we'll temporarily store things. 
   cd $WORKING_DIR
   IFS='@'                   # set separator to split REPO_INFO column
   read -ra items <<< "$str" # Slit into an array
+  IFS=$default_IFS          # set back to orginal value as it's used below
   url=${items[1]}           # Second element is url 
   repo_dir=$(basename $url)
   #echo repo_dir = $repo_dir
@@ -69,7 +71,7 @@ for str in ${REPO_INFO[@]}; do
               desc=`grep "^#\sDescription" $filename|cut -d ":" -f 2- |xargs`
               # add file to list that uses select to identify file to be updated
               updates+=( "$dest" "$desc" "off" )
-              #echo Update canidate: "$dest" "$desc" "off"
+              #echo Update canidate: "$dest" - "$desc" - "off"
             fi
           fi
         fi
@@ -90,6 +92,7 @@ for str in ${REPO_INFO[@]}; do
           filename=$(basename $dest)
           src=$path_to_files/$(basename $filename)
           #echo Source when making move is $src
+	  echo Moving $src to $dest
           sudo mv $src $dest
           sudo chown root: $dest
           sudo chmod +x $dest 
