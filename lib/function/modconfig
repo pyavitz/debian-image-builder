@@ -1,16 +1,6 @@
 #!/bin/bash
 
 uboot_configs (){
-# boot logo
-LOGODIR="drivers/video"
-BOOTLOGO="files/boot/uboot/u_boot_logo.bmp"
-BOOTLOGODIR="files/boot/uboot"
-if [[ "$RANDOM_LOGO" == "true" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
-	ls ../../${BOOTLOGODIR}/u_boot_logo*.bmp | shuf -n 100 | xargs -I % cp % ${LOGODIR}/u_boot_logo.bmp
-fi
-if [[ "$RANDOM_LOGO" == "false" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
-	cp -f ../../${BOOTLOGO} ${LOGODIR}/
-fi
 # add default builder config options
 if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
 if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
@@ -33,7 +23,7 @@ fi
 # amlogic
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "lepotato" ]]; then
-		cp ../../${PRECOMPILED_UBOOT_DIR}/../${BOARD}.bmp tools/logos/libre-computer.bmp
+		cp ../../${PRECOMPILED_UBOOT_DIR}/../logo/${BOARD}.bmp tools/logos/libre-computer.bmp
 	fi
 	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
 		echo "CONFIG_CPU=y" >> configs/${UBOOT_DEFCONFIG}

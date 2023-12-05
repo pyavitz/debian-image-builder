@@ -93,6 +93,16 @@ if [[ "$FAMILY" == "allwinner" || "$FAMILY_EXT" == "imx8" || "$FAMILY" == "rockc
 fi
 # lib/function/patching
 uboot_patching
+# boot logo
+LOGODIR="drivers/video"
+BOOTLOGO="files/boot/uboot/logo/u_boot_logo.bmp"
+BOOTLOGODIR="files/boot/uboot/logo"
+if [[ "$RANDOM_LOGO" == "true" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
+	ls ../../${BOOTLOGODIR}/u_boot_logo*.bmp | shuf -n 100 | xargs -I % cp % ${LOGODIR}/u_boot_logo.bmp
+fi
+if [[ "$RANDOM_LOGO" == "false" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
+	cp -f ../../${BOOTLOGO} ${LOGODIR}/
+fi
 # lib/function/modconfig
 uboot_configs
 # end
