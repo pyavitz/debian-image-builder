@@ -2,17 +2,19 @@
 
 uboot_configs (){
 # add default builder config options
-if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
-if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
-if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
-if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
 # allwinner
 if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$BOARD" == "cubietruck" ]]; then
+	if [[ "$BOARD" == "cubietruck" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		sed -i 's/CONFIG_DRAM_CLK=432/CONFIG_DRAM_CLK=384/g' configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_MMC_SUNXI_SLOT_EXTRA=2" >> configs/${UBOOT_DEFCONFIG}
 	fi
-	if [[ "$BOARD" == "pinea64plus" ]]; then
+	if [[ "$BOARD" == "pinea64plus" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		# Autoboot options
 		echo "CONFIG_BOOT_RETRY=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_BOOT_RETRY_TIME=5" >> configs/${UBOOT_DEFCONFIG}
@@ -23,9 +25,10 @@ fi
 # amlogic
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$BOARD" == "lepotato" ]]; then
+		mkdir -p "tools/logos"
 		cp ../../${PRECOMPILED_UBOOT_DIR}/../logo/${BOARD}.bmp tools/logos/libre-computer.bmp
 	fi
-	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
+	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo "CONFIG_CPU=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_SUPPORT_EMMC_RPMB=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
@@ -34,18 +37,18 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 fi
 # freescale
 if [[ "$FAMILY_EXT" == "imx8" ]]; then
-	if [[ "$BOARD" == "ft20" ]]; then
+	if [[ "$BOARD" == "ft20" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo 'CONFIG_IMX_CONFIG="board/freescale/imx8mp_evk/imximage-8mp-lpddr4.cfg"' >> configs/${UBOOT_DEFCONFIG}
 	fi
 fi
 # rockchip
 if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$BOARD" == "renegade" ]]; then
+	if [[ "$BOARD" == "renegade" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo "CONFIG_USE_PREBOOT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_BOARD_LATE_INIT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_CMD_GPIO=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
-	if [[ "$BOARD" == "nanopct4" ]]; then
+	if [[ "$BOARD" == "nanopct4" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo "CONFIG_MISC=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_PHY_ROCKCHIP_INNO_USB2=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_PHY_ROCKCHIP_TYPEC=y" >> configs/${UBOOT_DEFCONFIG}
@@ -57,7 +60,7 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		echo "CONFIG_ROCKCHIP_USB2_PHY=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_USB_DWC2=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
-	if [[ "$BOARD" == "nanopir4se" ]]; then
+	if [[ "$BOARD" == "nanopir4se" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo "CONFIG_MMC_IO_VOLTAGE=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_SPL_MMC_IO_VOLTAGE=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_MMC_UHS_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
@@ -65,11 +68,11 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		echo "CONFIG_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_SPL_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
-	if [[ "$BOARD" == "rockpro64" || "$BOARD" == "pinebookpro" ]]; then
+	if [[ "$BOARD" == "rockpro64" || "$BOARD" == "pinebookpro" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo "CONFIG_PCIE_DW_ROCKCHIP=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_OF_LIBFDT_OVERLAY=y" >> configs/${UBOOT_DEFCONFIG}
 	fi
-	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
+	if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 		echo "CONFIG_BOOTMETH_SCRIPT=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_OF_LIBFDT_OVERLAY=y" >> configs/${UBOOT_DEFCONFIG}
 		echo "CONFIG_DM_VIDEO=y" >> configs/${UBOOT_DEFCONFIG}
