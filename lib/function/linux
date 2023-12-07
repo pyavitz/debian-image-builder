@@ -45,12 +45,20 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 			echo ""
 			git clone -c advice.detachedHead=false --depth 1 -b v${VERSION} ${GIT_URL} ${KERNEL}-${VERSION}
 			sleep .50
-			echo ""
-			echo -en "${KERNEL}-${VERSION}"
-			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
-			cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
-			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-			extra_wireless
+			if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -f "${KERNEL}-${VERSION}/Makefile" ]]; then
+				echo ""
+				echo -en "${KERNEL}-${VERSION}"
+				echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+				cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
+				echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+				extra_wireless
+			else
+				echo ""
+				echo -en "${KERNEL}-${VERSION}"
+				echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
+				echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+				exit 0
+			fi
 		fi
 	else
 		echo ""
