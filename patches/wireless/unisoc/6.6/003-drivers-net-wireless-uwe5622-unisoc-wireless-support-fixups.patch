@@ -1,0 +1,157 @@
+From be168f116ffa016462ef7d2922941df4a02eaf4b Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Fri, 8 Dec 2023 07:53:21 -0500
+Subject: [PATCH] drivers: net: wireless: uwe5622: unisoc wireless support:
+ fixups 1
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c | 10 +---------
+ drivers/net/wireless/uwe5622/unisocwifi/11h.c          |  2 +-
+ drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c       |  6 +-----
+ drivers/net/wireless/uwe5622/unisocwifi/npi.c          |  4 ++--
+ 4 files changed, 5 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c b/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c
+index 220bac67ddd0..63a90f492c18 100644
+--- a/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c
++++ b/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c
+@@ -1371,15 +1371,13 @@ static int marlin_registsr_bt_wake(struct device *dev)
+ {
+ 	struct device_node *np;
+ 	int bt_wake_host_gpio, ret = 0;
+-	struct gpio_config config;
+ 
+ 	np = of_find_compatible_node(NULL, NULL, "allwinner,sunxi-btlpm");
+ 	if (!np) {
+ 		WCN_ERR("dts node for bt_wake not found");
+ 		return -EINVAL;
+ 	}
+-	bt_wake_host_gpio = of_get_named_gpio_flags(np, "bt_hostwake", 0,
+-		(enum of_gpio_flags *)&config);
++	bt_wake_host_gpio = of_get_named_gpio(np, "bt_hostwake", 0);
+ 	if (!gpio_is_valid(bt_wake_host_gpio)) {
+ 		WCN_ERR("bt_hostwake irq is invalid: %d\n",
+ 			bt_wake_host_gpio);
+@@ -1403,12 +1401,6 @@ static int marlin_registsr_bt_wake(struct device *dev)
+ 
+ 	marlin_dev->bt_wake_host_int_num = gpio_to_irq(bt_wake_host_gpio);
+ 
+-	WCN_INFO("%s bt_hostwake gpio=%d mul-sel=%d pull=%d "
+-		 "drv_level=%d data=%d intnum=%d\n",
+-		 __func__, config.gpio, config.mul_sel, config.pull,
+-		 config.drv_level, config.data,
+-		 marlin_dev->bt_wake_host_int_num);
+-
+ 	ret = device_init_wakeup(dev, true);
+ 	if (ret < 0) {
+ 		WCN_ERR("device init bt wakeup failed!\n");
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/11h.c b/drivers/net/wireless/uwe5622/unisocwifi/11h.c
+index 8df549180486..6376f7b74e7f 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/11h.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/11h.c
+@@ -75,7 +75,7 @@ void sprdwl_dfs_chan_sw_work_queue(struct work_struct *work)
+ 		container_of(delayed_work, struct sprdwl_vif,
+ 			     dfs_chan_sw_work);
+ 
+-	cfg80211_ch_switch_notify(vif->ndev, &vif->dfs_chandef);
++	cfg80211_ch_switch_notify(vif->ndev, &vif->dfs_chandef, 0, 0);
+ }
+ 
+ /*This is delayed work emits CAC finished event for cfg80211 if
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+index 809e24ca700d..edccf55b013f 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+@@ -3426,11 +3426,7 @@ void sprdwl_event_chan_changed(struct sprdwl_vif *vif, u8 *data, u16 len)
+ 						NL80211_CHAN_HT20);
+ 		else
+ 			wl_err("%s, ch is null!\n", __func__);
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,19, 2))
+-		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0);
+-#else
+-		cfg80211_ch_switch_notify(vif->ndev, &chandef);
+-#endif
++		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0, 0);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/npi.c b/drivers/net/wireless/uwe5622/unisocwifi/npi.c
+index 90b333b701b4..695fc2e1aeb2 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/npi.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/npi.c
+@@ -104,7 +104,7 @@ static int sprdwl_cmd_set_psm_cap(struct sprdwl_vif *vif)
+ 	return ret;
+ }
+ 
+-static int sprdwl_npi_pre_doit(const struct genl_ops *ops,
++static int sprdwl_npi_pre_doit(const struct genl_split_ops *ops,
+ 				   struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct net_device *ndev;
+@@ -135,7 +135,7 @@ static int sprdwl_npi_pre_doit(const struct genl_ops *ops,
+ 	return 0;
+ }
+ 
+-static void sprdwl_npi_post_doit(const struct genl_ops *ops,
++static void sprdwl_npi_post_doit(const struct genl_split_ops *ops,
+ 				 struct sk_buff *skb, struct genl_info *info)
+ {
+ 	if (info->user_ptr[0])
+-- 
+2.39.2
+
+From 0d839c0c745f5c555b9c9b25da956fd16c408dfe Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Fri, 8 Dec 2023 08:02:26 -0500
+Subject: [PATCH] drivers: net: wireless: uwe5622: unisoc wireless support:
+ fixups 2
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/net/wireless/uwe5622/tty-sdio/lpm.c               | 1 +
+ drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_log.c | 2 +-
+ drivers/net/wireless/uwe5622/unisocwifi/cmdevt.h          | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/uwe5622/tty-sdio/lpm.c b/drivers/net/wireless/uwe5622/tty-sdio/lpm.c
+index 1570676ced50..adfa41507d07 100644
+--- a/drivers/net/wireless/uwe5622/tty-sdio/lpm.c
++++ b/drivers/net/wireless/uwe5622/tty-sdio/lpm.c
+@@ -11,6 +11,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/version.h>
+ #include <linux/export.h>
++#include <linux/device.h>
+ #include <marlin_platform.h>
+ 
+ #define VERSION         "marlin2 V0.1"
+diff --git a/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_log.c b/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_log.c
+index 1a78b5b035a4..c68d86a20fe2 100644
+--- a/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_log.c
++++ b/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_log.c
+@@ -260,7 +260,7 @@ int log_cdev_init(void)
+ 	struct wcnlog_dev *dev[WCN_LOG_MAX_MINOR] = {NULL};
+ 
+ 	WCN_DEBUG("log_cdev_init\n");
+-	wcnlog_class = class_create(THIS_MODULE, "slog_wcn");
++	wcnlog_class = class_create("slog_wcn");
+ 	if (IS_ERR(wcnlog_class))
+ 		return PTR_ERR(wcnlog_class);
+ 
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.h b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.h
+index ce8c774e8968..5257fd23b4d4 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.h
++++ b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.h
+@@ -20,7 +20,7 @@
+ 
+ #include "msg.h"
+ #include <linux/math64.h>
+-#include <linux/pm_wakeup.h>
++#include <linux/device.h>
+ 
+ #define SPRDWL_VALID_CONFIG		(0x80)
+ #define  CMD_WAIT_TIMEOUT		(3000)
+-- 
+2.39.2
+

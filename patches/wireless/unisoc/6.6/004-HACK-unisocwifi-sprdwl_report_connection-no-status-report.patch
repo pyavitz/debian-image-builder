@@ -1,0 +1,41 @@
+From 02b15a1d25b179406bd9e35fb8f776041d511407 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 2 Oct 2023 09:11:25 -0400
+Subject: [PATCH] HACK: unisocwifi: sprdwl_report_connection: no status report
+
+unisoc_wifi unisoc_wifi wlan0: sprdwl_report_connection XXXXXXX failed status code:1!
+sprdwl:Wait disconnect event timeout. [mstime = 15228]
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c b/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c
+index e5d21887d2f8..89769dc97e4d 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c
+@@ -1795,8 +1795,9 @@ static int sprdwl_cfg80211_disconnect(struct wiphy *wiphy,
+ #else
+ 		msec = (u32)(div_u64(kt.tv64, NSEC_PER_MSEC));
+ #endif
+-		wl_err("Wait disconnect event timeout. [mstime = %d]\n",
+-			   cpu_to_le32(msec));
++		//wl_err("Wait disconnect event timeout. [mstime = %d]\n",
++		//	   cpu_to_le32(msec));
++		return 0;
+ 	} else {
+ 		sprdwl_disconnect_handle(vif);
+ 	}
+@@ -2484,7 +2485,7 @@ void sprdwl_report_connection(struct sprdwl_vif *vif,
+ 		cfg80211_connect_result(vif->ndev, vif->bssid, NULL, 0, NULL, 0,
+ 					status_code, GFP_KERNEL);
+ 
+-	wl_ndev_log(L_ERR, vif->ndev, "%s %s failed status code:%d!\n",
++	wl_ndev_log(L_DBG, vif->ndev, "%s %s failed status code:%d!\n",
+ 				__func__, vif->ssid, status_code);
+ 	memset(vif->bssid, 0, sizeof(vif->bssid));
+ 	memset(vif->ssid, 0, sizeof(vif->ssid));
+-- 
+2.39.2
+
