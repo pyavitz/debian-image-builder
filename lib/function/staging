@@ -1,6 +1,6 @@
 #!/bin/bash
 
-filesystem(){
+filesystem (){
 if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; else EXTFS="ext4"; fi
 if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$EFI" == "true" ]]; then BOOT_LABEL="EFI"; else BOOT_LABEL="BOOT"; fi
@@ -25,7 +25,7 @@ if [[ "$FSTYPE" == "xfs" ]]; then
 fi
 }
 
-single_partition(){
+single_partition (){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$GPT" == "true" ]]; then
 	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
@@ -52,7 +52,7 @@ umount ${P_ROOTFS}
 $MOUNT_ROOTFS
 }
 
-dual_partition(){
+dual_partition (){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
 if [[ "$VFAT" == "true" ]]; then
 	if [[ "$GPT" == "true" ]]; then
@@ -107,7 +107,7 @@ umount ${P_ROOTFS}
 $MOUNT_ROOTFS
 }
 
-partition(){
+partition (){
 # offset first partition by
 if [[ "$OFFSET" == "4096" || "$OFFSET" == "8192" ]]; then PART_OFFSET="4MiB"; fi
 if [[ "$OFFSET" == "32768" ]]; then PART_OFFSET="16MiB"; fi
@@ -125,31 +125,25 @@ if [[ "$P_VALUE" == "p2" ]]; then
 fi
 }
 
-uuid(){
+uuid (){
 if [[ "$P_VALUE" == "p1" ]]; then
 	ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 	ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
-	echo ROOT_UUID='"'$ROOT_UUID'"' > part-uuid.txt
-	echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 else
 	BOOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_BOOT}" | sed -ne 's/^UUID=//p')
 	ROOT_UUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^UUID=//p')
 	ROOT_PARTUUID=$(blkid -o export -- "${IMAGE_LOOP_DEV_ROOTFS}" | sed -ne 's/^PARTUUID=//p')
-	echo BOOT_UUID='"'$BOOT_UUID'"' > part-uuid.txt
-	echo ROOT_UUID='"'$ROOT_UUID'"' >> part-uuid.txt
-	echo ROOT_PARTUUID='"'$ROOT_PARTUUID'"' >> part-uuid.txt
 fi
-source part-uuid.txt
 }
 
-p1_fstab(){
+p1_fstab (){
 tee p1/etc/fstab <<EOF
 UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
 tmpfs		/tmp	tmpfs	defaults,nosuid 0 0
 EOF
 }
 
-p2_fstab(){
+p2_fstab (){
 if [[ "$VFAT" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
 fi
@@ -172,7 +166,7 @@ if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "true" ]] && [[ "$VFAT" == "tru
 fi
 }
 
-setup(){
+setup (){
 if [ $VERBOSE -eq 1 ]; then
 	partition
 else
@@ -213,7 +207,7 @@ EOF
 fi
 }
 
-board_information(){
+board_information (){
 BOARD_DEST="${P_VALUE}/etc/opt/board.txt"
 echo "# architecture" > "${BOARD_DEST}"
 echo ARCH='"'$ARCH'"' >> "${BOARD_DEST}"
@@ -250,7 +244,7 @@ echo "# motd" >> "${BOARD_DEST}"
 echo DEFAULT_MOTD='"'$DEFAULT_MOTD'"' >> "${BOARD_DEST}"
 }
 
-files(){
+files (){
 cp lib/function/networking ${P_VALUE}/root/networking.txt
 cp lib/function/services ${P_VALUE}/root/services.txt
 cp lib/source ${P_VALUE}/root/source.txt
@@ -269,7 +263,7 @@ board_information
 }
 
 # rename and check for compression
-finish_image(){
+finish_image (){
 IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
 IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
 if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; fi
@@ -289,7 +283,7 @@ fi
 }
 
 # odroid boot.cmd
-odroid_bootcmd(){
+odroid_bootcmd (){
 rm -f p1/{boot.cmd,config.ini}
 VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.release | grep -o '^...'`
 if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
@@ -315,7 +309,7 @@ if [[ -f "p1/config.ini" ]]; then
 fi
 }
 
-odroid_bootini(){
+odroid_bootini (){
 rm -f p1/boot.ini
 cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini
 sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini
@@ -330,7 +324,7 @@ bootm 0x20800000 0x22000000 0x21800000
 EOF
 }
 
-bootcmd(){
+bootcmd (){
 echo -en "$BOARD: "; echo -e "boot script"
 if [[ "$P_VALUE" == "p1" ]]; then
 	BOOT_PATH="p1/boot"
@@ -365,7 +359,7 @@ sed -i 's/^setenv fdtfile "".*/setenv fdtfile "'"${DEVICETREE}"'"/g' ${BOOT_PATH
 mkimage -C none -A arm -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
 }
 
-extlinux(){
+extlinux (){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
 if [[ "$P_VALUE" == "p1" ]]; then
 	BOOT_PATH="p1/boot"
@@ -389,7 +383,7 @@ label default
 EOF
 }
 
-customize_image(){
+customize_image (){
 # edit board.txt variables before the file gets sourced
 if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
 	if [[ "$ENABLE_PETITBOOT" == "true" ]]; then
