@@ -41,7 +41,7 @@ CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
 # BOARDS
-BOARDS=$(shell sudo cp lib/boards/${board} board.txt)
+BOARDS=$(shell sudo rm -f board.txt; if [ -f lib/boards/${board} ]; then sudo cp lib/boards/${board} board.txt; fi)
 
 ifdef board
 include lib/boards/${board}
