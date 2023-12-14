@@ -15,6 +15,7 @@ if [[ -f "override.txt" ]]; then
 	override_board
 fi
 # create dtc list
+if [[ -f "board.txt" ]]; then :; else echo "Board not found?"; exit 0; fi
 if [[ -f "dtclist.txt" ]]; then rm -f dtclist.txt; fi
 for f in lib/boards/*; do
 	. $f
@@ -26,7 +27,7 @@ for f in lib/boards/*; do
 		if [[ "$SERIES" == "$FIND" ]]; then echo -e ${DEVICETREE} | tr ' ' '\n' | tee -a dtclist.txt > /dev/null 2>&1; fi
 	fi
 done
-if [[ -f "board.txt" ]]; then . board.txt; else echo "Board not found?"; exit 0; fi
+source board.txt
 if [[ -f "kernel.txt" ]]; then . kernel.txt; fi
 source userdata.txt
 # debug switch
