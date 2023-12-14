@@ -8,11 +8,8 @@ source lib/function/patching
 source lib/function/modconfig
 source lib/function/compilers
 # override the board file
-if [[ -f "override.txt" ]]; then
-	. override.txt
-	override_board
-fi
-if [[ -f "board.txt" ]]; then . board.txt; else echo "Board not found?"; exit 0; fi
+if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
+if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source userdata.txt
 # force precompiled u-boot package if host machine is running debian bookworm
 if [[ "$BOARD" == "lepotato" ]] && [[ "$HOST_CODENAME" == "bookworm" ]]; then

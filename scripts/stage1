@@ -33,12 +33,9 @@ customize_image > /dev/null 2>&1
 # user scripts pre-stage1
 if [ $USCRIPTS -eq 1 ]; then uscripts_pre-stage1; fi
 # override the board file
-if [[ -f "override.txt" ]]; then
-	. override.txt
-	override_board
-fi
+if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
 # source board and family
-if [[ -f "board.txt" ]]; then . board.txt; else echo "Board not found?"; exit 0; fi
+if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source lib/function/${FAMILY}
 # clean
 if [[ -d "sysroot" ]] || [[ -d "p1" ]]; then make cleanup; clear -x; fi
