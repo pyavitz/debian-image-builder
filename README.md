@@ -119,7 +119,7 @@ Distribution
 Distro:			# Supported: debian, devuan and ubuntu
 Release:		# Debian: bullseye, bookworm, trixie, testing, unstable and sid
 			# Devuan: chimaera, daedalus, excalibur, testing, unstable and ceres
-			# Ubuntu: focal and jammy
+			# Ubuntu: focal, jammy and noble
 Network Manager		# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
