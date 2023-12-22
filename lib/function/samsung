@@ -1,6 +1,49 @@
 #!/bin/bash
 
-flash_uboot(){
+# U-BOOT
+uboot_configs (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+}
+
+uboot_output (){
+if [[ -f "u-boot.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f u-boot.bin ../../${OUTPUT}/
+	if [[ "$BOARD" == "odroidxu4" ]]; then
+		cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl1.bin ../../${OUTPUT}/
+		cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl2.bin ../../${OUTPUT}/
+		cp -f ../../${PRECOMPILED_UBOOT_DIR}/tzsw.bin ../../${OUTPUT}/
+	fi
+	uboot_packaging
+	echo ""
+else
+	report_error
+fi
+}
+
+samsung_uboot_run (){
+sources_dir
+uboot_run
+uboot_output
+}
+
+samsung_uboot_packaging (){
+cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+if [[ "$BOARD" == "odroidxu4" ]]; then
+	cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl2.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f ../../${PRECOMPILED_UBOOT_DIR}/tzsw.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+}
+
+# STAGE1
+flash_uboot (){
 dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" seek=1 conv=fsync
 dd if=${OUTPUT}/bl2.bin of="${IMAGE_LOOP_DEV}" seek=31 conv=fsync
 dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" seek=63 conv=fsync

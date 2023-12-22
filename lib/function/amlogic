@@ -1,24 +1,80 @@
 #!/bin/bash
 
+# U-BOOT
+uboot_configs (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+if [[ "$BOARD" == "lepotato" ]]; then
+	mkdir -p "tools/logos"
+	cp ../../${PRECOMPILED_UBOOT_DIR}/../logo/${BOARD}.bmp tools/logos/libre-computer.bmp
+fi
+if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	echo "CONFIG_CPU=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_SUPPORT_EMMC_RPMB=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_SPL_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
+fi
+}
+
+uboot_output (){
+if [[ ! -z $RUN_FIP ]] && [[ -f "u-boot.bin" ]]; then
+	if [[ "$BOARD" == "x96air" ]]; then
+		mkdir -p ../../${OUTPUT}/
+		cp -f u-boot.bin ../../${OUTPUT}/chainload.bin
+	fi
+	echo -en "Firmware Image Package ${PNK}[${FIN}${WHT}"${RUN_FIP}"${FIN}${PNK}]${FIN} "
+	echo -e "${PNK}[${FIN}${WHT}"${BOARD_FIP}"${FIN}${PNK}]${FIN}"
+	${RUN_FIP}
+else
+	report_error
+fi
+if [[ -f "fip/u-boot.bin" ]] && [[ -f "fip/u-boot.bin.sd.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f fip/u-boot.bin ../../${OUTPUT}
+	cp -f fip/u-boot.bin.sd.bin ../../${OUTPUT}
+	uboot_packaging
+	echo ""
+else
+	report_error
+fi
+}
+
+amlogic_uboot_run (){
+sources_dir
+download_fip
+uboot_run
+uboot_output
+}
+
+amlogic_uboot_packaging (){
+cp -f fip/u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+cp -f fip/u-boot.bin.sd.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+}
+
 # STAGE1
 flash_uboot (){
 if [ $EMMC -eq 1 ]; then
-	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1;
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
 else
-	dd if=${OUTPUT}/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442;
-	dd if=${OUTPUT}/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1;
+	dd if=${OUTPUT}/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
+	dd if=${OUTPUT}/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
 fi
 }
 
 flash_vendor-uboot (){
 if [[ "$BOARD" == "odroidc1" ]]; then
-	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync;
-	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync;
-	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=64 conv=fsync;
-	dd if=/dev/zero of="${IMAGE_LOOP_DEV}" seek=1024 count=32 bs=512 conv=fsync;
+	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=1 count=442 conv=fsync
+	dd if=${OUTPUT}/bl1.bin of="${IMAGE_LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=64 conv=fsync
+	dd if=/dev/zero of="${IMAGE_LOOP_DEV}" seek=1024 count=32 bs=512 conv=fsync
 fi
 if [[ "$FAMILY_EXT" == "odroid" ]]; then
-	dd if=${PRECOMPILED_UBOOT_DIR}/u-boot.bin of="${IMAGE_LOOP_DEV}" conv=fsync,notrunc bs=512 seek=1;
+	dd if=${PRECOMPILED_UBOOT_DIR}/u-boot.bin of="${IMAGE_LOOP_DEV}" conv=fsync,notrunc bs=512 seek=1
 fi
 }
 

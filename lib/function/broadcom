@@ -1,12 +1,44 @@
 #!/bin/bash
 
+# U-BOOT
+uboot_configs (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+}
 
-flash_uboot(){ # place holder
+uboot_output (){
+if [[ -f "u-boot.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f u-boot.bin ../../${OUTPUT}/
+	uboot_packaging
+	echo ""
+else
+	report_error
+fi
+}
+
+broadcom_uboot_run (){
+sources_dir
+uboot_run
+uboot_output
+}
+
+broadcom_uboot_packaging (){
+cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+}
+
+# STAGE1
+flash_uboot (){ # place holder
 echo -e "Broadcom: place holder"
 }
 
 # /boot/config.txt
-brcm_config(){
+brcm_config (){
 if [[ -f "p1/config.txt" ]]; then
 	rm -f p1/config.txt;
 fi
@@ -43,7 +75,7 @@ fi
 }
 
 # /boot/extlinux/extlinux.conf
-brcm_extlinux(){
+brcm_extlinux (){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
 CMDLINE="append ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} ${ROOT_FSTYPE} fsck.repair=yes ${EXTRA} loglevel=5 rootwait"
 if [[ -f "p1/extlinux/extlinux.conf" ]]; then rm -f p1/extlinux/extlinux.conf; fi
@@ -67,7 +99,7 @@ fi
 }
 
 # STAGE 2
-apt_preferences(){
+apt_preferences (){
 echo ""
 tee /etc/apt/preferences <<EOF
 Package: rpi-eeprom linux-firmware linux-firmware-raspi2 pi-bluetooth raspberrypi-sys-mods
@@ -77,7 +109,7 @@ EOF
 }
 
 # EEPROM
-find_eeprom(){
+find_eeprom (){
 EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==1) {print substr($2, 1, length($2)-3)}}' | sed 's/[()]//g')
 if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_eeprom;
@@ -86,7 +118,7 @@ else
 fi
 }
 
-finding_eeprom(){
+finding_eeprom (){
 EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==10) {print substr($2, 1, length($2)-3)}}' | sed 's/[()]//g')
 if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_eeprom;
@@ -96,12 +128,12 @@ else
 fi
 }
 
-download_eeprom(){
+download_eeprom (){
 wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
 wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
 }
 
-bcm2711_eeprom(){
+bcm2711_eeprom (){
 ERURL="https://archive.raspberrypi.org/debian/pool/main/r/rpi-eeprom/"
 CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/debian/bullseye/debian/changelog"
 echo ""
@@ -131,7 +163,7 @@ cd ..
 rm -fdr eeprom
 }
 
-rpi_userland(){
+rpi_userland (){
 echo ""
 echo -e "Installing userland ..."
 rm -f /etc/profile
@@ -158,7 +190,7 @@ rm -fdr userland
 ldconfig
 }
 
-brcm_modules(){
+brcm_modules (){
 rm -f /etc/modules
 tee /etc/modules <<EOF
 # /etc/modules: kernel modules to load at boot time.
@@ -173,7 +205,7 @@ chown root:root /etc/modules
 }
 
 # Firmware
-brcm_firmware(){
+brcm_firmware (){
 echo ""
 echo -e "Adding extra firmware ..."
 mkdir -p /lib/firmware/brcm

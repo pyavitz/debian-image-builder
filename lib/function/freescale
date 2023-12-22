@@ -1,7 +1,75 @@
 #!/bin/bash
 
-# U-Boot
-flash_uboot(){
+# U-BOOT
+
+uboot_configs (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+if [[ "$BOARD" == "ft20" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	echo 'CONFIG_IMX_CONFIG="board/freescale/imx8mp_evk/imximage-8mp-lpddr4.cfg"' >> configs/${UBOOT_DEFCONFIG}
+fi
+}
+
+uboot_output (){
+if [[ "$ARCH" == "arm" ]]; then
+	if [[ -f "u-boot.img" ]] && [[ -f "SPL" ]]; then
+		mkdir -p ../../${OUTPUT}
+		cp -f SPL ../../${OUTPUT}/sploader.bin
+		cp -f u-boot.img ../../${OUTPUT}/u-boot.bin
+		uboot_packaging
+		echo ""
+	else
+		report_error
+	fi
+fi
+if [[ "$ARCH" == "arm64" ]]; then
+	if [[ -f "flash.bin" ]]; then
+		mkdir -p ../../${OUTPUT}
+		cp -f flash.bin u-boot.bin
+		cp -f u-boot.bin ../../${OUTPUT}/
+		uboot_packaging
+		echo ""
+	else
+		report_error
+	fi
+fi
+}
+
+freescale_uboot_run (){
+sources_dir
+if [[ "$ARCH" == "arm64" ]]; then
+	arm_trusted_firmware
+	if [[ -f "firmware-imx-8.17.bin" ]] && [[ -d "firmware-imx-8.17" ]]; then
+		echo -en "${WHT}firmware-imx${FIN} "
+		echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+	else
+		rm -fdr firmware-imx-8.17*
+		cp -f ../files/firmware/imx8/u-boot-firmware-imx-8.17.bin firmware-imx-8.17.bin
+		chmod +x firmware-imx-8.17.bin
+		bash firmware-imx-8.17.bin --auto-accept
+	fi
+fi
+uboot_run
+uboot_output
+}
+
+freescale_uboot_packaging (){
+if [[ "$ARCH" == "arm" ]]; then
+	cp -f SPL ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/sploader.bin
+	cp -f u-boot.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+fi
+if [[ "$ARCH" == "arm64" ]]; then
+	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+fi
+}
+
+# STAGE1
+flash_uboot (){
 if [[ "$SERIES" == "imx6q" ]]; then
 	dd if=${OUTPUT}/sploader.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=1 conv=sync
 	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=1k seek=69 conv=sync
