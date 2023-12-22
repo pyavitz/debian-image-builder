@@ -4,7 +4,7 @@
 COMPRESSION="xz"
 
 # linux packaging
-linux_packaging(){
+linux_packaging (){
 # debian package name
 if [[ "$COMMON_PKG" == "true" ]]; then
 	LINUX_IMAGE="linux-image-${COMMON_PKGNAME}"
@@ -36,56 +36,14 @@ echo compression='"'$COMPRESSION'"' >> "scripts/package/pkgvars"
 }
 
 # u-boot packaging
-uboot_packaging(){
+uboot_packaging (){
 PKGNAME="u-boot-${SERIES}-${BOARD}"
 PKGVERSION=`echo $UBOOT_VERSION | sed 's/v//g'`
 BV="${BUILD_VERSION}"
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-if [[ "$FAMILY" == "allwinner" ]]; then
-	cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	cp -f ../../packaging/flash_uboot.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$FAMILY" == "amlogic" ]]; then
-	cp -f fip/u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	cp -f fip/u-boot.bin.sd.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	cp -f ../../packaging/flash_uboot.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	if [[ "$BOARD" == "x96air" ]]; then
-		cp -f ../../files/boot/uboot/${BOARD}/vendor-u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	fi
-fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$FAMILY" == "freescale" ]]; then
-	if [[ "$ARCH" == "arm" ]]; then
-		cp -f SPL ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/sploader.bin
-		cp -f u-boot.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
-	fi
-	if [[ "$ARCH" == "arm64" ]]; then
-		cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	fi	
-	cp -f ../../packaging/flash_uboot.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$FAMILY" == "rockchip" ]]; then
-	if [[ "$ARCH" == "arm" ]]; then
-		cp -f u-boot-rockchip.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	fi
-	if [[ "$ARCH" == "arm64" ]]; then
-		cp -f idbloader.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/idbloader.bin
-		cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	fi
-	cp -f ../../packaging/flash_uboot.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$FAMILY" == "samsung" ]]; then
-	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	cp -f ../../packaging/flash_uboot.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	if [[ "$BOARD" == "odroidxu4" ]]; then
-		cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-		cp -f ../../${PRECOMPILED_UBOOT_DIR}/bl2.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-		cp -f ../../${PRECOMPILED_UBOOT_DIR}/tzsw.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	fi
-fi
+${PLATFORM}_uboot_packaging
+cp -f ../../packaging/flash_uboot.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 
 # make u-boot flash script executable
 if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/flash_uboot.sh" ]]; then
@@ -154,7 +112,7 @@ fi
 }
 
 # u-boot precompiled packaging
-uboot_precompiled_packaging(){
+uboot_precompiled_packaging (){
 PKGNAME="u-boot-${SERIES}-${BOARD}"
 BV="${BUILD_VERSION}"
 mkdir -p ${OUTPUT}/

@@ -1,12 +1,59 @@
 #!/bin/bash
 
+# U-BOOT
+uboot_configs (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+if [[ "$BOARD" == "cubietruck" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	sed -i 's/CONFIG_DRAM_CLK=432/CONFIG_DRAM_CLK=384/g' configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_MMC_SUNXI_SLOT_EXTRA=2" >> configs/${UBOOT_DEFCONFIG}
+fi
+if [[ "$BOARD" == "pinea64plus" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	# Autoboot options
+	echo "CONFIG_BOOT_RETRY=y" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_BOOT_RETRY_TIME=5" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_BOOT_RETRY_MIN=5" >> configs/${UBOOT_DEFCONFIG}
+	echo "CONFIG_RESET_TO_RETRY=y" >> configs/${UBOOT_DEFCONFIG}
+fi
+}
+
+uboot_output (){
+if [[ -f "u-boot-sunxi-with-spl.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f u-boot-sunxi-with-spl.bin ../../${OUTPUT}/
+	uboot_packaging
+	echo ""
+else
+	report_error
+fi
+}
+
+allwinner_uboot_run (){
+sources_dir
+if [[ "$ARCH" == "arm64" ]]; then
+	arm_trusted_firmware
+	if [[ "$HOST_CODENAME" == "bullseye" ]]; then :; else crust_firmware; fi
+fi
+uboot_run
+uboot_output
+}
+
+allwinner_uboot_packaging (){
+cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+}
+
 # STAGE1
-flash_uboot(){
+flash_uboot (){
 dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
 # STAGE2
-alt_firmware(){
+alt_firmware (){
 echo -e ""
 if [[ "$BOARD" == "bananapim2zero" || "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" ]]; then
 	echo "Adding $DEFAULT_MOTD firmware ..."
@@ -52,7 +99,7 @@ fi
 cd ~
 }
 
-pine64_bthelper(){
+pine64_bthelper (){
 echo  ""
 echo -e "Installing bluetooth helper ..."
 sleep .50
@@ -83,7 +130,7 @@ if [[ -f "/usr/local/sbin/bthelper" ]]; then
 fi
 }
 
-ct_blacklist(){
+ct_blacklist (){
 cat <<EOF > "/etc/modprobe.d/cubietruck-blacklist.conf"
 # bluetooth
 blacklist hci_uart
