@@ -302,6 +302,27 @@ else
 	exit 0
 fi
 
+# GUID PARTITION TABLE
+if [[ "$FAMILY" == "rockchip" ]]; then
+	$EE ""
+	$EE "${BLD}GUID Partition Table${FIN} (recommended)"
+	options=("Yes" "No")
+	select opt in "${options[@]}"
+	do
+		case $opt in
+			"Yes")
+				GPT="true"
+				break
+				;;
+			"No")
+				GPT="false"
+				break
+				;;
+			*) echo "invalid option $REPLY";;
+		esac
+	done
+fi
+
 # SUMMARY
 $EE ""
 $EE "${BLD}Summary List${FIN}"
@@ -309,6 +330,9 @@ $EE "Board: $DEFAULT_MOTD"
 $EN "Platform: "; $EE "$FAMILY" | sed -e 's/\(.*\)/\U\1/'
 $EE "Drive: $DEVICE_NODE"
 $EN "Partitions: "; $EE "$P_VALUE" | sed 's/p//g'
+if [[ "$FAMILY" == "rockchip" ]]; then
+	$EN "GPT: "; $EE "$GPT"
+fi
 $EE "eMMC Transfer: $EMMC_TRUE"
 if [[ "$P_VALUE" == "p2" ]]; then
 	$EN "BOOT FSTYPE: "; $EE "$B_FSTYPE"
