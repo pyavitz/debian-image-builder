@@ -1,21 +1,20 @@
 #!/bin/bash
 
-# shrink image
 shrink (){
 RELEASE=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
+IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
+KPARTX="$(kpartx -av $IMAGE_FILE)"
+if [[ "$RELEASE" == "jammy" ]]; then
+	# snapd woes; grep for higher loop numbers.
+	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
+else
+	LOOP=`grep -o 'loop.p.' <<<"$KPARTX"`
+fi
 if [[ "$P_VALUE" == "p1" ]]; then shrink_p1; fi
 if [[ "$P_VALUE" == "p2" ]]; then shrink_p2; fi
 }
 
 shrink_p1 (){
-IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
-KPARTX="$(kpartx -av $IMAGE_FILE)"
-if [[ "$RELEASE" == "jammy" ]]; then
-	# snapd woes; grep for higher loop numbers
-	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
-else
-	LOOP=`grep -o 'loop.p.' <<<"$KPARTX"`
-fi
 ROOTFS_LOOP="/dev/mapper/$LOOP"
 ROOTFS="${ROOTFS_LOOP}"
 mkdir -p ROOTFS
@@ -29,11 +28,10 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
-echo -en "Shrinking ${IMAGE_FILE} to ${IMGSIZE}"
+echo -en "Shrinking ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
 rsync -ahpzx ROOTFS/ p1/ > /dev/null
-echo -e " [done]"
 sleep .75
-echo -en "Cleaning"
+echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
 umount ROOTFS
 sleep .75
 rm -fdr ROOTFS
@@ -48,18 +46,10 @@ mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
 if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1
-echo -e " [done]"
+echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 }
 
 shrink_p2 (){
-IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
-KPARTX="$(kpartx -av $IMAGE_FILE)"
-if [[ "$RELEASE" == "jammy" ]]; then
-	# snapd woes; grep for higher loop numbers
-	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
-else
-	LOOP=`grep -o 'loop.p.' <<<"$KPARTX"`
-fi
 B_LOOP=`echo "$LOOP" | sed -n '1p'`
 R_LOOP=`echo "$LOOP" | sed -n '2p'`
 BOOT_LOOP="/dev/mapper/$B_LOOP"
@@ -77,12 +67,11 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
-echo -en "Shrinking ${IMAGE_FILE} to ${IMGSIZE}"
+echo -en "Shrinking ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
 cp -fr BOOT/* p1/
 if [[ "$FSTYPE" == "btrfs" ]]; then rsync -ahpzx ROOTFS/@/ p2/ > /dev/null; else rsync -ahpzx ROOTFS/ p2/ > /dev/null; fi
-echo -e " [done]"
 sleep .75
-echo -en "Cleaning"
+echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
 umount BOOT; umount ROOTFS
 sleep .75
 rm -fdr BOOT; rm -fdr ROOTFS
@@ -102,5 +91,5 @@ mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
 if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1 p2
-echo -e " [done]"
+echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 }
