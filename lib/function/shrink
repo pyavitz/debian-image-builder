@@ -1,122 +1,106 @@
 #!/bin/bash
 
 # shrink image
-shrink(){
+shrink (){
 RELEASE=`cat /etc/os-release | grep -w VERSION_CODENAME | sed 's/VERSION_CODENAME=//g'`
-if [[ -f "scripts/shrink" ]]; then
-	chmod +x scripts/shrink
-	scripts/shrink -s ${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img
-else
-	echo ""
-	echo "Builder error! Shrink script missing from repository."
-	make cleanup > /dev/null 2>&1
-	exit 0
-fi
-if [[ "$P_VALUE" == "p1" ]]; then kpartx_p1; fi
-if [[ "$P_VALUE" == "p2" ]]; then kpartx_p2; fi
+if [[ "$P_VALUE" == "p1" ]]; then shrink_p1; fi
+if [[ "$P_VALUE" == "p2" ]]; then shrink_p2; fi
 }
 
-kpartx_p1(){
-if [[ "$P_ROOTFS" == "p1" ]]; then
-	echo 'ROOTFS_LOOP="/dev/mapper/' > kpart1
-	echo '"' > kpart3
-fi
+shrink_p1 (){
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 KPARTX="$(kpartx -av $IMAGE_FILE)"
-echo "$KPARTX"
 if [[ "$RELEASE" == "jammy" ]]; then
 	# snapd woes; grep for higher loop numbers
-	grep -o 'loop[0-9]\+p.' <<<"$KPARTX" > kpart2
+	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
 else
-	grep -o 'loop.p.' <<<"$KPARTX" > kpart2
+	LOOP=`grep -o 'loop.p.' <<<"$KPARTX"`
 fi
-paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
-rm -f {kpart1,kpart2,kpart3}
-source kpart.txt
+ROOTFS_LOOP="/dev/mapper/$LOOP"
 ROOTFS="${ROOTFS_LOOP}"
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-mkdir -p p1
-sleep 1s
-mount "${ROOTFS}" p1
-echo ""
-if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	extlinux > /dev/null 2>&1
-fi
-if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	bootcmd > /dev/null 2>&1
-fi
-if [[ "$ARCH" == "arm" ]]; then
-	# remove 100mb file
-	rm -f p1/block.img
-fi
-sleep 3s
-umount p1
-rm -fdr p1
+mkdir -p ROOTFS
+sleep .50
+mount "${ROOTFS}" ROOTFS
+sleep .50
+DU=`du -sm ROOTFS | sed 's/ROOTFS//g' | sed s/'\s'//g`
+IMGSIZE="$(($DU+225))MB"
+if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
+mkdir -p "$IMAGE_FOLDER"
+if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
+partition > /dev/null 2>&1
+uuid
+echo -en "Shrinking ${IMAGE_FILE} to ${IMGSIZE}"
+rsync -ahpzx ROOTFS/ p1/ > /dev/null
+echo -e " [done]"
+sleep .75
+echo -en "Cleaning"
+umount ROOTFS
+sleep .75
+rm -fdr ROOTFS
 kpartx -d ${IMAGE_FILE}
-rm -f kpart.txt
+rm -f ${IMAGE_FILE}
+if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
+if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
+p1_fstab > /dev/null 2>&1
+umount p1
+losetup -d "${IMAGE_LOOP_DEV}"
+mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
+if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
+rmdir "${IMAGE_FOLDER}"
+rmdir p1
+echo -e " [done]"
 }
 
-kpartx_p2(){
-echo 'BOOT_LOOP="/dev/mapper/' > kpart1
-echo 'ROOTFS_LOOP="/dev/mapper/' >> kpart1
+shrink_p2 (){
 IMAGE_FILE="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 KPARTX="$(kpartx -av $IMAGE_FILE)"
-echo "$KPARTX"
 if [[ "$RELEASE" == "jammy" ]]; then
 	# snapd woes; grep for higher loop numbers
-	grep -o 'loop[0-9]\+p.' <<<"$KPARTX" > kpart2
+	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
 else
-	grep -o 'loop.p.' <<<"$KPARTX" > kpart2
+	LOOP=`grep -o 'loop.p.' <<<"$KPARTX"`
 fi
-echo '"' > kpart3
-echo '"' >> kpart3
-paste -d '\0' kpart1 kpart2 kpart3 > kpart.txt
-rm -f {kpart1,kpart2,kpart3}
-source kpart.txt
+B_LOOP=`echo "$LOOP" | sed -n '1p'`
+R_LOOP=`echo "$LOOP" | sed -n '2p'`
+BOOT_LOOP="/dev/mapper/$B_LOOP"
+ROOTFS_LOOP="/dev/mapper/$R_LOOP"
 BOOT="${BOOT_LOOP}"
 ROOTFS="${ROOTFS_LOOP}"
-ROOT_UUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^UUID=//p')
-ROOT_PARTUUID=$(blkid -o export -- ${ROOTFS} | sed -ne 's/^PARTUUID=//p')
-mkdir -p p1
-sleep 1s
-mount "${BOOT}" p1
-echo ""
-if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	if [[ "$FAMILY" == "broadcom" ]]; then
-		brcm_extlinux > /dev/null 2>&1
-	else
-		extlinux > /dev/null 2>&1
-	fi
-fi
-if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	bootcmd > /dev/null 2>&1
-fi
-if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	# odroid g12/sm1
-	odroid_bootcmd > /dev/null 2>&1
-fi
-if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	# odroid c1
-	odroid_bootini > /dev/null 2>&1
-fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	brcm_config > /dev/null 2>&1
-fi
-if [[ "$ARCH" == "arm" ]]; then
-	# remove 100mb file
-	ROOTFS="${ROOTFS_LOOP}"
-	mkdir -p p2
-	sleep .25
-	mount "${ROOTFS}" p2
-	rm -f p2/block.img
-	sleep .50
-	umount p2
-	sleep .50
-	rm -fdr p2
-fi
-sleep 3s
-umount p1
-rm -fdr p1
+mkdir -p BOOT; mkdir -p ROOTFS
+sleep .50
+mount "${BOOT}" BOOT; mount "${ROOTFS}" ROOTFS
+sleep .50
+DU=`du -sm ROOTFS | sed 's/ROOTFS//g' | sed s/'\s'//g`
+if [[ "$FSTYPE" == "ext4" ]]; then IMGSIZE="$(($DU+225))MB"; else IMGSIZE="$(($DU+1225))MB"; fi
+if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
+mkdir -p "$IMAGE_FOLDER"
+if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
+partition > /dev/null 2>&1
+uuid
+echo -en "Shrinking ${IMAGE_FILE} to ${IMGSIZE}"
+cp -fr BOOT/* p1/
+if [[ "$FSTYPE" == "btrfs" ]]; then rsync -ahpzx ROOTFS/@/ p2/ > /dev/null; else rsync -ahpzx ROOTFS/ p2/ > /dev/null; fi
+echo -e " [done]"
+sleep .75
+echo -en "Cleaning"
+umount BOOT; umount ROOTFS
+sleep .75
+rm -fdr BOOT; rm -fdr ROOTFS
 kpartx -d ${IMAGE_FILE}
-rm -f kpart.txt
+rm -f ${IMAGE_FILE}
+if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
+	if [[ "$FAMILY" == "broadcom" ]]; then brcm_extlinux > /dev/null 2>&1; else extlinux > /dev/null 2>&1; fi
+fi
+if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
+if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
+if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootini > /dev/null 2>&1; fi
+if [[ "$FAMILY" == "broadcom" ]]; then brcm_config > /dev/null 2>&1; fi
+p2_fstab > /dev/null 2>&1
+umount p2; umount p1
+losetup -d "${IMAGE_LOOP_DEV}"
+mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
+if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
+rmdir "${IMAGE_FOLDER}"
+rmdir p1 p2
+echo -e " [done]"
 }
