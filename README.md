@@ -146,22 +146,22 @@ User service:		# Create user during first boot (bypass the user information abov
 #### Customize image
 * custom.txt
 ```sh
-# Boot Partition: true false
+# Boot Partition
 ENABLE_VFAT="false"
 
 # Root Filesystem Types: ext4 btrfs xfs
 FSTYPE="ext4"
 
-# UEFI Options: true false
+# UEFI Options (WIP)
 ENABLE_EFI="false"
 
-# Default Image Size: 3072MB
-IMGSIZE="3072MB"
+# Image Size: 4096MB
+IMGSIZE="4096MB"
 
-# Shrink Image (EXT4 Only): true false
-ENABLE_SHRINK="true"
+# Shrink Image
+ENABLE_SHRINK="false"
 
-# Petitboot (ODROID): true false
+# Petitboot (AML ODROID) (not recommended)
 ENABLE_PETITBOOT="false"
 
 # Compression Types: xz zst
