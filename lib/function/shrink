@@ -20,6 +20,8 @@ ROOTFS="${ROOTFS_LOOP}"
 mkdir -p ROOTFS
 sleep .50
 mount "${ROOTFS}" ROOTFS
+# add removable 100mb file to ensure space on the img.
+dd if="/dev/urandom" of="ROOTFS/block.img" bs=100MB count=1 > /dev/null 2>&1
 sleep .50
 DU=`du -sm ROOTFS | sed 's/ROOTFS//g' | sed s/'\s'//g`
 IMGSIZE="$(($DU+225))MB"
@@ -28,6 +30,8 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
+# remove 100mb file.
+rm -f "ROOTFS/block.img"
 echo -en "Shrinking ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
 rsync -ahpzx ROOTFS/ p1/ > /dev/null
 sleep .75
@@ -59,6 +63,8 @@ ROOTFS="${ROOTFS_LOOP}"
 mkdir -p BOOT; mkdir -p ROOTFS
 sleep .50
 mount "${BOOT}" BOOT; mount "${ROOTFS}" ROOTFS
+# add removable 100mb file to ensure space on the img.
+dd if="/dev/urandom" of="ROOTFS/block.img" bs=100MB count=1 > /dev/null 2>&1
 sleep .50
 DU=`du -sm ROOTFS | sed 's/ROOTFS//g' | sed s/'\s'//g`
 if [[ "$FSTYPE" == "ext4" ]]; then IMGSIZE="$(($DU+225))MB"; else IMGSIZE="$(($DU+1225))MB"; fi
@@ -67,6 +73,8 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
+# remove 100mb file.
+rm -f "ROOTFS/block.img"
 echo -en "Shrinking ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
 cp -fr BOOT/* p1/
 if [[ "$FSTYPE" == "btrfs" ]]; then rsync -ahpzx ROOTFS/@/ p2/ > /dev/null; else rsync -ahpzx ROOTFS/ p2/ > /dev/null; fi
