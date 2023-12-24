@@ -71,7 +71,7 @@ if [ $DEVROOTFS -eq 1 ]; then
 	fi
 	mkdir -p "$ROOTFS_FOLDER"
 	if [ $RAM -ne 0 ]; then
-		mount -t tmpfs -o size=3G tmpfs $ROOTFS_FOLDER
+		mount -t tmpfs -o size=4G tmpfs $ROOTFS_FOLDER
 	fi
 	if [ $VERBOSE -eq 1 ]; then
 		sysroot_partition
@@ -109,11 +109,10 @@ rm -fdr ${ROOT}/var/cache/debconf/*
 
 # finish
 echo
-echo -e "== Archiving: ${RELEASE_TARBALL}"
+echo -e "Archiving ${PNK}[${FIN}${WHT}${RELEASE_TARBALL}${FIN}${PNK}]${FIN}"
 cd ${ROOT}
 XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../$RELEASE_TARBALL)
 cd ..
-
 if [ $DEVROOTFS -eq 1 ]; then
 	losetup -d "${IMAGE_LOOP_DEV}"
 	rm -f "${ROOTFS_FOLDER}${RELEASE_NAME}"
@@ -122,9 +121,7 @@ if [ $DEVROOTFS -eq 1 ]; then
 	fi
 	rmdir "${ROOTFS_FOLDER}"
 fi
-
 if [[ -d "${ROOT}" ]]; then umount ${ROOT}; sleep .50; rm -fdr ${ROOT}; fi
-
 if [[ "$HOST_MACHINE" == "Debian" || "$HOST_MACHINE" == "Ubuntu" ]]; then
 	# devuan releases
 	if [[ -f "/usr/share/debootstrap/scripts/chimaera" ]]; then
@@ -137,7 +134,5 @@ if [[ "$HOST_MACHINE" == "Debian" || "$HOST_MACHINE" == "Ubuntu" ]]; then
 		rm -f /usr/share/debootstrap/scripts/excalibur
 	fi
 fi
-
-if [ $VERBOSE -eq 0 ]; then clear -x; fi
 
 exit 0

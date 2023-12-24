@@ -10,7 +10,7 @@ else
 	ENABLE_EFI="false"
 	ENABLE_PETITBOOT="false"
 	ENABLE_SHRINK="true"
-	IMGSIZE="3072MB"
+	IMGSIZE="4096MB"
 	IMG_COMPRESSION="xz"
 fi
 source lib/function/staging
@@ -87,7 +87,7 @@ if [ $RAM -ne 0 ]; then
 fi
 mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then
-	mount -t tmpfs -o size=3G tmpfs $IMAGE_FOLDER
+	mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER
 fi
 if [[ ! -z $P_VALUE ]]; then
 	SOURCES_LIST="${P_VALUE}/etc/apt/sources.list"
@@ -152,49 +152,28 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	# unmount
 	umount p1/dev/pts
 	umount p1/dev
-	if [[ -f "p1/usr/bin/${STATIC}" ]]; then
-		rm -f p1/usr/bin/${STATIC}
-	fi
+	if [[ -f "p1/usr/bin/${STATIC}" ]]; then rm -f p1/usr/bin/${STATIC}; fi
 	cp -f p1/root/kernel.release .
 	rm p1/root/stage2
 	rm -f p1/root/*.txt
 	rm -fdr p1/var/cache/debconf/*
 	# user scripts fin-stage1
 	if [ $USCRIPTS -eq 1 ]; then uscripts_fin-stage1; fi
-	if [ -n "$PROXY" ]; then
-		rm p1/etc/apt/apt.conf.d/30proxy
-	fi
+	if [ -n "$PROXY" ]; then rm p1/etc/apt/apt.conf.d/30proxy; fi
 	rm p1/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 	if [[ -f "kernel.release" ]]; then source kernel.release; fi
 	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
-	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
-		extlinux > /dev/null 2>&1
-	fi
-	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
-		bootcmd > /dev/null 2>&1
-	fi
-	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]] && [[ "$ARCH" == "arm" ]]; then
-		# add removable 100mb file to ensure space on the img after shrinking
-		dd if="/dev/urandom" of="p1/block.img" bs=100MB count=1 > /dev/null 2>&1
-		sleep .75
-	fi
+	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
+	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
 	umount p1
 	echo ""
 	# finish
-	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then
-		tune2fs -O^has_journal "${IMAGE_LOOP_DEV_ROOTFS}"
-		fsck -fy "${IMAGE_LOOP_DEV_ROOTFS}"
-		resize2fs -M "${IMAGE_LOOP_DEV_ROOTFS}"
-		tune2fs -Ohas_journal "${IMAGE_LOOP_DEV_ROOTFS}"
-	fi
 	losetup -d "${IMAGE_LOOP_DEV}"
 	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
-	if [ $RAM -ne 0 ]; then
-		umount "${IMAGE_FOLDER}"
-	fi
+	if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
 	rmdir "${IMAGE_FOLDER}"
 	rmdir p1
-	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
+	if [[ "$ENABLE_SHRINK" == "true" ]]; then shrink; fi
 	finish_image
 	rm -f {part-uuid.txt,board.txt,kernel.release}
 	exit 0
@@ -230,22 +209,18 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	else
 		umount ${P_NORM}
 	fi
-	if [[ -f "p2/usr/bin/${STATIC}" ]]; then
-		rm -f p2/usr/bin/${STATIC}
-	fi
+	if [[ -f "p2/usr/bin/${STATIC}" ]]; then rm -f p2/usr/bin/${STATIC}; fi
 	cp -f p2/root/kernel.release .
 	rm p2/root/stage2
 	rm -f p2/root/*.txt
 	rm -fdr p2/var/cache/debconf/*
 	# user scripts fin-stage1
 	if [ $USCRIPTS -eq 1 ]; then uscripts_fin-stage1; fi
-	if [ -n "$PROXY" ]; then
-		rm p2/etc/apt/apt.conf.d/30proxy
-	fi
+	if [ -n "$PROXY" ]; then rm p2/etc/apt/apt.conf.d/30proxy; fi
 	rm p2/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 	if [[ -f "kernel.release" ]]; then source kernel.release; fi
 	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
-	if [[ "$FSTYPE" == "btrfs" ]]; then btrfs filesystem defragment -f -r ${P_VALUE}; fi
+	if [[ "$FSTYPE" == "btrfs" ]]; then btrfs filesystem defragment -f -r ${P_VALUE} > /dev/null 2>&1; fi
 	if [[ "$FSTYPE" == "xfs" ]]; then xfs_fsr ${P_VALUE}; fi
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
 		if [[ "$FAMILY" == "broadcom" ]]; then
@@ -254,49 +229,26 @@ if [[ "$P_VALUE" == "p2" ]]; then
 			extlinux > /dev/null 2>&1
 		fi
 	fi
-	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then
-		bootcmd > /dev/null 2>&1
-	fi
-	if [[ "$FAMILY" == "broadcom" ]]; then
-		brcm_config > /dev/null 2>&1
-	fi
-	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then
-		# odroid g12/sm1
-		odroid_bootcmd > /dev/null 2>&1
-	fi
-	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then
-		# odroid c1
-		odroid_bootini > /dev/null 2>&1
-	fi
+	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
+	if [[ "$FAMILY" == "broadcom" ]]; then brcm_config > /dev/null 2>&1; fi
+	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
+	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootini > /dev/null 2>&1; fi
 	if [[ "$BOARD" == "x96air" ]] && [[ "$EMMC" == "0" ]]; then
 		cp -f ${OUTPUT}/chainload.bin p1/
 		cp -fr files/boot/uboot/${BOARD}/{aml_autoscript.cmd,s905_autoscript.cmd} p1/
 		mkimage -C none -A arm -T script -d p1/aml_autoscript.cmd p1/aml_autoscript > /dev/null 2>&1
 		mkimage -C none -A arm -T script -d p1/s905_autoscript.cmd p1/s905_autoscript > /dev/null 2>&1
 	fi
-	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]] && [[ "$ARCH" == "arm" ]]; then
-		# add removable 100mb file to ensure space on the img after shrinking
-		dd if="/dev/urandom" of="p2/block.img" bs=100MB count=1 > /dev/null 2>&1
-		sleep .75
-	fi
 	umount p2
 	umount p1
 	echo ""
 	# finish
-	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then
-		tune2fs -O^has_journal "${IMAGE_LOOP_DEV_ROOTFS}"
-		fsck -fy "${IMAGE_LOOP_DEV_ROOTFS}"
-		resize2fs -M "${IMAGE_LOOP_DEV_ROOTFS}"
-		tune2fs -Ohas_journal "${IMAGE_LOOP_DEV_ROOTFS}"
-	fi
 	losetup -d "${IMAGE_LOOP_DEV}"
 	mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
-	if [ $RAM -ne 0 ]; then
-		umount "${IMAGE_FOLDER}"
-	fi
+	if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
 	rmdir "${IMAGE_FOLDER}"
 	rmdir p1 p2
-	if [[ "$ENABLE_SHRINK" == "true" ]] && [[ "$GPT" == "false" ]] && [[ "$FSTYPE" == "ext4" ]]; then shrink; fi
+	if [[ "$ENABLE_SHRINK" == "true" ]]; then shrink; fi
 	finish_image
 	rm -f {part-uuid.txt,board.txt,kernel.release}
 	exit 0
