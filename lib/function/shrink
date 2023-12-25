@@ -30,7 +30,7 @@ if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
 echo -en "Shrinking ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
-if [ $VERBOSE -eq 1 ]; then rsync -ahpzx ROOTFS/ p1/; else rsync -ahpzx ROOTFS/ p1/ > /dev/null; fi
+if [ $VERBOSE -eq 1 ]; then rsync -avhpzx --progress --stats --human-readable ROOTFS/ p1/; else rsync -ahpzx ROOTFS/ p1/ > /dev/null; fi
 sleep .75
 echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
 umount ROOTFS
@@ -71,9 +71,9 @@ uuid
 echo -en "Shrinking ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
 cp -fr BOOT/* p1/
 if [ $VERBOSE -eq 1 ]; then
-	if [[ "$FSTYPE" == "btrfs" ]]; then rsync -ahpzx ROOTFS/@/ p2/; else rsync -ahpzx ROOTFS/ p2/; fi
+	if [[ "$FSTYPE" == "btrfs" ]]; then rsync -avhpzx --progress --stats --human-readable ROOTFS/@/ p2/; else rsync -ahpzx ROOTFS/ p2/; fi
 else
-	if [[ "$FSTYPE" == "btrfs" ]]; then rsync -ahpzx ROOTFS/@/ p2/ > /dev/null; else rsync -ahpzx ROOTFS/ p2/ > /dev/null; fi
+	if [[ "$FSTYPE" == "btrfs" ]]; then rsync -avhpzx --progress --stats --human-readable ROOTFS/@/ p2/ > /dev/null; else rsync -ahpzx ROOTFS/ p2/ > /dev/null; fi
 fi
 sleep .75
 echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
