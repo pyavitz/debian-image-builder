@@ -23,47 +23,47 @@ exit 0
 
 download (){
 if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
-	GIT_URL="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
-	if [[ `wget -S --spider ${GIT_URL} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-		if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -d "${KERNEL}-${VERSION}.backup" ]]; then
+	GIT_STABLE="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tag/?h=v${VERSION}"
+	GIT_TORVALDS="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tag/?h=v${VERSION}"
+	if [[ `wget -S --spider ${GIT_STABLE} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="stable"; else
+		if [[ `wget -S --spider ${GIT_TORVALDS} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="torvalds"; else
+			echo -e "The git branch v${VERSION} is not available?"; exit 0; fi
+	fi
+	GIT_URL="https://git.kernel.org/pub/scm/linux/kernel/git/${GIT_REPO}/linux.git"
+	if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -d "${KERNEL}-${VERSION}.backup" ]]; then
+		echo -en "${KERNEL}-${VERSION}"
+		echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
+		rm -fdr ${KERNEL}-${VERSION}
+		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
+		cp -r ${KERNEL}-${VERSION}.backup ${KERNEL}-${VERSION}
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		extra_wireless
+	else
+		if [[ -d "${KERNEL}-${VERSION}" ]]; then
 			echo -en "${KERNEL}-${VERSION}"
-			echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
+			echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
 			rm -fdr ${KERNEL}-${VERSION}
-			echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
-			cp -r ${KERNEL}-${VERSION}.backup ${KERNEL}-${VERSION}
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			echo ""
+		fi
+		echo -e "This may take a while ..."
+		echo ""
+		git clone -c advice.detachedHead=false --depth 1 -b v${VERSION} ${GIT_URL} ${KERNEL}-${VERSION}
+		sleep .50
+		if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -f "${KERNEL}-${VERSION}/Makefile" ]]; then
+			echo ""
+			echo -en "${KERNEL}-${VERSION}"
+			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+			cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 			extra_wireless
 		else
-			if [[ -d "${KERNEL}-${VERSION}" ]]; then
-				echo -en "${KERNEL}-${VERSION}"
-				echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
-				rm -fdr ${KERNEL}-${VERSION}
-				echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-				echo ""
-			fi
-			echo -e "This may take a while ..."
 			echo ""
-			git clone -c advice.detachedHead=false --depth 1 -b v${VERSION} ${GIT_URL} ${KERNEL}-${VERSION}
-			sleep .50
-			if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -f "${KERNEL}-${VERSION}/Makefile" ]]; then
-				echo ""
-				echo -en "${KERNEL}-${VERSION}"
-				echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
-				cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
-				echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-				extra_wireless
-			else
-				echo ""
-				echo -en "${KERNEL}-${VERSION}"
-				echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
-				echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-				exit 0
-			fi
+			echo -en "${KERNEL}-${VERSION}"
+			echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
+			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			exit 0
 		fi
-	else
-		echo ""
-		echo -e "The git branch v${VERSION} is not available?"
-		exit 0
 	fi
 else
 	download_tarball
