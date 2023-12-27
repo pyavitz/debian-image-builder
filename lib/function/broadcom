@@ -123,7 +123,7 @@ EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==10) {print substr
 if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_eeprom;
 else
-	EEPROM_VERSION="13.12";
+	EEPROM_VERSION="20.1";
 	download_eeprom;
 fi
 }
@@ -135,7 +135,7 @@ wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
 
 bcm2711_eeprom (){
 ERURL="https://archive.raspberrypi.org/debian/pool/main/r/rpi-eeprom/"
-CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/debian/bullseye/debian/changelog"
+CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/debian/bookworm/debian/changelog"
 echo ""
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 echo -e "Installing rpi-eeprom ..."
@@ -151,11 +151,9 @@ rm -f rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
 mkdir -p debian/patches
 mv rpi-eeprom-update.patch debian/patches/rpi-eeprom-update.patch 
 echo rpi-eeprom-update.patch >> debian/patches/series
+rm -f debian/control; mv -f rpi-eeprom-control debian/control
 mv -f debian rpi-eeprom-${EEPROM_VERSION}/
-mv rpi-eeprom-control.patch rpi-eeprom-${EEPROM_VERSION}/
 cd rpi-eeprom-${EEPROM_VERSION}
-patch -p1 < rpi-eeprom-control.patch
-rm -f rpi-eeprom-control.patch
 dpkg-buildpackage -us -nc -uc
 cd ..
 dpkg -i *.deb
