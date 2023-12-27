@@ -1,0 +1,40 @@
+From eded80dca68d89f134ef1b317c29940488c9bb04 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Wed, 27 Dec 2023 14:39:31 -0500
+Subject: [PATCH] uwe5622-unisocwifi: wait_for_completion() causes bogus system
+ load
+
+wait_for_completion puts the calling thread in the
+"uninterruptible sleep" state, making the kernel count the CPU
+utilization as 100%, leading to the bogus 1.0 system load.
+
+https://github.com/orangepi-xunlong/linux-orangepi/issues/57
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c b/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c
+index 40d51a7130d9..f1c356306c80 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c
+@@ -317,7 +317,15 @@ void sprdwl_dequeue_data_list(struct mbuf_t *head, int num)
+ /* seam for tx_thread */
+ void tx_down(struct sprdwl_tx_msg *tx_msg)
+ {
+-	wait_for_completion(&tx_msg->tx_completed);
++	int ret;
++	while (1) {
++		ret = wait_for_completion_interruptible(&tx_msg->tx_completed);
++		if (ret == -ERESTARTSYS) {
++			continue;
++		}
++
++		return;
++	}
+ }
+ 
+ void tx_up(struct sprdwl_tx_msg *tx_msg)
+-- 
+2.39.2
+
