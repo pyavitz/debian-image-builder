@@ -10,48 +10,31 @@ fi
 }
 
 rpi_firmware (){
-RPIURL="https://github.com/raspberrypi/firmware/raw/master/boot/"
-mkdir -p firmware
-rm -fr firmware/*
-cd firmware
+FIRMWARE="https://github.com/raspberrypi/firmware.git"
 echo ""
 echo -en "Firmware"
 echo -en " ${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN}"
-aria2c -q ${RPIURL}LICENCE.broadcom
-aria2c -q ${RPIURL}COPYING.linux
-if [[ "$SERIES" == "bcm2711" ]]; then
-	aria2c -q ${RPIURL}fixup4.dat
-	aria2c -q ${RPIURL}fixup4cd.dat
-	aria2c -q ${RPIURL}fixup4db.dat
-	aria2c -q ${RPIURL}fixup4x.dat
-	aria2c -q ${RPIURL}start4.elf
-	aria2c -q ${RPIURL}start4cd.elf
-	aria2c -q ${RPIURL}start4db.elf
-	aria2c -q ${RPIURL}start4x.elf
-	cd ..
-	if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-	else
-		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
-		exit 0
-	fi
+rm -fdr firmware
+git clone -q -n --filter=tree:0 --sparse ${FIRMWARE} tmp &> /dev/null
+cd tmp
+git sparse-checkout set --no-cone --quiet boot &> /dev/null
+git checkout --quiet &> /dev/null
+rm -fdr boot/{overlays,*.dtb,kernel*}
+mv boot ../firmware
+cd ..
+rm -fdr tmp
+echo -en " ${PNK}[${FIN}${WHT}checking${FIN}${PNK}]${FIN}"
+if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf}` ]] > /dev/null 2>&1; then
+	:;
 else
-	aria2c -q ${RPIURL}bootcode.bin
-	aria2c -q ${RPIURL}fixup.dat
-	aria2c -q ${RPIURL}fixup_cd.dat
-	aria2c -q ${RPIURL}fixup_db.dat
-	aria2c -q ${RPIURL}fixup_x.dat
-	aria2c -q ${RPIURL}start.elf
-	aria2c -q ${RPIURL}start_cd.elf
-	aria2c -q ${RPIURL}start_db.elf
-	aria2c -q ${RPIURL}start_x.elf
-	cd ..
-	if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf,LICENCE.broadcom,COPYING.linux}` ]] > /dev/null 2>&1; then
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-	else
-		echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
-		exit 0
-	fi
+	echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
+	exit 0
+fi
+if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf}` ]] > /dev/null 2>&1; then
+	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+else
+	echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
+	exit 0
 fi
 }
 
