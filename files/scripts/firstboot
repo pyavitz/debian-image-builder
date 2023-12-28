@@ -54,9 +54,6 @@ if [[ -f "/etc/opt/board.txt" ]] && [[ "$ARCH" == "arm" ]]; then
 	if [[ -f "/boot/boot.ini" ]]; then
 		sed -i '3s/.*/setenv uuid "'"root=PARTUUID=${PARTUUID}"'"/' /boot/boot.ini
 	fi
-	if [[ -f "/boot/${FAMILY}/cmdline.txt" ]]; then
-		sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/${FAMILY}/cmdline.txt
-	fi
 fi
 
 # fsck fat partition
@@ -75,14 +72,6 @@ if [[ `findmnt -v -n /boot/efi | grep -w "vfat"` ]]; then
 	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
 	sleep .50
 	mount /boot/efi
-fi
-if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
-	BOOT=`findmnt -v -n -o SOURCE /boot/broadcom`
-	umount /boot/broadcom
-	sleep .50
-	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
-	sleep .50
-	mount /boot/broadcom
 fi
 
 # clean

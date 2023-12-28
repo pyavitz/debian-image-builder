@@ -35,12 +35,6 @@ Odroid N2+
 Radxa Zero
 X96-AIR	
 
-# BROADCOM
-Raspberry Pi 2B
-Raspberry Pi 3B
-Raspberry Pi 4B
-Raspberry Pi Zero
-
 # FREESCALE
 Cubox-I (*)
 FT20 (*)

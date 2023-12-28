@@ -9,35 +9,6 @@ if [[ -d "../../patches/atf" ]]; then
 fi
 }
 
-rpi_firmware (){
-FIRMWARE="https://github.com/raspberrypi/firmware.git"
-echo ""
-echo -en "Firmware"
-echo -en " ${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN}"
-rm -fdr firmware
-git clone -q -n --filter=tree:0 --sparse ${FIRMWARE} tmp &> /dev/null
-cd tmp
-git sparse-checkout set --no-cone --quiet boot &> /dev/null
-git checkout --quiet &> /dev/null
-rm -fdr boot/{overlays,*.dtb,kernel*}
-mv boot ../firmware
-cd ..
-rm -fdr tmp
-echo -en " ${PNK}[${FIN}${WHT}checking${FIN}${PNK}]${FIN}"
-if [[ `ls firmware/{fixup4.dat,fixup4cd.dat,fixup4db.dat,fixup4x.dat,start4.elf,start4cd.elf,start4db.elf,start4x.elf}` ]] > /dev/null 2>&1; then
-	:;
-else
-	echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
-	exit 0
-fi
-if [[ `ls firmware/{bootcode.bin,fixup.dat,fixup_cd.dat,fixup_db.dat,fixup_x.dat,start.elf,start_cd.elf,start_db.elf,start_x.elf}` ]] > /dev/null 2>&1; then
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-else
-	echo -en " ${YLW}[${FIN}${RED}failed${FIN}${YLW}]${FIN}"; echo ""
-	exit 0
-fi
-}
-
 # check log and report
 check_log (){
 if [[ -f "${LOG_FILE}" ]]; then

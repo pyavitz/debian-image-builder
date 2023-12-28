@@ -30,12 +30,6 @@ mount -t sysfs sys sys/
 
 export DEBIAN_FRONTEND="noninteractive"
 
-if [[ "$FAMILY" == "broadcom" ]]; then
-	if [[ "$DISTRO" == "ubuntu" ]]; then
-		apt_preferences
-		echo ""
-	fi
-fi
 apt-get update
 apt-get install -y apt-utils
 
@@ -77,9 +71,6 @@ if [[ "$DISTRO" == "ubuntu" ]]; then
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} dbus-user-session libical3 resolvconf haveged ntpdate ${NETWORKING}
-fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	apt install -y ${RPI}
 fi
 # apt clean
 if [[ "$DISTRO" == "ubuntu" ]]; then
@@ -170,17 +161,11 @@ cd ~
 if [[ "$EFI" == "true" ]]; then
 	# uefi kernel, initrd, dtb and grub cfg script
 	mkdir -p /etc/initramfs/post-update.d/
-	if [[ "$FAMILY" == "broadcom" ]]; then
-		mv -f /root/99-uefi-brcm /etc/initramfs/post-update.d/99-uefi;
-		rm -f /root/99-uefi;
-	else
-		mv -f /root/99-uefi /etc/initramfs/post-update.d/;
-		rm -f /root/99-uefi-brcm;
-	fi
-	chmod +x /etc/initramfs/post-update.d/99-uefi;
-	chown root:root /etc/initramfs/post-update.d/99-uefi;
+	mv -f /root/99-uefi /etc/initramfs/post-update.d/
+	chmod +x /etc/initramfs/post-update.d/99-uefi
+	chown root:root /etc/initramfs/post-update.d/99-uefi
 else
-	rm -f /root/{99-uefi,99-uefi-brcm};
+	rm -f /root/99-uefi
 fi
 
 # alsa asound.state file
@@ -195,9 +180,9 @@ fi
 
 # led triggers
 if [[ -f "/root/led-trigger" ]]; then
-	mv -f /root/led-trigger /usr/local/sbin/led-trigger;
-	chmod +x /usr/local/sbin/led-trigger;
-	chown -R root:root /usr/local/sbin/;
+	mv -f /root/led-trigger /usr/local/sbin/led-trigger
+	chmod +x /usr/local/sbin/led-trigger
+	chown -R root:root /usr/local/sbin/
 fi
 
 # bluetooth helper
@@ -284,13 +269,6 @@ if [ $NETWORKMANAGER -eq 0 ]; then
 	wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/
 fi
 wget -cq --show-progress ${SCRIPTS_URL}governor -P /usr/local/bin/
-if [[ "$FAMILY" == "broadcom" ]]; then
-	wget -cq --show-progress ${SCRIPTS_URL}update-fw -P /usr/local/bin/
-	if [[ "$SERIES" == "bcm2711" ]]; then
-		wget -cq --show-progress ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/
-		#wget -cq --show-progress ${SCRIPTS_URL}write2usb -P /usr/local/bin/;
-	fi
-fi
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
 chmod +x /usr/local/sbin/firstboot
@@ -398,9 +376,6 @@ fi
 if [[ "$FAMILY" == "freescale" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
 	extra_firmware
 fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	brcm_firmware
-fi
 
 # network setup
 if [ $VERBOSE -eq 1 ]; then
@@ -440,62 +415,6 @@ fi
 
 # wireless regulatory db
 wireless_regdb
-
-# raspberry Pi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	mkdir -p /etc/udev/rules.d/
-	mkdir -p /lib/udev/rules.d/
-	if [[ -f "/root/99-com.rules" ]]; then
-		mv -f 99-com.rules /etc/udev/rules.d/
-	fi
-	if [[ -f "/root/10-local-rpi.rules" ]]; then
-		# camera
-		mv -f 10-local-rpi.rules /lib/udev/rules.d/
-	fi
-	if [[ -f "/root/60-rpi.gpio-common.rules" ]]; then
-		mv -f 60-rpi.gpio-common.rules /lib/udev/rules.d/
-	fi
-	# sys-mods
-	echo ""
-	echo "Installing raspi-sys-mods ..."
-	sleep .50
-	git clone https://github.com/RPi-Distro/raspberrypi-sys-mods.git
-	if [[ "$DISTRO" == "devuan" ]]; then
-		mv raspberrypi-sys-mods.patch raspberrypi-sys-mods/
-		cd raspberrypi-sys-mods
-		git checkout -q 46ae4208397d662fc4f5d0cc9acc85395f852af1
-		patch -p1 < raspberrypi-sys-mods.patch
-		rm -f raspberrypi-sys-mods.patch
-	else
-		rm -f raspberrypi-sys-mods.patch
-		cd raspberrypi-sys-mods
-		git checkout -q 46ae4208397d662fc4f5d0cc9acc85395f852af1
-	fi
-	dpkg-buildpackage -us -uc
-	cd ~
-	dpkg -i raspberrypi-sys-mods*.deb
-	rm -fdR raspberrypi-sys-mods*
-	if [[ -f "/etc/apt/sources.list.d/vscode.list" ]]; then
-		rm -f /etc/apt/sources.list.d/vscode.list
-	fi
-	if [[ -f "/etc/apt/trusted.gpg.d/microsoft.gpg" ]]; then
-		rm -f /etc/apt/trusted.gpg.d/microsoft.gpg
-	fi
-	if [[ -f "/etc/apt/preferences.d/3rd_parties.pref" ]]; then
-		rm -f /etc/apt/preferences.d/3rd_parties.pref
-	fi
-	echo "Done."
-	# userland
-	rpi_userland
-	# eeprom
-	if [[ "$SERIES" == "bcm2711" ]]; then
-		${SERIES}_eeprom
-	fi
-	# modules
-	brcm_modules > /dev/null 2>&1
-	# clean misc files
-	rm -f {*.patch,*led*,*eeprom*,*.rules}
-fi
 
 # sudoers file
 if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then

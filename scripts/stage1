@@ -60,11 +60,7 @@ if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 	fi
 fi
 # verbosity
-if [ $VERBOSE -eq 1 ]; then
-	set -eux -o pipefail
-else
-	set -eu -o pipefail
-fi
+if [ $VERBOSE -eq 1 ]; then set -eux -o pipefail; else set -eu -o pipefail; fi
 if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]]; then
 	echo "The $FSTYPE filesystem requires a boot partition."
 	echo -e ""
@@ -82,16 +78,12 @@ IMAGE_FOLDER="img/"
 DEVICE_SOC="${DTB}"
 IMAGE_DATE="$(date +%F)"
 IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
-if [ $RAM -ne 0 ]; then
-	IMAGE_FOLDER="ram/"
-fi
+if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
 mkdir -p "$IMAGE_FOLDER"
-if [ $RAM -ne 0 ]; then
-	mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER
-fi
+if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 if [[ ! -z $P_VALUE ]]; then
 	SOURCES_LIST="${P_VALUE}/etc/apt/sources.list"
-	setup;
+	setup
 fi
 # setup stage2
 if [[ ! -z $FAMILY ]]; then
@@ -143,7 +135,7 @@ fi
 # user scripts stage1
 if [ $USCRIPTS -eq 1 ]; then uscripts_stage1; fi
 echo ""
-echo -e "${WHT}Starting chroot${FIN} ..."
+echo -e "${WHT}Running chroot${FIN} ..."
 # mount and chroot p1
 if [[ "$P_VALUE" == "p1" ]]; then
 	mount -o bind /dev p1/dev
@@ -182,19 +174,11 @@ fi
 # mount and chroot p2
 if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$EFI" == "true" ]]; then
-		if [[ "$FAMILY" == "broadcom" ]]; then
-			P_EFI="p2/boot/${FAMILY}"
-		else
-			P_EFI="p2/boot/efi"
-		fi
+		P_EFI="p2/boot/efi"
 		mkdir -p ${P_EFI}
 		mount -o bind p1 ${P_EFI}
 	else
-		if [[ "$FAMILY" == "broadcom" ]]; then
-			P_NORM="p2/boot/${FAMILY}"
-		else
-			P_NORM="p2/boot"
-		fi
+		P_NORM="p2/boot"
 		mkdir -p ${P_NORM}
 		mount -o bind p1 ${P_NORM}
 	fi
@@ -204,11 +188,7 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	# unmount
 	umount p2/dev/pts
 	umount p2/dev
-	if [[ "$EFI" == "true" ]]; then
-		umount ${P_EFI}
-	else
-		umount ${P_NORM}
-	fi
+	if [[ "$EFI" == "true" ]]; then umount ${P_EFI}; else umount ${P_NORM}; fi
 	if [[ -f "p2/usr/bin/${STATIC}" ]]; then rm -f p2/usr/bin/${STATIC}; fi
 	cp -f p2/root/kernel.release .
 	rm p2/root/stage2
@@ -222,15 +202,8 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$FSTYPE" == "ext4" ]]; then e4defrag -c ${P_VALUE}; fi
 	if [[ "$FSTYPE" == "btrfs" ]]; then btrfs filesystem defragment -f -r ${P_VALUE} > /dev/null 2>&1; fi
 	if [[ "$FSTYPE" == "xfs" ]]; then xfs_fsr ${P_VALUE}; fi
-	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then
-		if [[ "$FAMILY" == "broadcom" ]]; then
-			brcm_extlinux > /dev/null 2>&1
-		else
-			extlinux > /dev/null 2>&1
-		fi
-	fi
+	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
 	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
-	if [[ "$FAMILY" == "broadcom" ]]; then brcm_config > /dev/null 2>&1; fi
 	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
 	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootini > /dev/null 2>&1; fi
 	if [[ "$BOARD" == "x96air" ]] && [[ "$EMMC" == "0" ]]; then

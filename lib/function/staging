@@ -68,9 +68,7 @@ if [[ "$VFAT" == "true" ]]; then
 		#parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 lba off
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 boot on
 	fi
-	if [[ "$EFI" == "true" ]]; then
-		if [[ "$FAMILY" == "boardcom" ]]; then :; else parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 esp on; fi
-	fi
+	if [[ "$EFI" == "true" ]]; then parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" set 1 esp on; fi
 else
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
@@ -160,25 +158,11 @@ UUID=${BOOT_UUID}	${BOOTFS_TABLE}
 UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
 tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
-if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]] && [[ "$VFAT" == "true" ]]; then
-	sed -i 's/boot/boot\/broadcom/g' p2/etc/fstab
-fi
-if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "true" ]] && [[ "$VFAT" == "true" ]]; then
-	sed -i 's/boot\/efi/boot\/broadcom/g' p2/etc/fstab
-fi
 }
 
 setup (){
-if [ $VERBOSE -eq 1 ]; then
-	partition
-else
-	partition > /dev/null 2>&1
-fi
-if [ $VERBOSE -eq 1 ]; then
-	uuid
-else
-	uuid > /dev/null 2>&1
-fi
+if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
+if [ $VERBOSE -eq 1 ]; then uuid; else uuid > /dev/null 2>&1; fi
 if [[ -f "${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz" ]]; then
 	echo -en "${WHT}Extracting rootfs${FIN} "
 	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C ${P_VALUE}/
@@ -192,16 +176,8 @@ mkdir -p ${P_VALUE}/etc/apt/apt.conf.d ${P_VALUE}/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "${P_VALUE}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p ${P_VALUE}/usr/bin
 cp $(command -v "${STATIC}") ${P_VALUE}/usr/bin
-if [ $VERBOSE -eq 1 ]; then
-	choose_release
-else
-	choose_release > /dev/null 2>&1
-fi
-if [ $VERBOSE -eq 1 ]; then
-	${P_VALUE}_fstab
-else
-	${P_VALUE}_fstab > /dev/null 2>&1
-fi
+if [ $VERBOSE -eq 1 ]; then choose_release; else choose_release > /dev/null 2>&1; fi
+if [ $VERBOSE -eq 1 ]; then ${P_VALUE}_fstab; else ${P_VALUE}_fstab > /dev/null 2>&1; fi
 if [ -n "$PROXY" ]; then
 	tee "${P_VALUE}/etc/apt/apt.conf.d/30proxy" <<EOF
 Acquire::http::proxy "http://127.0.0.1:3142";
@@ -257,9 +233,6 @@ cp files/users/* ${P_VALUE}/root
 cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} ${P_VALUE}/root
 if [[ "$DISTRO" == "devuan" ]]; then
 	cp files/inits/*.init ${P_VALUE}/root
-fi
-if [[ "$FAMILY" == "broadcom" ]]; then
-	cp files/raspberrypi/* ${P_VALUE}/root
 fi
 board_information
 }
@@ -328,11 +301,7 @@ EOF
 
 bootcmd (){
 echo -en "$BOARD: "; echo -e "boot script"
-if [[ "$P_VALUE" == "p1" ]]; then
-	BOOT_PATH="p1/boot"
-else
-	BOOT_PATH="p1"
-fi
+if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
 rm -f ${BOOT_PATH}/{boot.cmd,boot.scr}
 cp -f files/boot/boot.cmd ${BOOT_PATH}/
 sed -i 's/^setenv bootlabel "".*/setenv bootlabel "'"${DEFAULT_MOTD}"'"/g' ${BOOT_PATH}/boot.cmd
@@ -363,11 +332,7 @@ mkimage -C none -A arm -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
 
 extlinux (){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
-if [[ "$P_VALUE" == "p1" ]]; then
-	BOOT_PATH="p1/boot"
-else
-	BOOT_PATH="p1"
-fi
+if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"

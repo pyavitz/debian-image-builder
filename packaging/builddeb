@@ -97,36 +97,6 @@ else
 	if [ -f arch/arm64/boot/Image ]; then
 		cp arch/arm64/boot/Image "$tmpdir/boot/Image"
 	fi
-	if [ "$platform" = "broadcom" ]; then
-		mkdir -p "$tmpdir/boot/$platform"
-		if [ -f arch/arm/boot/zImage ]; then
-			cp arch/arm/boot/zImage "$tmpdir/boot/$platform/Image"
-		fi
-		if [ -f arch/arm64/boot/Image ]; then
-			cp arch/arm64/boot/Image "$tmpdir/boot/$platform/Image"
-		fi
-		if [ -f firmware/bootcode.bin ]; then
-			install -m 0644 firmware/bootcode.bin "$tmpdir/boot/$platform"
-		fi
-		if [ -f firmware/fixup.dat ]; then
-			install -m 0644 firmware/fixup*.dat "$tmpdir/boot/$platform"
-		fi
-		if [ -f firmware/start.elf ]; then
-			install -m 0644 firmware/start*.elf "$tmpdir/boot/$platform"
-		fi
-		if [ -f firmware/fixup4.dat ]; then
-			install -m 0644 firmware/fixup4*.dat "$tmpdir/boot/$platform"
-		fi
-		if [ -f firmware/start4.elf ]; then
-			install -m 0644 firmware/start4*.elf "$tmpdir/boot/$platform"
-		fi
-		if [ -f firmware/LICENCE.broadcom ]; then
-			install -m 0644 firmware/LICENCE.broadcom "$tmpdir/boot/$platform"
-		fi
-		if [ -f firmware/COPYING.linux ]; then
-			install -m 0644 firmware/COPYING.linux "$tmpdir/boot/$platform"
-		fi
-	fi
 fi
 cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
 
@@ -248,16 +218,9 @@ fi
 if [ -f /boot/initrd.gz ] || [ -f /boot/uInitrd ]; then
 	rm -fr /boot/{initrd.gz,uInitrd,initrd.img-*}
 fi
-# prep bsp boot directory
-if [ -f /boot/$platform/Image ]; then
-	rm -f /boot/$platform/Image
-fi
-if [ -f /boot/$platform/initrd.gz ]; then
-	rm -f /boot/$platform/initrd.gz
-fi
 # prep boot platform directory
 if [ -d /boot/$platform ]; then
-	rm -fr /boot/$platform/{*.dtb,bootcode.bin,fixup*.dat,start*.elf,fixup4*.dat,start4*.elf,LICENCE.broadcom,COPYING.linux}
+	rm -fr /boot/$platform/*.dtb
 	if [ -d /boot/$platform/overlays ]; then
 		rm -fdr /boot/$platform/overlays
 	fi
