@@ -36,8 +36,14 @@ create_package() {
 	dpkg-deb -Z$compression --build "$pdir" ..
 }
 
-if [ -f scripts/package/pkgvars ]; then
+if [ -f "scripts/package/pkgvars" ]; then
 	. scripts/package/pkgvars
+	if [ -f "dtclist.txt" ] && [ -f "initrd" ] && [ -f "headers-byteshift.patch" ]; then
+		:;
+	else
+		echo -e "A builddeb dependency is missing."
+		exit 0
+	fi
 else
 	echo "Missing: pkgvars"
 	exit 0
@@ -50,8 +56,6 @@ libc_headers_dir="$objtree/debian/headertmp"
 dbg_dir="$objtree/debian/dbgtmp"
 libc_headers_packagename=linux-libc-dev
 dbg_packagename=$packagename-dbg
-
-# Variables set by pkgvars
 packagename=$linux_name
 kernel_headers_packagename=$headers_name
 
