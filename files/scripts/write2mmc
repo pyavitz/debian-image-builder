@@ -43,29 +43,9 @@ if [[ -f "/etc/default/write2mmc" ]]; then
 	. /etc/default/write2mmc
 else
 	echo 'DISCLAIMER="true"' | tee /etc/default/write2mmc > /dev/null 2>&1
-	echo 'VERBOSITY="1"' | tee -a /etc/default/write2mmc > /dev/null 2>&1
+	echo 'VERBOSITY="0"' | tee -a /etc/default/write2mmc > /dev/null 2>&1
 	. /etc/default/write2mmc
 fi
-if [[ -f "/etc/opt/progressbar.txt" ]]; then
-	:;
-else
-	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-		mkdir -p /etc/opt
-		wget -cq https://raw.githubusercontent.com/pyavitz/bash_progress_bar/master/progress_bar.sh -P /etc/opt/
-		if [[ -f "/etc/opt/progress_bar.sh" ]]; then
-			mv -f /etc/opt/progress_bar.sh /etc/opt/progressbar.txt
-			sed -i 's/ETA_ENABLED="false"/ETA_ENABLED="true"/g' /etc/opt/progressbar.txt
-		else
-			WARNING_MSG="The write2mmc script requires an internet connection. ERR -1"
-			WARNING
-		fi
-	else
-		WARNING_MSG="The write2mmc script requires an internet connection. ERR -2"
-		WARNING
-	fi
-fi
-if [[ `command -v mkfs.f2fs` ]]; then :; else apt install -y f2fs-tools; fi
-if [[ `command -v kpartx` ]]; then :; else apt install -y kpartx; fi
 
 # STYLE
 BLD="\033[1m"
@@ -479,7 +459,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 		one_partition
 	else
 		$EE
-		$EN "Partitioning: $DEVICE_NODE "
+		$EN "Partitioning $DEVICE_NODE "
 		one_partition > /dev/null 2>&1
 		$EE "[done]"
 	fi
@@ -489,26 +469,26 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		two_partitions
 	else
 		$EE
-		$EN "Partitioning: $DEVICE_NODE "
+		$EN "Partitioning $DEVICE_NODE "
 		two_partitions > /dev/null 2>&1
 		$EE "[done]"
 	fi
 fi
 
-# RSYNC
+# TRANSFER
 transfer (){
 cd /
 if [[ "$P_VALUE" == "p2" ]]; then
-	cp -fr /boot/* /mnt/${P_BOOT}/
+	cp -ax /boot/* /mnt/${P_BOOT}/
 	if [[ "$BOARD" == "x96air" ]]; then
 		rm -f /mnt/${P_BOOT}/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
 		rm -fdr /mnt/${P_BOOT}/{LOST.DIR,Android}
 	fi
 fi
-rsync -avpxH --progress --stats --human-readable . /mnt/${P_ROOTFS} > /dev/null
+cp -axv . /mnt/${P_ROOTFS}
 if [[ "$P_VALUE" == "p1" ]]; then
 	mkdir -p /mnt/${P_ROOTFS}/boot
-	cp -fr /boot/* /mnt/${P_ROOTFS}/boot/
+	cp -ax /boot/* /mnt/${P_ROOTFS}/boot/
 	if [[ "$BOARD" == "x96air" ]]; then
 		rm -f /mnt/${P_ROOTFS}/boot/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
 		rm -fdr /mnt/${P_ROOTFS}/boot/{LOST.DIR,Android}
@@ -519,19 +499,13 @@ if [[ "$P_VALUE" == "p2" ]]; then
 fi
 }
 
-source /etc/opt/progressbar.txt
-enable_trapping
-setup_scroll_area
-for i in {0..100}
-do
-	if [ $i = 0 ]; then
-		block_progress_bar $i
-	else
-		transfer
-		draw_progress_bar $i
-	fi
-done
-destroy_scroll_area
+if [[ "$VERBOSITY" = "1" ]]; then
+	transfer
+else
+	$EN "Transferring to $DEVICE_NODE "
+	transfer > /dev/null 2>&1
+	$EE "[done]"
+fi
 
 # FLASH U-BOOT
 flash_uboot (){
