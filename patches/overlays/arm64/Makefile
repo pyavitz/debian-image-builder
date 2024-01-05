@@ -14,6 +14,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
 	meson-g12a-radxa-zero-uart-ee-c.dtbo \
+	meson-g12b-bananapi-cm4-gpu.dtbo \
 	meson-g12b-bananapi-m2s-rtl8822cs.dtbo \
 	meson-g12b-odroid-n2-canfd0.dtbo \
 	meson-g12b-odroid-n2-i2c0.dtbo \

@@ -1,0 +1,27 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "bananapi,bpi-cm4io", "bananapi,bpi-cm4", "amlogic,a311d", "amlogic,g12b";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			vddgpu: regulator-vddgpu {
+				compatible = "regulator-fixed";
+				regulator-name = "mali";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <800000>;
+				vin-supply = <&dc_in>;
+				regulator-always-on;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&mali>;
+		__overlay__ {
+			mali-supply=<&vddgpu>;
+		};
+	};
+};
