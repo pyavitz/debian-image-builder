@@ -17,6 +17,10 @@ if [ -f "/sys/class/leds/${LED1}/trigger" ]; then
 		if [[ "$ROOT_SSD" == "/dev/nvme0n1" ]]; then
 			echo -n "none" > $BLUE_LED
 		fi
+		ROOT_SATA=`findmnt -v -n -o SOURCE / | sed 's/.$//'`
+		if [[ "$ROOT_SATA" == "/dev/sda" || "$ROOT_SATA" == "/dev/sdb" ]]; then
+			echo -n "none" > $BLUE_LED
+		fi
 	fi
 fi
 if [ -f "/sys/class/leds/${LED2}/trigger" ]; then
