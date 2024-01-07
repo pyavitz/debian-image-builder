@@ -188,7 +188,7 @@ fi
 # bluetooth helper
 if [[ "$BOARD" == "pinea64plus" ]]; then
 	pine64_bthelper
-	if [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" || "$DISTRO" == "kali" ]]; then
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then
 		pine64_bt_service > /dev/null 2>&1
 	fi
 fi
@@ -247,7 +247,7 @@ sleep 1s
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
 mv -f {add-overlay,bootcmd,menu-config,menu-config-update,setup,smon,sysinfo} /usr/local/bin/
-if [[ "$SERIES" == "meson-g12a" || "$SERIES" == "meson-g12b" || "$SERIES" == "meson-sm1" ]] && [[ -f "/root/amlmixer" ]]; then
+if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]] && [[ -f "/root/amlmixer" ]]; then
 	mv -f amlmixer /usr/local/bin/
 	# emc2305 fan controller
 	if [[ "$BOARD" == "bananapicm4" ]]; then echo "#emc2305" >> /etc/modules; fi
@@ -356,7 +356,7 @@ fi
 
 # firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$BOARD" == "bananapim2zero" || "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" || "$BOARD" == "cubietruck" ]]; then
+	if [[ "$BOARD" =~ ^(bananapim2zero|bananapip2zero|nanopineoplus2|cubietruck)$ ]]; then
 		alt_firmware
 	else
 		extra_firmware
@@ -369,7 +369,7 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 		extra_firmware
 	fi
 fi
-if [[ "$FAMILY" == "freescale" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
+if [[ "$FAMILY" =~ ^(freescale|rockchip|samsung)$ ]]; then
 	extra_firmware
 fi
 
@@ -384,7 +384,7 @@ if [ $VERBOSE -eq 1 ]; then
 		ifupdown-credentials
 		router_ifupdown
 	fi
-	if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" || "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO" =~ ^(debian|kali|raspbian|ubuntu)$ ]]; then
 		credentials_service
 	fi
 else
@@ -397,7 +397,7 @@ else
 		ifupdown-credentials > /dev/null 2>&1
 		router_ifupdown > /dev/null 2>&1
 	fi
-	if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" || "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO" =~ ^(debian|kali|raspbian|ubuntu)$ ]]; then
 		credentials_service > /dev/null 2>&1
 	fi
 fi
@@ -486,7 +486,7 @@ EOF
 fi
 
 # udev rules
-if [[ "$FAMILY_EXT" == "odroid" || "$FAMILY_EXT" == "ac2xx" || "$FAMILY_EXT" == "rk3288" ]]; then
+if [[ "$FAMILY_EXT" =~ ^(odroid|ac2xx|rk3288)$ ]]; then
 	${FAMILY_EXT}_udev_rules > /dev/null 2>&1
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
@@ -496,7 +496,7 @@ if [[ "$FAMILY_EXT" == "exynos" ]]; then
 	mkdir -p /etc/modprobe.d/
 	echo "blacklist ina231_sensor" > /etc/modprobe.d/blacklist-odroid.conf
 fi
-if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
+if [[ "$BOARD" =~ ^(nanopir4s|nanopir4se|nanopir5c|nanopir5s)$ ]]; then
 	router_udev_rules
 fi
 
@@ -505,16 +505,6 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
 	sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged
 fi
 
-# bcm2835 hack
-if [[ "$SERIES" == "bcm2835" ]] && [[ -f "/lib/ld-linux.so.3" ]]; then
-	ln -s /lib/ld-linux.so.3 /lib/ld-linux-armhf.so.3
-fi
-if [[ "$SERIES" == "bcm2835" ]] && [[ "$DISTRO" == "debian" ]] && [[ -f "/etc/default/haveged" ]]; then
-	mkdir -p /etc/systemd/system/haveged.service.d
-	echo -e '[Service]\nSystemCallFilter=uname' > /etc/systemd/system/haveged.service.d/fix.conf
-	systemctl daemon-reload > /dev/null 2>&1
-	systemctl restart haveged > /dev/null 2>&1
-fi
 echo ""
 echo "Enabling Services ..."
 if [[ "$BOARD" == "nanopineoplus2" ]]; then

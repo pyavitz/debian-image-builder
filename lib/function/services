@@ -143,7 +143,7 @@ cd ~
 echo "overclock=0" > /etc/opt/overclock.txt
 chmod +x /usr/bin/tweaks
 chown root:root /usr/bin/tweaks
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
+if [[ "$BOARD" =~ ^(odroidn2|odroidn2l|odroidn2plus)$ ]]; then
 	mv -f irq-tweaks /usr/bin/irq-tweaks
 	chmod +x /usr/bin/irq-tweaks
 	chown root:root /usr/bin/irq-tweaks
@@ -211,8 +211,7 @@ StandardError=journal+console
 WantedBy=multi-user.target
 EOF
 systemctl enable tweaks
-
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]]; then
+if [[ "$BOARD" =~ ^(odroidn2|odroidn2l|odroidn2plus)$ ]]; then
 	tee /etc/systemd/system/irq-tweaks.service <<EOF
 [Unit]
 Description=ODROID IRQ Tweaks
@@ -422,13 +421,13 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	chmod +x /etc/init.d/tweaks
 	chown root:root /etc/init.d/tweaks
 else
-	if [[ "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$BOARD" == "lepotato" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
+	if [[ "$BOARD" =~ ^(cubietruck|cuboxi|lepotato|radxazero|x96air)$ ]]; then
 		${BOARD}_systemd
 	fi
-	if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then nanopi5_systemd; fi
-	if [[ "$BOARD" == "orangepi3" || "$BOARD" == "orangepi3lts" ]]; then orangepi3_systemd; fi
-	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" ]]; then ${FAMILY_EXT}_systemd; fi
-	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then rockchip_systemd; fi
+	if [[ "$BOARD" =~ ^(nanopir5c|nanopir5s)$ ]]; then nanopi5_systemd; fi
+	if [[ "$BOARD" =~ ^(orangepi3|orangepi3lts)$ ]]; then orangepi3_systemd; fi
+	if [[ "$FAMILY_EXT" =~ ^(bananapi|odroid)$ ]]; then ${FAMILY_EXT}_systemd; fi
+	if [[ "$FAMILY_EXT" =~ ^(rk3288|rk3328|rk3399)$ ]]; then rockchip_systemd; fi
 fi
 }
 
@@ -501,7 +500,7 @@ if [[ -f "/usr/local/sbin/led-trigger" ]]; then
 	chmod +x /etc/init.d/leds
 	update-rc.d leds defaults 2
 fi
-if [[ "$BOARD" == "pinea64plus" || "$BOARD" == "nanopineoplus2" ]]; then
+if [[ "$BOARD" =~ ^(pinea64plus|nanopineoplus2)$ ]]; then
 	chmod +x /etc/init.d/bthelper
 	update-rc.d bthelper defaults 2
 fi
@@ -519,9 +518,7 @@ update-rc.d credentials defaults 2
 enable_systemd (){
 systemctl enable rc-local
 systemctl enable ifplugd
-if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" ]]; then
-	systemctl enable resolvconf
-fi
+if [[ "$DISTRO" =~ ^(debian|kali|raspbian)$ ]]; then systemctl enable resolvconf; fi
 systemctl enable zramswap
 systemctl enable firstboot
 systemctl enable governor

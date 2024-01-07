@@ -197,7 +197,7 @@ if [[ "$FAMILY" == "allwinner" ]] && [[ -d "../../${LINUX_PATCHDIR}/all" ]]; the
 fi
 # rockchip: all
 if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; then
-	if [[ "$FAMILY_EXT" == "rk3288" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
+	if [[ "$FAMILY_EXT" =~ ^(rk3288|rk3328|rk3399)$ ]]; then
 		if [[ `ls ../../${LINUX_PATCHDIR}/../all/*.patch` ]] > /dev/null 2>&1; then
 			echo "# ${LINUX_PATCHDIR}/../all" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 			for i in ../../${LINUX_PATCHDIR}/../all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
@@ -206,7 +206,7 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all" ]]; t
 fi
 # overlays
 if [[ -d "../../${OVERLAYPATCHES}/${LINUX_VERSION}" ]] && [[ -d "../../${OVERLAYPATCHES}/${ARCH}" ]]; then
-	if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "amlogic" || "$FAMILY" == "samsung" ]]; then
+	if [[ "$FAMILY" =~ ^(allwinner|amlogic|samsung)$ ]]; then
 		if [[ `ls ../../${OVERLAYPATCHES}/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 			echo "# ${OVERLAYPATCHES}/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 			for i in ../../${OVERLAYPATCHES}/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
