@@ -46,11 +46,13 @@ fi
 # set device node variable
 MMC=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
 
-# locate target device node
-if [[ -e "${MMC}boot0" ]]; then
-	EMMC="1"
+# check node
+if [[ "$MMC" == "/dev/mmcblk0" || "$MMC" == "/dev/mmcblk1" || "$MMC" == "/dev/mmcblk2" ]]; then
+	# locate target device node
+	if [[ -e "${MMC}boot0" ]]; then EMMC="1"; else EMMC="0"; fi
 else
-	EMMC="0"
+	REPORT="Could not find device node."
+	error_prompt
 fi
 
 target_device () {
