@@ -45,16 +45,22 @@ if [[ `ls /sys/class/hwmon/hwmon*[0-9]*/pwm1` ]] > /dev/null 2>&1; then
 else
 	FAN="false"
 fi
+if [[ `ls /sys/class/nvme/nvme[0-9]/hwmon[0-9]/temp[0-9]_input` ]] > /dev/null 2>&1; then
+	NVME="true"
+	SSDT=$(cat /sys/class/nvme/nvme[0-9]/hwmon[0-9]/temp[0-9]_input | cut -c1-2 | sed s/$/°C/ | tr '\n' ' ')
+else
+	NVME="false"
+fi
 # functions
 count_high (){
-echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C";
-echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C";
+echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C"
+echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C"
 echo -en "Frequencies: "$CPU0C; echo -en "MHz $CPU1C"; echo -e "MHz"
 }
 
 count_low (){
-echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C";
-echo -en "Frequency:   "$CPU0C; echo -e "MHz";
+echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C"
+echo -en "Frequency:   "$CPU0C; echo -e "MHz"
 }
 
 cpu_hwinfo (){
@@ -90,6 +96,7 @@ echo -e "CPU usage:  " `top -b -n1 | grep "Cpu(s)" | awk '{print $2 + $4}'`
 if [[ -f "/sys/devices/system/cpu/present" ]]; then cpu_hwinfo; fi
 echo -e "Online:     " $(lscpu | grep -w "On-line CPU(s) list:" | sed "s/On-line CPU(s) list:/ /g" | sed -e "s/\s\{3,\}//g")
 if [[ "$FAN" == "true" ]]; then fan_pwr; fi
+if [[ "$NVME" == "true" ]]; then echo -e "NVMe:        ${SSDT}"; fi
 echo -e "Governor:   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "Memory:     " $(free -h | sed 's/i//g' | sed 's/Mem://g' | awk '{print $1" "$2}' | sed -n 'n;p')
 echo -e "Entropy:    " $(cat /proc/sys/kernel/random/entropy_avail)
