@@ -5,7 +5,7 @@ HEADER=./scripts/.header
 MENU=./lib/dialog/menu
 GMENU=./lib/dialog/general
 CONF=./lib/dialog/config
-DIALOGRC=$(shell cp -f lib/dialogrc ~/.dialogrc)
+DIALOGRC=$(shell cp -f lib/dialog/dialogrc ~/.dialogrc)
 
 # misc
 RFS=./scripts/rootfs
