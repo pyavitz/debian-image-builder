@@ -15,11 +15,9 @@ set -o nounset
 if [ $NETWORKMANAGER -eq 0 ]; then
 	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
 		# systemd-resolved breaks static ip when using ifupdown, disable on jammy jellyfish
-		unlink /etc/resolv.conf;
-		if [ -f /etc/resolv.conf ]; then
-			rm -f /etc/resolv.conf;
-		fi
-		systemctl disable systemd-resolved;
+		unlink /etc/resolv.conf
+		rm -f /etc/resolv.conf
+		systemctl disable systemd-resolved
 	fi
 fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
@@ -102,6 +100,7 @@ EOF
 fi
 apt -y clean
 apt -y autoclean
+
 # hostname / username / password
 if [[ "$HOSTNAME" == "default" ]]; then
 	# default hostname
@@ -154,8 +153,10 @@ if [ $USERACCT -eq 1 ]; then
 fi
 # set root:toor password
 if [ $ROOTPASSWD -eq 1 ]; then echo "root:toor" | chpasswd; fi
+
 # user scripts stage2
 if [ $USCRIPTS -eq 1 ]; then uscripts_stage2; fi
+
 # initrd / uinitrd
 cd ~
 if [[ "$EFI" == "true" ]]; then
@@ -188,9 +189,7 @@ fi
 # bluetooth helper
 if [[ "$BOARD" == "pinea64plus" ]]; then
 	pine64_bthelper
-	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then
-		pine64_bt_service > /dev/null 2>&1
-	fi
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then pine64_bt_service > /dev/null 2>&1; fi
 fi
 
 # brcm patchram
@@ -212,9 +211,7 @@ if [[ "$BOARD" == "nanopineoplus2" ]]; then
 fi
 
 # cubietruck blacklist hci_uart / bluetooth
-if [[ "$BOARD" == "cubietruck" ]]; then
-	ct_blacklist
-fi
+if [[ "$BOARD" == "cubietruck" ]]; then ct_blacklist; fi
 
 # orangepi3lts bluetooth and wifi
 if [[ "$BOARD" == "orangepi3lts" ]]; then
@@ -225,12 +222,7 @@ if [[ "$BOARD" == "orangepi3lts" ]]; then
 fi
 
 # board information
-if [[ -f "/etc/opt/board.txt" ]]; then
-	:;
-else
-	mkdir -p /etc/opt
-	cp /root/board.txt /etc/opt/
-fi
+if [[ -f "/etc/opt/board.txt" ]]; then :; else mkdir -p /etc/opt; cp /root/board.txt /etc/opt/; fi
 
 # write2mmc script
 cd ~
@@ -253,17 +245,13 @@ if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]] && [[ -f "/root/amlmix
 	if [[ "$BOARD" == "bananapicm4" ]]; then echo "#emc2305" >> /etc/modules; fi
 fi
 # tweaks
-if [[ -f "/usr/bin/tweaks" ]]; then
-	tweaks_service > /dev/null 2>&1
-fi
+if [[ -f "/usr/bin/tweaks" ]]; then tweaks_service > /dev/null 2>&1; fi
 # tvbox flash recovery script
 if [[ "$BOARD" == "x96air" ]]; then
 	mv -f flash-recovery /usr/local/sbin/
 	chmod +x /usr/local/sbin/flash-recovery
 fi
-if [ $NETWORKMANAGER -eq 0 ]; then
-	wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/
-fi
+if [ $NETWORKMANAGER -eq 0 ]; then wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/; fi
 wget -cq --show-progress ${SCRIPTS_URL}governor -P /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
@@ -291,22 +279,12 @@ if [[ "$DISTRO" == "devuan" ]]; then
 		mv -f bthelper.init /etc/init.d/bthelper
 		rm -f /etc/init.d/leds
 	fi
-	if [[ "$BOARD" == "nanopineoplus2" ]]; then
-		mv -f bthelper.init /etc/init.d/bthelper
-	fi
+	if [[ "$BOARD" == "nanopineoplus2" ]]; then mv -f bthelper.init /etc/init.d/bthelper; fi
 fi
 
 # motd
 mkdir -p /etc/update-motd.d
-if [[ -f "/etc/update-motd.d/10-uname" ]]; then
-	rm -f /etc/update-motd.d/10-uname
-fi
-if [[ -f "/etc/update-motd.d/10-help-text" ]]; then
-	rm -f /etc/update-motd.d/10-help-text
-fi
-if [[ -f "/etc/update-motd.d/00-header" ]]; then
-	rm -f /etc/update-motd.d/00-header
-fi
+rm -f /etc/update-motd.d/{00-header,10-uname,10-help-text}
 mv -f {00-header,15-brand,20-sysinfo,90-dynamic-motd} /etc/update-motd.d/
 chmod +x /etc/update-motd.d/*
 echo "# DYNAMIC MOTD VARIABLES" > /etc/default/dynamic-motd
@@ -356,22 +334,12 @@ fi
 
 # firmware
 if [[ "$FAMILY" == "allwinner" ]]; then
-	if [[ "$BOARD" =~ ^(bananapim2zero|bananapip2zero|nanopineoplus2|cubietruck)$ ]]; then
-		alt_firmware
-	else
-		extra_firmware
-	fi
+	if [[ "$BOARD" =~ ^(bananapim2zero|bananapip2zero|nanopineoplus2|cubietruck)$ ]]; then alt_firmware; else extra_firmware; fi
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
-	if [[ "$BOARD" == "radxazero" ]]; then
-		radxazero_firmware
-	else
-		extra_firmware
-	fi
+	if [[ "$BOARD" == "radxazero" ]]; then radxazero_firmware; else extra_firmware; fi
 fi
-if [[ "$FAMILY" =~ ^(freescale|rockchip|samsung)$ ]]; then
-	extra_firmware
-fi
+if [[ "$FAMILY" =~ ^(freescale|rockchip|samsung)$ ]]; then extra_firmware; fi
 
 # network setup
 if [ $VERBOSE -eq 1 ]; then
@@ -413,9 +381,6 @@ fi
 wireless_regdb
 
 # sudoers file
-if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then
-	rm -f /etc/sudoers.d/010_pi-nopasswd
-fi
 if [ $USERACCT -eq 0 ]; then
 	echo ""
 	tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
@@ -429,18 +394,14 @@ if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
 fi
 
 # uimage
-if [[ "$BOARD" == "odroidc1" ]]; then
-	make_uimage
-fi
+if [[ "$BOARD" == "odroidc1" ]]; then make_uimage; fi
 
 # u-boot and kernel packages
 echo ""
 echo "Installing linux and u-boot package ..."
 apt update
 apt upgrade -y
-if [[ "$EFI" == "true" ]]; then
-	apt install -y grub-efi
-fi
+if [[ "$EFI" == "true" ]]; then apt install -y grub-efi; fi
 apt -y clean
 apt -y autoclean
 sleep 1s
@@ -486,19 +447,13 @@ EOF
 fi
 
 # udev rules
-if [[ "$FAMILY_EXT" =~ ^(odroid|ac2xx|rk3288)$ ]]; then
-	${FAMILY_EXT}_udev_rules > /dev/null 2>&1
-fi
-if [[ "$FAMILY" == "amlogic" ]]; then
-	aml_gpiomem_rules > /dev/null 2>&1
-fi
+if [[ "$FAMILY_EXT" =~ ^(odroid|ac2xx|rk3288)$ ]]; then ${FAMILY_EXT}_udev_rules > /dev/null 2>&1; fi
+if [[ "$FAMILY" == "amlogic" ]]; then aml_gpiomem_rules > /dev/null 2>&1; fi
 if [[ "$FAMILY_EXT" == "exynos" ]]; then
 	mkdir -p /etc/modprobe.d/
 	echo "blacklist ina231_sensor" > /etc/modprobe.d/blacklist-odroid.conf
 fi
-if [[ "$BOARD" =~ ^(nanopir4s|nanopir4se|nanopir5c|nanopir5s)$ ]]; then
-	router_udev_rules
-fi
+if [[ "$BOARD" =~ ^(nanopir4s|nanopir4se|nanopir5c|nanopir5s)$ ]]; then router_udev_rules; fi
 
 # services
 if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
@@ -517,20 +472,14 @@ else
 	firstboot_service > /dev/null 2>&1
 	governor_service > /dev/null 2>&1
 	led_service > /dev/null 2>&1
-	if [[ -f "/usr/local/sbin/led-trigger" ]]; then
-		:;
-	else
-		systemctl disable leds > /dev/null 2>&1
-	fi
+	if [[ -f "/usr/local/sbin/led-trigger" ]]; then :; else systemctl disable leds > /dev/null 2>&1; fi
 	rc-local_service > /dev/null 2>&1
 	echo "== Systemd"
 	enable_systemd > /dev/null 2>&1
 fi
 
 # own it
-if [ $USERACCT -eq 0 ]; then
-	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME};
-fi
+if [ $USERACCT -eq 0 ]; then chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}; fi
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chmod +x /usr/local/sbin/*
