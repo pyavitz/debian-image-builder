@@ -106,9 +106,7 @@ fi
 }
 
 override_board (){
-if [[ -z "$ARCH_EXT" ]]; then
-	:;
-else
+if [[ ! -z "$ARCH_EXT" ]]; then
 	sed -i 's/^ARCH_EXT=.*/ARCH_EXT="'"${ARCH_EXT}"'"/' board.txt
 	if [[ "$ARCH_EXT" == "armel" ]]; then
 		sed -i 's/^CROSS_COMPILE=.*/CROSS_COMPILE="'"arm-linux-gnueabi-"'"/' board.txt
@@ -123,9 +121,9 @@ else
 		sed -i 's/^STATIC=.*/STATIC="'"qemu-aarch64-static"'"/' board.txt
 	fi
 fi
-if [[ -z "$FORCE_GIT" ]]; then :; else sed -i 's/^FORCE_GIT=.*/FORCE_GIT="'"${FORCE_GIT}"'"/' board.txt; fi
-if [[ -z "$FORCE_VERSION" ]]; then :; else sed -i 's/^FORCE_VERSION=.*/FORCE_VERSION="'"${FORCE_VERSION}"'"/' board.txt; fi
-if [[ -z "$LINUX_PATCHING" ]]; then :; else sed -i 's/^LINUX_PATCHING=.*/LINUX_PATCHING="'"${LINUX_PATCHING}"'"/' board.txt; fi
-if [[ -z "$PRECOMPILED_UBOOT" ]]; then :; else sed -i 's/^PRECOMPILED_UBOOT=.*/PRECOMPILED_UBOOT="'"${PRECOMPILED_UBOOT}"'"/' board.txt; fi
+if [[ ! -z "$FORCE_GIT" ]]; then sed -i 's/^FORCE_GIT=.*/FORCE_GIT="'"${FORCE_GIT}"'"/' board.txt; fi
+if [[ ! -z "$FORCE_VERSION" ]]; then sed -i 's/^FORCE_VERSION=.*/FORCE_VERSION="'"${FORCE_VERSION}"'"/' board.txt; fi
+if [[ ! -z "$LINUX_PATCHING" ]]; then sed -i 's/^LINUX_PATCHING=.*/LINUX_PATCHING="'"${LINUX_PATCHING}"'"/' board.txt; fi
+if [[ ! -z "$PRECOMPILED_UBOOT" ]]; then sed -i 's/^PRECOMPILED_UBOOT=.*/PRECOMPILED_UBOOT="'"${PRECOMPILED_UBOOT}"'"/' board.txt; fi
 rm -f override.txt
 }
