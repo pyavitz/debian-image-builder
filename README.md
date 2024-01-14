@@ -55,7 +55,6 @@ Renegade
 Rock 5B	(*)
 ROCK64	
 ROCKPro64 (*)
-Tinkerboard
 
 # SAMSUNG
 Odroid XU4
