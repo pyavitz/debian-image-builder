@@ -9,6 +9,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12a-radxa-zero-i2c-ee-m3-gpioa-14-gpioa-15.dtbo \
 	meson-g12a-radxa-zero-pwm-c-on-gpiox-8.dtbo \
 	meson-g12a-radxa-zero-pwmao-a-on-gpioao-11.dtbo \
+	meson-g12a-radxa-zero-rtc-ds1307.dtbo \
 	meson-g12a-radxa-zero-spi-spidev.dtbo \
 	meson-g12a-radxa-zero-uart-ao-a-on-gpioao-0-gpioao-1.dtbo \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \

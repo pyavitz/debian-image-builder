@@ -1,0 +1,27 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	/* requires meson-g12a-radxa-zero-i2c-ee-m3-gpioa-14-gpioa-15.dtbo */
+	compatible = "radxa,zero", "amlogic,g12a";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			aliases {
+				rtc0 = &rtc;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&i2c3>;
+		__overlay__ {
+			rtc: rtc@68 {
+				compatible = "dallas,ds1307";
+				reg = <0x68>;
+				wakeup-source;
+			};
+		};
+	};
+};
