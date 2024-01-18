@@ -25,7 +25,6 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12b-odroid-n2-spi.dtbo \
 	meson-g12b-odroid-n2-uart0.dtbo \
 	meson-g12b-odroid-n2-uart1.dtbo \
-	meson-g12b-waveshare-cm4-io-base-usb.dtbo \
 	meson-g12-gxl-cma-pool-896MB.dtbo \
 	meson-g12-pwm-gpiox-5-fan.dtbo \
 	meson-sm1-bananapi-m5-rtl8822cs.dtbo \
@@ -41,7 +40,8 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-sm1-odroid-c4-uart1.dtbo \
 	meson-sm1-odroid-c4-uart2.dtbo \
 	meson-sm1-odroid-c4-uart3.dtbo \
-	meson-sm1-x96-air-rtc.dtbo
+	meson-sm1-x96-air-rtc.dtbo \
+	meson-usb-host-mode.dtbo
 
 dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-a64-overclock.dtbo \
