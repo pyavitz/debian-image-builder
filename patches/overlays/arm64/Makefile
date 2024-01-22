@@ -27,6 +27,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12b-odroid-n2-uart1.dtbo \
 	meson-g12-gxl-cma-pool-896MB.dtbo \
 	meson-g12-pwm-gpiox-5-fan.dtbo \
+	meson-gxl-s905x-libretech-cc-i2c-ao.dtbo \
 	meson-sm1-bananapi-m5-rtl8822cs.dtbo \
 	meson-sm1-bananapi-uartA.dtbo \
 	meson-sm1-bananapi-uartA_cts_rts.dtbo \
