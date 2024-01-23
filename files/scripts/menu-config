@@ -60,7 +60,7 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 		FAN_CTRL="0"
 	fi
 	# home assistant
-	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" ]] && [[ "$DISTRO_CODENAME" == "bullseye" ]]; then
+	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" ]] && [[ "$DISTRO_CODENAME" == "bookworm" ]]; then
 		SUPPORTED_HA="1"
 	else
 		SUPPORTED_HA="0"
@@ -442,28 +442,28 @@ if [ $HDMI_AUDIO -eq 1 ]; then
 	amlogic_hdmi
 fi
 
-# install docker
-curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-echo \
- "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]\
- https://download.docker.com/linux/debian \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt-get update; sudo apt-get -y upgrade
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io
-
 # install HA required packages
-sudo apt -y install jq libglib2.0-bin udisks2 systemd-resolved systemd/bullseye-backports libpam-systemd/bullseye-backports network-manager/bullseye-backports systemd-journal-remote/bullseye-backports 
-
-# install agent required by ha
-wget -cq --show-progress \
-https://github.com/home-assistant/os-agent/releases/download/1.2.2/os-agent_1.2.2_linux_aarch64.deb
-sudo dpkg -i os-agent_1.2.2_linux_aarch64.deb
+sudo apt -y install jq libglib2.0-bin udisks2 systemd-resolved libpam-systemd systemd-journal-remote cifs-utils lsb-release network-manager nfs-common 
 
 # enabed service required by HA
 sudo systemctl enable systemd-resolved.service
-sudo systemctl start systemd-resolved.service
+sudo systemctl restart systemd-resolved.service
+
+# give time for resolved to restart
+sleep 2
+
+# install docker
+curl -fsSL get.docker.com | sh
+
+sudo apt-get update; sudo apt-get -y upgrade
+
+# sadly at this time we now have to downgrade docker to work with HA
+apt install -y --allow-downgrades docker-ce=5:24.0.7-1~debian.12~bookworm
+
+# install agent required by hA
+wget -cq --show-progress \
+https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
+sudo dpkg -i os-agent_1.6.0_linux_aarch64.deb
 
 # need to fake grub so HA will install
 sudo touch /etc/default/grub
@@ -477,7 +477,7 @@ echo 'KERNEL=="gpiochip0", MODE="0666"' | sudo tee -a /etc/udev/rules.d/99-perm.
 echo 'KERNEL=="gpiochip1", MODE="0666"' | sudo tee -a /etc/udev/rules.d/99-perm.rules 
 
 # install tools useful for sensor scripts that communicate with HA mosquitto broker
-sudo apt -y install netcat mosquitto-clients
+sudo apt -y install netcat-openbsd mosquitto-clients
 
 # install tools that allow for using usb nic for backup communication path
 sudo apt -y install networkd-dispatcher ifmetric
@@ -487,15 +487,14 @@ sudo apt -y remove --purge avahi-daemon
 
 # add some kernel arguments, some that are required, some that look to make system more stable
 if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
-	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/extlinux/extlinux.conf;
+	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset apparmor=1 security=apparmor/' /boot/extlinux/extlinux.conf;
 fi
 if [[ -f "/boot/${FAMILY}/extlinux/extlinux.conf" ]]; then
-	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor/' /boot/${FAMILY}/extlinux/extlinux.conf;
+	sudo sed -i '/append / s/$/ systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 usbcore.autosuspend=-1 clk_ignore_unused cgroup_enable=cpuset apparmor=1 security=apparmor/' /boot/${FAMILY}/extlinux/extlinux.conf;
 fi
 
 # grab the HA supervisor package which will install HA
-sudo apt install -y systemd-journal-remote
-wget -cq --show-progress https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
+wget -cq --show-progress homeassistant-supervised.deb https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
 sudo dpkg -i homeassistant-supervised.deb
 
 # clean
@@ -509,7 +508,7 @@ echo ""
 if [[ "$PETITBOOT" == "true" ]]; then
 	echo -e "You need to add the following kernel params to: /boot/config.ini"
 	echo -e ""
-	echo -e "systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory apparmor=1 security=apparmor"
+	echo -e "systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false usbcore.autosuspend=-1 cgroup_enable=cpuset apparmor=1 security=apparmor"
 	echo -e ""
 fi
 read -p "Press enter to continue."
