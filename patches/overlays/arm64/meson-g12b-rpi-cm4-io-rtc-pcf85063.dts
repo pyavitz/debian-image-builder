@@ -1,0 +1,26 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "bananapi,bpi-cm4io", "bananapi,bpi-cm4", "amlogic,a311d", "amlogic,g12b";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			aliases {
+				rtc0 = &rtc;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&i2c1>;
+		__overlay__ {
+			rtc: rtc@51 {
+				compatible = "nxp,pcf85063";
+				reg = <0x51>;
+				wakeup-source;
+			};
+		};
+	};
+};
