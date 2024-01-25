@@ -1,0 +1,53 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/thermal/thermal.h>
+
+/ {
+	compatible = "bananapi,bpi-cm4io", "bananapi,bpi-cm4", "amlogic,a311d", "amlogic,g12b";
+
+	fragment@0 {
+		target = <&i2c1>;
+		__overlay__ {
+			fanctrl: emc2305@2f {
+				compatible = "smsc,emc2305";
+				reg = <0x2f>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				#cooling-cells = <0x02>;
+				wakeup-source;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&cpu_thermal>;
+		__overlay__ {
+			trips {
+				fanmid0: fanmid0 {
+					temperature = <60000>;
+					hysteresis = <2000>;
+					type = "active";
+				};
+
+				fanmax0: fanmax0 {
+					temperature = <65000>;
+					hysteresis = <2000>;
+					type = "active";
+				};
+			};
+
+			cooling-maps {
+				map0 {
+					trip = <&fanmid0>;
+					cooling-device = <&fanctrl 2 6>;
+				};
+
+				map1 {
+					trip = <&fanmax0>;
+					cooling-device = <&fanctrl 7 THERMAL_NO_LIMIT>;
+				};
+			};
+		};
+	};
+};
