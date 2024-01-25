@@ -2,7 +2,6 @@
 /plugin/;
 
 / {
-	/* requires meson-g12a-radxa-zero-i2c-ee-m3-gpioa-14-gpioa-15.dtbo */
 	compatible = "radxa,zero", "amlogic,g12a";
 
 	fragment@0 {
@@ -17,11 +16,19 @@
 	fragment@1 {
 		target = <&i2c3>;
 		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
 			rtc: rtc@68 {
 				compatible = "dallas,ds1307";
 				reg = <0x68>;
 				wakeup-source;
 			};
 		};
+	};
+
+	__overrides__ {
+		rtc = <0>,"+0";
+		addr = <&rtc>, "reg:0";
 	};
 };

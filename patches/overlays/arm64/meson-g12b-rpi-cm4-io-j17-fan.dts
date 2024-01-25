@@ -9,11 +9,12 @@
 	fragment@0 {
 		target = <&i2c1>;
 		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
 			fanctrl: emc2305@2f {
 				compatible = "smsc,emc2305";
 				reg = <0x2f>;
-				#address-cells = <1>;
-				#size-cells = <0>;
 				#cooling-cells = <0x02>;
 				wakeup-source;
 			};
@@ -49,5 +50,10 @@
 				};
 			};
 		};
+	};
+
+	__overrides__ {
+		fanctrl = <0>,"+0";
+		addr = <&fanctrl>, "reg:0";
 	};
 };
