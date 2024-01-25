@@ -559,20 +559,8 @@ fi
 p1_boot (){
 $EE
 $EE "extlinux.conf"
-FDT="../${FAMILY}/${DTB}.dtb"
-FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
-mkdir -p /mnt/${P_ROOTFS}/boot/extlinux
-rm -f /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
-tee /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf <<EOF
-label default
-	kernel ../Image
-	initrd ../uInitrd
-	fdtdir ${FDTDIR}
-	fdt ${FDT}
-	#fdtoverlays
-	${CMDLINE}
-EOF
+sed -i "/append/c\\	${CMDLINE}" /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
+cat /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
 $EE
 $EE "fstab"
 rm -f /mnt/${P_ROOTFS}/etc/fstab
@@ -585,20 +573,8 @@ EOF
 p2_boot (){
 $EE
 $EE "extlinux.conf"
-FDT="../${FAMILY}/${DTB}.dtb"
-FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
-mkdir -p /mnt/${P_BOOT}/extlinux
-rm -f /mnt/${P_BOOT}/extlinux/extlinux.conf
-tee /mnt/${P_BOOT}/extlinux/extlinux.conf <<EOF
-label default
-	kernel ../Image
-	initrd ../uInitrd
-	fdtdir ${FDTDIR}
-	fdt ${FDT}
-	#fdtoverlays
-	${CMDLINE}
-EOF
+sed -i "/append/c\\	${CMDLINE}" /mnt/${P_BOOT}/extlinux/extlinux.conf
+cat /mnt/${P_BOOT}/extlinux/extlinux.conf
 $EE
 $EE "fstab"
 rm -f /mnt/${P_ROOTFS}/etc/fstab
@@ -609,6 +585,7 @@ tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
 }
 
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
 if [[ "$P_VALUE" == "p1" ]]; then
 	ROOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^UUID=//p')
 	ROOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^PARTUUID=//p')
