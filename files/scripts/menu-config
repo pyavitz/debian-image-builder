@@ -30,7 +30,7 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 	# overclocking
 	if [[ "$FAMILY_EXT" == "bananapi" || "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$FAMILY_EXT" == "odroid"  || \
 		"$BOARD" == "orangepi3" || "$BOARD" == "orangepi3lts" || "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk3328" || \
-		"$BOARD" == "tinker" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
+		"$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
 		SUPPORTED_OC="1"
 	else
 		SUPPORTED_OC="0"
@@ -48,11 +48,7 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 		JACK_AUDIO="0"
 	fi
 	# amlogic g12/sm1 series analog audio
-	if [[ "$BOARD" == "x96air" ]]; then
-		SPDIF_AUDIO="1"
-	else
-		SPDIF_AUDIO="0"
-	fi
+	if [[ "$BOARD" == "x96air" ]]; then SPDIF_AUDIO="1"; else SPDIF_AUDIO="0"; fi
 	# fan control
 	if [[ "$BOARD" == "bananapicm4" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || "$BOARD" == "odroidxu4" ]]; then
 		FAN_CTRL="1"
@@ -65,61 +61,6 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 	else
 		SUPPORTED_HA="0"
 	fi
-fi
-}
-
-amlogic_hdmi(){
-sudo amixer -c 0 set 'TOHDMITX' 'on'
-sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
-sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
-sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
-sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
-sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
-sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
-	sudo amixer -c 0 set 'ACODEC' '85%'
-fi
-# Save
-sudo alsactl store
-if [ $VERBOSITY -eq 1 ]; then
-	echo ""
-	read -p "Press enter to continue."
-fi
-}
-
-amlogic_analog(){
-sudo amixer -c 0 set 'TOACODEC OUT EN' 'on'
-sudo amixer -c 0 set 'TOACODEC SRC' 'I2S B'
-sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
-sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
-sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
-sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
-sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
-sudo amixer -c 0 set 'ACODEC' '85%'
-# Save
-sudo alsactl store
-if [ $VERBOSITY -eq 1 ]; then
-	echo ""
-	read -p "Press enter to continue."
-fi
-}
-
-amlogic_spdif(){
-sudo amixer -c 0 set 'TOHDMITX' 'on'
-sudo amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
-sudo amixer -c 0 set 'TDMOUT_B SRC SEL' 'IN 0'
-sudo amixer -c 0 set 'FRDDR_A SRC 2 EN' 'on'
-sudo amixer -c 0 set 'FRDDR_A SRC 3 EN' 'on'
-sudo amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
-sudo amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
-sudo amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 3'
-sudo amixer -c 0 set 'SPDIFOUT_A SRC SEL' 'IN 0'
-sudo amixer -c 0 set 'ACODEC' '85%'
-# Save
-sudo alsactl store
-if [ $VERBOSITY -eq 1 ]; then
-	echo ""
-	read -p "Press enter to continue."
 fi
 }
 
@@ -140,7 +81,7 @@ case $SOUND_MIXER in
 		if [ $HDMI_AUDIO -eq 1 ]; then
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "HDMI AUDIO" --title "Confirm" --yesno "    Apply HDMI Audio Settings?" 0 0); then
-				amlogic_hdmi
+				amlmixer hdmi
 				whiptail --backtitle "HDMI AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0
 			else
 				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
@@ -155,7 +96,7 @@ case $SOUND_MIXER in
 		if [ $JACK_AUDIO -eq 1 ]; then
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirm" --yesno "    Apply Analog Audio Settings?" 0 0); then
-				amlogic_analog
+				amlmixer analog
 				whiptail --backtitle "3.5MM JACK AUDIO" --title "Confirmation" --msgbox "    Applied successfully." 0 0
 			else
 				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
@@ -170,7 +111,7 @@ case $SOUND_MIXER in
 		if [ $SPDIF_AUDIO -eq 1 ]; then
 			export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 			if (whiptail --backtitle "Digital Optical Audio" --title "Confirm" --yesno "    Apply SPDIF Audio Settings?" 0 0); then
-				amlogic_spdif
+				amlmixer spdif
 				whiptail --backtitle "Digital Optical Audio" --title "Confirmation" --msgbox "    Applied successfully." 0 0
 			else
 				whiptail --title "Cancelled" --msgbox "    Hit enter to return to menu." 0 0
@@ -438,9 +379,7 @@ homeAssistant(){
 clear -x
 echo "Installing Home Assistant ..."
 
-if [ $HDMI_AUDIO -eq 1 ]; then
-	amlogic_hdmi
-fi
+if [ $HDMI_AUDIO -eq 1 ]; then amlmixer hdmi; fi
 
 # install HA required packages
 sudo apt -y install jq libglib2.0-bin udisks2 systemd-resolved libpam-systemd systemd-journal-remote cifs-utils lsb-release network-manager nfs-common 
@@ -512,122 +451,6 @@ if [[ "$PETITBOOT" == "true" ]]; then
 	echo -e ""
 fi
 read -p "Press enter to continue."
-}
-
-tinker_rtc_ds1307(){
-if [[ `apt list fake-hwclock | grep "[installed]"` ]] &> /dev/null; then
-	if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
-		sudo systemctl stop fake-hwclock
-		sudo systemctl disable fake-hwclock
-	fi
-	if [[ "$DISTRO" == "Devuan" ]]; then
-		sudo service fake-hwclock stop
-		sudo update-rc.d -f fake-hwclock remove
-	fi
-fi
-if [[ `grep -w "rtc-ds1307" "/etc/modules"` ]]; then
-	if [[ `lsmod | grep -w rtc_ds1307` || `lsmod | grep -w rtc-ds1307` ]]; then
-		:;
-	else
-		sudo modprobe rtc-ds1307
-	fi
-else
-	echo "rtc-ds1307" | sudo tee -a /etc/modules
-	if [[ `lsmod | grep -w rtc_ds1307` || `lsmod | grep -w rtc-ds1307` ]]; then
-		:;
-	else
-		sudo modprobe rtc-ds1307
-	fi
-fi
-if [[ -f "/lib/udev/rules.d/50-udev-default.rules" ]]; then
-	sudo sed -i 's/rtc0/rtc1/' /lib/udev/rules.d/50-udev-default.rules
-fi
-if [[ -f "/lib/udev/rules.d/85-hwclock.rules" ]]; then
-	sudo sed -i 's/rtc0/rtc1/' /lib/udev/rules.d/85-hwclock.rules
-fi
-if [[ -f "/etc/default/hwclock" ]]; then
-	sudo sed -i 's/rtc0/rtc1/' /etc/default/hwclock
-fi
-if [[ -f "/lib/udev/hwclock-set" ]]; then
-	sudo sed -i 's/rtc0/rtc1/' /lib/udev/hwclock-set
-fi
-if [[ -f "/usr/local/sbin/rtc-ds1307" ]]; then
-	sudo chmod +x /usr/local/sbin/rtc-ds1307
-else
-	sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/rtc-ds1307 -P /usr/local/sbin
-	sudo chmod +x /usr/local/sbin/rtc-ds1307
-fi
-if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
-	if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]]; then
-		:;
-	else
-		sudo tee /etc/systemd/system/rtc-ds1307.service <<EOF
-[Unit]
-Description=RTC DS1307
-Before=cloud-init-local.service
-Requires=systemd-modules-load.service
-After=systemd-modules-load.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/rtc-ds1307
-
-[Install]
-WantedBy=multi-user.target
-EOF
-	fi
-fi
-if [[ "$DISTRO" == "Devuan" ]]; then
-	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
-		:;
-	else
-		sudo tee /etc/init.d/rtc-ds1307 <<'EOF'
-#!/bin/bash
-### BEGIN INIT INFO
-# Provides: RTC DS1307
-# Required-Start: $all
-# Required-Stop:
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 6
-# Short-Description: Starts RTC DS1307
-# Description:
-### END INIT INFO
-
-# chmod +x /etc/init.d/rtc-ds1307
-# update-rc.d rtc-ds1307 defaults 5
-
-. /lib/lsb/init-functions
-
-case "$1" in
-	start)
-	if [ -f /usr/local/sbin/rtc-ds1307 ]; then
-		/usr/local/sbin/rtc-ds1307;
-	fi
-	exit 0
-	;;
-	*)
-	echo "Usage: $0 start" >&2
-	exit 3
-	;;
-esac
-EOF
-	fi
-	if [[ -f "/etc/init.d/rtc-ds1307" ]]; then
-		#sudo sed -i 's/# Required-Start:/# Required-Start: $all/g' /etc/init.d/rtc-ds1307
-		#sudo sed -i 's/case "" in/case "$1" in/g' /etc/init.d/rtc-ds1307
-		sleep .25
-		sudo chmod +x /etc/init.d/rtc-ds1307
-		sleep .25
-		sudo update-rc.d rtc-ds1307 defaults 5
-		sudo service rtc-ds1307 start
-	fi
-	if [[ -f "/etc/init.d/hwclock.sh" ]]; then
-		sudo sed -i 's/rtc0/rtc1/g' /etc/init.d/hwclock.sh
-		sleep .25
-		sudo update-rc.d hwclock.sh defaults S
-		sudo service hwclock.sh start
-	fi
-fi
 }
 
 # main menu
@@ -735,7 +558,6 @@ case $CHOICE in
 			"BF)" "Binfmt Support           Debian Bookworm systemd fixups" \
 			"DC)" "Debconf                  Reconfigure ${DISTRO} configuration system" \
 			"FC)" "Fan Control              Install fanctrl script and service" \
-			"TB)" "Tinkerboard              Enable DS1307 RTC" \
 			"E)" "Exit .." 3>&2 2>&1 1>&3
 		)
 		case $MISC in
@@ -813,42 +635,6 @@ case $CHOICE in
 								fanctrl menu
 							fi
 						fi
-					else
-						export NEWT_COLORS='root=,black'
-						whiptail --msgbox "    Your board is not supported." 0 0
-					fi
-				else
-					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    This requires a internet connection." 0 0
-				fi
-				;;
-			"TB)")
-				if [[ -f "/etc/systemd/system/rtc-ds1307.service" ]] || [[ -f "/etc/init.d/rtc-ds1307" ]]; then
-					export NEWT_COLORS='root=,black'
-					whiptail --msgbox "    Service already installed." 0 0
-					break
-				fi
-				if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-					if [[ "$BOARD" == "tinker" ]]; then
-						tinker_rtc_ds1307
-						while true; do
-							export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-								if (whiptail --backtitle "Menu Interface: Sync Clock: Confirm" --title "Confirm" --yesno "    Keep System Time and RTC in sync?" 0 0); then
-									sudo sed -i 's/SYNC_CLK="false"/SYNC_CLK="true"/g' /usr/local/sbin/rtc-ds1307
-									sleep .50
-									sudo systemctl enable rtc-ds1307.service
-									sudo systemctl start rtc-ds1307.service
-									sudo systemctl set-default multi-user.target
-									whiptail --backtitle "Menu Interface: Sync Clock: Confirmation" --title "Confirmation" --msgbox "    Enabled." 0 0
-								else
-									sleep .50
-									sudo systemctl enable rtc-ds1307.service
-									sudo systemctl start rtc-ds1307.service
-									sudo systemctl set-default multi-user.target
-									whiptail --title "Clock Not Synced" --msgbox "    Hit enter to return to menu." 0 0
-								fi
-							break
-						done
 					else
 						export NEWT_COLORS='root=,black'
 						whiptail --msgbox "    Your board is not supported." 0 0
