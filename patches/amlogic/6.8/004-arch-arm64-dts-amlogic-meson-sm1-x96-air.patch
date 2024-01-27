@@ -1,16 +1,16 @@
-From fd15f15a2e45946dfd8b6dac37f5734f14a429c6 Mon Sep 17 00:00:00 2001
+From 052e17afb09e2be92df07d10aaf8ec51ad242715 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 11 Sep 2023 14:54:48 -0400
+Date: Sat, 27 Jan 2024 09:49:40 -0500
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-x96-air
 
-Added support: spdif jack rtc openvfd jl2xx1
+Added support: spdif jack i2c1 openvfd jl2xx1
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  15 +-
- .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 198 +++++++++++++++++-
- .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 195 ++++++++++++++++-
- 3 files changed, 395 insertions(+), 13 deletions(-)
+ .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 186 +++++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 183 ++++++++++++++++-
+ 3 files changed, 371 insertions(+), 13 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 index 46a34731f7e2..d2c24efd17e7 100644
@@ -53,10 +53,10 @@ index 46a34731f7e2..d2c24efd17e7 100644
  
  	non-removable;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-index fc9b961133cd..49566e3564bc 100644
+index fc9b961133cd..5331909649d5 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-@@ -7,20 +7,45 @@
+@@ -7,20 +7,44 @@
  /dts-v1/;
  
  #include "meson-sm1-ac2xx.dtsi"
@@ -70,7 +70,6 @@ index fc9b961133cd..49566e3564bc 100644
 +	aliases {
 +		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
-+		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
 +
@@ -104,7 +103,7 @@ index fc9b961133cd..49566e3564bc 100644
  
  		assigned-clocks = <&clkc CLKID_MPLL2>,
  				  <&clkc CLKID_MPLL0>,
-@@ -42,8 +67,20 @@ dai-link-2 {
+@@ -42,8 +66,20 @@ dai-link-2 {
  			sound-dai = <&frddr_c>;
  		};
  
@@ -126,7 +125,7 @@ index fc9b961133cd..49566e3564bc 100644
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -52,20 +89,82 @@ dai-link-3 {
+@@ -52,20 +88,82 @@ dai-link-3 {
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -187,7 +186,7 @@ index fc9b961133cd..49566e3564bc 100644
 +				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
 +			};
 +		};
- 	};
++	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -196,7 +195,7 @@ index fc9b961133cd..49566e3564bc 100644
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
-+	};
+ 	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -211,7 +210,7 @@ index fc9b961133cd..49566e3564bc 100644
  };
  
  &arb {
-@@ -81,7 +180,7 @@ &ethmac {
+@@ -81,7 +179,7 @@ &ethmac {
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
@@ -220,7 +219,7 @@ index fc9b961133cd..49566e3564bc 100644
  	phy-handle = <&external_phy>;
  
  	rx-internal-delay-ps = <800>;
-@@ -89,7 +188,6 @@ &ethmac {
+@@ -89,7 +187,6 @@ &ethmac {
  
  &ext_mdio {
  	external_phy: ethernet-phy@0 {
@@ -228,7 +227,7 @@ index fc9b961133cd..49566e3564bc 100644
  		reg = <0>;
  		max-speed = <1000>;
  
-@@ -103,6 +201,12 @@ external_phy: ethernet-phy@0 {
+@@ -103,6 +200,12 @@ external_phy: ethernet-phy@0 {
  	};
  };
  
@@ -241,7 +240,7 @@ index fc9b961133cd..49566e3564bc 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -119,14 +223,94 @@ &ir {
+@@ -119,14 +222,83 @@ &ir {
  	linux,rc-map-name = "rc-x96max";
  };
  
@@ -299,6 +298,11 @@ index fc9b961133cd..49566e3564bc 100644
 +	status = "okay";
 +};
 +
++&i2c1 {
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++};
++
 +&uart_A {
 +	status = "okay";
 +	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
@@ -320,27 +324,11 @@ index fc9b961133cd..49566e3564bc 100644
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
-+
-+&i2c1 {
-+	status = "disabled";
-+	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
-+	pinctrl-names = "default";
-+
-+	rtc: rtc@51 {
-+		compatible = "haoyu,hym8563";
-+		reg = <0x51>;
-+		wakeup-source;
-+		init_date = "2022/06/01";
-+		#clock-cells = <0x00>;
-+		clock-frequency = <32768>;
-+		clock-output-names = "xin32k";
-+	};
-+};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-index 9ea969255b4f..f853067c2756 100644
+index 9ea969255b4f..5bd4a8435197 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-@@ -7,20 +7,45 @@
+@@ -7,20 +7,44 @@
  /dts-v1/;
  
  #include "meson-sm1-ac2xx.dtsi"
@@ -354,7 +342,6 @@ index 9ea969255b4f..f853067c2756 100644
 +	aliases {
 +		serial2 = &uart_A;
 +		ethernet0 = &ethmac;
-+		rtc0 = &rtc;
 +		rtc1 = &vrtc;
 +	};
 +
@@ -388,7 +375,7 @@ index 9ea969255b4f..f853067c2756 100644
  
  		assigned-clocks = <&clkc CLKID_MPLL2>,
  				  <&clkc CLKID_MPLL0>,
-@@ -42,8 +67,20 @@ dai-link-2 {
+@@ -42,8 +66,20 @@ dai-link-2 {
  			sound-dai = <&frddr_c>;
  		};
  
@@ -410,7 +397,7 @@ index 9ea969255b4f..f853067c2756 100644
  			sound-dai = <&tdmif_b>;
  			dai-format = "i2s";
  			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -52,20 +89,82 @@ dai-link-3 {
+@@ -52,20 +88,82 @@ dai-link-3 {
  			dai-tdm-slot-tx-mask-3 = <1 1>;
  			mclk-fs = <256>;
  
@@ -495,7 +482,7 @@ index 9ea969255b4f..f853067c2756 100644
  };
  
  &arb {
-@@ -82,6 +181,12 @@ &ethmac {
+@@ -82,6 +180,12 @@ &ethmac {
  	phy-mode = "rmii";
  };
  
@@ -508,7 +495,7 @@ index 9ea969255b4f..f853067c2756 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -98,14 +203,94 @@ &ir {
+@@ -98,14 +202,83 @@ &ir {
  	linux,rc-map-name = "rc-beelink-gs1";
  };
  
@@ -566,6 +553,11 @@ index 9ea969255b4f..f853067c2756 100644
 +	status = "okay";
 +};
 +
++&i2c1 {
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++};
++
 +&uart_A {
 +	status = "okay";
 +	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
@@ -586,22 +578,6 @@ index 9ea969255b4f..f853067c2756 100644
 +
 +&mali {
 +	mali-supply=<&vddgpu>;
-+};
-+
-+&i2c1 {
-+	status = "disabled";
-+	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
-+	pinctrl-names = "default";
-+
-+	rtc: rtc@51 {
-+		compatible = "haoyu,hym8563";
-+		reg = <0x51>;
-+		wakeup-source;
-+		init_date = "2022/06/01";
-+		#clock-cells = <0x00>;
-+		clock-frequency = <32768>;
-+		clock-output-names = "xin32k";
-+	};
 +};
 -- 
 2.39.2

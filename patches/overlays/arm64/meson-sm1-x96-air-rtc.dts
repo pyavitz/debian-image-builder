@@ -2,10 +2,39 @@
 /plugin/;
 
 / {
+ 	compatible = "amediatech,x96-air-gbit", "amediatech,x96-air", "amlogic,sm1";
+
 	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			aliases {
+				rtc0 = &rtc;
+			};
+		};
+	};
+
+	fragment@1 {
 		target = <&i2c1>;
 		__overlay__ {
 			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			rtc: rtc@51 {
+				status = "okay";
+				compatible = "haoyu,hym8563";
+				reg = <0x51>;
+				wakeup-source;
+				init_date = "2022/06/01";
+				#clock-cells = <0x00>;
+				clock-frequency = <32768>;
+				clock-output-names = "xin32k";
+			};
 		};
+	};
+
+	__overrides__ {
+		rtc = <0>,"+0";
+		addr = <&rtc>, "reg:0";
 	};
 };
