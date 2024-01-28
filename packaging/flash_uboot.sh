@@ -153,9 +153,9 @@ fi
 
 ROOTFS=`findmnt -v -n -o SOURCE /`
 PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-sleep .25
+sleep .50
 flash_uboot
-sleep .25
+sleep 1.25
 if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
 	sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/extlinux/extlinux.conf
 fi
