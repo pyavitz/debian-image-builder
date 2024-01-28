@@ -116,10 +116,6 @@ if [[ ! -z $FAMILY ]]; then
 	# led trigger
 	if [[ -f "files/led-trigger/${BOARD}" ]]; then
 		cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger
-		if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
-			mkdir -p ${P_VALUE}/usr/local/bin
-			cp files/openvfd/vfdservice ${P_VALUE}/usr/local/bin/
-		fi
 	fi
 	# tweaks
 	if [[ -f "files/tweaks/${BOARD}" ]]; then
@@ -128,9 +124,14 @@ if [[ ! -z $FAMILY ]]; then
 	fi
 	# blob
 	if [[ "$BOARD" == "orangepi3lts" ]]; then
-		# bluetooth blob
+		# bluetooth
 		mkdir -p ${P_VALUE}/usr/local/sbin
 		cp files/blob/hciattach_opi ${P_VALUE}/usr/local/sbin/
+	fi
+	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
+		# vfd
+		mkdir -p ${P_VALUE}/usr/local/bin
+		cp files/blob/vfdservice ${P_VALUE}/usr/local/bin/
 	fi
 fi
 # user account service
