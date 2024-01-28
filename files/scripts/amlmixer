@@ -45,23 +45,23 @@ else
 	warning
 fi
 
-if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "radxazero" || "$BOARD" == "x96air" ]]; then
+if [[ "$FAMILY_EXT" == "ac2xx" || "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "radxazero" ]]; then
 	HDMI_AUDIO=1
 else
 	HDMI_AUDIO=0
 fi
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+if [[ "$FAMILY_EXT" == "ac2xx" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" ]]; then
 	JACK_AUDIO=1
 else
 	JACK_AUDIO=0
 fi
-if [[ "$BOARD" == "x96air" ]]; then
+if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 	SPDIF_AUDIO=1
 else
 	SPDIF_AUDIO=0
 fi
 
-analog(){
+analog (){
 if [ $JACK_AUDIO -eq 1 ]; then
 	amixer -c 0 set 'TOACODEC OUT EN' 'on'
 	amixer -c 0 set 'TOACODEC SRC' 'I2S B'
@@ -77,7 +77,7 @@ else
 fi
 }
 
-hdmi(){
+hdmi (){
 if [ $HDMI_AUDIO -eq 1 ]; then
 	amixer -c 0 set 'TOHDMITX' 'on'
 	amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
@@ -86,8 +86,8 @@ if [ $HDMI_AUDIO -eq 1 ]; then
 	amixer -c 0 set 'FRDDR_A SINK 1 SEL' 'OUT 0'
 	amixer -c 0 set 'FRDDR_A SINK 2 SEL' 'OUT 1'
 	amixer -c 0 set 'FRDDR_A SINK 3 SEL' 'OUT 2'
-	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" || \
-		"$BOARD" == "bananapim5" || "$BOARD" == "x96air" ]]; then
+	if [[ "$FAMILY_EXT" == "ac2xx" || "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || \
+	"$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" ]]; then
 		amixer -c 0 set 'ACODEC' '85%'
 	fi
 	alsactl store
@@ -96,7 +96,7 @@ else
 fi
 }
 
-spdif(){
+spdif (){
 if [ $SPDIF_AUDIO -eq 1 ]; then
 	amixer -c 0 set 'TOHDMITX' 'on'
 	amixer -c 0 set 'TOHDMITX I2S SRC' 'I2S B'
