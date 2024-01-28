@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [[ -f "/etc/opt/overclock.txt" ]]; then
+	. /etc/opt/overclock.txt
+else
+	echo 'overclock="0"' > /etc/opt/overclock.txt
+	. /etc/opt/overclock.txt
+fi
+
+if [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
+	if [ $overclock -eq 1 ]; then
+		echo "1" > /sys/devices/system/cpu/cpufreq/boost
+		governor -r
+	else
+		echo "0" > /sys/devices/system/cpu/cpufreq/boost
+		governor -r
+	fi
+fi
+
+if [[ -e "/sys/class/net/eth0/queues/rx-0/rps_cpus" ]] && [[ `grep -w "0f" "/sys/class/net/eth0/queues/rx-0/rps_cpus"` ]]; then
+	:;
+else
+	echo "f" > /sys/class/net/eth0/queues/rx-0/rps_cpus
+fi
+
+exit 0
