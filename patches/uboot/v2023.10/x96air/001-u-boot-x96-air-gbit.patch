@@ -1,18 +1,18 @@
-From 90b3a934f50835753c41705a21810c35b1be5846 Mon Sep 17 00:00:00 2001
+From 41ea0e812636f1ad85b90f847c633fe26099034f Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 24 Jul 2023 18:38:05 -0400
-Subject: [PATCH] u-boot: v2023.07.02: x96-air support
+Date: Sat, 27 Jan 2024 22:15:23 -0500
+Subject: [PATCH] u-boot: x96-air-gbit
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm/dts/Makefile                         |   3 +-
  arch/arm/dts/meson-sm1-ac2xx.dtsi             | 300 ++++++++++++++++++
  .../dts/meson-sm1-x96-air-gbit-u-boot.dtsi    |   7 +
- arch/arm/dts/meson-sm1-x96-air-gbit.dts       | 257 +++++++++++++++
+ arch/arm/dts/meson-sm1-x96-air-gbit.dts       | 187 +++++++++++
  board/amlogic/ac2xx/Makefile                  |   7 +
  board/amlogic/ac2xx/ac2xx.c                   |  51 +++
  configs/x96air-gbit_defconfig                 |  82 +++++
- 7 files changed, 706 insertions(+), 1 deletion(-)
+ 7 files changed, 636 insertions(+), 1 deletion(-)
  create mode 100644 arch/arm/dts/meson-sm1-ac2xx.dtsi
  create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
  create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit.dts
@@ -355,15 +355,15 @@ index 0000000000..8ebc1caa4a
 +#include "meson-sm1-u-boot.dtsi"
 diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit.dts b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
 new file mode 100644
-index 0000000000..6a7cd084e9
+index 0000000000..05c33128da
 --- /dev/null
 +++ b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
-@@ -0,0 +1,257 @@
+@@ -0,0 +1,187 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
 + * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
-+ * Copyright (c) 2021 flippy <flippy@sina.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@xxxxx.com>
 + */
 +
 +/dts-v1/;
@@ -374,16 +374,6 @@ index 0000000000..6a7cd084e9
 +/ {
 +	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
 +	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
-+
-+	aliases {
-+		serial2 = &uart_A;
-+		ethernet0 = &ethmac;
-+	};
-+
-+	emmc_pwrseq: emmc-pwrseq {
-+		compatible = "mmc-pwrseq-emmc";
-+		reset-gpios = <&gpio BOOT_12 GPIO_ACTIVE_LOW>;
-+	};
 +
 +	sound {
 +		compatible = "amlogic,axg-sound-card";
@@ -477,7 +467,6 @@ index 0000000000..6a7cd084e9
 +
 +&ext_mdio {
 +	external_phy: ethernet-phy@0 {
-+		/* Realtek RTL8211F (0x001cc916) */
 +		reg = <0>;
 +		max-speed = <1000>;
 +
@@ -521,66 +510,7 @@ index 0000000000..6a7cd084e9
 +
 +/* SDIO */
 +&sd_emmc_a {
-+	status = "okay";
-+	pinctrl-0 = <&sdio_pins>;
-+	pinctrl-1 = <&sdio_clk_gate_pins>;
-+	pinctrl-names = "default", "clk-gate";
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+
-+	bus-width = <4>;
-+	cap-sd-highspeed;
-+	// sd-uhs-sdr50;
-+	max-frequency = <200000000>;
-+
-+	non-removable;
-+	disable-wp;
-+
-+	/* WiFi firmware requires power to be kept while in suspend */
-+	keep-power-in-suspend;
-+
-+	mmc-pwrseq = <&sdio_pwrseq>;
-+
-+	vmmc-supply = <&vddao_3v3>;
-+	vqmmc-supply = <&vddio_ao1v8>;
-+};
-+
-+/* SD Card */
-+&sd_emmc_b {
-+	status = "okay";
-+	pinctrl-0 = <&sdcard_c_pins>;
-+	pinctrl-1 = <&sdcard_clk_gate_c_pins>;
-+	pinctrl-names = "default", "clk-gate";
-+
-+	bus-width = <4>;
-+	cap-sd-highspeed;
-+	/* CRC errors are observed at 50MHz */
-+	max-frequency = <35000000>;
-+	disable-wp;
-+
-+	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_LOW>;
-+	vmmc-supply = <&vddao_3v3>;
-+	vqmmc-supply = <&vddao_3v3>;
-+};
-+
-+/* eMMC */
-+&sd_emmc_c {
-+	status = "okay";
-+	pinctrl-0 = <&emmc_ctrl_pins>, <&emmc_data_8b_pins>, <&emmc_ds_pins>;
-+	pinctrl-1 = <&emmc_clk_gate_pins>;
-+	pinctrl-names = "default", "clk-gate";
-+
-+	bus-width = <8>;
-+	cap-mmc-highspeed;
-+	mmc-ddr-1_8v;
-+	mmc-hs200-1_8v;
-+	max-frequency = <200000000>;
-+	non-removable;
-+	disable-wp;
-+
-+	mmc-pwrseq = <&emmc_pwrseq>;
-+	vmmc-supply = <&vddao_3v3>;
-+	vqmmc-supply = <&emmc_1v8>;
++	/delete-property/ sd-uhs-sdr50;
 +};
 +
 +&usb {
