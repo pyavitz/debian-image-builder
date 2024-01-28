@@ -116,7 +116,7 @@ if [[ ! -z $FAMILY ]]; then
 	# led trigger
 	if [[ -f "files/led-trigger/${BOARD}" ]]; then
 		cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger
-		if [[ "$BOARD" == "x96air" ]]; then
+		if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 			mkdir -p ${P_VALUE}/usr/local/bin
 			cp files/openvfd/vfdservice ${P_VALUE}/usr/local/bin/
 		fi
@@ -212,9 +212,9 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
 	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
 	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootini > /dev/null 2>&1; fi
-	if [[ "$BOARD" == "x96air" ]] && [[ "$EMMC" == "0" ]]; then
+	if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ "$EMMC" == "0" ]]; then
 		cp -f ${OUTPUT}/chainload.bin p1/
-		cp -fr files/boot/uboot/${BOARD}/{aml_autoscript.cmd,s905_autoscript.cmd} p1/
+		cp -fr files/boot/${FAMILY_EXT}/{aml_autoscript.cmd,s905_autoscript.cmd} p1/
 		mkimage -C none -A arm -T script -d p1/aml_autoscript.cmd p1/aml_autoscript > /dev/null 2>&1
 		mkimage -C none -A arm -T script -d p1/s905_autoscript.cmd p1/s905_autoscript > /dev/null 2>&1
 	fi

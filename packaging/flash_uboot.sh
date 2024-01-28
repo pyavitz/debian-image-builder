@@ -5,9 +5,7 @@
 
 # developer debug switch
 VERBOSITY="0"
-if [ $VERBOSITY -eq 1 ]; then
-	set -x
-fi
+if [ $VERBOSITY -eq 1 ]; then set -x; fi
 
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
@@ -151,11 +149,11 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 fi
 }
 
-ROOTFS=`findmnt -v -n -o SOURCE /`
-PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 sleep .50
 flash_uboot
-sleep 1.25
+sleep .50
+ROOTFS=`findmnt -v -n -o SOURCE /`
+PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
 	sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/extlinux/extlinux.conf
 fi

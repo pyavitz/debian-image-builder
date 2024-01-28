@@ -25,6 +25,7 @@ BananaPi CM4
 BananaPi M2 Pro
 BananaPi M2S
 BananaPi M5
+H96-MAX X3 (*)
 Le Potato
 Odroid C1 (*)
 Odroid C4
@@ -33,7 +34,7 @@ Odroid N2
 Odroid N2L
 Odroid N2+
 Radxa Zero
-X96-AIR	
+X96-AIR	GBIT
 
 # FREESCALE
 Cubox-I (*)

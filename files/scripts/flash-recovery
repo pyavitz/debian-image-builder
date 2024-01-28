@@ -25,13 +25,13 @@ else
 	exit 0
 fi
 
-ROOTFS=`findmnt -v -n -o SOURCE /`
-PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
-if [[ "$BOARD" == "x96air" ]] && [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; then
+if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; then
 	echo -e ""
 	echo -e "Flashing Vendor U-Boot ..."
 	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=1 count=442
 	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
+	ROOTFS=`findmnt -v -n -o SOURCE /`
+	PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 	if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
 		sed -i "s,root=PARTUUID=[^ ]*,root=PARTUUID=${PARTUUID}," /boot/extlinux/extlinux.conf
 	fi
