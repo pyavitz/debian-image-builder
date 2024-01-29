@@ -1,39 +1,24 @@
-From 41ea0e812636f1ad85b90f847c633fe26099034f Mon Sep 17 00:00:00 2001
+From 420bf87569085e0930fa6c00bd61639f22f9f293 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sat, 27 Jan 2024 22:15:23 -0500
-Subject: [PATCH] u-boot: x96-air-gbit
+Date: Sun, 28 Jan 2024 07:34:16 -0500
+Subject: [PATCH] arch: arm: dts: meson-sm1-ac2xx
 
+AC200/AC202 = S905D3
+AC213/AC214 = S905X3
+
+Author: Neil Armstrong <narmstrong@baylibre.com>
+Author: Christian Hewitt <christianshewitt@gmail.com>
+Editor: flippy <flippy@sina.com>
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm/dts/Makefile                         |   3 +-
- arch/arm/dts/meson-sm1-ac2xx.dtsi             | 300 ++++++++++++++++++
- .../dts/meson-sm1-x96-air-gbit-u-boot.dtsi    |   7 +
- arch/arm/dts/meson-sm1-x96-air-gbit.dts       | 187 +++++++++++
- board/amlogic/ac2xx/Makefile                  |   7 +
- board/amlogic/ac2xx/ac2xx.c                   |  51 +++
- configs/x96air-gbit_defconfig                 |  82 +++++
- 7 files changed, 636 insertions(+), 1 deletion(-)
+ arch/arm/dts/meson-sm1-ac2xx.dtsi | 300 ++++++++++++++++++++++++++++++
+ board/amlogic/ac2xx/Makefile      |   7 +
+ board/amlogic/ac2xx/ac2xx.c       |  51 +++++
+ 3 files changed, 358 insertions(+)
  create mode 100644 arch/arm/dts/meson-sm1-ac2xx.dtsi
- create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
- create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit.dts
  create mode 100644 board/amlogic/ac2xx/Makefile
  create mode 100644 board/amlogic/ac2xx/ac2xx.c
- create mode 100644 configs/x96air-gbit_defconfig
 
-diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index 480269fa60..3d5a024daf 100644
---- a/arch/arm/dts/Makefile
-+++ b/arch/arm/dts/Makefile
-@@ -226,7 +226,8 @@ dtb-$(CONFIG_ARCH_MESON) += \
- 	meson-sm1-khadas-vim3l.dtb \
- 	meson-sm1-odroid-c4.dtb \
- 	meson-sm1-odroid-hc4.dtb \
--	meson-sm1-sei610.dtb
-+	meson-sm1-sei610.dtb \
-+	meson-sm1-x96-air-gbit.dtb
- dtb-$(CONFIG_ARCH_TEGRA) += tegra20-harmony.dtb \
- 	tegra20-medcom-wide.dtb \
- 	tegra20-paz00.dtb \
 diff --git a/arch/arm/dts/meson-sm1-ac2xx.dtsi b/arch/arm/dts/meson-sm1-ac2xx.dtsi
 new file mode 100644
 index 0000000000..46a34731f7
@@ -340,212 +325,6 @@ index 0000000000..46a34731f7
 +	status = "okay";
 +	dr_mode = "otg";
 +};
-diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
-new file mode 100644
-index 0000000000..8ebc1caa4a
---- /dev/null
-+++ b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
-@@ -0,0 +1,7 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2019 BayLibre, SAS.
-+ * Author: Neil Armstrong <narmstrong@baylibre.com>
-+ */
-+
-+#include "meson-sm1-u-boot.dtsi"
-diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit.dts b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
-new file mode 100644
-index 0000000000..05c33128da
---- /dev/null
-+++ b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
-@@ -0,0 +1,187 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * Copyright (c) 2019 BayLibre SAS. All rights reserved.
-+ * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
-+ * Copyright (c) 2024 Patrick Yavitz <pyavitz@xxxxx.com>
-+ */
-+
-+/dts-v1/;
-+
-+#include "meson-sm1-ac2xx.dtsi"
-+#include <dt-bindings/sound/meson-g12a-tohdmitx.h>
-+
-+/ {
-+	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
-+	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
-+
-+	sound {
-+		compatible = "amlogic,axg-sound-card";
-+		model = "X96-AIR";
-+		audio-aux-devs = <&tdmout_b>;
-+		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
-+				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
-+				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
-+				"TDM_B Playback", "TDMOUT_B OUT";
-+
-+		assigned-clocks = <&clkc CLKID_MPLL2>,
-+				  <&clkc CLKID_MPLL0>,
-+				  <&clkc CLKID_MPLL1>;
-+		assigned-clock-parents = <0>, <0>, <0>;
-+		assigned-clock-rates = <294912000>,
-+				       <270950400>,
-+				       <393216000>;
-+		status = "okay";
-+
-+		dai-link-0 {
-+			sound-dai = <&frddr_a>;
-+		};
-+
-+		dai-link-1 {
-+			sound-dai = <&frddr_b>;
-+		};
-+
-+		dai-link-2 {
-+			sound-dai = <&frddr_c>;
-+		};
-+
-+		/* 8ch hdmi interface */
-+		dai-link-3 {
-+			sound-dai = <&tdmif_b>;
-+			dai-format = "i2s";
-+			dai-tdm-slot-tx-mask-0 = <1 1>;
-+			dai-tdm-slot-tx-mask-1 = <1 1>;
-+			dai-tdm-slot-tx-mask-2 = <1 1>;
-+			dai-tdm-slot-tx-mask-3 = <1 1>;
-+			mclk-fs = <256>;
-+
-+			codec {
-+				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
-+			};
-+		};
-+
-+		/* hdmi glue */
-+		dai-link-4 {
-+			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
-+
-+			codec {
-+				sound-dai = <&hdmi_tx>;
-+			};
-+		};
-+	};
-+
-+	vddgpu: regulator-vddgpu {
-+		compatible = "regulator-fixed";
-+		regulator-name = "mali";
-+		regulator-min-microvolt = <800000>;
-+		regulator-max-microvolt = <800000>;
-+		vin-supply = <&ao_5v>;
-+		regulator-always-on;
-+	};
-+};
-+
-+&vddcpu {
-+	regulator-min-microvolt = <721000>;
-+	regulator-max-microvolt = <1022000>;
-+	pwms = <&pwm_AO_cd 1 1250 0>;
-+};
-+
-+&arb {
-+	status = "okay";
-+};
-+
-+&clkc_audio {
-+	status = "okay";
-+};
-+
-+&ethmac {
-+	status = "okay";
-+
-+	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
-+	pinctrl-names = "default";
-+	phy-mode = "rgmii";
-+	phy-handle = <&external_phy>;
-+
-+	amlogic,tx-delay-ns = <2>;
-+};
-+
-+&ext_mdio {
-+	external_phy: ethernet-phy@0 {
-+		reg = <0>;
-+		max-speed = <1000>;
-+
-+		reset-assert-us = <10000>;
-+		reset-deassert-us = <80000>;
-+		reset-gpios = <&gpio GPIOZ_15 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>;
-+
-+		interrupt-parent = <&gpio_intc>;
-+		/* MAC_INTR on GPIOZ_14 */
-+		interrupts = <26 IRQ_TYPE_LEVEL_LOW>;
-+	};
-+};
-+
-+&frddr_a {
-+	status = "okay";
-+};
-+
-+&frddr_b {
-+	status = "okay";
-+};
-+
-+&frddr_c {
-+	status = "okay";
-+};
-+
-+&ir {
-+	linux,rc-map-name = "rc-x96max";
-+};
-+
-+&tdmif_b {
-+	status = "okay";
-+};
-+
-+&tdmout_b {
-+	status = "okay";
-+};
-+
-+&tohdmitx {
-+	status = "okay";
-+};
-+
-+/* SDIO */
-+&sd_emmc_a {
-+	/delete-property/ sd-uhs-sdr104;
-+};
-+
-+&usb {
-+	status = "okay";
-+};
-+
-+&usb2_phy0 {
-+	status = "okay";
-+};
-+
-+&usb2_phy1 {
-+	status = "okay";
-+};
-+
-+&uart_A {
-+	status = "okay";
-+	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
-+	pinctrl-names = "default";
-+	uart-has-rtscts;
-+
-+	bluetooth {
-+		compatible = "realtek,rtl8822cs-bt";
-+		max-speed = <1500000>;
-+		clocks = <&wifi32k>;
-+		clock-names = "lpo";
-+		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
-+		host-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
-+		vbat-supply = <&vddao_3v3>;
-+		vddio-supply = <&vddio_ao1v8>;
-+	};
-+};
-+
-+&mali {
-+	mali-supply=<&vddgpu>;
-+};
 diff --git a/board/amlogic/ac2xx/Makefile b/board/amlogic/ac2xx/Makefile
 new file mode 100644
 index 0000000000..8a28ac2f24
@@ -616,94 +395,6 @@ index 0000000000..8734d6b9ed
 +
 +	return 0;
 +}
-diff --git a/configs/x96air-gbit_defconfig b/configs/x96air-gbit_defconfig
-new file mode 100644
-index 0000000000..866d12371a
---- /dev/null
-+++ b/configs/x96air-gbit_defconfig
-@@ -0,0 +1,82 @@
-+CONFIG_ARM=y
-+CONFIG_SYS_BOARD="ac2xx"
-+CONFIG_ARCH_MESON=y
-+CONFIG_TEXT_BASE=0x01000000
-+CONFIG_NR_DRAM_BANKS=1
-+CONFIG_ENV_SIZE=0x2000
-+CONFIG_DM_GPIO=y
-+CONFIG_DEFAULT_DEVICE_TREE="meson-sm1-x96-air-gbit"
-+CONFIG_MESON_G12A=y
-+CONFIG_DEBUG_UART_BASE=0xff803000
-+CONFIG_DEBUG_UART_CLOCK=24000000
-+CONFIG_IDENT_STRING=" x96-air-gbit"
-+CONFIG_SYS_LOAD_ADDR=0x1000000
-+CONFIG_DEBUG_UART=y
-+CONFIG_HAS_CUSTOM_SYS_INIT_SP_ADDR=y
-+CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x20000000
-+CONFIG_REMAKE_ELF=y
-+# CONFIG_BOOTMETH_DISTRO_PXE is not set
-+CONFIG_OF_BOARD_SETUP=y
-+# CONFIG_SD_BOOT= set by builder
-+CONFIG_BOOTDELAY=3
-+CONFIG_USE_PREBOOT=y
-+CONFIG_CONSOLE_MUX=y
-+# CONFIG_DISPLAY_CPUINFO is not set
-+CONFIG_DISPLAY_BOARDINFO_LATE=y
-+CONFIG_MISC_INIT_R=y
-+CONFIG_FDT_SIMPLEFB=y
-+CONFIG_SYS_MAXARGS=32
-+# CONFIG_CMD_BDI is not set
-+# CONFIG_CMD_IMI is not set
-+CONFIG_CMD_GPIO=y
-+# CONFIG_CMD_LOADS is not set
-+CONFIG_CMD_MMC=y
-+CONFIG_CMD_USB=y
-+CONFIG_CMD_USB_MASS_STORAGE=y
-+# CONFIG_CMD_SETEXPR is not set
-+# CONFIG_CMD_CLS is not set
-+CONFIG_CMD_REGULATOR=y
-+CONFIG_CMD_BTRFS=y
-+CONFIG_CMD_EXT4_WRITE=y
-+CONFIG_OF_CONTROL=y
-+CONFIG_SYS_RELOC_GD_ENV_ADDR=y
-+CONFIG_NET_RANDOM_ETHADDR=y
-+CONFIG_ADC=y
-+CONFIG_SARADC_MESON=y
-+CONFIG_MMC_MESON_GX=y
-+CONFIG_PHY_REALTEK=y
-+CONFIG_DM_MDIO=y
-+CONFIG_DM_MDIO_MUX=y
-+CONFIG_ETH_DESIGNWARE_MESON8B=y
-+CONFIG_MDIO_MUX_MESON_G12A=y
-+CONFIG_MESON_G12A_USB_PHY=y
-+CONFIG_PINCTRL=y
-+CONFIG_PINCTRL_MESON_G12A=y
-+CONFIG_POWER_DOMAIN=y
-+CONFIG_MESON_EE_POWER_DOMAIN=y
-+CONFIG_DM_REGULATOR=y
-+CONFIG_DM_REGULATOR_FIXED=y
-+CONFIG_DM_RESET=y
-+CONFIG_DEBUG_UART_ANNOUNCE=y
-+CONFIG_DEBUG_UART_SKIP_INIT=y
-+CONFIG_MESON_SERIAL=y
-+CONFIG_USB=y
-+CONFIG_USB_XHCI_HCD=y
-+CONFIG_USB_XHCI_DWC3=y
-+CONFIG_USB_DWC3=y
-+# CONFIG_USB_DWC3_GADGET is not set
-+CONFIG_USB_DWC3_MESON_G12A=y
-+CONFIG_USB_KEYBOARD=y
-+CONFIG_USB_GADGET=y
-+CONFIG_USB_GADGET_VENDOR_NUM=0x1b8e
-+CONFIG_USB_GADGET_PRODUCT_NUM=0xfada
-+CONFIG_USB_GADGET_DWC2_OTG=y
-+CONFIG_USB_GADGET_DWC2_OTG_PHY_BUS_WIDTH_8=y
-+CONFIG_USB_GADGET_DOWNLOAD=y
-+CONFIG_VIDEO=y
-+CONFIG_SYS_WHITE_ON_BLACK=y
-+CONFIG_VIDEO_MESON=y
-+CONFIG_BMP_16BPP=y
-+CONFIG_BMP_24BPP=y
-+CONFIG_BMP_32BPP=y
-+CONFIG_OF_LIBFDT_OVERLAY=y
 -- 
 2.39.2
 

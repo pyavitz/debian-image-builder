@@ -116,10 +116,6 @@ if [[ ! -z $FAMILY ]]; then
 	# led trigger
 	if [[ -f "files/led-trigger/${BOARD}" ]]; then
 		cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger
-		if [[ "$BOARD" == "x96air" ]]; then
-			mkdir -p ${P_VALUE}/usr/local/bin
-			cp files/openvfd/vfdservice ${P_VALUE}/usr/local/bin/
-		fi
 	fi
 	# tweaks
 	if [[ -f "files/tweaks/${BOARD}" ]]; then
@@ -128,9 +124,14 @@ if [[ ! -z $FAMILY ]]; then
 	fi
 	# blob
 	if [[ "$BOARD" == "orangepi3lts" ]]; then
-		# bluetooth blob
+		# bluetooth
 		mkdir -p ${P_VALUE}/usr/local/sbin
 		cp files/blob/hciattach_opi ${P_VALUE}/usr/local/sbin/
+	fi
+	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
+		# vfd
+		mkdir -p ${P_VALUE}/usr/local/bin
+		cp files/blob/vfdservice ${P_VALUE}/usr/local/bin/
 	fi
 fi
 # user account service
@@ -212,9 +213,9 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
 	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
 	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootini > /dev/null 2>&1; fi
-	if [[ "$BOARD" == "x96air" ]] && [[ "$EMMC" == "0" ]]; then
+	if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ "$EMMC" == "0" ]]; then
 		cp -f ${OUTPUT}/chainload.bin p1/
-		cp -fr files/boot/uboot/${BOARD}/{aml_autoscript.cmd,s905_autoscript.cmd} p1/
+		cp -fr files/boot/${FAMILY_EXT}/{aml_autoscript.cmd,s905_autoscript.cmd} p1/
 		mkimage -C none -A arm -T script -d p1/aml_autoscript.cmd p1/aml_autoscript > /dev/null 2>&1
 		mkimage -C none -A arm -T script -d p1/s905_autoscript.cmd p1/s905_autoscript > /dev/null 2>&1
 	fi

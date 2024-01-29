@@ -11,7 +11,6 @@ ROOTFS=`findmnt -v -n -o SOURCE /`
 BLOCK=`findmnt -v -n -o SOURCE / | sed 's/\/dev\///' | sed 's/..$//'`
 PART=`findmnt -v -n -o SOURCE / | sed 's/.*\(.\)/\1/'`
 FSTYPE=`findmnt -v -n -o FSTYPE /`
-PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 
 # expand root filesystem
 if [[ "$DISTRO" == "Devuan" ]]; then
@@ -46,6 +45,7 @@ if [[ ! -z `mount | grep "on / type ext4 (ro,"` ]]; then
 fi
 
 # fix PARTUUID
+PARTUUID=$(blkid -o export -- $ROOTFS | sed -ne 's/^PARTUUID=//p')
 if [[ -f "/etc/opt/board.txt" ]] && [[ "$ARCH" == "arm" ]]; then
 	sleep .25
 	if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
@@ -82,6 +82,5 @@ else
 	systemctl disable firstboot
 fi
 rm -f /var/cache/debconf/*
-rm -f /usr/local/sbin/firstboot
 
 exit 0

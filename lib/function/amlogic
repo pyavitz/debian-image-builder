@@ -23,7 +23,7 @@ fi
 
 uboot_output (){
 if [[ ! -z $RUN_FIP ]] && [[ -f "u-boot.bin" ]]; then
-	if [[ "$BOARD" == "x96air" ]]; then
+	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 		mkdir -p ../../${OUTPUT}/
 		cp -f u-boot.bin ../../${OUTPUT}/chainload.bin
 	fi
@@ -87,21 +87,15 @@ ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6
 echo ""
 echo "Adding Radxa Zero firmware ..."
 cd ~
-git clone -b radxa https://github.com/pyavitz/firmware.git
-if [[ -f "firmware/README.md" ]]; then
-	rm -f firmware/README.md;
-fi
+git clone -q -b radxa https://github.com/pyavitz/firmware.git
+rm -f firmware/README.md
 cp -fr firmware/* /lib/firmware
 if [[ -f "fw-0a5c_21e8.hcd" ]]; then 
-	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
-	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd;
-	chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd;
-	chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd;
+	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+	chown root:root /lib/firmware/brcm/{BCM20702A1-0a5c-21e8.hcd,BCM20702A0-0a5c-21e8.hcd}
 fi
-if [[ -f "UPDATE.mem" ]]; then
-	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem;
-	rm -f UPDATE.mem;
-fi
+if [[ -f "UPDATE.mem" ]]; then install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem; rm -f UPDATE.mem; fi
 rm -fdr firmware
 git clone -q -b realtek https://github.com/pyavitz/firmware.git
 cp -fr firmware/* /lib/firmware
@@ -153,21 +147,22 @@ EOF
 }
 
 ac2xx_udev_rules (){
-# udev rules
-echo "# SDCARD" > /etc/udev/rules.d/10-openvfd-led.rules
-echo 'ACTION=="add", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
-echo 'ACTION=="remove", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/10-openvfd-led.rules
-echo "# USB" >> /etc/udev/rules.d/10-openvfd-led.rules
-echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
-echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/10-openvfd-led.rules
-sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_on/'echo sd > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/10-openvfd-led.rules
-sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_off/'echo sd > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/10-openvfd-led.rules
-sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_on/'echo usb > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/10-openvfd-led.rules
-sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_off/'echo usb > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/10-openvfd-led.rules
-echo "# HDMI" >> /etc/udev/rules.d/10-openvfd-led.rules
-echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DEVNAME}=="/dev/dri/card0", RUN+="/usr/local/sbin/hdmi-led-trigger"' >> /etc/udev/rules.d/10-openvfd-led.rules
-# hdmi helper script
-cat <<EOF > /usr/local/sbin/hdmi-led-trigger
+if [[ "$BOARD" == "x96air" ]]; then
+	# udev rules
+	echo "# SDCARD" > /etc/udev/rules.d/10-openvfd-led.rules
+	echo 'ACTION=="add", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
+	echo 'ACTION=="remove", SUBSYSTEM=="mmc", ENV{MMC_TYPE}=="SD", RUN+="/bin/sh -c echo sd > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/10-openvfd-led.rules
+	echo "# USB" >> /etc/udev/rules.d/10-openvfd-led.rules
+	echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_on"' >> /etc/udev/rules.d/10-openvfd-led.rules
+	echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo usb > /sys/class/leds/openvfd/led_off"' >> /etc/udev/rules.d/10-openvfd-led.rules
+	sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_on/'echo sd > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/10-openvfd-led.rules
+	sed -i "s/echo sd > \/sys\/class\/leds\/openvfd\/led_off/'echo sd > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/10-openvfd-led.rules
+	sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_on/'echo usb > \/sys\/class\/leds\/openvfd\/led_on'/g" /etc/udev/rules.d/10-openvfd-led.rules
+	sed -i "s/echo usb > \/sys\/class\/leds\/openvfd\/led_off/'echo usb > \/sys\/class\/leds\/openvfd\/led_off'/g" /etc/udev/rules.d/10-openvfd-led.rules
+	echo "# HDMI" >> /etc/udev/rules.d/10-openvfd-led.rules
+	echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DEVNAME}=="/dev/dri/card0", RUN+="/usr/local/sbin/hdmi-led-trigger"' >> /etc/udev/rules.d/10-openvfd-led.rules
+	# hdmi helper script
+	cat <<EOF > /usr/local/sbin/hdmi-led-trigger
 #!/bin/bash
 
 sleep .90
@@ -179,8 +174,9 @@ fi
 
 exit 0
 EOF
-sed -i 's/grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"/`grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"`/g' /usr/local/sbin/hdmi-led-trigger
-chmod +x /usr/local/sbin/hdmi-led-trigger
+	sed -i 's/grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"/`grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"`/g' /usr/local/sbin/hdmi-led-trigger
+	chmod +x /usr/local/sbin/hdmi-led-trigger
+fi
 }
 
 make_uimage (){
