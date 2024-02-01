@@ -7,7 +7,7 @@ else
 fi
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
-amlogic_audio(){
+amlogic_audio (){
 echo -e "Setup audio ..?"
 echo -e ""
 read -p "Continue (y/n)?" choice
@@ -51,10 +51,7 @@ while getopts "rh" OPTION; do
 				echo ""
 			fi
 			sleep .50
-
-			if [[ "$BOARD" == "radxazero" || "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "x96air" ]]; then
-				amlogic_audio
-			fi
+			if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]]; then amlogic_audio; fi
 			sleep .50
 			sudo update-ca-certificates -f
 			echo ""
