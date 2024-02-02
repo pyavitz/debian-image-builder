@@ -1,6 +1,6 @@
-From c8906c3c444ba7676a4f788d5fb58a212b056c41 Mon Sep 17 00:00:00 2001
+From 4a9f0b1baa38a3923d218553ca195699ed257171 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sun, 28 Jan 2024 09:37:01 -0500
+Date: Fri, 2 Feb 2024 06:54:29 -0500
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
 
 H96-MAX X3
@@ -11,10 +11,10 @@ Added support: spdif jack i2c1 openvfd jl2xx1
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |   9 +
- .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 170 ++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 177 +++++++++++++++-
  .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 194 +++++++++++++++++-
  .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 190 ++++++++++++++++-
- 4 files changed, 538 insertions(+), 25 deletions(-)
+ 4 files changed, 544 insertions(+), 26 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 index 46a34731f7e2..c8cb8ac986ff 100644
@@ -37,7 +37,7 @@ index 46a34731f7e2..c8cb8ac986ff 100644
  		compatible = "regulator-fixed";
  		regulator-name = "VDDAO_3V3";
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
-index 0f6660e68e72..68a090004625 100644
+index 0f6660e68e72..aed478c90265 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 @@ -7,20 +7,44 @@
@@ -178,7 +178,7 @@ index 0f6660e68e72..68a090004625 100644
 +				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
 +			};
 +		};
- 	};
++	};
 +
 +	vddgpu: regulator-vddgpu {
 +		compatible = "regulator-fixed";
@@ -187,7 +187,7 @@ index 0f6660e68e72..68a090004625 100644
 +		regulator-max-microvolt = <800000>;
 +		vin-supply = <&ao_5v>;
 +		regulator-always-on;
-+	};
+ 	};
 +
 +	openvfd {
 +		compatible = "open,vfd";
@@ -202,19 +202,26 @@ index 0f6660e68e72..68a090004625 100644
  };
  
  &arb {
-@@ -82,9 +179,10 @@ &ethmac {
+@@ -82,10 +179,16 @@ &ethmac {
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
 -	phy-mode = "rgmii-txid";
 +	phy-mode = "rgmii";
++	amlogic,tx-delay-ns = <2>;
  	phy-handle = <&external_phy>;
  
+-	rx-internal-delay-ps = <800>;
++	snps,aal;
++	snps,rxpbl = <1000>;
++	snps,txpbl = <1000>;
++
++	rx-fifo-depth = <4096>;
 +	tx-fifo-depth = <4096>;
- 	rx-internal-delay-ps = <800>;
  };
  
-@@ -104,6 +202,18 @@ external_phy: ethernet-phy@0 {
+ &ext_mdio {
+@@ -104,6 +207,18 @@ external_phy: ethernet-phy@0 {
  	};
  };
  
@@ -233,7 +240,7 @@ index 0f6660e68e72..68a090004625 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -120,14 +230,56 @@ &tdmif_b {
+@@ -120,14 +235,56 @@ &tdmif_b {
  	status = "okay";
  };
  
@@ -290,7 +297,7 @@ index 0f6660e68e72..68a090004625 100644
  &uart_A {
  	status = "okay";
  
-@@ -143,3 +295,7 @@ bluetooth {
+@@ -143,3 +300,7 @@ bluetooth {
  		clock-names = "lpo";
  	};
  };

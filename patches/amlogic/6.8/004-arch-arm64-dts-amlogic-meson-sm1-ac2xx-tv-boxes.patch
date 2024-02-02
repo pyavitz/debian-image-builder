@@ -1,6 +1,6 @@
-From 1abbac3272e0835854ecc605bd14759b256a2c27 Mon Sep 17 00:00:00 2001
+From 069524e32428237512dbb9909f10684e553aa71a Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sun, 28 Jan 2024 12:08:10 -0500
+Date: Fri, 2 Feb 2024 06:58:31 -0500
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
 
 H96-MAX X3
@@ -11,10 +11,10 @@ Added support: spdif jack i2c1 openvfd jl2xx1
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |   9 +
- .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 169 ++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 176 +++++++++++++++-
  .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 193 +++++++++++++++++-
  .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 191 ++++++++++++++++-
- 4 files changed, 539 insertions(+), 23 deletions(-)
+ 4 files changed, 545 insertions(+), 24 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 index 46a34731f7e2..c8cb8ac986ff 100644
@@ -37,7 +37,7 @@ index 46a34731f7e2..c8cb8ac986ff 100644
  		compatible = "regulator-fixed";
  		regulator-name = "VDDAO_3V3";
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
-index e6e9410d40cb..8795d6927c17 100644
+index e6e9410d40cb..281810041b8c 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 @@ -7,20 +7,44 @@
@@ -194,19 +194,26 @@ index e6e9410d40cb..8795d6927c17 100644
  };
  
  &arb {
-@@ -81,9 +179,10 @@ &ethmac {
+@@ -81,10 +179,16 @@ &ethmac {
  
  	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
  	pinctrl-names = "default";
 -	phy-mode = "rgmii-txid";
 +	phy-mode = "rgmii";
++	amlogic,tx-delay-ns = <2>;
  	phy-handle = <&external_phy>;
  
+-	rx-internal-delay-ps = <800>;
++	snps,aal;
++	snps,rxpbl = <1000>;
++	snps,txpbl = <1000>;
++
++	rx-fifo-depth = <4096>;
 +	tx-fifo-depth = <4096>;
- 	rx-internal-delay-ps = <800>;
  };
  
-@@ -103,6 +202,18 @@ external_phy: ethernet-phy@0 {
+ &ext_mdio {
+@@ -103,6 +207,18 @@ external_phy: ethernet-phy@0 {
  	};
  };
  
@@ -225,7 +232,7 @@ index e6e9410d40cb..8795d6927c17 100644
  &frddr_a {
  	status = "okay";
  };
-@@ -119,14 +230,56 @@ &tdmif_b {
+@@ -119,14 +235,56 @@ &tdmif_b {
  	status = "okay";
  };
  
@@ -282,7 +289,7 @@ index e6e9410d40cb..8795d6927c17 100644
  &uart_A {
  	status = "okay";
  
-@@ -142,3 +295,7 @@ bluetooth {
+@@ -142,3 +300,7 @@ bluetooth {
  		clock-names = "lpo";
  	};
  };
