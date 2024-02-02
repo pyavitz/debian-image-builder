@@ -1,6 +1,6 @@
-From 4a9f0b1baa38a3923d218553ca195699ed257171 Mon Sep 17 00:00:00 2001
+From cdfe43492a0709639aef8fe02234b7da92896706 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 2 Feb 2024 06:54:29 -0500
+Date: Fri, 2 Feb 2024 12:16:12 -0500
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
 
 H96-MAX X3
@@ -11,10 +11,10 @@ Added support: spdif jack i2c1 openvfd jl2xx1
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |   9 +
- .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 177 +++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 180 +++++++++++++++-
  .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 194 +++++++++++++++++-
  .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 190 ++++++++++++++++-
- 4 files changed, 544 insertions(+), 26 deletions(-)
+ 4 files changed, 546 insertions(+), 27 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 index 46a34731f7e2..c8cb8ac986ff 100644
@@ -37,7 +37,7 @@ index 46a34731f7e2..c8cb8ac986ff 100644
  		compatible = "regulator-fixed";
  		regulator-name = "VDDAO_3V3";
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
-index 0f6660e68e72..aed478c90265 100644
+index 0f6660e68e72..a8bda96c1f39 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 @@ -7,20 +7,44 @@
@@ -221,7 +221,7 @@ index 0f6660e68e72..aed478c90265 100644
  };
  
  &ext_mdio {
-@@ -104,6 +207,18 @@ external_phy: ethernet-phy@0 {
+@@ -104,6 +207,19 @@ external_phy: ethernet-phy@0 {
  	};
  };
  
@@ -230,17 +230,18 @@ index 0f6660e68e72..aed478c90265 100644
 +};
 +
 +&sd_emmc_a {
-+	/delete-property/ sd-uhs-sdr104;
++	sd-uhs-sdr50;
++	cap-mmc-highspeed;
 +	brcmf: wifi@1 {
 +		reg = <1>;
-+		compatible = "brcm,bcm4329-fmac";
++		compatible = "brcm,bcm4335-fmac";
 +	};
 +};
 +
  &frddr_a {
  	status = "okay";
  };
-@@ -120,14 +235,56 @@ &tdmif_b {
+@@ -120,14 +236,56 @@ &tdmif_b {
  	status = "okay";
  };
  
@@ -297,7 +298,15 @@ index 0f6660e68e72..aed478c90265 100644
  &uart_A {
  	status = "okay";
  
-@@ -143,3 +300,7 @@ bluetooth {
+@@ -136,10 +294,14 @@ &uart_A {
+ 	uart-has-rtscts;
+ 
+ 	bluetooth {
+-		compatible = "brcm,bcm43438-bt";
++		compatible = "brcm,bcm4335a0";
+ 		shutdown-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
+ 		max-speed = <2000000>;
+ 		clocks = <&wifi32k>;
  		clock-names = "lpo";
  	};
  };
