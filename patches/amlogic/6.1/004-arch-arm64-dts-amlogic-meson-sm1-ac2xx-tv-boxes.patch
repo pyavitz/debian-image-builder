@@ -863,3 +863,43 @@ index cd93d798f2a3..18381254a603 100644
 -- 
 2.39.2
 
+From b5ace2ec52ea8aa076c633abd0ab81b005cc457e Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 3 Feb 2024 09:04:44 -0500
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-h96-max
+
+H96MAX X3 locks up if overclocked to 2200MHz.
+Delete opp-2200000000 node and down clock by default.
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../arm64/boot/dts/amlogic/meson-sm1-h96-max.dts | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
+index a8bda96c1f39..1cb801ddcf26 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
+@@ -305,3 +305,19 @@ bluetooth {
+ &mali {
+ 	mali-supply=<&vddgpu>;
+ };
++
++&cpu_opp_table {
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <1000000>;
++		turbo-mode;
++	};
++
++	opp-2100000000 {
++		opp-hz = /bits/ 64 <2100000000>;
++		opp-microvolt = <1022000>;
++		turbo-mode;
++	};
++
++	/delete-node/ opp-2200000000;
++};
+-- 
+2.39.2
+
