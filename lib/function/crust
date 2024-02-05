@@ -14,7 +14,7 @@ crust_firmware (){
 # apt install gcc-or1k-elf
 # The package isn't currently available in the Debian Bullseye repo.
 # For the time being we will use precompiled binaries.
-if [[ "$FAMILY_EXT" == "sun50i" ]]; then
+if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
 	if [[ -d "crust" ]]; then
 		echo -en "${WHT}crust${FIN} "
 		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
@@ -37,23 +37,23 @@ if [[ "$FAMILY_EXT" == "sun50i" ]]; then
 			exit 0
 		fi
 	fi
+	echo ""
+	crust_defconfig
+	if [ $CROSSCOMPILE -eq 1 ]; then
+		echo -e "${GRN}  CC${FIN}"
+		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
+		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+	else
+		echo -e "${GRN}  NC${FIN}"
+		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
+		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+	fi
+	if [[ "$BOARD" == "orangepi3lts" ]]; then
+		rm -f configs/${UBOOT_DEFCONFIG}
+	fi
+	cd ..
+	echo ""
 fi
-echo ""
-crust_defconfig
-if [ $CROSSCOMPILE -eq 1 ]; then
-	echo -e "${GRN}  CC${FIN}"
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
-else
-	echo -e "${GRN}  NC${FIN}"
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
-	make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
-fi
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	rm -f configs/${UBOOT_DEFCONFIG}
-fi
-cd ..
-echo ""
 }
 
 report_crust_error (){

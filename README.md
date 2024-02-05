@@ -6,6 +6,7 @@
 
 # ALLWINNER
 BananaPi M2 Zero (*)
+BananaPi M4 Zero (*)
 BananaPi P2 Zero (*)
 Cubietruck (*)
 NanoPi M1

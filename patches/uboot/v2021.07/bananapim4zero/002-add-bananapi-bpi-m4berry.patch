@@ -1,0 +1,257 @@
+From 3629c070c59e3ed0caad47b1c5e9ecbabc902a5f Mon Sep 17 00:00:00 2001
+From: Banana Pi -BPI <lionwang@sinovoip.com.cn>
+Date: Sun, 29 Oct 2023 19:55:53 +0800
+Subject: [PATCH] add bananapi bpi-m4berry
+
+---
+ arch/arm/dts/Makefile                         |   1 +
+ arch/arm/dts/sun50i-h616-bananapi-m4berry.dts | 176 ++++++++++++++++++
+ board/sunxi/board.c                           |  11 ++
+ configs/bananapi_m4berry_defconfig            |  18 ++
+ 4 files changed, 206 insertions(+)
+ create mode 100644 arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
+ create mode 100644 configs/bananapi_m4berry_defconfig
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index b47bdc25..86808dc2 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -646,6 +646,7 @@ dtb-$(CONFIG_MACH_SUN50I_H6) += \
+ 	sun50i-h6-pine-h64-model-b.dtb \
+ 	sun50i-h6-tanix-tx6.dtb
+ dtb-$(CONFIG_MACH_SUN50I_H616) += \
++	sun50i-h616-bananapi-m4berry.dtb \
+ 	sun50i-h616-orangepi-zero2.dtb \
+ 	sun50i-h616-orangepi-zero2-b.dtb \
+ 	sun50i-h616-orangepi-zero2-lts.dtb \
+diff --git a/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts b/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
+new file mode 100644
+index 00000000..253fa620
+--- /dev/null
++++ b/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
+@@ -0,0 +1,176 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++/*
++ * Copyright (C) 2020 Arm Ltd.
++ */
++
++/dts-v1/;
++
++#include "sun50i-h616.dtsi"
++#include "sunxi-common-regulators.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/leds/common.h>
++
++/ {
++	model = "Banana Pi M4 Berry";
++	compatible = "bananapi,bananapi-m4berry", "allwinner,sun50i-h616";
++
++	aliases {
++		ethernet0 = &emac0;
++		serial0 = &uart0;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-0 {
++			function = LED_FUNCTION_POWER;
++			color = <LED_COLOR_ID_RED>;
++			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>; /* PC12 */
++			default-state = "on";
++		};
++
++	};
++
++	reg_vcc5v: vcc5v {
++		/* board wide 5V supply directly from the USB-C socket */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-5v";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++	};
++
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++/* USB 2 & 3 are on headers only. */
++
++&emac0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&ext_rgmii_pins>;
++	phy-mode = "rgmii";
++	phy-handle = <&ext_rgmii_phy>;
++	allwinner,rx-delay-ps = <3100>;
++	allwinner,tx-delay-ps = <700>;
++	status = "okay";
++};
++
++&mdio0 {
++	ext_rgmii_phy: ethernet-phy@1 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <1>;
++	};
++};
++
++&mmc0 {
++	vmmc-supply = <&reg_vcc3v3>;
++	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;	/* PF6 */
++	bus-width = <4>;
++	status = "okay";
++};
++
++
++&mmc2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc2_pins>;
++	vmmc-supply = <&reg_vcc3v3>;
++	vqmmc-supply = <&reg_vcc3v3>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&r_i2c {
++	status = "okay";
++
++	axp313a: pmic@36 {
++		compatible = "x-powers,axp313a";
++		status = "okay";
++		reg = <0x36>;
++		wakeup-source;
++
++		standby_param: standby_param {
++			vcc-dram = <0x4>;
++		};
++
++		regulators{
++			reg_dcdc1: dcdc1 {
++				regulator-name = "axp313a-dcdc1";
++				regulator-min-microvolt = <500000>;
++				regulator-max-microvolt = <3400000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
++			};
++
++			reg_dcdc2: dcdc2 {
++				regulator-name = "axp313a-dcdc2";
++				regulator-min-microvolt = <500000>;
++				regulator-max-microvolt = <1540000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-ramp-delay = <200>;
++				regulator-always-on;
++			};
++
++			reg_dcdc3: dcdc3 {
++				regulator-name = "axp313a-dcdc3";
++				regulator-min-microvolt = <1100000>;
++				regulator-max-microvolt = <1100000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
++			};
++
++			reg_aldo1: aldo1 {
++				regulator-name = "axp313a-aldo1";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
++			};
++
++			reg_dldo1: dldo1 {
++				regulator-name = "axp313a-dldo1";
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
++			};
++		};
++	};
++};
++
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_ph_pins>;
++	status = "okay";
++};
++
++&usbotg {
++	dr_mode = "peripheral";
++	status = "okay";
++};
++
+diff --git a/board/sunxi/board.c b/board/sunxi/board.c
+index a5b0e4f1..87f1ffe1 100644
+--- a/board/sunxi/board.c
++++ b/board/sunxi/board.c
+@@ -573,6 +573,17 @@ static void mmc_pinmux_setup(int sdc)
+ 			sunxi_gpio_set_pull(pin, SUNXI_GPIO_PULL_UP);
+ 			sunxi_gpio_set_drv(pin, 2);
+ 		}
++#elif defined(CONFIG_MACH_SUN50I_H616)
++		/* SDC2: PC0-PC1, PC5-PC6, PC8-PC11, PC13-PC16 */
++		for (pin = SUNXI_GPC(0); pin <= SUNXI_GPC(16); pin++) {
++			if (pin > SUNXI_GPC(1) && pin < SUNXI_GPC(5))
++				continue;
++			if (pin == SUNXI_GPC(7) || pin == SUNXI_GPC(12))
++				continue;
++			sunxi_gpio_set_cfgpin(pin, SUNXI_GPC_SDC2);
++			sunxi_gpio_set_pull(pin, SUNXI_GPIO_PULL_UP);
++			sunxi_gpio_set_drv(pin, 2);
++		}		
+ #elif defined(CONFIG_MACH_SUN9I)
+ 		/* SDC2: PC6-PC16 */
+ 		for (pin = SUNXI_GPC(6); pin <= SUNXI_GPC(16); pin++) {
+diff --git a/configs/bananapi_m4berry_defconfig b/configs/bananapi_m4berry_defconfig
+new file mode 100644
+index 00000000..804eae05
+--- /dev/null
++++ b/configs/bananapi_m4berry_defconfig
+@@ -0,0 +1,18 @@
++CONFIG_ARM=y
++CONFIG_ARCH_SUNXI=y
++CONFIG_DEFAULT_DEVICE_TREE="sun50i-h616-bananapi-m4berry"
++CONFIG_SPL=y
++CONFIG_DRAM_CLK=792
++CONFIG_SUNXI_DRAM_H616_LPDDR4=y
++CONFIG_DRAM_SUN50I_H616_READ_CALIBRATION=y
++CONFIG_DRAM_SUN50I_H616_UNKNOWN_FEATURE=y
++CONFIG_DRAM_SUN50I_H616_BIT_DELAY_COMPENSATION=y
++# CONFIG_DRAM_SUN50I_H616_TRIM_SIZE is not set
++CONFIG_MACH_SUN50I_H616=y
++CONFIG_MMC0_CD_PIN="PF6"
++CONFIG_MMC_SUNXI_SLOT_EXTRA=2
++CONFIG_R_I2C_ENABLE=y
++# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
++CONFIG_AXP_DCDC3_VOLT=1100
++CONFIG_SPL_I2C_SUPPORT=y
++CONFIG_AXP313A_POWER=y
+-- 
+2.39.2
+
