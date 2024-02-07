@@ -44,7 +44,6 @@ FT20 (*)
 # ROCKCHIP
 Indiedroid Nova (*)
 Khadas Edge2 (*)
-NanoPC-T4
 NanoPi R4S (*)
 NanoPi R4SE (*)
 NanoPi R5C (*)
