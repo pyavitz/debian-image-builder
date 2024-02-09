@@ -1,42 +1,35 @@
-From 823b62e52ec76d58ea6022ba861534ef0cadb623 Mon Sep 17 00:00:00 2001
+From 092e2305acb1ec2c418ba7f245a945845d456a1a Mon Sep 17 00:00:00 2001
 From: Banana Pi -BPI <lionwang@sinovoip.com.cn>
-Date: Fri, 17 Nov 2023 00:14:55 +0800
-Subject: [PATCH] add bananapi bpi-m4zero
+Date: Fri, 9 Feb 2024 03:36:11 -0500
+Subject: [PATCH] add bananapi bpi-m4-zero
 
+Signed-off-by: Banana Pi -BPI <lionwang@sinovoip.com.cn>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm/dts/Makefile                         |   3 +-
- ...y.dts => sun50i-h618-bananapi-m4berry.dts} |   0
- arch/arm/dts/sun50i-h618-bananapi-m4zero.dts  | 190 ++++++++++++++++++
+ arch/arm/dts/Makefile                         |   1 +
+ arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts | 190 ++++++++++++++++++
  configs/bananapi_m4zero_defconfig             |  18 ++
- drivers/mmc/sunxi_mmc.c                       |   7 +
- 5 files changed, 217 insertions(+), 1 deletion(-)
- rename arch/arm/dts/{sun50i-h616-bananapi-m4berry.dts => sun50i-h618-bananapi-m4berry.dts} (100%)
- create mode 100644 arch/arm/dts/sun50i-h618-bananapi-m4zero.dts
+ 3 files changed, 209 insertions(+)
+ create mode 100644 arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts
  create mode 100644 configs/bananapi_m4zero_defconfig
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index 86808dc2..02de856e 100644
+index 9dc9a22abd..f46881a820 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
-@@ -646,7 +646,8 @@ dtb-$(CONFIG_MACH_SUN50I_H6) += \
- 	sun50i-h6-pine-h64-model-b.dtb \
+@@ -647,6 +647,7 @@ dtb-$(CONFIG_MACH_SUN50I_H6) += \
  	sun50i-h6-tanix-tx6.dtb
  dtb-$(CONFIG_MACH_SUN50I_H616) += \
--	sun50i-h616-bananapi-m4berry.dtb \
-+	sun50i-h618-bananapi-m4berry.dtb \
-+	sun50i-h618-bananapi-m4zero.dtb \
+ 	sun50i-h618-bananapi-m4berry.dtb \
++	sun50i-h618-bananapi-m4-zero.dtb \
  	sun50i-h616-orangepi-zero2.dtb \
  	sun50i-h616-orangepi-zero2-b.dtb \
  	sun50i-h616-orangepi-zero2-lts.dtb \
-diff --git a/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts b/arch/arm/dts/sun50i-h618-bananapi-m4berry.dts
-similarity index 100%
-rename from arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
-rename to arch/arm/dts/sun50i-h618-bananapi-m4berry.dts
-diff --git a/arch/arm/dts/sun50i-h618-bananapi-m4zero.dts b/arch/arm/dts/sun50i-h618-bananapi-m4zero.dts
+diff --git a/arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts b/arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts
 new file mode 100644
-index 00000000..91fdf76a
+index 0000000000..8a9e34bc63
 --- /dev/null
-+++ b/arch/arm/dts/sun50i-h618-bananapi-m4zero.dts
++++ b/arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts
 @@ -0,0 +1,190 @@
 +// SPDX-License-Identifier: (GPL-2.0+ or MIT)
 +/*
@@ -53,7 +46,7 @@ index 00000000..91fdf76a
 +
 +/ {
 +	model = "Banana Pi M4 Zero";
-+	compatible = "bananapi,bananapi-m4zero", "allwinner,sun50i-h616";
++	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h616";
 +
 +	aliases {
 +		ethernet0 = &emac0;
@@ -230,13 +223,13 @@ index 00000000..91fdf76a
 +};
 diff --git a/configs/bananapi_m4zero_defconfig b/configs/bananapi_m4zero_defconfig
 new file mode 100644
-index 00000000..a36d3236
+index 0000000000..d067539817
 --- /dev/null
 +++ b/configs/bananapi_m4zero_defconfig
 @@ -0,0 +1,18 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_SUNXI=y
-+CONFIG_DEFAULT_DEVICE_TREE="sun50i-h618-bananapi-m4zero"
++CONFIG_DEFAULT_DEVICE_TREE="sun50i-h618-bananapi-m4-zero"
 +CONFIG_SPL=y
 +CONFIG_DRAM_CLK=792
 +CONFIG_SUNXI_DRAM_H616_LPDDR4=y
@@ -252,31 +245,6 @@ index 00000000..a36d3236
 +CONFIG_AXP_DCDC3_VOLT=1100
 +CONFIG_SPL_I2C_SUPPORT=y
 +CONFIG_AXP313A_POWER=y
-diff --git a/drivers/mmc/sunxi_mmc.c b/drivers/mmc/sunxi_mmc.c
-index a944b191..99a79088 100644
---- a/drivers/mmc/sunxi_mmc.c
-+++ b/drivers/mmc/sunxi_mmc.c
-@@ -86,6 +86,7 @@ static int mmc_resource_init(int sdc_no)
- 	}
- 	priv->mmc_no = sdc_no;
- 
-+#ifdef BPI
- 	cd_pin = sunxi_mmc_getcd_gpio(sdc_no);
- 	if (cd_pin >= 0) {
- 		ret = gpio_request(cd_pin, "mmc_cd");
-@@ -94,6 +95,12 @@ static int mmc_resource_init(int sdc_no)
- 			ret = gpio_direction_input(cd_pin);
- 		}
- 	}
-+#else
-+	if(1) {
-+		printf("BPI: skip sunxi_mmc_getcd_gpio %d\n", sdc_no);
-+		ret=0;
-+	}
-+#endif
- 
- 	return ret;
- }
 -- 
 2.39.2
 

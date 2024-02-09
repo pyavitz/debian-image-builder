@@ -1,35 +1,37 @@
-From 3629c070c59e3ed0caad47b1c5e9ecbabc902a5f Mon Sep 17 00:00:00 2001
+From 2540086511580c6830b94e07b076fdf4bcdc2a95 Mon Sep 17 00:00:00 2001
 From: Banana Pi -BPI <lionwang@sinovoip.com.cn>
-Date: Sun, 29 Oct 2023 19:55:53 +0800
+Date: Fri, 9 Feb 2024 03:31:41 -0500
 Subject: [PATCH] add bananapi bpi-m4berry
 
+Signed-off-by: Banana Pi -BPI <lionwang@sinovoip.com.cn>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm/dts/Makefile                         |   1 +
- arch/arm/dts/sun50i-h616-bananapi-m4berry.dts | 176 ++++++++++++++++++
- board/sunxi/board.c                           |  11 ++
+ arch/arm/dts/sun50i-h618-bananapi-m4berry.dts | 189 ++++++++++++++++++
+ board/sunxi/board.c                           |  11 +
  configs/bananapi_m4berry_defconfig            |  18 ++
- 4 files changed, 206 insertions(+)
- create mode 100644 arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
+ 4 files changed, 219 insertions(+)
+ create mode 100644 arch/arm/dts/sun50i-h618-bananapi-m4berry.dts
  create mode 100644 configs/bananapi_m4berry_defconfig
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index b47bdc25..86808dc2 100644
+index b47bdc2515..9dc9a22abd 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
 @@ -646,6 +646,7 @@ dtb-$(CONFIG_MACH_SUN50I_H6) += \
  	sun50i-h6-pine-h64-model-b.dtb \
  	sun50i-h6-tanix-tx6.dtb
  dtb-$(CONFIG_MACH_SUN50I_H616) += \
-+	sun50i-h616-bananapi-m4berry.dtb \
++	sun50i-h618-bananapi-m4berry.dtb \
  	sun50i-h616-orangepi-zero2.dtb \
  	sun50i-h616-orangepi-zero2-b.dtb \
  	sun50i-h616-orangepi-zero2-lts.dtb \
-diff --git a/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts b/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
+diff --git a/arch/arm/dts/sun50i-h618-bananapi-m4berry.dts b/arch/arm/dts/sun50i-h618-bananapi-m4berry.dts
 new file mode 100644
-index 00000000..253fa620
+index 0000000000..e64fc91cf2
 --- /dev/null
-+++ b/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
-@@ -0,0 +1,176 @@
++++ b/arch/arm/dts/sun50i-h618-bananapi-m4berry.dts
+@@ -0,0 +1,189 @@
 +// SPDX-License-Identifier: (GPL-2.0+ or MIT)
 +/*
 + * Copyright (C) 2020 Arm Ltd.
@@ -38,7 +40,7 @@ index 00000000..253fa620
 +/dts-v1/;
 +
 +#include "sun50i-h616.dtsi"
-+#include "sunxi-common-regulators.dtsi"
++
 +#include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/interrupt-controller/arm-gic.h>
 +#include <dt-bindings/leds/common.h>
@@ -60,9 +62,9 @@ index 00000000..253fa620
 +		compatible = "gpio-leds";
 +
 +		led-0 {
-+			function = LED_FUNCTION_POWER;
-+			color = <LED_COLOR_ID_RED>;
-+			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>; /* PC12 */
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_GREEN>;
++			gpios = <&pio 2 12 GPIO_ACTIVE_LOW>; /* PC12 */
 +			default-state = "on";
 +		};
 +
@@ -77,6 +79,16 @@ index 00000000..253fa620
 +		regulator-always-on;
 +	};
 +
++	reg_usb1_vbus: usb1-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usb1-vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc5v>;
++		regulator-always-on;
++
++		status = "okay";
++	};
 +};
 +
 +&ehci0 {
@@ -107,7 +119,7 @@ index 00000000..253fa620
 +};
 +
 +&mmc0 {
-+	vmmc-supply = <&reg_vcc3v3>;
++
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;	/* PF6 */
 +	bus-width = <4>;
 +	status = "okay";
@@ -117,8 +129,7 @@ index 00000000..253fa620
 +&mmc2 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&mmc2_pins>;
-+	vmmc-supply = <&reg_vcc3v3>;
-+	vqmmc-supply = <&reg_vcc3v3>;
++
 +	bus-width = <8>;
 +	non-removable;
 +	status = "okay";
@@ -206,8 +217,12 @@ index 00000000..253fa620
 +	status = "okay";
 +};
 +
++&usbphy {
++	usb1_vbus-supply = <&reg_usb1_vbus>;
++	status = "okay";
++};
 diff --git a/board/sunxi/board.c b/board/sunxi/board.c
-index a5b0e4f1..87f1ffe1 100644
+index a5b0e4f152..87f1ffe154 100644
 --- a/board/sunxi/board.c
 +++ b/board/sunxi/board.c
 @@ -573,6 +573,17 @@ static void mmc_pinmux_setup(int sdc)
@@ -230,7 +245,7 @@ index a5b0e4f1..87f1ffe1 100644
  		for (pin = SUNXI_GPC(6); pin <= SUNXI_GPC(16); pin++) {
 diff --git a/configs/bananapi_m4berry_defconfig b/configs/bananapi_m4berry_defconfig
 new file mode 100644
-index 00000000..804eae05
+index 0000000000..804eae0515
 --- /dev/null
 +++ b/configs/bananapi_m4berry_defconfig
 @@ -0,0 +1,18 @@

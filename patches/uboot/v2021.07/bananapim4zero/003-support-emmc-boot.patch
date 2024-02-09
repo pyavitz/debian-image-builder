@@ -1,87 +1,18 @@
-From cbdca15b14fa677df322d9754f30a8da662c10c4 Mon Sep 17 00:00:00 2001
+From 15732ae8a22fd04ac75a24fbc8df17c0628620ba Mon Sep 17 00:00:00 2001
 From: Banana Pi -BPI <lionwang@sinovoip.com.cn>
-Date: Wed, 1 Nov 2023 23:14:04 +0800
+Date: Fri, 9 Feb 2024 03:33:34 -0500
 Subject: [PATCH] support emmc boot
 
+Signed-off-by: Banana Pi -BPI <lionwang@sinovoip.com.cn>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm/dts/sun50i-h616-bananapi-m4berry.dts | 27 +++++---
- arch/arm/include/asm/arch-sunxi/mmc.h         |  1 +
- board/sunxi/board.c                           |  2 +-
- drivers/mmc/sunxi_mmc.c                       | 63 ++++++++++++++++---
- 4 files changed, 77 insertions(+), 16 deletions(-)
+ arch/arm/include/asm/arch-sunxi/mmc.h |  1 +
+ board/sunxi/board.c                   |  2 +-
+ drivers/mmc/sunxi_mmc.c               | 70 ++++++++++++++++++++++++---
+ 3 files changed, 64 insertions(+), 9 deletions(-)
 
-diff --git a/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts b/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
-index 253fa620..e64fc91c 100644
---- a/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
-+++ b/arch/arm/dts/sun50i-h616-bananapi-m4berry.dts
-@@ -6,7 +6,7 @@
- /dts-v1/;
- 
- #include "sun50i-h616.dtsi"
--#include "sunxi-common-regulators.dtsi"
-+
- #include <dt-bindings/gpio/gpio.h>
- #include <dt-bindings/interrupt-controller/arm-gic.h>
- #include <dt-bindings/leds/common.h>
-@@ -28,9 +28,9 @@
- 		compatible = "gpio-leds";
- 
- 		led-0 {
--			function = LED_FUNCTION_POWER;
--			color = <LED_COLOR_ID_RED>;
--			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>; /* PC12 */
-+			function = LED_FUNCTION_STATUS;
-+			color = <LED_COLOR_ID_GREEN>;
-+			gpios = <&pio 2 12 GPIO_ACTIVE_LOW>; /* PC12 */
- 			default-state = "on";
- 		};
- 
-@@ -45,6 +45,16 @@
- 		regulator-always-on;
- 	};
- 
-+	reg_usb1_vbus: usb1-vbus {
-+		compatible = "regulator-fixed";
-+		regulator-name = "usb1-vbus";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&reg_vcc5v>;
-+		regulator-always-on;
-+
-+		status = "okay";
-+	};
- };
- 
- &ehci0 {
-@@ -75,7 +85,7 @@
- };
- 
- &mmc0 {
--	vmmc-supply = <&reg_vcc3v3>;
-+
- 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;	/* PF6 */
- 	bus-width = <4>;
- 	status = "okay";
-@@ -85,8 +95,7 @@
- &mmc2 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&mmc2_pins>;
--	vmmc-supply = <&reg_vcc3v3>;
--	vqmmc-supply = <&reg_vcc3v3>;
-+
- 	bus-width = <8>;
- 	non-removable;
- 	status = "okay";
-@@ -174,3 +183,7 @@
- 	status = "okay";
- };
- 
-+&usbphy {
-+	usb1_vbus-supply = <&reg_usb1_vbus>;
-+	status = "okay";
-+};
 diff --git a/arch/arm/include/asm/arch-sunxi/mmc.h b/arch/arm/include/asm/arch-sunxi/mmc.h
-index 340e25b0..5daacf10 100644
+index 340e25b04d..5daacf10eb 100644
 --- a/arch/arm/include/asm/arch-sunxi/mmc.h
 +++ b/arch/arm/include/asm/arch-sunxi/mmc.h
 @@ -119,6 +119,7 @@ struct sunxi_mmc {
@@ -93,7 +24,7 @@ index 340e25b0..5daacf10 100644
  #define SUNXI_MMC_NTSR_MODE_SEL_NEW		(0x1 << 31)
  
 diff --git a/board/sunxi/board.c b/board/sunxi/board.c
-index 87f1ffe1..73f5745f 100644
+index 87f1ffe154..73f5745f08 100644
 --- a/board/sunxi/board.c
 +++ b/board/sunxi/board.c
 @@ -582,7 +582,7 @@ static void mmc_pinmux_setup(int sdc)
@@ -106,10 +37,31 @@ index 87f1ffe1..73f5745f 100644
  #elif defined(CONFIG_MACH_SUN9I)
  		/* SDC2: PC6-PC16 */
 diff --git a/drivers/mmc/sunxi_mmc.c b/drivers/mmc/sunxi_mmc.c
-index 3503ccdb..a944b191 100644
+index 3503ccdb2e..99a79088b4 100644
 --- a/drivers/mmc/sunxi_mmc.c
 +++ b/drivers/mmc/sunxi_mmc.c
-@@ -303,8 +303,9 @@ static int mmc_trans_data_by_cpu(struct sunxi_mmc_priv *priv, struct mmc *mmc,
+@@ -86,6 +86,7 @@ static int mmc_resource_init(int sdc_no)
+ 	}
+ 	priv->mmc_no = sdc_no;
+ 
++#ifdef BPI
+ 	cd_pin = sunxi_mmc_getcd_gpio(sdc_no);
+ 	if (cd_pin >= 0) {
+ 		ret = gpio_request(cd_pin, "mmc_cd");
+@@ -94,6 +95,12 @@ static int mmc_resource_init(int sdc_no)
+ 			ret = gpio_direction_input(cd_pin);
+ 		}
+ 	}
++#else
++	if(1) {
++		printf("BPI: skip sunxi_mmc_getcd_gpio %d\n", sdc_no);
++		ret=0;
++	}
++#endif
+ 
+ 	return ret;
+ }
+@@ -303,8 +310,9 @@ static int mmc_trans_data_by_cpu(struct sunxi_mmc_priv *priv, struct mmc *mmc,
  					      SUNXI_MMC_STATUS_FIFO_FULL;
  	unsigned i;
  	unsigned *buff = (unsigned int *)(reading ? data->dest : data->src);
@@ -121,7 +73,7 @@ index 3503ccdb..a944b191 100644
  	unsigned long  start;
  
  	if (timeout_msecs < 2000)
-@@ -315,16 +316,42 @@ static int mmc_trans_data_by_cpu(struct sunxi_mmc_priv *priv, struct mmc *mmc,
+@@ -315,16 +323,42 @@ static int mmc_trans_data_by_cpu(struct sunxi_mmc_priv *priv, struct mmc *mmc,
  
  	start = get_timer(0);
  
@@ -170,7 +122,7 @@ index 3503ccdb..a944b191 100644
  	}
  
  	return 0;
-@@ -531,6 +558,17 @@ struct mmc *sunxi_mmc_init(int sdc_no)
+@@ -531,6 +565,17 @@ struct mmc *sunxi_mmc_init(int sdc_no)
  	cfg->f_min = 400000;
  	cfg->f_max = 52000000;
  
@@ -188,7 +140,7 @@ index 3503ccdb..a944b191 100644
  	if (mmc_resource_init(sdc_no) != 0)
  		return NULL;
  
-@@ -633,6 +671,15 @@ static int sunxi_mmc_probe(struct udevice *dev)
+@@ -633,6 +678,15 @@ static int sunxi_mmc_probe(struct udevice *dev)
  
  	cfg->f_min = 400000;
  	cfg->f_max = 52000000;
