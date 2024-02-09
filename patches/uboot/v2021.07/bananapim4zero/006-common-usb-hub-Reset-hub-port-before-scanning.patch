@@ -1,0 +1,53 @@
+From 51fa641a3ff97ae815c726c667f1bd64019d6900 Mon Sep 17 00:00:00 2001
+From: Shantur Rathore <i@shantur.com>
+Date: Fri, 9 Feb 2024 06:21:15 -0500
+Subject: [PATCH] common: usb-hub: Reset hub port before scanning
+
+Currently when a hub is turned on, all the ports are powered on.
+This works well for hubs which have individual power control.
+
+For the hubs without individual power control this has no effect.
+Mostly in these scenarios the hub port is powered before the USB
+controller is enabled, this can lead to some devices in unexpected
+state.
+
+With this patch, we explicitly reset the port while powering up hub
+This resets the port for hubs without port power control and has
+no effect on hubs with port power control as the port is still off.
+
+Before this patch AMicro AM8180 based NVME to USB adapter won't be
+detected as a USB3.0 Mass Storage device but with this it works as
+expected.
+
+Tested working after this patch:
+1. AMicro AM8180 based NVME to USB Adapter
+2. Kingston DataTraveler 3.0
+3. GenesysLogic USB3.0 Hub
+
+The drives were tested while connected directly and via the hub.
+
+Signed-off-by: Shantur Rathore <i@shantur.com>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ common/usb_hub.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/common/usb_hub.c b/common/usb_hub.c
+index ba11a188ca..7eb63f1a6e 100644
+--- a/common/usb_hub.c
++++ b/common/usb_hub.c
+@@ -172,8 +172,10 @@ static void usb_hub_power_on(struct usb_hub_device *hub)
+ 
+ 	debug("enabling power on all ports\n");
+ 	for (i = 0; i < dev->maxchild; i++) {
++		usb_set_port_feature(dev, i + 1, USB_PORT_FEAT_RESET);
++		debug("Reset : port %d returns %lX\n", i + 1, dev->status);
+ 		usb_set_port_feature(dev, i + 1, USB_PORT_FEAT_POWER);
+-		debug("port %d returns %lX\n", i + 1, dev->status);
++		debug("PowerOn : port %d returns %lX\n", i + 1, dev->status);
+ 	}
+ 
+ #ifdef CONFIG_SANDBOX
+-- 
+2.39.2
+
