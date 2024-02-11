@@ -54,7 +54,9 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-h5-i2c0.dtbo \
 	sunxi-h5-i2c1.dtbo \
 	sunxi-h5-i2c2.dtbo \
-	sunxi-h5-mbus-devfreq-driver.dtbo
+	sunxi-h5-mbus-devfreq-driver.dtbo \
+	sunxi-usb-host-mode.dtbo \
+	sunxi-usb-otg-mode.dtbo
 
 targets += dtbs dtbs_install
 targets += $(dtbo-y)

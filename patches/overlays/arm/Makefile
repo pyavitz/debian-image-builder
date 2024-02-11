@@ -21,7 +21,9 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sun8i-h3-uart2.dtbo \
 	sun8i-h3-uart3.dtbo \
 	sunxi-h3-h5-ir-tx.dtbo \
-	sunxi-h3-h5-overclock.dtbo
+	sunxi-h3-h5-overclock.dtbo \
+	sunxi-usb-host-mode.dtbo \
+	sunxi-usb-otg-mode.dtbo
 
 targets += dtbs dtbs_install
 targets += $(dtbo-y)
