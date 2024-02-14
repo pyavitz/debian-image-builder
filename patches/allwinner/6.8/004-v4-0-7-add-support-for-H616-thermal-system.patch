@@ -1,10 +1,9 @@
-From c8ab1a7c45afd2d47b3efcd4b4956bbe3a9032f3 Mon Sep 17 00:00:00 2001
+From a82f7775b86869ccc47595b39073d74276c63db2 Mon Sep 17 00:00:00 2001
 From: Andre Przywara <andre.przywara@arm.com>
-Date: Sun, 11 Feb 2024 05:51:34 -0500
+Date: Wed, 14 Feb 2024 07:21:40 -0500
 Subject: [PATCH] v4-0-7 add support for H616 thermal system
 
 HI,
-
 this is v4 of the series originally by Martin, complemented by patches
 to fix the problem with way-too-high temperatures reported on
 some boards, and some refactoring and simplifications, compared to the
@@ -95,10 +94,10 @@ Signed-off-by: Andre Przywara <andre.przywara@arm.com>
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  .../thermal/allwinner,sun8i-a83t-ths.yaml     |  34 +++--
- .../arm64/boot/dts/allwinner/sun50i-h616.dtsi |  84 ++++++++++++
+ .../arm64/boot/dts/allwinner/sun50i-h616.dtsi |  88 +++++++++++++
  drivers/soc/sunxi/sunxi_sram.c                |  23 ++++
  drivers/thermal/sun8i_thermal.c               | 122 +++++++++++++++---
- 4 files changed, 231 insertions(+), 32 deletions(-)
+ 4 files changed, 235 insertions(+), 32 deletions(-)
 
 diff --git a/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml b/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml
 index 9b2272a9ec15..6b3aea6d73b0 100644
@@ -174,7 +173,7 @@ index 9b2272a9ec15..6b3aea6d73b0 100644
      then:
        required:
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
-index 5bd5b92a19c2..14eb41d3a9e2 100644
+index f8382aa5981d..5ccf5d86568a 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
 @@ -9,6 +9,7 @@
@@ -185,7 +184,18 @@ index 5bd5b92a19c2..14eb41d3a9e2 100644
  
  / {
  	interrupt-parent = <&gic>;
-@@ -523,6 +524,19 @@ mdio0: mdio {
+@@ -138,6 +139,10 @@ sid: efuse@3006000 {
+ 			reg = <0x03006000 0x1000>;
+ 			#address-cells = <1>;
+ 			#size-cells = <1>;
++
++			ths_calibration: thermal-sensor-calibration@14 {
++				reg = <0x14 0x8>;
++			};
+ 		};
+ 
+ 		watchdog: watchdog@30090a0 {
+@@ -515,6 +520,19 @@ mdio0: mdio {
  			};
  		};
  
@@ -205,7 +215,7 @@ index 5bd5b92a19c2..14eb41d3a9e2 100644
  		usbotg: usb@5100000 {
  			compatible = "allwinner,sun50i-h616-musb",
  				     "allwinner,sun8i-h3-musb";
-@@ -770,4 +784,74 @@ r_rsb: rsb@7083000 {
+@@ -762,4 +780,74 @@ r_rsb: rsb@7083000 {
  			#size-cells = <0>;
  		};
  	};
