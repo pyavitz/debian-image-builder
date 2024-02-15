@@ -130,32 +130,11 @@ echo "options 88x2bu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /et
 echo "options 8821cu rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/50-8821cu.conf
 echo "options 88x2cs rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/50-88x2cs.conf
 echo "options 88XXau rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/50-88XXau.conf
-#echo "options rtw88_core disable_lps_deep=y" > /etc/modprobe.d/50-rtw88.conf
-#
-#tee /usr/lib/NetworkManager/conf.d/rtl88x2bu.conf <<EOF
-# Certain drivers are known not to support changing the MAC address.
-# Disable touching the MAC address on such devices.
-#
-#[device-rtl88x2bu]
-#match-device=driver:rtl88x2bu
-#wifi.scan-rand-mac-address=no
-#wifi.cloned-mac-address=preserve
-#ethernet.cloned-mac-address=preserve
-#EOF
-#
-#tee /usr/lib/NetworkManager/conf.d/rtl8821cu.conf <<EOF
-# Certain drivers are known not to support changing the MAC address.
-# Disable touching the MAC address on such devices.
-#
-#[device-rtl8821cu]
-#match-device=driver:rtl8821cu
-#wifi.scan-rand-mac-address=no
-#wifi.cloned-mac-address=preserve
-#ethernet.cloned-mac-address=preserve
-#EOF
-#
-#chown root:root /etc/modprobe.d/{50-8723bs.conf,50-8723ds.conf,50-88x2bu.conf,50-8821cu.conf,50-88XXau.conf,50-rtw88.conf}
-#chown root:root /usr/lib/NetworkManager/conf.d/{rtl88x2bu.conf,rtl8821cu.conf}
+if [[ "$BOARD" == "bananapim4zero" ]]; then
+	# blacklist rtw88_8821cu
+	echo "blacklist rtw88_8821c" > /etc/modprobe.d/blacklist-rtw88-8821cu.conf
+	echo "blacklist rtw88_8821cu" >> /etc/modprobe.d/blacklist-rtw88-8821cu.conf
+fi
 }
 
 router_udev_rules(){
