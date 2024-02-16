@@ -1,14 +1,14 @@
-From 6693c10386bc61da233fc4ef9ff72c3bc1654328 Mon Sep 17 00:00:00 2001
+From c18e8b36262aa394964738c25e36ee1c3382de52 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 9 Feb 2024 13:29:50 -0500
+Date: Thu, 15 Feb 2024 19:42:30 -0500
 Subject: [PATCH] arch: arm64: dts: allwinner: sun50i-h618-bananapi-m4-zero
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- arch/arm64/boot/dts/allwinner/Makefile                 |  2 +-
- ...api-m4zero.dts => sun50i-h618-bananapi-m4-zero.dts} | 10 ++++++----
- 2 files changed, 7 insertions(+), 5 deletions(-)
- rename arch/arm64/boot/dts/allwinner/{sun50i-h618-bananapi-m4zero.dts => sun50i-h618-bananapi-m4-zero.dts} (96%)
+ arch/arm64/boot/dts/allwinner/Makefile        |  2 +-
+ ...o.dts => sun50i-h618-bananapi-m4-zero.dts} | 19 +++++++++----------
+ 2 files changed, 10 insertions(+), 11 deletions(-)
+ rename arch/arm64/boot/dts/allwinner/{sun50i-h618-bananapi-m4zero.dts => sun50i-h618-bananapi-m4-zero.dts} (94%)
 
 diff --git a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
 index 9ca0e352fc..33238b5eee 100644
@@ -23,10 +23,10 @@ index 9ca0e352fc..33238b5eee 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-orangepi-zero3.dtb
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-orangepi-zero2w.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4zero.dts b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
-similarity index 96%
+similarity index 94%
 rename from arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4zero.dts
 rename to arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
-index a22436fd69..b182ba7d9b 100644
+index a22436fd69..5ad6d4ae91 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4zero.dts
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
 @@ -14,7 +14,7 @@
@@ -38,7 +38,7 @@ index a22436fd69..b182ba7d9b 100644
  
  	aliases {
  		ethernet0 = &emac1;
-@@ -37,11 +37,12 @@ hdmi_con_in: endpoint {
+@@ -37,22 +37,17 @@ hdmi_con_in: endpoint {
  		};
  	};
  
@@ -48,17 +48,39 @@ index a22436fd69..b182ba7d9b 100644
  
 -		led-greed {
 -			label = "red_led";
-+		led-red {
++		led-0 {
 +			color = <LED_COLOR_ID_RED>;
 +			function = LED_FUNCTION_STATUS;
  			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>; /* PC12 */
  			linux,default-trigger = "heartbeat";
  		};
-@@ -116,6 +117,7 @@ &mmc2 {
+ 	};
+ 
+-	wifi_usb {
+-		compatible = "usb-wifi";
+-		status = "okay";
+-		power_on_pin = <&pio 2 2 GPIO_ACTIVE_HIGH>; /* PC2 */
+-	};
+-
+ 	reg_vcc5v: vcc5v {
+ 		/* board wide 5V supply directly from the USB-C socket */
+ 		compatible = "regulator-fixed";
+@@ -116,6 +111,7 @@ &mmc2 {
  	bus-width = <8>;
  	non-removable;
  	cap-mmc-hw-reset;
 +	//mmc-hs200-1_8v;
+ 	status = "okay";
+ };
+ 
+@@ -208,7 +204,10 @@ &ehci0 {
+ 	status = "disabled";
+ };
+ 
++ /* Connected to an on-board RTL8821CU USB WiFi chip. */
+ &ehci1 {
++	clocks = <&ccu CLK_BUS_EHCI1>;
++	resets = <&ccu RST_BUS_EHCI1>;
  	status = "okay";
  };
  
