@@ -55,6 +55,8 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-h5-i2c1.dtbo \
 	sunxi-h5-i2c2.dtbo \
 	sunxi-h5-mbus-devfreq-driver.dtbo \
+	sunxi-h616-pg-17-18-i2c3.dtbo \
+	sunxi-h616-pg-15-16-i2c4.dtbo \
 	sunxi-usb-host-mode.dtbo \
 	sunxi-usb-otg-mode.dtbo
 
