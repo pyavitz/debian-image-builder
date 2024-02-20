@@ -26,7 +26,7 @@ BananaPi CM4
 BananaPi M2 Pro
 BananaPi M2S
 BananaPi M5
-H96-MAX X3 (*)
+H96-MAX X3
 Le Potato
 Odroid C1 (*)
 Odroid C4
