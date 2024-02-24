@@ -93,59 +93,9 @@ Martin Botka (3):
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7D7763984D
-	for <linux-sunxi@lists.linux.dev>; Mon, 19 Feb 2024 15:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708357011; cv=none; b=VWpOOD3o48TriaTpSRWodopJGtwXBCKas1RIf+kC5uKp3ciyh19wAPBUG/YRvHhl2mL3giVz351KfyPS4rKQpJTTaX8sRBadUom39OMINnVj6XY6LajSOfhCl733KbmMoUEEFkbsmcbvVs4o8ad38dFzY95oR8grf+OsjZxPwME=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708357011; c=relaxed/simple;
-	bh=FnjwIrCiUegrhGJ9QPXF/0eEn7GLU+V188gyihnPQWY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uFZN3X840gUoVMaFu1jOJ3wykJDCLZJqthiIzBKd9MPMVcBSj1IRupByiI7v8rYSPavQAC799eoDp8xdEirq/s4EXLkqLEg/TsmK77OFHdolMuWmsa0szFJhi3cxEamFvY1o4DLoOB+o/kEUwXhqMcAfWUNeWpG+tNAu368Ey2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A031A1007;
-	Mon, 19 Feb 2024 07:37:28 -0800 (PST)
-Received: from donnerap.arm.com (donnerap.manchester.arm.com [10.32.100.28])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6C3A03F762;
-	Mon, 19 Feb 2024 07:36:46 -0800 (PST)
 From: Andre Przywara <andre.przywara@arm.com>
-To: Vasily Khoruzhick <anarsoul@gmail.com>,
-	Yangtao Li <tiny.windzz@gmail.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Samuel Holland <samuel@sholland.org>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Lukasz Luba <lukasz.luba@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Martin Botka <martin.botka@somainline.org>,
-	Maksim Kiselev <bigunclemax@gmail.com>,
-	Bob McChesney <bob@electricworry.net>,
-	linux-pm@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-sunxi@lists.linux.dev
 Subject: [PATCH v5 1/7] soc: sunxi: sram: export register 0 for THS on H616
 Date: Mon, 19 Feb 2024 15:36:33 +0000
-Message-Id: <20240219153639.179814-2-andre.przywara@arm.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240219153639.179814-1-andre.przywara@arm.com>
-References: <20240219153639.179814-1-andre.przywara@arm.com>
-Precedence: bulk
-X-Mailing-List: linux-sunxi@lists.linux.dev
-List-Id: <linux-sunxi.lists.linux.dev>
-List-Subscribe: <mailto:linux-sunxi+subscribe@lists.linux.dev>
-List-Unsubscribe: <mailto:linux-sunxi+unsubscribe@lists.linux.dev>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
 The Allwinner H616 SoC contains a mysterious bit at register offset 0x0
 in the SRAM control block. If bit 16 is set (the reset value), the
