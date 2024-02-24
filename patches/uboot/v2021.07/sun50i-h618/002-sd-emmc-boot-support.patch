@@ -1,15 +1,14 @@
-From 15732ae8a22fd04ac75a24fbc8df17c0628620ba Mon Sep 17 00:00:00 2001
+From 5b582dc8029698afc157aaf9b169d8bab6ceb0ce Mon Sep 17 00:00:00 2001
 From: Banana Pi -BPI <lionwang@sinovoip.com.cn>
-Date: Fri, 9 Feb 2024 03:33:34 -0500
-Subject: [PATCH] support emmc boot
+Date: Fri, 23 Feb 2024 06:57:54 -0500
+Subject: [PATCH] sd emmc boot support
 
 Signed-off-by: Banana Pi -BPI <lionwang@sinovoip.com.cn>
-Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm/include/asm/arch-sunxi/mmc.h |  1 +
- board/sunxi/board.c                   |  2 +-
+ board/sunxi/board.c                   | 11 +++++
  drivers/mmc/sunxi_mmc.c               | 70 ++++++++++++++++++++++++---
- 3 files changed, 64 insertions(+), 9 deletions(-)
+ 3 files changed, 74 insertions(+), 8 deletions(-)
 
 diff --git a/arch/arm/include/asm/arch-sunxi/mmc.h b/arch/arm/include/asm/arch-sunxi/mmc.h
 index 340e25b04d..5daacf10eb 100644
@@ -24,18 +23,27 @@ index 340e25b04d..5daacf10eb 100644
  #define SUNXI_MMC_NTSR_MODE_SEL_NEW		(0x1 << 31)
  
 diff --git a/board/sunxi/board.c b/board/sunxi/board.c
-index 87f1ffe154..73f5745f08 100644
+index a5b0e4f152..73f5745f08 100644
 --- a/board/sunxi/board.c
 +++ b/board/sunxi/board.c
-@@ -582,7 +582,7 @@ static void mmc_pinmux_setup(int sdc)
- 				continue;
- 			sunxi_gpio_set_cfgpin(pin, SUNXI_GPC_SDC2);
+@@ -573,6 +573,17 @@ static void mmc_pinmux_setup(int sdc)
  			sunxi_gpio_set_pull(pin, SUNXI_GPIO_PULL_UP);
--			sunxi_gpio_set_drv(pin, 2);
+ 			sunxi_gpio_set_drv(pin, 2);
+ 		}
++#elif defined(CONFIG_MACH_SUN50I_H616)
++		/* SDC2: PC0-PC1, PC5-PC6, PC8-PC11, PC13-PC16 */
++		for (pin = SUNXI_GPC(0); pin <= SUNXI_GPC(16); pin++) {
++			if (pin > SUNXI_GPC(1) && pin < SUNXI_GPC(5))
++				continue;
++			if (pin == SUNXI_GPC(7) || pin == SUNXI_GPC(12))
++				continue;
++			sunxi_gpio_set_cfgpin(pin, SUNXI_GPC_SDC2);
++			sunxi_gpio_set_pull(pin, SUNXI_GPIO_PULL_UP);
 +			sunxi_gpio_set_drv(pin, 3);
- 		}		
++		}		
  #elif defined(CONFIG_MACH_SUN9I)
  		/* SDC2: PC6-PC16 */
+ 		for (pin = SUNXI_GPC(6); pin <= SUNXI_GPC(16); pin++) {
 diff --git a/drivers/mmc/sunxi_mmc.c b/drivers/mmc/sunxi_mmc.c
 index 3503ccdb2e..99a79088b4 100644
 --- a/drivers/mmc/sunxi_mmc.c
