@@ -37,6 +37,12 @@ if [[ "$BOARD" == "h96max-x3" ]]; then
 	cp -fr firmware/* /lib/firmware
 	rm -fdr firmware
 fi
+if [[ "$BOARD" == "radxazero" ]]; then
+	git clone -q -b radxa https://github.com/pyavitz/firmware.git
+	rm -f firmware/README.md
+	cp -fr firmware/* /lib/firmware
+	rm -fdr firmware
+fi
 mkdir -p /lib/firmware/rtl_nic
 wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
 if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
@@ -101,6 +107,13 @@ if [[ "$BOARD" == "indiedroid-nova" ]]; then
 	cd ~
 	rm -fdr rkwifibt
 fi
+cd /lib/firmware
+if [[ -f "/lib/firmware/dvb-fe-xc4000-1.4.1.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/dvb-fe-xc4000-1.4.1.fw; fi
+if [[ -f "/lib/firmware/xc3028-v27.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/xc3028-v27.fw; fi
+if [[ -f "/lib/firmware/xc3028L-v36.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/xc3028L-v36.fw; fi
+if [[ -f "/lib/firmware/xc4000-1.4.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/xc4000-1.4.fw; fi
+if [[ -f "/lib/firmware/dvb-fe-xc4000-1.4.fw" ]]; then :; else ln -s /lib/firmware/xc4000-1.4.fw /lib/firmware/dvb-fe-xc4000-1.4.fw; fi
+cd ~
 echo ""
 }
 

@@ -87,53 +87,6 @@ fi
 }
 
 # STAGE2
-radxazero_firmware (){
-ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
-echo ""
-echo "Adding Radxa Zero firmware ..."
-cd ~
-git clone -q -b radxa https://github.com/pyavitz/firmware.git
-rm -f firmware/README.md
-cp -fr firmware/* /lib/firmware
-if [[ -f "fw-0a5c_21e8.hcd" ]]; then 
-	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-	chown root:root /lib/firmware/brcm/{BCM20702A1-0a5c-21e8.hcd,BCM20702A0-0a5c-21e8.hcd}
-fi
-if [[ -f "UPDATE.mem" ]]; then install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem; rm -f UPDATE.mem; fi
-rm -fdr firmware
-git clone -q -b realtek https://github.com/pyavitz/firmware.git
-cp -fr firmware/* /lib/firmware
-rm -fdr firmware
-mkdir -p /lib/firmware/rtl_nic
-wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
-if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
-	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
-	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
-fi
-${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz
-tar xf meson-firmware-master.tar.gz
-mkdir -p /lib/firmware/meson
-cp -fr meson-firmware-master/meson/* /lib/firmware/meson
-rm -fdr meson-firmware-master*
-mkdir -p /lib/firmware/ene-ub6250
-cd /lib/firmware/ene-ub6250
-${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_init.bin
-${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_rdwr.bin
-${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/msp_rdwr.bin
-${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init1.bin
-${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init2.bin
-${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_rdwr.bin
-chown -R root:root /lib/firmware/ene-ub6250
-cd /lib/firmware
-if [[ -f "/lib/firmware/dvb-fe-xc4000-1.4.1.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/dvb-fe-xc4000-1.4.1.fw; fi
-if [[ -f "/lib/firmware/xc3028-v27.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/xc3028-v27.fw; fi
-if [[ -f "/lib/firmware/xc3028L-v36.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/xc3028L-v36.fw; fi
-if [[ -f "/lib/firmware/xc4000-1.4.fw" ]]; then :; else ${ARIA2} https://github.com/armbian/firmware/raw/master/xc4000-1.4.fw; fi
-if [[ -f "/lib/firmware/dvb-fe-xc4000-1.4.fw" ]]; then :; else ln -s /lib/firmware/xc4000-1.4.fw /lib/firmware/dvb-fe-xc4000-1.4.fw; fi
-cd ~
-}
-
 odroid_udev_rules (){
 tee /etc/udev/rules.d/10-odroid.rules <<EOF
 KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
