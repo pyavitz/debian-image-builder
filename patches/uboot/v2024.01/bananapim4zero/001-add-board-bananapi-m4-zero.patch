@@ -1,14 +1,14 @@
-From f11f93479ca6558638824400852f319836db4244 Mon Sep 17 00:00:00 2001
+From 4a7858e8af98166ef9081f363439296f50fd1fad Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sat, 24 Feb 2024 15:00:42 -0500
+Date: Wed, 28 Feb 2024 12:02:09 -0500
 Subject: [PATCH] add board bananapi m4 zero
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/arm/dts/Makefile                         |   3 +-
- arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts | 190 ++++++++++++++++++
+ arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts | 194 ++++++++++++++++++
  configs/bananapi_m4zero_defconfig             |  29 +++
- 3 files changed, 221 insertions(+), 1 deletion(-)
+ 3 files changed, 225 insertions(+), 1 deletion(-)
  create mode 100644 arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts
  create mode 100644 configs/bananapi_m4zero_defconfig
 
@@ -28,10 +28,10 @@ index 9d28a485be..5fb6040c5e 100644
  	sun50i-a64-bananapi-m64.dtb \
 diff --git a/arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts b/arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts
 new file mode 100644
-index 0000000000..3e4e3dc54d
+index 0000000000..079240bbcb
 --- /dev/null
 +++ b/arch/arm/dts/sun50i-h618-bananapi-m4-zero.dts
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,194 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2024
@@ -127,7 +127,9 @@ index 0000000000..3e4e3dc54d
 +	vqmmc-supply = <&reg_aldo1>;
 +	bus-width = <8>;
 +	non-removable;
++	//max-frequency = <100000000>;
 +	cap-mmc-hw-reset;
++	//
 +	//mmc-ddr-1_8v;
 +	mmc-hs200-1_8v;
 +	status = "okay";
@@ -206,11 +208,13 @@ index 0000000000..3e4e3dc54d
 +
 +/* Connected to an on-board RTL8821CU USB WiFi chip. */
 +&ehci1 {
++	clocks = <&ccu CLK_BUS_EHCI1>;
++	resets = <&ccu RST_BUS_EHCI1>;
 +	status = "okay";
 +};
 +
 +&ehci3 {
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&ohci3 {
@@ -224,7 +228,7 @@ index 0000000000..3e4e3dc54d
 +};
 diff --git a/configs/bananapi_m4zero_defconfig b/configs/bananapi_m4zero_defconfig
 new file mode 100644
-index 0000000000..21bb43c3ee
+index 0000000000..4b4ad0e8e7
 --- /dev/null
 +++ b/configs/bananapi_m4zero_defconfig
 @@ -0,0 +1,29 @@
@@ -256,7 +260,7 @@ index 0000000000..21bb43c3ee
 +CONFIG_AXP313_POWER=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_OHCI_HCD=y
-+CONFIG_USB_MUSB_GADGET=y
++# CONFIG_USB_MUSB_GADGET= is not set
 -- 
 2.39.2
 
