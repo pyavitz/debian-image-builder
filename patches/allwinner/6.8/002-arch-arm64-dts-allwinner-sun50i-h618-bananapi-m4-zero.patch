@@ -327,3 +327,50 @@ index d549d277d972..a88a87569a2e 100644
 -- 
 2.39.2
 
+From de61d1d4a78abe7a8d1f42225009fdd297396aa1 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Fri, 1 Mar 2024 08:52:20 -0500
+Subject: [PATCH] dts: allwinner: sun50i-h618-bananapi-m4-zero: add spi1 node
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../allwinner/sun50i-h618-bananapi-m4-zero.dts   | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
+index 348babfce28c..134556e78524 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
+@@ -22,6 +22,7 @@ aliases {
+ 		serial0 = &uart0;
+ 		i2c3 = &i2c3;
+ 		i2c4 = &i2c4;
++		spi1 = &spi1
+ 	};
+ 
+ 	chosen {
+@@ -200,6 +201,21 @@ reg_dcdc3: dcdc3 {
+ 	};
+ };
+ 
++&spi1 {
++	status = "disabled";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi1_pins>, <&spi1_cs1_pin>;
++
++	spidev@1 {
++		compatible = "rohm,dh2228fv";
++		status = "disabled";
++		reg = <1>;
++		spi-max-frequency = <1000000>;
++	};
++};
++
+ &usbotg {
+ 	/*
+ 	 * PHY0 pins are connected to a USB-C socket, but a role switch is not
+-- 
+2.39.2
+
