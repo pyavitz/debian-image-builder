@@ -1,0 +1,29 @@
+From 04ad160a53e3df8c7f6e14052d695137099ebafe Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Thu, 28 Sep 2023 04:03:56 -0400
+Subject: [PATCH] Turn on the power led and turn off status led on sunxi-h6
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ board/sunxi/board.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/board/sunxi/board.c b/board/sunxi/board.c
+index f321cd58a6..2965f0c818 100644
+--- a/board/sunxi/board.c
++++ b/board/sunxi/board.c
+@@ -573,6 +573,11 @@ void sunxi_board_init(void)
+ {
+ 	int power_failed = 0;
+ 
++#if defined(CONFIG_MACH_SUN50I_H6)
++	gpio_direction_output(SUNXI_GPL(4), 0);
++	gpio_direction_output(SUNXI_GPL(7), 1);
++#endif
++
+ #ifdef CONFIG_LED_STATUS
+ 	if (IS_ENABLED(CONFIG_SPL_DRIVERS_MISC))
+ 		status_led_init();
+-- 
+2.39.2
+
