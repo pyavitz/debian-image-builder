@@ -1,0 +1,56 @@
+From edf6417e5317f25474c9d3bbb1fe5f54856b1183 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 4 Mar 2024 16:57:49 -0500
+Subject: [PATCH] add delay to stabilize ddr init
+
+https://github.com/BPI-SINOVOIP/pi-u-boot/commit/42c2c1870278744c071a423e76eebb3a73d51a16
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm/mach-sunxi/dram_sun50i_h616.c | 10 ++++++++++
+ board/sunxi/board.c                    |  1 +
+ 2 files changed, 11 insertions(+)
+
+diff --git a/arch/arm/mach-sunxi/dram_sun50i_h616.c b/arch/arm/mach-sunxi/dram_sun50i_h616.c
+index 205c78bb67..93b76feb70 100644
+--- a/arch/arm/mach-sunxi/dram_sun50i_h616.c
++++ b/arch/arm/mach-sunxi/dram_sun50i_h616.c
+@@ -1288,6 +1288,11 @@ static unsigned long mctl_calc_size(struct dram_para *para)
+ 	u8 width = para->bus_full_width ? 4 : 2;
+ 	unsigned long size;
+ 
++#ifdef BPI
++#else
++	printf("para->cols[%x] para->rows[%x] width[%x] para->ranks[%x]\nDRAM:",para->cols, para->rows, width, para->ranks);
++#endif
++
+ 	/* 8 banks */
+ 	size = (1ULL << (para->cols + para->rows + 3)) * width * para->ranks;
+ 
+@@ -1304,6 +1309,11 @@ unsigned long sunxi_dram_init(void)
+ 	};
+ 	unsigned long size;
+ 
++#ifdef BPI
++#else
++	udelay(1000); /* delay for PMIC ready*/
++#endif
++
+ 	if (IS_ENABLED(CONFIG_SUNXI_DRAM_H616_DDR3_1333))
+ 		para.type = SUNXI_DRAM_TYPE_DDR3;
+ 	if (IS_ENABLED(CONFIG_SUNXI_DRAM_H616_LPDDR3))
+diff --git a/board/sunxi/board.c b/board/sunxi/board.c
+index e1bb9ab6dc..949aba9347 100644
+--- a/board/sunxi/board.c
++++ b/board/sunxi/board.c
+@@ -708,6 +708,7 @@ void sunxi_board_init(void)
+ #endif
+ #if defined(CONFIG_AXP313A_POWER)
+ 	power_failed |= axp_set_dcdc3(CONFIG_AXP_DCDC3_VOLT);
++	printf("BPI: AXP313A AXP_DCDC3_VOLT:%d\n",CONFIG_AXP_DCDC3_VOLT);
+ #endif
+ #if !defined(CONFIG_AXP209_POWER) && !defined(CONFIG_AXP818_POWER) && \
+     !defined(CONFIG_AXP313A_POWER)
+-- 
+2.39.2
+
