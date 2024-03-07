@@ -73,6 +73,14 @@ if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" == "btrfs" || "$FSTYPE" == "xfs" ]];
 	read -p "Press enter to continue."
 	exit 0
 fi
+# check for qemu
+if [[ `command -v ${STATIC}` ]]; then
+	:;
+else
+	echo -e "Missing depends: ${STATIC}"
+	echo -e "Run ./install.sh"
+	exit 1
+fi
 # start
 CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
 CAP_RELEASE=`echo "${DISTRO_VERSION}" | sed -e "s/\b\(.\)/\u\1/g"`
