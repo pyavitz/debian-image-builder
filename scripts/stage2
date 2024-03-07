@@ -207,12 +207,12 @@ if [[ "$BOARD" == "nanopineoplus2" ]]; then
 fi
 
 # linux modules
-if [[ ! -z "$MODULES_LOAD" ]]; then
+if [[ -v "MODULES_LOAD" ]] && [[ ! -z "$MODULES_LOAD" ]]; then
 	mkdir -p /etc/modules-load.d
 	echo "# LOAD MODULES" > /etc/modules-load.d/${BOARD}.conf
 	echo "$MODULES_LOAD" | tr ' ' '\n' | tee -a /etc/modules-load.d/${BOARD}.conf > /dev/null 2>&1
 fi
-if [[ ! -z "$MODULES_BLACKLIST" ]]; then
+if [[ -v "MODULES_BLACKLIST" ]] && [[ ! -z "$MODULES_BLACKLIST" ]]; then
 	mkdir -p /etc/modprobe.d
 	echo "# BLACKLIST MODULES" > /etc/modprobe.d/blacklist-$BOARD.conf
 	echo "$MODULES_BLACKLIST" | tr ' ' '\n' | sed 's/^/blacklist /' | tee -a /etc/modprobe.d/blacklist-${BOARD}.conf > /dev/null 2>&1
