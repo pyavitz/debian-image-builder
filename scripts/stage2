@@ -178,10 +178,7 @@ if [[ -f "/root/asound.state" ]]; then
 	mkdir -p /var/lib/alsa
 	mv -f /root/asound.state /var/lib/alsa/asound.state
 fi
-if [[ -f "/root/asound.conf" ]]; then
-	mkdir -p /etc
-	mv -f /root/asound.conf /etc/asound.conf
-fi
+if [[ -f "/root/asound.conf" ]]; then mv -f /root/asound.conf /etc/asound.conf; fi
 
 # led triggers
 if [[ -f "/root/led-trigger" ]]; then
@@ -207,22 +204,18 @@ if [[ "$BOARD" == "nanopineoplus2" ]]; then
 	cp -f brcm_patchram_plus /usr/bin
 	cd ~
 	rm -fdr patchram
-	echo "bluetooth" >> /etc/modules
-	echo "hidp" >> /etc/modules
-	echo "rfcomm" >> /etc/modules
-	echo "bnep" >> /etc/modules
-	echo "hci_uart" >> /etc/modules
 fi
 
-# cubietruck blacklist hci_uart / bluetooth
-if [[ "$BOARD" == "cubietruck" ]]; then ct_blacklist; fi
-
-# orangepi3lts bluetooth and wifi
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	echo "# orangepi3lts bluetooth" >> /etc/modules
-	echo "sprdbt_tty" >> /etc/modules
-	echo "# orangepi3lts wifi" >> /etc/modules
-	echo "sprdwl_ng" >> /etc/modules
+# linux modules
+if [[ ! -z "$MODULES_LOAD" ]]; then
+	mkdir -p /etc/modules-load.d
+	echo "# LOAD MODULES" > /etc/modules-load.d/${BOARD}.conf
+	echo "$MODULES_LOAD" | tr ' ' '\n' | tee -a /etc/modules-load.d/${BOARD}.conf > /dev/null 2>&1
+fi
+if [[ ! -z "$MODULES_BLACKLIST" ]]; then
+	mkdir -p /etc/modprobe.d
+	echo "# BLACKLIST MODULES" > /etc/modprobe.d/blacklist-$BOARD.conf
+	echo "$MODULES_BLACKLIST" | tr ' ' '\n' | sed 's/^/blacklist /' | tee -a /etc/modprobe.d/blacklist-${BOARD}.conf > /dev/null 2>&1
 fi
 
 # board information
@@ -453,10 +446,6 @@ fi
 # udev rules
 if [[ "$FAMILY_EXT" =~ ^(odroid|ac2xx|rk3288)$ ]]; then ${FAMILY_EXT}_udev_rules > /dev/null 2>&1; fi
 if [[ "$FAMILY" == "amlogic" ]]; then aml_gpiomem_rules > /dev/null 2>&1; fi
-if [[ "$FAMILY_EXT" == "exynos" ]]; then
-	mkdir -p /etc/modprobe.d/
-	echo "blacklist ina231_sensor" > /etc/modprobe.d/blacklist-odroid.conf
-fi
 if [[ "$BOARD" =~ ^(nanopir4s|nanopir4se|nanopir5c|nanopir5s)$ ]]; then router_udev_rules; fi
 
 # services
