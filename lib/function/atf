@@ -5,15 +5,7 @@ arm_trusted_firmware (){
 TAG="lts-v2.10.2"
 if [[ "$FAMILY_EXT" == "imx8" || "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 	atf_download; cd arm-trusted-firmware; atf_patching; echo ""
-	if [ $CROSSCOMPILE -eq 1 ]; then
-		echo -e "${GRN}  CC${FIN}"
-		export CROSS_COMPILE=${CROSS_COMPILE}
-		make -j${CORES} CC="${CROSS}" ${ATF_EXT}
-	else
-		echo -e "${GRN}  NC${FIN}"
-		export ARCH=${ARCH}
-		make -j${CORES} CC="${NATIVE}" ${ATF_EXT}
-	fi
+	ubuild "${ATF_EXT}"
 	cd ..
 	if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
 fi
