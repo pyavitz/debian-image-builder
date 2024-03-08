@@ -3,8 +3,15 @@
 # ATF
 arm_trusted_firmware (){
 TAG="lts-v2.10.2"
-if [[ "$FAMILY_EXT" == "imx8" || "$FAMILY_EXT" == "sun50i" || "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
+if [[ "$FAMILY_EXT" =~ ^(imx8|sun50i|rk3328|rk3399)$ ]]; then
 	atf_download; cd arm-trusted-firmware; atf_patching; echo ""
+	if [ $CROSSCOMPILE -eq 1 ]; then
+		echo -e "${GRN}  CC${FIN}"
+		echo -e "  GCC     ${CROSS_COMPILE}${COMPILER}"
+	else
+		echo -e "${GRN}  NC${FIN}"
+		echo -e "  GCC     ${COMPILER}"
+	fi
 	ubuild "${ATF_EXT}"
 	cd ..
 	if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
