@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # general firmware
-extra_firmware(){
+install_firmware (){
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 echo ""
 echo "Adding ${DEFAULT_MOTD} firmware ..."
@@ -10,9 +10,7 @@ mkdir -p /lib/firmware/brcm
 cd ~
 ${ARIA2} https://github.com/armbian/firmware/archive/master.tar.gz
 tar xf firmware-master.tar.gz
-if [[ -f "firmware-master/README.md" ]]; then
-	rm -f firmware-master/README.md
-fi
+rm -f firmware-master/README.md
 rm -fdr firmware-master/ath11k
 cp -fr firmware-master/* /lib/firmware
 rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
@@ -24,24 +22,34 @@ if [[ -f "/lib/firmware/brcm/brcmfmac4356-sdio.bin" ]]; then
 fi
 mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
 git clone -q -b realtek https://github.com/pyavitz/firmware.git
-cp -fr firmware/* /lib/firmware
-rm -fdr firmware
+rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+if [[ "$BOARD" =~ ^(bananapim2zero|bananapip2zero|nanopineoplus2)$ ]]; then
+	git clone -b nanopi https://github.com/pyavitz/firmware.git
+	rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+fi
+if [[ "$BOARD" == "cubietruck" ]]; then
+	git clone -b cubietruck https://github.com/pyavitz/firmware.git
+	rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+fi
 if [[ "$BOARD" == "h96max-x3" ]]; then
 	git clone -q -b h96max-x3 https://github.com/pyavitz/firmware.git
-	rm -f firmware/README.md
-	cp -fr firmware/* /lib/firmware
-	rm -fdr firmware
+	rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
 fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	git clone -q -b radxa https://github.com/pyavitz/firmware.git
-	rm -f firmware/README.md
-	cp -fr firmware/* /lib/firmware
-	rm -fdr firmware
+	rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+fi
+if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.bin" ]]; then
+	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin /lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm,nanopi-neo-plus2.bin
+	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-m2-zero.bin
+	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-p2-zero.bin
+fi
+if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.txt" ]]; then
+	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.txt /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-m2-zero.txt
+	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.txt /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-p2-zero.txt
 fi
 mkdir -p /lib/firmware/rtl_nic
 wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
@@ -50,6 +58,7 @@ if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
 	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
 fi
 if [[ "$BOARD" == "pinebookpro" ]]; then
+	cd ~
 	# wifi and bluetooth firmware
 	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/brcmfmac43456-sdio.txt
 	wget -cq https://raw.githubusercontent.com/pyavitz/firmware/main/brcmfmac43456-sdio.bin
@@ -60,6 +69,7 @@ if [[ "$BOARD" == "pinebookpro" ]]; then
 	mv -f {brcmfmac43456-*,BCM4345C5.hcd,BCM4345C0.hcd} /lib/firmware/brcm/
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
+	cd ~
 	${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz
 	tar xf meson-firmware-master.tar.gz
 	cp -fr meson-firmware-master/meson/* /lib/firmware/meson
@@ -75,7 +85,8 @@ if [[ "$FAMILY" == "amlogic" ]]; then
 	chown -R root:root /lib/firmware/ene-ub6250
 	cd ~
 fi
-if [[ "$FAMILY_EXT" == "rk356x" || "$FAMILY_EXT" == "rk3588" ]]; then
+if [[ "$FAMILY_EXT" =~ ^(rk356x|rk3588)$ ]]; then
+	cd ~
 	mkdir -p /lib/firmware/bnx2
 	wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+archive/refs/heads/main/bnx2.tar.gz -P /lib/firmware/bnx2
 	if [[ -f "/lib/firmware/bnx2/bnx2.tar.gz" ]]; then
@@ -83,16 +94,12 @@ if [[ "$FAMILY_EXT" == "rk356x" || "$FAMILY_EXT" == "rk3588" ]]; then
 		rm -f /lib/firmware/bnx2/bnx2.tar.gz
 	fi
 	if [[ "$BOARD" == "khadasedge2" ]]; then
-		cd ~
-		echo ""
 		git clone -q -b kedge2 https://github.com/pyavitz/firmware.git
-		cp -fr firmware/* /lib/firmware
-		rm -fdr firmware
+		rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
 	fi
 fi
 if [[ "$BOARD" == "indiedroid-nova" ]]; then
 	cd ~
-	#echo "Installing bluetooth support ..."
 	git clone -q https://github.com/stvhay/rkwifibt
 	# build the hci driver
 	cd rkwifibt
@@ -103,7 +110,6 @@ if [[ "$BOARD" == "indiedroid-nova" ]]; then
 	cp -f realtek/rtk_hciattach/rtk_hciattach /usr/bin/
 	cp -f bt_load_rtk_firmware                /usr/bin/
 	chmod +x /usr/bin/{rtk_hciattach,bt_load_rtk_firmware}
-	echo hci_uart >> /etc/modules
 	cd ~
 	rm -fdr rkwifibt
 fi
@@ -118,7 +124,7 @@ echo ""
 }
 
 # regulatory db
-wireless_regdb(){
+wireless_regdb (){
 echo ""
 echo -e "Adding regulatory db ..."
 if [[ "$DISTRO" == "ubuntu" ]]; then
@@ -134,7 +140,7 @@ rm -fdr wireless-regdb
 }
 
 # wireless conf files
-realtek_conf(){
+realtek_conf (){
 mkdir -p /etc/modprobe.d/
 mkdir -p /usr/lib/NetworkManager/conf.d/
 echo "options 8723bs rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/50-8723bs.conf
@@ -145,9 +151,9 @@ echo "options 88x2cs rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /et
 echo "options 88XXau rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1" > /etc/modprobe.d/50-88XXau.conf
 }
 
-router_udev_rules(){
+router_udev_rules (){
 mkdir -p /etc/udev/rules.d
-if [[ "$BOARD" == "nanopir4s" || "$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" ]]; then
+if [[ "$BOARD" =~ ^(nanopir4s|nanopir4se|nanopir5c)$ ]]; then
 	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-led.rules
 	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-led.rules
 fi
@@ -158,9 +164,8 @@ if [[ "$BOARD" == "nanopir5s" ]]; then
 fi
 }
 
-router_ifupdown(){
-if [[ "$BOARD" == "bananapim2s" || "$BOARD" == "ft20" || "$BOARD" == "orangepir1" || "$BOARD" == "nanopir1" || "$BOARD" == "nanopir4s" || \
-	"$BOARD" == "nanopir4se" || "$BOARD" == "nanopir5c" || "$BOARD" == "radxae25" ]]; then
+router_ifupdown (){
+if [[ "$BOARD" =~ ^(bananapim2s|ft20|orangepir1|nanopir1|nanopir4s|nanopir4se|nanopir5c|radxae25)$ ]]; then
 	if [[ -f "/etc/network/interfaces" ]]; then
 		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/network/interfaces
 		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/network/interfaces
@@ -176,7 +181,7 @@ if [[ "$BOARD" == "nanopir5s" ]]; then
 fi
 }
 
-ifupdown-setup(){
+ifupdown-setup (){
 rm -f /etc/network/interfaces
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
@@ -252,7 +257,7 @@ network={
 EOF
 }
 
-networkmanager-setup(){
+networkmanager-setup (){
 if [ -f /etc/network/interfaces ]; then
 	rm -f /etc/network/interfaces
 fi
@@ -276,7 +281,7 @@ else
 fi
 }
 
-ifupdown-credentials(){
+ifupdown-credentials (){
 if [ -f /root/ifupdown.credentials ]; then
 	CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 	mv -f /root/ifupdown.credentials /usr/local/bin/credentials
@@ -302,7 +307,7 @@ if [ -f /root/ifupdown.credentials ]; then
 fi
 }
 
-networkmanager-credentials(){
+networkmanager-credentials (){
 if [ -f /root/networkmanager.credentials ]; then
 	CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 	mv -f /root/networkmanager.credentials /usr/local/bin/credentials

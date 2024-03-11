@@ -53,52 +53,6 @@ dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1
 }
 
 # STAGE2
-alt_firmware (){
-echo -e ""
-if [[ "$BOARD" == "bananapim2zero" || "$BOARD" == "bananapip2zero" || "$BOARD" == "nanopineoplus2" ]]; then
-	echo "Adding $DEFAULT_MOTD firmware ..."
-	cd ~
-	git clone -b nanopi https://github.com/pyavitz/firmware.git
-fi
-if [[ "$BOARD" == "cubietruck" ]]; then
-	echo "Adding $DEFAULT_MOTD firmware ..."
-	cd ~
-	git clone -b $BOARD https://github.com/pyavitz/firmware.git
-fi
-if [[ -f "firmware/README.md" ]]; then rm -f firmware/README.md; fi
-cp -fr firmware/* /lib/firmware
-if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.bin" ]]; then
-	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin /lib/firmware/brcm/brcmfmac43430-sdio.friendlyarm,nanopi-neo-plus2.bin
-	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-m2-zero.bin
-	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.bin /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-p2-zero.bin
-fi
-if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.txt" ]]; then
-	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.txt /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-m2-zero.txt
-	ln -s /lib/firmware/brcm/brcmfmac43430-sdio.txt /lib/firmware/brcm/brcmfmac43430-sdio.sinovoip,bpi-p2-zero.txt
-fi
-if [[ -f "fw-0a5c_21e8.hcd" ]]; then 
-	mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-	cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-	chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
-	chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
-fi
-if [[ -f "UPDATE.mem" ]]; then
-	install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
-	rm -f UPDATE.mem
-fi
-if [[ -d "firmware" ]]; then rm -fdr firmware; fi
-git clone -q -b realtek https://github.com/pyavitz/firmware.git
-cp -fr firmware/* /lib/firmware
-rm -fdr firmware
-mkdir -p /lib/firmware/rtl_nic
-wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
-if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
-	tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
-	rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
-fi
-cd ~
-}
-
 pine64_bthelper (){
 echo  ""
 echo -e "Installing bluetooth helper ..."
