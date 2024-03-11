@@ -1,0 +1,71 @@
+From 52c1989d36995f937f00c4cf551d667aa52f2086 Mon Sep 17 00:00:00 2001
+From: Andre Przywara <andre.przywara@arm.com>
+Date: Mon, 11 Mar 2024 07:04:31 -0400
+Subject: [PATCH] regulator: axp20x: fix typo-ed identifier
+
+The registers to set the X-Powers AXP313 regulators are of course
+"CONTROL" registers, not "CONRTOL" ones.
+
+Fix the typo in the header file and in its users. No functional change.
+
+Signed-off-by: Andre Przywara <andre.przywara@arm.com>
+---
+ drivers/regulator/axp20x-regulator.c | 10 +++++-----
+ include/linux/mfd/axp20x.h           | 10 +++++-----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/regulator/axp20x-regulator.c b/drivers/regulator/axp20x-regulator.c
+index 3087bc9869..9324f7a22b 100644
+--- a/drivers/regulator/axp20x-regulator.c
++++ b/drivers/regulator/axp20x-regulator.c
+@@ -666,21 +666,21 @@ static const struct linear_range axp313a_dcdc3_ranges[] = {
+ static const struct regulator_desc axp313a_regulators[] = {
+ 	AXP_DESC_RANGES(AXP313A, DCDC1, "dcdc1", "vin1",
+ 			axp313a_dcdc1_ranges, AXP313A_DCDC1_NUM_VOLTAGES,
+-			AXP313A_DCDC1_CONRTOL, AXP313A_DCDC_V_OUT_MASK,
++			AXP313A_DCDC1_CONTROL, AXP313A_DCDC_V_OUT_MASK,
+ 			AXP313A_OUTPUT_CONTROL, BIT(0)),
+ 	AXP_DESC_RANGES(AXP313A, DCDC2, "dcdc2", "vin2",
+ 			axp313a_dcdc2_ranges, AXP313A_DCDC23_NUM_VOLTAGES,
+-			AXP313A_DCDC2_CONRTOL, AXP313A_DCDC_V_OUT_MASK,
++			AXP313A_DCDC2_CONTROL, AXP313A_DCDC_V_OUT_MASK,
+ 			AXP313A_OUTPUT_CONTROL, BIT(1)),
+ 	AXP_DESC_RANGES(AXP313A, DCDC3, "dcdc3", "vin3",
+ 			axp313a_dcdc3_ranges, AXP313A_DCDC23_NUM_VOLTAGES,
+-			AXP313A_DCDC3_CONRTOL, AXP313A_DCDC_V_OUT_MASK,
++			AXP313A_DCDC3_CONTROL, AXP313A_DCDC_V_OUT_MASK,
+ 			AXP313A_OUTPUT_CONTROL, BIT(2)),
+ 	AXP_DESC(AXP313A, LDO1, "ldo1", "vin1", 500, 3500, 100,
+-		 AXP313A_ALDO1_CONRTOL, AXP313A_LDO_V_OUT_MASK,
++		 AXP313A_ALDO1_CONTROL, AXP313A_LDO_V_OUT_MASK,
+ 		 AXP313A_OUTPUT_CONTROL, BIT(3)),
+ 	AXP_DESC(AXP313A, LDO2, "ldo2", "vin1", 500, 3500, 100,
+-		 AXP313A_DLDO1_CONRTOL, AXP313A_LDO_V_OUT_MASK,
++		 AXP313A_DLDO1_CONTROL, AXP313A_LDO_V_OUT_MASK,
+ 		 AXP313A_OUTPUT_CONTROL, BIT(4)),
+ 	AXP_DESC_FIXED(AXP313A, RTC_LDO, "rtc-ldo", "vin1", 1800),
+ };
+diff --git a/include/linux/mfd/axp20x.h b/include/linux/mfd/axp20x.h
+index 0e2c2ce192..9a0c141837 100644
+--- a/include/linux/mfd/axp20x.h
++++ b/include/linux/mfd/axp20x.h
+@@ -94,11 +94,11 @@ enum axp20x_variants {
+ 
+ #define AXP313A_ON_INDICATE		0x00
+ #define AXP313A_OUTPUT_CONTROL		0x10
+-#define AXP313A_DCDC1_CONRTOL		0x13
+-#define AXP313A_DCDC2_CONRTOL		0x14
+-#define AXP313A_DCDC3_CONRTOL		0x15
+-#define AXP313A_ALDO1_CONRTOL		0x16
+-#define AXP313A_DLDO1_CONRTOL		0x17
++#define AXP313A_DCDC1_CONTROL		0x13
++#define AXP313A_DCDC2_CONTROL		0x14
++#define AXP313A_DCDC3_CONTROL		0x15
++#define AXP313A_ALDO1_CONTROL		0x16
++#define AXP313A_DLDO1_CONTROL		0x17
+ #define AXP313A_POWER_STATUS		0x1a
+ #define AXP313A_PWROK_SET		0x1b
+ #define AXP313A_OUTPUT_MONITOR		0x1d
+-- 
+2.39.2
+
