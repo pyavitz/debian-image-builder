@@ -142,6 +142,14 @@ fi
 }
 
 linux_configs (){
+if [[ -v "MODULES" ]] && [[ ! -z "$MODULES" ]]; then
+	# insert additional modules
+	echo -e ${MODULES} | tr ' ' '\n' | tee -a modlist.txt > /dev/null 2>&1
+	for MODLIST in `cat modlist.txt`; do
+		if [[ `grep -w "${MODLIST}" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "${MODLIST}" >> "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"; fi
+		rm -f modlist.txt
+	done
+fi
 if [ $CLANG -eq 1 ] && [[ "$ARCH" == "arm64" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	if [[ `grep -w "CONFIG_LTO_CLANG_THIN=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
 fi
