@@ -53,9 +53,7 @@ OrangePi 5 (*)
 OrangePi 5 Plus (*)
 Pinebook Pro (*)
 Radxa E25 (*)
-Renegade
 Rock 5B	(*)
-ROCK64	
 ROCKPro64 (*)
 
 # SAMSUNG
