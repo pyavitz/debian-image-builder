@@ -289,13 +289,25 @@ if [[ -f "/etc/update-motd.d/10-help-text" ]]; then
 fi
 mv -f {00-header,15-brand,20-sysinfo,90-dynamic-motd} /etc/update-motd.d/
 chmod +x /etc/update-motd.d/*
-echo "# DYNAMIC MOTD VARIABLES" > /etc/default/dynamic-motd
-echo H_POS='"'-c'"' >> /etc/default/dynamic-motd
-echo B_POS='"'-r'"' >> /etc/default/dynamic-motd
-echo BRANDING='"'false'"' >> /etc/default/dynamic-motd
-echo T_FONT='"'small'"' >> /etc/default/dynamic-motd
-echo T_FILTER='"'metal'"' >> /etc/default/dynamic-motd
-echo MENUCONFIG='"'true'"' >> /etc/default/dynamic-motd
+cat <<EOF > "/etc/default/dynamic-motd"
+# DYNAMIC MOTD VARIABLES
+
+# header
+H_POS="-c"
+
+# banner
+B_POS="-r"
+B_FONT="term"
+B_FONT_STYLE="\033[1m"
+
+# alternative banner
+BRANDING="false"
+T_FONT="small"
+T_FILTER="metal"
+
+# helper
+MENUCONFIG="false"
+EOF
 chown -R root:root /etc/update-motd.d/{00-header,15-brand,20-sysinfo,90-dynamic-motd}
 rm -f /etc/motd
 echo "" > /etc/motd
