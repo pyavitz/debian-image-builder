@@ -1,0 +1,33 @@
+From d180521e709c052abe0af574a7b93a1dcb649fad Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 25 Mar 2024 08:07:20 -0400
+Subject: [PATCH] of: build dtbs with symbols when CONFIG_OF_OVERLAY is set
+
+The overlay feature requires the base dtb to be built with symbols.
+
+https://patchwork.kernel.org/project/linux-kbuild/patch/20171214151240.14555-1-a.heider@gmail.com/
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ scripts/Makefile.lib | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 3179747cbd2c..ffc2d348a503 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -370,6 +370,11 @@ DTC_FLAGS += -Wnode_name_chars_strict \
+ 	-Wunique_unit_address
+ endif
+ 
++ifeq ($(CONFIG_OF_OVERLAY),y)
++# enable creation of __symbols__ node
++DTC_FLAGS += -@
++endif
++
+ DTC_FLAGS += $(DTC_FLAGS_$(target-stem))
+ 
+ # Set -@ if the target is a base DTB that overlay is applied onto
+-- 
+2.39.2
+
