@@ -1,6 +1,6 @@
-From 6bbae25137abf7bf218bb5e998a51a6cce15d738 Mon Sep 17 00:00:00 2001
+From c24403f7555225b8ad44171eafd0634fd325d598 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 17 Nov 2023 06:44:20 -0500
+Date: Mon, 25 Mar 2024 08:39:04 -0400
 Subject: [PATCH] HACK: net: wireless: nl80211: remove WARNING and TRACE
 
 [   12.358788] WARNING: CPU: 1 PID: 545 at net/wireless/nl80211.c:19289 cfg80211_ch_switch_started_notify+0xc8/0xd4 [cfg80211]
@@ -32,27 +32,26 @@ Subject: [PATCH] HACK: net: wireless: nl80211: remove WARNING and TRACE
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- net/wireless/nl80211.c | 7 -------
- 1 file changed, 7 deletions(-)
+ net/wireless/nl80211.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 569234bc2be6..3f6ca246dafc 100644
+index b4edba6b0b7b..471527580b2c 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -19323,13 +19323,6 @@ void cfg80211_ch_switch_started_notify(struct net_device *dev,
+@@ -19439,12 +19439,6 @@ void cfg80211_ch_switch_started_notify(struct net_device *dev,
  	struct wiphy *wiphy = wdev->wiphy;
  	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
  
 -	lockdep_assert_wiphy(wdev->wiphy);
 -	WARN_INVALID_LINK_ID(wdev, link_id);
 -
--	trace_cfg80211_ch_switch_started_notify(dev, chandef, link_id,
--						punct_bitmap);
+-	trace_cfg80211_ch_switch_started_notify(dev, chandef, link_id);
 -
 -
  	nl80211_ch_switch_notify(rdev, dev, link_id, chandef, GFP_KERNEL,
  				 NL80211_CMD_CH_SWITCH_STARTED_NOTIFY,
- 				 count, quiet, punct_bitmap);
+ 				 count, quiet);
 -- 
 2.39.2
 
