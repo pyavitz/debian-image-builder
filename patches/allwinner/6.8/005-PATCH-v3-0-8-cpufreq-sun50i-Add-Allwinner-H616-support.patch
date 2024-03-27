@@ -1,21 +1,28 @@
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 0/8] cpufreq: sun50i: Add Allwinner H616 support
-Date: Mon, 18 Mar 2024 01:12:20 +0000
+Subject: [PATCH v3 0/8] cpufreq: sun50i: Add Allwinner H616 support
+Date: Tue, 26 Mar 2024 11:47:35 +0000
 
-This series adds cpufreq support for the Allwinner H616 SoC.
-This v2 is quite some rework compared to Martin's original series from
-about half a year ago[1].
+This series adds cpufreq support to the Allwinner H616 SoC.
+v3 has seen only little changes compared to v2, which contained quite
+some rework of Martin's original series from about half a year ago[1].
+Thanks for the comments on the list, I adjusted the OPP nodes as
+suggested. See below for a changelog.
 
-The various H616 chips are rated into different speedbins at the factory,
-the bin index is then burned into the efuses. This is very similar to the
-H6, though the location of the speedbin fuse and its encoding differs.
-Also the die revision has a say here, we can derive this from the SoC ID,
-already provided by TF-A through the SMCCC SoC ID interface.
-On top of that not all chips are qualified to reach the full 1.5GHz,
+=================
+The various H616 chips seem to be qualified by production batches, and
+there is a table that translates from some efuses values to actual speed
+bin indexes. Also the die revision has a say here: we can derive this
+from the SoC ID, already provided by TF-A through the SMCCC SoC ID
+interface.
+So while the H6 had explicit speed bin indexes in the efuses, this is
+conceptually not that different, and after refactoring patch 4/8 this
+can be neatly integrated into the existing (H6) sun50i-cpufreq-nvmem
+driver.
+On top of that, not all chips are qualified to reach the full 1.5GHz,
 and the BSP kernel describes different OPPs for each speedbin. This
-requires to add support for the opp-supported-hw DT property, to be able
-to describe those requirements properly.
+requires to add support for the opp-supported-hw DT property, to be
+able to describe those requirements properly.
 
 Patch 1/8 exports the SoC ID function, so that we can call it from our
 driver. Patch 2/8 blocks the affected SoCs from the generic DT cpufreq
@@ -31,15 +38,37 @@ Patch 7/8 add the CPU OPP table as a .dtsi to the DT directory, the
 values in there were taken from the BSP source.
 Patch 8/8 then enables the OPPs for all boards we have DTs for.
 
-Please have a look, especially patch 5/8 might need some discussion.
-This is based on v6.8, with the THS series on top, which should reach
-mainline in the next days. I plan to send a rebased version after -rc1,
-but wanted to start the discussion early.
+Based on v6.9-rc1.
+
+Please have a look!
 
 Cheers,
 Andre
 
 [1] https://lore.kernel.org/linux-sunxi/20230904-cpufreq-h616-v1-0-b8842e525c43@somainline.org/T/#u
+
+Changelog v2 .. v3:
+- rebased on top of v6.9-rc1
+- drop node name suffix from DT bindings
+- drop multiple nodes per frequency in DT bindings example
+- add H700 nvmem value and OPPs
+- print warning for unknown nvmem values
+- add #cooling-cells properties to CPU DT nodes
+- use one DT node per frequency for OPP table entries
+- include OPP table for newly added Longan board
+
+Changelog v1 .. v2:
+- extend commit messages
+- add H618/H700 SoC IDs
+- fix binding compatible enum
+- fix binding documentation
+- allow additional suffix to OPP node name
+- shorten existing DT binding example
+- add another (opp-supported-hw) binding example
+- move speed bin decoding refactoring to separate patch (Brandon)
+- move opp-supported-hw support to separate patch
+- merge opp-supported-hw and microvolt suffix handling
+- rewrite OPP tables without opp-microvolt-speed suffix
 
 Andre Przywara (2):
   cpufreq: sun50i: Add support for opp_supported_hw
@@ -55,29 +84,30 @@ Martin Botka (5):
   cpufreq: sun50i: Add H616 support
   arm64: dts: allwinner: h616: Add CPU OPPs table
 
- .../allwinner,sun50i-h6-operating-points.yaml |  89 +++++----
+ .../allwinner,sun50i-h6-operating-points.yaml |  86 ++++----
  .../sun50i-h616-bigtreetech-cb1.dtsi          |   5 +
- .../dts/allwinner/sun50i-h616-cpu-opp.dtsi    | 138 +++++++++++++
+ .../dts/allwinner/sun50i-h616-cpu-opp.dtsi    | 125 +++++++++++
  .../allwinner/sun50i-h616-orangepi-zero2.dts  |   5 +
  .../dts/allwinner/sun50i-h616-x96-mate.dts    |   5 +
- .../arm64/boot/dts/allwinner/sun50i-h616.dtsi |   4 +
+ .../arm64/boot/dts/allwinner/sun50i-h616.dtsi |   8 +
+ .../sun50i-h618-longan-module-3h.dtsi         |   5 +
  .../allwinner/sun50i-h618-orangepi-zero2w.dts |   5 +
  .../allwinner/sun50i-h618-orangepi-zero3.dts  |   5 +
  .../sun50i-h618-transpeed-8k618-t.dts         |   5 +
  drivers/cpufreq/cpufreq-dt-platdev.c          |   3 +
- drivers/cpufreq/sun50i-cpufreq-nvmem.c        | 189 +++++++++++++++---
+ drivers/cpufreq/sun50i-cpufreq-nvmem.c        | 197 +++++++++++++++---
  drivers/firmware/smccc/smccc.c                |   1 +
- 12 files changed, 379 insertions(+), 75 deletions(-)
+ 13 files changed, 378 insertions(+), 77 deletions(-)
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h616-cpu-opp.dtsi
 
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 1/8] firmware: smccc: Export revision soc_id function
-Date: Mon, 18 Mar 2024 01:12:21 +0000
+Subject: [PATCH v3 1/8] firmware: smccc: Export revision soc_id function
+Date: Tue, 26 Mar 2024 11:47:36 +0000
 
 From: Martin Botka <martin.botka@somainline.org>
 
@@ -109,13 +139,13 @@ index db818f9dcb8ee..d670635914ecb 100644
  static int __init smccc_devices_init(void)
  {
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 2/8] cpufreq: dt-platdev: Blocklist Allwinner H616/618 SoCs
-Date: Mon, 18 Mar 2024 01:12:22 +0000
+Subject: [PATCH v3 2/8] cpufreq: dt-platdev: Blocklist Allwinner H616/618 SoCs
+Date: Tue, 26 Mar 2024 11:47:37 +0000
 
 From: Martin Botka <martin.botka@somainline.org>
 
@@ -130,7 +160,7 @@ Signed-off-by: Andre Przywara <andre.przywara@arm.com>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/cpufreq/cpufreq-dt-platdev.c b/drivers/cpufreq/cpufreq-dt-platdev.c
-index bd1e1357cef8e..3f98c4b31647a 100644
+index b993a498084bc..86d8baa816795 100644
 --- a/drivers/cpufreq/cpufreq-dt-platdev.c
 +++ b/drivers/cpufreq/cpufreq-dt-platdev.c
 @@ -104,6 +104,9 @@ static const struct of_device_id allowlist[] __initconst = {
@@ -144,27 +174,26 @@ index bd1e1357cef8e..3f98c4b31647a 100644
  	{ .compatible = "apple,arm-platform", },
  
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 3/8] dt-bindings: opp: Describe H616 OPPs and opp-supported-hw
-Date: Mon, 18 Mar 2024 01:12:23 +0000
+Subject: [PATCH v3 3/8] dt-bindings: opp: Describe H616 OPPs and opp-supported-hw
+Date: Tue, 26 Mar 2024 11:47:38 +0000
 
 From: Martin Botka <martin.botka@somainline.org>
 
-The Allwinner H616 uses a similar NVMEM based mechanism to determine the
-silicon revision, which is required to select the right frequency /
-voltage pair for the OPPs.
-However it limits the maximum frequency for some speedbins, which
-requires to introduce the opp-supported-hw property.
+Compared to the existing Allwinner H6 OPP scheme, the H616 uses a
+similar NVMEM based mechanism to determine the silicon revision, which
+is required to select the right frequency / voltage pair for the OPPs.
+However it limits the maximum frequency for some speed bins, also seems
+to not support all frequencies in all speed bins, which requires us to
+introduce the opp-supported-hw property.
 
 Add this property to the list of allowed properties, also drop the
 requirement for the revision specific opp-microvolt properties, since
-they won't be needed if using opp-supported-hw. When using this
-property, we also might have multiple OPP nodes per frequency, so relax
-the OPP node naming to allow a single letter suffix.
+they might not be needed if using opp-supported-hw.
 
 Also use to opportunity to adjust some wording, and drop a sentence
 referring to the Linux driver and the OPP subsystem.
@@ -175,11 +204,11 @@ opp-supported-hw property.
 Signed-off-by: Martin Botka <martin.botka@somainline.org>
 Signed-off-by: Andre Przywara <andre.przywara@arm.com>
 ---
- .../allwinner,sun50i-h6-operating-points.yaml | 89 ++++++++++---------
- 1 file changed, 47 insertions(+), 42 deletions(-)
+ .../allwinner,sun50i-h6-operating-points.yaml | 86 +++++++++----------
+ 1 file changed, 42 insertions(+), 44 deletions(-)
 
 diff --git a/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml b/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml
-index 51f62c3ae1947..d5439a3f696bc 100644
+index 51f62c3ae1947..d679b2e4a7199 100644
 --- a/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml
 +++ b/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml
 @@ -13,25 +13,25 @@ maintainers:
@@ -216,14 +245,7 @@ index 51f62c3ae1947..d5439a3f696bc 100644
        examples below.
  
    opp-shared: true
-@@ -41,21 +41,23 @@ required:
-   - nvmem-cells
- 
- patternProperties:
--  "^opp-[0-9]+$":
-+  "^opp-[0-9]+(-[a-z])?$":
-     type: object
- 
+@@ -47,15 +47,17 @@ patternProperties:
      properties:
        opp-hz: true
        clock-latency-ns: true
@@ -244,7 +266,7 @@ index 51f62c3ae1947..d5439a3f696bc 100644
  
      unevaluatedProperties: false
  
-@@ -77,58 +79,61 @@ examples:
+@@ -77,58 +79,54 @@ examples:
              opp-microvolt-speed2 = <800000>;
          };
  
@@ -276,41 +298,36 @@ index 51f62c3ae1947..d5439a3f696bc 100644
 +            opp-microvolt-speed2 = <960000>;
          };
 +    };
-+
+ 
+-        opp-888000000 {
+-            clock-latency-ns = <244144>; /* 8 32k periods */
+-            opp-hz = /bits/ 64 <888000000>;
+-
+-            opp-microvolt-speed0 = <940000>;
+-            opp-microvolt-speed1 = <820000>;
+-            opp-microvolt-speed2 = <800000>;
+-        };
 +  - |
 +    opp-table {
 +        compatible = "allwinner,sun50i-h616-operating-points";
 +        nvmem-cells = <&speedbin_efuse>;
 +        opp-shared;
  
--        opp-888000000 {
+-        opp-1080000000 {
 +        opp-480000000 {
              clock-latency-ns = <244144>; /* 8 32k periods */
--            opp-hz = /bits/ 64 <888000000>;
-+            opp-hz = /bits/ 64 <480000000>;
- 
--            opp-microvolt-speed0 = <940000>;
--            opp-microvolt-speed1 = <820000>;
--            opp-microvolt-speed2 = <800000>;
-+            opp-microvolt = <900000>;
-+            opp-supported-hw = <0x1f>;
-         };
- 
--        opp-1080000000 {
-+        opp-792000000-l {
-             clock-latency-ns = <244144>; /* 8 32k periods */
 -            opp-hz = /bits/ 64 <1080000000>;
-+            opp-hz = /bits/ 64 <792000000>;
++            opp-hz = /bits/ 64 <480000000>;
  
 -            opp-microvolt-speed0 = <1060000>;
 -            opp-microvolt-speed1 = <880000>;
 -            opp-microvolt-speed2 = <840000>;
 +            opp-microvolt = <900000>;
-+            opp-supported-hw = <0x02>;
++            opp-supported-hw = <0x1f>;
          };
  
 -        opp-1320000000 {
-+        opp-792000000-h {
++        opp-792000000 {
              clock-latency-ns = <244144>; /* 8 32k periods */
 -            opp-hz = /bits/ 64 <1320000000>;
 +            opp-hz = /bits/ 64 <792000000>;
@@ -318,8 +335,9 @@ index 51f62c3ae1947..d5439a3f696bc 100644
 -            opp-microvolt-speed0 = <1160000>;
 -            opp-microvolt-speed1 = <940000>;
 -            opp-microvolt-speed2 = <900000>;
-+            opp-microvolt = <940000>;
-+            opp-supported-hw = <0x10>;
++            opp-microvolt-speed1 = <900000>;
++            opp-microvolt-speed4 = <940000>;
++            opp-supported-hw = <0x12>;
          };
  
 -        opp-1488000000 {
@@ -337,13 +355,13 @@ index 51f62c3ae1947..d5439a3f696bc 100644
      };
  
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 4/8] cpufreq: sun50i: Refactor speed bin decoding
-Date: Mon, 18 Mar 2024 01:12:24 +0000
+Subject: [PATCH v3 4/8] cpufreq: sun50i: Refactor speed bin decoding
+Date: Tue, 26 Mar 2024 11:47:39 +0000
 
 From: Brandon Cheo Fusi <fusibrandon13@gmail.com>
 
@@ -492,13 +510,13 @@ index 32a9c88f8ff6d..7b44f3b13e7d2 100644
  
  	snprintf(name, MAX_NAME_LEN, "speed%d", speed);
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 5/8] cpufreq: sun50i: Add support for opp_supported_hw
-Date: Mon, 18 Mar 2024 01:12:25 +0000
+Subject: [PATCH v3 5/8] cpufreq: sun50i: Add support for opp_supported_hw
+Date: Tue, 26 Mar 2024 11:47:40 +0000
 
 The opp_supported_hw DT property allows the DT to specify a mask of chip
 revisions that a certain OPP is eligible for. This allows for easy
@@ -628,13 +646,13 @@ index 7b44f3b13e7d2..bd170611c7906 100644
  	kfree(opp_tokens);
  }
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 6/8] cpufreq: sun50i: Add H616 support
-Date: Mon, 18 Mar 2024 01:12:26 +0000
+Subject: [PATCH v3 6/8] cpufreq: sun50i: Add H616 support
+Date: Tue, 26 Mar 2024 11:47:41 +0000
 
 From: Martin Botka <martin.botka@somainline.org>
 
@@ -653,11 +671,11 @@ very close sibling SoCs H618 and H700, so add them to the list as well.
 Signed-off-by: Martin Botka <martin.botka@somainline.org>
 Signed-off-by: Andre Przywara <andre.przywara@arm.com>
 ---
- drivers/cpufreq/sun50i-cpufreq-nvmem.c | 53 ++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+ drivers/cpufreq/sun50i-cpufreq-nvmem.c | 61 ++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
 diff --git a/drivers/cpufreq/sun50i-cpufreq-nvmem.c b/drivers/cpufreq/sun50i-cpufreq-nvmem.c
-index bd170611c7906..3f7051937ff2b 100644
+index bd170611c7906..f9e9fc340f848 100644
 --- a/drivers/cpufreq/sun50i-cpufreq-nvmem.c
 +++ b/drivers/cpufreq/sun50i-cpufreq-nvmem.c
 @@ -10,6 +10,7 @@
@@ -668,7 +686,7 @@ index bd170611c7906..3f7051937ff2b 100644
  #include <linux/cpu.h>
  #include <linux/module.h>
  #include <linux/nvmem-consumer.h>
-@@ -46,14 +47,63 @@ static u32 sun50i_h6_efuse_xlate(u32 speedbin)
+@@ -46,14 +47,71 @@ static u32 sun50i_h6_efuse_xlate(u32 speedbin)
  		return 0;
  }
  
@@ -707,8 +725,16 @@ index bd170611c7906..3f7051937ff2b 100644
 +		value = 4;
 +		break;
 +	case 0x5d00:
-+	default:
 +		value = 0;
++		break;
++	case 0x6c00:
++		value = 5;
++		break;
++	default:
++		pr_warn("sun50i-cpufreq-nvmem: unknown speed bin 0x%x, using default bin 0\n",
++			speedbin & 0xffff);
++		value = 0;
++		break;
 +	}
 +
 +	return value;
@@ -732,7 +758,7 @@ index bd170611c7906..3f7051937ff2b 100644
  	{}
  };
  
-@@ -230,6 +280,9 @@ static struct platform_driver sun50i_cpufreq_driver = {
+@@ -230,6 +288,9 @@ static struct platform_driver sun50i_cpufreq_driver = {
  
  static const struct of_device_id sun50i_cpufreq_match_list[] = {
  	{ .compatible = "allwinner,sun50i-h6" },
@@ -743,36 +769,40 @@ index bd170611c7906..3f7051937ff2b 100644
  };
  MODULE_DEVICE_TABLE(of, sun50i_cpufreq_match_list);
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 7/8] arm64: dts: allwinner: h616: Add CPU OPPs table
-Date: Mon, 18 Mar 2024 01:12:27 +0000
+Subject: [PATCH v3 7/8] arm64: dts: allwinner: h616: Add CPU OPPs table
+Date: Tue, 26 Mar 2024 11:47:42 +0000
 
 From: Martin Botka <martin.botka@somainline.org>
 
 Add an Operating Performance Points table for the CPU cores to enable
 Dynamic Voltage & Frequency Scaling (DVFS) on the H616.
+The values were taken from the BSP sources. The (newer) H700 chips we
+have seen seem to use a separate speed bin, its OPP values were taken
+from a live system and added to the mix.
 
-Also add the needed cpu_speed_grade nvmem cell.
+Also add the needed cpu_speed_grade nvmem cell and the cooling cells
+properties, to enable passive cooling.
 
 Signed-off-by: Martin Botka <martin.botka@somainline.org>
-[Andre: rework to only use single opp-microvolt]
+[Andre: rework to minimise opp-microvolt properties]
 Signed-off-by: Andre Przywara <andre.przywara@arm.com>
 ---
- .../dts/allwinner/sun50i-h616-cpu-opp.dtsi    | 138 ++++++++++++++++++
- .../arm64/boot/dts/allwinner/sun50i-h616.dtsi |   4 +
- 2 files changed, 142 insertions(+)
+ .../dts/allwinner/sun50i-h616-cpu-opp.dtsi    | 125 ++++++++++++++++++
+ .../arm64/boot/dts/allwinner/sun50i-h616.dtsi |   8 ++
+ 2 files changed, 133 insertions(+)
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h616-cpu-opp.dtsi
 
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h616-cpu-opp.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h616-cpu-opp.dtsi
 new file mode 100644
-index 0000000000000..b0ec24000dad9
+index 0000000000000..6073fdf672592
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h616-cpu-opp.dtsi
-@@ -0,0 +1,138 @@
+@@ -0,0 +1,125 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +// Copyright (C) 2023 Martin Botka <martin@somainline.org>
 +
@@ -786,7 +816,7 @@ index 0000000000000..b0ec24000dad9
 +			opp-hz = /bits/ 64 <480000000>;
 +			opp-microvolt = <900000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x1f>;
++			opp-supported-hw = <0x3f>;
 +		};
 +
 +		opp-600000000 {
@@ -800,21 +830,15 @@ index 0000000000000..b0ec24000dad9
 +			opp-hz = /bits/ 64 <720000000>;
 +			opp-microvolt = <900000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x0d>;
++			opp-supported-hw = <0x2d>;
 +		};
 +
-+		opp-792000000-l {
++		opp-792000000 {
 +			opp-hz = /bits/ 64 <792000000>;
-+			opp-microvolt = <900000>;
++			opp-microvolt-speed1 = <900000>;
++			opp-microvolt-speed4 = <940000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x02>;
-+		};
-+
-+		opp-792000000-h {
-+			opp-hz = /bits/ 64 <792000000>;
-+			opp-microvolt = <940000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x10>;
++			opp-supported-hw = <0x12>;
 +		};
 +
 +		opp-936000000 {
@@ -824,53 +848,44 @@ index 0000000000000..b0ec24000dad9
 +			opp-supported-hw = <0x0d>;
 +		};
 +
-+		opp-1008000000-l {
++		opp-1008000000 {
 +			opp-hz = /bits/ 64 <1008000000>;
-+			opp-microvolt = <950000>;
++			opp-microvolt-speed0 = <950000>;
++			opp-microvolt-speed1 = <940000>;
++			opp-microvolt-speed2 = <950000>;
++			opp-microvolt-speed3 = <950000>;
++			opp-microvolt-speed4 = <1020000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x0d>;
++			opp-supported-hw = <0x1f>;
 +		};
 +
-+		opp-1008000000-m {
-+			opp-hz = /bits/ 64 <1008000000>;
-+			opp-microvolt = <940000>;
++		opp-10320000 {
++			opp-hz = /bits/ 64 <1032000000>;
++			opp-microvolt = <900000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x02>;
-+		};
-+
-+		opp-1008000000-h {
-+			opp-hz = /bits/ 64 <1008000000>;
-+			opp-microvolt = <1020000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x10>;
++			opp-supported-hw = <0x20>;
 +		};
 +
 +		opp-1104000000 {
 +			opp-hz = /bits/ 64 <1104000000>;
-+			opp-microvolt = <1000000>;
++			opp-microvolt-speed0 = <1000000>;
++			opp-microvolt-speed2 = <1000000>;
++			opp-microvolt-speed3 = <1000000>;
++			opp-microvolt-speed5 = <950000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x0d>;
++			opp-supported-hw = <0x2d>;
 +		};
 +
-+		opp-1200000000-l {
++		opp-1200000000 {
 +			opp-hz = /bits/ 64 <1200000000>;
-+			opp-microvolt = <1020000>;
++			opp-microvolt-speed0 = <1050000>;
++			opp-microvolt-speed1 = <1020000>;
++			opp-microvolt-speed2 = <1050000>;
++			opp-microvolt-speed3 = <1050000>;
++			opp-microvolt-speed4 = <1100000>;
++			opp-microvolt-speed5 = <1020000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x02>;
-+		};
-+
-+		opp-1200000000-m {
-+			opp-hz = /bits/ 64 <1200000000>;
-+			opp-microvolt = <1050000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x0d>;
-+		};
-+
-+		opp-1200000000-h {
-+			opp-hz = /bits/ 64 <1200000000>;
-+			opp-microvolt = <1100000>;
-+			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x10>;
++			opp-supported-hw = <0x3f>;
 +		};
 +
 +		opp-1320000000 {
@@ -884,14 +899,16 @@ index 0000000000000..b0ec24000dad9
 +			opp-hz = /bits/ 64 <1416000000>;
 +			opp-microvolt = <1100000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x0d>;
++			opp-supported-hw = <0x2d>;
 +		};
 +
 +		opp-1512000000 {
 +			opp-hz = /bits/ 64 <1512000000>;
-+			opp-microvolt = <1100000>;
++			opp-microvolt-speed1 = <1100000>;
++			opp-microvolt-speed3 = <1100000>;
++			opp-microvolt-speed5 = <1160000>;
 +			clock-latency-ns = <244144>; /* 8 32k periods */
-+			opp-supported-hw = <0x0a>;
++			opp-supported-hw = <0x2a>;
 +		};
 +	};
 +};
@@ -912,10 +929,42 @@ index 0000000000000..b0ec24000dad9
 +	operating-points-v2 = <&cpu_opp_table>;
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
-index 08517f46de058..91f1874aa3b02 100644
+index b2e85e52d1a12..c0fa466fa9f07 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
-@@ -143,6 +143,10 @@ sid: efuse@3006000 {
+@@ -26,6 +26,7 @@ cpu0: cpu@0 {
+ 			reg = <0>;
+ 			enable-method = "psci";
+ 			clocks = <&ccu CLK_CPUX>;
++			#cooling-cells = <2>;
+ 		};
+ 
+ 		cpu1: cpu@1 {
+@@ -34,6 +35,7 @@ cpu1: cpu@1 {
+ 			reg = <1>;
+ 			enable-method = "psci";
+ 			clocks = <&ccu CLK_CPUX>;
++			#cooling-cells = <2>;
+ 		};
+ 
+ 		cpu2: cpu@2 {
+@@ -42,6 +44,7 @@ cpu2: cpu@2 {
+ 			reg = <2>;
+ 			enable-method = "psci";
+ 			clocks = <&ccu CLK_CPUX>;
++			#cooling-cells = <2>;
+ 		};
+ 
+ 		cpu3: cpu@3 {
+@@ -50,6 +53,7 @@ cpu3: cpu@3 {
+ 			reg = <3>;
+ 			enable-method = "psci";
+ 			clocks = <&ccu CLK_CPUX>;
++			#cooling-cells = <2>;
+ 		};
+ 	};
+ 
+@@ -156,6 +160,10 @@ sid: efuse@3006000 {
  			ths_calibration: thermal-sensor-calibration@14 {
  				reg = <0x14 0x8>;
  			};
@@ -927,13 +976,13 @@ index 08517f46de058..91f1874aa3b02 100644
  
  		watchdog: watchdog@30090a0 {
 -- 
-2.35.8
+2.25.1
 
 
 From mboxrd@z Thu Jan  1 00:00:00 1970
 From: Andre Przywara <andre.przywara@arm.com>
-Subject: [PATCH v2 8/8] arm64: dts: allwinner: h616: enable DVFS for all boards
-Date: Mon, 18 Mar 2024 01:12:28 +0000
+Subject: [PATCH v3 8/8] arm64: dts: allwinner: h616: enable DVFS for all boards
+Date: Tue, 26 Mar 2024 11:47:43 +0000
 
 With the DT bindings now describing the format of the CPU OPP tables, we
 can include the OPP table in each board's .dts file, and specify the CPU
@@ -947,13 +996,14 @@ Signed-off-by: Andre Przywara <andre.przywara@arm.com>
  .../boot/dts/allwinner/sun50i-h616-bigtreetech-cb1.dtsi      | 5 +++++
  arch/arm64/boot/dts/allwinner/sun50i-h616-orangepi-zero2.dts | 5 +++++
  arch/arm64/boot/dts/allwinner/sun50i-h616-x96-mate.dts       | 5 +++++
+ .../boot/dts/allwinner/sun50i-h618-longan-module-3h.dtsi     | 5 +++++
  .../arm64/boot/dts/allwinner/sun50i-h618-orangepi-zero2w.dts | 5 +++++
  arch/arm64/boot/dts/allwinner/sun50i-h618-orangepi-zero3.dts | 5 +++++
  .../boot/dts/allwinner/sun50i-h618-transpeed-8k618-t.dts     | 5 +++++
- 6 files changed, 30 insertions(+)
+ 7 files changed, 35 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h616-bigtreetech-cb1.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h616-bigtreetech-cb1.dtsi
-index 1fed2b46cfe87..86e58d1ed23ea 100644
+index af421ba24ce0c..d12b01c5f41b6 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h616-bigtreetech-cb1.dtsi
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h616-bigtreetech-cb1.dtsi
 @@ -6,6 +6,7 @@
@@ -1066,7 +1116,7 @@ index b3b1b8692125f..e1cd7572a14ce 100644
  	allwinner,tx-delay-ps = <700>;
  	phy-mode = "rgmii-rxid";
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-transpeed-8k618-t.dts b/arch/arm64/boot/dts/allwinner/sun50i-h618-transpeed-8k618-t.dts
-index 8ea1fd41aebaa..2dd178a164fbe 100644
+index ac0a2b7ea6f31..a6458b7a86713 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h618-transpeed-8k618-t.dts
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-transpeed-8k618-t.dts
 @@ -6,6 +6,7 @@
@@ -1077,7 +1127,7 @@ index 8ea1fd41aebaa..2dd178a164fbe 100644
  
  #include <dt-bindings/gpio/gpio.h>
  #include <dt-bindings/interrupt-controller/arm-gic.h>
-@@ -41,6 +42,10 @@ reg_vcc3v3: vcc3v3 {
+@@ -51,6 +52,10 @@ wifi_pwrseq: wifi_pwrseq {
  	};
  };
  
@@ -1089,6 +1139,5 @@ index 8ea1fd41aebaa..2dd178a164fbe 100644
  	status = "okay";
  };
 -- 
-2.35.8
-
+2.25.1
 
