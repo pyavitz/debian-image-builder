@@ -48,6 +48,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-usb-host-mode.dtbo
 
 dtbo-$(CONFIG_ARCH_SUNXI) += \
+	sunxi-a64-mbus-devfreq-driver.dtbo \
 	sunxi-a64-overclock.dtbo \
 	sunxi-h3-h5-ir-tx.dtbo \
 	sunxi-h3-h5-overclock.dtbo \

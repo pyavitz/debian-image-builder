@@ -263,3 +263,53 @@ index 77b5349f6087..20d97bb2a15c 100644
 -- 
 2.39.2
 
+From 07b16c0607358aaa2f0bd490431501df8858581d Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Wed, 27 Mar 2024 17:44:38 -0400
+Subject: [PATCH] sun50i-a64-pine64: remove support for mem dynamic freq
+ scaling
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm64/boot/dts/allwinner/sun50i-a64-pine64.dts | 4 ++++
+ arch/arm64/boot/dts/allwinner/sun50i-a64.dtsi       | 5 ++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-a64-pine64.dts b/arch/arm64/boot/dts/allwinner/sun50i-a64-pine64.dts
+index bdbf4c1ae316..94ed63bf0718 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-a64-pine64.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-a64-pine64.dts
+@@ -117,6 +117,10 @@ &i2s2 {
+ 	status = "okay";
+ };
+ 
++&mbus {
++	/delete-property/ compatible;
++};
++
+ &mdio {
+ 	ext_rmii_phy1: ethernet-phy@1 {
+ 		compatible = "ethernet-phy-ieee802.3-c22";
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-a64.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-a64.dtsi
+index 20d97bb2a15c..774f27e3dd3f 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-a64.dtsi
++++ b/arch/arm64/boot/dts/allwinner/sun50i-a64.dtsi
+@@ -1211,7 +1211,6 @@ pwm: pwm@1c21400 {
+ 		};
+ 
+ 		mbus: dram-controller@1c62000 {
+-			compatible = "allwinner,sun50i-a64-mbus";
+ 			reg = <0x01c62000 0x1000>,
+ 			      <0x01c63000 0x1000>;
+ 			reg-names = "mbus", "dram";
+@@ -1452,3 +1451,7 @@ r_rsb: rsb@1f03400 {
+ 		};
+ 	};
+ };
++
++&mbus {
++	compatible = "allwinner,sun50i-a64-mbus";
++};
+-- 
+2.39.2
+
