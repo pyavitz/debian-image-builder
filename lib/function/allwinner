@@ -1,5 +1,28 @@
 #!/bin/bash
 
+# ATF AND CRUST BINARY
+atf_bl31 (){ # place bl31 file.
+if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6|sun50i-h618)$ ]]; then
+	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin" ]]; then
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin bl31.bin
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/debug/bl31.bin atf-bl31
+	else
+		report_atf_error
+	fi
+	if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
+		if [[ "$HOST_CODENAME" == "bullseye" ]]; then
+			cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
+		else
+			if [[ -f "../crust/build/scp/scp.bin" ]]; then
+				cp ../crust/build/scp/scp.bin scp.bin
+			else
+				report_crust_error
+			fi
+		fi
+	fi
+fi
+}
+
 # U-BOOT
 uboot_configs (){
 # add default builder config options

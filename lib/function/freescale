@@ -1,7 +1,20 @@
 #!/bin/bash
 
-# U-BOOT
+# ATF BINARY AND FIRMWARE
+atf_bl31 (){ # place bl31 file.
+if [[ "$FAMILY_EXT" == "imx8" ]]; then
+	if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin" ]]; then
+		cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31.bin bl31.bin
+	else
+		report_atf_error
+	fi
+	cp ../firmware-imx-8.17/firmware/ddr/synopsys/lpddr4*.bin .
+	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_hdmi_imx8m.bin .
+	cp ../firmware-imx-8.17/firmware/hdmi/cadence/signed_dp_imx8m.bin .
+fi
+}
 
+# U-BOOT
 uboot_configs (){
 # add default builder config options
 if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
