@@ -3,7 +3,7 @@
 # ATF
 arm_trusted_firmware (){
 TAG="lts-v2.10.2"
-if [[ "$FAMILY_EXT" =~ ^(imx8|sun50i|rk3328|rk3399)$ ]]; then
+if [[ "$FAMILY_EXT" =~ ^(sun50i|rk3328|rk3399)$ ]]; then
 	atf_download; cd arm-trusted-firmware; atf_patching; echo ""
 	if [ $CROSSCOMPILE -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
@@ -33,7 +33,6 @@ if [[ `wget -S --spider https://github.com/ARM-software/arm-trusted-firmware/blo
 		git checkout ${TAG} &> /dev/null
 		make realclean > /dev/null 2>&1
 		cd ..
-		echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 		cp -r arm-trusted-firmware arm-trusted-firmware.backup
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
@@ -50,7 +49,58 @@ if [[ `wget -S --spider https://github.com/ARM-software/arm-trusted-firmware/blo
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
 			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-			exit 0
+			exit 1
+		fi
+	fi
+fi
+}
+
+# IMX ATF
+imx_arm_trusted_firmware (){
+BRANCH="lf_v2.6"
+imx_atf_download; cd imx-arm-trusted-firmware; echo ""
+if [ $CROSSCOMPILE -eq 1 ]; then
+	echo -e "${GRN}  CC${FIN}"
+	echo -e "  GCC     ${CROSS_COMPILE}${COMPILER}"
+else
+	echo -e "${GRN}  NC${FIN}"
+	echo -e "  GCC     ${COMPILER}"
+fi
+export ARCH=${ARCH}
+ubuild "${ATF_EXT}"
+cd ..
+if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then echo ""; fi 
+}
+
+imx_atf_download (){
+if [[ `wget -S --spider https://github.com/nxp-imx/imx-atf/blob/${BRANCH}/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -d "imx-arm-trusted-firmware" ]] && [[ -d "imx-arm-trusted-firmware.backup" ]]; then
+		echo -en "${WHT}imx arm trusted firmware${FIN}"
+		echo -en " ${PNK}[${FIN}${YLW}cleaning${FIN}${PNK}]${FIN}"
+		rm -fdr imx-arm-trusted-firmware
+		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
+		mv -f imx-arm-trusted-firmware.backup imx-arm-trusted-firmware
+		cd imx-arm-trusted-firmware
+		git checkout ${BRANCH} &> /dev/null
+		make realclean > /dev/null 2>&1
+		cd ..
+		cp -r imx-arm-trusted-firmware imx-arm-trusted-firmware.backup
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	else
+		if [[ -d "imx-arm-trusted-firmware" ]]; then rm -fdr imx-arm-trusted-firmware; fi
+		echo -en "${WHT}imx arm trusted firmware${FIN}"
+		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+		git clone -q -c advice.detachedHead=false https://github.com/nxp-imx/imx-atf -b ${BRANCH} imx-arm-trusted-firmware
+		if [[ -d "imx-arm-trusted-firmware" ]]; then
+			cd imx-arm-trusted-firmware
+			make realclean > /dev/null 2>&1
+			cd ..
+			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+			cp -r imx-arm-trusted-firmware imx-arm-trusted-firmware.backup
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		else
+			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			exit 1
 		fi
 	fi
 fi
@@ -59,5 +109,5 @@ fi
 report_atf_error (){
 echo "Missing ${ATF_PLAT} bl31 blob. Please report build errors."
 echo ""
-exit 0
+exit 1
 }
