@@ -589,7 +589,8 @@ BOOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_BOOT} | sed -ne 's/^UUID=//p')
 BOOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_BOOT} | sed -ne 's/^PARTUUID=//p')
 ROOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^UUID=//p')
 ROOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^PARTUUID=//p')
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
+if [[ -v "LOGLEVEL" ]]; then :; else LOGLEVEL="loglevel=1"; fi
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA} init=/sbin/init"
 if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then
 		p1_boot

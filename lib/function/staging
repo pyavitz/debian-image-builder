@@ -216,6 +216,7 @@ echo BOOTINI='"'$BOOTINI'"' >> "${BOARD_DEST}"
 echo "" >> "${BOARD_DEST}"
 echo "# command line" >> "${BOARD_DEST}"
 echo CONSOLE='"'$CONSOLE'"' >> "${BOARD_DEST}"
+echo LOGLEVEL='"'$LOGLEVEL'"' >> "${BOARD_DEST}"
 echo EXTRA='"'$EXTRA'"' >> "${BOARD_DEST}"
 echo "" >> "${BOARD_DEST}"
 echo "# motd" >> "${BOARD_DEST}"
@@ -335,7 +336,7 @@ echo -en "$BOARD: "; echo -e "extlinux.conf"
 if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
 FDT="../${FAMILY}/${DTB}.dtb"
 FDTDIR="../${FAMILY}/"
-CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA} init=/sbin/init"
+CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA} init=/sbin/init"
 CHECK=`echo "$INSTALLED_KERNEL" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g'`
 mkdir -p ${BOOT_PATH}/extlinux
 if [[ -f "${BOOT_PATH}/extlinux/extlinux.conf" ]]; then rm -f ${BOOT_PATH}/extlinux/extlinux.conf; fi
