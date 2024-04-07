@@ -22,7 +22,7 @@ else
 	WARNING_MSG="Your board is not supported."
 	WARNING
 fi
-if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "amlogic" || "$FAMILY" == "rockchip" || "$FAMILY" == "samsung" ]]; then
+if [[ "$FAMILY" =~ ^(allwinner|amlogic|freescale|rockchip|samsung)$ ]]; then
 	:;
 else
 	PLATFORM=`echo $FAMILY | sed -e 's/\(.*\)/\U\1/'`
@@ -513,6 +513,15 @@ $EE "Writing u-boot ..."
 sleep .75
 if [[ "$FAMILY" == "allwinner" ]]; then
 	dd if="${UBOOT_DIR}/u-boot-sunxi-with-spl.bin" of="${DEVICE_NODE}" conv=fsync bs=1024 seek=8
+fi
+if [[ "$FAMILY" == "freescale" ]]; then
+	if [[ "$SERIES" == "imx6q" ]]; then
+		dd if="${UBOOT_DIR}/sploader.bin" of="${DEVICE_NODE}" bs=1k seek=1 conv=sync
+		dd if="${UBOOT_DIR}/u-boot.bin" of="${DEVICE_NODE}" bs=1k seek=69 conv=sync
+	fi
+	if [[ "$SERIES" == "imx8mp" ]]; then
+		dd if="${UBOOT_DIR}/u-boot.bin" of="${DEVICE_NODE}" bs=1024 seek=32 conv=notrunc
+	fi
 fi
 if [[ "$FAMILY" == "amlogic" ]]; then
 	if [[ "$EMMC_TRUE" == "true" ]]; then
