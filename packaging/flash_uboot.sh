@@ -101,7 +101,7 @@ if [[ "$FAMILY" == "freescale" ]] && [[ "$ARCH" == "arm64" ]] && [[ -f "${DIR}/u
 	target_device
 	sleep .50
 	# flash binary
-	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=1k seek=33
+	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=1024 seek=32 conv=notrunc
 fi
 
 # rockchip
