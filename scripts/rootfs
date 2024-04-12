@@ -107,19 +107,16 @@ if [ $DEVROOTFS -eq 1 ]; then
 fi
 
 # clean up
-if [[ -f "${ROOT}/usr/bin/${STATIC}" ]]; then
-	rm -f ${ROOT}/usr/bin/${STATIC}
-fi
-if [[ -e "${ROOT}/lost+found" ]]; then
-	rm -fdr ${ROOT}/lost+found
-fi
+rm -f ${ROOT}/usr/bin/${STATIC}
+if [[ -e "${ROOT}/lost+found" ]]; then rm -fdr ${ROOT}/lost+found; fi
 rm -fdr ${ROOT}/var/cache/debconf/*
+rm -fdr ${ROOT}/*usr-is-merged*
 
 # finish
 echo
 echo -e "Archiving ${PNK}[${FIN}${WHT}${RELEASE_TARBALL}${FIN}${PNK}]${FIN}"
 cd ${ROOT}
-rm -fdr {bin.usr-is-merged,lib.usr-is-merged,sbin.usr-is-merged}
+
 XZ_DEFAULTS="--threads=${CORES}"; export XZ_DEFAULTS;tar cfJ - * | (pv -terb > ../$RELEASE_TARBALL)
 cd ..
 if [ $DEVROOTFS -eq 1 ]; then
