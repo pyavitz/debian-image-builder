@@ -2,24 +2,6 @@
 
 source lib/source
 
-jammy-ncompile (){
-sudo debconf-apt-progress -- apt install -y \
-	build-essential bison bc git dialog patch make dosfstools zip unzip \
-	qemu debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
-	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
-	python3-distutils python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
-	gcc-arm-none-eabi distro-info-data lsb-release python2-dev python2 zstd \
-	python-dev-is-python3 kpartx gcc-9 gcc-10 gcc-11 debian-archive-keyring \
-	python-setuptools python3-setuptools python3-distutils-extra fdisk python2-minimal \
-	dh-python 2to3 python-is-python3 gcc-12 crossbuild-essential-armhf debian-keyring \
-	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
-	gcc-12-arm-linux-gnueabihf colorized-logs gdisk jq wget btrfs-progs xfsprogs \
-	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi \
-	gcc-12-arm-linux-gnueabi crossbuild-essential-armel python3-pyelftools curl \
-	libgnutls28-dev uuu uuid-dev mtools gcc-9-plugin-dev gcc-10-plugin-dev \
-	gcc-11-plugin-dev gcc-12-plugin-dev figlet gcc-or1k-elf
-}
-
 bullseye-ncompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
@@ -48,6 +30,44 @@ sudo debconf-apt-progress -- apt install -y \
 	gcc-11-plugin-dev gcc-12-plugin-dev figlet gcc-or1k-elf
 }
 
+jammy-ncompile (){
+sudo debconf-apt-progress -- apt install -y \
+	build-essential bison bc git dialog patch make dosfstools zip unzip \
+	qemu debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
+	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
+	python3-distutils python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
+	gcc-arm-none-eabi distro-info-data lsb-release python2-dev python2 zstd \
+	python-dev-is-python3 kpartx gcc-9 gcc-10 gcc-11 debian-archive-keyring \
+	python-setuptools python3-setuptools python3-distutils-extra fdisk python2-minimal \
+	dh-python 2to3 python-is-python3 gcc-12 crossbuild-essential-armhf debian-keyring \
+	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
+	gcc-12-arm-linux-gnueabihf colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi \
+	gcc-12-arm-linux-gnueabi crossbuild-essential-armel python3-pyelftools curl \
+	libgnutls28-dev uuu uuid-dev mtools gcc-9-plugin-dev gcc-10-plugin-dev \
+	gcc-11-plugin-dev gcc-12-plugin-dev figlet gcc-or1k-elf
+}
+
+noble-ncompile (){
+sudo debconf-apt-progress -- apt install -y \
+	build-essential bison bc git dialog patch make dosfstools zip unzip \
+	debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
+	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
+	python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
+	gcc-arm-none-eabi distro-info-data lsb-release zstd \
+	python-dev-is-python3 kpartx debian-archive-keyring debian-keyring \
+	python3-setuptools python3-distutils-extra fdisk \
+	dh-python 2to3 python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+	python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
+	crossbuild-essential-arm64 crossbuild-essential-armhf crossbuild-essential-armel \
+	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi \
+	gcc-12-arm-linux-gnueabi gcc-13-arm-linux-gnueabi gcc-14-arm-linux-gnueabi \
+	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
+	gcc-12-arm-linux-gnueabihf gcc-13-arm-linux-gnueabihf gcc-14-arm-linux-gnueabihf \
+	libelf-dev gcc-9-plugin-dev gcc-10-plugin-dev gcc-11-plugin-dev gcc-12-plugin-dev \
+	gcc-13-plugin-dev gcc-14-plugin-dev gcc-9 gcc-10 gcc-11 gcc-12 gcc-13 gcc-14
+}
+
 if [[ "$HOST_ARCH" == "x86_64" ]]; then
 	echo ""
 	echo -e "You are running: $HOST_ARCH"
@@ -55,7 +75,7 @@ if [[ "$HOST_ARCH" == "x86_64" ]]; then
 	exit 0
 fi
 
-if [[ "$HOST_CODENAME" == "bullseye" || "$HOST_CODENAME" == "bookworm" || "$HOST_CODENAME" == "jammy" ]]; then
+if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|jammy|noble)$ ]]; then
 	echo ""
 	${HOST_CODENAME}-ncompile
 else

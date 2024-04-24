@@ -12,9 +12,7 @@ if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source lib/function/${FAMILY}
 source userdata.txt
 # force precompiled u-boot package if host machine is running debian bookworm
-if [[ "$BOARD" == "lepotato" ]] && [[ "$HOST_CODENAME" == "bookworm" ]]; then
-	PRECOMPILED_UBOOT="true"
-fi
+if [[ "$BOARD" == "lepotato" ]] && [[ "$HOST_CODENAME" =~ ^(bookworm|noble)$ ]]; then PRECOMPILED_UBOOT="true"; fi
 # debug switch
 if [ $VERBOSE -eq 1 ]; then set -x; fi
 # compile native or cross
