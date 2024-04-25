@@ -1,0 +1,40 @@
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Tom Rini <trini@konsulko.com>
+To: u-boot@lists.denx.de
+Subject: [PATCH] pylibfdt: Fix "invalid escape sequence '\w'" in setup.py
+Date: Tue, 20 Feb 2024 08:52:48 -0500
+
+From: Florian Schmaus <flo@geekplace.eu>
+
+Once u-boot's build system invokes
+
+python3 scripts/dtc/pylibfdt/setup.py --quiet build_ext --inplace
+
+it may fail with
+
+scripts/dtc/pylibfdt/setup.py:40: SyntaxWarning: invalid escape sequence '\w'
+  RE_KEY_VALUE = re.compile('(?P<key>\w+) *(?P<plus>[+])?= *(?P<value>.*)$')
+
+depending on the used Python version.
+
+Explicitly mark the regex string as raw string to avoid the warning.
+
+Signed-off-by: Florian Schmaus <flo@geekplace.eu>
+---
+ scripts/dtc/pylibfdt/setup.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/dtc/pylibfdt/setup.py b/scripts/dtc/pylibfdt/setup.py
+index 8baae08770ca..c6fe5a6a446f 100755
+--- a/scripts/dtc/pylibfdt/setup.py
++++ b/scripts/dtc/pylibfdt/setup.py
+@@ -37,7 +37,7 @@
+     long_description = fh.read()
+ 
+ # Decodes a Makefile assignment line into key and value (and plus for +=)
+-RE_KEY_VALUE = re.compile('(?P<key>\w+) *(?P<plus>[+])?= *(?P<value>.*)$')
++RE_KEY_VALUE = re.compile(r'(?P<key>\w+) *(?P<plus>[+])?= *(?P<value>.*)$')
+ 
+ def get_top_builddir():
+     if '--top-builddir' in sys.argv:
+
