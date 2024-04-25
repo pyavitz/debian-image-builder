@@ -62,7 +62,6 @@ Odroid XU4
 </details>
 
 ### Host dependencies for Debian Bookworm and Ubuntu Jammy Jellyfish / Noble Numbat
-* **Debian Bullseye** (recommended)
 * **Debian Bookworm** (testing)
 * **Ubuntu Jammy Jellyfish** (recommended)
 * **Ubuntu Noble Numbat** (testing)
