@@ -69,7 +69,6 @@ Odroid XU4
 **Install options:**
 * Run the `./install.sh` script (recommended)
 * Run builder [make commands](https://github.com/pyavitz/debian-image-builder#install-dependencies) (dependency: make)
-* Review [package list](https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/lib/.package.list) and install manually
 
 ---
 
