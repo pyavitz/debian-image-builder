@@ -21,6 +21,20 @@ echo ""
 exit 0
 }
 
+linux_prng (){
+URL="https://kernel.org"
+LTS1=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "5.15")
+LTS2=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.1")
+LTS3=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.6")
+STABLE=$(curl -s $URL/releases.json | jq '.latest_stable.version' -r)
+RC=$(curl -s $URL | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
+if [[ "$VERSION" == "lts1" ]]; then VERSION="${LTS1}"; fi
+if [[ "$VERSION" == "lts2" ]]; then VERSION="${LTS2}"; fi
+if [[ "$VERSION" == "lts3" ]]; then VERSION="${LTS3}"; fi
+if [[ "$VERSION" == "stable" ]]; then VERSION="${STABLE}"; fi
+if [[ "$VERSION" == "rc" ]]; then VERSION="${RC}"; fi
+}
+
 download (){
 if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 	GIT_STABLE="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tag/?h=v${VERSION}"
