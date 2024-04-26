@@ -116,7 +116,7 @@ Network Manager		# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
 U-Boot:			# Supported: v2023.01
-Branch:			# Supported: 5.15 / 6.1 and "maybe" current stable
+Branch:			# Supported: 6.1.y / 6.6.y and "maybe" current stable / rc
 Build:			# Kernel build version number
 Menuconfig:		# Run uboot and kernel menuconfig
 Compiler:		# GNU Compiler Collection / Clang

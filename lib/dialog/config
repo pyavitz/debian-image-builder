@@ -2,8 +2,8 @@
 
 source lib/function/config
 # builder and profile versions
-BUILDER="6.5"
-PROFILE="1.0"
+BUILDER="6.6"
+PROFILE="1.1"
 
 # depends
 if [[ `command -v curl` ]]; then :; else sudo apt install curl; fi
@@ -15,12 +15,6 @@ else
 fi
 
 # dynamic variables
-URL="https://kernel.org"
-LTS1=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "5.15")
-LTS2=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.1")
-LTS3=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.6")
-RC=$(curl -s $URL | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
-STABLE=$(curl -s $URL/releases.json | jq '.latest_stable.version' -r)
 GCC=`ls -ls /usr/bin/gcc | sed 's/.*\(..\)/\1/' | sed 's/ //g'`
 if [[ "$GCC" == "cc" ]]; then GCC="11"; fi
 MYNAME=`echo $USER | sed -e "s/\b\(.\)/\u\1/g"`
@@ -29,8 +23,8 @@ MYNAME=`echo $USER | sed -e "s/\b\(.\)/\u\1/g"`
 NAME="$MYNAME"
 USERNAME="$USER"
 PASSWORD="board"
-VERSION="$LTS3"
-CCACHE="0"
+VERSION="6.6.y"
+CCACHE="1"
 NETWORKMANAGER="1"
 RTW88="1"
 RTL88XXAU="1"

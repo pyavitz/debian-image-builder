@@ -28,13 +28,11 @@ LTS2=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>
 LTS3=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.6")
 STABLE=$(curl -s $URL/releases.json | jq '.latest_stable.version' -r)
 RC=$(curl -s $URL | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
-if [[ "$VERSION" == "lts1" ]]; then VERSION="${LTS1}"; fi
-if [[ "$VERSION" == "lts2" ]]; then VERSION="${LTS2}"; fi
-if [[ "$VERSION" == "lts3" ]]; then VERSION="${LTS3}"; fi
+if [[ "$VERSION" == "5.15.y" ]]; then VERSION="${LTS1}"; fi
+if [[ "$VERSION" == "6.1.y" ]]; then VERSION="${LTS2}"; fi
+if [[ "$VERSION" == "6.6.y" ]]; then VERSION="${LTS3}"; fi
 if [[ "$VERSION" == "stable" ]]; then VERSION="${STABLE}"; fi
 if [[ "$VERSION" == "rc" ]]; then VERSION="${RC}"; fi
-sed -i 's/^VERSION=.*/VERSION="'"${VERSION}"'"/' userdata.txt
-source userdata.txt
 }
 
 download (){
