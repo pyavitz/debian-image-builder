@@ -44,17 +44,10 @@ FT20 (*)
 # ROCKCHIP
 Indiedroid Nova (*)
 Khadas Edge2 (*)
-NanoPi R4S (*)
-NanoPi R4SE (*)
-NanoPi R5C (*)
-NanoPi R5S (*)
 Odroid M1 (*)
 OrangePi 5 (*)
 OrangePi 5 Plus (*)
-Pinebook Pro (*)
-Radxa E25 (*)
 Rock 5B	(*)
-ROCKPro64 (*)
 
 # SAMSUNG
 Odroid XU4
