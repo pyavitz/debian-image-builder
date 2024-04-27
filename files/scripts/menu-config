@@ -4,6 +4,7 @@
 # Destination: /usr/local/bin/menu-config
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 DISTRO_CODENAME=`cat /etc/os-release | grep -w "VERSION_CODENAME" | sed 's/VERSION_CODENAME=//g'`
+MODEL=$(tr -d '\0' </proc/device-tree/model)
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
 else
@@ -19,30 +20,27 @@ else
 fi
 
 # developer debug switch
-if [ $VERBOSITY -eq 1 ]; then
-	set -x
-fi
+if [ $VERBOSITY -eq 1 ]; then set -x; fi
 
 # functions
 supported_list(){
 DISCOVER=`echo $BOARD`
 if [[ "$DISCOVER" == "$BOARD" ]]; then
 	# overclocking
-	if [[ "$FAMILY_EXT" == "bananapi" || "$BOARD" == "cubietruck" || "$BOARD" == "cuboxi" || "$FAMILY_EXT" == "odroid"  || \
-		"$BOARD" == "orangepi3" || "$BOARD" == "orangepi3lts" || "$FAMILY_EXT" == "rk3399" || "$FAMILY_EXT" == "rk3328" || \
-		"$BOARD" == "radxazero" || "$FAMILY_EXT" == "ac2xx" ]]; then
+	if [[ "$BOARD" =~ ^(cubietruck|cuboxi|orangepi3|orangepi3lts|radxazero)$ ]] \
+	|| [[ "$FAMILY_EXT" =~ ^(ac2xx|bananapi|odroid|rk3328|rk3399)$ ]]; then
 		SUPPORTED_OC="1"
 	else
 		SUPPORTED_OC="0"
 	fi
 	# amlogic g12/sm1 series hdmi audio
-	if [[ "$FAMILY_EXT" == "bananapi" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "radxazero" || "$FAMILY_EXT" == "ac2xx" ]]; then
+	if [[ "$FAMILY_EXT" =~ ^(ac2xx|bananapi|odroid)$ ]] || [[ "$BOARD" == "radxazero" ]]; then
 		HDMI_AUDIO="1"
 	else
 		HDMI_AUDIO="0"
 	fi
 	# amlogic g12/sm1 series analog audio
-	if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2plus" || "$BOARD" == "bananapim5" || "$FAMILY_EXT" == "ac2xx" ]]; then
+	if [[ "$BOARD" =~ ^(odroidn2|odroidn2plus|bananapim5)$ ]] || [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 		JACK_AUDIO="1"
 	else
 		JACK_AUDIO="0"
@@ -55,6 +53,8 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 	else
 		FAN_CTRL="0"
 	fi
+	# fan control: gpio header fan is not supported
+	if [[ "$MODEL" == "BananaPi BPI-CM4IO Baseboard with BPI-CM4 Module" ]]; then FAN_CTRL="0"; fi
 	# home assistant
 	if [[ "$FAMILY_EXT" =~ ^(bananapi|odroid)$ ]] && [[ "$DISTRO_CODENAME" == "bookworm" ]]; then
 		SUPPORTED_HA="1"
@@ -459,7 +459,7 @@ do
 CHOICE=$(
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 whiptail --backtitle "${DISTRO}: System Settings" --title "Menu Config" --menu "" --nocancel 0 25 0 \
-	"W)" "Wireless          Configure wireless network interface" \
+	"N)" "Networking        Configure network interfaces" \
 	"" "" \
 	"1)" "Security          User security management" \
 	"2)" "Hostname          Change system hostname" \
@@ -478,20 +478,18 @@ whiptail --backtitle "${DISTRO}: System Settings" --title "Menu Config" --menu "
 )
 
 case $CHOICE in
-	"W)")
+	"N)")
 		clear -x
-		if [[ `command -v nmtui` ]]; then
-			sudo nmtui
-		else
-			swh -m
-		fi
+		if [[ `command -v nmtui` ]]; then sudo nmtui; else swh -m; fi
 		;;
 	"")
 		;;
 	"1)")
+		clear -x
 		user_security
 		;;
 	"2)")
+		clear -x
 		change_hostname
 		;;
 	"3)")
@@ -509,9 +507,11 @@ case $CHOICE in
 	"")
 		;;
 	"6)")
+		clear -x
 		governor -m
 		;;
 	"7)")
+		clear -x
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		supported_list
 		overclocking
@@ -609,7 +609,7 @@ case $CHOICE in
 					clear -x
 					supported_list
 					if [ $FAN_CTRL -eq 1 ] > /dev/null 2>&1; then
-						if [[ "$DISTRO" == "Debian" || "$DISTRO" == "Kali" || "$DISTRO" == "Ubuntu" || "$DISTRO" == "Raspbian" ]]; then
+						if [[ "$DISTRO" =~ ^(Debian|Kali|Ubuntu|Raspbian)$ ]]; then
 							if [[ `command -v fanctrl` ]]; then
 								echo ""
 								echo -e "Fan control is already installed. Run 'fanctrl' in a terminal for options."
@@ -662,11 +662,7 @@ case $CHOICE in
 		sudo wget -cq https://raw.githubusercontent.com/pyavitz/debian-image-builder/feature/files/scripts/menu-config-update -P $MENUDIR
 		sleep .75
 		sudo chmod +x $(command -v menu-config-update)
-		if [[ -f "$MCU" ]]; then
-			sudo rm -f $MCU.orig
-		else
-			sudo mv -f $MCU.orig $MCU > /dev/null 2>&1
-		fi
+		if [[ -f "$MCU" ]]; then sudo rm -f $MCU.orig; else sudo mv -f $MCU.orig $MCU > /dev/null 2>&1; fi
 		menu-config-update
 		exec menu-config
 		exit 0
