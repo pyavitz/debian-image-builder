@@ -3,6 +3,7 @@ source lib/function/echoes
 source lib/source
 validation
 source lib/function/rootfs
+source lib/function/release
 # override the board file
 if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
 if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
@@ -13,16 +14,10 @@ else
 	echo "Missing custom.txt file."
 	exit 0
 fi
-
 # clean
 if [[ -d "sysroot" ]] || [[ -d "p1" ]] || [[ -d "BOOT" ]] || [[ -f "shrink.img" ]]; then make cleanup; clear -x; fi
-
 # verbosity
-if [ $VERBOSE -eq 1 ]; then
-	set -eux -o pipefail
-else
-	set -eu -o pipefail
-fi
+if [ $VERBOSE -eq 1 ]; then set -eux -o pipefail; else set -eu -o pipefail; fi
 # restrictions
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$DISTRO" == "raspbian" ]]; then
 	echo -e "Aarch64 is currently not supported."
@@ -60,8 +55,16 @@ else
 	echo -e "Run ./install.sh"
 	exit 1
 fi
+if [[ `command -v mmdebstrap` ]]; then
+	:;
+else
+	echo -e "Missing depends: mmdebstrap"
+	echo -e "Run ./install.sh"
+	exit 1
+fi
 
 ROOT="sysroot"
+SOURCES_LIST="${ROOT}/etc/apt/sources.list"
 RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
 if [[ -f "$RELEASE_TARBALL" ]]; then
 	ls -ls $RELEASE_TARBALL
@@ -70,25 +73,16 @@ fi
 echo -e "${WHT}Starting debootstrap${FIN} ..."
 # start debootstrap
 if [ $DEVROOTFS -eq 1 ]; then
-	source lib/function/release
 	RAM=0
 	ROOTFS_FOLDER="img/"
 	RELEASE_NAME=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}
-	if [ $RAM -ne 0 ]; then
-		IMAGE_FOLDER="ram/"
-	fi
+	if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
 	mkdir -p "$ROOTFS_FOLDER"
-	if [ $RAM -ne 0 ]; then
-		mount -t tmpfs -o size=4G tmpfs $ROOTFS_FOLDER
-	fi
-	if [ $VERBOSE -eq 1 ]; then
-		sysroot_partition
-	else
-		sysroot_partition > /dev/null 2>&1
-	fi
+	if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $ROOTFS_FOLDER; fi
+	if [ $VERBOSE -eq 1 ]; then sysroot_partition; else sysroot_partition > /dev/null 2>&1; fi
 fi
 mkdir -p ${ROOT}/usr/bin
-cp $(command -v "${STATIC}") ${ROOT}/usr/bin;
+cp $(command -v "${STATIC}") ${ROOT}/usr/bin
 run_debootstrap
 
 # developer tarball
@@ -122,9 +116,7 @@ cd ..
 if [ $DEVROOTFS -eq 1 ]; then
 	losetup -d "${IMAGE_LOOP_DEV}"
 	rm -f "${ROOTFS_FOLDER}${RELEASE_NAME}"
-	if [ $RAM -ne 0 ]; then
-		umount "${ROOTFS_FOLDER}"
-	fi
+	if [ $RAM -ne 0 ]; then umount "${ROOTFS_FOLDER}"; fi
 	rmdir "${ROOTFS_FOLDER}"
 fi
 if [[ -d "${ROOT}" ]]; then umount ${ROOT}; sleep .50; rm -fdr ${ROOT}; fi
