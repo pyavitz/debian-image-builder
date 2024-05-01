@@ -20,6 +20,7 @@ if [ $NETWORKMANAGER -eq 0 ]; then
 		systemctl disable systemd-resolved
 	fi
 fi
+if [[ -f "/etc/resolv.conf" ]]; then mv -f /etc/resolv.conf /etc/resolv.conf.orig; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
@@ -491,6 +492,10 @@ chmod +x /usr/local/sbin/*
 chown -R root:root /usr/local/sbin/
 
 # finish
+if [[ -f "/etc/resolv.conf.orig" ]]; then
+	rm -f /etc/resolv.conf
+	mv -f /etc/resolv.conf.orig /etc/resolv.conf
+fi
 rm -f /etc/apt/apt.conf.d/71debconf
 rm -fdr /*usr-is-merged
 echo ""

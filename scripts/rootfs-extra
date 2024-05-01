@@ -11,6 +11,7 @@ CAP_RELEASE=`echo "$DISTRO_VERSION" | sed -e "s/\b\(.\)/\u\1/g"`
 echo ""
 echo -e "\e[1;37mAdding additional packages to $CAP_DISTRO $CAP_RELEASE\e[0m ..."
 
+if [[ -f "/etc/resolv.conf" ]]; then mv -f /etc/resolv.conf /etc/resolv.conf.orig; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
@@ -54,6 +55,9 @@ if [[ "$DISTRO" == "kali" ]]; then
 fi
 apt -y clean
 apt -y autoclean
-
+if [[ -f "/etc/resolv.conf.orig" ]]; then
+	rm -f /etc/resolv.conf
+	mv -f /etc/resolv.conf.orig /etc/resolv.conf
+fi
 umount /proc
 umount /sys
