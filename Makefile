@@ -40,6 +40,9 @@ USBBOOT=sudo ./scripts/usbboot
 CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
+# miscellaneous
+CHECK=./scripts/check
+
 # BOARDS
 BOARDS=$(shell sudo rm -f board.txt; if [ -f lib/boards/${board} ]; then sudo cp lib/boards/${board} board.txt; fi)
 
@@ -92,6 +95,7 @@ help:
 	@echo "  make cleanup                 Clean up rootfs / image errors"
 	@echo "  make purge                   Remove sources directory"
 	@echo "  make purge-all               Remove sources and output directory"
+	@echo "  make check                   Latest revision of selected branch"
 	@echo ""
 	@echo "  make list                    List boards"
 	@echo "  make uboot board=xxxx        Build u-boot package"
@@ -229,6 +233,11 @@ menu:
 	@chmod +x ${RIT}
 	@chmod +x ${LIT}
 	@${MENU}
+
+check:
+	# Check kernel revisions
+	@chmod +x ${CHECK}
+	@${CHECK}
 
 # USERDATA RESET
 reset:
