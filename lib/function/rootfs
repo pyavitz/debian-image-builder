@@ -120,18 +120,18 @@ if [[ "$DISTRO" == "ubuntu" ]]; then
 fi
 KEY_DIR="/usr/share/keyrings"
 if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "ubuntu" ]]; then
-	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} ${DISTRO_VERSION} ${ROOT}
+	mmdebstrap --skip=check/empty --include="${PKGS}" --arch=${ARCH_EXT} ${DISTRO_VERSION} ${ROOT}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	KEY="${KEY_DIR}/devuan-archive-keyring.gpg"
 	mkdir -p ${ROOT}/etc/apt
 	choose_release
-	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
+	mmdebstrap --skip=check/empty --include="${PKGS}" --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
 fi
 if [[ "$DISTRO" == "raspbian" ]]; then
 	KEY="${KEY_DIR}/raspbian-archive-keyring.gpg"
 	mkdir -p ${ROOT}/etc/apt
 	choose_release
-	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
+	mmdebstrap --skip=check/empty --include="${PKGS}" --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
 fi
 }
