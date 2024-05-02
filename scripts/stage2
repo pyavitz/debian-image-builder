@@ -12,7 +12,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-rm -f /etc/resolv.conf
+if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
@@ -503,7 +503,7 @@ chown -R root:root /usr/local/sbin/
 # finish
 rm -f /etc/apt/apt.conf.d/71debconf
 rm -fdr /*usr-is-merged
-rm -f /etc/resolv.conf
+if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 echo ""
 echo "Finalizing ..."
 echo ""

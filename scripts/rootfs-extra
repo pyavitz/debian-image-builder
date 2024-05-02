@@ -14,7 +14,7 @@ echo -e "\e[1;37mAdding additional packages to $CAP_DISTRO $CAP_RELEASE\e[0m ...
 mount -t proc proc proc/
 mount -t sysfs sys sys/
 
-rm -f /etc/resolv.conf
+if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
@@ -57,6 +57,6 @@ fi
 apt -y clean
 apt -y autoclean
 
-rm -f /etc/resolv.conf
+if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 umount /proc
 umount /sys
