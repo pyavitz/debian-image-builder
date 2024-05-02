@@ -110,28 +110,10 @@ fi
 }
 
 run_debootstrap (){
-if [[ "$DISTRO" == "debian" || "$DISTRO" == "devuan" ]]; then
-	DEBOOTSTRAP_SCRIPT="sid"
-	debootstrap_script
-fi
-if [[ "$DISTRO" == "ubuntu" ]]; then
-	DEBOOTSTRAP_SCRIPT="gutsy"
-	debootstrap_script
-fi
-KEY_DIR="/usr/share/keyrings"
-if [[ "$DISTRO" == "debian" || "$DISTRO" == "kali" || "$DISTRO" == "ubuntu" ]]; then
-	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} ${DISTRO_VERSION} ${ROOT}
-fi
-if [[ "$DISTRO" == "devuan" ]]; then
-	KEY="${KEY_DIR}/devuan-archive-keyring.gpg"
-	mkdir -p ${ROOT}/etc/apt
-	if [ $VERBOSE -eq 1 ]; then choose_release; else choose_release > /dev/null 2>&1; fi
-	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
-fi
-if [[ "$DISTRO" == "raspbian" ]]; then
-	KEY="${KEY_DIR}/raspbian-archive-keyring.gpg"
-	mkdir -p ${ROOT}/etc/apt
-	if [ $VERBOSE -eq 1 ]; then choose_release; else choose_release > /dev/null 2>&1; fi
-	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
-fi
+KEY="/usr/share/keyrings/${DISTRO}-archive-keyring.gpg"
+if [[ "$DISTRO" =~ ^(debian|devuan)$ ]]; then DEBOOTSTRAP_SCRIPT="sid"; debootstrap_script; fi
+if [[ "$DISTRO" == "ubuntu" ]]; then DEBOOTSTRAP_SCRIPT="gutsy"; debootstrap_script; fi
+mkdir -p ${ROOT}/etc/apt
+if [ $VERBOSE -eq 1 ]; then choose_release; else choose_release > /dev/null 2>&1; fi
+mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
 }
