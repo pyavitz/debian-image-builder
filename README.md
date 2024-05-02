@@ -103,12 +103,13 @@ Hostname:		# Set custom system hostname
 Distribution
 Distro:			# Supported: debian, devuan and ubuntu
 Release:		# Debian: bullseye, bookworm, trixie, testing, unstable and sid
-			# Devuan: chimaera, daedalus, excalibur, testing, unstable and ceres
+			# Devuan: chimaera, daedalus (broken: excalibur, testing, unstable and ceres)
+			# https://www.devuan.org/os/announce/excalibur-usrmerge-announce-2024-02-20.html
 			# Ubuntu: focal, jammy and noble
 Network Manager		# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
-U-Boot:			# Supported: v2023.01
+U-Boot:			# Supported: v2024.01
 Branch:			# Supported: 6.1.y / 6.6.y and "maybe" current stable / rc
 Build:			# Kernel build version number
 Menuconfig:		# Run uboot and kernel menuconfig

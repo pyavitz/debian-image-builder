@@ -11,11 +11,12 @@ CAP_RELEASE=`echo "$DISTRO_VERSION" | sed -e "s/\b\(.\)/\u\1/g"`
 echo ""
 echo -e "\e[1;37mAdding additional packages to $CAP_DISTRO $CAP_RELEASE\e[0m ..."
 
-echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
-echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
-
 mount -t proc proc proc/
 mount -t sysfs sys sys/
+
+if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
+echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
+echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
 if [[ -f "/etc/apt/trusted.gpg" ]] && [[ "$DISTRO" == "raspbian" ]]; then
 	mkdir -p /etc/apt/trusted.gpg.d
@@ -38,22 +39,24 @@ echo -n "${TIMEZONE}" > /etc/timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if [[ "$DISTRO" == "debian" || "$DISTRO" == "raspbian" ]]; then
+if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} resolvconf haveged
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
 	apt install -y ${PKGS} ${USER_PKGS} openresolv haveged
 fi
-if [[ "$DISTRO" == "ubuntu" ]]; then
-	if [[ "$DISTRO_VERSION" =~ ^(kinetic|lunar|mantic|noble)$ ]]; then RESOLVE="systemd-resolved"; else RESOLVE="openresolv"; fi
-	apt install -y ${PKGS} ${USER_PKGS} ${RESOLVE} rng-tools5
-fi
 if [[ "$DISTRO" == "kali" ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} dbus-user-session libical3 resolvconf haveged
 fi
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO_VERSION" =~ ^(focal|jammy)$ ]]; then RESOLVE="openresolv"; else RESOLVE="systemd-resolved"; fi
+	apt install -y ${PKGS} ${USER_PKGS} ${RESOLVE} rng-tools5
+fi
+
 apt -y clean
 apt -y autoclean
 
+if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 umount /proc
 umount /sys

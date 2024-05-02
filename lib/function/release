@@ -3,7 +3,7 @@
 debian_release (){
 DEB_URL="http://deb.debian.org/debian"
 if [[ "$DISTRO_VERSION" == "bullseye" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
-if [[ "$DISTRO_VERSION" == "bullseye" || "$DISTRO_VERSION" == "bookworm" ]]; then
+if [[ "$DISTRO_VERSION" =~ ^(bullseye|bookworm)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
 deb ${DEB_URL} ${DISTRO_VERSION} ${POOL}
 deb ${DEB_URL} ${DISTRO_VERSION}-updates ${POOL}
@@ -21,7 +21,7 @@ fi
 devuan_release (){
 DEB_URL="http://deb.devuan.org/merged"
 if [[ "$DISTRO_VERSION" == "chimaera" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
-if [[ "$DISTRO_VERSION" == "chimaera" || "$DISTRO_VERSION" == "daedalus" ]]; then
+if [[ "$DISTRO_VERSION" =~ ^(chimaera|daedalus)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
 deb ${DEB_URL} ${DISTRO_VERSION} ${POOL}
 deb ${DEB_URL} ${DISTRO_VERSION}-updates ${POOL}
@@ -82,7 +82,7 @@ EOF
 
 choose_release (){
 rm -f ${SOURCES_LIST}
-if [[ "$DISTRO" == "debian" || "$DISTRO" == "devuan" || "$DISTRO" == "kali" || "$DISTRO" == "raspbian" || "$DISTRO" == "ubuntu" ]]; then
+if [[ "$DISTRO" =~ ^(debian|devuan|kali|raspbian|ubuntu)$ ]]; then
 	${DISTRO}_release
 else
 	echo "${CAP_DISTRO} ${CAP_RELEASE} is not supported."
