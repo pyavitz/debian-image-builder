@@ -12,6 +12,11 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+mount -t proc proc proc/
+mount -t sysfs sys sys/
+
+export DEBIAN_FRONTEND="noninteractive"
+
 if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
@@ -24,11 +29,6 @@ if [ $NETWORKMANAGER -eq 0 ] && [[ "$DISTRO_VERSION" == "jammy" ]]; then
 	echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 	echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 fi
-
-mount -t proc proc proc/
-mount -t sysfs sys sys/
-
-export DEBIAN_FRONTEND="noninteractive"
 
 # do not accept new config files in an unattended install
 mkdir -p /etc/apt/apt.conf.d
