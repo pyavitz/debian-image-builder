@@ -472,7 +472,6 @@ WantedBy=multi-user.target
 EOF
 }
 
-# kali force start services
 kali_tweaks (){
 tee /etc/systemd/system/kali-tweaks.service <<EOF
 [Unit]
@@ -488,7 +487,11 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
+systemctl enable avahi-daemon
+systemctl enable bluetooth
 systemctl enable kali-tweaks
+systemctl enable ssh
+systemctl disable systemd-networkd-wait-online
 }
 
 enable_sysvinit (){
