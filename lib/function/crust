@@ -34,23 +34,24 @@ if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
 			echo_bdone
 		else
 			echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-			exit 0
+			exit 1
 		fi
 	fi
 	echo ""
 	crust_defconfig
-	if [ $CROSSCOMPILE -eq 1 ]; then
-		echo -e "${GRN}  CC${FIN}"
+	if [[ -f "configs/${CRUST_DEFCONFIG}" ]]; then
+		if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
 		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
 		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
 	else
-		echo -e "${GRN}  NC${FIN}"
-		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
-		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf-
+		echo ""
+		echo -e "${CRUST_DEFCONFIG} was not found."
+		echo -e "Check that the name is correct in the lib/boards/${BOARD} file."
+		echo -e ""
+		read -p "Press enter to continue."
+		exit 1
 	fi
-	if [[ "$BOARD" == "orangepi3lts" ]]; then
-		rm -f configs/${UBOOT_DEFCONFIG}
-	fi
+	if [[ "$BOARD" == "orangepi3lts" ]]; then rm -f configs/${UBOOT_DEFCONFIG}; fi
 	cd ..
 	echo ""
 fi
@@ -59,5 +60,5 @@ fi
 report_crust_error (){
 echo "Missing crust scp.bin blob. Please report build errors."
 echo ""
-exit 0
+exit 1
 }

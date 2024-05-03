@@ -12,7 +12,7 @@ rm -fdr {imx-mkimage,u-boot}
 report_error (){
 echo "Something went wrong? Please report."
 echo ""
-exit 0
+exit 1
 }
 
 download_uboot (){
@@ -35,7 +35,7 @@ if [[ `wget -S --spider https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_V
 else
 	echo ""
 	echo -e "${WHT}Version selected is not available.${FIN}"
-	exit 0
+	exit 1
 fi
 }
 
@@ -56,12 +56,21 @@ if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
 	mv -f u-boot-${UBOOT_VERSION} u-boot
 else
 	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
-	exit 0
+	exit 1
 fi
 }
 
 defconfig (){
-ubuild "${UBOOT_DEFCONFIG}"
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	ubuild "${UBOOT_DEFCONFIG}"
+else
+	echo ""
+	echo -e "${UBOOT_DEFCONFIG} was not found."
+	echo -e "Check that the name is correct in the lib/boards/${BOARD} file."
+	echo -e ""
+	read -p "Press enter to continue."
+	exit 1
+fi
 }
 
 menuconfig (){
