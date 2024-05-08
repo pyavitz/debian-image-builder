@@ -110,20 +110,19 @@ help:
 
 # DEPENDENCIES
 ccompile:
-	# Installing cross dependencies:
+	# X86_64 dependencies:
 	@chmod +x ${CCOMPILE}
 	@${CCOMPILE}
 
 ncompile:
-	# Installing native dependencies:
+	# Aarch64 dependencies:
 	@chmod +x ${NCOMPILE}
 	@${NCOMPILE}
 
-
-# COMMANDS
+# U-BOOT
 uboot:
 	@rm -f override.txt
-# USERDATA DOT TXT
+# edit user data file
 ifdef build
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
 endif
@@ -136,28 +135,22 @@ endif
 ifdef version
 	@$(shell sed -i "s/^UBOOT_VERSION=.*/UBOOT_VERSION="'"${version}"'"/" userdata.txt)
 endif
-# ARCHITECTURE
-ifdef arch
-	@echo 'ARCH_EXT="$(arch)"' > override.txt
-endif
-# FORCE COMPILE
-ifdef precompiled
-	@echo 'PRECOMPILED_UBOOT="$(precompiled)"' >> override.txt
-endif
-# FORCE VERSION
-ifdef force_version
-	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
-endif
-# VERBOSE
 ifdef verbose
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
 endif
-	# Compiling u-boot
+# edit board file
+ifdef precompiled
+	@echo 'PRECOMPILED_UBOOT="$(precompiled)"' >> override.txt
+endif
+ifdef force_version
+	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
+endif
 	$(call build_uboot)
 
+# KERNEL
 kernel:
 	@rm -f override.txt
-# USERDATA DOT TXT
+# edit user data file
 ifdef build
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
 endif
@@ -171,69 +164,66 @@ ifdef myconfig
 	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"1"'"/" userdata.txt)
 	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
 endif
-ifdef version
-	@$(shell sed -i "s/^VERSION=.*/VERSION="'"${version}"'"/" userdata.txt)
-endif
-# GIT
-ifdef force_git
-	@echo 'FORCE_GIT="$(force_git)"' > override.txt
-endif
-# ARCHITECTURE
-ifdef arch
-	@echo 'ARCH_EXT="$(arch)"' >> override.txt
-endif
-# FORCE VERSION
-ifdef force_version
-	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
-endif
-# PATCHING
-ifdef patching
-	@echo 'LINUX_PATCHING="$(patching)"' >> override.txt
-endif
-# VERBOSE
 ifdef verbose
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
 endif
-	# Compiling kernel
+ifdef version
+	@$(shell sed -i "s/^VERSION=.*/VERSION="'"${version}"'"/" userdata.txt)
+endif
+# edit board file
+ifdef force_git
+	@echo 'FORCE_GIT="$(force_git)"' > override.txt
+endif
+ifdef force_version
+	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
+endif
+ifdef patching
+	@echo 'LINUX_PATCHING="$(patching)"' >> override.txt
+endif
 	$(call build_kernel)
 
-image:
+# ROOTFS
+rootfs:
 	@rm -f override.txt
-# DISTRO AND RELEASE
+# edit board file
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
 endif
 ifdef release
 	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
 endif
-# ARCHITECTURE
-ifdef arch
-	@echo 'ARCH_EXT="$(arch)"' > override.txt
-endif
-# VERBOSE
 ifdef verbose
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
 endif
-	# Creating image
-	$(call build_image)
-
-all:
-	# Compiling u-boot
-	$(call build_uboot)
-	# Compiling kernel
-	$(call build_kernel)
-	# Creating ROOTFS tarball
 	$(call create_rootfs)
-	# Creating image
+
+# IMAGE
+image:
+	@rm -f override.txt
+# edit user data file
+ifdef distro
+	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
+endif
+ifdef release
+	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
+endif
+ifdef verbose
+	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
+endif
 	$(call build_image)
 
-usbboot:
-	# Creating usb image
-	$(call build_usbboot)
+# ALL
+all:
+	$(call build_uboot)
+	$(call build_kernel)
+	$(call create_rootfs)
+	$(call build_image)
 
 # MISCELLANEOUS
+usbboot:
+	$(call build_usbboot)
+
 menu:
-	# Menu
 	@chmod +x ${MENU}
 	@chmod +x ${GMENU}
 	@chmod +x ${RIT}
@@ -241,51 +231,25 @@ menu:
 	@${MENU}
 
 check:
-	# Check kernel revisions
 	@chmod +x ${CHECK}
 	@${CHECK}
 
-# USERDATA RESET
 reset:
-	# Resetting userdata.txt file
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"1"'"/" userdata.txt)
 	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"_defconfig"'"/" userdata.txt)
 
-# LIST BOARDS
 list:
 	# Boards
 	@ls lib/boards/
 
 config:
-	# Please be patient
 	@chmod +x ${CONF}
 	@${CONF}
 
 dialogrc:
-	# Setting builder theme
 	@${DIALOGRC}
-
-rootfs:
-	@rm -f override.txt
-# DISTRO AND RELEASE
-ifdef distro
-	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
-endif
-ifdef release
-	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
-endif
-# ARCHITECTURE
-ifdef arch
-	@echo 'ARCH_EXT="$(arch)"' > override.txt
-endif
-# VERBOSE
-ifdef verbose
-	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
-endif
-	# Root Filesystem
-	$(call create_rootfs)
 
 cleanup:
 	@chmod +x ${CLN}
@@ -295,10 +259,10 @@ purge:
 	# Removing sources directory
 	@${PURGE}
 
-purge-log:
-	# Removing all logs
-	@${PURGELOG}
-
 purge-all:
 	# Removing sources and output directory
 	@${PURGEALL}
+
+purge-log:
+	# Removing all logs
+	@${PURGELOG}

@@ -232,9 +232,7 @@ cp userdata.txt ${P_VALUE}/root
 cp files/scripts/* ${P_VALUE}/root
 cp files/users/* ${P_VALUE}/root
 cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} ${P_VALUE}/root
-if [[ "$DISTRO" == "devuan" ]]; then
-	cp files/inits/*.init ${P_VALUE}/root
-fi
+if [[ "$DISTRO" == "devuan" ]]; then cp files/inits/*.init ${P_VALUE}/root; fi
 board_information
 }
 
@@ -245,12 +243,8 @@ IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${
 if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; fi
 if [ $COMPRESS_IMG -eq 1 ]; then
 	echo_compress
-	if [[ "$IMG_COMPRESSION" == "xz" ]]; then
-		xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}
-	fi
-	if [[ "$IMG_COMPRESSION" == "zst" ]]; then
-		zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}
-	fi
+	if [[ "$IMG_COMPRESSION" == "xz" ]]; then xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}; fi
+	if [[ "$IMG_COMPRESSION" == "zst" ]]; then zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}; fi
 	if [[ -f "${IMAGE_FIN_NAME}.${IMG_COMPRESSION}" ]]; then
 		sha256sum ${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
 		sha256sum --check ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
@@ -285,6 +279,7 @@ if [[ -f "p1/config.ini" ]]; then
 fi
 }
 
+# odroid c1
 odroid_bootini (){
 rm -f p1/boot.ini
 cp -f files/boot/odroid/${BOARD}-boot.ini p1/boot.ini
@@ -300,6 +295,7 @@ bootm 0x20800000 0x22000000 0x21800000
 EOF
 }
 
+# broken
 bootcmd (){
 echo -en "$BOARD: "; echo -e "boot script"
 if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
