@@ -50,6 +50,11 @@ ifdef board
 include lib/boards/${board}
 endif
 
+define create_config
+	@chmod +x ${CONF}
+	@${CONF}
+endef
+
 define build_uboot
 	@${BOARDS}
 	@chmod +x ${XUBOOT}
@@ -83,6 +88,7 @@ define build_usbboot
 endef
 
 # USAGE
+.ONESHELL:
 help:
 	@echo ""
 	@${HEADER}
@@ -118,6 +124,22 @@ ncompile:
 	# Aarch64 dependencies:
 	@chmod +x ${NCOMPILE}
 	@${NCOMPILE}
+
+# USER DATA
+config:
+ifdef edit
+	@if [ -f ${edit}.txt ]; then nano ${edit}.txt; else echo "${edit}.txt: file not found"; fi
+	exit
+endif
+	$(call create_config)
+
+# MENU
+menu:
+	@chmod +x ${MENU}
+	@chmod +x ${GMENU}
+	@chmod +x ${RIT}
+	@chmod +x ${LIT}
+	@${MENU}
 
 # U-BOOT
 uboot:
@@ -219,17 +241,10 @@ all:
 	$(call create_rootfs)
 	$(call build_image)
 
-# MISCELLANEOUS
 usbboot:
 	$(call build_usbboot)
 
-menu:
-	@chmod +x ${MENU}
-	@chmod +x ${GMENU}
-	@chmod +x ${RIT}
-	@chmod +x ${LIT}
-	@${MENU}
-
+# MISCELLANEOUS
 check:
 	@chmod +x ${CHECK}
 	@${CHECK}
@@ -243,10 +258,6 @@ reset:
 list:
 	# Boards
 	@ls lib/boards/
-
-config:
-	@chmod +x ${CONF}
-	@${CONF}
 
 dialogrc:
 	@${DIALOGRC}
