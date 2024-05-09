@@ -83,7 +83,7 @@ make dialogrc   # Set builder theme (optional)
 ```
 #### Miscellaneous
 ```sh
-make cleanup    # Clean up image errors
+make clean      # Clean up image errors
 make purge      # Remove sources directory
 make purge-all  # Remove sources and output directory
 ```
