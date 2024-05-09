@@ -1,3 +1,7 @@
+.ONESHELL:
+.SILENT:
+.PHONY: clean list
+
 # header
 HEADER=./scripts/.header
 
@@ -16,8 +20,8 @@ CLEAN=sudo ./scripts/clean
 
 # purge
 PURGE=$(shell sudo rm -fdr sources; if [ -d .cache ]; then sudo rm -f .cache/git_fast.*; fi)
-PURGELOG=$(shell sudo rm -fdr output/logs)
 PURGEALL=$(shell sudo rm -fdr sources output; if [ -d .cache ]; then sudo rm -f .cache/git_fast.*; fi)
+PURGELOG=$(shell sudo rm -fdr output/logs)
 
 # logger
 RIT=./scripts/runit
@@ -88,28 +92,28 @@ define build_usbboot
 endef
 
 # USAGE
-.ONESHELL:
 help:
 	@echo ""
 	@${HEADER}
 	@echo ""
 	@echo "\e[1;37mCommand List:\e[0m"
-	@echo "  make ccompile                Install x86_64 dependencies"
-	@echo "  make ncompile                Install aarch64 dependencies"
-	@echo "  make config                  Create user data file"
-	@echo "  make menu                    Menu interface"
-	@echo "  make cleanup                 Clean up rootfs / image errors"
-	@echo "  make purge                   Remove sources directory"
-	@echo "  make purge-all               Remove sources and output directory"
-	@echo "  make check                   Latest revision of selected branch"
+	@echo "  make ccompile\t\t\tInstall x86_64 dependencies"
+	@echo "  make ncompile\t\t\tInstall aarch64 dependencies"
+	@echo "  make config\t\t\tCreate user data file"
+	@echo "  make menu\t\t\tMenu interface"
+	@echo "  make clean\t\t\tClean up rootfs / image errors"
+	@echo "  make purge\t\t\tRemove sources"
+	@echo "  make purge-log\t\tRemove kernel log"
+	@echo "  make purge-all\t\tRemove log, output and sources"
+	@echo "  make check\t\t\tLatest revision of selected branch"
 	@echo ""
-	@echo "  make list                    List boards"
-	@echo "  make uboot board=xxxx        Build u-boot package"
-	@echo "  make kernel board=xxxx       Build linux kernel package"
-	@echo "  make rootfs board=xxxx       Create rootfs tarball"
-	@echo "  make image board=xxxx        Make bootable image"
-	@echo "  make usbboot board=xxxx      Make bootable usb SDCARD image"
-	@echo "  make all board=xxxx          Feeling lucky?"
+	@echo "  make list\t\t\tList boards"
+	@echo "  make uboot board=xxxx\t\tBuild u-boot package"
+	@echo "  make kernel board=xxxx\tBuild linux kernel package"
+	@echo "  make rootfs board=xxxx\tCreate rootfs tarball"
+	@echo "  make image board=xxxx\t\tMake bootable image"
+	@echo "  make usbboot board=xxxx\tMake bootable usb SDCARD image"
+	@echo "  make all board=xxxx\t\tFeeling lucky?"
 	@echo ""
 	@echo "For details consult the \e[1;37mREADME.md\e[0m file"
 	@echo
@@ -262,18 +266,18 @@ list:
 dialogrc:
 	@${DIALOGRC}
 
-cleanup:
+clean:
 	@chmod +x ${CLN}
 	@${CLEAN}
 
 purge:
-	# Removing sources directory
+	# Removing sources
 	@${PURGE}
 
 purge-all:
-	# Removing sources and output directory
+	# Removing logs, output and sources
 	@${PURGEALL}
 
 purge-log:
-	# Removing all logs
+	# Removing kernel logs
 	@${PURGELOG}
