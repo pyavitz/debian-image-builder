@@ -103,8 +103,8 @@ help:
 	@echo "  make menu\t\t\tMenu interface"
 	@echo "  make clean\t\t\tClean up rootfs / image errors"
 	@echo "  make purge\t\t\tRemove sources"
-	@echo "  make purge-log\t\tRemove kernel log"
-	@echo "  make purge-all\t\tRemove log, output and sources"
+	@echo "  make purge-log\t\tRemove all logs"
+	@echo "  make purge-all\t\tRemove logs, output and sources"
 	@echo "  make check\t\t\tLatest revision of selected branch"
 	@echo ""
 	@echo "  make list\t\t\tList boards"
@@ -279,5 +279,5 @@ purge-all:
 	@${PURGEALL}
 
 purge-log:
-	# Removing kernel logs
+	# Removing logs
 	@${PURGELOG}
