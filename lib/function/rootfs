@@ -65,12 +65,11 @@ fi
 }
 
 ubuntu_setup (){
-if [[ "$HOST_ARCH" == "x86_64" ]]; then
-	MACHINE="amd64"
-fi
-if [[ "$HOST_ARCH" == "aarch64" ]]; then
-	MACHINE="arm64"
-fi
+# This was initially done to provide proper debootstrap support
+# for Debian Bullseye. I believe this can be reworked going forward
+# as we should only need the keyring.
+if [[ "$HOST_ARCH" == "x86_64" ]]; then MACHINE="amd64"; fi
+if [[ "$HOST_ARCH" == "aarch64" ]]; then MACHINE="arm64"; fi
 URL="https://github.com/pyavitz/debian-image-builder/releases/download/dpkg/"
 FILE1="dpkg_1.21.2_$MACHINE.deb"
 FILE2="debootstrap_1.0.126+nmu1_all.deb"
@@ -78,25 +77,21 @@ FILE3="ubuntu-keyring_2020.06.17.1-1_all.deb"
 FILE4="ubuntu-archive-keyring_2020.06.17.1-1_all.deb"
 FILE5="ubuntu-cloud-keyring_2020.06.17.1-1_all.deb"
 FILE6="ubuntu-dbgsym-keyring_2020.06.17.1-1_all.deb"
-if [[ `grep -w "Ubuntu" "/etc/os-release"` ]] && [[ `grep -w "VERSION_CODENAME=jammy" "/etc/os-release"` ]]; then
-	:;
-else
-	if [[ `apt show dpkg | grep "Version: 1.21"` ]] > /dev/null 2>&1; then
-		:;
-	else
-		wget -cq $URL$FILE1
-		wget -cq $URL$FILE2
-		dpkg -i *.deb
-		rm -f *.deb
-	fi
-fi
+#if [[ `apt show dpkg | grep "Version: 1.21"` ]] > /dev/null 2>&1; then
+#	:;
+#else
+#	wget -cq $URL$FILE1
+#	wget -cq $URL$FILE2
+#	dpkg -i *.deb
+#	rm -f *.deb
+#fi
 if [[ -f "/usr/share/keyrings/ubuntu-archive-keyring.gpg" ]]; then
 	:;
 else
 	wget -cq --show-progress $URL$FILE3
 	wget -cq --show-progress $URL$FILE4
 	wget -cq --show-progress $URL$FILE5
-	wget -cq --show-progress $URL$FILE6
+	#wget -cq --show-progress $URL$FILE6
 	dpkg -i *.deb
 	rm -f *.deb
 fi
