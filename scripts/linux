@@ -27,6 +27,10 @@ source board.txt
 source lib/function/${FAMILY}
 if [[ -f "kernel.txt" ]]; then . kernel.txt; fi
 source userdata.txt
+# override userdata file
+if [[ "$FORCE_VERSION" == "true" ]]; then
+	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
+fi
 if [[ "$VERSION" =~ ^(5.15.y|6.1.y|6.6.y|stable|rc)$ ]]; then linux_prng; fi
 # debug switch
 if [ $VERBOSE -eq 1 ]; then set -x; fi
@@ -34,10 +38,6 @@ if [ $VERBOSE -eq 1 ]; then set -x; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then CROSSCOMPILE="1"; fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then CROSSCOMPILE="1"; fi
-# override userdata file
-if [[ "$FORCE_VERSION" == "true" ]]; then
-	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
-fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 # compiler
 linux_compilers
