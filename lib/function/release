@@ -1,7 +1,7 @@
 #!/bin/bash
 
 debian_release (){
-MIRROR="http://deb.debian.org/debian"
+MIRROR="${DEBIAN_MIRROR}"
 if [[ "$DISTRO_VERSION" == "bullseye" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
 if [[ "$DISTRO_VERSION" =~ ^(bullseye|bookworm)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
@@ -19,7 +19,7 @@ fi
 }
 
 devuan_release (){
-MIRROR="http://deb.devuan.org/merged"
+MIRROR="${DEVUAN_MIRROR}"
 if [[ "$DISTRO_VERSION" == "chimaera" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
 if [[ "$DISTRO_VERSION" =~ ^(chimaera|daedalus)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
@@ -38,7 +38,7 @@ fi
 
 kali_release (){
 # https://www.kali.org/docs/general-use/kali-linux-sources-list-repositories/
-MIRROR="http://http.kali.org/kali"
+MIRROR="${KALI_MIRROR}"
 POOL="main contrib non-free non-free-firmware"
 tee ${SOURCES_LIST} <<EOF
 deb ${MIRROR} ${DISTRO_VERSION} ${POOL}
@@ -58,7 +58,7 @@ EOF
 }
 
 ubuntu_release (){
-MIRROR="http://ports.ubuntu.com/ubuntu-ports/"
+MIRROR="${UBUNTU_MIRROR}"
 tee ${SOURCES_LIST} <<EOF
 deb ${MIRROR} ${DISTRO_VERSION} main restricted
 deb ${MIRROR} ${DISTRO_VERSION}-updates main restricted
@@ -81,6 +81,7 @@ EOF
 }
 
 choose_release (){
+source mirror.txt
 rm -f ${SOURCES_LIST}
 if [[ "$DISTRO" =~ ^(debian|devuan|kali|raspbian|ubuntu)$ ]]; then
 	${DISTRO}_release

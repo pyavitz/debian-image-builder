@@ -105,7 +105,8 @@ else
 		chroot ${ROOT} /debootstrap/debootstrap --second-stage
 	fi
 	if [[ "$DISTRO" =~ ^(devuan|raspbian)$ ]]; then
-		if [[ "$DISTRO" == "devuan" ]]; then SOURCE="http://deb.devuan.org/merged"; fi
+		source mirror.txt
+		if [[ "$DISTRO" == "devuan" ]]; then SOURCE="${DEVUAN_MIRROR}"; fi
 		if [[ "$DISTRO" == "raspbian" ]]; then SOURCE="http://raspbian.raspberrypi.org/raspbian"; fi
 		debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=${KEY} ${DISTRO_VERSION} ${ROOT} ${SOURCE}
 		chroot ${ROOT} /debootstrap/debootstrap --second-stage
