@@ -105,6 +105,7 @@ Distro:			# Supported: debian, devuan and ubuntu
 Release:		# Debian: bullseye, bookworm, trixie, testing, unstable and sid
 			# Devuan: chimaera, daedalus (broken: excalibur, testing, unstable and ceres)
 			# https://www.devuan.org/os/announce/excalibur-usrmerge-announce-2024-02-20.html
+			# Kali: kali-last-snapshot and kali-rolling
 			# Ubuntu: focal, jammy and noble
 Network Manager		# 1 networkmanager | 0 ifupdown
 
