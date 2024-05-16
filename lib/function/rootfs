@@ -100,16 +100,7 @@ if [[ "$MMDEBSTRAP" == "true" ]]; then
 	if [ $VERBOSE -eq 1 ]; then choose_release; else choose_release > /dev/null 2>&1; fi
 	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
 else
-	if [[ "$DISTRO" =~ ^(debian|kali|ubuntu)$ ]]; then
-		debootstrap --arch ${ARCH_EXT} --foreign ${DISTRO_VERSION} ${ROOT}
-		chroot ${ROOT} /debootstrap/debootstrap --second-stage
-	fi
-	if [[ "$DISTRO" =~ ^(devuan|raspbian)$ ]]; then
-		source mirror.txt
-		if [[ "$DISTRO" == "devuan" ]]; then SOURCE="${DEVUAN_MIRROR}"; fi
-		if [[ "$DISTRO" == "raspbian" ]]; then SOURCE="http://raspbian.raspberrypi.org/raspbian"; fi
-		debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=${KEY} ${DISTRO_VERSION} ${ROOT} ${SOURCE}
-		chroot ${ROOT} /debootstrap/debootstrap --second-stage
-	fi
+	debootstrap --arch ${ARCH_EXT} --foreign --force-check-gpg --keyring=${KEY} ${DISTRO_VERSION} ${ROOT} ${MIRROR}
+	chroot ${ROOT} /debootstrap/debootstrap --second-stage
 fi
 }

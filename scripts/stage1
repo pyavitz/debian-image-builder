@@ -35,6 +35,9 @@ if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source lib/function/${FAMILY}
 # clean
 if [[ -d "sysroot" ]] || [[ -d "p1" ]] || [[ -d "BOOT" ]] || [[ -f "shrink.img" ]]; then make clean; clear -x; fi
+# verbosity
+if [ $VERBOSE -eq 1 ]; then set -eux -o pipefail; else set -eu -o pipefail; fi
+mirrors
 # check output
 if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
 	:;
@@ -55,8 +58,6 @@ if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 		exit 0
 	fi
 fi
-# verbosity
-if [ $VERBOSE -eq 1 ]; then set -eux -o pipefail; else set -eu -o pipefail; fi
 if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then
 	echo "The $FSTYPE filesystem requires a boot partition."
 	echo -e ""
