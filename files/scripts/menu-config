@@ -462,16 +462,17 @@ whiptail --backtitle "${DISTRO}: System Settings" --title "Menu Config" --menu "
 	"N)" "Networking        Configure network interfaces" \
 	"" "" \
 	"1)" "Security          User security management" \
-	"2)" "Hostname          Change system hostname" \
-	"3)" "Keyboard          Change keyboard layout" \
-	"4)" "Locales           Change language settings" \
-	"5)" "Timezone          Change regional settings" \
+	"2)" "Hostname          System hostname" \
+	"3)" "Keyboard          Keyboard layout" \
+	"4)" "Locales           Language settings" \
+	"5)" "Timezone          Regional settings" \
+	"6)" "Console           Font and keymap setup" \
 	"" "" \
-	"6)" "Governor          Dynamic frequency scaling" \
-	"7)" "Overclock         CPU operating speed" \
+	"7)" "Governor          Dynamic frequency scaling" \
+	"8)" "Overclock         CPU operating speed" \
 	"" "" \
-	"8)" "Software          Third-party software installers" \
-	"9)" "Miscellaneous     System settings" \
+	"S)" "Software          Third-party software installers" \
+	"M)" "Miscellaneous     System settings" \
 	"" "" \
 	"U)" "Update            Menu interface configuration tool" \
 	"Q)" "Quit .." 3>&2 2>&1 1>&3
@@ -504,13 +505,18 @@ case $CHOICE in
 		clear -x
 		sudo dpkg-reconfigure tzdata
 		;;
+	"6)")
+		clear -x
+		sudo dpkg-reconfigure console-setup
+		sudo service console-setup restart
+		;;
 	"")
 		;;
-	"6)")
+	"7)")
 		clear -x
 		governor -m
 		;;
-	"7)")
+	"8)")
 		clear -x
 		export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 		supported_list
@@ -518,7 +524,7 @@ case $CHOICE in
 		;;
 	"")
 		;;
-	"8)")
+	"S)")
 		while [ 1 ]
 		do
 		SOFTWARE=$(
@@ -548,7 +554,7 @@ case $CHOICE in
 			esac
 		done
 		;;
-	"9)")
+	"M)")
 		while [ 1 ]
 		do
 		MISC=$(
