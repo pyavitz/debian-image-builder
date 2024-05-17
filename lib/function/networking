@@ -183,18 +183,16 @@ fi
 
 ifupdown-setup (){
 rm -f /etc/network/interfaces
-if [[ "$DISTRO" == "ubuntu" ]]; then
-	if [[ "$DISTRO_VERSION" == "jammy" ]]; then
-		# /etc/network/if-down.d/resolved: 12: mystatedir: not found
-		# /etc/network/if-up.d/resolved: 12: mystatedir: not found
-		if [[ -e "/etc/network/if-down.d/resolved" ]]; then
-			sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-down.d/resolved
-			sed -i 's/return/exit 0/g' /etc/network/if-down.d/resolved
-		fi
-		if [[ -e "/etc/network/if-up.d/resolved" ]]; then
-			sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-up.d/resolved
-			sed -i 's/return/exit 0/g' /etc/network/if-up.d/resolved
-		fi
+if [[ "$DISTRO" == "ubuntu" ]] && [[ "$DISTRO_VERSION" == "jammy" ]]; then
+	# /etc/network/if-down.d/resolved: 12: mystatedir: not found
+	# /etc/network/if-up.d/resolved: 12: mystatedir: not found
+	if [[ -e "/etc/network/if-down.d/resolved" ]]; then
+		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-down.d/resolved
+		sed -i 's/return/exit 0/g' /etc/network/if-down.d/resolved
+	fi
+	if [[ -e "/etc/network/if-up.d/resolved" ]]; then
+		sed -i 's/mystatedir statedir ifindex interface/#mystatedir statedir ifindex interface/g' /etc/network/if-up.d/resolved
+		sed -i 's/return/exit 0/g' /etc/network/if-up.d/resolved
 	fi
 fi
 # ifupdown interfaces and wpa_supplicant files
@@ -258,9 +256,7 @@ EOF
 }
 
 networkmanager-setup (){
-if [ -f /etc/network/interfaces ]; then
-	rm -f /etc/network/interfaces
-fi
+rm -f /etc/network/interfaces
 tee /etc/network/interfaces <<EOF
 source /etc/network/interfaces.d/*
 
@@ -270,10 +266,10 @@ EOF
 echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" > /etc/wpa_supplicant/wpa_supplicant.conf
 chown root:root /etc/network/interfaces
 chown root:root /etc/wpa_supplicant/wpa_supplicant.conf
-if [ -f /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf ]; then
+if [[ -f "/usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf" ]]; then
 	rm -f /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf
 fi
-if [ -f /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf ]; then
+if [[ -f "/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf" ]]; then
 	sed -i 's/wifi.powersave = 3/wifi.powersave = 2/g' /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf
 else
 	echo "[connection]" > /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf
@@ -282,7 +278,7 @@ fi
 }
 
 ifupdown-credentials (){
-if [ -f /root/ifupdown.credentials ]; then
+if [[ -f "/root/ifupdown.credentials" ]]; then
 	CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 	mv -f /root/ifupdown.credentials /usr/local/bin/credentials
 	chmod +x /usr/local/bin/credentials
@@ -308,7 +304,7 @@ fi
 }
 
 networkmanager-credentials (){
-if [ -f /root/networkmanager.credentials ]; then
+if [[ -f "/root/networkmanager.credentials" ]]; then
 	CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 	mv -f /root/networkmanager.credentials /usr/local/bin/credentials
 	chmod +x /usr/local/bin/credentials

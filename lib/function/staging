@@ -240,7 +240,7 @@ board_information
 finish_image (){
 IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
 IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
-if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; fi
+if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; else echo -e "Build error: ${IMAGE_FILE_NAME}"; exit 1; fi
 if [ $COMPRESS_IMG -eq 1 ]; then
 	echo_compress
 	if [[ "$IMG_COMPRESSION" == "xz" ]]; then xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}; fi
