@@ -22,17 +22,29 @@ exit 0
 }
 
 linux_prng (){
-URL="https://kernel.org"
-LTS1=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "5.15")
-LTS2=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.1")
-LTS3=$(curl -s $URL | grep -A1 longterm: -n1 | egrep -o '>[^<]+' | egrep -o '[^>]+' | grep -w "6.6")
-STABLE=$(curl -s $URL/releases.json | jq '.latest_stable.version' -r)
-RC=$(curl -s $URL | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
-if [[ "$VERSION" == "5.15.y" ]]; then VERSION="${LTS1}"; fi
-if [[ "$VERSION" == "6.1.y" ]]; then VERSION="${LTS2}"; fi
-if [[ "$VERSION" == "6.6.y" ]]; then VERSION="${LTS3}"; fi
-if [[ "$VERSION" == "stable" ]]; then VERSION="${STABLE}"; fi
-if [[ "$VERSION" == "rc" ]]; then VERSION="${RC}"; fi
+if [[ "$VERSION" =~ ^([0-9].[0-9].y)$ ]]; then
+	URL="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+	if [[ `wget -S --spider ${URL}/plain/Makefile?h=${KERNEL}-${VERSION} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+		curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${VERSION} | grep -m1 "VERSION" | \
+		sed 's/VERSION = //g' > revision.txt
+		curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${VERSION} | grep -m1 "PATCHLEVEL" | \
+		sed 's/PATCHLEVEL = /./g' >> revision.txt
+		curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${VERSION} | grep -m1 "SUBLEVEL" | \
+		sed 's/SUBLEVEL = /./g' >> revision.txt
+		curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${VERSION} | grep -m1 "EXTRAVERSION" | \
+		sed 's/EXTRAVERSION =//g' | sed 's/ //g' >> revision.txt
+		VERSION=`tr -d '\n' < revision.txt`
+		rm -f revision.txt
+	fi
+else
+	if [[ "$VERSION" =~ ^(stable|rc)$ ]]; then
+		URL="https://kernel.org"
+		STABLE=$(curl -s $URL/releases.json | jq '.latest_stable.version' -r)
+		RC=$(curl -s $URL | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
+		if [[ "$VERSION" == "stable" ]]; then VERSION="${STABLE}"; else
+		if [[ "$VERSION" == "rc" ]]; then VERSION="${RC}"; fi; fi
+	fi
+fi
 }
 
 download (){
@@ -76,7 +88,7 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 			echo -en "${KERNEL}-${VERSION}"
 			echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
 			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-			exit 0
+			exit 1
 		fi
 	fi
 else

@@ -27,13 +27,13 @@ source board.txt
 source lib/function/${FAMILY}
 if [[ -f "kernel.txt" ]]; then . kernel.txt; fi
 source userdata.txt
+# debug switch
+if [ $VERBOSE -eq 1 ]; then set -x; fi
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
 fi
-if [[ "$VERSION" =~ ^(5.15.y|6.1.y|6.6.y|stable|rc)$ ]]; then linux_prng; fi
-# debug switch
-if [ $VERBOSE -eq 1 ]; then set -x; fi
+if [[ "$VERSION" =~ ^([0-9].[0-9].y|stable|rc)$ ]]; then linux_prng; fi
 # compile native or cross
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then CROSSCOMPILE="1"; fi

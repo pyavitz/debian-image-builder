@@ -1,18 +1,39 @@
 #!/bin/bash
+# depends: curl
 
-source lib/function/linux
+source lib/source
+echo "Example: 6.6.y"
+echo
+echo -en "BRANCH:  "
+read BRANCH
+ITL="\033[3m"
+FIN="\033[0m"
+URL="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+if [[ `wget -S --spider ${URL}/plain/Makefile?h=${KERNEL}-${BRANCH} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${BRANCH} | grep -m1 "VERSION" | \
+	sed 's/VERSION = //g' > revision.txt
+	curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${BRANCH} | grep -m1 "PATCHLEVEL" | \
+	sed 's/PATCHLEVEL = /./g' >> revision.txt
+	curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${BRANCH} | grep -m1 "SUBLEVEL" | \
+	sed 's/SUBLEVEL = /./g' >> revision.txt
+	curl --silent -L ${URL}/plain/Makefile?h=${KERNEL}-${BRANCH} | grep -m1 "EXTRAVERSION" | \
+	sed 's/EXTRAVERSION =//g' | sed 's/ //g' >> revision.txt
+else
+	echo ""
+	echo -e "The BRANCH you selected is not available."
+	rm -f revision.txt
+	exit 0
+fi
 
-echo -e "BRANCHES: 5.15.y  6.1.y  6.6.y  stable  rc"
-echo -e ""
-echo -en "BRANCH: "
-read VERSION
-
-linux_prng
-GIT_STABLE="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tag/?h=v${VERSION}"
-GIT_TORVALDS="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tag/?h=v${VERSION}"
-if [[ `wget -S --spider ${GIT_STABLE} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then echo "CURRENT: ${VERSION}"; else
-	if [[ `wget -S --spider ${GIT_TORVALDS} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then echo "CURRENT: ${VERSION}"; else
-		echo -e "The git branch ${VERSION} is not available."; exit 1; fi
+if [[ -f "revision.txt" ]]; then
+	echo -en "CURRENT: "
+	tr -d '\n' < revision.txt
+	echo -e ""
+	rm -f revision.txt
+else
+	echo -e "Something went wrong?"
+	rm -f revision.txt
+	exit 1
 fi
 
 exit 0
