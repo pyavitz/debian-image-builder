@@ -93,11 +93,12 @@ if [[ "$FAMILY_EXT" == "imx8" ]]; then ubuild "flash.bin"; fi
 }
 
 uboot_run (){
-download
-extract
+if [[ -v "GIT_UBOOT_URL" ]] && [[ ! -z "$GIT_UBOOT_URL" ]]; then ${FAMILY}_uboot_download; else download; extract; fi
 if [[ -d "u-boot" ]]; then cd u-boot; else report_error; fi
 # lib/function/atf
 if [[ "$FAMILY" =~ ^(allwinner|freescale|rockchip)$ ]]; then atf_bl31; fi
+# lib/function/opensbi
+if [[ "$FAMILY" =~ ^(spacemit)$ ]]; then fw_dynamic; fi
 # lib/function/patching
 uboot_patching
 # boot logo

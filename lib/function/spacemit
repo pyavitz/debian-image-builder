@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# ATF BINARY AND FIRMWARE
+fw_dynamic (){ # place file.
+if [[ -f "../opensbi/${OPENSBI_FIRMWARE}" ]]; then cp "../opensbi/${OPENSBI_FIRMWARE}" .; else report_opensbi_error; fi
+}
+
+spacemit_uboot_download (){
+if [[ -d "${BOARD}-u-boot" ]]; then
+	echo -en "${WHT}${BOARD}-u-boot${FIN} "
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+	cd ${BOARD}-u-boot
+	make clean
+	git config pull.rebase false
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+	git pull -q; cd ..; cp -r ${BOARD}-u-boot u-boot
+	echo_bdone
+else
+	echo -en "${WHT}${BOARD}-u-boot${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+	git clone -q ${GIT_UBOOT_URL}
+	if [[ -d "${BOARD}-u-boot" ]]; then
+		cd ${BOARD}-u-boot; make clean; cd ..; cp -r ${BOARD}-u-boot u-boot
+		echo_bdone
+	else
+		echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"; exit 1
+	fi
+fi
+}
+
+# U-BOOT
+uboot_configs (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+}
+
+uboot_output (){
+if [[ -f "bootinfo_emmc.bin" ]] && [[ -f "u-boot.itb" ]] && [[ "fw_dynamic.itb " ]] && [[ "FSBL.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f bootinfo_emmc.bin ../../${OUTPUT}/
+	cp -f FSBL.bin ../../${OUTPUT}/
+	cp -f fw_dynamic.itb ../../${OUTPUT}/fw_dynamic.bin
+	cp -f u-boot.itb ../../${OUTPUT}/u-boot.bin
+	uboot_packaging
+	echo ""
+else
+	report_error
+fi
+}
+
+spacemit_uboot_run (){
+sources_dir
+opensbi_firmware
+uboot_run
+uboot_output
+}
+
+spacemit_uboot_packaging (){
+cp -f bootinfo_emmc.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+cp -f FSBL.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/fw_dynamic.bin
+cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+}
+
+# STAGE1
+flash_uboot (){
+dd if=${OUTPUT}/bootinfo_emmc.bin of="${IMAGE_LOOP_DEV}" bs=512 conv=notrunc
+dd if=${OUTPUT}/FSBL.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1 conv=notrunc
+dd if=${OUTPUT}/FSBL.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=512 conv=notrunc
+dd if=${OUTPUT}/fw_dynamic.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1280 conv=notrunc
+dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=2048 conv=notrunc
+}
+
+env_config (){
+rm -f p1/env_k1-x.txt
+cp -f files/boot/env_k1-x.txt p1/
+sed -i "s/^mmc_rootfstype=.*/mmc_rootfstype=${FSTYPE}/" p1/env_k1-x.txt
+sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/env_k1-x.txt
+}

@@ -18,6 +18,7 @@ if [ $VERBOSE -eq 1 ]; then set -x; fi
 # compile native or cross
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then CROSSCOMPILE="1"; fi
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "riscv" ]]; then CROSSCOMPILE="1"; fi
 if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" ]]; then CROSSCOMPILE="1"; fi
 # override the user data file
 if [[ "$FORCE_VERSION" == "true" ]]; then
@@ -31,6 +32,7 @@ if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then
 else
 	if [[ "$FAMILY" == "amlogic" ]]; then . lib/function/fip; fi
 	if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "freescale" || "$FAMILY" == "rockchip" ]]; then . lib/function/atf; . lib/function/crust; fi
+	if [[ "$FAMILY" == "spacemit" ]]; then . lib/function/opensbi; fi
 	${FAMILY}_uboot_run
 fi
 

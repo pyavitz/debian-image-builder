@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# architecture
+ARCH="riscv"
+ARCH_EXT="riscv64"
+DEBARCH=""
+CROSS_COMPILE="${ARCH_EXT}-linux-gnu-"
+ROOTFS_ARCH="rootfs-${ARCH_EXT}"
+STATIC="qemu-${ARCH_EXT}-static"
+
+# device information
+SERIES="k1"
+FAMILY="spacemit"
+FAMILY_EXT=""
+DTB="${SERIES}-x_deb1"
+
+# default config
+LINUX_DEFCONFIG="k1_defconfig"
+UBOOT_DEFCONFIG="k1_defconfig"
+
+# partition scheme
+GPT="false"
+EFI="false"
+VFAT="true"
+P_VALUE="p2"
+OFFSET="204800"
+
+# boot config
+EXTLINUX="false"
+PETITBOOT="false"
+BOOTINI="false"
+BOOTCMD="false"
+
+# opensbi firmware
+OPENSBI_DIR="bpi-opensbi"
+OPENSBI_URL="https://github.com/BPI-SINOVOIP/pi-opensbi.git"
+OPENSBI_BRANCH="v1.3-k1"
+#OPENSBI_TAG=""
+OPENSBI_PLATFORM="generic"
+OPENSBI_DEFCONFIG="k1_defconfig"
+OPENSBI_FIRMWARE="build/platform/${OPENSBI_PLATFORM}/firmware/fw_dynamic.itb"
+
+# output
+BOARD="bananapif3"
+OUTPUT="output/${BOARD}"
+
+# extlinux
+FDTOVERLAYS="#fdtoverlays"
+
+# cmdline
+CONSOLE="console=tty1 console=ttySIF0,115200n8 earlycon=sbi console=both"
+LOGLEVEL="loglevel=1"
+EXTRA="net.ifnames=0 stmmaceth=chain_mode:1"
+
+# motd
+DEFAULT_MOTD="BananaPi F3"
+
+# customize
+#MODULES_BLACKLIST=""
+
+# patches
+LINUX_PATCHING="false"
+UBOOT_PATCHDIR="patches/uboot"
+LINUX_PATCHDIR="patches/${FAMILY}"
+
+# image
+IMG_EXP="${DTB}-*.img*"
+
+# uboot logo
+RANDOM_LOGO="true"
+
+# precompiled
+PRECOMPILED_UBOOT="false"
+PKGVERSION=""
+PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
+
+# force git (https://github.com/BPI-SINOVOIP/pi-linux/tree/linux-6.1.15-k1)
+FORCE_GIT="true"
+GIT_OWN="BPI-SINOVOIP"
+GIT_REPO="pi-linux"
+GIT_BRANCH="linux-6.1.15-k1"
+GIT_URL="https://github.com"
+GIT_BLOB="blob"
+# git linux patching
+GIT_PATCHING="false"
+GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
+# u-boot (if variable not found ignore)
+GIT_UBOOT_URL="-b v2022.10-k1 https://github.com/BPI-SINOVOIP/pi-u-boot.git ${BOARD}-u-boot"
+
+# override userdata file
+FORCE_VERSION="true"
+FORCE_LINUX_VERSION=""
+FORCE_UBOOT_VERSION="v2022.10"
+
+# devicetree and platform
+DEVICETREE="${DTB}.dtb k1-x_deb2.dtb k1-x_evb.dtb k1-x_hs450.dtb k1-x_kx312.dtb k1-x_mingo.dtb k1-x_MINI-PC.dtb k1-x_MUSE-N1.dtb k1-x_MUSE-Pi.dtb"
+PLATFORM="${FAMILY}"
+
+# kernel package name (if shared patching set to true)
+COMMON_PKG="false"
+COMMON_PKGNAME=""
