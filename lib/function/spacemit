@@ -80,6 +80,16 @@ dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=2048 conv=notrunc
 env_config (){
 rm -f p1/env_k1-x.txt
 cp -f files/boot/env_k1-x.txt p1/
+if [[ "$P_VALUE" == "p1" ]]; then
+	sed -i "s/^knl_name=.*/knl_name=boot\/Image.itb/" p1/env_k1-x.txt
+	sed -i "s/^ramdisk_name=.*/ramdisk_name=boot\/initrd.gz/" p1/env_k1-x.txt
+	sed -i "s/^dtb_dir=.*/dtb_dir=boot\/spacemit/" p1/env_k1-x.txt
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	sed -i "s/^knl_name=.*/knl_name=Image.itb/" p1/env_k1-x.txt
+	sed -i "s/^ramdisk_name=.*/ramdisk_name=initrd.gz/" p1/env_k1-x.txt
+	sed -i "s/^dtb_dir=.*/dtb_dir=spacemit/" p1/env_k1-x.txt
+fi
 sed -i "s/^mmc_rootfstype=.*/mmc_rootfstype=${FSTYPE}/" p1/env_k1-x.txt
 sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/env_k1-x.txt
 }
