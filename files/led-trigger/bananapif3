@@ -1,0 +1,19 @@
+#!/bin/bash
+# BPI-F3 LED TRIGGER
+
+SYS_LED="/sys/class/leds/sys-led/trigger"
+if [ -f "${SYS_LED}" ]; then
+	ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
+	ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
+	ROOT_DEVICE=${ROOT_DEVICE/mmcblk/mmc}
+	ROOT_DEVICE=${ROOT_DEVICE/p[0-9]/}
+	echo -n "$ROOT_DEVICE" > $SYS_LED
+fi
+if [ -f "${SYS_LED}" ]; then
+	ROOT_SSD=`findmnt -v -n -o SOURCE / | sed 's/..$//'`
+	if [[ "$ROOT_SSD" == "/dev/nvme0n1" ]]; then echo -n "none" > $SYS_LED; fi
+	ROOT_SATA=`findmnt -v -n -o SOURCE / | sed 's/.$//'`
+	if [[ "$ROOT_SATA" == "/dev/sda" || "$ROOT_SATA" == "/dev/sdb" ]]; then echo -n "none" > $SYS_LED; fi
+fi
+
+exit 0
