@@ -95,12 +95,10 @@ if [ "$ARCH" = "um" ] ; then
 else
 	cp System.map "$tmpdir/boot/System.map-$version"
 	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
-	if [ -f arch/arm/boot/zImage ]; then
-		cp arch/arm/boot/zImage "$tmpdir/boot/Image"
-	fi
-	if [ -f arch/arm64/boot/Image ]; then
-		cp arch/arm64/boot/Image "$tmpdir/boot/Image"
-	fi
+	if [ -f arch/arm/boot/zImage ]; then cp arch/arm/boot/zImage "$tmpdir/boot/Image"; fi
+	if [ -f arch/arm64/boot/Image ]; then cp arch/arm64/boot/Image "$tmpdir/boot/Image"; fi
+	if [ -f arch/riscv/boot/Image ]; then cp arch/riscv/boot/Image "$tmpdir/boot/Image"; fi
+	if [ -f arch/riscv/boot/Image.itb ]; then cp arch/riscv/boot/Image.itb "$tmpdir/boot/Image.itb"; fi
 fi
 cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
 
@@ -223,7 +221,7 @@ cat <<EOF > "$tmpdir/DEBIAN/preinst"
 set -e
 # prep boot directory
 if [ -f /boot/Image ]; then
-	rm -fr /boot/{Image,vmlinuz-*,System.map-*,config-*}
+	rm -fr /boot/{Image,Image.itb,vmlinuz-*,System.map-*,config-*}
 fi
 if [ -f /boot/initrd.gz ] || [ -f /boot/uInitrd ]; then
 	rm -fr /boot/{initrd.gz,uInitrd,initrd.img-*}

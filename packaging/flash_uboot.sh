@@ -118,7 +118,6 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${
 	dd if="${DIR}/idbloader.bin" of="${MMC}" seek=64
 	dd if="${DIR}/u-boot.itb" of="${MMC}" seek=16384
 fi
-
 # samsung / odroid xu4 / emmc
 if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 	if [ $EMMC -eq 1 ] && [[ -f "${DIR}/bl1.bin" ]] && [[ -f "${DIR}/bl2.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]] && [[ "${DIR}/tzsw.bin" ]]; then
@@ -146,6 +145,26 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 		dd if="${DIR}/tzsw.bin" of="${MMC}" seek=1503 conv=fsync
 		dd if="/dev/zero" of="${MMC}" seek=2015 bs=512 count=32 conv=fsync
 	fi
+fi
+# spacemit
+if [[ "$FAMILY" == "spacemit" ]] && [[ -f "${DIR}/bootinfo_emmc.bin" ]] && [[ -f "${DIR}/u-boot.itb" ]] && \
+	[[ "${DIR}/fw_dynamic.itb " ]] && [[ "${DIR}/FSBL.bin" ]]; then
+	target_device
+	sleep .50
+	if [ $EMMC -eq 1 ]; then
+		DEVICE=`ls /dev/mmcblk*boot0 | sed 's/^.....//'`
+		echo 0 > /sys/block/${DEVICE}/force_ro
+		sleep .50
+		dd if="${DIR}/bootinfo_emmc.bin" of="/dev/${DEVICE}" bs=512 conv=notrunc
+		dd if="${DIR}/FSBL.bin" of="/dev/${DEVICE}" bs=512 seek=1 conv=notrunc
+		dd if="${DIR}/FSBL.bin" of="/dev/${DEVICE}" bs=512 seek=512 conv=notrunc
+	else
+		dd if="${DIR}/bootinfo_emmc.bin" of="${MMC}" bs=512 conv=notrunc
+		dd if="${DIR}/FSBL.bin" of="${MMC}" bs=512 seek=1 conv=notrunc
+		dd if="${DIR}/FSBL.bin" of="${MMC}" bs=512 seek=512 conv=notrunc
+	fi
+	dd if="${DIR}/fw_dynamic.bin" of="${MMC}" bs=512 seek=1280 conv=notrunc
+	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=512 seek=2048 conv=notrunc
 fi
 }
 

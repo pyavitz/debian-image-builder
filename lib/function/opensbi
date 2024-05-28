@@ -1,0 +1,39 @@
+#!/bin/bash
+
+opensbi_firmware (){
+rm -fdr opensbi
+if [[ -d "${OPENSBI_DIR}" ]]; then
+	echo -en "${WHT}${OPENSBI_DIR}${FIN} "
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+	cd ${OPENSBI_DIR}
+	make clean
+	git config pull.rebase false
+	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+	git pull -q
+	cd ..
+	cp -r ${OPENSBI_DIR} opensbi
+	echo_bdone
+else
+	echo -en "${WHT}${OPENSBI_DIR}${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
+	git clone -q -b ${OPENSBI_BRANCH} ${OPENSBI_URL} ${OPENSBI_DIR}
+	if [[ -d "${OPENSBI_DIR}" ]]; then
+		cd ${OPENSBI_DIR}; make clean; cd ..; cp -r ${OPENSBI_DIR} opensbi; echo_bdone
+	else
+		echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"; exit 1
+	fi
+fi
+echo ""
+cd opensbi
+if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
+ubuild "PLATFORM=${OPENSBI_PLATFORM} PLATFORM_DEFCONFIG=${OPENSBI_DEFCONFIG}"
+if [[ -f "${OPENSBI_FIRMWARE}" ]]; then :; else report_opensbi_error; fi
+cd ..
+echo ""
+}
+
+report_opensbi_error (){
+echo "Missing firmware ${OPENSBI_FIRMWARE}. Please report build errors."
+echo ""
+exit 1
+}

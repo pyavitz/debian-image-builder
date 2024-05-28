@@ -262,10 +262,11 @@ user_patches
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 # add dtclist initrd and headers-byteshift.patch
-if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]]; then
-	mv ../../dtclist.txt dtclist.txt; cp -fr ../../packaging/{initrd,headers-byteshift.patch} .
+if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]]; then
+	mv ../../dtclist.txt dtclist.txt; cp -f ../../packaging/headers-byteshift.patch .
+	if [[ "$ARCH" =~ ^(arm|arm64)$ ]] then cp -f ../../packaging/initrd.arm initrd; else cp -f ../../packaging/initrd.riscv initrd; fi
 else
-	echo -e "An essential builddeb file is missing."
+	echo -e "lib/function/patching: An essential builddeb file is missing."
 	exit 0
 fi
 # custom linux logo
@@ -274,8 +275,10 @@ if [[ -v "LINUX_LOGO" ]] && [[ ! -z "$LINUX_LOGO" ]]; then
 fi
 # firmware
 if [[ "$BOARD" == "odroidxu4" ]] && [[ -e "../../files/firmware/edid" ]]; then
-	mkdir -p firmware
-	cp -fr ../../files/firmware/edid firmware/;
+	mkdir -p firmware; cp -fr ../../files/firmware/edid firmware/
+fi
+if [[ "$BOARD" == "bananapif3" ]] && [[ -e "../../files/firmware/spacemit" ]]; then
+	mkdir -p firmware; cp -fr ../../files/firmware/spacemit/* firmware/
 fi
 echo ""
 }

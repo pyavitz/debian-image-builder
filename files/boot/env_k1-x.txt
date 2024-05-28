@@ -1,0 +1,103 @@
+# Parameters
+earlycon=sbi
+console=ttyS0,115200
+init=/init
+bootdelay=0
+baudrate=115200
+loglevel=8
+stderr=serial
+stdin=serial,usbkbd
+stdout=serial
+
+#ethaddr=fe:fe:fe:22:22:01
+#eth1addr=fe:fe:fe:22:22:02
+ipaddr=10.0.92.100
+netmask=255.255.255.0
+serverip=10.0.92.134
+gatewayip=10.0.92.1
+net_data_path=net_flash_file/net_flash_file/
+
+mmc_rootfstype=
+partuuid=
+preboot=
+kernel_addr_r=0x10000000
+ramdisk_addr=0x20000000
+ramdisk_size=-
+ramdisk_combo=-
+knl_name=
+ramdisk_name=
+dtb_dir=
+dtb_name=k1-x_deb1.dtb
+dtb_addr=0x1F000000
+splashfile=-
+mdio_intf=
+phyaddr0=1
+phy_link_time=10000
+netdev=eth0
+
+# Boot arguments
+commonargs=setenv bootargs earlycon=${earlycon} earlyprintk console=tty1 console=${console} loglevel=${loglevel} clk_ignore_unused swiotlb=65536 net.ifnames=0 rdinit=${init}
+
+loadknl=echo "Loading kernel ..."; \
+            load ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${kernel_addr_r} ${knl_name};
+
+loadramdisk=echo "Loading ramdisk ..."; \
+            if load ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${ramdisk_addr} ${ramdisk_name}; then \
+                size ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${ramdisk_name}; \
+                setenv ramdisk_size ${filesize}; \
+                setenv ramdisk_combo ${ramdisk_addr}:${ramdisk_size}; \
+            else \
+                echo "load ramdisk from bootfs fail, use built-in ramdisk"; \
+                setenv ramdisk_addr -; \
+            fi;
+
+loaddtb=echo "Loading ${dtb_name} ..."; \
+            if load ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${dtb_addr} ${dtb_dir}/${dtb_name}; then \
+            else \
+                echo "load dtb from bootfs fail, use built-in dtb"; \
+                setenv dtb_addr ""; \
+            fi;
+
+set_mmc_args=setenv bootargs "${bootargs}" root=PARTUUID=${partuuid} rootwait rootfstype=${mmc_rootfstype}
+
+mmc_boot=echo "Try to boot from MMC${boot_devnum} ..."; \
+         run commonargs; \
+         run set_mmc_args; \
+         run loadknl; \
+         run loaddtb; \
+         run loadramdisk; \
+         bootm ${kernel_addr_r} ${ramdisk_combo} ${dtb_addr}; \
+         echo "########### boot kernel failed by default config, check your boot config #############"
+
+# Variable "boot_device" is set during board_late_init()
+autoboot=if test ${boot_device} = nand; then \
+                run nand_boot; \
+        elif test ${boot_device} = nor; then \
+                run nor_boot; \
+        elif test ${boot_device} = mmc; then \
+                run mmc_boot; \
+        fi;
+
+bootcmd=run autoboot; echo "run autoboot"
+
+# Boot menu definitions
+boot_default=echo "Current Boot Device: ${boot_device}"
+flash_default=echo "Returning to Boot Menu..."
+flash_from_usb=echo "recovery from usb...... "; \
+					  flash_image usb;
+flash_from_mmc=echo "recovery from mmc...... " \
+					  flash_image mmc;
+flash_from_net=echo "recovery from net...... " \
+					  flash_image net;
+
+bootmenu_delay=5
+bootmenu_0="-------- Boot Options --------"=run boot_default
+bootmenu_1="Boot from Nor"=run nor_boot
+bootmenu_2="Boot from Nand"=run nand_boot
+bootmenu_3="Boot from MMC"=run mmc_boot
+bootmenu_4="Autoboot"=run autoboot
+bootmenu_5="Show current Boot Device"=run boot_default
+bootmenu_6="-------- Flash Options --------"=run flash_default
+bootmenu_7="recovery from usb"=run flash_from_usb
+bootmenu_8="recovery from mmc"=run flash_from_mmc
+bootmenu_9="recovery from net"=run flash_from_net
