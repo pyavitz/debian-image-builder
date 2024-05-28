@@ -1,7 +1,7 @@
-# Common parameter
+# Parameters
 earlycon=sbi
 console=ttyS0,115200
-init=/sbin/init
+init=/init
 bootdelay=0
 baudrate=115200
 loglevel=8
@@ -9,35 +9,16 @@ stderr=serial
 stdin=serial,usbkbd
 stdout=serial
 
-# partitions/mtdparts/mtdids would set while flashing env.bin
-
-# Nor flash rootfs device
-#nor_root=/dev/mtdblock6
-#nor_rootfstype=squashfs
-
-# eMMC/SDCard rootfs device
-mmc_rootfstype=
-
-# Get "rootfs" partition number in decimal, and set var "mmc_root"
-# Variable "boot_devnum" is set during board_lat_init()
-set_mmc_root=part number mmc ${boot_devnum} rootfs rootfs_part; \
-             setexpr rootfs_part ${rootfs_part} + 0; \
-             setenv mmc_root "/dev/mmcblk${boot_devnum}p${rootfs_part}";
-
-set_nvme_root=part number nvme ${boot_devnum} rootfs rootfs_part; \
-             setexpr rootfs_part ${rootfs_part} + 0; \
-             setenv nvme_root "/dev/nvme${boot_devnum}n1p${rootfs_part}";
-
-# Override here, otherwise gen random addr and save to eeprom by uboot
 #ethaddr=fe:fe:fe:22:22:01
 #eth1addr=fe:fe:fe:22:22:02
-
 ipaddr=10.0.92.100
 netmask=255.255.255.0
 serverip=10.0.92.134
 gatewayip=10.0.92.1
 net_data_path=net_flash_file/net_flash_file/
 
+mmc_rootfstype=
+partuuid=
 preboot=
 kernel_addr_r=0x10000000
 ramdisk_addr=0x20000000
@@ -46,7 +27,7 @@ ramdisk_combo=-
 knl_name=
 ramdisk_name=
 dtb_dir=
-dtb_name=k1-x_evb.dtb
+dtb_name=k1-x_deb1.dtb
 dtb_addr=0x1F000000
 splashfile=-
 mdio_intf=
@@ -54,34 +35,10 @@ phyaddr0=1
 phy_link_time=10000
 netdev=eth0
 
-# Common boot args
-commonargs=setenv bootargs earlycon=${earlycon} earlyprintk console=tty1 console=${console} loglevel=${loglevel} init=${init}
+# Boot arguments
+commonargs=setenv bootargs earlycon=${earlycon} earlyprintk console=tty1 console=${console} loglevel=${loglevel} clk_ignore_unused swiotlb=65536 net.ifnames=0 rdinit=${init}
 
-# Detect product_name from env and select dtb file to load
-dtb_env=if test -n "${product_name}"; then \
-                if test "${product_name}" = k1_evb; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_evb.dtb; \
-                elif test "${product_name}" = k1_deb1; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_deb1.dtb; \
-                elif test "${product_name}" = k1_deb2; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_deb2.dtb; \
-                elif test "${product_name}" = k1_hs450; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_hs450.dtb; \
-                elif test "${product_name}" = k1_kx312; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_kx312.dtb; \
-                elif test "${product_name}" = k1_mingo; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_mingo.dtb; \
-                elif test "${product_name}" = k1_MINI-PC; then \
-                    setenv dtb_name ${dtb_dir}/k1-x_MINI-PC.dtb; \
-                else \
-                    echo "falling to default dtb: ${dtb_dir}/${product_name}.dtb"; \
-                    setenv dtb_name  ${dtb_dir}/${product_name}.dtb; \
-                fi; \
-            fi;
-
-detect_dtb=echo "product_name: ${product_name}"; run dtb_env; echo "select ${dtb_name} to load";
-
-loadknl=echo "Loading kernel..."; \
+loadknl=echo "Loading kernel ..."; \
             load ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${kernel_addr_r} ${knl_name};
 
 loadramdisk=echo "Loading ramdisk ..."; \
@@ -94,36 +51,18 @@ loadramdisk=echo "Loading ramdisk ..."; \
                 setenv ramdisk_addr -; \
             fi;
 
-loaddtb=echo "Loading dtb..."; \
-            if load ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${dtb_addr} ${dtb_name}; then \
+loaddtb=echo "Loading ${dtb_name} ..."; \
+            if load ${bootfs_devname} ${boot_devnum}:${bootfs_part} ${dtb_addr} ${dtb_dir}/${dtb_name}; then \
             else \
                 echo "load dtb from bootfs fail, use built-in dtb"; \
                 setenv dtb_addr ""; \
             fi;
 
-# Nor+ssd boot combo
-set_nor_args=setenv bootargs ${bootargs} mtdparts=${mtdparts} root=${nvme_root} rootfstype=ext4
-nor_boot=echo "Try to boot from NVMe ..."; \
-         run commonargs; \
-         run set_nvme_root; \
-         run set_nor_args; \
-         run detect_dtb; \
-         run loadknl; \
-         run loaddtb; \
-         run loadramdisk; \
-         bootm ${kernel_addr_r} ${ramdisk_combo} ${dtb_addr}; \
-         echo "########### boot kernel failed by default config, check your boot config #############"
-
-##############################################################################
-# eMMC/SDCard boot
-##############################################################################
-set_mmc_args=setenv bootargs "${bootargs}" root=PARTUUID= rootwait rootfstype=${mmc_rootfstype} net.ifnames=0;
+set_mmc_args=setenv bootargs "${bootargs}" root=PARTUUID=${partuuid} rootwait rootfstype=${mmc_rootfstype}
 
 mmc_boot=echo "Try to boot from MMC${boot_devnum} ..."; \
          run commonargs; \
-         run set_mmc_root; \
          run set_mmc_args; \
-         run detect_dtb; \
          run loadknl; \
          run loaddtb; \
          run loadramdisk; \
