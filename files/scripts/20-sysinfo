@@ -49,24 +49,22 @@ HA=`echo -e Hassio:`
 DOCKER=`echo -e Docker:`
 
 # functions
-count_high (){
-echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C";
-echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C";
+disp_cpu1 (){
+echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C"
+echo -en "Frequency:   "$CPU0C; echo -e "MHz"
+}
+
+disp_cpu2 (){
+echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C"
+echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C"
 echo -en "Frequencies: "$CPU0C; echo -en "MHz $CPU1C"; echo -e "MHz"
 }
 
-count_low (){
-echo -en "Processor:   "$CPU0; echo -en " @ $CPU0M"; echo -e "MHz $CPU0T°C";
-echo -en "Frequency:   "$CPU0C; echo -e "MHz";
-}
-
 cpu_hwinfo (){
-if [[ "$PRESENT" == "0-7" || "$PRESENT" == "0-5" ]]; then
-	count_high;
+if [[ "$PRESENT" =~ ^(0-9|0-7|0-5)$ ]]; then
+	if [[ ! -z "$CPU0M" ]] && [[ ! -z "$CPU1M" ]]; then disp_cpu2; else disp_cpu1; fi
 fi
-if [[ "$PRESENT" == "0-3" || "$PRESENT" == "0-1" || "$PRESENT" == "0" ]]; then
-	count_low;
-fi
+if [[ "$PRESENT" =~ ^(0-3|0-1|0)$ ]]; then disp_cpu1; fi
 }
 
 fan_pwr (){
