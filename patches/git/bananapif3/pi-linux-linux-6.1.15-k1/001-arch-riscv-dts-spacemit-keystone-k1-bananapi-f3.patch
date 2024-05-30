@@ -1,17 +1,17 @@
-From e1151e8cadc649135bbdc6176f414d5201ffa8c6 Mon Sep 17 00:00:00 2001
+From 7fde4edf4f20b598200715cf0a5de314c1704205 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 29 May 2024 06:52:38 -0400
+Date: Thu, 30 May 2024 16:25:03 -0400
 Subject: [PATCH] arch: riscv: dts: spacemit: keystone-k1-bananapi-f3
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/riscv/boot/dts/spacemit/Makefile         |   3 +-
- .../dts/spacemit/keystone-k1-bananapi-f3.dts  | 991 ++++++++++++++++++
- 2 files changed, 993 insertions(+), 1 deletion(-)
+ .../dts/spacemit/keystone-k1-bananapi-f3.dts  | 999 ++++++++++++++++++
+ 2 files changed, 1001 insertions(+), 1 deletion(-)
  create mode 100644 arch/riscv/boot/dts/spacemit/keystone-k1-bananapi-f3.dts
 
 diff --git a/arch/riscv/boot/dts/spacemit/Makefile b/arch/riscv/boot/dts/spacemit/Makefile
-index 52b1d4a1ae..eecfb552ea 100644
+index 52b1d4a1a..eecfb552e 100644
 --- a/arch/riscv/boot/dts/spacemit/Makefile
 +++ b/arch/riscv/boot/dts/spacemit/Makefile
 @@ -1,4 +1,5 @@
@@ -23,10 +23,10 @@ index 52b1d4a1ae..eecfb552ea 100644
  obj-$(CONFIG_BUILTIN_DTB) += $(addsuffix .o, $(dtb-y))
 diff --git a/arch/riscv/boot/dts/spacemit/keystone-k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/keystone-k1-bananapi-f3.dts
 new file mode 100644
-index 0000000000..d7ae9158d5
+index 000000000..2d58f0835
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/keystone-k1-bananapi-f3.dts
-@@ -0,0 +1,991 @@
+@@ -0,0 +1,999 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2023 Spacemit, Inc */
 +
@@ -172,7 +172,6 @@ index 0000000000..d7ae9158d5
 +		io-supply = <&dcdc_3>;
 +		io_voltage = <1800000>;
 +		pwr-gpios  = <&gpio 67 0>;
-+		power-always-on;
 +		status = "okay";
 +
 +		wlan_pwrseq: wlan-pwrseq {
@@ -221,6 +220,7 @@ index 0000000000..d7ae9158d5
 +&dpu_online2_dsi {
 +	memory-region = <&dpu_resv>;
 +	spacemit-dpu-bitclk = <1000000000>;
++	spacemit-dpu-escclk = <76800000>;
 +	dsi_1v2-supply = <&ldo_5>;
 +	vin-supply-names = "dsi_1v2";
 +	status = "disabled";
@@ -260,18 +260,21 @@ index 0000000000..d7ae9158d5
 +&i2c0 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_i2c0>;
++	spacemit,i2c-fast-mode;
 +	status = "okay";
 +};
 +
 +&i2c1 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_i2c1>;
++	spacemit,i2c-fast-mode;
 +	status = "okay";
 +};
 +
 +&i2c2 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_i2c2_0>;
++	spacemit,i2c-fast-mode;
 +	status = "okay";
 +
 +	eeprom@50{
@@ -676,8 +679,9 @@ index 0000000000..d7ae9158d5
 +			SDHCI_QUIRK2_PRESET_VALUE_BROKEN |
 +			SDHCI_QUIRK2_BROKEN_PHY_MODULE
 +			)>;
-+	spacemit,rx_dline_reg = <0x01>;
++	spacemit,rx_dline_reg = <0x0>;
 +	spacemit,rx_tuning_limit = <50>;
++	spacemit,rx_tuning_type = <0x0>;
 +	spacemit,sdh-freq = <204800000>;
 +	status = "okay";
 +};
@@ -798,6 +802,7 @@ index 0000000000..d7ae9158d5
 +};
 +
 +&ehci1 {
++	spacemit,reset-on-resume;
 +	status = "okay";
 +};
 +
@@ -819,18 +824,17 @@ index 0000000000..d7ae9158d5
 +
 +&usbdrd3 {
 +	status = "okay";
++	reset-on-resume;
 +	dwc3@c0a00000 {
 +		dr_mode = "host";
 +		phy_type = "utmi";
 +		snps,hsphy_interface = "utmi";
 +		snps,dis_enblslpm_quirk;
-+		snps,dis-u1u2-quirk;
-+		snps,dis-u2-freeclk-exists-quirk;
-+		snps,dis-del-phy-power-chg-quirk;
 +		snps,dis_u2_susphy_quirk;
 +		snps,dis_u3_susphy_quirk;
-+		snps,dis_rxdet_inp3_quirk;
-+		snps,xhci-trb-ent-quirk;
++		snps,dis-del-phy-power-chg-quirk;
++		snps,dis-tx-ipgap-linecheck-quirk;
++		snps,parkmode-disable-ss-quirk;
 +	};
 +};
 +
@@ -988,8 +992,6 @@ index 0000000000..d7ae9158d5
 +	pinctrl-0 = <&pinctrl_rcpu>;
 +	mboxes = <&mailbox 0>, <&mailbox 1>;
 +	mbox-names = "vq0", "vq1";
-+	interconnects = <&dram_range0>;
-+	interconnect-names = "dma-mem";
 +	memory-region = <&rcpu_mem_0>, <&vdev0vring0>, <&vdev0vring1>, <&vdev0buffer>, <&rsc_table>, <&rcpu_mem_snapshots>;
 +	status = "okay";
 +};
@@ -1017,6 +1019,12 @@ index 0000000000..d7ae9158d5
 +	simple-audio-card,codec {
 +		sound-dai = <&es8326>;
 +	};
++};
++
++&rpwm2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_rpwm2_0>;
++	status = "okay";
 +};
 -- 
 2.39.2
