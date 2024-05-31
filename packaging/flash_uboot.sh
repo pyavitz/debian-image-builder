@@ -147,8 +147,8 @@ if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
 	fi
 fi
 # spacemit
-if [[ "$FAMILY" == "spacemit" ]] && [[ -f "${DIR}/bootinfo_emmc.bin" ]] && [[ -f "${DIR}/u-boot.itb" ]] && \
-	[[ "${DIR}/fw_dynamic.itb " ]] && [[ "${DIR}/FSBL.bin" ]]; then
+if [[ "$FAMILY" == "spacemit" ]] && [[ -f "${DIR}/bootinfo_emmc.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]] && \
+	[[ "${DIR}/fw_dynamic.bin" ]] && [[ "${DIR}/FSBL.bin" ]]; then
 	target_device
 	sleep .50
 	if [ $EMMC -eq 1 ]; then
