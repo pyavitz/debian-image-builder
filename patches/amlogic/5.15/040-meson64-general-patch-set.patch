@@ -30,8 +30,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/media/platform/s5p-mfc/s5p_mfc.c      |   9 +-
  drivers/media/platform/s5p-mfc/s5p_mfc_dec.c  |   8 +-
  drivers/media/platform/s5p-mfc/s5p_mfc_enc.c  |   9 +
- .../ethernet/stmicro/stmmac/stmmac_ethtool.c  |   8 +-
- drivers/net/phy/realtek.c                     |  48 ++
  drivers/regulator/s2mps11.c                   |  80 +++
  drivers/spi/spidev.c                          |   2 +
  drivers/staging/fbtft/Kconfig                 |  14 +
@@ -2081,102 +2079,6 @@ index 3da1775a65f1..e39709736a57 100644
  				list_del(&mb_entry->list);
  				ctx->ref_queue_cnt--;
  				vb2_buffer_done(&mb_entry->b->vb2_buf,
-diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
-index 9e8ae4384e4f..000a5b170849 100644
---- a/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
-+++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c
-@@ -758,12 +758,16 @@ static int stmmac_set_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
- 	if (wol->wolopts) {
- 		pr_info("stmmac: wakeup enable\n");
- 		device_set_wakeup_enable(priv->device, 1);
--		enable_irq_wake(priv->wol_irq);
-+		if (priv->wol_irq != dev->irq)
-+			enable_irq_wake(priv->wol_irq);
- 	} else {
- 		device_set_wakeup_enable(priv->device, 0);
--		disable_irq_wake(priv->wol_irq);
-+		if (priv->wol_irq != dev->irq)
-+			disable_irq_wake(priv->wol_irq);
- 	}
- 
-+	phylink_ethtool_set_wol(priv->phylink, wol);
-+
- 	mutex_lock(&priv->lock);
- 	priv->wolopts = wol->wolopts;
- 	mutex_unlock(&priv->lock);
-diff --git a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
-index 11be60333fa8..dd82045b5ef3 100644
---- a/drivers/net/phy/realtek.c
-+++ b/drivers/net/phy/realtek.c
-@@ -12,6 +12,8 @@
- #include <linux/phy.h>
- #include <linux/module.h>
- #include <linux/delay.h>
-+#include <linux/etherdevice.h>
-+#include <linux/netdevice.h>
- 
- #define RTL821x_PHYSR				0x11
- #define RTL821x_PHYSR_DUPLEX			BIT(13)
-@@ -300,6 +302,51 @@ static irqreturn_t rtl8211f_handle_interrupt(struct phy_device *phydev)
- 	return IRQ_HANDLED;
- }
- 
-+static int rtl8211f_set_wol(struct phy_device *phydev,
-+		struct ethtool_wolinfo *wol)
-+{
-+	struct net_device *ndev = phydev->attached_dev;
-+	const u8 *mac;
-+	int val;
-+
-+	if (wol->wolopts & WAKE_MAGIC) {
-+		mac = (const u8 *)ndev->dev_addr;
-+
-+		if (!is_valid_ether_addr(mac))
-+			return -EINVAL;
-+
-+		/* Set MAC address */
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd8c);
-+		phy_write(phydev, 0x10, (mac[1] << 8) | mac[0]);
-+		phy_write(phydev, 0x11, (mac[3] << 8) | mac[2]);
-+		phy_write(phydev, 0x12, (mac[5] << 8) | mac[4]);
-+
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd8a);
-+
-+		/* Set magic packet for WOL */
-+		phy_write(phydev, 0x10, 0x1000);
-+		phy_write(phydev, 0x11, 0x9fff);
-+
-+		/* PIN31 - pull high */
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd40);
-+		val = phy_read(phydev, 0x16);
-+		phy_write(phydev, 0x16, val | BIT(5));
-+
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0);
-+	} else {
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0xd8a);
-+
-+		/* Reset magic packet for WOL */
-+		phy_write(phydev, 0x10, 0x0);
-+		val = phy_read(phydev, 0x11);
-+		phy_write(phydev, 0x11, val & ~BIT(15));
-+
-+		phy_write(phydev, RTL821x_PAGE_SELECT, 0);
-+	}
-+
-+	return 0;
-+}
-+
- static int rtl8211_config_aneg(struct phy_device *phydev)
- {
- 	int ret;
-@@ -909,6 +956,7 @@ static struct phy_driver realtek_drvs[] = {
- 		.handle_interrupt = rtl821x_handle_interrupt,
- 		.suspend	= genphy_suspend,
- 		.resume		= genphy_resume,
-+		.set_wol	= rtl8211f_set_wol,
- 		.read_page	= rtl821x_read_page,
- 		.write_page	= rtl821x_write_page,
- 	}, {
 diff --git a/drivers/regulator/s2mps11.c b/drivers/regulator/s2mps11.c
 index ebc67e3ddd4f..9239d4f303cc 100644
 --- a/drivers/regulator/s2mps11.c
