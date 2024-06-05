@@ -159,30 +159,20 @@ if [ -d $tmpdir/$linux_path ]; then
 	for dtclist in `cat dtclist.txt`; do cp -r "$dtclist" 2>/dev/null "$tmpdir/$boot_path"; done
 	rm -f dtclist.txt
 	# install overlays
-	if ls arch/arm/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
+	if ls arch/$karch/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
 		mkdir -p "$tmpdir/$linux_path/overlays"
-		chmod +x arch/arm/boot/dts/overlays/*.dtbo
-		cp -r arch/arm/boot/dts/overlays/*.dtbo "$tmpdir/$linux_path/overlays"
-	else
-		if ls arch/arm64/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
-			mkdir -p "$tmpdir/$linux_path/overlays"
-			chmod +x arch/arm64/boot/dts/overlays/*.dtbo
-			cp -r arch/arm64/boot/dts/overlays/*.dtbo "$tmpdir/$linux_path/overlays"
-		fi
+		chmod +x arch/$karch/boot/dts/overlays/*.dtbo
+		cp -r arch/$karch/boot/dts/overlays/*.dtbo "$tmpdir/$linux_path/overlays"
 	fi
-	if [ -d "$tmpdir/$overlays_path" ]; then
+	if [ -d "$tmpdir/$linux_path/overlays" ]; then
 		mkdir -p "$tmpdir/$boot_path/overlays"
-		cp -r "$tmpdir/$overlays_path/" "$tmpdir/$boot_path"
+		cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
 	else
-		if [ -d "$tmpdir/$linux_path/overlays" ]; then
+		# check for vendor overlays
+		if [ -d "$tmpdir/$linux_path/overlay" ]; then
 			mkdir -p "$tmpdir/$boot_path/overlays"
+			mv -f "$tmpdir/$linux_path/overlay" "$tmpdir/$linux_path/overlays"
 			cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
-		else
-			if [ -d "$tmpdir/$linux_path/overlay" ]; then
-				mkdir -p "$tmpdir/$boot_path/overlays"
-				mv -f "$tmpdir/$linux_path/overlay" "$tmpdir/$linux_path/overlays"
-				cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
-			fi
 		fi
 	fi
 fi
