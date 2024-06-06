@@ -103,6 +103,11 @@ echo -e ""; echo -e "Installing bluetooth helper ..."
 git clone https://gitee.com/bianbu-linux/rtk_hciattach.git
 cd rtk_hciattach
 make -j4
-if [[ -f "rtk_hciattach" ]]; then cp -f rtk_hciattach /usr/sbin/; bananapif3_systemd >/dev/null 2>&1; else echo "rtk_hciattach: build failed!"; fi
+if [[ -f "rtk_hciattach" ]]; then
+	cp -f rtk_hciattach /usr/sbin/
+	bananapif3_bt_service > /dev/null 2>&1
+else
+	echo "rtk_hciattach: build failed!"
+fi
 cd ..; rm -fdr rtk_hciattach
 }
