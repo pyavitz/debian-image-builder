@@ -95,3 +95,14 @@ fi
 sed -i "s/^mmc_rootfstype=.*/mmc_rootfstype=${FSTYPE}/" p1/env_k1-x.txt
 sed -i "s/^partuuid=.*/partuuid=${ROOT_PARTUUID}/" p1/env_k1-x.txt
 }
+
+# STAGE2
+bananapif3_bthelper (){
+cd ~
+echo -e ""; echo -e "Installing bluetooth helper ..."
+git clone https://gitee.com/bianbu-linux/rtk_hciattach.git
+cd rtk_hciattach
+make -j4
+if [[ -f "rtk_hciattach" ]]; then cp -f rtk_hciattach /usr/sbin/; bananapif3_systemd >/dev/null 2>&1; else echo "rtk_hciattach: build failed!"; fi
+cd ..; rm -fdr rtk_hciattach
+}
