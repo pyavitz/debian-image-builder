@@ -53,6 +53,8 @@ if [[ "$FORCE_GIT" == "true" ]]; then git_download; else download; fi
 if [[ "$FORCE_GIT" == "true" ]]; then git_setup; else setup; fi
 # patching
 if [[ ! -z $FAMILY ]]; then linux_patching; fi
+# firmware
+if [[ -v "LINUX_EXTRA_FIRMWARE" ]] && [[ ! -z "$LINUX_EXTRA_FIRMWARE" ]]; then mkdir -p firmware; cp -fr ../../${LINUX_EXTRA_FIRMWARE} firmware/; fi
 # defconfig
 if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else bconfig; fi
 # menuconfig
