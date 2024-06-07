@@ -8,10 +8,13 @@ source lib/function/git
 source lib/function/patching
 source lib/function/wireless
 source lib/function/compilers
+source userdata.txt
+# debug switch
+if [ $VERBOSE -eq 1 ]; then set -x; fi
+if [[ -f "board.txt" ]]; then :; else noboard; fi
 # override the board file
 if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
 # create dtc list
-if [[ -f "board.txt" ]]; then :; else noboard; fi
 if [[ -f "dtclist.txt" ]]; then rm -f dtclist.txt; fi
 for f in lib/boards/*; do
 	. $f
@@ -26,9 +29,6 @@ done
 source board.txt
 source lib/function/${FAMILY}
 if [[ -f "kernel.txt" ]]; then . kernel.txt; fi
-source userdata.txt
-# debug switch
-if [ $VERBOSE -eq 1 ]; then set -x; fi
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
@@ -41,7 +41,7 @@ if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPIL
 if [[ "$HOST_ARCH" == "riscv64" ]] && [[ "$ARCH" == "riscv" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm" ]]; then CROSSCOMPILE="1"; fi
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "riscv" ]]; then CROSSCOMPILE="1"; fi
-if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" == "arm" || "$ARCH" == "arm64" || "$ARCH" == "riscv" ]]; then CROSSCOMPILE="1"; fi
+if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then CROSSCOMPILE="1"; fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
 # compiler
 linux_compilers
