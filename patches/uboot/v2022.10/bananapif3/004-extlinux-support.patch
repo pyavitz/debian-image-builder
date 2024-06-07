@@ -1,7 +1,7 @@
-From 03aa79ad3ed05a8c9082e1a5c9a7411747ec157c Mon Sep 17 00:00:00 2001
+From 46d2e12986882824d18ab2e2e270917d2d0936ff Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 3 Jun 2024 10:50:18 -0400
-Subject: [PATCH] bananapif3: extlinux support
+Date: Fri, 7 Jun 2024 06:31:33 -0400
+Subject: [PATCH] extlinux support
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
@@ -11,7 +11,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  3 files changed, 21 insertions(+), 163 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-index b0241819..25ca3e79 100644
+index b024181959..d688d6bb8e 100644
 --- a/board/spacemit/k1-x/k1-x.env
 +++ b/board/spacemit/k1-x/k1-x.env
 @@ -1,4 +1,4 @@
@@ -198,11 +198,11 @@ index b0241819..25ca3e79 100644
 -bootmenu_9="recovery from net"=run flash_from_net
 -
 diff --git a/configs/k1_defconfig b/configs/k1_defconfig
-index db0f4a31..c6a9ad78 100644
+index 1251477584..969e38e2e7 100644
 --- a/configs/k1_defconfig
 +++ b/configs/k1_defconfig
-@@ -38,6 +38,8 @@ CONFIG_AUTOBOOT_KEYED=y
- CONFIG_AUTOBOOT_STOP_STR="s"
+@@ -42,6 +42,8 @@ CONFIG_AUTOBOOT_STOP_STR=" "
+ CONFIG_AUTOBOOT_KEYED_CTRLC=y
  CONFIG_USE_BOOTCOMMAND=y
  CONFIG_BOOTCOMMAND="bootm 0x20000000"
 +CONFIG_USE_PREBOOT=y
@@ -211,7 +211,7 @@ index db0f4a31..c6a9ad78 100644
  CONFIG_SPL_LOGLEVEL=1
  # CONFIG_SYS_DEVICE_NULLDEV is not set
 diff --git a/include/configs/k1-x.h b/include/configs/k1-x.h
-index 9796a66e..a18e5bf1 100644
+index 9796a66ec9..a18e5bf18a 100644
 --- a/include/configs/k1-x.h
 +++ b/include/configs/k1-x.h
 @@ -129,10 +129,13 @@ struct boot_storage_op
