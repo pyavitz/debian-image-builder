@@ -30,6 +30,7 @@ LIT=./scripts/loggit
 # uboot and linux
 XUBOOT=./scripts/uboot
 UBOOT=sudo ./scripts/uboot
+DTCLIST=./scripts/dtclist
 XKERNEL=./scripts/linux
 KERNEL=sudo ./scripts/linux
 
@@ -67,7 +68,9 @@ endef
 
 define build_kernel
 	@${BOARDS}
+	@chmod +x ${DTCLIST}
 	@chmod +x ${XKERNEL}
+	@${DTCLIST}
 	@${KERNEL}
 endef
 

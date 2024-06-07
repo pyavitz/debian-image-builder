@@ -9,23 +9,11 @@ source lib/function/patching
 source lib/function/wireless
 source lib/function/compilers
 source userdata.txt
-# debug switch
-if [ $VERBOSE -eq 1 ]; then set -x; fi
 if [[ -f "board.txt" ]]; then :; else noboard; fi
 # override the board file
 if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
-# create dtc list
-if [[ -f "dtclist.txt" ]]; then rm -f dtclist.txt; fi
-for f in lib/boards/*; do
-	. $f
-	if [[ "$COMMON_PKG" == "true" ]]; then
-		FIND=`cat board.txt | grep -w COMMON_PKGNAME= | sed 's/COMMON_PKGNAME=//g' | sed 's/"//g'`
-		if [[ "$COMMON_PKGNAME" == "$FIND" ]]; then echo -e ${DEVICETREE} | tr ' ' '\n' | tee -a dtclist.txt > /dev/null 2>&1; fi
-	else
-		FIND=`cat board.txt | grep -w SERIES= | sed 's/SERIES=//g' | sed 's/"//g'`
-		if [[ "$SERIES" == "$FIND" ]]; then echo -e ${DEVICETREE} | tr ' ' '\n' | tee -a dtclist.txt > /dev/null 2>&1; fi
-	fi
-done
+# debug switch
+if [ $VERBOSE -eq 1 ]; then set -x; fi
 source board.txt
 source lib/function/${FAMILY}
 if [[ -f "kernel.txt" ]]; then . kernel.txt; fi
