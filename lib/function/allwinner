@@ -70,6 +70,22 @@ allwinner_uboot_packaging (){
 cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 }
 
+# LINUX
+allwinner_extra_wireless (){
+if [[ "$BOARD" == "bananapim4zero" ]] && [[ -d "../../${WIRELESSPATCHES}/rtl8821cu" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/rtl8821cu/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/rtl8821cu/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/rtl8821cu/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+if [[ "$BOARD" == "orangepi3lts" ]] && [[ -d "../../${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/unisoc/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+}
+
 # STAGE1
 flash_uboot (){
 dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8

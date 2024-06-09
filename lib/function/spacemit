@@ -70,6 +70,16 @@ cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u
 #cp -f ../../files/boot/env_k1-x.txt ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 }
 
+# LINUX
+spacemit_extra_wireless (){
+if [[ "$BOARD" == "bananapif3" ]] && [[ -d "../../${WIRELESSPATCHES}/rtl8852bs/${LINUX_VERSION}" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/rtl8852bs/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/rtl8852bs/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/rtl8852bs/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+}
+
 # STAGE1
 flash_uboot (){
 dd if=${OUTPUT}/bootinfo_emmc.bin of="${IMAGE_LOOP_DEV}" bs=512 conv=notrunc
