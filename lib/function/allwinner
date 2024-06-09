@@ -71,6 +71,16 @@ cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/l
 }
 
 # LINUX
+allwinner_extra_patching (){
+# allwinner: all
+if [[ "$FAMILY" == "allwinner" ]] && [[ -d "../../${LINUX_PATCHDIR}/all" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/all/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/all" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+}
+
 allwinner_extra_wireless (){
 if [[ "$BOARD" == "bananapim4zero" ]] && [[ -d "../../${WIRELESSPATCHES}/rtl8821cu" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtl8821cu/*.patch` ]] > /dev/null 2>&1; then
