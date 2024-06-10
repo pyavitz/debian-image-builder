@@ -117,7 +117,19 @@ if [[ -f "rtk_hciattach" ]]; then
 	cp -f rtk_hciattach /usr/sbin/
 	bananapif3_bt_service > /dev/null 2>&1
 else
-	echo "rtk_hciattach: build failed!"
+	echo -e "rtk_hciattach: build failed!"
 fi
 cd ..; rm -fdr rtk_hciattach
+}
+
+bananapif3_vpu_firmware (){
+echo -e ""; echo -e "Installing VPU firmware ..."
+git clone https://gitee.com/bianbu-linux/k1x-vpu-firmware.git
+if [[ -d "k1x-vpu-firmware/lib/firmware/linlon-v52_v76-80-2" ]]; then
+	mkdir -p /lib/firmware/linlon-v52_v76-80-2
+	cp -fr k1x-vpu-firmware/lib/firmware/linlon-v52_v76-80-2/* /lib/firmware/linlon-v52_v76-80-2/
+else
+	echo -e "k1x-vpu-firmware: install failed!"
+fi
+rm -fdr k1x-vpu-firmware
 }
