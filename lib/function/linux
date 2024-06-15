@@ -21,6 +21,20 @@ echo ""
 exit 0
 }
 
+linux_log (){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+if [[ -f "${LOG_FILE}" ]]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+else
+	mkdir -p ${LOG_DIR}
+	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+fi
+}
+
 linux_prng (){
 if [[ "$VERSION" =~ ^([0-9].[0-9].y|[0-9].[0-9][0-9].y)$ ]]; then
 	URL="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"

@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# firmware
-atf_patching (){
-if [[ -d "../../patches/atf" ]]; then
-	if [[ `ls ../../patches/atf/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../patches/atf/*.patch; do patch -N -p1 < $i; done
-	fi
-fi
-}
-
 # check log and report
 check_log (){
 if [[ -f "${LOG_FILE}" ]]; then
@@ -40,51 +31,6 @@ if [[ -f "${LOG_FILE}" ]]; then
 fi
 }
 
-# uboot patch log
-uboot_log (){
-LOG_DIR="../../output/logs"
-LOG_FILE="${LOG_DIR}/${BOARD}-u-boot-patch.log"
-if [[ -f "${LOG_FILE}" ]]; then
-	mv -f ${LOG_FILE} ${LOG_FILE}.1
-	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-else
-	mkdir -p ${LOG_DIR}
-	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-fi
-}
-
-# linux patch log
-linux_log (){
-LOG_DIR="../../output/logs"
-LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
-if [[ -f "${LOG_FILE}" ]]; then
-	mv -f ${LOG_FILE} ${LOG_FILE}.1
-	echo "Linux ${VERSION}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-else
-	mkdir -p ${LOG_DIR}
-	echo "Linux ${VERSION}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-fi
-}
-
-# linux git patch log
-linux_git_log (){
-LOG_DIR="../../output/logs"
-LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
-if [[ -f "${LOG_FILE}" ]]; then
-	mv -f ${LOG_FILE} ${LOG_FILE}.1
-	echo "${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-else
-	mkdir -p ${LOG_DIR}
-	echo "${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-fi
-}
-
 # linux user patch log
 linux_user_log (){
 LOG_DIR="../../output/logs"
@@ -100,21 +46,36 @@ else
 fi
 }
 
-# user patches
-user_patches (){
-if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
-	linux_user_log
-	echo "" >> ${LOG_FILE}
-	echo "# APPLYING USER PATCHES" >> ${LOG_FILE}
-	echo -en "${WHT}User Patches${FIN} ${PNK}[${FIN}${WHT}applying${FIN}${PNK}]${FIN}"
-	for i in ../../${USERPATCHES}/*.patch; do patch -N -p1 -F100 < $i; done >> ${LOG_FILE}
-	check_log
+# atf patching
+atf_patching (){
+if [[ -d "../../patches/atf" ]]; then
+	if [[ `ls ../../patches/atf/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../patches/atf/*.patch; do patch -N -p1 < $i; done
+	fi
 fi
+}
+
+# opensbi patching
+opensbi_patching (){
+if [[ -v "OPENSBI_PATCHDIR" ]] && [[ ! -z "${OPENSBI_PATCHDIR}" ]]; then
+	opensbi_log
+	echo "" >> ${LOG_FILE}
+	echo "# APPLYING PATCHES" >> ${LOG_FILE}
+	echo -en "${WHT}Patches${FIN} ${PNK}[${FIN}${WHT}applying${FIN}${PNK}]${FIN}"
+	if [[ `ls ../../${OPENSBI_PATCHDIR}/*.patch` ]] > /dev/null 2>&1; then
+		for i in ../../${OPENSBI_PATCHDIR}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+# check log and report
+check_log
+# clean
+if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
+if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
+echo -e ""
 }
 
 # u-boot patching
 uboot_patching (){
-# apply patches
 if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
 	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
 		[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${SERIES}" ]] || \
@@ -145,6 +106,18 @@ check_log
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 echo -e ""
+}
+
+# user patches
+user_patches (){
+if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
+	linux_user_log
+	echo "" >> ${LOG_FILE}
+	echo "# APPLYING USER PATCHES" >> ${LOG_FILE}
+	echo -en "${WHT}User Patches${FIN} ${PNK}[${FIN}${WHT}applying${FIN}${PNK}]${FIN}"
+	for i in ../../${USERPATCHES}/*.patch; do patch -N -p1 -F100 < $i; done >> ${LOG_FILE}
+	check_log
+fi
 }
 
 # linux apply patches
@@ -220,7 +193,6 @@ if [[ -d "../../${GIT_PATCHDIR}" ]]; then
 	fi
 fi
 }
-
 
 linux_patching (){
 # packaging

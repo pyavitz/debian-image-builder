@@ -1,30 +1,53 @@
 #!/bin/bash
 
-opensbi_firmware (){
-rm -fdr opensbi
-if [[ -d "${OPENSBI_DIR}" ]]; then
-	echo -en "${WHT}${OPENSBI_DIR}${FIN} "
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd ${OPENSBI_DIR}
-	make clean
-	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-	git pull -q
-	cd ..
-	cp -r ${OPENSBI_DIR} opensbi
-	echo_bdone
+opensbi_log (){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-opensbi-patch.log"
+if [[ -f "${LOG_FILE}" ]]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "Opensbi ${OPENSBI_TAG}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
 else
-	echo -en "${WHT}${OPENSBI_DIR}${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q -b ${OPENSBI_BRANCH} ${OPENSBI_URL} ${OPENSBI_DIR}
-	if [[ -d "${OPENSBI_DIR}" ]]; then
-		cd ${OPENSBI_DIR}; make clean; cd ..; cp -r ${OPENSBI_DIR} opensbi; echo_bdone
+	mkdir -p ${LOG_DIR}
+	echo "Opensbi ${OPENSBI_TAG}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+fi
+}
+
+opensbi_firmware (){
+if [[ `wget -S --spider https://raw.githubusercontent.com/riscv-software-src/opensbi/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -d "opensbi" ]] && [[ -d "opensbi.backup" ]]; then
+		echo -en "${WHT}opensbi v${OPENSBI_TAG}${FIN}"
+		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+		rm -fdr opensbi
+		echo -en " ${WHT}...${FIN}"
+		mv -f opensbi.backup opensbi
+		cd opensbi
+		git checkout v${TAG} &> /dev/null
+		make clean
+		cd ..
+		cp -r opensbi opensbi.backup
+		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
-		echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"; exit 1
+		if [[ -d "opensbi" ]]; then rm -fdr opensbi; fi
+		echo -en "${WHT}opensbi v${OPENSBI_TAG}${FIN}"
+		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+		git clone -q -c advice.detachedHead=false ${OPENSBI_URL} -b v${OPENSBI_TAG}
+		if [[ -d "opensbi" ]]; then
+			cd opensbi
+			make clean
+			cd ..
+			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+			cp -r opensbi opensbi.backup
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		else
+			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			exit 1
+		fi
 	fi
 fi
-echo ""
 cd opensbi
+opensbi_patching
 if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
 ubuild "PLATFORM=${OPENSBI_PLATFORM} PLATFORM_DEFCONFIG=${OPENSBI_DEFCONFIG}"
 if [[ -f "${OPENSBI_FIRMWARE}" ]]; then :; else report_opensbi_error; fi

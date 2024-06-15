@@ -15,6 +15,20 @@ echo ""
 exit 1
 }
 
+uboot_log (){
+LOG_DIR="../../output/logs"
+LOG_FILE="${LOG_DIR}/${BOARD}-u-boot-patch.log"
+if [[ -f "${LOG_FILE}" ]]; then
+	mv -f ${LOG_FILE} ${LOG_FILE}.1
+	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+else
+	mkdir -p ${LOG_DIR}
+	echo "U-Boot ${UBOOT_VERSION}" > ${LOG_FILE}
+	echo `date` >> ${LOG_FILE}
+fi
+}
+
 download_uboot (){
 if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
