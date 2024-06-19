@@ -13,10 +13,7 @@ if [[ -f "${LOG_FILE}" ]]; then
 	if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
 		FAILED="true"
 		grep "FAILED" "${LOG_FILE}" | echo -en " ${PNK}[${FIN}"${RED}fails${FIN} ${WHT}`wc -l`${FIN}"${PNK}]${FIN}"
-		if [ $VERBOSE -eq 1 ]; then
-			echo -en " ${WHT}log: ${PATHTOFILE}${FIN}"
-			exit 0
-		fi
+		if [ $VERBOSE -eq 1 ]; then echo -en " ${WHT}log: ${PATHTOFILE}${FIN}"; exit 0; fi
 	else
 		FAILED="false"
 	fi
@@ -31,17 +28,16 @@ if [[ -f "${LOG_FILE}" ]]; then
 fi
 }
 
-# linux user patch log
-linux_user_log (){
+# log patching
+patch_log (){
 LOG_DIR="../../output/logs"
-LOG_FILE="${LOG_DIR}/${BOARD}-user-patch.log"
 if [[ -f "${LOG_FILE}" ]]; then
 	mv -f ${LOG_FILE} ${LOG_FILE}.1
-	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo "${LOG_TITLE}" > ${LOG_FILE}
 	echo `date` >> ${LOG_FILE}
 else
 	mkdir -p ${LOG_DIR}
-	echo "Linux ${VERSION}" > ${LOG_FILE}
+	echo "${LOG_TITLE}" > ${LOG_FILE}
 	echo `date` >> ${LOG_FILE}
 fi
 }
@@ -49,16 +45,16 @@ fi
 # atf patching
 atf_patching (){
 if [[ -d "../../patches/atf" ]]; then
-	if [[ `ls ../../patches/atf/*.patch` ]] > /dev/null 2>&1; then
-		for i in ../../patches/atf/*.patch; do patch -N -p1 < $i; done
-	fi
+	if [[ `ls ../../patches/atf/*.patch` ]] > /dev/null 2>&1; then for i in ../../patches/atf/*.patch; do patch -N -p1 < $i; done; fi
 fi
 }
 
 # opensbi patching
 opensbi_patching (){
 if [[ -v "OPENSBI_PATCHDIR" ]] && [[ ! -z "${OPENSBI_PATCHDIR}" ]]; then
-	opensbi_log
+	LOG_FILE="${LOG_DIR}/${BOARD}-opensbi-patch.log"
+	LOG_TITLE="Opensbi ${OPENSBI_TAG}"
+	patch_log
 	echo "" >> ${LOG_FILE}
 	echo "# APPLYING PATCHES" >> ${LOG_FILE}
 	echo -en "${WHT}Patches${FIN} ${PNK}[${FIN}${WHT}applying${FIN}${PNK}]${FIN}"
@@ -80,7 +76,9 @@ if [[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}" ]] || \
 	[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}" ]] || \
 		[[ -d "../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${SERIES}" ]] || \
 			[[ `ls ../../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/all/*.patch` ]] > /dev/null 2>&1; then
-	uboot_log
+	LOG_FILE="${LOG_DIR}/${BOARD}-u-boot-patch.log"
+	LOG_TITLE="U-Boot ${UBOOT_VERSION}"
+	patch_log
 	echo ""
 	echo "" >> ${LOG_FILE}
 	echo "# APPLYING PATCHES" >> ${LOG_FILE}
@@ -111,7 +109,9 @@ echo -e ""
 # user patches
 user_patches (){
 if [[ `ls ../../${USERPATCHES}/*.patch` ]] > /dev/null 2>&1; then
-	linux_user_log
+	LOG_FILE="${LOG_DIR}/${BOARD}-user-patch.log"
+	LOG_TITLE="Linux ${VERSION}"
+	patch_log
 	echo "" >> ${LOG_FILE}
 	echo "# APPLYING USER PATCHES" >> ${LOG_FILE}
 	echo -en "${WHT}User Patches${FIN} ${PNK}[${FIN}${WHT}applying${FIN}${PNK}]${FIN}"
@@ -122,7 +122,9 @@ fi
 
 # linux apply patches
 apply (){
-linux_log
+LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+LOG_TITLE="Linux ${VERSION}"
+patch_log
 echo ""
 echo "" >> ${LOG_FILE}
 echo "# APPLYING PATCHES" >> ${LOG_FILE}
@@ -142,7 +144,7 @@ if [ $RTW88 -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]
 		echo "# ${WIRELESSPATCHES}/rtw88/hack" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/rtw88/hack/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
-	if [[ -d "drivers/net/wireless/realtek/rtw88.bak" ]]; then rm -fdr drivers/net/wireless/realtek/rtw88.bak; fi
+	rm -fdr drivers/net/wireless/realtek/rtw88.bak
 fi
 if [ $RTL88XXAU -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtl88xxau" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtl88xxau/*.patch` ]] > /dev/null 2>&1; then
@@ -167,22 +169,20 @@ fi
 # this needs to be removed
 if [[ `type ${FAMILY}_extra_patching` ]] &>/dev/null; then ${FAMILY}_extra_patching; fi
 # overlays
-if [[ -d "../../${OVERLAYPATCHES}/${ARCH}" ]]; then
-	if [[ -f "arch/${ARCH}/boot/dts/Makefile" ]]; then
-		echo "" >> "arch/${ARCH}/boot/dts/Makefile"
-		echo "subdir-y += overlays" >> "arch/${ARCH}/boot/dts/Makefile"
-	fi
-	if [[ `ls ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
-		mkdir -p arch/${ARCH}/boot/dts/overlays
-		echo "# ${OVERLAYPATCHES}/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-		ls ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts} | sed 's/..\/..\///g' >> ${LOG_FILE}
-		cp -fr ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts} arch/${ARCH}/boot/dts/overlays/
-	fi
+if [[ -f "arch/${ARCH}/boot/dts/Makefile" ]] && [[ `ls ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+	echo "" >> "arch/${ARCH}/boot/dts/Makefile"
+	echo "subdir-y += overlays" >> "arch/${ARCH}/boot/dts/Makefile"
+	mkdir -p arch/${ARCH}/boot/dts/overlays
+	echo "# ${OVERLAYPATCHES}/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+	ls ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts} | sed 's/..\/..\///g' >> ${LOG_FILE}
+	cp -fr ../../${OVERLAYPATCHES}/${ARCH}/{Makefile,*.dts} arch/${ARCH}/boot/dts/overlays/
 fi
 }
 
 git_apply (){
-linux_git_log
+LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+LOG_TITLE="${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}"
+patch_log
 echo ""
 echo "" >> ${LOG_FILE}
 echo "# APPLYING PATCHES" >> ${LOG_FILE}

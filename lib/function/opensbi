@@ -1,19 +1,5 @@
 #!/bin/bash
 
-opensbi_log (){
-LOG_DIR="../../output/logs"
-LOG_FILE="${LOG_DIR}/${BOARD}-opensbi-patch.log"
-if [[ -f "${LOG_FILE}" ]]; then
-	mv -f ${LOG_FILE} ${LOG_FILE}.1
-	echo "Opensbi ${OPENSBI_TAG}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-else
-	mkdir -p ${LOG_DIR}
-	echo "Opensbi ${OPENSBI_TAG}" > ${LOG_FILE}
-	echo `date` >> ${LOG_FILE}
-fi
-}
-
 opensbi_firmware (){
 if [[ `wget -S --spider https://raw.githubusercontent.com/riscv-software-src/opensbi/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	if [[ -d "opensbi" ]] && [[ -d "opensbi.backup" ]]; then
