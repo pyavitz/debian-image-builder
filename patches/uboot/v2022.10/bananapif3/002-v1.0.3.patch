@@ -5116,3 +5116,205 @@ index ef34b762..b9c2058c 100644
 -- 
 2.39.2
 
+From 3e7449e5b68fe755b54fddd59b4ff8abc1458314 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E2=80=9Clilijun=E2=80=9D?= <“lijun.li@spacemit.com”>
+Date: Tue, 18 Jun 2024 19:10:39 +0800
+Subject: [PATCH] display: optimize edp init time
+
+Change-Id: I126707798c3d013bd56090cd6a1c902781feb30f
+---
+ .../video/spacemit/dsi/drv/spacemit_dphy.c    |  2 +-
+ drivers/video/spacemit/spacemit_dpu.c         |  2 +-
+ drivers/video/spacemit/spacemit_edp.c         | 69 ++++++++++---------
+ 3 files changed, 37 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/video/spacemit/dsi/drv/spacemit_dphy.c b/drivers/video/spacemit/dsi/drv/spacemit_dphy.c
+index 1e9cbe9a..c415a8d4 100644
+--- a/drivers/video/spacemit/dsi/drv/spacemit_dphy.c
++++ b/drivers/video/spacemit/dsi/drv/spacemit_dphy.c
+@@ -78,7 +78,7 @@ static void dphy_set_timing(struct spacemit_dphy_ctx *dphy_ctx)
+ 	bit_clk = dphy_ctx->phy_freq / 1000;
+ 	ui = 1000/bit_clk + 1;
+ 
+-	pr_info("%s: esc_clk %d bit_clk %d\n", __func__, esc_clk, bit_clk);
++	pr_debug("%s: esc_clk %d bit_clk %d\n", __func__, esc_clk, bit_clk);
+ 
+ 	lpx_clk = (phy_timing->lpx_constant + phy_timing->lpx_ui * ui) / esc_clk_t + 1;
+ 	lpx_time = lpx_clk * esc_clk_t;
+diff --git a/drivers/video/spacemit/spacemit_dpu.c b/drivers/video/spacemit/spacemit_dpu.c
+index 9544676e..ed0f88f9 100644
+--- a/drivers/video/spacemit/spacemit_dpu.c
++++ b/drivers/video/spacemit/spacemit_dpu.c
+@@ -356,7 +356,7 @@ static int spacemit_display_init(struct udevice *dev, ulong fbbase, ofnode ep_no
+ 		uc_priv->xsize = spacemit_mode->xres;
+ 		uc_priv->ysize = spacemit_mode->yres;
+ 
+-		pr_info("%s: panel type %d\n", __func__, fbi.tx->panel_type);
++		pr_debug("%s: panel type %d\n", __func__, fbi.tx->panel_type);
+ 
+ 		if (fbi.tx->panel_type == LCD_MIPI) {
+ 			dsi_dpu_init(spacemit_mode, fbbase);
+diff --git a/drivers/video/spacemit/spacemit_edp.c b/drivers/video/spacemit/spacemit_edp.c
+index b9b04f80..0f382bb0 100644
+--- a/drivers/video/spacemit/spacemit_edp.c
++++ b/drivers/video/spacemit/spacemit_edp.c
+@@ -80,7 +80,7 @@ static u8 LT8911EXB_IIC_Read_byte(struct udevice *dev, u8 reg)
+ 	err = dm_i2c_read(dev, reg, &valb, 1);
+ 	if (err)
+ 		return err;
+-	mdelay(10);
++	udelay(100);
+ 
+ 	return (int)valb;
+ 
+@@ -89,7 +89,7 @@ static u8 LT8911EXB_IIC_Read_byte(struct udevice *dev, u8 reg)
+ static void LT8911EXB_IIC_Write_byte(struct udevice *dev,u8 reg, u8 val)
+ {
+ 	dm_i2c_write(dev, reg, &val, 1);
+-	mdelay(10);
++	udelay(100);
+ }
+ 
+ enum {
+@@ -158,9 +158,9 @@ void Reset_LT8911EXB(struct udevice *dev)
+ 	pr_debug("%s: device %s\n", __func__, dev->name);
+ 
+ 	dm_gpio_set_value(&priv->reset_gpio, 1);
+-	mdelay(150);
++	mdelay(50);
+ 	dm_gpio_set_value(&priv->reset_gpio, 0);
+-	mdelay(150);
++	mdelay(50);
+ 	dm_gpio_set_value(&priv->reset_gpio, 1);
+ 	mdelay(150);
+ 
+@@ -721,7 +721,8 @@ void LT8911EXB_video_check(struct udevice *dev)
+ 	LT8911EXB_IIC_Write_byte(dev, 0x09, 0xfd );
+ 
+ 	LT8911EXB_IIC_Write_byte(dev, 0xff, 0x85 );
+-	mdelay( 200 );
++
++	mdelay(100);
+ 	if( LT8911EXB_IIC_Read_byte(dev, 0x50 ) == 0x03 )
+ 	{
+ 		reg	   = LT8911EXB_IIC_Read_byte(dev, 0x4d );
+@@ -907,33 +908,33 @@ void LT8911EX_link_train(struct udevice *dev)
+ #endif
+ }
+ 
+-void LT8911EX_link_train_result(struct udevice *dev)
+-{
+-	u8 i, reg;
+-	LT8911EXB_IIC_Write_byte(dev, 0xff, 0xac );
+-	for( i = 0; i < 10; i++ )
+-	{
+-		reg = LT8911EXB_IIC_Read_byte(dev, 0x82 );
+-		if( reg & 0x20 )
+-		{
+-			if( ( reg & 0x1f ) == 0x1e )
+-			{
+-				pr_debug( "\r\nLink train success, 0x82 = 0x%x", reg );
+-			} else
+-			{
+-				pr_debug( "\r\nLink train fail, 0x82 = 0x%x", reg );
+-			}
+-
+-			pr_debug( "\r\npanel link rate: 0x%x", LT8911EXB_IIC_Read_byte(dev, 0x83 ) );
+-			pr_debug( "\r\npanel link count: 0x%x", LT8911EXB_IIC_Read_byte(dev, 0x84 ) );
+-			return;
+-		}else
+-		{
+-			pr_debug( "\r\nlink trian on going..." );
+-		}
+-		mdelay( 100 );
+-	}
+-}
++// void LT8911EX_link_train_result(struct udevice *dev)
++// {
++// 	u8 i, reg;
++// 	LT8911EXB_IIC_Write_byte(dev, 0xff, 0xac );
++// 	for( i = 0; i < 10; i++ )
++// 	{
++// 		reg = LT8911EXB_IIC_Read_byte(dev, 0x82 );
++// 		if( reg & 0x20 )
++// 		{
++// 			if( ( reg & 0x1f ) == 0x1e )
++// 			{
++// 				pr_debug( "\r\nLink train success, 0x82 = 0x%x", reg );
++// 			} else
++// 			{
++// 				pr_debug( "\r\nLink train fail, 0x82 = 0x%x", reg );
++// 			}
++
++// 			pr_debug( "\r\npanel link rate: 0x%x", LT8911EXB_IIC_Read_byte(dev, 0x83 ) );
++// 			pr_debug( "\r\npanel link count: 0x%x", LT8911EXB_IIC_Read_byte(dev, 0x84 ) );
++// 			return;
++// 		}else
++// 		{
++// 			pr_debug( "\r\nlink trian on going..." );
++// 		}
++// 		mdelay( 100 );
++// 	}
++// }
+ 
+ enum
+ {
+@@ -1062,7 +1063,7 @@ static int edp_panel_enable_backlight(struct udevice *dev)
+ 	ScrambleMode = 0;
+ 	LT8911EX_link_train(dev);
+ 	LT8911EXB_LinkTrainResultCheck(dev);
+-	LT8911EX_link_train_result(dev);	// for debug
++	// LT8911EX_link_train_result(dev);	// for debug
+ 
+ 	LT8911EXB_video_check(dev);		// just for Check MIPI Input
+ 
+@@ -1125,7 +1126,7 @@ static int edp_panel_probe(struct udevice *dev)
+ 	dm_gpio_set_value(&priv->enable_gpio, 1);
+ 	dm_gpio_set_value(&priv->standby_gpio, 1);
+ 	dm_gpio_set_value(&priv->bl_gpio, 1);
+-	mdelay(100);
++	mdelay(50);
+ 
+ 	Reset_LT8911EXB(dev);
+ 
+-- 
+2.39.2
+
+From 34b213294c2ca1e8e15251f26e05863d3a00fa49 Mon Sep 17 00:00:00 2001
+From: zhangmeng <zhangmeng.kevin@spacemit.com>
+Date: Tue, 18 Jun 2024 12:29:18 +0800
+Subject: [PATCH] muse-book: delete battery device node from board dts
+
+Change-Id: I4f006165c0ae08197e685ce795655754b1db2506
+---
+ arch/riscv/dts/k1-x_MUSE-Book.dts | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/arch/riscv/dts/k1-x_MUSE-Book.dts b/arch/riscv/dts/k1-x_MUSE-Book.dts
+index 90e46cdd..78718be4 100644
+--- a/arch/riscv/dts/k1-x_MUSE-Book.dts
++++ b/arch/riscv/dts/k1-x_MUSE-Book.dts
+@@ -64,20 +64,6 @@
+ 	};
+ };
+ 
+-&i2c4 {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_i2c4_2>;
+-	clock-frequency = <400000>;
+-	status = "okay";
+-
+-	battery: battery@b {
+-		compatible = "sbs,sbs-battery";
+-		reg = <0x0b>;
+-		sbs,i2c-retry-count = <2>;
+-		sbs,poll-retry-count = <1>;
+-	};
+-};
+-
+ &i2c6 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c6_2>;
+-- 
+2.39.2
+
