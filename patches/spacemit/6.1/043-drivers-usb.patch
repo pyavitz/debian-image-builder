@@ -5243,22 +5243,23 @@ index 4619d5e89d5b..39cb9a6b433e 100644
  		port_change_bit = "connect";
  		break;
  	case USB_PORT_FEAT_C_OVER_CURRENT:
+From 0322df6f007e38fa43496ac084e1ee78f38dd50b Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 08:11:52 -0400
+Subject: [PATCH] drivers: usb: host: xhci-plat.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/usb/host/xhci-plat.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
 diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
-index 5fb55bf19493..645b98a1fc7f 100644
+index b387d39bfb81..5f82075ec49d 100644
 --- a/drivers/usb/host/xhci-plat.c
 +++ b/drivers/usb/host/xhci-plat.c
-@@ -184,7 +184,7 @@ static int xhci_plat_probe(struct platform_device *pdev)
- 	int			ret;
- 	int			irq;
- 	struct xhci_plat_priv	*priv = NULL;
--
-+	bool of_match;
- 
- 	if (usb_disabled())
- 		return -ENODEV;
-@@ -301,20 +301,31 @@ static int xhci_plat_probe(struct platform_device *pdev)
- 		if (device_property_read_bool(tmpdev, "quirk-broken-port-ped"))
- 			xhci->quirks |= XHCI_BROKEN_PORT_PED;
+@@ -304,6 +304,10 @@ static int xhci_plat_probe(struct platform_device *pdev)
+ 		if (device_property_read_bool(tmpdev, "xhci-sg-trb-cache-size-quirk"))
+ 			xhci->quirks |= XHCI_SG_TRB_CACHE_SIZE_QUIRK;
  
 +#if defined(CONFIG_SOC_SPACEMIT_K1X)
 +		if (device_property_read_bool(tmpdev, "reset-on-resume"))
@@ -5267,37 +5268,9 @@ index 5fb55bf19493..645b98a1fc7f 100644
  		device_property_read_u32(tmpdev, "imod-interval-ns",
  					 &xhci->imod_interval);
  	}
- 
--	hcd->usb_phy = devm_usb_get_phy_by_phandle(sysdev, "usb-phy", 0);
--	if (IS_ERR(hcd->usb_phy)) {
--		ret = PTR_ERR(hcd->usb_phy);
--		if (ret == -EPROBE_DEFER)
--			goto disable_clk;
--		hcd->usb_phy = NULL;
--	} else {
--		ret = usb_phy_init(hcd->usb_phy);
--		if (ret)
--			goto disable_clk;
-+	/*
-+	 * Drivers such as dwc3 manages PHYs themself (and rely on driver name
-+	 * matching for the xhci platform device).
-+	 */
-+	of_match = of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
-+	if (of_match) {
-+		hcd->usb_phy = devm_usb_get_phy_by_phandle(sysdev, "usb-phy", 0);
-+		if (IS_ERR(hcd->usb_phy)) {
-+			ret = PTR_ERR(hcd->usb_phy);
-+			if (ret == -EPROBE_DEFER)
-+				goto disable_clk;
-+			hcd->usb_phy = NULL;
-+		} else {
-+			ret = usb_phy_init(hcd->usb_phy);
-+			if (ret)
-+				goto disable_clk;
-+		}
- 	}
- 
- 	hcd->tpl_support = of_usb_host_tpl_support(sysdev->of_node);
+-- 
+2.39.2
+
 diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
 index 2b280beb0011..dfcdc63218e2 100644
 --- a/drivers/usb/host/xhci.c

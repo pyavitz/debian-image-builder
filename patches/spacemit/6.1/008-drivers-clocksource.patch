@@ -801,8 +801,18 @@ index 000000000000..d76803988baf
 +
 +TIMER_OF_DECLARE(spacemit_timer, "spacemit,soc-timer", spacemit_of_timer_init);
 +#endif
+From f8d0917c0d3924e496e8148d5294d2a19b0653b1 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 09:59:12 -0400
+Subject: [PATCH] drivers: clocksource: timer-riscv.c: fixups
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/clocksource/timer-riscv.c | 61 ++++++++++++++++++++++++++++---
+ 1 file changed, 55 insertions(+), 6 deletions(-)
+
 diff --git a/drivers/clocksource/timer-riscv.c b/drivers/clocksource/timer-riscv.c
-index a0d66fabf073..92b923647e29 100644
+index a01c2bd24134..92b923647e29 100644
 --- a/drivers/clocksource/timer-riscv.c
 +++ b/drivers/clocksource/timer-riscv.c
 @@ -33,8 +33,46 @@ static int riscv_clock_next_event(unsigned long delta,
@@ -880,17 +890,31 @@ index a0d66fabf073..92b923647e29 100644
  	pr_info("%s: Registering clocksource cpuid [%d] hartid [%lu]\n",
  	       __func__, cpuid, hartid);
  	error = clocksource_register_hz(&riscv_clocksource, riscv_timebase);
-@@ -184,11 +232,12 @@ static int __init riscv_timer_init_dt(struct device_node *n)
+@@ -177,11 +225,6 @@ static int __init riscv_timer_init_dt(struct device_node *n)
+ 		return error;
+ 	}
+ 
+-	if (riscv_isa_extension_available(NULL, SSTC)) {
+-		pr_info("Timer interrupt in S-mode is available via sstc extension\n");
+-		static_branch_enable(&riscv_sstc_available);
+-	}
+-
+ 	error = cpuhp_setup_state(CPUHP_AP_RISCV_TIMER_STARTING,
+ 			 "clockevents/riscv/timer:starting",
+ 			 riscv_timer_starting_cpu, riscv_timer_dying_cpu);
+@@ -189,6 +232,12 @@ static int __init riscv_timer_init_dt(struct device_node *n)
  		pr_err("cpu hp setup state failed for RISCV timer [%d]\n",
  		       error);
  
 +#ifndef CONFIG_SOC_SPACEMIT
- 	if (riscv_isa_extension_available(NULL, SSTC)) {
- 		pr_info("Timer interrupt in S-mode is available via sstc extension\n");
- 		static_branch_enable(&riscv_sstc_available);
- 	}
--
++	if (riscv_isa_extension_available(NULL, SSTC)) {
++		pr_info("Timer interrupt in S-mode is available via sstc extension\n");
++		static_branch_enable(&riscv_sstc_available);
++	}
 +#endif
  	return error;
  }
  
+-- 
+2.39.2
+

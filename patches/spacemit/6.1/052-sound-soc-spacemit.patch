@@ -1267,8 +1267,18 @@ index 8e5ffe5ee10d..c9ad5ef936f6 100644
 +#endif
  
  #endif
+From 5ea0b57c5524c292d49766f3b0fc7518de165867 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 08:20:16 -0400
+Subject: [PATCH] sound: soc: dwc: dwc-i2s.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ sound/soc/dwc/dwc-i2s.c | 202 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 184 insertions(+), 18 deletions(-)
+
 diff --git a/sound/soc/dwc/dwc-i2s.c b/sound/soc/dwc/dwc-i2s.c
-index 7f7dd07c63b2..cd876368a5da 100644
+index f966d39c5c90..7c2a988e12c3 100644
 --- a/sound/soc/dwc/dwc-i2s.c
 +++ b/sound/soc/dwc/dwc-i2s.c
 @@ -17,6 +17,7 @@
@@ -1279,22 +1289,6 @@ index 7f7dd07c63b2..cd876368a5da 100644
  #include <linux/slab.h>
  #include <linux/pm_runtime.h>
  #include <sound/designware_i2s.h>
-@@ -132,13 +133,13 @@ static irqreturn_t i2s_irq_handler(int irq, void *dev_id)
- 
- 		/* Error Handling: TX */
- 		if (isr[i] & ISR_TXFO) {
--			dev_err(dev->dev, "TX overrun (ch_id=%d)\n", i);
-+			dev_err_ratelimited(dev->dev, "TX overrun (ch_id=%d)\n", i);
- 			irq_valid = true;
- 		}
- 
- 		/* Error Handling: TX */
- 		if (isr[i] & ISR_RXFO) {
--			dev_err(dev->dev, "RX overrun (ch_id=%d)\n", i);
-+			dev_err_ratelimited(dev->dev, "RX overrun (ch_id=%d)\n", i);
- 			irq_valid = true;
- 		}
- 	}
 @@ -149,19 +150,51 @@ static irqreturn_t i2s_irq_handler(int irq, void *dev_id)
  		return IRQ_NONE;
  }
@@ -1360,38 +1354,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  
  	if (!dev->active) {
  		i2s_write_reg(dev->i2s_base, CER, 0);
-@@ -183,30 +219,6 @@ static void i2s_stop(struct dw_i2s_dev *dev,
- 	}
- }
- 
--static int dw_i2s_startup(struct snd_pcm_substream *substream,
--		struct snd_soc_dai *cpu_dai)
--{
--	struct dw_i2s_dev *dev = snd_soc_dai_get_drvdata(cpu_dai);
--	union dw_i2s_snd_dma_data *dma_data = NULL;
--
--	if (!(dev->capability & DWC_I2S_RECORD) &&
--			(substream->stream == SNDRV_PCM_STREAM_CAPTURE))
--		return -EINVAL;
--
--	if (!(dev->capability & DWC_I2S_PLAY) &&
--			(substream->stream == SNDRV_PCM_STREAM_PLAYBACK))
--		return -EINVAL;
--
--	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
--		dma_data = &dev->play_dma_data;
--	else if (substream->stream == SNDRV_PCM_STREAM_CAPTURE)
--		dma_data = &dev->capture_dma_data;
--
--	snd_soc_dai_set_dma_data(cpu_dai, substream, (void *)dma_data);
--
--	return 0;
--}
--
- static void dw_i2s_config(struct dw_i2s_dev *dev, int stream)
- {
- 	u32 ch_reg;
-@@ -239,6 +251,11 @@ static int dw_i2s_hw_params(struct snd_pcm_substream *substream,
+@@ -215,6 +251,11 @@ static int dw_i2s_hw_params(struct snd_pcm_substream *substream,
  	struct dw_i2s_dev *dev = snd_soc_dai_get_drvdata(dai);
  	struct i2s_clk_config_data *config = &dev->config;
  	int ret;
@@ -1403,7 +1366,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  
  	switch (params_format(params)) {
  	case SNDRV_PCM_FORMAT_S16_LE:
-@@ -291,6 +308,23 @@ static int dw_i2s_hw_params(struct snd_pcm_substream *substream,
+@@ -267,6 +308,23 @@ static int dw_i2s_hw_params(struct snd_pcm_substream *substream,
  				return ret;
  			}
  		} else {
@@ -1427,7 +1390,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  			u32 bitclk = config->sample_rate *
  					config->data_width * 2;
  
-@@ -300,17 +334,12 @@ static int dw_i2s_hw_params(struct snd_pcm_substream *substream,
+@@ -276,6 +334,7 @@ static int dw_i2s_hw_params(struct snd_pcm_substream *substream,
  					ret);
  				return ret;
  			}
@@ -1435,27 +1398,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  		}
  	}
  	return 0;
- }
- 
--static void dw_i2s_shutdown(struct snd_pcm_substream *substream,
--		struct snd_soc_dai *dai)
--{
--	snd_soc_dai_set_dma_data(dai, substream, NULL);
--}
--
- static int dw_i2s_prepare(struct snd_pcm_substream *substream,
- 			  struct snd_soc_dai *dai)
- {
-@@ -382,8 +411,6 @@ static int dw_i2s_set_fmt(struct snd_soc_dai *cpu_dai, unsigned int fmt)
- }
- 
- static const struct snd_soc_dai_ops dw_i2s_dai_ops = {
--	.startup	= dw_i2s_startup,
--	.shutdown	= dw_i2s_shutdown,
- 	.hw_params	= dw_i2s_hw_params,
- 	.prepare	= dw_i2s_prepare,
- 	.trigger	= dw_i2s_trigger,
-@@ -480,9 +507,9 @@ static const u32 bus_widths[COMP_MAX_DATA_WIDTH] = {
+@@ -448,9 +507,9 @@ static const u32 bus_widths[COMP_MAX_DATA_WIDTH] = {
  static const u32 formats[COMP_MAX_WORDSIZE] = {
  	SNDRV_PCM_FMTBIT_S16_LE,
  	SNDRV_PCM_FMTBIT_S16_LE,
@@ -1468,7 +1411,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	0,
  	0,
  	0
-@@ -517,8 +544,13 @@ static int dw_configure_dai(struct dw_i2s_dev *dev,
+@@ -485,8 +544,13 @@ static int dw_configure_dai(struct dw_i2s_dev *dev,
  		if (dev->quirks & DW_I2S_QUIRK_16BIT_IDX_OVERRIDE)
  			idx = 1;
  		dw_i2s_dai->playback.channels_min = MIN_CHANNEL_NUM;
@@ -1482,7 +1425,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  		dw_i2s_dai->playback.formats = formats[idx];
  		dw_i2s_dai->playback.rates = rates;
  	}
-@@ -531,8 +563,13 @@ static int dw_configure_dai(struct dw_i2s_dev *dev,
+@@ -499,8 +563,13 @@ static int dw_configure_dai(struct dw_i2s_dev *dev,
  		if (dev->quirks & DW_I2S_QUIRK_16BIT_IDX_OVERRIDE)
  			idx = 1;
  		dw_i2s_dai->capture.channels_min = MIN_CHANNEL_NUM;
@@ -1496,7 +1439,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  		dw_i2s_dai->capture.formats = formats[idx];
  		dw_i2s_dai->capture.rates = rates;
  	}
-@@ -545,7 +582,11 @@ static int dw_configure_dai(struct dw_i2s_dev *dev,
+@@ -513,7 +582,11 @@ static int dw_configure_dai(struct dw_i2s_dev *dev,
  		dev->capability |= DW_I2S_SLAVE;
  	}
  
@@ -1508,7 +1451,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	return 0;
  }
  
-@@ -589,13 +630,9 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
+@@ -557,13 +630,9 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
  	u32 comp1 = i2s_read_reg(dev->i2s_base, I2S_COMP_PARAM_1);
  	u32 comp2 = i2s_read_reg(dev->i2s_base, I2S_COMP_PARAM_2);
  	u32 fifo_depth = 1 << (1 + COMP1_FIFO_DEPTH_GLOBAL(comp1));
@@ -1522,7 +1465,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	ret = dw_configure_dai(dev, dw_i2s_dai, SNDRV_PCM_RATE_8000_192000);
  	if (ret < 0)
  		return ret;
-@@ -605,7 +642,6 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
+@@ -573,7 +642,6 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
  
  		dev->capability |= DWC_I2S_PLAY;
  		dev->play_dma_data.dt.addr = res->start + I2S_TXDMA;
@@ -1530,7 +1473,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  		dev->play_dma_data.dt.fifo_size = fifo_depth *
  			(fifo_width[idx2]) >> 8;
  		dev->play_dma_data.dt.maxburst = 16;
-@@ -615,7 +651,6 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
+@@ -583,7 +651,6 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
  
  		dev->capability |= DWC_I2S_RECORD;
  		dev->capture_dma_data.dt.addr = res->start + I2S_RXDMA;
@@ -1538,8 +1481,8 @@ index 7f7dd07c63b2..cd876368a5da 100644
  		dev->capture_dma_data.dt.fifo_size = fifo_depth *
  			(fifo_width[idx2] >> 8);
  		dev->capture_dma_data.dt.maxburst = 16;
-@@ -625,6 +660,77 @@ static int dw_configure_dai_by_dt(struct dw_i2s_dev *dev,
- 
+@@ -601,6 +668,77 @@ static int dw_i2s_dai_probe(struct snd_soc_dai *dai)
+ 	return 0;
  }
  
 +static int dw_i2s_dai_probe(struct snd_soc_dai *dai)
@@ -1616,13 +1559,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  static int dw_i2s_probe(struct platform_device *pdev)
  {
  	const struct i2s_platform_data *pdata = pdev->dev.platform_data;
-@@ -643,11 +749,20 @@ static int dw_i2s_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	dw_i2s_dai->ops = &dw_i2s_dai_ops;
-+	dw_i2s_dai->probe = dw_i2s_dai_probe;
- 
- 	dev->i2s_base = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
+@@ -625,6 +763,14 @@ static int dw_i2s_probe(struct platform_device *pdev)
  	if (IS_ERR(dev->i2s_base))
  		return PTR_ERR(dev->i2s_base);
  
@@ -1637,7 +1574,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	dev->dev = &pdev->dev;
  
  	irq = platform_get_irq_optional(pdev, 0);
-@@ -656,10 +771,15 @@ static int dw_i2s_probe(struct platform_device *pdev)
+@@ -633,10 +779,15 @@ static int dw_i2s_probe(struct platform_device *pdev)
  				pdev->name, dev);
  		if (ret < 0) {
  			dev_err(&pdev->dev, "failed to request irq\n");
@@ -1655,7 +1592,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	dev->i2s_reg_comp1 = I2S_COMP_PARAM_1;
  	dev->i2s_reg_comp2 = I2S_COMP_PARAM_2;
  	if (pdata) {
-@@ -676,24 +796,31 @@ static int dw_i2s_probe(struct platform_device *pdev)
+@@ -653,24 +804,31 @@ static int dw_i2s_probe(struct platform_device *pdev)
  		ret = dw_configure_dai_by_dt(dev, dw_i2s_dai, res);
  	}
  	if (ret < 0)
@@ -1692,7 +1629,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	}
  
  	dev_set_drvdata(&pdev->dev, dev);
-@@ -727,6 +854,8 @@ static int dw_i2s_probe(struct platform_device *pdev)
+@@ -704,6 +862,8 @@ static int dw_i2s_probe(struct platform_device *pdev)
  err_clk_disable:
  	if (dev->capability & DW_I2S_MASTER)
  		clk_disable_unprepare(dev->clk);
@@ -1701,7 +1638,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	return ret;
  }
  
-@@ -737,6 +866,7 @@ static int dw_i2s_remove(struct platform_device *pdev)
+@@ -714,6 +874,7 @@ static int dw_i2s_remove(struct platform_device *pdev)
  	if (dev->capability & DW_I2S_MASTER)
  		clk_disable_unprepare(dev->clk);
  
@@ -1709,7 +1646,7 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	pm_runtime_disable(&pdev->dev);
  	return 0;
  }
-@@ -744,6 +874,11 @@ static int dw_i2s_remove(struct platform_device *pdev)
+@@ -721,6 +882,11 @@ static int dw_i2s_remove(struct platform_device *pdev)
  #ifdef CONFIG_OF
  static const struct of_device_id dw_i2s_of_match[] = {
  	{ .compatible = "snps,designware-i2s",	 },
@@ -1721,6 +1658,9 @@ index 7f7dd07c63b2..cd876368a5da 100644
  	{},
  };
  
+-- 
+2.39.2
+
 diff --git a/sound/soc/dwc/local.h b/sound/soc/dwc/local.h
 index 1c361eb6127e..35cb38fc52e4 100644
 --- a/sound/soc/dwc/local.h
