@@ -1,59 +1,51 @@
-From 71dbc129e4c94e479b475c426f400c6f5fc0cf12 Mon Sep 17 00:00:00 2001
-From: James Deng <james.deng@spacemit.com>
-Date: Wed, 19 Jun 2024 15:18:09 +0800
-Subject: [PATCH] Update to v1.0.3
+From fe73a18517f5cbdd021c9018e92af6f0c4f164b9 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 08:49:36 -0400
+Subject: [PATCH] update to v1.0.3
 
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- Makefile                                      |    6 +-
- drivers/clk/spacemit/ccu-spacemit-k1x.c       |    4 +-
- drivers/gpu/drm/img-rogue/rgxtimecorr.c       |    2 +-
- drivers/gpu/drm/spacemit/Kconfig              |   16 +-
- drivers/gpu/drm/spacemit/Makefile             |    2 +
- .../gpu/drm/spacemit/dphy/spacemit_dphy_drv.c |    6 +-
- drivers/gpu/drm/spacemit/dpu/dpu_saturn.c     |   10 +-
- drivers/gpu/drm/spacemit/lt8911exb.c          |  236 ++--
- drivers/gpu/drm/spacemit/lt9711.c             |  406 +++++++
- drivers/gpu/drm/spacemit/spacemit_dsi.c       |    8 +-
- drivers/gpu/drm/spacemit/spacemit_hdmi.c      |   39 +-
- drivers/pci/controller/dwc/pcie-k1x.c         |   57 +-
- drivers/regulator/spacemit-regulator.c        |   27 +-
- drivers/remoteproc/k1x-rproc.c                |    9 +-
- drivers/soc/spacemit/jpu/jpu.c                |    4 +-
- .../soc/spacemit/pm_domain/k1x-pm_domain.c    |    3 +-
- drivers/spi/spi-k1x-qspi.c                    |    5 +-
- drivers/target/target_core_configfs.c         |   20 +
- drivers/target/target_core_device.c           |    2 +
- drivers/target/target_core_spc.c              |  920 +++++++++++++++
- drivers/target/target_core_tmr.c              |   26 +-
- drivers/tty/serial/pxa_k1x.c                  |    4 +-
- drivers/usb/dwc3/gadget.c                     |    1 +
- drivers/usb/gadget/function/f_tcm.c           |   26 +-
- drivers/usb/gadget/function/tcm.h             |    1 +
- include/linux/mfd/spacemit/spacemit_pmic.h    |    1 +
- include/linux/mfd/spacemit/spm8821.h          |    5 +-
- include/scsi/scsi_proto.h                     |   10 +
- include/target/target_core_base.h             |   19 +
- init/version-timestamp.c                      |    2 +-
- sound/soc/codecs/es8316.c                     |   29 +-
- sound/soc/codecs/es8326.c                     |  116 +-
- sound/soc/spacemit/spacemit-snd-card.c        |   55 +
- sound/soc/spacemit/spacemit-snd-i2s.c         |   41 +-
- sound/soc/spacemit/spacemit-snd-pcm-dma.c     |   12 +-
- sound/soc/spacemit/spacemit-snd-sspa.c        |    2 +-
- 54 files changed, 4221 insertions(+), 327 deletions(-)
- mode change 100755 => 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-reserved-mm.dtsi
- mode change 100755 => 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi
- mode change 100755 => 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-sensor.dtsi
- create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_MUSE-Book.dts
- create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_milkv-jupiter.dts
- create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi
+ Makefile                                      |   6 +-
+ drivers/clk/spacemit/ccu-spacemit-k1x.c       |   4 +-
+ drivers/gpu/drm/img-rogue/rgxtimecorr.c       |   2 +-
+ drivers/gpu/drm/spacemit/Kconfig              |  16 +-
+ drivers/gpu/drm/spacemit/Makefile             |   2 +
+ .../gpu/drm/spacemit/dphy/spacemit_dphy_drv.c |   6 +-
+ drivers/gpu/drm/spacemit/dpu/dpu_saturn.c     |  10 +-
+ drivers/gpu/drm/spacemit/lt8911exb.c          | 236 ++---
+ drivers/gpu/drm/spacemit/lt9711.c             | 406 ++++++++
+ drivers/gpu/drm/spacemit/spacemit_dsi.c       |   8 +-
+ drivers/gpu/drm/spacemit/spacemit_hdmi.c      |  39 +-
+ drivers/pci/controller/dwc/pcie-k1x.c         |  57 +-
+ drivers/regulator/spacemit-regulator.c        |  27 +-
+ drivers/remoteproc/k1x-rproc.c                |   9 +-
+ drivers/soc/spacemit/jpu/jpu.c                |   4 +-
+ .../soc/spacemit/pm_domain/k1x-pm_domain.c    |   3 +-
+ drivers/spi/spi-k1x-qspi.c                    |   5 +-
+ drivers/target/target_core_configfs.c         |  20 +
+ drivers/target/target_core_spc.c              | 920 ++++++++++++++++++
+ drivers/tty/serial/pxa_k1x.c                  |   4 +-
+ drivers/usb/gadget/function/f_tcm.c           |  26 +-
+ drivers/usb/gadget/function/tcm.h             |   1 +
+ include/linux/mfd/spacemit/spacemit_pmic.h    |   1 +
+ include/linux/mfd/spacemit/spm8821.h          |   5 +-
+ include/scsi/scsi_proto.h                     |  10 +
+ include/target/target_core_base.h             |  18 +
+ init/version-timestamp.c                      |   2 +-
+ sound/soc/codecs/es8316.c                     |  28 +
+ sound/soc/codecs/es8326.c                     | 116 ++-
+ sound/soc/spacemit/spacemit-snd-card.c        |  55 ++
+ sound/soc/spacemit/spacemit-snd-i2s.c         |  41 +-
+ sound/soc/spacemit/spacemit-snd-pcm-dma.c     |  12 +-
+ sound/soc/spacemit/spacemit-snd-sspa.c        |   2 +-
+ 33 files changed, 1848 insertions(+), 253 deletions(-)
  create mode 100644 drivers/gpu/drm/spacemit/lt9711.c
 
 diff --git a/Makefile b/Makefile
-index 4dfe902b7..bb97ab316 100644
+index b760de61167d..ab0825570b55 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -370,8 +370,9 @@ include $(srctree)/scripts/Kbuild.include
+@@ -377,8 +377,9 @@ include $(srctree)/scripts/Kbuild.include
  
  # Read KERNELRELEASE from include/config/kernel.release (if it exists)
  KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
@@ -64,7 +56,7 @@ index 4dfe902b7..bb97ab316 100644
  
  include $(srctree)/scripts/subarch.include
  
-@@ -1330,7 +1331,8 @@ define filechk_version.h
+@@ -1333,7 +1334,8 @@ define filechk_version.h
  	((c) > 255 ? 255 : (c)))';                                       \
  	echo \#define LINUX_VERSION_MAJOR $(VERSION);                    \
  	echo \#define LINUX_VERSION_PATCHLEVEL $(PATCHLEVEL);            \
@@ -75,7 +67,7 @@ index 4dfe902b7..bb97ab316 100644
  
  $(version_h): PATCHLEVEL := $(or $(PATCHLEVEL), 0)
 diff --git a/drivers/clk/spacemit/ccu-spacemit-k1x.c b/drivers/clk/spacemit/ccu-spacemit-k1x.c
-index b1b1ff299..cd8176a5e 100644
+index b1b1ff299b4a..cd8176a5ea79 100644
 --- a/drivers/clk/spacemit/ccu-spacemit-k1x.c
 +++ b/drivers/clk/spacemit/ccu-spacemit-k1x.c
 @@ -643,10 +643,10 @@ static SPACEMIT_CCU_GATE_NO_PARENT(onewire_clk, "onewire_clk", NULL,
@@ -92,7 +84,7 @@ index b1b1ff299..cd8176a5e 100644
  	BASE_TYPE_MPMU, MPMU_ISCCR,
  	BIT(29), BIT(29), 0x0,
 diff --git a/drivers/gpu/drm/img-rogue/rgxtimecorr.c b/drivers/gpu/drm/img-rogue/rgxtimecorr.c
-index 3fc284ca5..b70b1e407 100644
+index 3fc284ca5a52..b70b1e407da5 100644
 --- a/drivers/gpu/drm/img-rogue/rgxtimecorr.c
 +++ b/drivers/gpu/drm/img-rogue/rgxtimecorr.c
 @@ -428,7 +428,7 @@ static inline IMG_UINT32 _RGXGPUFreqGetIndex(RGX_GPU_DVFS_TABLE *psGpuDVFSTable,
@@ -105,7 +97,7 @@ index 3fc284ca5..b70b1e407 100644
  	         paui32GPUFrequencies[i], ui32CoreClockSpeed));
  
 diff --git a/drivers/gpu/drm/spacemit/Kconfig b/drivers/gpu/drm/spacemit/Kconfig
-index e322b27ff..c630c48bd 100644
+index e322b27ff532..c630c48bd068 100644
 --- a/drivers/gpu/drm/spacemit/Kconfig
 +++ b/drivers/gpu/drm/spacemit/Kconfig
 @@ -33,4 +33,18 @@ config DRM_LT8911EXB
@@ -130,7 +122,7 @@ index e322b27ff..c630c48bd 100644
 +	help
 +	  Support for Lontium LT9711 DSI to eDP driver.
 diff --git a/drivers/gpu/drm/spacemit/Makefile b/drivers/gpu/drm/spacemit/Makefile
-index b83eda2b0..8816f1c8b 100644
+index b83eda2b082b..8816f1c8b5b8 100644
 --- a/drivers/gpu/drm/spacemit/Makefile
 +++ b/drivers/gpu/drm/spacemit/Makefile
 @@ -29,4 +29,6 @@ obj-$(CONFIG_DRM_SPACEMIT) += spacemit-drm.o
@@ -141,7 +133,7 @@ index b83eda2b0..8816f1c8b 100644
 +
  obj-$(CONFIG_SPACEMIT_MIPI_PANEL) += spacemit_mipi_panel.o
 diff --git a/drivers/gpu/drm/spacemit/dphy/spacemit_dphy_drv.c b/drivers/gpu/drm/spacemit/dphy/spacemit_dphy_drv.c
-index df77156ba..079332eba 100644
+index df77156ba916..079332eba7e9 100644
 --- a/drivers/gpu/drm/spacemit/dphy/spacemit_dphy_drv.c
 +++ b/drivers/gpu/drm/spacemit/dphy/spacemit_dphy_drv.c
 @@ -211,7 +211,7 @@ static void dphy_set_timing(struct spacemit_dphy_ctx *dphy_ctx)
@@ -172,7 +164,7 @@ index df77156ba..079332eba 100644
  	dptc_dsi_write(0x4c, 0x001F);
  #else
 diff --git a/drivers/gpu/drm/spacemit/dpu/dpu_saturn.c b/drivers/gpu/drm/spacemit/dpu/dpu_saturn.c
-index 1bc770007..ac9b221ae 100644
+index 1bc77000783f..ac9b221aecfc 100644
 --- a/drivers/gpu/drm/spacemit/dpu/dpu_saturn.c
 +++ b/drivers/gpu/drm/spacemit/dpu/dpu_saturn.c
 @@ -643,15 +643,15 @@ static int dpu_enable_clocks(struct spacemit_dpu *dpu)
@@ -197,7 +189,7 @@ index 1bc770007..ac9b221ae 100644
  		udelay(10);
  	}
 diff --git a/drivers/gpu/drm/spacemit/lt8911exb.c b/drivers/gpu/drm/spacemit/lt8911exb.c
-index 8e725e197..07f0c3fcf 100644
+index 8e725e197fef..07f0c3fcf88f 100644
 --- a/drivers/gpu/drm/spacemit/lt8911exb.c
 +++ b/drivers/gpu/drm/spacemit/lt8911exb.c
 @@ -18,12 +18,9 @@
@@ -918,7 +910,7 @@ index 8e725e197..07f0c3fcf 100644
  }
 diff --git a/drivers/gpu/drm/spacemit/lt9711.c b/drivers/gpu/drm/spacemit/lt9711.c
 new file mode 100644
-index 000000000..07e174f44
+index 000000000000..07e174f446a2
 --- /dev/null
 +++ b/drivers/gpu/drm/spacemit/lt9711.c
 @@ -0,0 +1,406 @@
@@ -1329,7 +1321,7 @@ index 000000000..07e174f44
 +MODULE_DESCRIPTION("LT9711_MIPI to DP Reg Setting driver");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/gpu/drm/spacemit/spacemit_dsi.c b/drivers/gpu/drm/spacemit/spacemit_dsi.c
-index 235720894..52f5faadb 100644
+index 235720894b23..52f5faadbde1 100644
 --- a/drivers/gpu/drm/spacemit/spacemit_dsi.c
 +++ b/drivers/gpu/drm/spacemit/spacemit_dsi.c
 @@ -462,7 +462,7 @@ static int spacemit_dsi_connector_get_modes(struct drm_connector *connector)
@@ -1369,7 +1361,7 @@ index 235720894..52f5faadb 100644
  }
  
 diff --git a/drivers/gpu/drm/spacemit/spacemit_hdmi.c b/drivers/gpu/drm/spacemit/spacemit_hdmi.c
-index 5745275bb..16878c028 100644
+index 5745275bbb7b..16878c0287f4 100644
 --- a/drivers/gpu/drm/spacemit/spacemit_hdmi.c
 +++ b/drivers/gpu/drm/spacemit/spacemit_hdmi.c
 @@ -40,7 +40,7 @@
@@ -1492,7 +1484,7 @@ index 5745275bb..16878c028 100644
  		clk_val = clk_round_rate(hdmi->hdmi_mclk, DPU_MCLK_DEFAULT);
  		clk_set_rate(hdmi->hdmi_mclk, clk_val);
 diff --git a/drivers/pci/controller/dwc/pcie-k1x.c b/drivers/pci/controller/dwc/pcie-k1x.c
-index f25e7525a..f958c6f3c 100644
+index f25e7525a74a..f958c6f3ca62 100644
 --- a/drivers/pci/controller/dwc/pcie-k1x.c
 +++ b/drivers/pci/controller/dwc/pcie-k1x.c
 @@ -263,7 +263,6 @@ void porta_rterm(struct k1x_pcie *k1x)
@@ -1701,7 +1693,7 @@ index f25e7525a..f958c6f3c 100644
  	return 0;
  }
 diff --git a/drivers/regulator/spacemit-regulator.c b/drivers/regulator/spacemit-regulator.c
-index b96323366..4e28ef002 100644
+index b96323366cf0..4e28ef0025f3 100644
 --- a/drivers/regulator/spacemit-regulator.c
 +++ b/drivers/regulator/spacemit-regulator.c
 @@ -17,6 +17,31 @@
@@ -1753,7 +1745,7 @@ index b96323366..4e28ef002 100644
  	int i;
  
 diff --git a/drivers/remoteproc/k1x-rproc.c b/drivers/remoteproc/k1x-rproc.c
-index 229cb2b29..9dc013875 100644
+index 229cb2b29109..9dc013875bad 100644
 --- a/drivers/remoteproc/k1x-rproc.c
 +++ b/drivers/remoteproc/k1x-rproc.c
 @@ -619,12 +619,16 @@ static int spacemit_rproc_probe(struct platform_device *pdev)
@@ -1792,7 +1784,7 @@ index 229cb2b29..9dc013875 100644
  MODULE_LICENSE("GPL v2");
  MODULE_DESCRIPTION("sapcemit remote processor control driver");
 diff --git a/drivers/soc/spacemit/jpu/jpu.c b/drivers/soc/spacemit/jpu/jpu.c
-index 93dc44d82..b323901b6 100644
+index 93dc44d82449..b323901b6006 100644
 --- a/drivers/soc/spacemit/jpu/jpu.c
 +++ b/drivers/soc/spacemit/jpu/jpu.c
 @@ -1695,7 +1695,7 @@ static int jpu_probe(struct platform_device *pdev)
@@ -1814,7 +1806,7 @@ index 93dc44d82..b323901b6 100644
  	return 0;
  }
 diff --git a/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c b/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c
-index 35d4e03d0..4a2dd1b2e 100644
+index 35d4e03d058c..4a2dd1b2e553 100644
 --- a/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c
 +++ b/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c
 @@ -473,8 +473,9 @@ static void spacemit_pd_detach_dev(struct generic_pm_domain *genpd, struct devic
@@ -1829,7 +1821,7 @@ index 35d4e03d0..4a2dd1b2e 100644
  
  static int spacemit_cpuidle_qos_notfier_call(struct notifier_block *nb, unsigned long action, void *data)
 diff --git a/drivers/spi/spi-k1x-qspi.c b/drivers/spi/spi-k1x-qspi.c
-index 467b6fa53..c5a6d4659 100644
+index 467b6fa53145..c5a6d46597c0 100644
 --- a/drivers/spi/spi-k1x-qspi.c
 +++ b/drivers/spi/spi-k1x-qspi.c
 @@ -1305,8 +1305,11 @@ static int k1x_qspi_adjust_op_size(struct spi_mem *mem, struct spi_mem_op *op)
@@ -1846,7 +1838,7 @@ index 467b6fa53..c5a6d4659 100644
  	mutex_unlock(&qspi->lock);
  
 diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 416514c5c..533524299 100644
+index 1a26dd0d5666..f23fb4158310 100644
 --- a/drivers/target/target_core_configfs.c
 +++ b/drivers/target/target_core_configfs.c
 @@ -547,6 +547,7 @@ DEF_CONFIGFS_ATTRIB_SHOW(unmap_granularity);
@@ -1897,28 +1889,8 @@ index 416514c5c..533524299 100644
  	NULL,
  };
  EXPORT_SYMBOL(sbc_attrib_attrs);
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index cb4f7cc02..aeb031367 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -782,6 +782,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 	spin_lock_init(&dev->t10_alua.lba_map_lock);
- 
- 	INIT_WORK(&dev->delayed_cmd_work, target_do_delayed_work);
-+	mutex_init(&dev->lun_reset_mutex);
- 
- 	dev->t10_wwn.t10_dev = dev;
- 	/*
-@@ -804,6 +805,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 	dev->dev_attrib.emulate_caw = DA_EMULATE_CAW;
- 	dev->dev_attrib.emulate_3pc = DA_EMULATE_3PC;
- 	dev->dev_attrib.emulate_pr = DA_EMULATE_PR;
-+	dev->dev_attrib.emulate_rsoc = DA_EMULATE_RSOC;
- 	dev->dev_attrib.pi_prot_type = TARGET_DIF_TYPE0_PROT;
- 	dev->dev_attrib.enforce_pr_isids = DA_ENFORCE_PR_ISIDS;
- 	dev->dev_attrib.force_pr_aptpl = DA_FORCE_PR_APTPL;
 diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 7cca3b154..ffe02e195 100644
+index 7cca3b15472b..ffe02e195733 100644
 --- a/drivers/target/target_core_spc.c
 +++ b/drivers/target/target_core_spc.c
 @@ -1314,6 +1314,922 @@ spc_emulate_testunitready(struct se_cmd *cmd)
@@ -2855,65 +2827,8 @@ index 7cca3b154..ffe02e195 100644
  			*size = get_unaligned_be32(&cdb[6]);
  		} else {
  			/*
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 2b95b4550..4718db628 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -188,14 +188,23 @@ static void core_tmr_drain_tmr_list(
- 	 * LUN_RESET tmr..
- 	 */
- 	spin_lock_irqsave(&dev->se_tmr_lock, flags);
--	if (tmr)
--		list_del_init(&tmr->tmr_list);
- 	list_for_each_entry_safe(tmr_p, tmr_pp, &dev->dev_tmr_list, tmr_list) {
-+		if (tmr_p == tmr)
-+			continue;
-+
- 		cmd = tmr_p->task_cmd;
- 		if (!cmd) {
- 			pr_err("Unable to locate struct se_cmd for TMR\n");
- 			continue;
- 		}
-+
-+		/*
-+		 * We only execute one LUN_RESET at a time so we can't wait
-+		 * on them below.
-+		 */
-+		if (tmr_p->function == TMR_LUN_RESET)
-+			continue;
-+
- 		/*
- 		 * If this function was called with a valid pr_res_key
- 		 * parameter (eg: for PROUT PREEMPT_AND_ABORT service action
-@@ -379,14 +388,25 @@ int core_tmr_lun_reset(
- 				tmr_nacl->initiatorname);
- 		}
- 	}
-+
-+
-+	/*
-+	 * We only allow one reset or preempt and abort to execute at a time
-+	 * to prevent one call from claiming all the cmds causing a second
-+	 * call from returning while cmds it should have waited on are still
-+	 * running.
-+	 */
-+	mutex_lock(&dev->lun_reset_mutex);
-+
- 	pr_debug("LUN_RESET: %s starting for [%s], tas: %d\n",
- 		(preempt_and_abort_list) ? "Preempt" : "TMR",
- 		dev->transport->name, tas);
--
- 	core_tmr_drain_tmr_list(dev, tmr, preempt_and_abort_list);
- 	core_tmr_drain_state_list(dev, prout_cmd, tmr_sess, tas,
- 				preempt_and_abort_list);
- 
-+	mutex_unlock(&dev->lun_reset_mutex);
-+
- 	/*
- 	 * Clear any legacy SPC-2 reservation when called during
- 	 * LOGICAL UNIT RESET
 diff --git a/drivers/tty/serial/pxa_k1x.c b/drivers/tty/serial/pxa_k1x.c
-index 767fe217c..73be034c3 100644
+index 767fe217c6a3..73be034c3da9 100644
 --- a/drivers/tty/serial/pxa_k1x.c
 +++ b/drivers/tty/serial/pxa_k1x.c
 @@ -2075,7 +2075,7 @@ static int serial_pxa_probe_dt(struct platform_device *pdev, struct uart_pxa_por
@@ -2934,20 +2849,8 @@ index 767fe217c..73be034c3 100644
  	platform_set_drvdata(dev, sport);
  
  #ifdef CONFIG_PM
-diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index ed958da0e..f48a4d305 100644
---- a/drivers/usb/dwc3/gadget.c
-+++ b/drivers/usb/dwc3/gadget.c
-@@ -180,6 +180,7 @@ static void dwc3_gadget_del_and_unmap_request(struct dwc3_ep *dep,
- 	list_del(&req->list);
- 	req->remaining = 0;
- 	req->needs_extra_trb = false;
-+	req->num_trbs = 0;
- 
- 	if (req->request.status == -EINPROGRESS)
- 		req->request.status = status;
 diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index ad3ea71d7..54c668a36 100644
+index 5ca5810c9bf5..f0f7f691c6d8 100644
 --- a/drivers/usb/gadget/function/f_tcm.c
 +++ b/drivers/usb/gadget/function/f_tcm.c
 @@ -249,6 +249,7 @@ static int bot_send_write_request(struct usbg_cmd *cmd)
@@ -3026,7 +2929,7 @@ index ad3ea71d7..54c668a36 100644
  
  static int usbg_prepare_w_request(struct usbg_cmd *cmd, struct usb_request *req)
 diff --git a/drivers/usb/gadget/function/tcm.h b/drivers/usb/gadget/function/tcm.h
-index 5cb21e9c7..ea73fce74 100644
+index 5cb21e9c7003..ea73fce74478 100644
 --- a/drivers/usb/gadget/function/tcm.h
 +++ b/drivers/usb/gadget/function/tcm.h
 @@ -75,6 +75,7 @@ struct usbg_cmd {
@@ -3038,7 +2941,7 @@ index 5cb21e9c7..ea73fce74 100644
  	struct kref ref;
  
 diff --git a/include/linux/mfd/spacemit/spacemit_pmic.h b/include/linux/mfd/spacemit/spacemit_pmic.h
-index 78d0b209e..e519487be 100644
+index 78d0b209e525..e519487be838 100644
 --- a/include/linux/mfd/spacemit/spacemit_pmic.h
 +++ b/include/linux/mfd/spacemit/spacemit_pmic.h
 @@ -197,6 +197,7 @@ struct mfd_match_data {
@@ -3050,7 +2953,7 @@ index 78d0b209e..e519487be 100644
  	const char *name;
  };
 diff --git a/include/linux/mfd/spacemit/spm8821.h b/include/linux/mfd/spacemit/spm8821.h
-index c94aa6f1c..f4f2988a9 100644
+index c94aa6f1cfc3..f4f2988a90ea 100644
 --- a/include/linux/mfd/spacemit/spm8821.h
 +++ b/include/linux/mfd/spacemit/spm8821.h
 @@ -83,6 +83,8 @@ enum SPM8821_reg {
@@ -3080,7 +2983,7 @@ index c94aa6f1c..f4f2988a9 100644
  
  #endif /* __SPM8821_H__ */
 diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index c03e35fc3..cb722225b 100644
+index c03e35fc382c..cb722225b3bc 100644
 --- a/include/scsi/scsi_proto.h
 +++ b/include/scsi/scsi_proto.h
 @@ -342,4 +342,14 @@ enum scsi_version_descriptor {
@@ -3099,7 +3002,7 @@ index c03e35fc3..cb722225b 100644
 +
  #endif /* _SCSI_PROTO_H_ */
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index f435020f0..b71bb7e9f 100644
+index 9e74c6282861..69198c4d7272 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
 @@ -91,6 +91,8 @@
@@ -3111,7 +3014,7 @@ index f435020f0..b71bb7e9f 100644
  /* Enforce SCSI Initiator Port TransportID with 'ISID' for PR */
  #define DA_ENFORCE_PR_ISIDS			1
  /* Force SPC-3 PR Activate Persistence across Target Power Loss */
-@@ -695,6 +697,7 @@ struct se_dev_attrib {
+@@ -700,6 +702,7 @@ struct se_dev_attrib {
  	bool		emulate_caw;
  	bool		emulate_3pc;
  	bool		emulate_pr;
@@ -3119,13 +3022,10 @@ index f435020f0..b71bb7e9f 100644
  	enum target_prot_type pi_prot_type;
  	enum target_prot_type hw_pi_prot_type;
  	bool		pi_prot_verify;
-@@ -870,6 +873,22 @@ struct se_device {
- 	struct rcu_head		rcu_head;
- 	int			queue_cnt;
- 	struct se_device_queue	*queues;
-+	struct mutex		lun_reset_mutex;
-+};
-+
+@@ -878,6 +881,21 @@ struct se_device {
+ 	struct mutex		lun_reset_mutex;
+ };
+ 
 +struct target_opcode_descriptor {
 +	u8			support:3;
 +	u8			serv_action_valid:1;
@@ -3139,11 +3039,13 @@ index f435020f0..b71bb7e9f 100644
 +	void			(*update_usage_bits)(u8 *usage_bits,
 +						     struct se_device *dev);
 +	u8			usage_bits[];
- };
- 
++};
++
  struct se_hba {
+ 	u16			hba_tpgt;
+ 	u32			hba_id;
 diff --git a/init/version-timestamp.c b/init/version-timestamp.c
-index 179e93bae..c948d8b11 100644
+index 179e93bae539..c948d8b11893 100644
 --- a/init/version-timestamp.c
 +++ b/init/version-timestamp.c
 @@ -27,5 +27,5 @@ struct uts_namespace init_uts_ns = {
@@ -3154,7 +3056,7 @@ index 179e93bae..c948d8b11 100644
 +	"Linux version " UTS_RELEASE " (" LINUX_VERSION_COMMITID ") (" LINUX_COMPILE_BY "@"
  	LINUX_COMPILE_HOST ") (" LINUX_COMPILER ") " UTS_VERSION "\n";
 diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
-index 056c3082f..6bec98c3b 100644
+index c4e4ab93fdb6..3ea78275efa8 100644
 --- a/sound/soc/codecs/es8316.c
 +++ b/sound/soc/codecs/es8316.c
 @@ -23,6 +23,13 @@
@@ -3179,16 +3081,15 @@ index 056c3082f..6bec98c3b 100644
  
  struct es8316_priv {
  	struct mutex lock;
-@@ -371,7 +379,7 @@ static int es8316_set_dai_sysclk(struct snd_soc_dai *codec_dai,
- 
+@@ -375,6 +383,7 @@ static int es8316_set_dai_sysclk(struct snd_soc_dai *codec_dai,
+ 	if (freq == 0)
  		return 0;
- 	}
--
+ 
 +	dev_dbg(component->dev, "set sysclk freq: %d\n",  freq);
  	ret = clk_set_rate(es8316->mclk, freq);
  	if (ret)
  		return ret;
-@@ -466,9 +474,12 @@ static int es8316_pcm_hw_params(struct snd_pcm_substream *substream,
+@@ -471,9 +480,12 @@ static int es8316_pcm_hw_params(struct snd_pcm_substream *substream,
  	u16 lrck_divider;
  	int i;
  
@@ -3201,7 +3102,7 @@ index 056c3082f..6bec98c3b 100644
  
  		if (es8316->sysclk % ratio != 0)
  			continue;
-@@ -500,6 +511,8 @@ static int es8316_pcm_hw_params(struct snd_pcm_substream *substream,
+@@ -505,6 +517,8 @@ static int es8316_pcm_hw_params(struct snd_pcm_substream *substream,
  		return -EINVAL;
  	}
  
@@ -3210,7 +3111,7 @@ index 056c3082f..6bec98c3b 100644
  	snd_soc_component_update_bits(component, ES8316_SERDATA_DAC,
  			    ES8316_SERDATA2_LEN_MASK, wordlen);
  	snd_soc_component_update_bits(component, ES8316_SERDATA_ADC,
-@@ -757,6 +770,20 @@ static int es8316_probe(struct snd_soc_component *component)
+@@ -762,6 +776,20 @@ static int es8316_probe(struct snd_soc_component *component)
  	 */
  	snd_soc_component_write(component, ES8316_CLKMGR_ADCOSR, 0x32);
  
@@ -3232,7 +3133,7 @@ index 056c3082f..6bec98c3b 100644
  }
  
 diff --git a/sound/soc/codecs/es8326.c b/sound/soc/codecs/es8326.c
-index 29eb00c11..e2bebd535 100644
+index 29eb00c11979..e2bebd53560e 100644
 --- a/sound/soc/codecs/es8326.c
 +++ b/sound/soc/codecs/es8326.c
 @@ -47,6 +47,11 @@ struct es8326_priv {
@@ -3395,7 +3296,7 @@ index 29eb00c11..e2bebd535 100644
  	es8326->mclk = devm_clk_get_optional(&i2c->dev, "mclk");
  	if (IS_ERR(es8326->mclk)) {
 diff --git a/sound/soc/spacemit/spacemit-snd-card.c b/sound/soc/spacemit/spacemit-snd-card.c
-index 7538d229c..77eb384f8 100644
+index 7538d229c43f..77eb384f8d86 100644
 --- a/sound/soc/spacemit/spacemit-snd-card.c
 +++ b/sound/soc/spacemit/spacemit-snd-card.c
 @@ -21,6 +21,54 @@
@@ -3475,7 +3376,7 @@ index 7538d229c..77eb384f8 100644
  	asoc_simple_canonicalize_platform(dai_link->platforms, dai_link->cpus);
  
 diff --git a/sound/soc/spacemit/spacemit-snd-i2s.c b/sound/soc/spacemit/spacemit-snd-i2s.c
-index faca36129..cc55a30bd 100644
+index faca36129b35..cc55a30bd538 100644
 --- a/sound/soc/spacemit/spacemit-snd-i2s.c
 +++ b/sound/soc/spacemit/spacemit-snd-i2s.c
 @@ -85,6 +85,7 @@ struct sspa_priv {
@@ -3568,7 +3469,7 @@ index faca36129..cc55a30bd 100644
  }
  
 diff --git a/sound/soc/spacemit/spacemit-snd-pcm-dma.c b/sound/soc/spacemit/spacemit-snd-pcm-dma.c
-index 5832f8bb5..dcc42ba4e 100644
+index 5832f8bb54d7..dcc42ba4e6a3 100644
 --- a/sound/soc/spacemit/spacemit-snd-pcm-dma.c
 +++ b/sound/soc/spacemit/spacemit-snd-pcm-dma.c
 @@ -731,7 +731,7 @@ static int spacemit_snd_pcm_new(struct snd_soc_component *component, struct snd_
@@ -3623,7 +3524,7 @@ index 5832f8bb5..dcc42ba4e 100644
  }
  EXPORT_SYMBOL(spacemit_snd_register_dmaclient_pdrv);
 diff --git a/sound/soc/spacemit/spacemit-snd-sspa.c b/sound/soc/spacemit/spacemit-snd-sspa.c
-index a29011a42..9bbffb898 100644
+index a29011a427ae..9bbffb898b66 100644
 --- a/sound/soc/spacemit/spacemit-snd-sspa.c
 +++ b/sound/soc/spacemit/spacemit-snd-sspa.c
 @@ -100,7 +100,7 @@ static int mmp_sspa_hw_params(struct snd_pcm_substream *substream,

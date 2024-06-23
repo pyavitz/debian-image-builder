@@ -832,8 +832,18 @@ index f30dabc99795..a812b9b00e6b 100644
  	if (IS_ERR(dmac->base))
  		return PTR_ERR(dmac->base);
  
+From e751d3fb9606cddae7770c6d2cd4a26fd78cd27b Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 07:54:04 -0400
+Subject: [PATCH] drivers: dma: dw-axi-dmac: dw-axi-dmac-platform.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../dma/dw-axi-dmac/dw-axi-dmac-platform.c    | 70 ++++++++++++++++---
+ 1 file changed, 59 insertions(+), 11 deletions(-)
+
 diff --git a/drivers/dma/dw-axi-dmac/dw-axi-dmac-platform.c b/drivers/dma/dw-axi-dmac/dw-axi-dmac-platform.c
-index bf85aa0979ec..a4313d341924 100644
+index 152c5d98524d..a4313d341924 100644
 --- a/drivers/dma/dw-axi-dmac/dw-axi-dmac-platform.c
 +++ b/drivers/dma/dw-axi-dmac/dw-axi-dmac-platform.c
 @@ -21,10 +21,12 @@
@@ -869,16 +879,7 @@ index bf85aa0979ec..a4313d341924 100644
  		cfg_hi = config->tt_fc << CH_CFG_H_TT_FC_POS |
  			 config->hs_sel_src << CH_CFG_H_HS_SEL_SRC_POS |
  			 config->hs_sel_dst << CH_CFG_H_HS_SEL_DST_POS |
-@@ -325,8 +331,6 @@ dma_chan_tx_status(struct dma_chan *dchan, dma_cookie_t cookie,
- 		len = vd_to_axi_desc(vdesc)->hw_desc[0].len;
- 		completed_length = completed_blocks * len;
- 		bytes = length - completed_length;
--	} else {
--		bytes = vd_to_axi_desc(vdesc)->length;
- 	}
- 
- 	spin_unlock_irqrestore(&chan->vc.lock, flags);
-@@ -607,6 +611,7 @@ static int dw_axi_dma_set_hw_desc(struct axi_dma_chan *chan,
+@@ -605,6 +611,7 @@ static int dw_axi_dma_set_hw_desc(struct axi_dma_chan *chan,
  	size_t block_ts;
  	u32 ctllo, ctlhi;
  	u32 burst_len;
@@ -886,7 +887,7 @@ index bf85aa0979ec..a4313d341924 100644
  
  	axi_block_ts = chan->chip->dw->hdata->block_size[chan->id];
  
-@@ -670,8 +675,14 @@ static int dw_axi_dma_set_hw_desc(struct axi_dma_chan *chan,
+@@ -668,8 +675,14 @@ static int dw_axi_dma_set_hw_desc(struct axi_dma_chan *chan,
  
  	hw_desc->lli->block_ts_lo = cpu_to_le32(block_ts - 1);
  
@@ -903,7 +904,7 @@ index bf85aa0979ec..a4313d341924 100644
  	hw_desc->lli->ctl_lo = cpu_to_le32(ctllo);
  
  	set_desc_src_master(hw_desc);
-@@ -1142,7 +1153,7 @@ static int dma_chan_terminate_all(struct dma_chan *dchan)
+@@ -1140,7 +1153,7 @@ static int dma_chan_terminate_all(struct dma_chan *dchan)
  	axi_chan_disable(chan);
  
  	ret = readl_poll_timeout_atomic(chan->chip->regs + DMAC_CHEN, val,
@@ -912,7 +913,7 @@ index bf85aa0979ec..a4313d341924 100644
  	if (ret == -ETIMEDOUT)
  		dev_warn(dchan2dev(dchan),
  			 "%s failed to stop\n", axi_chan_name(chan));
-@@ -1294,6 +1305,13 @@ static struct dma_chan *dw_axi_dma_of_xlate(struct of_phandle_args *dma_spec,
+@@ -1292,6 +1305,13 @@ static struct dma_chan *dw_axi_dma_of_xlate(struct of_phandle_args *dma_spec,
  
  	chan = dchan_to_axi_dma_chan(dchan);
  	chan->hw_handshake_num = dma_spec->args[0];
@@ -926,7 +927,7 @@ index bf85aa0979ec..a4313d341924 100644
  	return dchan;
  }
  
-@@ -1364,16 +1382,24 @@ static int parse_device_properties(struct axi_dma_chip *chip)
+@@ -1362,16 +1382,24 @@ static int parse_device_properties(struct axi_dma_chip *chip)
  		chip->dw->hdata->axi_rw_burst_len = tmp;
  	}
  
@@ -953,7 +954,7 @@ index bf85aa0979ec..a4313d341924 100644
  	u32 i;
  	int ret;
  
-@@ -1397,17 +1423,27 @@ static int dw_probe(struct platform_device *pdev)
+@@ -1395,17 +1423,27 @@ static int dw_probe(struct platform_device *pdev)
  	if (chip->irq < 0)
  		return chip->irq;
  
@@ -984,7 +985,7 @@ index bf85aa0979ec..a4313d341924 100644
  	chip->core_clk = devm_clk_get(chip->dev, "core-clk");
  	if (IS_ERR(chip->core_clk))
  		return PTR_ERR(chip->core_clk);
-@@ -1558,8 +1594,18 @@ static const struct dev_pm_ops dw_axi_dma_pm_ops = {
+@@ -1556,8 +1594,18 @@ static const struct dev_pm_ops dw_axi_dma_pm_ops = {
  };
  
  static const struct of_device_id dw_dma_of_id_table[] = {
@@ -1005,6 +1006,9 @@ index bf85aa0979ec..a4313d341924 100644
  	{}
  };
  MODULE_DEVICE_TABLE(of, dw_dma_of_id_table);
+-- 
+2.39.2
+
 diff --git a/drivers/dma/dw-axi-dmac/dw-axi-dmac.h b/drivers/dma/dw-axi-dmac/dw-axi-dmac.h
 index e9d5eb0fd594..ab6d2d1e26c7 100644
 --- a/drivers/dma/dw-axi-dmac/dw-axi-dmac.h

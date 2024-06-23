@@ -25,8 +25,18 @@ index ac9b3e757ba1..115cbc8354fe 100644
  obj-$(CONFIG_GP_PCI1XXXX)	+= mchp_pci1xxxx/
  obj-$(CONFIG_VCPU_STALL_DETECTOR)	+= vcpu_stall_detector.o
 +obj-$(CONFIG_SPACEMIT_TCM)	+= tcm.o
+From 5c1a004ab4fb3aee9f8ec9ca7eca98fea99de2e5 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 08:06:33 -0400
+Subject: [PATCH] drivers: misc: eeprom: at24.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/misc/eeprom/at24.c | 49 +++++++++++++++-----------------------
+ 1 file changed, 19 insertions(+), 30 deletions(-)
+
 diff --git a/drivers/misc/eeprom/at24.c b/drivers/misc/eeprom/at24.c
-index 938c4f41b98c..ca949f93f795 100644
+index e664c1c85250..f2e314aea4b3 100644
 --- a/drivers/misc/eeprom/at24.c
 +++ b/drivers/misc/eeprom/at24.c
 @@ -433,7 +433,8 @@ static int at24_read(void *priv, unsigned int off, void *val, size_t count)
@@ -88,7 +98,7 @@ index 938c4f41b98c..ca949f93f795 100644
  
  	return 0;
  }
-@@ -691,7 +697,6 @@ static int at24_probe(struct i2c_client *client)
+@@ -716,7 +722,6 @@ static int at24_probe(struct i2c_client *client)
  	at24->offset_adj = at24_get_offset_adj(flags, byte_len);
  	at24->client_regmaps[0] = regmap;
  
@@ -96,7 +106,7 @@ index 938c4f41b98c..ca949f93f795 100644
  	if (IS_ERR(at24->vcc_reg))
  		return PTR_ERR(at24->vcc_reg);
  
-@@ -744,23 +749,15 @@ static int at24_probe(struct i2c_client *client)
+@@ -769,17 +774,10 @@ static int at24_probe(struct i2c_client *client)
  
  	i2c_set_clientdata(client, at24);
  
@@ -113,18 +123,11 @@ index 938c4f41b98c..ca949f93f795 100644
 +	pm_runtime_use_autosuspend(dev);
 +	pm_runtime_set_autosuspend_delay(dev, 10);
  	pm_runtime_enable(dev);
- 
 +	pm_runtime_get_sync(dev);
-+
- 	at24->nvmem = devm_nvmem_register(dev, &nvmem_config);
- 	if (IS_ERR(at24->nvmem)) {
- 		pm_runtime_disable(dev);
--		if (!pm_runtime_status_suspended(dev))
--			regulator_disable(at24->vcc_reg);
- 		return PTR_ERR(at24->nvmem);
- 	}
  
-@@ -773,13 +770,12 @@ static int at24_probe(struct i2c_client *client)
+ 	/*
+ 	 * Perform a one-byte test read to verify that the chip is functional,
+@@ -790,8 +788,6 @@ static int at24_probe(struct i2c_client *client)
  		err = at24_read(at24, 0, &test_byte, 1);
  		if (err) {
  			pm_runtime_disable(dev);
@@ -133,6 +136,18 @@ index 938c4f41b98c..ca949f93f795 100644
  			return -ENODEV;
  		}
  	}
+@@ -799,8 +795,6 @@ static int at24_probe(struct i2c_client *client)
+ 	at24->nvmem = devm_nvmem_register(dev, &nvmem_config);
+ 	if (IS_ERR(at24->nvmem)) {
+ 		pm_runtime_disable(dev);
+-		if (!pm_runtime_status_suspended(dev))
+-			regulator_disable(at24->vcc_reg);
+ 		return dev_err_probe(dev, PTR_ERR(at24->nvmem),
+ 				     "failed to register nvmem\n");
+ 	}
+@@ -809,7 +803,8 @@ static int at24_probe(struct i2c_client *client)
+ 	if (cdata == &at24_data_spd)
+ 		at24_probe_temp_sensor(client);
  
 -	pm_runtime_idle(dev);
 +	pm_runtime_mark_last_busy(dev);
@@ -140,7 +155,7 @@ index 938c4f41b98c..ca949f93f795 100644
  
  	if (writable)
  		dev_info(dev, "%u byte %s EEPROM, writable, %u bytes/write\n",
-@@ -805,18 +801,12 @@ static void at24_remove(struct i2c_client *client)
+@@ -835,18 +830,12 @@ static void at24_remove(struct i2c_client *client)
  
  static int __maybe_unused at24_suspend(struct device *dev)
  {
@@ -161,6 +176,9 @@ index 938c4f41b98c..ca949f93f795 100644
  }
  
  static const struct dev_pm_ops at24_pm_ops = {
+-- 
+2.39.2
+
 diff --git a/drivers/misc/tcm.c b/drivers/misc/tcm.c
 new file mode 100644
 index 000000000000..ebc0b2ab2bae

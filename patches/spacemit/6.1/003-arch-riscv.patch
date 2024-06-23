@@ -1157,19 +1157,6 @@ index aff6c33ab0c0..b011ff8de9fc 100644
 +#endif
 +
  #endif /* _ASM_RISCV_MMIO_H */
-diff --git a/arch/riscv/include/asm/mmu.h b/arch/riscv/include/asm/mmu.h
-index 5ff1f19fd45c..0099dc116168 100644
---- a/arch/riscv/include/asm/mmu.h
-+++ b/arch/riscv/include/asm/mmu.h
-@@ -19,8 +19,6 @@ typedef struct {
- #ifdef CONFIG_SMP
- 	/* A local icache flush is needed before user execution can resume. */
- 	cpumask_t icache_stale_mask;
--	/* A local tlb flush is needed before user execution can resume. */
--	cpumask_t tlb_stale_mask;
- #endif
- } mm_context_t;
- 
 diff --git a/arch/riscv/include/asm/module.h b/arch/riscv/include/asm/module.h
 index 76aa96a9fc08..0f3baaa6a9a8 100644
 --- a/arch/riscv/include/asm/module.h
@@ -1202,29 +1189,6 @@ index 76aa96a9fc08..0f3baaa6a9a8 100644
 +}
 +
  #endif /* _ASM_RISCV_MODULE_H */
-diff --git a/arch/riscv/include/asm/pgtable.h b/arch/riscv/include/asm/pgtable.h
-index ec6fb83349ce..5b53e26eb534 100644
---- a/arch/riscv/include/asm/pgtable.h
-+++ b/arch/riscv/include/asm/pgtable.h
-@@ -161,8 +161,7 @@ extern struct pt_alloc_ops pt_ops __initdata;
- 					 _PAGE_EXEC | _PAGE_WRITE)
- 
- #define PAGE_COPY		PAGE_READ
--#define PAGE_COPY_EXEC		PAGE_EXEC
--#define PAGE_COPY_READ_EXEC	PAGE_READ_EXEC
-+#define PAGE_COPY_EXEC		PAGE_READ_EXEC
- #define PAGE_SHARED		PAGE_WRITE
- #define PAGE_SHARED_EXEC	PAGE_WRITE_EXEC
- 
-@@ -415,7 +414,7 @@ static inline void update_mmu_cache(struct vm_area_struct *vma,
- 	 * Relying on flush_tlb_fix_spurious_fault would suffice, but
- 	 * the extra traps reduce performance.  So, eagerly SFENCE.VMA.
- 	 */
--	flush_tlb_page(vma, address);
-+	local_flush_tlb_page(address);
- }
- 
- static inline void update_mmu_cache_pmd(struct vm_area_struct *vma,
 diff --git a/arch/riscv/include/asm/processor.h b/arch/riscv/include/asm/processor.h
 index 94a0590c6971..f0138336acc7 100644
 --- a/arch/riscv/include/asm/processor.h
@@ -1429,44 +1393,6 @@ index 67322f878e0d..2f0f0d7d0fc0 100644
  #endif /* !__ASSEMBLY__ */
  
  /*
-diff --git a/arch/riscv/include/asm/tlbflush.h b/arch/riscv/include/asm/tlbflush.h
-index 907b9efd39a8..a09196f8de68 100644
---- a/arch/riscv/include/asm/tlbflush.h
-+++ b/arch/riscv/include/asm/tlbflush.h
-@@ -12,6 +12,8 @@
- #include <asm/errata_list.h>
- 
- #ifdef CONFIG_MMU
-+extern unsigned long asid_mask;
-+
- static inline void local_flush_tlb_all(void)
- {
- 	__asm__ __volatile__ ("sfence.vma" : : : "memory");
-@@ -22,24 +24,6 @@ static inline void local_flush_tlb_page(unsigned long addr)
- {
- 	ALT_FLUSH_TLB_PAGE(__asm__ __volatile__ ("sfence.vma %0" : : "r" (addr) : "memory"));
- }
--
--static inline void local_flush_tlb_all_asid(unsigned long asid)
--{
--	__asm__ __volatile__ ("sfence.vma x0, %0"
--			:
--			: "r" (asid)
--			: "memory");
--}
--
--static inline void local_flush_tlb_page_asid(unsigned long addr,
--		unsigned long asid)
--{
--	__asm__ __volatile__ ("sfence.vma %0, %1"
--			:
--			: "r" (addr), "r" (asid)
--			: "memory");
--}
--
- #else /* CONFIG_MMU */
- #define local_flush_tlb_all()			do { } while (0)
- #define local_flush_tlb_page(addr)		do { } while (0)
 diff --git a/arch/riscv/include/asm/vdso/processor.h b/arch/riscv/include/asm/vdso/processor.h
 index fa70cfe507aa..14f5d27783b8 100644
 --- a/arch/riscv/include/asm/vdso/processor.h
@@ -1955,21 +1881,31 @@ index 882547f6bd5c..e17c550986a6 100644
  #endif /* __ASSEMBLY__ */
  
  #endif /* _UAPI_ASM_RISCV_PTRACE_H */
+From 4ec6ebf9ade860c70c6a788e2da371e17e5c3257 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 07:23:03 -0400
+Subject: [PATCH] arch: riscv: include: uapi: asm: setup: cmdline 2048
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/riscv/include/uapi/asm/setup.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/arch/riscv/include/uapi/asm/setup.h b/arch/riscv/include/uapi/asm/setup.h
-new file mode 100644
-index 000000000000..f2bd4d8e4891
---- /dev/null
+index 66b13a522880..eb4f0209c696 100644
+--- a/arch/riscv/include/uapi/asm/setup.h
 +++ b/arch/riscv/include/uapi/asm/setup.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+
-+#ifndef _UAPI_RISCV_SETUP_H
-+#define _UAPI_RISCV_SETUP_H
-+
-+#define COMMAND_LINE_SIZE       2048
-+
-+#endif /* _UAPI_RISCV_SETUP_H */
-+
+@@ -3,6 +3,6 @@
+ #ifndef _UAPI_ASM_RISCV_SETUP_H
+ #define _UAPI_ASM_RISCV_SETUP_H
+ 
+-#define COMMAND_LINE_SIZE	1024
++#define COMMAND_LINE_SIZE	2048
+ 
+ #endif /* _UAPI_ASM_RISCV_SETUP_H */
+-- 
+2.39.2
+
 diff --git a/arch/riscv/include/uapi/asm/sigcontext.h b/arch/riscv/include/uapi/asm/sigcontext.h
 index 84f2dfcfdbce..8b8a8541673a 100644
 --- a/arch/riscv/include/uapi/asm/sigcontext.h
@@ -2541,8 +2477,18 @@ index 000000000000..03b173c972eb
 +}
 +EXPORT_SYMBOL_GPL(kernel_vector_end);
 \ No newline at end of file
+From 044d4916e668275c04a1778284b50f7044fe8f3a Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 07:28:17 -0400
+Subject: [PATCH] arch: riscv: kernel: module.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/riscv/kernel/module.c | 708 ++++++++++++++++++++++++++++++-------
+ 1 file changed, 589 insertions(+), 119 deletions(-)
+
 diff --git a/arch/riscv/kernel/module.c b/arch/riscv/kernel/module.c
-index 91fe16bfaa07..b5cc3659b803 100644
+index a331001e33e6..b5cc3659b803 100644
 --- a/arch/riscv/kernel/module.c
 +++ b/arch/riscv/kernel/module.c
 @@ -7,6 +7,9 @@
@@ -3495,14 +3441,7 @@ index 91fe16bfaa07..b5cc3659b803 100644
  	return 0;
  }
  
-@@ -424,26 +909,12 @@ void *module_alloc(unsigned long size)
- {
- 	return __vmalloc_node_range(size, 1, MODULES_VADDR,
- 				    MODULES_END, GFP_KERNEL,
--				    PAGE_KERNEL, 0, NUMA_NO_NODE,
-+				    PAGE_KERNEL, VM_FLUSH_RESET_PERMS,
-+				    NUMA_NO_NODE,
- 				    __builtin_return_address(0));
+@@ -430,21 +915,6 @@ void *module_alloc(unsigned long size)
  }
  #endif
  
@@ -3524,6 +3463,9 @@ index 91fe16bfaa07..b5cc3659b803 100644
  int module_finalize(const Elf_Ehdr *hdr,
  		    const Elf_Shdr *sechdrs,
  		    struct module *me)
+-- 
+2.39.2
+
 diff --git a/arch/riscv/kernel/process.c b/arch/riscv/kernel/process.c
 index 8955f2432c2d..c367be3d93b7 100644
 --- a/arch/riscv/kernel/process.c
@@ -3720,16 +3662,27 @@ index 86acd690d529..566447429211 100644
  }
  
  static int __init topology_init(void)
+From 8a43d7cc5cce5513050314bf6440953c4eec540f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 07:34:04 -0400
+Subject: [PATCH] arch: riscv: kernel: signal.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/riscv/kernel/signal.c | 220 ++++++++++++++++++++++++++++++++-----
+ 1 file changed, 192 insertions(+), 28 deletions(-)
+
 diff --git a/arch/riscv/kernel/signal.c b/arch/riscv/kernel/signal.c
-index bfb2afa4135f..ffde81cfadb7 100644
+index 36bb15af6fa8..aa92a5088378 100644
 --- a/arch/riscv/kernel/signal.c
 +++ b/arch/riscv/kernel/signal.c
-@@ -18,9 +18,13 @@
+@@ -18,10 +18,14 @@
  #include <asm/signal.h>
  #include <asm/signal32.h>
  #include <asm/switch_to.h>
 +#include <asm/vector.h>
  #include <asm/csr.h>
+ #include <asm/cacheflush.h>
  
 +unsigned long signal_minsigstksz __ro_after_init;
 +
@@ -3738,7 +3691,7 @@ index bfb2afa4135f..ffde81cfadb7 100644
  
  #define DEBUG_SIG 0
  
-@@ -38,26 +42,13 @@ static long restore_fp_state(struct pt_regs *regs,
+@@ -39,26 +43,13 @@ static long restore_fp_state(struct pt_regs *regs,
  {
  	long err;
  	struct __riscv_d_ext_state __user *state = &sc_fpregs->d;
@@ -3766,7 +3719,7 @@ index bfb2afa4135f..ffde81cfadb7 100644
  }
  
  static long save_fp_state(struct pt_regs *regs,
-@@ -65,52 +56,186 @@ static long save_fp_state(struct pt_regs *regs,
+@@ -66,52 +57,186 @@ static long save_fp_state(struct pt_regs *regs,
  {
  	long err;
  	struct __riscv_d_ext_state __user *state = &sc_fpregs->d;
@@ -3965,7 +3918,7 @@ index bfb2afa4135f..ffde81cfadb7 100644
  		goto badframe;
  
  	if (__copy_from_user(&set, &frame->uc.uc_sigmask, sizeof(set)))
-@@ -144,12 +269,23 @@ static long setup_sigcontext(struct rt_sigframe __user *frame,
+@@ -145,12 +270,23 @@ static long setup_sigcontext(struct rt_sigframe __user *frame,
  	struct pt_regs *regs)
  {
  	struct sigcontext __user *sc = &frame->uc.uc_mcontext;
@@ -3989,7 +3942,7 @@ index bfb2afa4135f..ffde81cfadb7 100644
  	return err;
  }
  
-@@ -173,6 +309,13 @@ static inline void __user *get_sigframe(struct ksignal *ksig,
+@@ -174,6 +310,13 @@ static inline void __user *get_sigframe(struct ksignal *ksig,
  	/* Align the stack frame. */
  	sp &= ~0xfUL;
  
@@ -4003,11 +3956,12 @@ index bfb2afa4135f..ffde81cfadb7 100644
  	return (void __user *)sp;
  }
  
-@@ -181,9 +324,10 @@ static int setup_rt_frame(struct ksignal *ksig, sigset_t *set,
+@@ -182,10 +325,11 @@ static int setup_rt_frame(struct ksignal *ksig, sigset_t *set,
  {
  	struct rt_sigframe __user *frame;
  	long err = 0;
 +	size_t frame_size = get_rt_frame_size(false);
+ 	unsigned long __maybe_unused addr;
  
 -	frame = get_sigframe(ksig, regs, sizeof(*frame));
 -	if (!access_ok(frame, sizeof(*frame)))
@@ -4016,7 +3970,7 @@ index bfb2afa4135f..ffde81cfadb7 100644
  		return -EFAULT;
  
  	err |= copy_siginfo_to_user(&frame->info, &ksig->info);
-@@ -337,3 +481,23 @@ asmlinkage __visible void do_work_pending(struct pt_regs *regs,
+@@ -351,3 +495,23 @@ asmlinkage __visible void do_work_pending(struct pt_regs *regs,
  		thread_info_flags = read_thread_flags();
  	} while (thread_info_flags & _TIF_WORK_MASK);
  }
@@ -4040,6 +3994,9 @@ index bfb2afa4135f..ffde81cfadb7 100644
 +	return ss_size > get_rt_frame_size(false);
 +}
 +#endif /* CONFIG_DYNAMIC_SIGFRAME */
+-- 
+2.39.2
+
 diff --git a/arch/riscv/kernel/smpboot.c b/arch/riscv/kernel/smpboot.c
 index ddb2afba6d25..c489b14a0442 100644
 --- a/arch/riscv/kernel/smpboot.c
@@ -4718,90 +4675,18 @@ index 000000000000..c351be913462
 +END(xor_regs_5_)
 +EXPORT_SYMBOL(xor_regs_5_)
 \ No newline at end of file
-diff --git a/arch/riscv/mm/context.c b/arch/riscv/mm/context.c
-index 80ce9caba8d2..12e22e7330e7 100644
---- a/arch/riscv/mm/context.c
-+++ b/arch/riscv/mm/context.c
-@@ -22,7 +22,7 @@ DEFINE_STATIC_KEY_FALSE(use_asid_allocator);
- 
- static unsigned long asid_bits;
- static unsigned long num_asids;
--static unsigned long asid_mask;
-+unsigned long asid_mask;
- 
- static atomic_long_t current_version;
- 
-@@ -196,16 +196,6 @@ static void set_mm_asid(struct mm_struct *mm, unsigned int cpu)
- 
- 	if (need_flush_tlb)
- 		local_flush_tlb_all();
--#ifdef CONFIG_SMP
--	else {
--		cpumask_t *mask = &mm->context.tlb_stale_mask;
--
--		if (cpumask_test_cpu(cpu, mask)) {
--			cpumask_clear_cpu(cpu, mask);
--			local_flush_tlb_all_asid(cntx & asid_mask);
--		}
--	}
--#endif
- }
- 
- static void set_mm_noasid(struct mm_struct *mm)
-@@ -215,12 +205,24 @@ static void set_mm_noasid(struct mm_struct *mm)
- 	local_flush_tlb_all();
- }
- 
--static inline void set_mm(struct mm_struct *mm, unsigned int cpu)
-+static inline void set_mm(struct mm_struct *prev,
-+			  struct mm_struct *next, unsigned int cpu)
- {
--	if (static_branch_unlikely(&use_asid_allocator))
--		set_mm_asid(mm, cpu);
--	else
--		set_mm_noasid(mm);
-+	/*
-+	 * The mm_cpumask indicates which harts' TLBs contain the virtual
-+	 * address mapping of the mm. Compared to noasid, using asid
-+	 * can't guarantee that stale TLB entries are invalidated because
-+	 * the asid mechanism wouldn't flush TLB for every switch_mm for
-+	 * performance. So when using asid, keep all CPUs footmarks in
-+	 * cpumask() until mm reset.
-+	 */
-+	cpumask_set_cpu(cpu, mm_cpumask(next));
-+	if (static_branch_unlikely(&use_asid_allocator)) {
-+		set_mm_asid(next, cpu);
-+	} else {
-+		cpumask_clear_cpu(cpu, mm_cpumask(prev));
-+		set_mm_noasid(next);
-+	}
- }
- 
- static int __init asids_init(void)
-@@ -274,7 +276,8 @@ static int __init asids_init(void)
- }
- early_initcall(asids_init);
- #else
--static inline void set_mm(struct mm_struct *mm, unsigned int cpu)
-+static inline void set_mm(struct mm_struct *prev,
-+			  struct mm_struct *next, unsigned int cpu)
- {
- 	/* Nothing to do here when there is no MMU */
- }
-@@ -327,10 +330,7 @@ void switch_mm(struct mm_struct *prev, struct mm_struct *next,
- 	 */
- 	cpu = smp_processor_id();
- 
--	cpumask_clear_cpu(cpu, mm_cpumask(prev));
--	cpumask_set_cpu(cpu, mm_cpumask(next));
--
--	set_mm(next, cpu);
-+	set_mm(prev, next, cpu);
- 
- 	flush_icache_deferred(next, cpu);
- }
+From 3bb878b96d65b11d581859d7abaa3f46f6dbea1d Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 22 Jun 2024 07:38:30 -0400
+Subject: [PATCH] arch: riscv: mm: init.c
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/riscv/mm/init.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
 diff --git a/arch/riscv/mm/init.c b/arch/riscv/mm/init.c
-index 50a1b6edd491..fbb7a7f256ff 100644
+index 7ba5c244f3a0..b28a6df8893c 100644
 --- a/arch/riscv/mm/init.c
 +++ b/arch/riscv/mm/init.c
 @@ -232,7 +232,12 @@ static void __init setup_bootmem(void)
@@ -4817,9 +4702,9 @@ index 50a1b6edd491..fbb7a7f256ff 100644
  	set_max_mapnr(max_low_pfn - ARCH_PFN_OFFSET);
  
  	reserve_initrd_mem();
-@@ -262,7 +267,12 @@ static void __init setup_bootmem(void)
- 			memblock_reserve(dtb_early_pa, fdt_totalsize(dtb_early_va));
- 	}
+@@ -253,7 +258,12 @@ static void __init setup_bootmem(void)
+ 	if (!IS_ENABLED(CONFIG_BUILTIN_DTB))
+ 		memblock_reserve(dtb_early_pa, fdt_totalsize(dtb_early_va));
  
 +#ifdef CONFIG_ZONE_DMA32
  	dma_contiguous_reserve(dma32_phys_limit);
@@ -4829,68 +4714,7 @@ index 50a1b6edd491..fbb7a7f256ff 100644
 +
  	if (IS_ENABLED(CONFIG_64BIT))
  		hugetlb_cma_reserve(PUD_SHIFT - PAGE_SHIFT);
- 	memblock_allow_resize();
-@@ -299,7 +309,7 @@ static const pgprot_t protection_map[16] = {
- 	[VM_EXEC]					= PAGE_EXEC,
- 	[VM_EXEC | VM_READ]				= PAGE_READ_EXEC,
- 	[VM_EXEC | VM_WRITE]				= PAGE_COPY_EXEC,
--	[VM_EXEC | VM_WRITE | VM_READ]			= PAGE_COPY_READ_EXEC,
-+	[VM_EXEC | VM_WRITE | VM_READ]			= PAGE_COPY_EXEC,
- 	[VM_SHARED]					= PAGE_NONE,
- 	[VM_SHARED | VM_READ]				= PAGE_READ,
- 	[VM_SHARED | VM_WRITE]				= PAGE_SHARED,
-diff --git a/arch/riscv/mm/tlbflush.c b/arch/riscv/mm/tlbflush.c
-index ce7dfc81bb3f..ef701fa83f36 100644
---- a/arch/riscv/mm/tlbflush.c
-+++ b/arch/riscv/mm/tlbflush.c
-@@ -5,7 +5,23 @@
- #include <linux/sched.h>
- #include <asm/sbi.h>
- #include <asm/mmu_context.h>
--#include <asm/tlbflush.h>
-+
-+static inline void local_flush_tlb_all_asid(unsigned long asid)
-+{
-+	__asm__ __volatile__ ("sfence.vma x0, %0"
-+			:
-+			: "r" (asid)
-+			: "memory");
-+}
-+
-+static inline void local_flush_tlb_page_asid(unsigned long addr,
-+		unsigned long asid)
-+{
-+	__asm__ __volatile__ ("sfence.vma %0, %1"
-+			:
-+			: "r" (addr), "r" (asid)
-+			: "memory");
-+}
- 
- void flush_tlb_all(void)
- {
-@@ -15,7 +31,6 @@ void flush_tlb_all(void)
- static void __sbi_tlb_flush_range(struct mm_struct *mm, unsigned long start,
- 				  unsigned long size, unsigned long stride)
- {
--	struct cpumask *pmask = &mm->context.tlb_stale_mask;
- 	struct cpumask *cmask = mm_cpumask(mm);
- 	unsigned int cpuid;
- 	bool broadcast;
-@@ -27,16 +42,7 @@ static void __sbi_tlb_flush_range(struct mm_struct *mm, unsigned long start,
- 	/* check if the tlbflush needs to be sent to other CPUs */
- 	broadcast = cpumask_any_but(cmask, cpuid) < nr_cpu_ids;
- 	if (static_branch_unlikely(&use_asid_allocator)) {
--		unsigned long asid = atomic_long_read(&mm->context.id);
--
--		/*
--		 * TLB will be immediately flushed on harts concurrently
--		 * executing this MM context. TLB flush on other harts
--		 * is deferred until this MM context migrates there.
--		 */
--		cpumask_setall(pmask);
--		cpumask_clear_cpu(cpuid, pmask);
--		cpumask_andnot(pmask, pmask, cmask);
-+		unsigned long asid = atomic_long_read(&mm->context.id) & asid_mask;
- 
- 		if (broadcast) {
- 			sbi_remote_sfence_vma_asid(cmask, start, size, asid);
+ }
+-- 
+2.39.2
+
