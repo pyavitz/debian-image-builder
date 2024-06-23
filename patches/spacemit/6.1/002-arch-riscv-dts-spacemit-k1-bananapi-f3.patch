@@ -82,3 +82,34 @@ index f671a350ece4..f27613fc70df 100644
 -- 
 2.39.2
 
+From 74382606c99f7e3e6dd4500c85d11d4d677fee14 Mon Sep 17 00:00:00 2001
+From: Icenowy Zheng <uwu@icenowy.me>
+Date: Sat, 22 Jun 2024 21:58:16 -0400
+Subject: [PATCH] riscv: dts: spacemit: fix PCIe lane number for deb1
+
+K1-X deb1 board seems to have only one PCIe lane wired for PCIe C port,
+as a mini PCIe slot.
+
+Fix the PCIe lane number, otherwise the PCIe controller could not be
+correctly brought up and no card will be detected.
+
+Signed-off-by: Icenowy Zheng <uwu@icenowy.me>
+---
+ arch/riscv/boot/dts/spacemit/k1-x_deb1.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
+index f27613fc70df..13e81530cdf7 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
+@@ -871,6 +871,7 @@ &pcie1_rc {
+ &pcie2_rc {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pcie2_4>;
++	num-lanes = <1>;
+ 	status = "okay";
+ };
+ 
+-- 
+2.39.2
+
