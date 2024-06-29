@@ -16,10 +16,7 @@ if [[ "$BOARD" == "lepotato" ]] && [[ "$HOST_CODENAME" =~ ^(bookworm|noble)$ ]];
 # debug switch
 if [ $VERBOSE -eq 1 ]; then set -x; fi
 # compile native or cross
-if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
-if [[ "$HOST_ARCH" == "riscv64" ]] && [[ "$ARCH" == "riscv" ]]; then CROSSCOMPILE="0"; fi
-if [[ "$HOST_ARCH" == "aarch64"  ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then CROSSCOMPILE="1"; fi
-if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then CROSSCOMPILE="1"; fi
+compile
 # override the user data file
 if [[ "$FORCE_VERSION" == "true" ]]; then
 	if [ -z $FORCE_UBOOT_VERSION ]; then :; else UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
@@ -31,7 +28,7 @@ if [[ "$PRECOMPILED_UBOOT" == "true" ]]; then
 	uboot_precompiled_packaging
 else
 	if [[ "$FAMILY" == "amlogic" ]]; then . lib/function/fip; fi
-	if [[ "$FAMILY" == "allwinner" || "$FAMILY" == "freescale" || "$FAMILY" == "rockchip" ]]; then . lib/function/atf; . lib/function/crust; fi
+	if [[ "$FAMILY" =~ ^(allwinner|freescale|rockchip)$ ]]; then . lib/function/atf; . lib/function/crust; fi
 	if [[ "$FAMILY" == "spacemit" ]]; then . lib/function/opensbi; fi
 	${FAMILY}_uboot_run
 fi
