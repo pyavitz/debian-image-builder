@@ -1,41 +1,57 @@
 #!/bin/bash
 
-# RTL8189ES
-rtl8189es_download(){ # lib:function:wireless -> extra_wireless
-if [[ -d "rtl8189es" ]]; then
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd rtl8189es
+driver_download (){
+if [[ -d "${DRIVER}" ]]; then
+	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+	cd ${DRIVER}
 	git config pull.rebase false
-	echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
+	echo -en " ${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN}"
 	git pull -q
 	cd ..
 else
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q https://github.com/jwrdegoede/rtl8189ES_linux rtl8189es
+	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+	git clone -q ${DRIVER_URL} ${DRIVER}
 fi
 }
 
-rtl8189es(){ # lib:function:linux -> setup
-rm -fdr drivers/net/wireless/rtl8189es
-mkdir -p drivers/net/wireless/rtl8189es
-cp -R ../rtl8189es/{core,hal,include,os_dep,platform} drivers/net/wireless/rtl8189es
-cp -R ../rtl8189es/Makefile drivers/net/wireless/rtl8189es/Makefile
-cp -R ../rtl8189es/Kconfig drivers/net/wireless/rtl8189es/Kconfig
-echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/Makefile
-sed -i 's/---help---/help/g' drivers/net/wireless/rtl8189es/Kconfig
-sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8189es\/Kconfig"' drivers/net/wireless/Kconfig
+# RTL8189ES
+add_rtl8189es (){
+rm -fdr drivers/net/wireless/realtek/rtl8189es
+mkdir -p drivers/net/wireless/realtek/rtl8189es
+cp -R ../rtl8189es/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/rtl8189es
+cp -R ../rtl8189es/Makefile drivers/net/wireless/realtek/rtl8189es/Makefile
+cp -R ../rtl8189es/Kconfig drivers/net/wireless/realtek/rtl8189es/Kconfig
+echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/realtek/Makefile
+sed -i 's/---help---/help/g' drivers/net/wireless/realtek/rtl8189es/Kconfig
+sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189es\/Kconfig"' \
+	"drivers/net/wireless/realtek/Kconfig"
 }
 
-extra_wireless(){ # lib:function:linux -> stable/mainline_download
+# RTL8852BS
+add_rtl8852bs (){
+rm -fdr drivers/net/wireless/realtek/${DRIVER}
+mkdir -p drivers/net/wireless/realtek/${DRIVER}
+cp -fr ../${DRIVER}/* drivers/net/wireless/realtek/${DRIVER}/
+rm -f drivers/net/wireless/realtek/${DRIVER}/README.md
+echo "obj-\$(CONFIG_RTL8852BS)		+= rtl8852bs/" >> drivers/net/wireless/realtek/Makefile
+sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8852bs\/Kconfig"' \
+	"drivers/net/wireless/realtek/Kconfig"
+}
+
+extra_wireless (){
+if [[ "$BOARD" == "bananapif3" ]]; then
+	DRIVER_INFO="Realtek 8852BS"
+	DRIVER="rtl8852bs"
+	DRIVER_URL="https://github.com/pyavitz/rtl8852bs.git"
+fi
 if [[ "$BOARD" == "orangepir1" ]]; then
-	echo -en "${WHT}Realtek 8189ES${FIN} "
-	rtl8189es_download
-	echo_bdone
+	DRIVER_INFO="Realtek 8189ES"
+	DRIVER="rtl8189es"
+	DRIVER_URL="https://github.com/jwrdegoede/rtl8189ES_linux"
 fi
-}
-
-enable_wireless_module(){ # lib:function:linux -> bconfig
-if [[ "$BOARD" == "orangepir1" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	echo "CONFIG_RTL8189ES=m" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}
+if [[ -v "DRIVER" ]] && [[ ! -z "$DRIVER" ]]; then
+	echo -en "${WHT}${DRIVER_INFO}${FIN} "
+	driver_download
+	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 fi
 }

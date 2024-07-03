@@ -6,7 +6,6 @@ source packaging/pkgvars
 source lib/function/linux
 source lib/function/git
 source lib/function/patching
-source lib/function/wireless
 source lib/function/compilers
 source userdata.txt
 if [[ -f "board.txt" ]]; then :; else noboard; fi
@@ -16,6 +15,7 @@ if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; overrid
 if [ $VERBOSE -eq 1 ]; then set -x; fi
 source board.txt
 source lib/function/${FAMILY}
+source lib/function/wireless
 if [[ -f "kernel.txt" ]]; then . kernel.txt; fi
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
@@ -33,13 +33,15 @@ linux_compilers
 # sources directory
 sources_dir
 # download source
-if [[ "$FORCE_GIT" == "true" ]]; then git_download; else download; fi
+if [[ "$FORCE_GIT" == "true" ]]; then git_download; else download; extra_wireless; fi
 # setup
 if [[ "$FORCE_GIT" == "true" ]]; then git_setup; else setup; fi
 # patching
 if [[ ! -z $FAMILY ]]; then linux_patching; fi
 # firmware
 if [[ -v "LINUX_EXTRA_FIRMWARE" ]] && [[ ! -z "$LINUX_EXTRA_FIRMWARE" ]]; then mkdir -p firmware; cp -fr ../../${LINUX_EXTRA_FIRMWARE} firmware/; fi
+# extra wireless
+if [[ -v "DRIVER" ]] && [[ ! -z "$DRIVER" ]]; then add_${DRIVER}; fi
 # defconfig
 if [ $CUSTOM_DEFCONFIG -eq 1 ]; then cconfig; else bconfig; fi
 # menuconfig

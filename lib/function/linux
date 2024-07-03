@@ -64,7 +64,6 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		echo -en " ${WHT}...${FIN}"
 		cp -r ${KERNEL}-${VERSION}.backup ${KERNEL}-${VERSION}
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-		extra_wireless
 	else
 		if [[ -d "${KERNEL}-${VERSION}" ]]; then
 			echo -en "${KERNEL}-${VERSION}"
@@ -83,7 +82,6 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 			cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-			extra_wireless
 		else
 			echo ""
 			echo -en "${KERNEL}-${VERSION}"
@@ -108,14 +106,12 @@ fi
 KERNELORG="https://git.kernel.org/torvalds/t/"
 if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
-		extra_wireless
 		echo_extract
 		pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
 	else
 		echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
 		${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.gz
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-		extra_wireless
 		if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
 			echo ""
 			echo_extract
@@ -129,14 +125,12 @@ else
 	KERNELORG="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
 	if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 		if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-			extra_wireless
 			echo_extract
 			pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
 		else
 			echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
 			${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.xz
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-			extra_wireless
 			if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
 				echo ""
 				echo_extract
@@ -156,7 +150,6 @@ setup (){
 sleep .75
 if [[ -d "${KERNEL}-${VERSION}" ]]; then
 	cd ${KERNEL}-${VERSION}
-	if [[ "$BOARD" == "orangepir1" ]]; then rtl8189es; fi
 	export ARCH=${ARCH}
 	# remove builddeb and mkdebian scripts
 	rm -f scripts/package/{builddeb,mkdebian}
@@ -210,8 +203,6 @@ else
 	read -p "Press enter to continue."
 	exit 1
 fi
-# lib/function/wireless
-enable_wireless_module
 # lib/function/modconfig
 linux_configs
 kbuild "${LINUX_DEFCONFIG}"
