@@ -1,14 +1,14 @@
-From b46c8c5a2257102403104dd2c168b7583f087dfa Mon Sep 17 00:00:00 2001
+From ebe5b75d73fe8f65e508a7aaf553c6e188dfadc3 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sat, 29 Jun 2024 08:42:10 -0400
+Date: Wed, 3 Jul 2024 16:53:05 -0400
 Subject: [PATCH] extlinux support
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  board/spacemit/k1-x/k1-x.env | 173 +++--------------------------------
  configs/k1_defconfig         |   2 +
- include/configs/k1-x.h       |  13 ++-
- 3 files changed, 22 insertions(+), 166 deletions(-)
+ include/configs/k1-x.h       |  30 ++----
+ 3 files changed, 21 insertions(+), 184 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
 index b024181959..d688d6bb8e 100644
@@ -211,19 +211,22 @@ index ac09a48a2a..717fd2e833 100644
  CONFIG_SPL_LOGLEVEL=1
  # CONFIG_SYS_DEVICE_NULLDEV is not set
 diff --git a/include/configs/k1-x.h b/include/configs/k1-x.h
-index 1098880f02..d9b20c6b4d 100644
+index 1098880f02..f71c955fad 100644
 --- a/include/configs/k1-x.h
 +++ b/include/configs/k1-x.h
-@@ -86,7 +86,7 @@
+@@ -84,11 +84,6 @@
+ #define TLV_CODE_EEPROM_I2C_INDEX	0x81
+ #define TLV_CODE_EEPROM_PIN_GROUP	0x82
  
- // #define RAMDISK_LOAD_ADDR		(CONFIG_FASTBOOT_BUF_ADDR + CONFIG_FASTBOOT_BUF_SIZE)
- // #define DTB_LOAD_ADDR		(CONFIG_FASTBOOT_BUF_ADDR + CONFIG_FASTBOOT_BUF_SIZE * 2)
+-// #define RAMDISK_LOAD_ADDR		(CONFIG_FASTBOOT_BUF_ADDR + CONFIG_FASTBOOT_BUF_SIZE)
+-// #define DTB_LOAD_ADDR		(CONFIG_FASTBOOT_BUF_ADDR + CONFIG_FASTBOOT_BUF_SIZE * 2)
 -#define RAMDISK_LOAD_ADDR		0x21000000
-+//#define RAMDISK_LOAD_ADDR		0x21000000
- #define DTB_LOAD_ADDR			0x31000000
- 
+-#define DTB_LOAD_ADDR			0x31000000
+-
  #ifndef __ASSEMBLY__
-@@ -135,10 +135,13 @@ struct boot_storage_op
+ #include "linux/types.h"
+ 
+@@ -135,10 +130,13 @@ struct boot_storage_op
  #define BOOTFS_NAME	("bootfs")
  
  /* Environment options */
@@ -232,25 +235,39 @@ index 1098880f02..d9b20c6b4d 100644
  	func(QEMU, qemu, na)
  
 +#define KERNEL_ADDR_R		__stringify(0x10000000)
-+#define FDT_ADDR_R		__stringify(0x1F000000)
++#define FDT_ADDR_R		__stringify(0x31000000)
 +#define RAMDISK_ADDR_R		__stringify(0x21000000)
 +
  #include <config_distro_bootcmd.h>
  
  #define BOOTENV_DEV_QEMU(devtypeu, devtypel, instance) \
-@@ -166,8 +169,10 @@ struct boot_storage_op
+@@ -164,22 +162,10 @@ struct boot_storage_op
+ /*if env not use for spl, please define to board/spacemit/k1-x/k1-x.env */
+ #define CONFIG_EXTRA_ENV_SETTINGS \
  	"stdout_flash=serial,vidconsole\0" \
- 	"kernel_comp_addr_r=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
- 	"kernel_comp_size=" __stringify(CONFIG_FASTBOOT_BUF_SIZE) "\0" \
+-	"kernel_comp_addr_r=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
+-	"kernel_comp_size=" __stringify(CONFIG_FASTBOOT_BUF_SIZE) "\0" \
 -	"kernel_addr_r=" __stringify(CONFIG_FASTBOOT_BUF_ADDR) "\0" \
 -	"ramdisk_addr=" __stringify(RAMDISK_LOAD_ADDR) "\0" \
+-	"dtb_addr=" __stringify(DTB_LOAD_ADDR) "\0" \
+-	"scriptaddr=0x2c100000\0" \
+-	"pxefile_addr_r=0x0c200000\0" \
+-	"ipaddr=192.168.1.15\0" \
+-	"netmask=255.255.255.0\0" \
+-	"serverip=10.0.92.134\0" \
+-	"gatewayip=192.168.1.1\0" \
+-	"net_data_path=spacemit_flash_file/net_flash_file/\0" \
+-	"splashimage=" __stringify(CONFIG_FASTBOOT_BUF_ADDR) "\0" \
+-	"splashpos=m,m\0" \
+-	"splashfile=bianbu.bmp\0" \
 +	"fdt_addr_r=" FDT_ADDR_R "\0" \
 +	"kernel_addr_r=" KERNEL_ADDR_R "\0" \
 +	"ramdisk_addr_r=" RAMDISK_ADDR_R "\0" \
 +	"fdtfile=spacemit/" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0" \
- 	"dtb_addr=" __stringify(DTB_LOAD_ADDR) "\0" \
- 	"scriptaddr=0x2c100000\0" \
- 	"pxefile_addr_r=0x0c200000\0" \
+ 	BOOTENV_DEVICE_CONFIG
+ 
+-
+ #endif /* __CONFIG_H */
 -- 
 2.39.2
 
