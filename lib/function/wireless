@@ -16,14 +16,40 @@ fi
 
 # RTL8189ES
 add_rtl8189es (){
-rm -fdr drivers/net/wireless/realtek/rtl8189es
-mkdir -p drivers/net/wireless/realtek/rtl8189es
-cp -R ../rtl8189es/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/rtl8189es
-cp -R ../rtl8189es/Makefile drivers/net/wireless/realtek/rtl8189es/Makefile
-cp -R ../rtl8189es/Kconfig drivers/net/wireless/realtek/rtl8189es/Kconfig
+rm -fdr drivers/net/wireless/realtek/${DRIVER}
+mkdir -p drivers/net/wireless/realtek/${DRIVER}
+cp -fr ../${DRIVER}/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/${DRIVER}
+cp -fr ../${DRIVER}/{Kconfig,Makefile} drivers/net/wireless/realtek/${DRIVER}/
 echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/realtek/Makefile
-sed -i 's/---help---/help/g' drivers/net/wireless/realtek/rtl8189es/Kconfig
+cat <<EOF > drivers/net/wireless/realtek/${DRIVER}/Kconfig
+config RTL8189ES
+	tristate "Realtek 8189E SDIO support"
+	depends on USB
+	default m
+	help
+	  Help message of RTL8189ES
+EOF
 sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189es\/Kconfig"' \
+	"drivers/net/wireless/realtek/Kconfig"
+}
+
+# RTL8821CU
+add_rtl8821cu (){
+rm -fdr drivers/net/wireless/realtek/${DRIVER}
+mkdir -p drivers/net/wireless/realtek/${DRIVER}
+cp -fr ../${DRIVER}/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/${DRIVER}
+cp -fr ../${DRIVER}/{Kconfig,Makefile,halmac.mk,rtl8821c.mk} drivers/net/wireless/realtek/${DRIVER}
+echo "obj-\$(CONFIG_RTL8821CU) += rtl8821cu/" >> drivers/net/wireless/realtek/Makefile
+cat <<EOF > drivers/net/wireless/realtek/${DRIVER}/Kconfig
+config RTL8821CU
+	tristate "Realtek 8821C USB support"
+	depends on USB
+	default m
+	help
+	  Help message of RTL8821CU
+EOF
+sed -i "s/CONFIG_RTW_DEBUG = y/CONFIG_RTW_DEBUG = n/g" drivers/net/wireless/realtek/${DRIVER}/Makefile
+sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8821cu\/Kconfig"' \
 	"drivers/net/wireless/realtek/Kconfig"
 }
 
@@ -43,6 +69,11 @@ if [[ "$BOARD" == "bananapif3" ]]; then
 	DRIVER_INFO="Realtek 8852BS"
 	DRIVER="rtl8852bs"
 	DRIVER_URL="https://github.com/pyavitz/rtl8852bs.git"
+fi
+if [[ "$BOARD" == "bananapim4zero" ]]; then
+	DRIVER_INFO="Realtek 8821CU"
+	DRIVER="rtl8821cu"
+	DRIVER_URL="https://github.com/morrownr/8821cu-20210916.git"
 fi
 if [[ "$BOARD" == "orangepir1" ]]; then
 	DRIVER_INFO="Realtek 8189ES"
