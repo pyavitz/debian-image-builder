@@ -1,14 +1,14 @@
-From ebe5b75d73fe8f65e508a7aaf553c6e188dfadc3 Mon Sep 17 00:00:00 2001
+From 5feb332846fe18f6f8c9d87e3c1e3563d5084975 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 3 Jul 2024 16:53:05 -0400
+Date: Thu, 4 Jul 2024 05:14:45 -0400
 Subject: [PATCH] extlinux support
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  board/spacemit/k1-x/k1-x.env | 173 +++--------------------------------
- configs/k1_defconfig         |   2 +
- include/configs/k1-x.h       |  30 ++----
- 3 files changed, 21 insertions(+), 184 deletions(-)
+ configs/k1_defconfig         |   3 +
+ include/configs/k1-x.h       |  25 ++---
+ 3 files changed, 24 insertions(+), 177 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
 index b024181959..d688d6bb8e 100644
@@ -198,7 +198,7 @@ index b024181959..d688d6bb8e 100644
 -bootmenu_9="recovery from net"=run flash_from_net
 -
 diff --git a/configs/k1_defconfig b/configs/k1_defconfig
-index ac09a48a2a..717fd2e833 100644
+index ac09a48a2a..86158878b4 100644
 --- a/configs/k1_defconfig
 +++ b/configs/k1_defconfig
 @@ -42,6 +42,8 @@ CONFIG_AUTOBOOT_STOP_STR=" "
@@ -210,8 +210,13 @@ index ac09a48a2a..717fd2e833 100644
  CONFIG_LOGLEVEL=7
  CONFIG_SPL_LOGLEVEL=1
  # CONFIG_SYS_DEVICE_NULLDEV is not set
+@@ -270,3 +272,4 @@ CONFIG_IMAGE_SPARSE_TRANSFER_BLK_NUM=0x3000
+ # CONFIG_SPL_SHA1 is not set
+ # CONFIG_SPL_SHA256 is not set
+ CONFIG_ZSTD=y
++CONFIG_OF_LIBFDT_OVERLAY=y
 diff --git a/include/configs/k1-x.h b/include/configs/k1-x.h
-index 1098880f02..f71c955fad 100644
+index 1098880f02..858165ad72 100644
 --- a/include/configs/k1-x.h
 +++ b/include/configs/k1-x.h
 @@ -84,11 +84,6 @@
@@ -226,7 +231,7 @@ index 1098880f02..f71c955fad 100644
  #ifndef __ASSEMBLY__
  #include "linux/types.h"
  
-@@ -135,10 +130,13 @@ struct boot_storage_op
+@@ -135,10 +130,14 @@ struct boot_storage_op
  #define BOOTFS_NAME	("bootfs")
  
  /* Environment options */
@@ -235,13 +240,14 @@ index 1098880f02..f71c955fad 100644
  	func(QEMU, qemu, na)
  
 +#define KERNEL_ADDR_R		__stringify(0x10000000)
-+#define FDT_ADDR_R		__stringify(0x31000000)
 +#define RAMDISK_ADDR_R		__stringify(0x21000000)
++#define FDT_ADDR_R		__stringify(0x31000000)
++#define FDTOVERLAY_ADDR_R	__stringify(0x01000000)
 +
  #include <config_distro_bootcmd.h>
  
  #define BOOTENV_DEV_QEMU(devtypeu, devtypel, instance) \
-@@ -164,22 +162,10 @@ struct boot_storage_op
+@@ -164,11 +163,6 @@ struct boot_storage_op
  /*if env not use for spl, please define to board/spacemit/k1-x/k1-x.env */
  #define CONFIG_EXTRA_ENV_SETTINGS \
  	"stdout_flash=serial,vidconsole\0" \
@@ -250,19 +256,20 @@ index 1098880f02..f71c955fad 100644
 -	"kernel_addr_r=" __stringify(CONFIG_FASTBOOT_BUF_ADDR) "\0" \
 -	"ramdisk_addr=" __stringify(RAMDISK_LOAD_ADDR) "\0" \
 -	"dtb_addr=" __stringify(DTB_LOAD_ADDR) "\0" \
--	"scriptaddr=0x2c100000\0" \
--	"pxefile_addr_r=0x0c200000\0" \
--	"ipaddr=192.168.1.15\0" \
--	"netmask=255.255.255.0\0" \
--	"serverip=10.0.92.134\0" \
--	"gatewayip=192.168.1.1\0" \
--	"net_data_path=spacemit_flash_file/net_flash_file/\0" \
+ 	"scriptaddr=0x2c100000\0" \
+ 	"pxefile_addr_r=0x0c200000\0" \
+ 	"ipaddr=192.168.1.15\0" \
+@@ -176,10 +170,11 @@ struct boot_storage_op
+ 	"serverip=10.0.92.134\0" \
+ 	"gatewayip=192.168.1.1\0" \
+ 	"net_data_path=spacemit_flash_file/net_flash_file/\0" \
 -	"splashimage=" __stringify(CONFIG_FASTBOOT_BUF_ADDR) "\0" \
 -	"splashpos=m,m\0" \
 -	"splashfile=bianbu.bmp\0" \
 +	"fdt_addr_r=" FDT_ADDR_R "\0" \
 +	"kernel_addr_r=" KERNEL_ADDR_R "\0" \
 +	"ramdisk_addr_r=" RAMDISK_ADDR_R "\0" \
++	"fdtoverlay_addr_r=" FDTOVERLAY_ADDR_R "\0" \
 +	"fdtfile=spacemit/" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0" \
  	BOOTENV_DEVICE_CONFIG
  
