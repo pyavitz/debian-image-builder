@@ -1,29 +1,32 @@
 #!/bin/bash
-# mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr
+
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+else
+	echo -e "Missing /etc/opt/board.txt"
+	exit 1
+fi
 
 if [ "$USER" != "root" ]; then
-        echo "Please run this as root or with sudo privileges."
-        exit 1
+	echo "Please run this as root or with sudo privileges."
+	exit 1
 fi
 if [[ `command -v mkimage` ]]; then
 	:;
 else
 	echo -e "Missing depends: u-boot-tools";
 	if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-		apt update; apt upgrade -y; apt install -y u-boot-tools;
+		apt install -y u-boot-tools
+	else
+		exit 1
 	fi
 fi
 if [[ -f "/boot/boot.cmd" ]]; then
-	if [[ -f "/boot/boot.scr" ]]; then
-		rm -f /boot/boot.bak
-		mv -f /boot/boot.scr /boot/boot.bak;
-		mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr;
-	else
-		mkimage -C none -A arm -T script -d /boot/boot.cmd /boot/boot.scr;
-	fi
+	if [[ -f "/boot/boot.scr" ]]; then mv -f /boot/boot.scr /boot/boot.bak; fi
+	mkimage -C none -A ${ARCH} -T script -d /boot/boot.cmd /boot/boot.scr
 else
 	echo -e "Error! No /boot/boot.cmd file found."
-	exit 0
+	exit 1
 fi
 
 exit 0

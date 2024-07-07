@@ -1,5 +1,4 @@
 # DEBIAN IMAGE BUILDER
-# mkimage -C none -A arm -T script -d boot.cmd boot.scr
 
 setenv bootlabel ""
 setenv uuid ""
@@ -14,9 +13,9 @@ setenv fdtfile ""
 
 setenv bootargs "${console} rw root=${uuid} ${rootfstype} loglevel=${verbose} fsck.repair=yes ${extra} rootwait"
 
-setenv load ""
-${load} ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${fk_kvers} \
-&& ${load} ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
-&& ${load} ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${initrd} \
-&& echo "Booting ${fk_kvers} from ${devtype} ${devnum}:${partition}..." \
+setenv loadinging ""
+${loading} ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${fk_kvers} \
+&& ${loading} ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
+&& ${loading} ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${initrd} \
+&& echo "Booting $bootlabel from ${devtype} ${devnum}:${partition} ..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
