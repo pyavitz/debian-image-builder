@@ -3,7 +3,7 @@
 setenv bootlabel ""
 setenv uuid ""
 setenv rootfstype ""
-setenv verbose "5"
+setenv verbose ""
 setenv console ""
 setenv extra ""
 setenv fk_kvers ""
@@ -11,7 +11,7 @@ setenv initrd ""
 setenv fdtdir ""
 setenv fdtfile ""
 
-setenv bootargs "${console} rw root=${uuid} ${rootfstype} loglevel=${verbose} fsck.repair=yes ${extra} rootwait"
+setenv bootargs "${console} rw root=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
 
 setenv loading ""
 ${loading} ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers} \
