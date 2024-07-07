@@ -14,8 +14,8 @@ setenv fdtfile ""
 setenv bootargs "${console} rw root=${uuid} ${rootfstype} loglevel=${verbose} fsck.repair=yes ${extra} rootwait"
 
 setenv loading ""
-${loading} ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${fk_kvers} \
-&& ${loading} ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
-&& ${loading} ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${initrd} \
-&& echo "Booting $bootlabel from ${devtype} ${devnum}:${partition} ..." \
+${loading} ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers} \
+&& ${loading} ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
+&& ${loading} ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd} \
+&& echo "Booting $bootlabel from ${devtype} ${devnum}:${distro_bootpart} ..." \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
