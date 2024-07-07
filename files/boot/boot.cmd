@@ -13,7 +13,7 @@ setenv fdtfile ""
 
 setenv bootargs "${console} rw root=${uuid} ${rootfstype} loglevel=${verbose} fsck.repair=yes ${extra} rootwait"
 
-setenv loadinging ""
+setenv loading ""
 ${loading} ${devtype} ${devnum}:${partition} ${kernel_addr_r} ${fk_kvers} \
 && ${loading} ${devtype} ${devnum}:${partition} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
 && ${loading} ${devtype} ${devnum}:${partition} ${ramdisk_addr_r} ${initrd} \
