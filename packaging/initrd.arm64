@@ -1,0 +1,32 @@
+#!/bin/bash
+
+UINITRD="/boot/uInitrd"
+INITRD="/boot/initrd.gz"
+
+failed (){
+echo >&2 "Error: $@"
+echo >&2 "uInitrd generation failed - exiting."
+exit 1
+}
+
+if [[ -d "/boot" ]] && [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
+	echo "update-initramfs: Generating ${INITRD}"
+	rm -fr /boot/{initrd.gz,initrd.img-*-bak}
+	cp -f /boot/initrd.img-* ${INITRD}
+fi
+
+if [[ -f "${UINITRD}" ]]; then rm -f ${UINITRD}; fi
+if [ "$#" -eq 2 ]; then
+	if [ ! -z "$1" ] && [ -f "$2" ]; then
+		NAME="initramfs-$1"
+		FILE="$2"
+		echo "update-initramfs: Generating ${UINITRD}"
+		mkimage -A arm64 -O linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n ${NAME} -d ${FILE} ${UINITRD}
+	else
+		failed
+	fi
+else
+	failed
+fi
+
+exit 0

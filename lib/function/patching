@@ -209,9 +209,8 @@ user_patches
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 # add dtclist initrd and headers-byteshift.patch
-if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]]; then
-	mv ../../dtclist.txt dtclist.txt; cp -f ../../packaging/headers-byteshift.patch .
-	if [[ "$ARCH" =~ ^(arm|arm64)$ ]] then cp -f ../../packaging/initrd.arm initrd; else cp -f ../../packaging/initrd.riscv initrd; fi
+if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]] && [[ -f "../../packaging/initrd.${ARCH}" ]]; then
+	mv ../../dtclist.txt dtclist.txt; cp -f ../../packaging/headers-byteshift.patch .; cp -f ../../packaging/initrd.${ARCH} initrd
 else
 	echo -e "lib/function/patching: An essential builddeb file is missing."
 	exit 0
