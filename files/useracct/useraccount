@@ -1,11 +1,7 @@
 #!/bin/bash
 
-if [[ -f "/etc/opt/board.txt" ]]; then
-	. /etc/opt/board.txt
-fi
-if [[ -f "/boot/useraccount.txt" ]]; then
-	. /boot/useraccount.txt
-fi
+if [[ -f "/etc/opt/board.txt" ]]; then . /etc/opt/board.txt; fi
+if [[ -f "/boot/useraccount.txt" ]]; then . /boot/useraccount.txt; fi
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
 create_user(){
@@ -37,9 +33,7 @@ fi
 }
 
 create_sudoers(){
-if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then
-	rm -f /etc/sudoers.d/010_pi-nopasswd
-fi
+if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then rm -f /etc/sudoers.d/010_pi-nopasswd; fi
 tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
 ${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
@@ -50,14 +44,43 @@ echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 echo ""
 echo -e "\e[1;37mWelcome. Create a User Account\e[0m."
-echo ""
-echo -en "Name: "
-read NAME
-echo -en "Username: "
-read USERNAME
+while true; do
+	echo -e ""
+	echo -en "Name: "
+	read NAME1
+	if [[ ! -z "$NAME1" ]]; then
+		NAME=`echo $NAME1 | sed 's/ //g'`
+	else
+		echo -e ""
+		echo -e "Field blank? Try again."
+		continue
+	fi
+	break
+done
+while true; do
+	echo -en "Username: "
+	read USERNAME
+	if [[ ! -z "$USERNAME" ]]; then
+		:;
+	else
+		echo -e ""
+		echo -e "Field blank? Try again."
+		echo -e ""
+		continue
+	fi
+	break
+done
 while true; do
 	echo -en "Password: "
 	read -s FIRST
+	if [[ ! -z "$FIRST" ]]; then
+		:;
+	else
+		echo -e ""
+		echo -e "Field blank? Try again."
+		echo -e ""
+		continue
+	fi
 	echo ""
 	echo -en "Password (again): "
 	read -s SECOND
@@ -109,8 +132,6 @@ if [[ -d "/home/${USERNAME}" ]]; then
 	chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 	rm -f /etc/opt/{nanorc-user,user-ini}
 fi
-if [[ "$DISTRO" == "Devuan" ]]; then
-	clear -x
-fi
+if [[ "$DISTRO" == "Devuan" ]]; then clear -x; fi
 
 exit 0
