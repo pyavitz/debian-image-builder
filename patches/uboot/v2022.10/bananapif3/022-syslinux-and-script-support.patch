@@ -1,17 +1,18 @@
-From 5feb332846fe18f6f8c9d87e3c1e3563d5084975 Mon Sep 17 00:00:00 2001
+From 6746c689c252f6def61aa337c990e0f146ab595d Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Thu, 4 Jul 2024 05:14:45 -0400
-Subject: [PATCH] extlinux support
+Date: Mon, 8 Jul 2024 07:18:02 -0400
+Subject: [PATCH] Syslinux and script support
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- board/spacemit/k1-x/k1-x.env | 173 +++--------------------------------
+ board/spacemit/k1-x/k1-x.env | 185 ++++-------------------------------
+ board/spacemit/k1-x/k1x.c    |  20 ++--
  configs/k1_defconfig         |   3 +
  include/configs/k1-x.h       |  25 ++---
- 3 files changed, 24 insertions(+), 177 deletions(-)
+ 4 files changed, 44 insertions(+), 189 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-index b024181959..d688d6bb8e 100644
+index b024181959..a5887ba575 100644
 --- a/board/spacemit/k1-x/k1-x.env
 +++ b/board/spacemit/k1-x/k1-x.env
 @@ -1,4 +1,4 @@
@@ -20,7 +21,7 @@ index b024181959..d688d6bb8e 100644
  earlycon=sbi
  console=ttyS0,115200
  init=/init
-@@ -9,166 +9,15 @@ stderr=serial
+@@ -9,166 +9,23 @@ stderr=serial
  stdin=serial,usbkbd
  stdout=serial
  
@@ -162,18 +163,8 @@ index b024181959..d688d6bb8e 100644
 -        elif test ${boot_device} = mmc; then \
 -                run mmc_boot; \
 -        fi;
-+// Extlinux
-+autoboot=if test -e ${boot_device} ${boot_devnum}:${bootfs_part} /extlinux/extlinux.conf; then \
-+		sysboot ${boot_device} ${boot_devnum}:${bootfs_part} any 0x2000000 /extlinux/extlinux.conf; \
-+	elif test -e ${boot_device} ${boot_devnum}:${bootfs_part} /boot/extlinux/extlinux.conf; then \
-+		sysboot ${boot_device} ${boot_devnum}:${bootfs_part} any 0x2000000 /boot/extlinux/extlinux.conf; \
-+	elif test -e nvme ${devnum}:${partition} /extlinux/extlinux.conf; then \
-+		sysboot nvme ${devnum}:${partition} any 0x2000000 /extlinux/extlinux.conf; \
-+	elif test -e nvme ${devnum}:${partition} /boot/extlinux/extlinux.conf; then \
-+		sysboot nvme ${devnum}:${partition} any 0x2000000 /boot/extlinux/extlinux.conf; \
-+	fi;
- 
- bootcmd=run autoboot; echo "run autoboot"
+-
+-bootcmd=run autoboot; echo "run autoboot"
 -
 -// Boot menu definitions
 -boot_default=echo "Current Boot Device: ${boot_device}"
@@ -197,6 +188,81 @@ index b024181959..d688d6bb8e 100644
 -bootmenu_8="recovery from mmc"=run flash_from_mmc
 -bootmenu_9="recovery from net"=run flash_from_net
 -
++// SYSLINUX and SCRIPT Support
++autoboot=if test -e ${devtype} ${devnum}:${distro_bootpart} /extlinux/extlinux.conf; then \
++		sysboot ${devtype} ${devnum}:${distro_bootpart} any 0x2000000 /extlinux/extlinux.conf; \
++	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot/extlinux/extlinux.conf; then \
++		sysboot ${devtype} ${devnum}:${distro_bootpart} any 0x2000000 /boot/extlinux/extlinux.conf; \
++	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot.scr; then \
++		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot.scr; source 0x2000000; \
++	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot/boot.scr; then \
++		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot/boot.scr; source 0x2000000; \
++	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /extlinux/extlinux.conf; then \
++		sysboot nvme ${nvme_devnum}:${distro_bootpart} any 0x2000000 /extlinux/extlinux.conf; \
++	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /boot/extlinux/extlinux.conf; then \
++		sysboot nvme ${nvme_devnum}:${distro_bootpart} any 0x2000000 /boot/extlinux/extlinux.conf; \
++	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /boot.scr; then \
++		load nvme ${nvme_devnum}:${distro_bootpart} 0x2000000 /boot.scr; source 0x2000000; \
++	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /boot/boot.scr; then \
++		load nvme ${nvme_devnum}:${distro_bootpart} 0x2000000 /boot/boot.scr; source 0x2000000; \
++	fi;
++
++bootcmd=echo "Loading ..."; run autoboot
+diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
+index 2c66d5ec4e..35b2f8783e 100644
+--- a/board/spacemit/k1-x/k1x.c
++++ b/board/spacemit/k1-x/k1x.c
+@@ -328,8 +328,8 @@ void _load_env_from_blk(struct blk_desc *dev_desc, const char *dev_name, int dev
+ #endif
+ 	}
+ 
+-	env_set("bootfs_part", simple_itoa(part));
+-	env_set("bootfs_devname", dev_name);
++	env_set("distro_bootpart", simple_itoa(part));
++	env_set("devnum", dev_name);
+ 
+ 	/*load env.txt and import to uboot*/
+ 	memset((void *)CONFIG_SPL_LOAD_FIT_ADDRESS, 0, CONFIG_ENV_SIZE);
+@@ -508,7 +508,7 @@ void setenv_boot_mode(void)
+ 	u32 boot_mode = get_boot_mode();
+ 	switch (boot_mode) {
+ 	case BOOT_MODE_NAND:
+-		env_set("boot_device", "nand");
++		env_set("devtype", "nand");
+ 		break;
+ 	case BOOT_MODE_NOR:
+ 		char *blk_name;
+@@ -519,23 +519,23 @@ void setenv_boot_mode(void)
+ 			return;
+ 		}
+ 
+-		env_set("boot_device", "nor");
+-		env_set("boot_devnum", simple_itoa(blk_index));
++		env_set("devtype", "nor");
++		env_set("devnum", simple_itoa(blk_index));
+ 		break;
+ 	case BOOT_MODE_EMMC:
+-		env_set("boot_device", "mmc");
+-		env_set("boot_devnum", simple_itoa(MMC_DEV_EMMC));
++		env_set("devtype", "mmc");
++		env_set("devnum", simple_itoa(MMC_DEV_EMMC));
+ 		break;
+ 	case BOOT_MODE_SD:
+-		env_set("boot_device", "mmc");
+-		env_set("boot_devnum", simple_itoa(MMC_DEV_SD));
++		env_set("devtype", "mmc");
++		env_set("devnum", simple_itoa(MMC_DEV_SD));
+ 		break;
+ 	case BOOT_MODE_USB:
+ 		// for fastboot image download and run test
+ 		env_set("bootcmd", CONFIG_BOOTCOMMAND);
+ 		break;
+ 	default:
+-		env_set("boot_device", "");
++		env_set("devtype", "");
+ 		break;
+ 	}
+ }
 diff --git a/configs/k1_defconfig b/configs/k1_defconfig
 index ac09a48a2a..86158878b4 100644
 --- a/configs/k1_defconfig
