@@ -322,9 +322,10 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$VFAT" == "false" ]]; then
 		sed -i 's/^setenv loading "".*/setenv loading "'"ext2load"'"/g' ${BOOT_PATH}/boot.cmd; fi
 fi
+echo "" >> ${BOOT_PATH}/boot.cmd
+echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> ${BOOT_PATH}/boot.cmd
+if [[ -d "${BOOT_PATH}/${FAMILY}/overlays" ]]; then echo "#overlays=" > ${BOOT_PATH}/${FAMILY}/overlays/overlays.txt; fi
 mkimage -C none -A ${ARCH} -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
-echo "" >> ${BOOT_PATH}/boot.scr
-echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> ${BOOT_PATH}/boot.scr
 }
 
 extlinux (){
