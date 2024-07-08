@@ -1,7 +1,6 @@
 # DEBIAN IMAGE BUILDER
 
 setenv bootlabel ""
-setenv uuid ""
 setenv rootfstype ""
 setenv verbose ""
 setenv console ""
@@ -13,8 +12,10 @@ setenv fdtfile ""
 
 if test -e ${devtype} ${devnum}:${distro_bootpart} ${kernel}; then
 	setenv fk_kvers ${kernel}
+	part uuid ${devtype} ${devnum}:2 uuid
 elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${kernel}; then
 	setenv fk_kvers boot/${kernel}
+	part uuid ${devtype} ${devnum}:1 uuid
 fi
 if test -e ${devtype} ${devnum}:${distro_bootpart} ${initramfs}; then
 	setenv initrd ${initramfs}
@@ -27,7 +28,7 @@ elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${platform}/${fdtfile}
 	setenv fdtdir boot/${platform}
 fi
 
-setenv bootargs "${console} rw root=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
+setenv bootargs "${console} rw root=PARTUUID=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
 
 setenv loading ""
 ${loading} ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers} \
