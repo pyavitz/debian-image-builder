@@ -6,10 +6,26 @@ setenv rootfstype ""
 setenv verbose ""
 setenv console ""
 setenv extra ""
-setenv fk_kvers ""
-setenv initrd ""
-setenv fdtdir ""
+setenv kernel ""
+setenv initramfs ""
+setenv platform ""
 setenv fdtfile ""
+
+if test -e ${devtype} ${devnum}:${distro_bootpart} ${kernel}; then
+	setenv fk_kvers ${kernel}
+elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${kernel}; then
+	setenv fk_kvers boot/${kernel}
+fi
+if test -e ${devtype} ${devnum}:${distro_bootpart} ${initramfs}; then
+	setenv initrd ${initramfs}
+elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${initramfs}; then
+	setenv initrd boot/${initramfs}
+fi
+if test -e ${devtype} ${devnum}:${distro_bootpart} ${platform}/${fdtfile}; then
+	setenv fdtdir ${platform}
+elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${platform}/${fdtfile}; then
+	setenv fdtdir boot/${platform}
+fi
 
 setenv bootargs "${console} rw root=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
 

@@ -297,7 +297,7 @@ EOF
 }
 
 bootcmd (){
-echo -en "$BOARD: "; echo -e "boot script"
+echo -en "$BOARD: "; echo -e "Installing boot script ..."
 if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
 rm -f ${BOOT_PATH}/{boot.cmd,boot.scr}
 cp -f files/boot/boot.cmd ${BOOT_PATH}/
@@ -307,20 +307,17 @@ sed -i 's/^setenv rootfstype "".*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/g' ${BO
 sed -i 's/^setenv verbose "".*/setenv verbose "'"${LOGLEVEL}"'"/g' ${BOOT_PATH}/boot.cmd
 sed -i 's/^setenv console "".*/setenv console "'"${CONSOLE}"'"/g' ${BOOT_PATH}/boot.cmd
 sed -i 's/^setenv extra "".*/setenv extra "'"${EXTRA}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv kernel "".*/setenv kernel "'"${BOOT_KERNEL}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv initramfs "".*/setenv initramfs "'"${BOOT_INITRD}"'"/g' ${BOOT_PATH}/boot.cmd
+sed -i 's/^setenv platform "".*/setenv platform "'"${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
 sed -i 's/^setenv fdtfile "".*/setenv fdtfile "'"${DTB}.dtb"'"/g' ${BOOT_PATH}/boot.cmd
 if [[ "$P_VALUE" == "p1" ]]; then
-	sed -i 's/^setenv fk_kvers "".*/setenv fk_kvers "'"boot\/${BOOT_KERNEL}"'"/g' ${BOOT_PATH}/boot.cmd
-	sed -i 's/^setenv initrd "".*/setenv initrd "'"boot\/${BOOT_INITRD}"'"/g' ${BOOT_PATH}/boot.cmd
-	sed -i 's/^setenv fdtdir "".*/setenv fdtdir "'"boot\/${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
 	sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' ${BOOT_PATH}/boot.cmd
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
-	sed -i 's/^setenv fk_kvers "".*/setenv fk_kvers "'"${BOOT_KERNEL}"'"/g' ${BOOT_PATH}/boot.cmd
-	sed -i 's/^setenv initrd "".*/setenv initrd "'"${BOOT_INITRD}"'"/g' ${BOOT_PATH}/boot.cmd
-	sed -i 's/^setenv fdtdir "".*/setenv fdtdir "'"${FAMILY}"'"/g' ${BOOT_PATH}/boot.cmd
 	if [[ "$VFAT" == "true" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"fatload"'"/g' ${BOOT_PATH}/boot.cmd; fi
-	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$VFAT" == "false" ]]; then
-		sed -i 's/^setenv loading "".*/setenv loading "'"ext2load"'"/g' ${BOOT_PATH}/boot.cmd; fi
+	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$VFAT" == "false" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' \
+		${BOOT_PATH}/boot.cmd; fi
 fi
 echo "" >> ${BOOT_PATH}/boot.cmd
 echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> ${BOOT_PATH}/boot.cmd
