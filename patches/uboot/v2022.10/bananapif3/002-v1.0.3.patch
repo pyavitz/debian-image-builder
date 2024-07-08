@@ -907,6 +907,68 @@ index 1797fa4e..61799904 100644
 +		};
  	};
  };
+diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
+index b0241819..2e47a877 100644
+--- a/board/spacemit/k1-x/k1-x.env
++++ b/board/spacemit/k1-x/k1-x.env
+@@ -23,19 +23,22 @@ rootfs_part_to_ul=echo "set rootfs_part to ul"; setexpr temp_num_0 ${rootfs_part
+                     setexpr temp_num_1 ${rootfs_part} % a;\
+                     setenv rootfs_part ${temp_num_0}${temp_num_1};
+ 
+-// Get "rootfs" partition number in decimal, and set var "mmc_root"
++// Get "rootfs" partition number in decimal, and set var "blk_root"
+ // Variable "boot_devnum" is set during board_lat_init()
+-set_mmc_root=part number mmc ${boot_devnum} rootfs rootfs_part; \
++set_rootfs_env=if test "${bootfs_devname}" = mmc; then \
++                    setenv blk_root "/dev/mmcblk${boot_devnum}p${rootfs_part}"; \
++                elif test "${bootfs_devname}" = nvme; then \
++                    setenv blk_root "/dev/nvme${boot_devnum}n1p${rootfs_part}"; \
++                else echo "not define rootfs part at this blk device, add to env"; \
++                fi;
++get_rootfs_env=part number ${bootfs_devname} ${boot_devnum} rootfs rootfs_part; \
+              setexpr rootfs_part ${rootfs_part} + 0; \
+              if test ${rootfs_part} > 9 ; then run rootfs_part_to_ul;fi; \
+-             echo "get rootfs_part index:${rootfs_part}"; \
+-             setenv mmc_root "/dev/mmcblk${boot_devnum}p${rootfs_part}";
++             echo "get rootfs_part index:${rootfs_part}";
+ 
+-set_nvme_root=part number nvme ${boot_devnum} rootfs rootfs_part; \
+-             setexpr rootfs_part ${rootfs_part} + 0; \
+-             if test ${rootfs_part} > 9 ; then run rootfs_part_to_ul;fi; \
+-             echo "get rootfs_part index:${rootfs_part}"; \
+-             setenv nvme_root "/dev/nvme${boot_devnum}n1p${rootfs_part}";
++set_mmc_root=run get_rootfs_env; run set_rootfs_env;
++
++set_nor_root=run get_rootfs_env; run set_rootfs_env;
+ 
+ //override here, otherwise gen random addr and save to eeprom by uboot
+ //ethaddr=fe:fe:fe:22:22:01
+@@ -111,10 +114,10 @@ loaddtb=echo "Loading dtb..."; \
+             fi;
+ 
+ // Nor+ssd boot combo
+-set_nor_args=setenv bootargs ${bootargs} mtdparts=${mtdparts} root=${nvme_root} rootfstype=ext4
+-nor_boot=echo "Try to boot from NVMe ..."; \
++set_nor_args=setenv bootargs ${bootargs} mtdparts=${mtdparts} root=${blk_root} rootfstype=ext4
++nor_boot=echo "Try to boot from ${bootfs_devname}${boot_devnum} ..."; \
+          run commonargs; \
+-         run set_nvme_root; \
++         run set_nor_root; \
+          run set_nor_args; \
+          run detect_dtb; \
+          run loadknl; \
+@@ -126,9 +129,9 @@ nor_boot=echo "Try to boot from NVMe ..."; \
+ //##############################################################################
+ // eMMC/SDCard boot
+ //##############################################################################
+-set_mmc_args=setenv bootargs "${bootargs}" root=${mmc_root} rootwait rootfstype=${mmc_rootfstype};
++set_mmc_args=setenv bootargs "${bootargs}" root=${blk_root} rootwait rootfstype=${mmc_rootfstype};
+ 
+-mmc_boot=echo "Try to boot from MMC${boot_devnum} ..."; \
++mmc_boot=echo "Try to boot from ${bootfs_devname}${boot_devnum} ..."; \
+          run commonargs; \
+          run set_mmc_root; \
+          run set_mmc_args; \
 diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
 index dde9cafc..2d6ed099 100644
 --- a/board/spacemit/k1-x/k1x.c
@@ -5116,12 +5178,48 @@ index ef34b762..b9c2058c 100644
 -- 
 2.39.2
 
+From 34b213294c2ca1e8e15251f26e05863d3a00fa49 Mon Sep 17 00:00:00 2001
+From: zhangmeng <zhangmeng.kevin@spacemit.com>
+Date: Tue, 18 Jun 2024 12:29:18 +0800
+Subject: [PATCH] muse-book: delete battery device node from board dts
+
+---
+ arch/riscv/dts/k1-x_MUSE-Book.dts | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/arch/riscv/dts/k1-x_MUSE-Book.dts b/arch/riscv/dts/k1-x_MUSE-Book.dts
+index 90e46cdd..78718be4 100644
+--- a/arch/riscv/dts/k1-x_MUSE-Book.dts
++++ b/arch/riscv/dts/k1-x_MUSE-Book.dts
+@@ -64,20 +64,6 @@
+ 	};
+ };
+ 
+-&i2c4 {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_i2c4_2>;
+-	clock-frequency = <400000>;
+-	status = "okay";
+-
+-	battery: battery@b {
+-		compatible = "sbs,sbs-battery";
+-		reg = <0x0b>;
+-		sbs,i2c-retry-count = <2>;
+-		sbs,poll-retry-count = <1>;
+-	};
+-};
+-
+ &i2c6 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c6_2>;
+-- 
+2.39.2
+
 From 3e7449e5b68fe755b54fddd59b4ff8abc1458314 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E2=80=9Clilijun=E2=80=9D?= <“lijun.li@spacemit.com”>
+From: Li Jun <lijun.li@spacemit.com>
 Date: Tue, 18 Jun 2024 19:10:39 +0800
 Subject: [PATCH] display: optimize edp init time
 
-Change-Id: I126707798c3d013bd56090cd6a1c902781feb30f
 ---
  .../video/spacemit/dsi/drv/spacemit_dphy.c    |  2 +-
  drivers/video/spacemit/spacemit_dpu.c         |  2 +-
@@ -5277,44 +5375,6 @@ index b9b04f80..0f382bb0 100644
  
  	Reset_LT8911EXB(dev);
  
--- 
-2.39.2
-
-From 34b213294c2ca1e8e15251f26e05863d3a00fa49 Mon Sep 17 00:00:00 2001
-From: zhangmeng <zhangmeng.kevin@spacemit.com>
-Date: Tue, 18 Jun 2024 12:29:18 +0800
-Subject: [PATCH] muse-book: delete battery device node from board dts
-
-Change-Id: I4f006165c0ae08197e685ce795655754b1db2506
----
- arch/riscv/dts/k1-x_MUSE-Book.dts | 14 --------------
- 1 file changed, 14 deletions(-)
-
-diff --git a/arch/riscv/dts/k1-x_MUSE-Book.dts b/arch/riscv/dts/k1-x_MUSE-Book.dts
-index 90e46cdd..78718be4 100644
---- a/arch/riscv/dts/k1-x_MUSE-Book.dts
-+++ b/arch/riscv/dts/k1-x_MUSE-Book.dts
-@@ -64,20 +64,6 @@
- 	};
- };
- 
--&i2c4 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_i2c4_2>;
--	clock-frequency = <400000>;
--	status = "okay";
--
--	battery: battery@b {
--		compatible = "sbs,sbs-battery";
--		reg = <0x0b>;
--		sbs,i2c-retry-count = <2>;
--		sbs,poll-retry-count = <1>;
--	};
--};
--
- &i2c6 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_i2c6_2>;
 -- 
 2.39.2
 

@@ -857,6 +857,43 @@ index 61799904..fc4033c7 100644
 +
  	};
  };
+diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
+index 2e47a877..b0a1cd60 100644
+--- a/board/spacemit/k1-x/k1-x.env
++++ b/board/spacemit/k1-x/k1-x.env
+@@ -8,6 +8,7 @@ loglevel=8
+ stderr=serial
+ stdin=serial,usbkbd
+ stdout=serial
++workqueue.default_affinity_scope=system
+ 
+ //partitions/mtdparts/mtdids would set while flashing env.bin
+ 
+@@ -51,15 +52,12 @@ gatewayip=10.0.92.1
+ net_data_path=net_flash_file/net_flash_file/
+ 
+ preboot=
+-kernel_addr_r=0x10000000
+-ramdisk_addr=0x20000000
+ ramdisk_size=-
+ ramdisk_combo=-
+ knl_name=Image.itb
+ ramdisk_name=initramfs-generic.img
+ dtb_dir=
+ dtb_name=k1-x_evb.dtb
+-dtb_addr=0x1F000000
+ splashfile=bianbu.bmp
+ mdio_intf=
+ phyaddr0=1
+@@ -67,7 +65,7 @@ phy_link_time=10000
+ netdev=eth0
+ 
+ // Common boot args
+-commonargs=setenv bootargs earlycon=${earlycon} earlyprintk console=tty1 console=${console} loglevel=${loglevel} clk_ignore_unused swiotlb=65536 rdinit=${init}
++commonargs=setenv bootargs earlycon=${earlycon} earlyprintk console=tty1 console=${console} loglevel=${loglevel} clk_ignore_unused swiotlb=65536 rdinit=${init} workqueue.default_affinity_scope=${workqueue.default_affinity_scope}
+ 
+ //detect product_name from env and select dtb file to load
+ dtb_env=if test -n "${product_name}"; then \
 diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
 index 2d6ed099..8a42f5d8 100644
 --- a/board/spacemit/k1-x/k1x.c
