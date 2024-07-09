@@ -1,21 +1,21 @@
-From 03981265f548d95ef311bc5d16e181ebe2831652 Mon Sep 17 00:00:00 2001
+From 361a28b96235a307f5d1acc96a63de28242b47cc Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 8 Jul 2024 08:48:19 -0400
+Date: Tue, 9 Jul 2024 00:47:49 -0400
 Subject: [PATCH] Syslinux and script support
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- board/spacemit/k1-x/k1-x.env | 184 ++++-------------------------------
+ board/spacemit/k1-x/k1-x.env | 180 ++++-------------------------------
  board/spacemit/k1-x/k1x.c    |  20 ++--
  configs/k1_defconfig         |   3 +
  include/configs/k1-x.h       |  25 ++---
- 4 files changed, 43 insertions(+), 189 deletions(-)
+ 4 files changed, 39 insertions(+), 189 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-index b0a1cd6000..a00ea527f2 100644
+index b0a1cd6000..ab9c18a98c 100644
 --- a/board/spacemit/k1-x/k1-x.env
 +++ b/board/spacemit/k1-x/k1-x.env
-@@ -8,168 +8,24 @@ loglevel=8
+@@ -8,168 +8,20 @@ loglevel=8
  stderr=serial
  stdin=serial,usbkbd
  stdout=serial
@@ -193,14 +193,10 @@ index b0a1cd6000..a00ea527f2 100644
 +		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot.scr; source 0x2000000; \
 +	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot/boot.scr; then \
 +		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot/boot.scr; source 0x2000000; \
-+	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /extlinux/extlinux.conf; then \
-+		sysboot nvme ${nvme_devnum}:${distro_bootpart} any 0x2000000 /extlinux/extlinux.conf; \
-+	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /boot/extlinux/extlinux.conf; then \
-+		sysboot nvme ${nvme_devnum}:${distro_bootpart} any 0x2000000 /boot/extlinux/extlinux.conf; \
-+	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /boot.scr; then \
-+		load nvme ${nvme_devnum}:${distro_bootpart} 0x2000000 /boot.scr; source 0x2000000; \
-+	elif test -e nvme ${nvme_devnum}:${distro_bootpart} /boot/boot.scr; then \
-+		load nvme ${nvme_devnum}:${distro_bootpart} 0x2000000 /boot/boot.scr; source 0x2000000; \
++	elif test -e nvme 0:1 /extlinux/extlinux.conf; then \
++		sysboot nvme 0:1 any 0x2000000 /extlinux/extlinux.conf; \
++	elif test -e nvme 0:1 /boot/extlinux/extlinux.conf; then \
++		sysboot nvme 0:1 any 0x2000000 /boot/extlinux/extlinux.conf; \
 +	fi;
 +
 +bootcmd=echo "Loading ..."; run autoboot
