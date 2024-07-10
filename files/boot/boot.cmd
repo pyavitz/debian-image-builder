@@ -10,18 +10,21 @@ setenv initramfs ""
 setenv platform ""
 setenv fdtfile ""
 
+setenv nvme_boot "false"
 setenv nvme_devtype "nvme"
 setenv nvme_devnum "0"
 setenv nvme_bootpart "1"
 
-if test -e ${nvme_devtype} ${nvme_devnum}:${nvme_bootpart} /boot.scr; then
-	setenv devtype $nvme_devtype
-	setenv devnum $nvme_devnum
-	setenv distro_bootpart $nvme_bootpart
-elif test -e ${nvme_devtype} ${nvme_devnum}:${nvme_bootpart} /boot/boot.scr; then
-	setenv devtype $nvme_devtype
-	setenv devnum $nvme_devnum
-	setenv distro_bootpart $nvme_bootpart
+if test "${nvme_boot}" = true; then
+	if test -e ${nvme_devtype} ${nvme_devnum}:${nvme_bootpart} /boot.scr; then
+		setenv devtype $nvme_devtype
+		setenv devnum $nvme_devnum
+		setenv distro_bootpart $nvme_bootpart
+	elif test -e ${nvme_devtype} ${nvme_devnum}:${nvme_bootpart} /boot/boot.scr; then
+		setenv devtype $nvme_devtype
+		setenv devnum $nvme_devnum
+		setenv distro_bootpart $nvme_bootpart
+	fi
 fi
 
 if test -e ${devtype} ${devnum}:${distro_bootpart} ${kernel}; then
