@@ -336,3 +336,31 @@ index 1098880f02..858165ad72 100644
 -- 
 2.39.2
 
+From 87d5e0e92a4e51b3745ff5a82b793ade3fe976df Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Wed, 10 Jul 2024 11:04:02 -0400
+Subject: [PATCH] nvme boot script support
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ board/spacemit/k1-x/k1-x.env | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
+index ab9c18a98c..acb1ef7a11 100644
+--- a/board/spacemit/k1-x/k1-x.env
++++ b/board/spacemit/k1-x/k1-x.env
+@@ -22,6 +22,10 @@ autoboot=if test -e ${devtype} ${devnum}:${distro_bootpart} /extlinux/extlinux.c
+ 		sysboot nvme 0:1 any 0x2000000 /extlinux/extlinux.conf; \
+ 	elif test -e nvme 0:1 /boot/extlinux/extlinux.conf; then \
+ 		sysboot nvme 0:1 any 0x2000000 /boot/extlinux/extlinux.conf; \
++	elif test -e nvme 0:1 /boot.scr; then \
++		load nvme 0:1 0x2000000 /boot.scr; source 0x2000000; \
++	elif test -e nvme 0:1 /boot/boot.scr; then \
++		load nvme 0:1 0x2000000 /boot/boot.scr; source 0x2000000; \
+ 	fi;
+ 
+ bootcmd=echo "Loading ..."; run autoboot
+-- 
+2.39.2
+
