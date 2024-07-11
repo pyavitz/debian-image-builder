@@ -1,7 +1,7 @@
-From 8a2e5ced1c97d81c3d7cf230a63aac66076e1ca0 Mon Sep 17 00:00:00 2001
+From e46795ccc3eeebebf0e7905b362322dbec51f2c5 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Fri, 21 Jun 2024 11:54:06 -0400
-Subject: [PATCH] add spacemit keystone k1-x_deb1 dts
+Date: Thu, 11 Jul 2024 17:21:18 -0400
+Subject: [PATCH] add spacemit k1-x_deb1 dts
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
@@ -10,23 +10,27 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../dts/spacemit/k1-x-camera-reserved-mm.dtsi |   17 +
  .../boot/dts/spacemit/k1-x-camera-sdk.dtsi    |  187 ++
  .../boot/dts/spacemit/k1-x-camera-sensor.dtsi |   73 +
+ arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi  |   52 +
  arch/riscv/boot/dts/spacemit/k1-x-hdmi.dtsi   |   62 +
  arch/riscv/boot/dts/spacemit/k1-x-lcd.dtsi    |  116 +
- arch/riscv/boot/dts/spacemit/k1-x.dtsi        | 2536 +++++++++++++++++
- arch/riscv/boot/dts/spacemit/k1-x_deb1.dts    | 1129 ++++++++
+ arch/riscv/boot/dts/spacemit/k1-x.dtsi        | 2630 +++++++++++++++++
+ arch/riscv/boot/dts/spacemit/k1-x_deb1.dts    | 1149 +++++++
  .../riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi | 1157 ++++++++
  .../dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi    |  104 +
  .../dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi |  157 +
  .../dts/spacemit/lcd/lcd_icnl9911c_mipi.dtsi  |   96 +
+ .../lcd/lcd_jd9365da_mipi_1280x800.dtsi       |   66 +
  .../lcd/lcd_lt8911_edp_1920x1080.dtsi         |   61 +
  .../lcd/lcd_lt8911_edp_1920x1200.dtsi         |   61 +
  .../spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi |   61 +
+ .../lcd/lcd_orisetech_ota7290b_mipi.dtsi      |   66 +
  .../boot/dts/spacemit/spacemit-scmi.dtsi      |   76 +
- 17 files changed, 5899 insertions(+)
+ 20 files changed, 6197 insertions(+)
  create mode 100644 arch/riscv/boot/dts/spacemit/Makefile
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-reserved-mm.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-sensor.dtsi
+ create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-hdmi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-lcd.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x.dtsi
@@ -35,9 +39,11 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_icnl9911c_mipi.dtsi
+ create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1080.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1200.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi
+ create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi
 
 diff --git a/arch/riscv/boot/dts/Makefile b/arch/riscv/boot/dts/Makefile
@@ -87,7 +93,7 @@ index 000000000000..06b6ea8fa83e
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi b/arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi
 new file mode 100644
-index 000000000000..97b5c24345cb
+index 000000000000..1e125109c061
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi
 @@ -0,0 +1,187 @@
@@ -104,7 +110,7 @@ index 000000000000..97b5c24345cb
 +		compatible = "spacemit,plat-cam", "simple-bus";
 +		#address-cells = <2>;
 +		#size-cells = <2>;
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -118,7 +124,7 @@ index 000000000000..97b5c24345cb
 +		clock-names = "csi_dphy";
 +		resets = <&reset RESET_CCIC1_PHY>;
 +		reset-names = "cphy_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -132,7 +138,7 @@ index 000000000000..97b5c24345cb
 +		clock-names = "csi_dphy";
 +		resets = <&reset RESET_CCIC2_PHY>;
 +		reset-names = "cphy_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -147,7 +153,7 @@ index 000000000000..97b5c24345cb
 +		clock-names = "csi_dphy";
 +		resets = <&reset RESET_CCIC3_PHY>;
 +		reset-names = "cphy_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -169,7 +175,7 @@ index 000000000000..97b5c24345cb
 +				<&reset RESET_CCIC_4X>, <&reset RESET_ISP_CI>;
 +		reset-names = "isp_ahb_reset", "csi_reset",
 +				"ccic_4x_reset", "isp_ci_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -191,7 +197,7 @@ index 000000000000..97b5c24345cb
 +				<&reset RESET_CCIC_4X>, <&reset RESET_ISP_CI>;
 +		reset-names = "isp_ahb_reset", "csi_reset",
 +				"ccic_4x_reset", "isp_ci_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -213,7 +219,7 @@ index 000000000000..97b5c24345cb
 +				<&reset RESET_CCIC_4X>, <&reset RESET_ISP_CI>;
 +		reset-names = "isp_ahb_reset", "csi_reset",
 +				"ccic_4x_reset", "isp_ci_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -233,7 +239,7 @@ index 000000000000..97b5c24345cb
 +				<&reset RESET_ISP_CI>, <&reset RESET_LCD_MCLK>;
 +		reset-names = "isp_ahb_reset", "isp_reset",
 +				"isp_ci_reset", "lcd_mclk_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -253,7 +259,7 @@ index 000000000000..97b5c24345cb
 +				<&reset RESET_ISP_CI>, <&reset RESET_LCD_MCLK>;
 +		reset-names = "isp_ahb_reset", "isp_reset",
 +				"isp_ci_reset", "lcd_mclk_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -273,7 +279,7 @@ index 000000000000..97b5c24345cb
 +				<&reset RESET_ISP_CI>, <&reset RESET_LCD_MCLK>;
 +		reset-names = "isp_ahb_reset", "isp_cpp_reset",
 +				"isp_ci_reset", "lcd_mclk_reset";
-+		interconnects = <&dram_range1>;
++		interconnects = <&dram_range3>;
 +		interconnect-names = "dma-mem";
 +		status = "okay";
 +	};
@@ -357,6 +363,64 @@ index 000000000000..092101702e0d
 +		status = "okay";
 +	};
 +};
+diff --git a/arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi b/arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi
+new file mode 100644
+index 000000000000..5aee36ef11f6
+--- /dev/null
++++ b/arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi
+@@ -0,0 +1,52 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/* Copyright (c) 2024 Spacemit, Inc */
++
++&efuse {
++	status = "okay";
++
++	efuse_bank7: efuse_bank@7 {
++		compatible = "spacemit,k1-efuse";
++		#address-cells = <1>;
++		#size-cells = <1>;
++		reg = <0x190 0x20>;
++		resets = <&reset RESET_AES>;
++		reset-names = "aes_reset";
++		clocks = <&ccu CLK_AES>;
++		clock-names = "aes_core";
++		status = "okay";
++
++		soc_die_id: bank7@11,3 {
++			reg = <0x11 3>;
++			bits = <3 16>;
++		};
++
++		soc_ver_id: bank7@1f,6 {
++			reg = <0x1F 1>;
++			bits = <6 2>;
++		};
++
++		soc_pack_id: bank7@16,6 {
++			reg = <0x16 2>;
++			bits = <6 9>;
++		};
++
++		soc_svt_dro: bank7@15,5 {
++			reg = <0x15 2>;
++			bits = <5 9>;
++		};
++
++		soc_chip_id: bank7@17,7 {
++			reg = <0x17 8>;
++			bits = <7 55>;
++		};
++	};
++};
++
++&socinfo {
++	nvmem-cells = <&soc_die_id>, <&soc_ver_id>, <&soc_pack_id>,
++			<&soc_svt_dro>, <&soc_chip_id>;
++	nvmem-cell-names = "soc_die_id", "soc_ver_id", "soc_pack_id",
++			"soc_svt_dro", "soc_chip_id";
++	status = "okay";
++};
++
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x-hdmi.dtsi b/arch/riscv/boot/dts/spacemit/k1-x-hdmi.dtsi
 new file mode 100644
 index 000000000000..53bdcef5b4a8
@@ -549,10 +613,10 @@ index 000000000000..755f032dbe26
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x.dtsi b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
 new file mode 100644
-index 000000000000..d18fef172d89
+index 000000000000..cadbc7a66ab7
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
-@@ -0,0 +1,2536 @@
+@@ -0,0 +1,2630 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2022 Spacemit, Inc */
 +
@@ -610,9 +674,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst0_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu0_intc: interrupt-controller {
@@ -638,9 +703,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst0_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu1_intc: interrupt-controller {
@@ -666,9 +732,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst0_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu2_intc: interrupt-controller {
@@ -694,9 +761,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst0_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu3_intc: interrupt-controller {
@@ -722,9 +790,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C1_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst1_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu4_intc: interrupt-controller {
@@ -750,9 +819,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C1_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst1_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu5_intc: interrupt-controller {
@@ -778,9 +848,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C1_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst1_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu6_intc: interrupt-controller {
@@ -806,9 +877,10 @@ index 000000000000..d18fef172d89
 +			d-cache-sets = <512>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C1_CORE>;
++			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst1_core_opp_table>;
++			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu7_intc: interrupt-controller {
@@ -870,24 +942,25 @@ index 000000000000..d18fef172d89
 +			};
 +		};
 +
-+		clst0_core_opp_table: opp_table0 {
++		clst_core_opp_table0: opp_table0 {
 +			compatible = "operating-points-v2";
 +			opp-shared;
 +
-+			clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C0_TCM>, <&ccu CLK_CCI550>;
-+			clock-names = "ace","tcm", "cci";
++			clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
++				<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
++			clock-names = "ace0","ace1","tcm","cci","pll3";
 +			cci-hz = /bits/ 64 <614000000>;
 +
 +			opp1600000000 {
-+				opp-hz = /bits/ 64 <1600000000>;
++				opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
 +				tcm-hz = /bits/ 64 <800000000>;
 +				ace-hz = /bits/ 64 <800000000>;
-+				opp-microvolt = <950000>;
++				opp-microvolt = <1050000>;
 +				clock-latency-ns = <200000>;
 +			};
 +
 +			opp1228800000 {
-+				opp-hz = /bits/ 64 <1228800000>;
++				opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
 +				tcm-hz = /bits/ 64 <614400000>;
 +				ace-hz = /bits/ 64 <614400000>;
 +				opp-microvolt = <950000>;
@@ -895,7 +968,7 @@ index 000000000000..d18fef172d89
 +			};
 +
 +			opp1000000000 {
-+				opp-hz = /bits/ 64 <1000000000>;
++				opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
 +				tcm-hz = /bits/ 64 <500000000>;
 +				ace-hz = /bits/ 64 <500000000>;
 +				opp-microvolt = <950000>;
@@ -903,7 +976,7 @@ index 000000000000..d18fef172d89
 +			};
 +
 +			opp819000000 {
-+				opp-hz = /bits/ 64 <819000000>;
++				opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
 +				opp-microvolt = <950000>;
 +				tcm-hz = /bits/ 64 <409500000>;
 +				ace-hz = /bits/ 64 <409500000>;
@@ -911,7 +984,7 @@ index 000000000000..d18fef172d89
 +			};
 +
 +			opp614400000 {
-+				opp-hz = /bits/ 64 <614400000>;
++				opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
 +				tcm-hz = /bits/ 64 <307200000>;
 +				ace-hz = /bits/ 64 <307200000>;
 +				opp-microvolt = <950000>;
@@ -919,44 +992,66 @@ index 000000000000..d18fef172d89
 +			};
 +		};
 +
-+		clst1_core_opp_table: opp_table1 {
++		clst_core_opp_table1: opp_table1 {
 +			compatible = "operating-points-v2";
 +			opp-shared;
 +
-+			clocks = <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CCI550>;
-+			clock-names = "ace", "cci";
++			clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
++				<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
++			clock-names = "ace0","ace1","tcm","cci","pll3";
 +			cci-hz = /bits/ 64 <614000000>;
 +
++			opp2000000000 {
++				opp-hz = /bits/ 64 <2000000000>, /bits/ 64 <2000000000>;
++				tcm-hz = /bits/ 64 <1000000000>;
++				ace-hz = /bits/ 64 <1000000000>;
++				opp-microvolt = <1050000>;
++				clock-latency-ns = <200000>;
++			};
++
++			opp1800000000 {
++				opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
++				tcm-hz = /bits/ 64 <900000000>;
++				ace-hz = /bits/ 64 <900000000>;
++				opp-microvolt = <1050000>;
++				clock-latency-ns = <200000>;
++			};
++
 +			opp1600000000 {
-+				opp-hz = /bits/ 64 <1600000000>;
++				opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
++				tcm-hz = /bits/ 64 <800000000>;
 +				ace-hz = /bits/ 64 <800000000>;
-+				opp-microvolt = <950000>;
++				opp-microvolt = <1050000>;
 +				clock-latency-ns = <200000>;
 +			};
 +
 +			opp1228800000 {
-+				opp-hz = /bits/ 64 <1228800000>;
++				opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
++				tcm-hz = /bits/ 64 <614400000>;
 +				ace-hz = /bits/ 64 <614400000>;
 +				opp-microvolt = <950000>;
 +				clock-latency-ns = <200000>;
 +			};
 +
 +			opp1000000000 {
-+				opp-hz = /bits/ 64 <1000000000>;
++				opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
++				tcm-hz = /bits/ 64 <500000000>;
 +				ace-hz = /bits/ 64 <500000000>;
 +				opp-microvolt = <950000>;
 +				clock-latency-ns = <200000>;
 +			};
 +
 +			opp819000000 {
-+				opp-hz = /bits/ 64 <819000000>;
-+				ace-hz = /bits/ 64 <409500000>;
++				opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
 +				opp-microvolt = <950000>;
++				tcm-hz = /bits/ 64 <409500000>;
++				ace-hz = /bits/ 64 <409500000>;
 +				clock-latency-ns = <200000>;
 +			};
 +
 +			opp614400000 {
-+				opp-hz = /bits/ 64 <614400000>;
++				opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
++				tcm-hz = /bits/ 64 <307200000>;
 +				ace-hz = /bits/ 64 <307200000>;
 +				opp-microvolt = <950000>;
 +				clock-latency-ns = <200000>;
@@ -1082,7 +1177,7 @@ index 000000000000..d18fef172d89
 +		#size-cells = <2>;
 +		ranges;
 +
-+		/* dram mapping for dma/usb/sdh/audio/crypto for ex. */
++		/* dram mapping for usb/sdh for ex. */
 +		dram_range0: dram_range@0 {
 +			compatible = "spacemit-dram-bus";
 +			#address-cells = <2>;
@@ -1092,7 +1187,7 @@ index 000000000000..d18fef172d89
 +			status = "okay";
 +		};
 +
-+		/* dram mapping for vpu/gpu/v2d/jpu for ex. */
++		/* dram mapping for vpu/gpu/dpu for ex. */
 +		dram_range1: dram_range@1 {
 +			compatible = "spacemit-dram-bus";
 +			#address-cells = <2>;
@@ -1103,12 +1198,46 @@ index 000000000000..d18fef172d89
 +			status = "okay";
 +		};
 +
++		/* dram mapping for pcie for ex. */
 +		dram_range2: dram_range@2 {
 +			compatible = "spacemit-dram-bus";
 +			#address-cells = <2>;
 +			#size-cells = <2>;
 +			dma-ranges = <0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>,
 +				     <0x0 0xb8000000 0x1 0x38000000 0x3 0x48000000>;
++			#interconnect-cells = <0>;
++			status = "okay";
++		};
++
++		/* dram mapping for v2d/isp/csi/vi/cpp for ex. */
++		dram_range3: dram_range@3 {
++			compatible = "spacemit-dram-bus";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			dma-ranges = <0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>,
++				     <0x0 0x80000000 0x1 0x00000000 0x1 0x80000000>;
++			#interconnect-cells = <0>;
++			status = "okay";
++		};
++
++		/* dram mapping for dma&users for ex. */
++		dram_range4: dram_range@4 {
++			compatible = "spacemit-dram-bus";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			dma-ranges = <0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>,
++				     <0x1 0x00000000 0x1 0x80000000 0x3 0x00000000>;
++			#interconnect-cells = <0>;
++			status = "okay";
++		};
++
++		/* dram mapping for eth/crypto/jpu for ex. */
++		dram_range5: dram_range@5 {
++			compatible = "spacemit-dram-bus";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			dma-ranges = <0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>,
++				     <0x0 0x80000000 0x1 0x00000000 0x0 0x80000000>;
 +			#interconnect-cells = <0>;
 +			status = "okay";
 +		};
@@ -1187,8 +1316,9 @@ index 000000000000..d18fef172d89
 +		};
 +
 +		pinctrl: pinctrl@d401e000 {
-+			compatible = "pinconf-single";
-+			reg = <0x0 0xd401e000 0x0 0x400>;
++			compatible = "pinconf-single-aib";
++			reg = <0x0 0xd401e000 0x0 0x400>,
++				<0x0 0xd4019800 0x0 0x10>;
 +			#address-cells = <1>;
 +			#size-cells = <1>;
 +			#pinctrl-cells = <2>;
@@ -1196,6 +1326,16 @@ index 000000000000..d18fef172d89
 +
 +			pinctrl-single,register-width = <32>;
 +			pinctrl-single,function-mask = <0xff77>;
++
++			clocks = <&ccu CLK_AIB>;
++			clock-names = "clk_aib";
++			resets = <&reset RESET_AIB>;
++			reset-names = "aib_rst";
++
++			interrupt-parent = <&intc>;
++			interrupts = <60>;
++			interrupt-controller;
++			#interrupt-cells = <1>;
 +
 +			range: gpio-range {
 +				#pinctrl-single,gpio-range-cells = <3>;
@@ -1351,7 +1491,7 @@ index 000000000000..d18fef172d89
 +			dmas = <&pdma0 DMA_UART0_RX 1
 +				&pdma0 DMA_UART0_TX 1>;
 +			dma-names = "rx", "tx";
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "ok";
 +		};
@@ -1368,7 +1508,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1385,7 +1525,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1402,7 +1542,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1419,7 +1559,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1436,7 +1576,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1453,7 +1593,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1470,7 +1610,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1487,7 +1627,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1535,7 +1675,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "ok";
 +		};
@@ -1567,7 +1707,7 @@ index 000000000000..d18fef172d89
 +			resets = <&reset RESET_SSPA0>;
 +			#address-cells = <1>;
 +			#size-cells = <0>;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1588,7 +1728,7 @@ index 000000000000..d18fef172d89
 +			resets = <&reset RESET_SSPA1>;
 +			#address-cells = <1>;
 +			#size-cells = <0>;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1607,7 +1747,7 @@ index 000000000000..d18fef172d89
 +			resets = <&reset RESET_SEC_SSP2>;
 +			#address-cells = <1>;
 +			#size-cells = <0>;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1628,7 +1768,7 @@ index 000000000000..d18fef172d89
 +			resets = <&reset RESET_SSP3>;
 +			#address-cells = <1>;
 +			#size-cells = <0>;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1660,7 +1800,7 @@ index 000000000000..d18fef172d89
 +			spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1692,7 +1832,7 @@ index 000000000000..d18fef172d89
 +                        spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +                        status = "disabled";
 +                };
@@ -1724,7 +1864,7 @@ index 000000000000..d18fef172d89
 +                        spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +                        status = "disabled";
 +                };
@@ -1749,7 +1889,7 @@ index 000000000000..d18fef172d89
 +                        spacemit,apb_clock = <52000000>;
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +                        status = "disabled";
 +                };
@@ -1781,7 +1921,7 @@ index 000000000000..d18fef172d89
 +			spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1813,7 +1953,7 @@ index 000000000000..d18fef172d89
 +                        spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +                        status = "disabled";
 +                };
@@ -1845,7 +1985,7 @@ index 000000000000..d18fef172d89
 +			spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1877,7 +2017,7 @@ index 000000000000..d18fef172d89
 +			spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -1909,7 +2049,7 @@ index 000000000000..d18fef172d89
 +                        spacemit,apb_clock = <52000000>;
 +                        power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +                        cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +                        status = "disabled";
 +                };
@@ -2204,8 +2344,6 @@ index 000000000000..d18fef172d89
 +			clock-names = "per","ipg";
 +			resets = <&reset RESET_CAN0>;
 +			fsl,clk-source = <0>;
-+			interconnects = <&dram_range0>;
-+			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
 +
@@ -2218,8 +2356,6 @@ index 000000000000..d18fef172d89
 +			clocks = <&ccu CLK_RCPU_CAN>,<&ccu CLK_RCPU_CAN_BUS>;
 +			clock-names = "per","ipg";
 +			resets = <&reset RESET_RCPU_CAN>;
-+			interconnects = <&dram_range0>;
-+			interconnect-names = "dma-mem";
 +			rcpu-can;
 +			status = "disabled";
 +		};
@@ -2272,7 +2408,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range1>;
++			interconnects = <&dram_range5>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -2296,7 +2432,7 @@ index 000000000000..d18fef172d89
 +			power-domains = <&power K1X_PMU_BUS_PWR_DOMAIN>;
 +			clk,pm-runtime,no-sleep;
 +			cpuidle,pm-runtime,sleep;
-+			interconnects = <&dram_range1>;
++			interconnects = <&dram_range5>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -2351,8 +2487,9 @@ index 000000000000..d18fef172d89
 +
 +		ehci: ehci@c0900100 {
 +			compatible = "spacemit,mv-ehci";
-+			reg = <0x0 0xc0900100 0x0 0x4000>;
-+			interrupts = <105>;
++			reg = <0x0 0xc0900100 0x0 0x4000>,
++				  <0x0 0xd428287c 0x0 0x4>;
++			interrupts = <105>,<106>;
 +			interrupt-parent = <&intc>;
 +			spacemit,ehci-name = "mv-ehci";
 +			spacemit,otg-force-a-bus-req;
@@ -2378,8 +2515,9 @@ index 000000000000..d18fef172d89
 +
 +		ehci1: ehci1@c0980100 {
 +			compatible = "spacemit,mv-ehci";
-+			reg = <0x0 0xc0980100 0x0 0x4000>;
-+			interrupts = <118>;
++			reg = <0x0 0xc0980100 0x0 0x4000>,
++				  <0x0 0xd4282bc4 0x0 0x4>;
++			interrupts = <118>,<148>;
 +			interrupt-parent = <&intc>;
 +			spacemit,ehci-name = "mv-ehci";
 +			spacemit,otg-force-a-bus-req;
@@ -2423,6 +2561,7 @@ index 000000000000..d18fef172d89
 +			compatible = "spacemit,k1-x-dwc3";
 +			#address-cells = <2>;
 +			#size-cells = <2>;
++			reg = <0x0 0xd4282bc8 0x0 0x4>;
 +			resets = <&reset RESET_USB3_0>;
 +			reset-names = "ctl_rst";
 +			clocks = <&ccu CLK_USB30>;
@@ -2682,7 +2821,7 @@ index 000000000000..d18fef172d89
 +			k1x,qspi-rx-dma = <1>;
 +			dmas = <&pdma0 45 1>;
 +			dma-names = "tx-dma";
-+			interconnects = <&dram_range0>;
++			interconnects = <&dram_range4>;
 +			interconnect-names = "dma-mem";
 +			status = "disabled";
 +		};
@@ -2861,7 +3000,7 @@ index 000000000000..d18fef172d89
 +			reset-names= "v2d_reset";
 +			interrupt-parent = <&intc>;
 +			interrupts = <86>;
-+			interconnects = <&dram_range1>;
++			interconnects = <&dram_range3>;
 +			interconnect-names = "dma-mem";
 +			status = "ok";
 +		};
@@ -2887,7 +3026,7 @@ index 000000000000..d18fef172d89
 +			jpu,cclk-min-frequency = <409000000>;
 +			jpu,cclk-default-frequency = <614000000>;
 +			page-size = <4>;
-+			interconnects = <&dram_range1>;
++			interconnects = <&dram_range5>;
 +			interconnect-names = "dma-mem";
 +			clk,pm-runtime,no-sleep;
 +			status = "okay";
@@ -2922,7 +3061,22 @@ index 000000000000..d18fef172d89
 +			num-engines = <1>;
 +			clocks = <&ccu CLK_AES>;
 +			resets = <&reset RESET_AES>;
++			interconnects = <&dram_range5>;
++			interconnect-names = "dma-mem";
 +			status = "okay";
++		};
++
++		efuse: fuse@f0702800 {
++			compatible = "simple-mfd";
++			#address-cells = <1>;
++			#size-cells = <1>;
++			ranges = <0 0x0 0xf0702800 0x400>;
++			status = "disabled";
++		};
++
++		socinfo: socinfo@0 {
++			compatible = "spacemit,socinfo-k1x";
++			status = "disabled";
 +		};
 +
 +		ciu: ciu@d4282c00 {
@@ -3065,6 +3219,8 @@ index 000000000000..d18fef172d89
 +		compatible = "spacemit,simple-audio-card";
 +		simple-audio-card,name = "snd-hdmi";
 +		status = "disabled";
++		interconnects = <&dram_range4>;
++		interconnect-names = "dma-mem";
 +		simple-audio-card,cpu {
 +			sound-dai = <&hdmi_sspa>;
 +		};
@@ -3080,6 +3236,8 @@ index 000000000000..d18fef172d89
 +		compatible = "spacemit,simple-audio-card";
 +		simple-audio-card,format = "i2s";
 +		status = "disabled";
++		interconnects = <&dram_range4>;
++		interconnect-names = "dma-mem";
 +		spacemit,init-jack;
 +		simple-audio-card,cpu {
 +			sound-dai = <&i2s0>;
@@ -3091,16 +3249,17 @@ index 000000000000..d18fef172d89
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
 new file mode 100644
-index 000000000000..0885c7e82466
+index 000000000000..eec69cc507b1
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
-@@ -0,0 +1,1129 @@
+@@ -0,0 +1,1149 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2023 Spacemit, Inc */
 +
 +/dts-v1/;
 +
 +#include "k1-x.dtsi"
++#include "k1-x-efuse.dtsi"
 +#include "k1-x_pinctrl.dtsi"
 +#include "lcd/lcd_gx09inx101_mipi.dtsi"
 +#include "k1-x-hdmi.dtsi"
@@ -3244,8 +3403,11 @@ index 000000000000..0885c7e82466
 +
 +		wlan_pwrseq: wlan-pwrseq {
 +			compatible = "spacemit,wlan-pwrseq";
-+			regon-gpios     = <&gpio 116 0>;
-+			hostwake-gpios  = <&gpio 66 0>;
++			regon-gpios = <&gpio 116 0>;
++			interrupt-parent = <&pinctrl>;
++			interrupts = <268>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&pinctrl_wlan_wakeup>;
 +		};
 +
 +		bt_pwrseq: bt-pwrseq {
@@ -3336,13 +3498,6 @@ index 000000000000..0885c7e82466
 +&i2c0 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_i2c0>;
-+	spacemit,i2c-fast-mode;
-+	status = "okay";
-+};
-+
-+&i2c1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_i2c1>;
 +	spacemit,i2c-fast-mode;
 +	status = "okay";
 +};
@@ -3648,7 +3803,7 @@ index 000000000000..0885c7e82466
 +		&range GPIO_58  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
 +		&range GPIO_63  2 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
 +		&range GPIO_65  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
-+		&range GPIO_66  2 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_3V_DS4)
++		&range GPIO_67  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_3V_DS4)
 +		&range PRI_TDI  2 (MUX_MODE1 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
 +		&range PRI_TCK  1 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
 +		&range PRI_TDO  1 (MUX_MODE1 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
@@ -3719,13 +3874,20 @@ index 000000000000..0885c7e82466
 +			K1X_PADCONF(GPIO_46,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_clk_ref */
 +		>;
 +	};
++
++	pinctrl_wlan_wakeup: wlan_wakeup_grp {
++		pinctrl-single,pins =<
++			K1X_PADCONF(GPIO_66, MUX_MODE0, (EDGE_FALL | PULL_DOWN | PAD_3V_DS2))   /* wifi edge detect */
++		>;
++	};
 +};
 +
 +&gpio{
 +	gpio-ranges = <
 +		&pinctrl 49  GPIO_49  2
 +		&pinctrl 58  GPIO_58  1
-+		&pinctrl 63  GPIO_63  5
++		&pinctrl 63  GPIO_63  3
++		&pinctrl 67  GPIO_67  1
 +		&pinctrl 70  PRI_TDI  4
 +		&pinctrl 74  GPIO_74  1
 +		&pinctrl 80  GPIO_80  4
@@ -4092,20 +4254,36 @@ index 000000000000..0885c7e82466
 +};
 +
 +&cpu_0 {
-+	clst0-supply = <&dcdc_1>;
-+	vin-supply-names = "clst0";
++	clst-supply = <&dcdc_1>;
 +};
 +
-+&clst0_core_opp_table {
-+	opp1600000000 {
-+		opp-microvolt = <1050000>;
-+	};
++&cpu_1 {
++	clst-supply = <&dcdc_1>;
 +};
 +
-+&clst1_core_opp_table {
-+	opp1600000000 {
-+		opp-microvolt = <1050000>;
-+	};
++&cpu_2 {
++	clst-supply = <&dcdc_1>;
++};
++
++&cpu_3 {
++	clst-supply = <&dcdc_1>;
++};
++
++&cpu_4 {
++	clst-supply = <&dcdc_1>;
++};
++
++&cpu_5 {
++	clst-supply = <&dcdc_1>;
++};
++
++
++&cpu_6 {
++	clst-supply = <&dcdc_1>;
++};
++
++&cpu_7 {
++	clst-supply = <&dcdc_1>;
 +};
 +
 +&rcpu {
@@ -5762,6 +5940,78 @@ index 000000000000..fbc3d70bbb60
 +		};
 +	};
 +};};
+diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
+new file mode 100644
+index 000000000000..e7952c0d2104
+--- /dev/null
++++ b/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
+@@ -0,0 +1,66 @@
++// SPDX-License-Identifier: GPL-2.0
++
++/ { lcds: lcds {
++        lcd_jd9365da_mipi_1280x800: lcd_jd9365da_mipi_1280x800 {
++                dsi-work-mode = <1>; /* video burst mode*/
++                dsi-lane-number = <4>;
++                dsi-color-format = "rgb888";
++                width-mm = <142>;
++                height-mm = <228>;
++                use-dcs-write;
++
++                /*mipi info*/
++                height = <1280>;
++                width = <800>;
++                hfp = <16>;
++                hbp = <48>;
++                hsync = <16>;
++                vfp = <8>;
++                vbp = <4>;
++                vsync = <4>;
++                fps = <60>;
++                work-mode = <0>;
++                rgb-mode = <3>;
++                lane-number = <4>;
++                phy-bit-clock = <480000000>;
++                //phy-esc-clock = <76800000>;
++                split-enable = <0>;
++                eotp-enable = <0>;
++                burst-mode = <2>;
++                esd-check-enable = <0>;
++
++                /* DSI_CMD, DSI_MODE, timeout, len, cmd */
++                initial-command = [
++                        39 01 F0 01 11
++                        39 01 28 01 29
++                ];
++                sleep-in-command = [
++                        39 01 78 01 28
++                        39 01 78 01 10
++                ];
++                sleep-out-command = [
++                        39 01 96 01 11
++                        39 01 32 01 29
++                ];
++                read-id-command = [
++                        37 01 00 01 01
++                        14 01 00 01 04
++                ];
++
++                display-timings {
++                        timing0 {
++                                clock-frequency = <68430000>;
++                                hactive = <800>;
++                                hfront-porch = <16>;
++                                hback-porch = <48>;
++                                hsync-len = <16>;
++                                vactive = <1280>;
++                                vfront-porch = <8>;
++                                vback-porch = <4>;
++                                vsync-len = <4>;
++                                vsync-active = <1>;
++                                hsync-active = <1>;
++                        };
++                };
++        };
++};};
 diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1080.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1080.dtsi
 new file mode 100644
 index 000000000000..92a97bb458a7
@@ -5959,6 +6209,78 @@ index 000000000000..3a86d6445925
 +				vsync-len = <5>;
 +				vsync-active = <1>;
 +				hsync-active = <1>;
++			};
++		};
++	};
++};};
+diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
+new file mode 100644
+index 000000000000..9e2a12429193
+--- /dev/null
++++ b/arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
+@@ -0,0 +1,66 @@
++// SPDX-License-Identifier: GPL-2.0
++
++/ { lcds: lcds {
++	lcd_orisetech_ota7290b_mipi: lcd_orisetech_ota7290b_mipi {
++		dsi-work-mode = <1>; /* video burst mode*/
++		dsi-lane-number = <4>;
++		dsi-color-format = "rgb888";
++		width-mm = <135>;
++		height-mm = <217>;
++		use-dcs-write;
++
++		/*mipi info*/
++		height = <1920>;
++		width = <1200>;
++		hfp = <80>;
++		hbp = <60>;
++		hsync = <4>;
++		vfp = <35>;
++		vbp = <25>;
++		vsync = <4>;
++		fps = <55>;
++		work-mode = <0>;
++		rgb-mode = <3>;
++		lane-number = <4>;
++		phy-bit-clock = <1000000000>;
++		phy-esc-clock = <76800000>;
++		split-enable = <0>;
++		eotp-enable = <0>;
++		burst-mode = <2>;
++		esd-check-enable = <0>;
++
++		/* DSI_CMD, DSI_MODE, timeout, len, cmd */
++		initial-command = [
++			39 01 F0 01 11
++			39 01 28 01 29
++		];
++		sleep-in-command = [
++			39 01 78 01 28
++			39 01 78 01 10
++		];
++		sleep-out-command = [
++			39 01 96 01 11
++			39 01 32 01 29
++		];
++		read-id-command = [
++			37 01 00 01 05
++			14 01 00 05 fb fc fd fe ff
++		];
++
++		display-timings {
++			timing0 {
++				clock-frequency = <143000000>;
++				hactive = <1200>;
++				hfront-porch = <80>;
++				hback-porch = <60>;
++				hsync-len = <4>;
++				vactive = <1920>;
++				vfront-porch = <35>;
++				vback-porch = <25>;
++				vsync-len = <4>;
++				vsync-active = <0>;
++				hsync-active = <0>;
 +			};
 +		};
 +	};

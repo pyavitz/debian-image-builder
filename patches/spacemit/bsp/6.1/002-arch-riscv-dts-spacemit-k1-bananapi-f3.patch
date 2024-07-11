@@ -1,22 +1,15 @@
-From bc7afaadbd6ed3a75e299a7319380385e5c37b96 Mon Sep 17 00:00:00 2001
+From b380e560a304b247b37cea5a2c4dfe366dae2c96 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Tue, 25 Jun 2024 07:13:07 -0400
+Date: Thu, 11 Jul 2024 17:22:30 -0400
 Subject: [PATCH] arch: riscv: dts: spacemit: k1-bananapi-f3
 
-Disable pwm_bl qspi for devel reasons. Enable using overlays.
+Disable pwm_bl qspi uart2. Enable using overlays.
 
-K1-X deb1 board seems to have only one PCIe lane wired for PCIe C port,
-as a mini PCIe slot.
-
-Fix the PCIe lane number, otherwise the PCIe controller could not be
-correctly brought up and no card will be detected.
-
-Signed-off-by: Icenowy Zheng <uwu@icenowy.me>
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
  arch/riscv/boot/dts/spacemit/Makefile         |  1 +
- .../boot/dts/spacemit/k1-bananapi-f3.dts      | 22 +++++++++++++++++++
- 2 files changed, 23 insertions(+)
+ .../boot/dts/spacemit/k1-bananapi-f3.dts      | 29 +++++++++++++++++++
+ 2 files changed, 30 insertions(+)
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
 
 diff --git a/arch/riscv/boot/dts/spacemit/Makefile b/arch/riscv/boot/dts/spacemit/Makefile
@@ -32,10 +25,10 @@ index 2be95dbca797..d198630de062 100644
  obj-$(CONFIG_BUILTIN_DTB) += $(addsuffix .o, $(dtb-y))
 diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
 new file mode 100644
-index 000000000000..412bc1291c5d
+index 000000000000..9aae419722ab
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,29 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2023 Spacemit, Inc */
 +
@@ -47,10 +40,6 @@ index 000000000000..412bc1291c5d
 +	model = "BananaPi BPI-F3";
 +};
 +
-+&pcie2_rc {
-+	num-lanes = <1>;
-+};
-+
 +&pwm_bl {
 +	status = "disabled";
 +};
@@ -58,27 +47,6 @@ index 000000000000..412bc1291c5d
 +&qspi {
 +	status = "disabled";
 +};
--- 
-2.39.2
-
-From a6ada13c1786efee0358ffa7c1a4c781503628d7 Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Wed, 26 Jun 2024 06:46:30 -0400
-Subject: [PATCH] SpacemiT: BPI-F3: Add uart2 bluetooth node
-
-Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
----
- arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-index 412bc1291c5d..98f99c8346a1 100644
---- a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-+++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-@@ -20,3 +20,15 @@ &pwm_bl {
- &qspi {
- 	status = "disabled";
- };
 +
 +&uart2 {
 +	pinctrl-names = "default";
@@ -88,8 +56,8 @@ index 412bc1291c5d..98f99c8346a1 100644
 +	bluetooth {
 +		compatible = "realtek,rtl8852bs-bt";
 +		device-wake-gpios = <&gpio 64 GPIO_ACTIVE_HIGH>;
-+		//host-wake-gpios = <&gpio 65 GPIO_ACTIVE_HIGH>;
 +	};
 +};
 -- 
 2.39.2
+

@@ -8,8 +8,6 @@ source: https://gitee.com/bianbu-linux/linux-6.1
 Signed-off-by: James Deng <james.deng@spacemit.com>
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
 ---
- .../lcd/lcd_jd9365da_mipi_1280x800.dtsi       |   66 +
- .../lcd/lcd_orisetech_ota7290b_mipi.dtsi      |   66 +
  drivers/crypto/spacemit/spacemit-ce-glue.c    |   24 +-
  drivers/gpio/gpio-k1x.c                       |    6 +
  drivers/gpu/drm/spacemit/dpu/dpu_saturn.c     |    2 +-
@@ -31,8 +29,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  sound/soc/codecs/es8156.h                     |   85 +
  sound/soc/spacemit/spacemit-snd-pcm-dma.c     |    4 +-
  22 files changed, 4162 insertions(+), 204 deletions(-)
- create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
- create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
  create mode 100644 sound/soc/codecs/es7210.c
  create mode 100644 sound/soc/codecs/es7210.h
  create mode 100644 sound/soc/codecs/es7210_config.c
@@ -41,150 +37,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 sound/soc/codecs/es8156.c
  create mode 100644 sound/soc/codecs/es8156.h
 
-diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
-new file mode 100644
-index 000000000000..e7952c0d2104
---- /dev/null
-+++ b/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
-@@ -0,0 +1,66 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+/ { lcds: lcds {
-+        lcd_jd9365da_mipi_1280x800: lcd_jd9365da_mipi_1280x800 {
-+                dsi-work-mode = <1>; /* video burst mode*/
-+                dsi-lane-number = <4>;
-+                dsi-color-format = "rgb888";
-+                width-mm = <142>;
-+                height-mm = <228>;
-+                use-dcs-write;
-+
-+                /*mipi info*/
-+                height = <1280>;
-+                width = <800>;
-+                hfp = <16>;
-+                hbp = <48>;
-+                hsync = <16>;
-+                vfp = <8>;
-+                vbp = <4>;
-+                vsync = <4>;
-+                fps = <60>;
-+                work-mode = <0>;
-+                rgb-mode = <3>;
-+                lane-number = <4>;
-+                phy-bit-clock = <480000000>;
-+                //phy-esc-clock = <76800000>;
-+                split-enable = <0>;
-+                eotp-enable = <0>;
-+                burst-mode = <2>;
-+                esd-check-enable = <0>;
-+
-+                /* DSI_CMD, DSI_MODE, timeout, len, cmd */
-+                initial-command = [
-+                        39 01 F0 01 11
-+                        39 01 28 01 29
-+                ];
-+                sleep-in-command = [
-+                        39 01 78 01 28
-+                        39 01 78 01 10
-+                ];
-+                sleep-out-command = [
-+                        39 01 96 01 11
-+                        39 01 32 01 29
-+                ];
-+                read-id-command = [
-+                        37 01 00 01 01
-+                        14 01 00 01 04
-+                ];
-+
-+                display-timings {
-+                        timing0 {
-+                                clock-frequency = <68430000>;
-+                                hactive = <800>;
-+                                hfront-porch = <16>;
-+                                hback-porch = <48>;
-+                                hsync-len = <16>;
-+                                vactive = <1280>;
-+                                vfront-porch = <8>;
-+                                vback-porch = <4>;
-+                                vsync-len = <4>;
-+                                vsync-active = <1>;
-+                                hsync-active = <1>;
-+                        };
-+                };
-+        };
-+};};
-diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
-new file mode 100644
-index 000000000000..9e2a12429193
---- /dev/null
-+++ b/arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
-@@ -0,0 +1,66 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+/ { lcds: lcds {
-+	lcd_orisetech_ota7290b_mipi: lcd_orisetech_ota7290b_mipi {
-+		dsi-work-mode = <1>; /* video burst mode*/
-+		dsi-lane-number = <4>;
-+		dsi-color-format = "rgb888";
-+		width-mm = <135>;
-+		height-mm = <217>;
-+		use-dcs-write;
-+
-+		/*mipi info*/
-+		height = <1920>;
-+		width = <1200>;
-+		hfp = <80>;
-+		hbp = <60>;
-+		hsync = <4>;
-+		vfp = <35>;
-+		vbp = <25>;
-+		vsync = <4>;
-+		fps = <55>;
-+		work-mode = <0>;
-+		rgb-mode = <3>;
-+		lane-number = <4>;
-+		phy-bit-clock = <1000000000>;
-+		phy-esc-clock = <76800000>;
-+		split-enable = <0>;
-+		eotp-enable = <0>;
-+		burst-mode = <2>;
-+		esd-check-enable = <0>;
-+
-+		/* DSI_CMD, DSI_MODE, timeout, len, cmd */
-+		initial-command = [
-+			39 01 F0 01 11
-+			39 01 28 01 29
-+		];
-+		sleep-in-command = [
-+			39 01 78 01 28
-+			39 01 78 01 10
-+		];
-+		sleep-out-command = [
-+			39 01 96 01 11
-+			39 01 32 01 29
-+		];
-+		read-id-command = [
-+			37 01 00 01 05
-+			14 01 00 05 fb fc fd fe ff
-+		];
-+
-+		display-timings {
-+			timing0 {
-+				clock-frequency = <143000000>;
-+				hactive = <1200>;
-+				hfront-porch = <80>;
-+				hback-porch = <60>;
-+				hsync-len = <4>;
-+				vactive = <1920>;
-+				vfront-porch = <35>;
-+				vback-porch = <25>;
-+				vsync-len = <4>;
-+				vsync-active = <0>;
-+				hsync-active = <0>;
-+			};
-+		};
-+	};
-+};};
 diff --git a/drivers/crypto/spacemit/spacemit-ce-glue.c b/drivers/crypto/spacemit/spacemit-ce-glue.c
 index b7315a95e284..a6cc7f5a0cdd 100644
 --- a/drivers/crypto/spacemit/spacemit-ce-glue.c
