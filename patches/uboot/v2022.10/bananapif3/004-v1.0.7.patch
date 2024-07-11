@@ -1,0 +1,886 @@
+From 7b9d68a95fbf4595a4b5e0f0ce6b43f679d3812a Mon Sep 17 00:00:00 2001
+From: James Deng <james.deng@spacemit.com>
+Date: Thu, 11 Jul 2024 14:56:36 +0800
+Subject: [PATCH] Update for v1.0.7
+
+---
+ arch/riscv/dts/k1-x_MINI-PC.dts           | 12 ----
+ arch/riscv/dts/k1-x_MUSE-Book.dts         | 12 ----
+ arch/riscv/dts/k1-x_MUSE-N1.dts           | 12 ----
+ arch/riscv/dts/k1-x_MUSE-Pi.dts           | 12 ----
+ arch/riscv/dts/k1-x_deb1.dts              | 12 ----
+ arch/riscv/dts/k1-x_deb2.dts              | 12 ----
+ arch/riscv/dts/k1-x_evb.dts               | 12 ----
+ arch/riscv/dts/k1-x_hs450.dts             | 12 ----
+ arch/riscv/dts/k1-x_kx312.dts             | 12 ----
+ arch/riscv/dts/k1-x_lpi3a.dts             | 12 ----
+ arch/riscv/dts/k1-x_milkv-jupiter.dts     | 12 ----
+ arch/riscv/dts/k1-x_mingo.dts             | 12 ----
+ arch/riscv/dts/m1-x_milkv-jupiter.dts     | 12 ----
+ board/spacemit/k1-x/configs/uboot_fdt.its | 51 ++++++++-------
+ board/spacemit/k1-x/k1x.c                 | 77 ++++++++++++++++++++++-
+ board/spacemit/k1-x/spl.c                 | 11 ++--
+ board/spacemit/k1-x/splash.c              |  4 +-
+ configs/k1_defconfig                      |  3 +
+ debian/env_k1-x.txt                       | 10 ---
+ debian/u-boot-spacemit.install            |  1 -
+ debian/u-boot-spacemit.postinst           | 12 ++--
+ drivers/clk/spacemit/ccu-k1x.c            |  3 +
+ drivers/clk/spacemit/ccu_pll.c            |  9 ++-
+ drivers/fastboot/fb_spacemit.c            | 41 ++++++++----
+ drivers/video/spacemit/spacemit_edp.c     |  6 +-
+ include/configs/k1-x.h                    |  5 +-
+ include/fb_spacemit.h                     | 10 ++-
+ 27 files changed, 174 insertions(+), 225 deletions(-)
+ delete mode 100644 debian/env_k1-x.txt
+
+diff --git a/arch/riscv/dts/k1-x_MINI-PC.dts b/arch/riscv/dts/k1-x_MINI-PC.dts
+index 375d4b52..9fe6856b 100644
+--- a/arch/riscv/dts/k1-x_MINI-PC.dts
++++ b/arch/riscv/dts/k1-x_MINI-PC.dts
+@@ -35,18 +35,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_MUSE-Book.dts b/arch/riscv/dts/k1-x_MUSE-Book.dts
+index 25246966..b74873ff 100644
+--- a/arch/riscv/dts/k1-x_MUSE-Book.dts
++++ b/arch/riscv/dts/k1-x_MUSE-Book.dts
+@@ -25,18 +25,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_MUSE-N1.dts b/arch/riscv/dts/k1-x_MUSE-N1.dts
+index 6051fb58..18ca3659 100644
+--- a/arch/riscv/dts/k1-x_MUSE-N1.dts
++++ b/arch/riscv/dts/k1-x_MUSE-N1.dts
+@@ -32,18 +32,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_MUSE-Pi.dts b/arch/riscv/dts/k1-x_MUSE-Pi.dts
+index c3bcd226..4d9a520a 100644
+--- a/arch/riscv/dts/k1-x_MUSE-Pi.dts
++++ b/arch/riscv/dts/k1-x_MUSE-Pi.dts
+@@ -38,18 +38,6 @@
+ 
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_deb1.dts b/arch/riscv/dts/k1-x_deb1.dts
+index 4236027a..893a720f 100644
+--- a/arch/riscv/dts/k1-x_deb1.dts
++++ b/arch/riscv/dts/k1-x_deb1.dts
+@@ -36,18 +36,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_deb2.dts b/arch/riscv/dts/k1-x_deb2.dts
+index e4ead43f..b3b74036 100644
+--- a/arch/riscv/dts/k1-x_deb2.dts
++++ b/arch/riscv/dts/k1-x_deb2.dts
+@@ -35,18 +35,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_evb.dts b/arch/riscv/dts/k1-x_evb.dts
+index 3551dc71..b46c950c 100644
+--- a/arch/riscv/dts/k1-x_evb.dts
++++ b/arch/riscv/dts/k1-x_evb.dts
+@@ -25,18 +25,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_hs450.dts b/arch/riscv/dts/k1-x_hs450.dts
+index 3ef65391..11aa6147 100644
+--- a/arch/riscv/dts/k1-x_hs450.dts
++++ b/arch/riscv/dts/k1-x_hs450.dts
+@@ -25,18 +25,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_kx312.dts b/arch/riscv/dts/k1-x_kx312.dts
+index d352a42d..a922c770 100644
+--- a/arch/riscv/dts/k1-x_kx312.dts
++++ b/arch/riscv/dts/k1-x_kx312.dts
+@@ -25,18 +25,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_lpi3a.dts b/arch/riscv/dts/k1-x_lpi3a.dts
+index 7952ba84..b6da3978 100644
+--- a/arch/riscv/dts/k1-x_lpi3a.dts
++++ b/arch/riscv/dts/k1-x_lpi3a.dts
+@@ -36,18 +36,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_milkv-jupiter.dts b/arch/riscv/dts/k1-x_milkv-jupiter.dts
+index eb9e97b8..06264754 100644
+--- a/arch/riscv/dts/k1-x_milkv-jupiter.dts
++++ b/arch/riscv/dts/k1-x_milkv-jupiter.dts
+@@ -36,18 +36,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/k1-x_mingo.dts b/arch/riscv/dts/k1-x_mingo.dts
+index 4253433a..f3ff1031 100644
+--- a/arch/riscv/dts/k1-x_mingo.dts
++++ b/arch/riscv/dts/k1-x_mingo.dts
+@@ -35,18 +35,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/arch/riscv/dts/m1-x_milkv-jupiter.dts b/arch/riscv/dts/m1-x_milkv-jupiter.dts
+index 06484ade..d868a863 100644
+--- a/arch/riscv/dts/m1-x_milkv-jupiter.dts
++++ b/arch/riscv/dts/m1-x_milkv-jupiter.dts
+@@ -36,18 +36,6 @@
+ 	};
+ };
+ 
+-&cpu_0 {
+-	/* boot frequency for cluster-0, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster0 = <1228000>;
+-	/* boot frequency for cluster-1, should be 1600000, 1228000, 819000, or 614000 */
+-	boot_freq_cluster1 = <1228000>;
+-};
+-
+-&dramc {
+-	/* dram data rate, should be 1200, 1600, or 2400 */
+-	datarate = <2400>;
+-};
+-
+ &cpus {
+ 	timebase-frequency = <24000000>;
+ };
+diff --git a/board/spacemit/k1-x/configs/uboot_fdt.its b/board/spacemit/k1-x/configs/uboot_fdt.its
+index fc4033c7..6386b132 100644
+--- a/board/spacemit/k1-x/configs/uboot_fdt.its
++++ b/board/spacemit/k1-x/configs/uboot_fdt.its
+@@ -119,27 +119,27 @@
+ 			};
+ 		};
+ 		fdt_12 {
+-                        description = "m1-x_milkv-jupiter";
+-                        type = "flat_dt";
+-                        compression = "none";
+-                        data = /incbin/("../dtb/m1-x_milkv-jupiter.dtb");
+-                        hash-1 {
+-                                algo = "crc32";
+-                        };
++			description = "m1-x_milkv-jupiter";
++			type = "flat_dt";
++			compression = "none";
++			data = /incbin/("../dtb/m1-x_milkv-jupiter.dtb");
++			hash-1 {
++				algo = "crc32";
++			};
+ 		};
+ 		fdt_13 {
+-                        description = "k1-x_lpi3a";
+-                        type = "flat_dt";
+-                        compression = "none";
+-                        data = /incbin/("../dtb/k1-x_lpi3a.dtb");
+-                        hash-1 {
+-                                algo = "crc32";
+-                        };
+-                };
++			description = "k1-x_lpi3a";
++			type = "flat_dt";
++			compression = "none";
++			data = /incbin/("../dtb/k1-x_lpi3a.dtb");
++			hash-1 {
++				algo = "crc32";
++			};
++		};
+ 	};
+ 
+ 	configurations {
+-		default = "conf_1";
++		default = "conf_2";
+ 		conf_1 {
+ 			description = "k1-x_evb";
+ 			loadables = "uboot";
+@@ -196,15 +196,14 @@
+ 			fdt = "fdt_11";
+ 		};
+ 		conf_12 {
+-                        description = "m1-x_milkv-jupiter";
+-                        loadables = "uboot";
+-                        fdt = "fdt_12";
+-                };
+-		 conf_13 {
+-                        description = "k1-x_lpi3a";
+-                        loadables = "uboot";
+-                        fdt = "fdt_13";
+-                };
+-
++			description = "m1-x_milkv-jupiter";
++			loadables = "uboot";
++			fdt = "fdt_12";
++		};
++		conf_13 {
++			description = "k1-x_lpi3a";
++			loadables = "uboot";
++			fdt = "fdt_13";
++		};
+ 	};
+ };
+diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
+index 8a42f5d8..192a850a 100644
+--- a/board/spacemit/k1-x/k1x.c
++++ b/board/spacemit/k1-x/k1x.c
+@@ -36,6 +36,9 @@
+ #include <dm/device.h>
+ #include <dm/device-internal.h>
+ #include <g_dnl.h>
++#include <fdt_simplefb.h>
++#include <mtd_node.h>
++#include <misc.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ static char found_partition[64] = {0};
+@@ -423,7 +426,7 @@ void import_env_from_bootfs(void)
+ 		char *blk_name;
+ 		int blk_index;
+ 
+-		if (get_available_blk_dev(&blk_name, &blk_index)){
++		if (get_available_boot_blk_dev(&blk_name, &blk_index)){
+ 			printf("can not get available blk dev\n");
+ 			return;
+ 		}
+@@ -506,7 +509,7 @@ void setenv_boot_mode(void)
+ 		char *blk_name;
+ 		int blk_index;
+ 
+-		if (get_available_blk_dev(&blk_name, &blk_index)){
++		if (get_available_boot_blk_dev(&blk_name, &blk_index)){
+ 			printf("can not get available blk dev\n");
+ 			return;
+ 		}
+@@ -996,3 +999,73 @@ int board_fit_config_name_match(const char *name)
+ 		return -1;
+ }
+ #endif
++
++static uint32_t get_dro_from_efuse(void)
++{
++	struct udevice *dev;
++	uint8_t fuses[2];
++	uint32_t dro = SVT_DRO_DEFAULT_VALUE;
++	int ret;
++
++	/* retrieve the device */
++	ret = uclass_get_device_by_driver(UCLASS_MISC,
++			DM_DRIVER_GET(spacemit_k1x_efuse), &dev);
++	if (ret) {
++		return ret;
++	}
++
++	// read from efuse, each bank has 32byte efuse data
++	// SVT-DRO in bank7 bit173~bit181
++	ret = misc_read(dev, 7 * 32 + 21, fuses, sizeof(fuses));
++	if (0 == ret) {
++		// (byte1 bit0~bit5) << 3 | (byte0 bit5~7) >> 5
++		dro = (fuses[0] >> 5) & 0x07;
++		dro |= (fuses[1] & 0x3F) << 3;
++	}
++
++	if (0 == dro)
++		dro = SVT_DRO_DEFAULT_VALUE;
++	return dro;
++}
++
++static int ft_board_cpu_fixup(void *blob, struct bd_info *bd)
++{
++	int node, ret;
++	uint32_t dro;
++
++	node = fdt_path_offset(blob, "/cpus");
++	if (node < 0) {
++		pr_err("Can't find cpus node!\n");
++		return -EINVAL;
++	}
++
++	dro = cpu_to_fdt32(get_dro_from_efuse());
++	ret = fdt_setprop(blob, node, "svt-dro", &dro, sizeof(dro));
++	if (ret < 0)
++		return ret;
++	return 0;
++}
++
++int ft_board_setup(void *blob, struct bd_info *bd)
++{
++	int node;
++	static const struct node_info nodes[] = {
++		{ "spacemit,k1x-qspi", MTD_DEV_TYPE_NOR, },  /* SPI flash */
++	};
++
++	/* update MTD partition info for nor boot */
++	if (CONFIG_IS_ENABLED(FDT_FIXUP_PARTITIONS) &&
++		BOOT_MODE_NOR == get_boot_mode())
++		fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
++
++	if (CONFIG_IS_ENABLED(FDT_SIMPLEFB)) {
++		node = fdt_node_offset_by_compatible(blob, -1, "simple-framebuffer");
++		if (node < 0)
++			fdt_simplefb_add_node(blob);
++
++		fdt_simplefb_enable_and_mem_rsv(blob);
++	}
++
++	ft_board_cpu_fixup(blob, bd);
++	return 0;
++}
+diff --git a/board/spacemit/k1-x/spl.c b/board/spacemit/k1-x/spl.c
+index 7993f8ce..aa7331de 100644
+--- a/board/spacemit/k1-x/spl.c
++++ b/board/spacemit/k1-x/spl.c
+@@ -140,7 +140,7 @@ static uint32_t adjust_cpu_freq(uint64_t cluster, uint32_t freq)
+ 	val &= ~(0x07 | BIT(13));
+ 	switch(freq) {
+ 	case 1600000:
+-		val |= 0x07;
++		val |= 0x07 | BIT(13); //set cpu freq to PLL3_DIV1
+ 		break;
+ 
+ 	case 1228000:
+@@ -180,13 +180,16 @@ void raise_cpu_frequency(void)
+ 	val |= BIT(16) | BIT(15) | BIT(14) | BIT(13);
+ 	writel(val, (void __iomem *)(K1X_MPMU_BASE + 0x1024));
+ 
+-	/* enable PLL3(3200Mhz) */
++	/* set the frequency of pll3 to 1.6G */
++	writel(0x0050cd61, (void __iomem *)(K1X_APB_SPARE_BASE + 0x124));
++
++	/* enable PLL3 */
+ 	val = readl((void __iomem *)(K1X_APB_SPARE_BASE + 0x12C));
+ 	val |= BIT(31);
+ 	writel(val, (void __iomem *)(K1X_APB_SPARE_BASE + 0x12C));
+-	/* enable PLL3_DIV2 */
++	/* enable PLL3_DIV2 and PLL3_DIV1*/
+ 	val = readl((void __iomem *)(K1X_APB_SPARE_BASE + 0x128));
+-	val |= BIT(1);
++	val |= BIT(1) | BIT(0);
+ 	writel(val, (void __iomem *)(K1X_APB_SPARE_BASE + 0x128));
+ 
+ 	cpu = cpu_get_current_dev();
+diff --git a/board/spacemit/k1-x/splash.c b/board/spacemit/k1-x/splash.c
+index 68c0af0f..eb94e7d8 100644
+--- a/board/spacemit/k1-x/splash.c
++++ b/board/spacemit/k1-x/splash.c
+@@ -56,7 +56,7 @@ int set_nor_splash_location(struct splash_location *locations) {
+ 	char *blk_name;
+ 	char devpart_str[16];
+ 
+-	if (get_available_blk_dev(&blk_name, &blk_index)){
++	if (get_available_boot_blk_dev(&blk_name, &blk_index)){
+ 		printf("can not get available blk dev\n");
+ 		return -1;
+ 	}
+@@ -145,7 +145,7 @@ int splash_screen_prepare(void)
+ 		int blk_index;
+ 		char *blk_name;
+ 
+-		if (get_available_blk_dev(&blk_name, &blk_index)){
++		if (get_available_boot_blk_dev(&blk_name, &blk_index)){
+ 			printf("can not get available blk dev\n");
+ 			return -1;
+ 		}
+diff --git a/configs/k1_defconfig b/configs/k1_defconfig
+index 9a90a13b..453ecb25 100644
+--- a/configs/k1_defconfig
++++ b/configs/k1_defconfig
+@@ -33,6 +33,7 @@ CONFIG_SPL_LOAD_FIT_ADDRESS=0x11000000
+ # CONFIG_BOOTSTD is not set
+ CONFIG_LEGACY_IMAGE_FORMAT=y
+ CONFIG_SUPPORT_RAW_INITRD=y
++CONFIG_OF_BOARD_SETUP=y
+ CONFIG_BOOTDELAY=0
+ CONFIG_AUTOBOOT_KEYED=y
+ CONFIG_AUTOBOOT_STOP_STR="s"
+@@ -75,6 +76,7 @@ CONFIG_SPL_USB_GADGET=y
+ CONFIG_SPL_FASTBOOT_LOAD=y
+ CONFIG_SPL_USB_SDP_SUPPORT=y
+ CONFIG_SPL_OPENSBI_SCRATCH_OPTIONS=0x0
++CONFIG_FDT_SIMPLEFB=y
+ CONFIG_HUSH_PARSER=y
+ CONFIG_SYS_CBSIZE=256
+ CONFIG_SYS_PBSIZE=276
+@@ -266,3 +268,4 @@ CONFIG_IMAGE_SPARSE_TRANSFER_BLK_NUM=0x3000
+ # CONFIG_SPL_SHA1 is not set
+ # CONFIG_SPL_SHA256 is not set
+ CONFIG_ZSTD=y
++CONFIG_FDT_FIXUP_PARTITIONS=y
+diff --git a/debian/env_k1-x.txt b/debian/env_k1-x.txt
+deleted file mode 100644
+index 71066971..00000000
+--- a/debian/env_k1-x.txt
++++ /dev/null
+@@ -1,10 +0,0 @@
+-# Common parameter
+-console=ttyS0,115200
+-init=/init
+-bootdelay=0
+-baudrate=115200
+-loglevel=8
+-
+-knl_name=vmlinuz-6.1.15
+-ramdisk_name=initrd.img-6.1.15
+-dtb_dir=spacemit
+diff --git a/debian/u-boot-spacemit.install b/debian/u-boot-spacemit.install
+index 5c74aa85..11c4a7aa 100644
+--- a/debian/u-boot-spacemit.install
++++ b/debian/u-boot-spacemit.install
+@@ -2,5 +2,4 @@ u-boot.itb usr/lib/u-boot/spacemit
+ FSBL.bin usr/lib/u-boot/spacemit
+ bootinfo*.bin usr/lib/u-boot/spacemit
+ env.bin usr/lib/u-boot/spacemit
+-debian/env_k1-x.txt boot
+ tools/logos/bianbu.bmp boot
+diff --git a/debian/u-boot-spacemit.postinst b/debian/u-boot-spacemit.postinst
+index 9c2d2a5b..234d5ae1 100755
+--- a/debian/u-boot-spacemit.postinst
++++ b/debian/u-boot-spacemit.postinst
+@@ -4,9 +4,11 @@ set -e
+ case "$1" in
+ configure)
+     target=""
+-    if grep -q '^spacemit' /sys/firmware/devicetree/base/model; then
++    if grep -q '^spacemit' /sys/firmware/devicetree/base/model || grep -q '^spacemit' /sys/devices/soc0/family; then
+         target="spacemit"
+     else
++        echo "Neither /sys/firmware/devicetree/base/model nor /sys/devices/soc0/family starts with 'spacemit'."
++        echo "This may indicate that you are installing this package in a chroot environment."
+         exit 0
+     fi
+ 
+@@ -41,8 +43,6 @@ configure)
+             UBOOT_SEEK=0
+             if [ -e $BOOTINFO ]; then
+                 echo 0 | tee /sys/block/mmcblk2boot0/force_ro
+-            else
+-                exit 0
+             fi
+             ;;
+         "/dev/nvme0n1"*)
+@@ -58,12 +58,12 @@ configure)
+             ;;
+         *)
+             echo "Unsupported root=$ROOT"
+-            exit 0
++            exit 1
+             ;;
+         esac
+     else
+         echo "Missing root= in cmdline"
+-        exit 0
++        exit 1
+     fi
+ 
+     BIN_DIR="/usr/lib/u-boot/$target"
+@@ -73,7 +73,7 @@ configure)
+         if [ ! -e "$file" ]; then
+             # 任意不存在则退出
+             echo "Missing $file"
+-            exit 0
++            exit 1
+         fi
+     done
+ 
+diff --git a/drivers/clk/spacemit/ccu-k1x.c b/drivers/clk/spacemit/ccu-k1x.c
+index 79500a74..c976cdda 100644
+--- a/drivers/clk/spacemit/ccu-k1x.c
++++ b/drivers/clk/spacemit/ccu-k1x.c
+@@ -346,6 +346,9 @@ static const struct ccu_pll_rate_tbl pll2_rate_tbl[] = {
+ };
+ 
+ static const struct ccu_pll_rate_tbl pll3_rate_tbl[] = {
++	PLL_RATE(1600000000UL, 0x61, 0xcd, 0x50, 0x00, 0x43, 0xeaaaab),
++	PLL_RATE(1800000000UL, 0x61, 0xcd, 0x50, 0x00, 0x4b, 0x000000),
++	PLL_RATE(2000000000UL, 0x62, 0xdd, 0x50, 0x00, 0x2a, 0xeaaaab),
+ 	PLL_RATE(3000000000UL, 0x66, 0xdd, 0x50, 0x00, 0x3f, 0xe00000),
+ 	PLL_RATE(3200000000UL, 0x67, 0xdd, 0x50, 0x00, 0x43, 0xeaaaab),
+ 	PLL_RATE(2457600000UL, 0x64, 0xdd, 0x50, 0x00, 0x33, 0x0ccccd),
+diff --git a/drivers/clk/spacemit/ccu_pll.c b/drivers/clk/spacemit/ccu_pll.c
+index e7e432ae..5f57bb0b 100644
+--- a/drivers/clk/spacemit/ccu_pll.c
++++ b/drivers/clk/spacemit/ccu_pll.c
+@@ -187,10 +187,11 @@ static ulong ccu_pll_set_rate(struct clk *clk, ulong rate)
+ 	union pllx_swcr1 swcr1;
+ 	union pllx_swcr3 swcr3;
+ 	bool found = false;
++	bool pll_enabled = false;
+ 
+ 	if (ccu_pll_is_enabled(clk)) {
+-		pr_info("%s is enabled, ignore the setrate!\n", clk->dev->name);
+-		return 0;
++		pll_enabled = true;
++		ccu_pll_disable(clk);
+ 	}
+ 
+ 	old_rate = __get_vco_freq(clk);
+@@ -212,6 +213,8 @@ static ulong ccu_pll_set_rate(struct clk *clk, ulong rate)
+ 
+ 	} else {
+ 		pr_err("don't find freq table for pll\n");
++		if (pll_enabled)
++			ccu_pll_enable(clk);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -228,6 +231,8 @@ static ulong ccu_pll_set_rate(struct clk *clk, ulong rate)
+ 	swcr3.b.div_frc = div_frc;
+ 	pll_writel_pll_swcr3(swcr3.v, p->common);
+ 
++	if (pll_enabled)
++		ccu_pll_enable(clk);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/fastboot/fb_spacemit.c b/drivers/fastboot/fb_spacemit.c
+index 8b22f64f..ab25ddb1 100644
+--- a/drivers/fastboot/fb_spacemit.c
++++ b/drivers/fastboot/fb_spacemit.c
+@@ -1321,7 +1321,7 @@ void clear_storage_data(char *cmd_parameter, char *response)
+  * @param partition try to find partition exist or not.
+  * @return int return partition index while finding partition in blk dev.
+ */
+-int detect_blk_dev_or_partition_exist(char *blk_name, int blk_index, char *partition)
++int detect_blk_dev_or_partition_exist(char *blk_name, int blk_index, const char *partition)
+ {
+ 	struct blk_desc *dev_desc;
+ 	struct disk_partition info;
+@@ -1355,14 +1355,7 @@ int detect_blk_dev_or_partition_exist(char *blk_name, int blk_index, char *parti
+ 	return 0;
+ }
+ 
+-/**
+- * @brief try to find available blk dev while defind multi blks at nor boot.
+- *
+- * @param blk_dev return available blk dev.
+- * @param index return available blk index.
+- * @param return return 0 while detect available blk dev.
+-*/
+-int get_available_blk_dev(char **blk_dev, int *index)
++int _get_available_blk_or_part(char **blk_dev, int *index, const char *partition)
+ {
+ #ifdef CONFIG_FASTBOOT_SUPPORT_BLOCK_DEV_NAME
+ 	static bool scan_nvme = false;
+@@ -1383,11 +1376,11 @@ int get_available_blk_dev(char **blk_dev, int *index)
+ 	if (strlen(CONFIG_FASTBOOT_SUPPORT_BLOCK_DEV_NAME) > 0){
+ 		*blk_dev = CONFIG_FASTBOOT_SUPPORT_BLOCK_DEV_NAME;
+ 		*index = CONFIG_FASTBOOT_SUPPORT_BLOCK_DEV_INDEX;
+-		if (detect_blk_dev_or_partition_exist(*blk_dev, *index, NULL) < 0){
++		if (detect_blk_dev_or_partition_exist(*blk_dev, *index, partition) < 0){
+ #ifdef CONFIG_FASTBOOT_SUPPORT_SECOND_BLOCK_DEV_NAME
+ 			*blk_dev = CONFIG_FASTBOOT_SUPPORT_SECOND_BLOCK_DEV_NAME;
+ 			*index = CONFIG_FASTBOOT_SUPPORT_SECOND_BLOCK_DEV_INDEX;
+-			if (detect_blk_dev_or_partition_exist(*blk_dev, *index, NULL) < 0)
++			if (detect_blk_dev_or_partition_exist(*blk_dev, *index, partition) < 0)
+ #endif
+ 				return -1;
+ 		}
+@@ -1399,5 +1392,31 @@ int get_available_blk_dev(char **blk_dev, int *index)
+ 	printf("not defind blk dev, check make config\n");
+ 	return -1;
+ #endif //CONFIG_FASTBOOT_SUPPORT_BLOCK_DEV_NAME
++	printf("detect available blk:%s\n", *blk_dev);
+ 	return 0;
+ }
++
++
++
++/**
++ * @brief try to find available blk dev while defind multi blks at nor boot.
++ *
++ * @param blk_dev return available blk dev.
++ * @param index return available blk index.
++ * @param return return 0 while detect available blk dev.
++*/
++int get_available_blk_dev(char **blk_dev, int *index)
++{
++	return _get_available_blk_or_part(blk_dev, index, NULL);
++}
++
++/**
++ * @brief try to find available bootable blk dev.
++ * @param blk_dev return available bootable blk dev.
++ * @param index return available bootable blk index.
++ * @param return return 0 while detect available blk dev.
++*/
++int get_available_boot_blk_dev(char **blk_dev, int *index)
++{
++	return _get_available_blk_or_part(blk_dev, index, BOOTFS_NAME);
++}
+diff --git a/drivers/video/spacemit/spacemit_edp.c b/drivers/video/spacemit/spacemit_edp.c
+index 0f382bb0..e6edabfd 100644
+--- a/drivers/video/spacemit/spacemit_edp.c
++++ b/drivers/video/spacemit/spacemit_edp.c
+@@ -1049,6 +1049,7 @@ void LT8911EXB_LinkTrainResultCheck(struct udevice *dev)
+ 
+ static int edp_panel_enable_backlight(struct udevice *dev)
+ {
++	struct edp_panel_priv *priv = dev_get_priv(dev);
+ 	pr_debug("%s: device %s \n", __func__, dev->name);
+ 
+ 	Reset_LT8911EXB(dev);     // Reset LT8911EXB
+@@ -1071,6 +1072,9 @@ static int edp_panel_enable_backlight(struct udevice *dev)
+ 
+ 	PCR_Status(dev);			// just for Check PCR CLK
+ 
++	dm_gpio_set_value(&priv->enable_gpio, 1);
++	dm_gpio_set_value(&priv->bl_gpio, 1);
++
+ 	return 0;
+ }
+ 
+@@ -1123,9 +1127,7 @@ static int edp_panel_probe(struct udevice *dev)
+ 		      __func__, ret);
+ 	}
+ 
+-	dm_gpio_set_value(&priv->enable_gpio, 1);
+ 	dm_gpio_set_value(&priv->standby_gpio, 1);
+-	dm_gpio_set_value(&priv->bl_gpio, 1);
+ 	mdelay(50);
+ 
+ 	Reset_LT8911EXB(dev);
+diff --git a/include/configs/k1-x.h b/include/configs/k1-x.h
+index 1098880f..023bd4b7 100644
+--- a/include/configs/k1-x.h
++++ b/include/configs/k1-x.h
+@@ -16,7 +16,6 @@
+ #define SEC_IMG_SIZE		0x0000000
+ #define CONFIG_SYS_SDRAM_BASE	(SYS_DRAM_OFFS + SEC_IMG_SIZE)
+ 
+-#define RISCV_MMODE_TIMERBASE	0xE4000000
+ #define RISCV_MMODE_TIMER_FREQ	24000000
+ #define RISCV_SMODE_TIMER_FREQ	24000000
+ 
+@@ -27,7 +26,6 @@
+ 
+ #define DEFAULT_PRODUCT_NAME	"k1-x_deb1"
+ 
+-#define K1X_SPL_BOOT_LOAD_ADDR	(0x20200000)
+ #define DDR_TRAINING_DATA_BASE	(0xc0832000)
+ 
+ // sram buffer address that save the DDR software training result
+@@ -89,6 +87,9 @@
+ #define RAMDISK_LOAD_ADDR		0x21000000
+ #define DTB_LOAD_ADDR			0x31000000
+ 
++// for those has NOT been through test procedure(ATE)
++#define SVT_DRO_DEFAULT_VALUE	(120)
++
+ #ifndef __ASSEMBLY__
+ #include "linux/types.h"
+ 
+diff --git a/include/fb_spacemit.h b/include/fb_spacemit.h
+index 296ad46b..801895d7 100644
+--- a/include/fb_spacemit.h
++++ b/include/fb_spacemit.h
+@@ -297,7 +297,7 @@ int _write_mtd_partition(struct flash_dev *fdev);
+  * @param partition try to find partition exist or not.
+ * @return int return partition index while finding partition in blk dev.
+ */
+-int detect_blk_dev_or_partition_exist(char *blk_name, int blk_index, char *partition);
++int detect_blk_dev_or_partition_exist(char *blk_name, int blk_index, const char *partition);
+ 
+ /**
+  * @brief try to find available blk dev while defind multi blks at nor boot.
+@@ -308,4 +308,12 @@ int detect_blk_dev_or_partition_exist(char *blk_name, int blk_index, char *parti
+ */
+ int get_available_blk_dev(char **blk_dev, int *index);
+ 
++/**
++ * @brief try to find available bootable blk dev.
++ * @param blk_dev return available bootable blk dev.
++ * @param index return available bootable blk index.
++ * @param return return 0 while detect available blk dev.
++*/
++int get_available_boot_blk_dev(char **blk_dev, int *index);
++
+ #endif
+-- 
+2.39.2
+
