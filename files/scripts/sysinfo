@@ -52,10 +52,10 @@ else
 	NVME="false"
 fi
 if [[ `ls /sys/class/scsi_device/[0-9]:[0-9]:[0-9]:[0-9]/device/hwmon/hwmon[0-9]/temp1_input` ]] > /dev/null 2>&1; then
-	SSD="true"
-	SSDT=$(cat /sys/class/scsi_device/[0-9]:[0-9]:[0-9]:[0-9]/device/hwmon/hwmon[0-9]/temp1_input | cut -c1-2 | sed s/$/°C/ | tr '\n' ' ')
+	SATA="true"
+	SATAT=$(cat /sys/class/scsi_device/[0-9]:[0-9]:[0-9]:[0-9]/device/hwmon/hwmon[0-9]/temp1_input | cut -c1-2 | sed s/$/°C/ | tr '\n' ' ')
 else
-	SSD="false"
+	SATA="false"
 fi
 # functions
 disp_cpu1 (){
@@ -101,7 +101,7 @@ if [[ -f "/sys/devices/system/cpu/present" ]]; then cpu_hwinfo; fi
 echo -e "Online:     " $(lscpu | grep -w "On-line CPU(s) list:" | sed "s/On-line CPU(s) list:/ /g" | sed -e "s/\s\{3,\}//g")
 if [[ "$FAN" == "true" ]]; then fan_pwr; fi
 if [[ "$NVME" == "true" ]]; then echo -e "NVMe:        ${NVMET}"; fi
-if [[ "$SSD" == "true" ]]; then echo -e "SSD:         ${SSDT}"; fi
+if [[ "$SATA" == "true" ]]; then echo -e "SATA:         ${SATAT}"; fi
 echo -e "Governor:   " $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
 echo -e "Memory:     " $(free -h | sed 's/i//g' | sed 's/Mem://g' | awk '{print $1" "$2}' | sed -n 'n;p')
 echo -e "Entropy:    " $(cat /proc/sys/kernel/random/entropy_avail)
