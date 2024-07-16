@@ -1,0 +1,510 @@
+From a4acc4163af074ef7a74ecc864e66eaf1762c2be Mon Sep 17 00:00:00 2001
+From: James Deng <james.deng@spacemit.com>
+Date: Tue, 16 Jul 2024 19:26:24 +0800
+Subject: [PATCH] Update for v1.0.8
+
+---
+ arch/riscv/dts/Makefile                   |   2 +-
+ arch/riscv/dts/k1-x_MUSE-Card.dts         | 271 ++++++++++++++++++++++
+ board/spacemit/k1-x/configs/uboot_fdt.its |  14 ++
+ board/spacemit/k1-x/k1x.c                 |  64 ++++-
+ cmd/spacemit_flash.c                      |  11 +-
+ configs/k1_defconfig                      |   4 +-
+ 6 files changed, 348 insertions(+), 18 deletions(-)
+ create mode 100755 arch/riscv/dts/k1-x_MUSE-Card.dts
+
+diff --git a/arch/riscv/dts/Makefile b/arch/riscv/dts/Makefile
+index 02d5855f..820fdf4b 100644
+--- a/arch/riscv/dts/Makefile
++++ b/arch/riscv/dts/Makefile
+@@ -12,7 +12,7 @@ dtb-$(CONFIG_TARGET_SPACEMIT_K1X) += k1-x_evb.dtb k1-x_deb2.dtb k1-x_deb1.dtb k1
+ 				     k1-x_kx312.dtb k1-x_MINI-PC.dtb k1-x_mingo.dtb k1-x_MUSE-N1.dtb \
+ 				     k1-x_MUSE-Pi.dtb k1-x_spl.dtb k1-x_milkv-jupiter.dtb \
+ 				     k1-x_MUSE-Book.dtb m1-x_milkv-jupiter.dtb \
+-				     k1-x_lpi3a.dtb
++				     k1-x_lpi3a.dtb k1-x_MUSE-Card.dtb
+ 
+ include $(srctree)/scripts/Makefile.dts
+ 
+diff --git a/arch/riscv/dts/k1-x_MUSE-Card.dts b/arch/riscv/dts/k1-x_MUSE-Card.dts
+new file mode 100755
+index 00000000..8e7dd89c
+--- /dev/null
++++ b/arch/riscv/dts/k1-x_MUSE-Card.dts
+@@ -0,0 +1,271 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/* Copyright (c) 2023 Spacemit, Inc */
++
++/dts-v1/;
++
++#include "k1-x.dtsi"
++#include "k1-x_pinctrl.dtsi"
++#include "k1-x_spm8821.dtsi"
++
++/ {
++	model = "spacemit k1-x MUSE-Card board";
++
++	aliases {
++		efuse_power = &ldo_31;
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x00000000 0x00000000 0x00000000 0x80000000>;
++	};
++
++	chosen {
++		bootargs = "earlycon=sbi console=ttyS0,115200 debug loglevel=8,initcall_debug=1 rdinit=/init.tmp";
++		stdout-path = "serial0:115200n8";
++	};
++
++	usb2hub: usb2hub {
++		compatible = "spacemit,usb-hub";
++		vbus-gpios = <&gpio 123 0>;	/* for usb2 hub output vbus */
++		status = "okay";
++	};
++
++	usb3hub: usb3hub {
++		compatible = "spacemit,usb-hub";
++		vbus-gpios = <&gpio 79 0>;	/* gpio_79 for usb3 pwren */
++		status = "okay";
++	};
++
++};
++
++&cpus {
++	timebase-frequency = <24000000>;
++};
++
++&uart0 {
++	status = "okay";
++};
++
++&i2c0 {
++	status = "disabled";
++};
++
++&i2c1 {
++	status = "disabled";
++};
++
++&i2c2 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c2_0>;
++	status = "okay";
++
++	eeprom@50{
++		compatible = "atmel,24c02";
++		reg = <0x50>;
++		vin-supply-names = "eeprom_1v8";
++		status = "okay";
++	};
++};
++
++&i2c3 {
++	status = "disabled";
++};
++
++&i2c4 {
++	clock-frequency = <400000>;
++	status = "okay";
++};
++
++&i2c5 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c5_0>;
++	status = "okay";
++};
++
++&i2c6 {
++	status = "disabled";
++};
++
++&i2c7 {
++	status = "disabled";
++};
++
++&pinctrl {
++	pinctrl-single,gpio-range = <
++		&range GPIO_49  2 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_3V_DS4)
++		&range GPIO_58  1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_63  1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_64  1 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_65  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_66  2 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range PRI_TDI  2 (MUX_MODE1 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range PRI_TCK  1 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range PRI_TDO  1 (MUX_MODE1 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_74  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_79  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_80  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_3V_DS4)
++		&range GPIO_81  3 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_90  1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_91  2 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range DVL0     2 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_110 1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_114 1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_115 2 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_123 1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_124 1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_125 3 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++	>;
++
++	gpio80_pmx_func0: gpio80_pmx_func0 {
++		pinctrl-single,pins = <
++			K1X_PADCONF(GPIO_80, MUX_MODE0, (EDGE_BOTH | PULL_UP | PAD_3V_DS4))  /* mmc cd */
++		>;
++	};
++};
++
++&gpio{
++	gpio-ranges = <
++		&pinctrl 49 GPIO_49 2
++		&pinctrl 58 GPIO_58 1
++		&pinctrl 63 GPIO_63 1
++		&pinctrl 65 GPIO_65 3
++		&pinctrl 70 PRI_TDI 4
++		&pinctrl 74 GPIO_74 1
++		&pinctrl 79 GPIO_79 1
++		&pinctrl 80 GPIO_80 4
++		&pinctrl 90 GPIO_90 3
++		&pinctrl 96 DVL0 2
++		&pinctrl 110 GPIO_110 1
++		&pinctrl 114 GPIO_114 3
++		&pinctrl 123 GPIO_123 5
++	>;
++};
++
++&udc {
++	status = "okay";
++};
++
++&usbphy1 {
++	status = "okay";
++};
++
++&ehci1 {
++	vbus-supply = <&usb2hub>;
++	status = "okay";
++};
++
++&usb2phy {
++	status = "okay";
++};
++
++&combphy {
++	status = "okay";
++};
++
++
++&usbdrd3 {
++	status = "okay";
++	vbus-supply = <&usb3hub>;
++	dwc3@c0a00000 {
++		dr_mode = "host";
++		phy_type = "utmi";
++		snps,dis_enblslpm_quirk;
++		snps,dis_u2_susphy_quirk;
++		snps,dis_u3_susphy_quirk;
++		snps,dis-del-phy-power-chg-quirk;
++		snps,dis-tx-ipgap-linecheck-quirk;
++	};
++};
++
++&sdhci0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_mmc1 &gpio80_pmx_func0>;
++	bus-width = <4>;
++	cd-gpios = <&gpio 80 0>;
++	cap-sd-highspeed;
++	sdh-phy-module = <0>;
++	clk-src-freq = <204800000>;
++	status = "okay";
++};
++
++&eth0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_gmac0>;
++
++	phy-reset-pin = <110>;
++
++	clk_tuning_enable;
++	clk-tuning-by-delayline;
++	tx-phase = <90>;
++	rx-phase = <73>;
++
++	phy-mode = "rgmii";
++	phy-addr = <1>;
++	phy-handle = <&rgmii>;
++
++	ref-clock-from-phy;
++
++	mdio {
++		#address-cells = <0x1>;
++		#size-cells = <0x0>;
++		rgmii: phy@0 {
++			compatible = "ethernet-phy-id001c.c916";
++			device_type = "ethernet-phy";
++			reg = <0x1>;
++		};
++	};
++};
++
++&pcie0_rc {
++	status = "disabled";
++};
++
++&pcie1_rc {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pcie1_3>;
++	status = "okay";
++};
++
++&qspi {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_qspi>;
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <26500000>;
++		m25p,fast-read;
++		broken-flash-reset;
++		status = "okay";
++	};
++};
++
++&efuse {
++	status = "okay";
++};
++
++&dpu {
++	status = "okay";
++};
++
++&hdmi {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_hdmi_0>;
++	status = "okay";
++};
++
++&mipi_dsi {
++	status = "disabled";
++};
++
++&panel {
++	dcp-gpios = <&gpio 40 0>;
++	dcn-gpios = <&gpio 83 0>;
++	bl-gpios = <&gpio 44 0>;
++	reset-gpios = <&gpio 41 0>;
++	status = "disabled";
++};
+diff --git a/board/spacemit/k1-x/configs/uboot_fdt.its b/board/spacemit/k1-x/configs/uboot_fdt.its
+index 6386b132..0e80e06b 100644
+--- a/board/spacemit/k1-x/configs/uboot_fdt.its
++++ b/board/spacemit/k1-x/configs/uboot_fdt.its
+@@ -136,6 +136,15 @@
+ 				algo = "crc32";
+ 			};
+ 		};
++		fdt_14 {
++			description = "k1-x_MUSE-Card";
++			type = "flat_dt";
++			compression = "none";
++			data = /incbin/("../dtb/k1-x_MUSE-Card.dtb");
++			hash-1 {
++				algo = "crc32";
++			};
++		};
+ 	};
+ 
+ 	configurations {
+@@ -205,5 +214,10 @@
+ 			loadables = "uboot";
+ 			fdt = "fdt_13";
+ 		};
++		conf_14 {
++			description = "k1-x_MUSE-Card";
++			loadables = "uboot";
++			fdt = "fdt_14";
++		};
+ 	};
+ };
+diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
+index 192a850a..bf5f20a8 100644
+--- a/board/spacemit/k1-x/k1x.c
++++ b/board/spacemit/k1-x/k1x.c
+@@ -1011,7 +1011,7 @@ static uint32_t get_dro_from_efuse(void)
+ 	ret = uclass_get_device_by_driver(UCLASS_MISC,
+ 			DM_DRIVER_GET(spacemit_k1x_efuse), &dev);
+ 	if (ret) {
+-		return ret;
++		return dro;
+ 	}
+ 
+ 	// read from efuse, each bank has 32byte efuse data
+@@ -1028,10 +1028,59 @@ static uint32_t get_dro_from_efuse(void)
+ 	return dro;
+ }
+ 
++static int get_chipinfo_from_efuse(uint32_t *product_id, uint32_t *wafer_tid)
++{
++	struct udevice *dev;
++	uint8_t fuses[3];
++	int ret;
++
++	*product_id = 0;
++	*wafer_tid = 0;
++	/* retrieve the device */
++	ret = uclass_get_device_by_driver(UCLASS_MISC,
++			DM_DRIVER_GET(spacemit_k1x_efuse), &dev);
++	if (ret) {
++		return ENODEV;
++	}
++
++	// read from efuse, each bank has 32byte efuse data
++	// product id in bank7 bit182~bit190
++	ret = misc_read(dev, 7 * 32 + 22, fuses, sizeof(fuses));
++	if (0 == ret) {
++		// (byte1 bit0~bit6) << 2 | (byte0 bit6~7) >> 6
++		*product_id = (fuses[0] >> 6) & 0x03;
++		*product_id |= (fuses[1] & 0x7F) << 2;
++	}
++
++	// read from efuse, each bank has 32byte efuse data
++	// product id in bank7 bit139~bit154
++	ret = misc_read(dev, 7 * 32 + 17, fuses, sizeof(fuses));
++	if (0 == ret) {
++		// (byte1 bit0~bit6) << 2 | (byte0 bit3~7) >> 3
++		*wafer_tid = (fuses[0] >> 3) & 0x1F;
++		*wafer_tid |= fuses[1] << 5;
++		*wafer_tid |= (fuses[2] & 0x07) << 13;
++	}
++
++	return 0;
++}
++
+ static int ft_board_cpu_fixup(void *blob, struct bd_info *bd)
+ {
+ 	int node, ret;
+-	uint32_t dro;
++	uint32_t dro, product_id, wafer_tid;
++
++	node = fdt_path_offset(blob, "/");
++	if (node < 0) {
++		pr_err("Can't find root node!\n");
++		return -EINVAL;
++	}
++
++	get_chipinfo_from_efuse(&product_id, &wafer_tid);
++	product_id = cpu_to_fdt32(product_id);
++	wafer_tid = cpu_to_fdt32(wafer_tid);
++	fdt_setprop(blob, node, "product-id", &product_id, sizeof(product_id));
++	fdt_setprop(blob, node, "wafer-id", &wafer_tid, sizeof(wafer_tid));
+ 
+ 	node = fdt_path_offset(blob, "/cpus");
+ 	if (node < 0) {
+@@ -1048,7 +1097,7 @@ static int ft_board_cpu_fixup(void *blob, struct bd_info *bd)
+ 
+ int ft_board_setup(void *blob, struct bd_info *bd)
+ {
+-	int node;
++	struct fdt_memory mem;
+ 	static const struct node_info nodes[] = {
+ 		{ "spacemit,k1x-qspi", MTD_DEV_TYPE_NOR, },  /* SPI flash */
+ 	};
+@@ -1059,11 +1108,12 @@ int ft_board_setup(void *blob, struct bd_info *bd)
+ 		fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
+ 
+ 	if (CONFIG_IS_ENABLED(FDT_SIMPLEFB)) {
+-		node = fdt_node_offset_by_compatible(blob, -1, "simple-framebuffer");
+-		if (node < 0)
+-			fdt_simplefb_add_node(blob);
++		/* reserved with no-map tag the video buffer */
++		mem.start = gd->video_bottom;
++		mem.end = gd->video_top - 1;
+ 
+-		fdt_simplefb_enable_and_mem_rsv(blob);
++		fdtdec_add_reserved_memory(blob, "framebuffer", &mem, NULL, 0, NULL,
++			FDTDEC_RESERVED_MEMORY_NO_MAP);
+ 	}
+ 
+ 	ft_board_cpu_fixup(blob, bd);
+diff --git a/cmd/spacemit_flash.c b/cmd/spacemit_flash.c
+index 1da11394..33bf34cc 100644
+--- a/cmd/spacemit_flash.c
++++ b/cmd/spacemit_flash.c
+@@ -388,14 +388,14 @@ int get_part_info(struct blk_desc *dev_desc, const char *name,
+ 
+ 
+ /**
+- * mmc_blk_write() - Write/erase MMC in chunks of MAX_BLK_WRITE
++ * _blk_write() - Write/erase blk dev in chunks of MAX_BLK_WRITE
+  *
+  * @block_dev: Pointer to block device
+  * @start: First block to write/erase
+  * @blkcnt: Count of blocks
+  * @buffer: Pointer to data buffer for write or NULL for erase
+  */
+-static __maybe_unused lbaint_t mmc_blk_write(struct blk_desc *block_dev, lbaint_t start,
++static __maybe_unused lbaint_t _blk_write(struct blk_desc *block_dev, lbaint_t start,
+ 			lbaint_t blkcnt, const void *buffer)
+ {
+ 	lbaint_t blk = start;
+@@ -423,7 +423,6 @@ int blk_write_raw_image(struct blk_desc *dev_desc,
+ 		struct disk_partition *info, const char *part_name,
+ 		void *buffer, u32 download_bytes)
+ {
+-#ifdef CONFIG_MMC
+ 	lbaint_t blkcnt;
+ 	lbaint_t blks;
+ 
+@@ -438,7 +437,7 @@ int blk_write_raw_image(struct blk_desc *dev_desc,
+ 
+ 	puts("Flashing Raw Image\n");
+ 
+-	blks = mmc_blk_write(dev_desc, info->start, blkcnt, buffer);
++	blks = _blk_write(dev_desc, info->start, blkcnt, buffer);
+ 
+ 	if (blks != blkcnt) {
+ 		printf("failed writing to device %d\n", dev_desc->devnum);
+@@ -448,10 +447,6 @@ int blk_write_raw_image(struct blk_desc *dev_desc,
+ 	printf("........ wrote " LBAFU " bytes to '%s'\n", \
+ 		blkcnt * info->blksz,part_name);
+ 	return RESULT_OK;
+-#else
+-	printf("not mmc dev found\n");
+-	return RESULT_FAIL;
+-#endif
+ }
+ 
+ int mtd_write_raw_image(struct mtd_info *mtd, const char *part_name, void *buffer, u32 download_bytes)
+diff --git a/configs/k1_defconfig b/configs/k1_defconfig
+index 453ecb25..b9f05568 100644
+--- a/configs/k1_defconfig
++++ b/configs/k1_defconfig
+@@ -200,8 +200,6 @@ CONFIG_PHY_REALTEK=y
+ CONFIG_SPACEMIT_K1X_EMAC=y
+ CONFIG_NVME_PCI=y
+ CONFIG_PCIE_DW_K1X=y
+-CONFIG_PHY=y
+-CONFIG_PHY_SPACEMIT_K1X_USB2=y
+ CONFIG_PHY_SPACEMIT_K1X_COMBPHY=y
+ CONFIG_PINCTRL=y
+ CONFIG_PINCTRL_SINGLE=y
+@@ -230,6 +228,8 @@ CONFIG_TIMER_EARLY=y
+ CONFIG_USB=y
+ CONFIG_USB_XHCI_HCD=y
+ CONFIG_USB_XHCI_DWC3=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_EHCI_K1X=y
+ CONFIG_USB_DWC3=y
+ # CONFIG_USB_DWC3_GADGET is not set
+ CONFIG_USB_DWC3_GENERIC=y
+-- 
+2.39.2
+

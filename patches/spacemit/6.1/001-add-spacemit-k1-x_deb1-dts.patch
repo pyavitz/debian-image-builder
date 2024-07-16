@@ -1,6 +1,6 @@
-From e46795ccc3eeebebf0e7905b362322dbec51f2c5 Mon Sep 17 00:00:00 2001
+From 19f1ad64f039d60d08cf0bf233e22b6cb59fa48a Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Thu, 11 Jul 2024 17:21:18 -0400
+Date: Tue, 16 Jul 2024 08:37:14 -0400
 Subject: [PATCH] add spacemit k1-x_deb1 dts
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -13,19 +13,21 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi  |   52 +
  arch/riscv/boot/dts/spacemit/k1-x-hdmi.dtsi   |   62 +
  arch/riscv/boot/dts/spacemit/k1-x-lcd.dtsi    |  116 +
- arch/riscv/boot/dts/spacemit/k1-x.dtsi        | 2630 +++++++++++++++++
- arch/riscv/boot/dts/spacemit/k1-x_deb1.dts    | 1149 +++++++
+ arch/riscv/boot/dts/spacemit/k1-x.dtsi        | 2491 +++++++++++++++++
+ arch/riscv/boot/dts/spacemit/k1-x_deb1.dts    | 1117 ++++++++
+ .../boot/dts/spacemit/k1-x_opp_table.dtsi     |  110 +
  .../riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi | 1157 ++++++++
  .../dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi    |  104 +
- .../dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi |  157 +
+ .../dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi |  157 ++
  .../dts/spacemit/lcd/lcd_icnl9911c_mipi.dtsi  |   96 +
  .../lcd/lcd_jd9365da_mipi_1280x800.dtsi       |   66 +
  .../lcd/lcd_lt8911_edp_1920x1080.dtsi         |   61 +
  .../lcd/lcd_lt8911_edp_1920x1200.dtsi         |   61 +
  .../spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi |   61 +
  .../lcd/lcd_orisetech_ota7290b_mipi.dtsi      |   66 +
+ .../boot/dts/spacemit/m1-x_opp_table.dtsi     |  234 ++
  .../boot/dts/spacemit/spacemit-scmi.dtsi      |   76 +
- 20 files changed, 6197 insertions(+)
+ 22 files changed, 6370 insertions(+)
  create mode 100644 arch/riscv/boot/dts/spacemit/Makefile
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-reserved-mm.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi
@@ -35,6 +37,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-lcd.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
+ create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_opp_table.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi
@@ -44,6 +47,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1200.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
+ create mode 100644 arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi
 
 diff --git a/arch/riscv/boot/dts/Makefile b/arch/riscv/boot/dts/Makefile
@@ -613,10 +617,10 @@ index 000000000000..755f032dbe26
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x.dtsi b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
 new file mode 100644
-index 000000000000..cadbc7a66ab7
+index 000000000000..82d7e1cd8681
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
-@@ -0,0 +1,2630 @@
+@@ -0,0 +1,2491 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2022 Spacemit, Inc */
 +
@@ -668,16 +672,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu0_intc: interrupt-controller {
@@ -697,16 +698,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu1_intc: interrupt-controller {
@@ -726,16 +724,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu2_intc: interrupt-controller {
@@ -755,16 +750,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst0_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu3_intc: interrupt-controller {
@@ -784,16 +776,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu4_intc: interrupt-controller {
@@ -813,16 +802,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu5_intc: interrupt-controller {
@@ -842,16 +828,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu6_intc: interrupt-controller {
@@ -871,16 +854,13 @@ index 000000000000..cadbc7a66ab7
 +			riscv,cbom-block-size = <64>;
 +			i-cache-block-size = <64>;
 +			i-cache-size = <32768>;
-+			i-cache-sets = <512>;
++			i-cache-sets = <128>;
 +			d-cache-block-size = <64>;
 +			d-cache-size = <32768>;
-+			d-cache-sets = <512>;
++			d-cache-sets = <128>;
 +			next-level-cache = <&clst1_l2_cache>;
 +			mmu-type = "riscv,sv39";
-+			clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+			clock-names = "cls0", "cls1";
 +			cpu-idle-states = <&CPU_NONRET> /*, <&CLUSTER_NONRET>, <&TOP_NONRET> */;
-+			operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>;
 +			#cooling-cells = <2>;
 +
 +			cpu7_intc: interrupt-controller {
@@ -895,7 +875,7 @@ index 000000000000..cadbc7a66ab7
 +			cache-block-size = <64>;
 +			cache-level = <2>;
 +			cache-size = <524288>;
-+			cache-sets = <1024>;
++			cache-sets = <512>;
 +			cache-unified;
 +		};
 +
@@ -904,7 +884,7 @@ index 000000000000..cadbc7a66ab7
 +			cache-block-size = <64>;
 +			cache-level = <2>;
 +			cache-size = <524288>;
-+			cache-sets = <1024>;
++			cache-sets = <512>;
 +			cache-unified;
 +		};
 +
@@ -939,122 +919,6 @@ index 000000000000..cadbc7a66ab7
 +				exit-latency-us = <1200>;
 +				min-residency-us = <2800>;
 +				wakeup-latency-us = <1600>;
-+			};
-+		};
-+
-+		clst_core_opp_table0: opp_table0 {
-+			compatible = "operating-points-v2";
-+			opp-shared;
-+
-+			clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
-+				<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
-+			clock-names = "ace0","ace1","tcm","cci","pll3";
-+			cci-hz = /bits/ 64 <614000000>;
-+
-+			opp1600000000 {
-+				opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
-+				tcm-hz = /bits/ 64 <800000000>;
-+				ace-hz = /bits/ 64 <800000000>;
-+				opp-microvolt = <1050000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp1228800000 {
-+				opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
-+				tcm-hz = /bits/ 64 <614400000>;
-+				ace-hz = /bits/ 64 <614400000>;
-+				opp-microvolt = <950000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp1000000000 {
-+				opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
-+				tcm-hz = /bits/ 64 <500000000>;
-+				ace-hz = /bits/ 64 <500000000>;
-+				opp-microvolt = <950000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp819000000 {
-+				opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
-+				opp-microvolt = <950000>;
-+				tcm-hz = /bits/ 64 <409500000>;
-+				ace-hz = /bits/ 64 <409500000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp614400000 {
-+				opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
-+				tcm-hz = /bits/ 64 <307200000>;
-+				ace-hz = /bits/ 64 <307200000>;
-+				opp-microvolt = <950000>;
-+				clock-latency-ns = <200000>;
-+			};
-+		};
-+
-+		clst_core_opp_table1: opp_table1 {
-+			compatible = "operating-points-v2";
-+			opp-shared;
-+
-+			clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
-+				<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
-+			clock-names = "ace0","ace1","tcm","cci","pll3";
-+			cci-hz = /bits/ 64 <614000000>;
-+
-+			opp2000000000 {
-+				opp-hz = /bits/ 64 <2000000000>, /bits/ 64 <2000000000>;
-+				tcm-hz = /bits/ 64 <1000000000>;
-+				ace-hz = /bits/ 64 <1000000000>;
-+				opp-microvolt = <1050000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp1800000000 {
-+				opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
-+				tcm-hz = /bits/ 64 <900000000>;
-+				ace-hz = /bits/ 64 <900000000>;
-+				opp-microvolt = <1050000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp1600000000 {
-+				opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
-+				tcm-hz = /bits/ 64 <800000000>;
-+				ace-hz = /bits/ 64 <800000000>;
-+				opp-microvolt = <1050000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp1228800000 {
-+				opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
-+				tcm-hz = /bits/ 64 <614400000>;
-+				ace-hz = /bits/ 64 <614400000>;
-+				opp-microvolt = <950000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp1000000000 {
-+				opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
-+				tcm-hz = /bits/ 64 <500000000>;
-+				ace-hz = /bits/ 64 <500000000>;
-+				opp-microvolt = <950000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp819000000 {
-+				opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
-+				opp-microvolt = <950000>;
-+				tcm-hz = /bits/ 64 <409500000>;
-+				ace-hz = /bits/ 64 <409500000>;
-+				clock-latency-ns = <200000>;
-+			};
-+
-+			opp614400000 {
-+				opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
-+				tcm-hz = /bits/ 64 <307200000>;
-+				ace-hz = /bits/ 64 <307200000>;
-+				opp-microvolt = <950000>;
-+				clock-latency-ns = <200000>;
 +			};
 +		};
 +	};
@@ -1118,6 +982,7 @@ index 000000000000..cadbc7a66ab7
 +		area_reserved@80000000 {
 +			/* dram area is 0~2GB, and 4GB~, the 2GB~4GB is io area */
 +			reg = <0x0 0x80000000 0x0 0x40800000>;
++			no-map;
 +		};
 +
 +		/* sram area, used for rcpu code & data & heap space */
@@ -3249,10 +3114,10 @@ index 000000000000..cadbc7a66ab7
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
 new file mode 100644
-index 000000000000..eec69cc507b1
+index 000000000000..1f08fcd8b8fd
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
-@@ -0,0 +1,1149 @@
+@@ -0,0 +1,1117 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2023 Spacemit, Inc */
 +
@@ -3265,6 +3130,7 @@ index 000000000000..eec69cc507b1
 +#include "k1-x-hdmi.dtsi"
 +#include "k1-x-lcd.dtsi"
 +#include "k1-x-camera-sdk.dtsi"
++#include "k1-x_opp_table.dtsi"
 +
 +/ {
 +	model = "spacemit k1-x deb1 board";
@@ -4253,39 +4119,6 @@ index 000000000000..eec69cc507b1
 +	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
 +};
 +
-+&cpu_0 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+&cpu_1 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+&cpu_2 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+&cpu_3 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+&cpu_4 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+&cpu_5 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+
-+&cpu_6 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
-+&cpu_7 {
-+	clst-supply = <&dcdc_1>;
-+};
-+
 +&rcpu {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_rcpu>;
@@ -4401,6 +4234,122 @@ index 000000000000..eec69cc507b1
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_rpwm2_0>;
 +	status = "okay";
++};
+diff --git a/arch/riscv/boot/dts/spacemit/k1-x_opp_table.dtsi b/arch/riscv/boot/dts/spacemit/k1-x_opp_table.dtsi
+new file mode 100644
+index 000000000000..6672b481625b
+--- /dev/null
++++ b/arch/riscv/boot/dts/spacemit/k1-x_opp_table.dtsi
+@@ -0,0 +1,110 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/* Copyright (c) 2024 Spacemit, Inc */
++
++&cpus {
++	clst_core_opp_table0: opp_table0 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
++			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
++		clock-names = "ace0","ace1","tcm","cci","pll3";
++		cci-hz = /bits/ 64 <614000000>;
++
++		opp1600000000 {
++			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
++			tcm-hz = /bits/ 64 <800000000>;
++			ace-hz = /bits/ 64 <800000000>;
++			opp-microvolt = <1050000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1228800000 {
++			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
++			tcm-hz = /bits/ 64 <614400000>;
++			ace-hz = /bits/ 64 <614400000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1000000000 {
++			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
++			tcm-hz = /bits/ 64 <500000000>;
++			ace-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp819000000 {
++			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
++			opp-microvolt = <950000>;
++			tcm-hz = /bits/ 64 <409500000>;
++			ace-hz = /bits/ 64 <409500000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp614400000 {
++			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
++			tcm-hz = /bits/ 64 <307200000>;
++			ace-hz = /bits/ 64 <307200000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++	};
++};
++
++&cpu_0 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_1 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_2 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_3 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_4 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_5 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_6 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
++};
++
++&cpu_7 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>;
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi b/arch/riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi
 new file mode 100644
@@ -6285,6 +6234,246 @@ index 000000000000..9e2a12429193
 +		};
 +	};
 +};};
+diff --git a/arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi b/arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi
+new file mode 100644
+index 000000000000..af2458381b89
+--- /dev/null
++++ b/arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi
+@@ -0,0 +1,234 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/* Copyright (c) 2023 Spacemit, Inc */
++
++&cpus {
++	clst_core_opp_table0: opp_table0 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
++			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
++		clock-names = "ace0","ace1","tcm","cci","pll3";
++		cci-hz = /bits/ 64 <614000000>;
++
++		opp1800000000 {
++			opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
++			tcm-hz = /bits/ 64 <900000000>;
++			ace-hz = /bits/ 64 <900000000>;
++			opp-microvolt = <1160000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1600000000 {
++			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
++			tcm-hz = /bits/ 64 <800000000>;
++			ace-hz = /bits/ 64 <800000000>;
++			opp-microvolt = <1050000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1228800000 {
++			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
++			tcm-hz = /bits/ 64 <614400000>;
++			ace-hz = /bits/ 64 <614400000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1000000000 {
++			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
++			tcm-hz = /bits/ 64 <500000000>;
++			ace-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp819000000 {
++			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
++			opp-microvolt = <950000>;
++			tcm-hz = /bits/ 64 <409500000>;
++			ace-hz = /bits/ 64 <409500000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp614400000 {
++			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
++			tcm-hz = /bits/ 64 <307200000>;
++			ace-hz = /bits/ 64 <307200000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++	};
++
++	clst_core_opp_table1: opp_table1 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
++			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
++		clock-names = "ace0","ace1","tcm","cci","pll3";
++		cci-hz = /bits/ 64 <614000000>;
++
++		opp1800000000 {
++			opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
++			tcm-hz = /bits/ 64 <900000000>;
++			ace-hz = /bits/ 64 <900000000>;
++			opp-microvolt = <1100000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1600000000 {
++			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
++			tcm-hz = /bits/ 64 <800000000>;
++			ace-hz = /bits/ 64 <800000000>;
++			opp-microvolt = <1050000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1228800000 {
++			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
++			tcm-hz = /bits/ 64 <614400000>;
++			ace-hz = /bits/ 64 <614400000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1000000000 {
++			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
++			tcm-hz = /bits/ 64 <500000000>;
++			ace-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp819000000 {
++			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
++			opp-microvolt = <950000>;
++			tcm-hz = /bits/ 64 <409500000>;
++			ace-hz = /bits/ 64 <409500000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp614400000 {
++			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
++			tcm-hz = /bits/ 64 <307200000>;
++			ace-hz = /bits/ 64 <307200000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++	};
++
++	clst_core_opp_table2: opp_table2 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
++			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
++		clock-names = "ace0","ace1","tcm","cci","pll3";
++		cci-hz = /bits/ 64 <614000000>;
++
++		opp1800000000 {
++			opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
++			tcm-hz = /bits/ 64 <900000000>;
++			ace-hz = /bits/ 64 <900000000>;
++			opp-microvolt = <1050000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1600000000 {
++			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
++			tcm-hz = /bits/ 64 <800000000>;
++			ace-hz = /bits/ 64 <800000000>;
++			opp-microvolt = <1050000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1228800000 {
++			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
++			tcm-hz = /bits/ 64 <614400000>;
++			ace-hz = /bits/ 64 <614400000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp1000000000 {
++			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
++			tcm-hz = /bits/ 64 <500000000>;
++			ace-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp819000000 {
++			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
++			opp-microvolt = <950000>;
++			tcm-hz = /bits/ 64 <409500000>;
++			ace-hz = /bits/ 64 <409500000>;
++			clock-latency-ns = <200000>;
++		};
++
++		opp614400000 {
++			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
++			tcm-hz = /bits/ 64 <307200000>;
++			ace-hz = /bits/ 64 <307200000>;
++			opp-microvolt = <950000>;
++			clock-latency-ns = <200000>;
++		};
++	};
++};
++
++&cpu_0 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_1 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_2 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_3 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_4 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_5 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_6 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
++
++&cpu_7 {
++	clst-supply = <&dcdc_1>;
++	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
++	clock-names = "cls0", "cls1";
++	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
++};
 diff --git a/arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi b/arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi
 new file mode 100644
 index 000000000000..5f33e7f6a0f6
