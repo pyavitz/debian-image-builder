@@ -577,6 +577,26 @@ if [[ "$FAMILY" == "spacemit" ]]; then
 fi
 }
 
+if [[ `echo $NODE | grep "sd[a-z]"` ]] || [[ `echo $NODE | grep "nvme[0-9][a-z][0-9]"` ]] && \
+	[[ -v "EMMC" ]] && [[ ! -z "$EMMC" ]]; then
+	$EE ""
+	$EE "Would you like to flash U-Boot to the eMMC?"
+	options=("Yes" "No")
+	select opt in "${options[@]}"
+	do
+		case $opt in
+			"Yes")
+				EMMC_TRUE="true"
+				break
+				;;
+			"No")
+				break
+				;;
+			*) echo "invalid option $REPLY";;
+		esac
+	done
+fi
+
 if [[ "$VERBOSITY" = "1" ]]; then
 	flash_uboot
 else
