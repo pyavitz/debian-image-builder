@@ -135,16 +135,23 @@ if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 	fi
 fi
 # wireless
-if [ $RTW88 -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
+if [ $RTW88 -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtw88" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/{Kconfig,Makefile}` ]] > /dev/null 2>&1; then
+		cp -fr ../../${WIRELESSPATCHES}/rtw88/{Kconfig,Makefile} drivers/net/wireless/realtek/${DRIVER}/
+	fi
+fi
+if [ $RTW88_DEVEL -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
+	rm -fdr drivers/net/wireless/realtek/rtw88.bak
+fi
+if [ $RTW88 -eq 1 ] || [ $RTW88_DEVEL -eq 1 ]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/hack/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${WIRELESSPATCHES}/rtw88/hack" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/rtw88/hack/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
-	rm -fdr drivers/net/wireless/realtek/rtw88.bak
 fi
 # board specific wireless
 if [[ `type ${FAMILY}_extra_wireless` ]] &>/dev/null; then ${FAMILY}_extra_wireless; fi

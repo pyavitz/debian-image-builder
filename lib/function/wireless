@@ -14,14 +14,16 @@ else
 fi
 }
 
+add_extra_wireless (){
 # RTL8189ES
-add_rtl8189es (){
-rm -fdr drivers/net/wireless/realtek/${DRIVER}
-mkdir -p drivers/net/wireless/realtek/${DRIVER}
-cp -fr ../${DRIVER}/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/${DRIVER}
-cp -fr ../${DRIVER}/{Kconfig,Makefile} drivers/net/wireless/realtek/${DRIVER}/
-echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/realtek/Makefile
-cat <<EOF > drivers/net/wireless/realtek/${DRIVER}/Kconfig
+if [[ "$BOARD" == "orangepir1" ]]; then
+	DRIVER="rtl8189es"
+	rm -fdr drivers/net/wireless/realtek/${DRIVER}
+	mkdir -p drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ../${DRIVER}/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ../${DRIVER}/{Kconfig,Makefile} drivers/net/wireless/realtek/${DRIVER}/
+	echo "obj-\$(CONFIG_RTL8189ES) += rtl8189es/" >> drivers/net/wireless/realtek/Makefile
+	cat <<EOF > drivers/net/wireless/realtek/${DRIVER}/Kconfig
 config RTL8189ES
 	tristate "Realtek 8189E SDIO support"
 	depends on USB
@@ -29,18 +31,19 @@ config RTL8189ES
 	help
 	  Help message of RTL8189ES
 EOF
-sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189es\/Kconfig"' \
-	"drivers/net/wireless/realtek/Kconfig"
-}
+	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189es\/Kconfig"' \
+		"drivers/net/wireless/realtek/Kconfig"
+fi
 
 # RTL8821CU
-add_rtl8821cu (){
-rm -fdr drivers/net/wireless/realtek/${DRIVER}
-mkdir -p drivers/net/wireless/realtek/${DRIVER}
-cp -fr ../${DRIVER}/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/${DRIVER}
-cp -fr ../${DRIVER}/{Kconfig,Makefile,halmac.mk,rtl8821c.mk} drivers/net/wireless/realtek/${DRIVER}
-echo "obj-\$(CONFIG_RTL8821CU) += rtl8821cu/" >> drivers/net/wireless/realtek/Makefile
-cat <<EOF > drivers/net/wireless/realtek/${DRIVER}/Kconfig
+if [[ "$BOARD" == "bananapim4zero" ]]; then
+	DRIVER="rtl8821cu"
+	rm -fdr drivers/net/wireless/realtek/${DRIVER}
+	mkdir -p drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ../${DRIVER}/{core,hal,include,os_dep,platform} drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ../${DRIVER}/{Kconfig,Makefile,halmac.mk,rtl8821c.mk} drivers/net/wireless/realtek/${DRIVER}
+	echo "obj-\$(CONFIG_RTL8821CU) += rtl8821cu/" >> drivers/net/wireless/realtek/Makefile
+	cat <<EOF > drivers/net/wireless/realtek/${DRIVER}/Kconfig
 config RTL8821CU
 	tristate "Realtek 8821C USB support"
 	depends on USB
@@ -48,41 +51,70 @@ config RTL8821CU
 	help
 	  Help message of RTL8821CU
 EOF
-sed -i "s/CONFIG_RTW_DEBUG = y/CONFIG_RTW_DEBUG = n/g" drivers/net/wireless/realtek/${DRIVER}/Makefile
-sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8821cu\/Kconfig"' \
-	"drivers/net/wireless/realtek/Kconfig"
-}
+	sed -i "s/CONFIG_RTW_DEBUG = y/CONFIG_RTW_DEBUG = n/g" drivers/net/wireless/realtek/${DRIVER}/Makefile
+	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8821cu\/Kconfig"' \
+		"drivers/net/wireless/realtek/Kconfig"
+fi
 
 # RTL8852BS
-add_rtl8852bs (){
-rm -fdr drivers/net/wireless/realtek/${DRIVER}
-mkdir -p drivers/net/wireless/realtek/${DRIVER}
-cp -fr ../${DRIVER}/* drivers/net/wireless/realtek/${DRIVER}/
-rm -f drivers/net/wireless/realtek/${DRIVER}/README.md
-echo "obj-\$(CONFIG_RTL8852BS)		+= rtl8852bs/" >> drivers/net/wireless/realtek/Makefile
-sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8852bs\/Kconfig"' \
-	"drivers/net/wireless/realtek/Kconfig"
+if [[ "$BOARD" == "bananapif3" ]]; then
+	DRIVER="rtl8852bs"
+	rm -fdr drivers/net/wireless/realtek/${DRIVER}
+	mkdir -p drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ../${DRIVER}/* drivers/net/wireless/realtek/${DRIVER}/
+	rm -f drivers/net/wireless/realtek/${DRIVER}/README.md
+	echo "obj-\$(CONFIG_RTL8852BS)		+= rtl8852bs/" >> drivers/net/wireless/realtek/Makefile
+	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8852bs\/Kconfig"' \
+		"drivers/net/wireless/realtek/Kconfig"
+fi
+
+# RTW88
+if [ $RTW88 -eq 1 ]; then
+	DRIVER="rtw88"
+	rm -fdr drivers/net/wireless/realtek/${DRIVER}
+	mkdir -p drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ../${DRIVER}/* drivers/net/wireless/realtek/${DRIVER}/
+	rm -fdr drivers/net/wireless/realtek/${DRIVER}/{alt_rtl8821ce,README.md}
+fi
+}
+
+report_error (){
+if [ $RTW88 -eq 1 ] && [ $RTW88_DEVEL -eq 1 ]; then
+	echo -e "Both RTW88 and RTW88_DEVEL can not be enabled."
+	exit 1
+fi
 }
 
 extra_wireless (){
+report_error
 if [[ "$BOARD" == "bananapif3" ]]; then
 	DRIVER_INFO="Realtek 8852BS"
 	DRIVER="rtl8852bs"
-	DRIVER_URL="https://github.com/pyavitz/rtl8852bs.git"
+	DRIVER_URL="https://github.com/pyavitz/${DRIVER}.git"
+	act_driver
 fi
 if [[ "$BOARD" == "bananapim4zero" ]]; then
 	DRIVER_INFO="Realtek 8821CU"
 	DRIVER="rtl8821cu"
 	DRIVER_URL="https://github.com/morrownr/8821cu-20210916.git"
+	act_driver
 fi
 if [[ "$BOARD" == "orangepir1" ]]; then
 	DRIVER_INFO="Realtek 8189ES"
 	DRIVER="rtl8189es"
-	DRIVER_URL="https://github.com/jwrdegoede/rtl8189ES_linux"
+	DRIVER_URL="https://github.com/jwrdegoede/${DRIVER}_linux.git"
+	act_driver
 fi
-if [[ -v "DRIVER" ]] && [[ ! -z "$DRIVER" ]]; then
-	echo -en "${WHT}${DRIVER_INFO}${FIN} "
-	driver_download
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+if [ $RTW88 -eq 1 ]; then
+	DRIVER_INFO="RTW88"
+	DRIVER="rtw88"
+	DRIVER_URL="https://github.com/lwfinger/${DRIVER}.git"
+	act_driver
 fi
+}
+
+act_driver (){
+echo -en "${WHT}${DRIVER_INFO}${FIN} "
+driver_download
+echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 }
