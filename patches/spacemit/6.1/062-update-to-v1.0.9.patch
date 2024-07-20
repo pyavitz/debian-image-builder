@@ -1,0 +1,485 @@
+From 767e66ae188050c0efe3af9f245a62ccc16f7083 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Sat, 20 Jul 2024 10:36:07 -0400
+Subject: [PATCH] Update to v1.0.9
+
+Signed-off-by: James Deng <james.deng@spacemit.com>
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ drivers/power/supply/sbs-battery.c            | 82 +++++++++++--------
+ drivers/pwm/pwm-pxa.c                         |  6 +-
+ .../soc/spacemit/pm_domain/k1x-pm_domain.c    | 11 ++-
+ drivers/usb/dwc3/dwc3-spacemit.c              | 35 +++++---
+ drivers/usb/host/ehci-k1x-ci.c                | 28 +++++--
+ sound/soc/codecs/es8326.c                     | 35 +++++---
+ 6 files changed, 127 insertions(+), 70 deletions(-)
+
+diff --git a/drivers/power/supply/sbs-battery.c b/drivers/power/supply/sbs-battery.c
+index c4a95b01463a..30bff75d2aeb 100644
+--- a/drivers/power/supply/sbs-battery.c
++++ b/drivers/power/supply/sbs-battery.c
+@@ -607,6 +607,21 @@ static int sbs_get_battery_presence_and_health(
+ 	return 0;
+ }
+ 
++static int sbs_get_property_index(struct i2c_client *client,
++	enum power_supply_property psp)
++{
++	int count;
++
++	for (count = 0; count < ARRAY_SIZE(sbs_data); count++)
++		if (psp == sbs_data[count].psp)
++			return count;
++
++	dev_warn(&client->dev,
++		"%s: Invalid Property - %d\n", __func__, psp);
++
++	return -EINVAL;
++}
++
+ static int sbs_get_battery_property(struct i2c_client *client,
+ 	int reg_offset, enum power_supply_property psp,
+ 	union power_supply_propval *val)
+@@ -639,25 +654,39 @@ static int sbs_get_battery_property(struct i2c_client *client,
+ 				val->intval =
+ 					POWER_SUPPLY_CAPACITY_LEVEL_NORMAL;
+ 			return 0;
+-		} else if (psp != POWER_SUPPLY_PROP_STATUS) {
+-			return 0;
+-		}
+-
+-		if (ret & BATTERY_FULL_CHARGED)
+-			val->intval = POWER_SUPPLY_STATUS_FULL;
+-		else if (ret & BATTERY_DISCHARGING)
+-			val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
+-		else
+-			val->intval = POWER_SUPPLY_STATUS_CHARGING;
+-
+-		sbs_status_correct(client, &val->intval);
+-
+-		if (chip->poll_time == 0)
+-			chip->last_state = val->intval;
+-		else if (chip->last_state != val->intval) {
+-			cancel_delayed_work_sync(&chip->work);
+-			power_supply_changed(chip->power_supply);
+-			chip->poll_time = 0;
++		} else if (psp == POWER_SUPPLY_PROP_STATUS) {
++			if (ret & BATTERY_FULL_CHARGED)
++				val->intval = POWER_SUPPLY_STATUS_FULL;
++			else if (ret & BATTERY_DISCHARGING)
++				val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
++			else
++				val->intval = POWER_SUPPLY_STATUS_CHARGING;
++
++			sbs_status_correct(client, &val->intval);
++
++			if (chip->poll_time == 0)
++				chip->last_state = val->intval;
++			else if (chip->last_state != val->intval) {
++				cancel_delayed_work_sync(&chip->work);
++				power_supply_changed(chip->power_supply);
++				chip->poll_time = 0;
++			}
++		} else if (psp == POWER_SUPPLY_PROP_CAPACITY) {
++			/* Check if the battery is fully charged */
++			union power_supply_propval status_val;
++			int status_index = sbs_get_property_index(client, POWER_SUPPLY_PROP_STATUS);
++			if (status_index >= 0) {
++				sbs_get_battery_property(client, status_index, POWER_SUPPLY_PROP_STATUS, &status_val);
++				if (status_val.intval == POWER_SUPPLY_STATUS_FULL) {
++					val->intval = 100;
++				} else {
++					val->intval = min(ret, 100);
++				}
++			} else {
++				val->intval = min(ret, 100);
++			}
++		} else {
++			val->intval = ret;
+ 		}
+ 	} else {
+ 		if (psp == POWER_SUPPLY_PROP_STATUS)
+@@ -674,21 +703,6 @@ static int sbs_get_battery_property(struct i2c_client *client,
+ 	return 0;
+ }
+ 
+-static int sbs_get_property_index(struct i2c_client *client,
+-	enum power_supply_property psp)
+-{
+-	int count;
+-
+-	for (count = 0; count < ARRAY_SIZE(sbs_data); count++)
+-		if (psp == sbs_data[count].psp)
+-			return count;
+-
+-	dev_warn(&client->dev,
+-		"%s: Invalid Property - %d\n", __func__, psp);
+-
+-	return -EINVAL;
+-}
+-
+ static const char *sbs_get_constant_string(struct sbs_info *chip,
+ 			enum power_supply_property psp)
+ {
+diff --git a/drivers/pwm/pwm-pxa.c b/drivers/pwm/pwm-pxa.c
+index a571c207c1a9..4fd778f7a608 100644
+--- a/drivers/pwm/pwm-pxa.c
++++ b/drivers/pwm/pwm-pxa.c
+@@ -308,6 +308,10 @@ static struct platform_driver pwm_driver = {
+ 	.id_table	= pwm_id_table,
+ };
+ 
+-module_platform_driver(pwm_driver);
++static int k1x_pwm_driver_init(void)
++{
++	return platform_driver_register(&pwm_driver);
++}
++late_initcall_sync(k1x_pwm_driver_init);
+ 
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c b/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c
+index 5cb23eb36019..d90d034d4258 100644
+--- a/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c
++++ b/drivers/soc/spacemit/pm_domain/k1x-pm_domain.c
+@@ -47,6 +47,7 @@
+ 
+ /* usb & others */
+ #define WAKEUP_SOURCE_WAKEUP_5	5
++static bool pmu_support_wakeup5 = false;
+ 
+ #define PM_QOS_BLOCK_C1		0x0 /* core wfi */
+ #define PM_QOS_BLOCK_C2		0x2 /* core power off */
+@@ -822,9 +823,11 @@ static int acpr_per_suspend(void)
+ 	regmap_write(gpmu->regmap[MPMU_REGMAP_INDEX], MPMU_AWUCRM_REG, apcr_per);
+ 
+ 	/* enable usb/rcpu/ap2audio */
+-	regmap_read(gpmu->regmap[MPMU_REGMAP_INDEX], MPMU_AWUCRM_REG, &apcr_per);
+-	apcr_per |= (1 << WAKEUP_SOURCE_WAKEUP_5);
+-	regmap_write(gpmu->regmap[MPMU_REGMAP_INDEX], MPMU_AWUCRM_REG, apcr_per);
++	if (pmu_support_wakeup5) {
++		regmap_read(gpmu->regmap[MPMU_REGMAP_INDEX], MPMU_AWUCRM_REG, &apcr_per);
++		apcr_per |= (1 << WAKEUP_SOURCE_WAKEUP_5);
++		regmap_write(gpmu->regmap[MPMU_REGMAP_INDEX], MPMU_AWUCRM_REG, apcr_per);
++	}
+ 
+ 	return 0;
+ }
+@@ -875,6 +878,8 @@ static int spacemit_pm_domain_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	pmu_support_wakeup5 = of_property_read_bool(np, "pmu_wakeup5");
++
+ 	/* get number power domains */
+ 	err = of_property_read_u32(np, "domains", &pmu->number_domains);
+ 	if (err) {
+diff --git a/drivers/usb/dwc3/dwc3-spacemit.c b/drivers/usb/dwc3/dwc3-spacemit.c
+index eb9107e58ac8..b0fa0eb98009 100644
+--- a/drivers/usb/dwc3/dwc3-spacemit.c
++++ b/drivers/usb/dwc3/dwc3-spacemit.c
+@@ -75,7 +75,7 @@ static void dwc3_spacemit_enable_wakeup_irqs(struct dwc3_spacemit *spacemit)
+ {
+ 	u32 reg;
+ 	reg = readl(spacemit->wakeup_reg);
+-	reg |= (DWC3_LFPS_WAKE_MASK | DWC3_LINS0_WAKE_MASK | DWC3_WAKEUP_INT_MASK);
++	reg |= (DWC3_LFPS_WAKE_MASK | DWC3_LINS0_WAKE_MASK | DWC3_LINS1_WAKE_MASK);
+ 	writel(reg, spacemit->wakeup_reg);
+ }
+ 
+@@ -83,7 +83,7 @@ static void dwc3_spacemit_disable_wakeup_irqs(struct dwc3_spacemit *spacemit)
+ {
+ 	u32 reg;
+ 	reg = readl(spacemit->wakeup_reg);
+-	reg &= ~(DWC3_LFPS_WAKE_MASK | DWC3_LINS0_WAKE_MASK | DWC3_WAKEUP_INT_MASK);
++	reg &= ~(DWC3_LFPS_WAKE_MASK | DWC3_LINS0_WAKE_MASK | DWC3_LINS1_WAKE_MASK);
+ 	writel(reg, spacemit->wakeup_reg);
+ }
+ 
+@@ -91,14 +91,17 @@ static void dwc3_spacemit_clear_wakeup_irqs(struct dwc3_spacemit *spacemit)
+ {
+ 	u32 reg;
+ 	reg = readl(spacemit->wakeup_reg);
+-	dev_dbg(spacemit->dev, "wakeup_reg: 0x%x\n", reg);
+-	reg |= (DWC3_LFPS_WAKE_CLEAR | DWC3_LINS0_WAKE_CLEAR);
++	reg |= (DWC3_LFPS_WAKE_CLEAR | DWC3_LINS0_WAKE_CLEAR | DWC3_LINS1_WAKE_CLEAR);
+ 	writel(reg, spacemit->wakeup_reg);
+ }
+ 
+ static irqreturn_t dwc3_spacemit_wakeup_interrupt(int irq, void *_spacemit)
+ {
+ 	struct dwc3_spacemit	*spacemit = _spacemit;
++	u32 reg;
++	reg = readl(spacemit->wakeup_reg);
++	dev_dbg(spacemit->dev, "wakeup_reg: 0x%x\n", reg);
++
+ 	dwc3_spacemit_disable_wakeup_irqs(spacemit);
+ 	dwc3_spacemit_clear_wakeup_irqs(spacemit);
+ 
+@@ -244,6 +247,7 @@ static int dwc3_spacemit_probe(struct platform_device *pdev)
+ 	struct device_node	*node = dev->of_node;
+ 	const struct dwc3_spacemit_driverdata *driver_data;
+ 	struct resource		*res;
++	bool wakeup_source;
+ 	int			i, ret;
+ 
+ 	spacemit = devm_kzalloc(dev, sizeof(*spacemit), GFP_KERNEL);
+@@ -324,8 +328,11 @@ static int dwc3_spacemit_probe(struct platform_device *pdev)
+ 		goto irq_err;
+ 	}
+ 
+-	device_init_wakeup(dev, true);
+-	dev_pm_set_wake_irq(dev, spacemit->irq);
++	wakeup_source = of_property_read_bool(dev->of_node, "wakeup-source");
++	if (wakeup_source) {
++		device_init_wakeup(dev, true);
++		dev_pm_set_wake_irq(dev, spacemit->irq);
++	}
+ 	return 0;
+ 
+ irq_err:
+@@ -338,10 +345,13 @@ static int dwc3_spacemit_probe(struct platform_device *pdev)
+ static int dwc3_spacemit_remove(struct platform_device *pdev)
+ {
+ 	struct dwc3_spacemit	*spacemit = platform_get_drvdata(pdev);
++	bool do_wakeup = device_may_wakeup(&pdev->dev);
+ 
+-	dwc3_spacemit_disable_wakeup_irqs(spacemit);
+-	dev_pm_clear_wake_irq(spacemit->dev);
+-	device_init_wakeup(spacemit->dev, false);
++	if (do_wakeup) {
++		dwc3_spacemit_disable_wakeup_irqs(spacemit);
++		dev_pm_clear_wake_irq(spacemit->dev);
++		device_init_wakeup(spacemit->dev, false);
++	}
+ 	of_platform_depopulate(&pdev->dev);
+ 	dwc3_spacemit_exit(spacemit);
+ 
+@@ -379,6 +389,7 @@ MODULE_DEVICE_TABLE(of, spacemit_dwc3_match);
+ static int dwc3_spacemit_suspend(struct device *dev)
+ {
+ 	struct dwc3_spacemit *spacemit = dev_get_drvdata(dev);
++	bool do_wakeup = device_may_wakeup(dev);
+ 	int i, ret;
+ 
+ 	dwc3_spacemit_phy_setup(spacemit, false);
+@@ -391,8 +402,10 @@ static int dwc3_spacemit_suspend(struct device *dev)
+ 	for (i = spacemit->num_clks - 1; i >= 0; i--)
+ 		clk_disable_unprepare(spacemit->clks[i]);
+ 
+-	dwc3_spacemit_clear_wakeup_irqs(spacemit);
+-	dwc3_spacemit_enable_wakeup_irqs(spacemit);
++	if (do_wakeup) {
++		dwc3_spacemit_clear_wakeup_irqs(spacemit);
++		dwc3_spacemit_enable_wakeup_irqs(spacemit);
++	}
+ 	return 0;
+ }
+ 
+diff --git a/drivers/usb/host/ehci-k1x-ci.c b/drivers/usb/host/ehci-k1x-ci.c
+index dcea1a11306c..e457d1684649 100644
+--- a/drivers/usb/host/ehci-k1x-ci.c
++++ b/drivers/usb/host/ehci-k1x-ci.c
+@@ -91,7 +91,6 @@ static void mv_ehci_clear_wakeup_irqs(struct ehci_hcd_mv *ehci_mv)
+ {
+ 	u32 reg;
+ 	reg = readl(ehci_mv->wakeup_reg);
+-	dev_dbg(ehci_mv->dev, "wakeup_reg: 0x%x\n", reg);
+ 	reg |= (USB_LINS0_WAKE_CLEAR | USB_LINS1_WAKE_CLEAR);
+ 	writel(reg, ehci_mv->wakeup_reg);
+ }
+@@ -99,6 +98,10 @@ static void mv_ehci_clear_wakeup_irqs(struct ehci_hcd_mv *ehci_mv)
+ static irqreturn_t mv_ehci_wakeup_interrupt(int irq, void *_ehci_mv)
+ {
+ 	struct ehci_hcd_mv *ehci_mv = _ehci_mv;
++	u32 reg;
++	reg = readl(ehci_mv->wakeup_reg);
++	dev_dbg(ehci_mv->dev, "wakeup_reg: 0x%x\n", reg);
++
+ 	mv_ehci_disable_wakeup_irqs(ehci_mv);
+ 	mv_ehci_clear_wakeup_irqs(ehci_mv);
+ 
+@@ -258,6 +261,7 @@ static int mv_ehci_probe(struct platform_device *pdev)
+ 	struct ehci_hcd_mv *ehci_mv;
+ 	struct resource *r;
+ 	int retval = -ENODEV;
++	bool wakeup_source;
+ 	u32 offset;
+ 
+ 	dev_dbg(&pdev->dev, "mv_ehci_probe: Enter ... \n");
+@@ -431,8 +435,11 @@ static int mv_ehci_probe(struct platform_device *pdev)
+ 		goto err_set_vbus;
+ 	}
+ 
+-	device_init_wakeup(dev, true);
+-	dev_pm_set_wake_irq(dev, ehci_mv->irq);
++	wakeup_source = of_property_read_bool(dev->of_node, "wakeup-source");
++	if (wakeup_source) {
++		device_init_wakeup(dev, true);
++		dev_pm_set_wake_irq(dev, ehci_mv->irq);
++	}
+ 
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
+@@ -467,10 +474,13 @@ static int mv_ehci_remove(struct platform_device *pdev)
+ {
+ 	struct ehci_hcd_mv *ehci_mv = platform_get_drvdata(pdev);
+ 	struct usb_hcd *hcd = ehci_mv->hcd;
++	bool do_wakeup = device_may_wakeup(&pdev->dev);
+ 
+-	mv_ehci_disable_wakeup_irqs(ehci_mv);
+-	dev_pm_clear_wake_irq(ehci_mv->dev);
+-	device_init_wakeup(ehci_mv->dev, false);
++	if (do_wakeup) {
++		mv_ehci_disable_wakeup_irqs(ehci_mv);
++		dev_pm_clear_wake_irq(ehci_mv->dev);
++		device_init_wakeup(ehci_mv->dev, false);
++	}
+ 
+ 	if (hcd->rh_registered)
+ 		usb_remove_hcd(hcd);
+@@ -537,8 +547,10 @@ static int mv_ehci_suspend(struct device *dev)
+ 	clk_disable_unprepare(ehci_mv->clk);
+ 	dev_dbg(dev, "pm suspend: disable clks and phy\n");
+ 
+-	mv_ehci_clear_wakeup_irqs(ehci_mv);
+-	mv_ehci_enable_wakeup_irqs(ehci_mv);
++	if (do_wakeup) {
++		mv_ehci_clear_wakeup_irqs(ehci_mv);
++		mv_ehci_enable_wakeup_irqs(ehci_mv);
++	}
+ 	return ret;
+ }
+ 
+diff --git a/sound/soc/codecs/es8326.c b/sound/soc/codecs/es8326.c
+index 6362e232f24b..44a56bdbda4f 100644
+--- a/sound/soc/codecs/es8326.c
++++ b/sound/soc/codecs/es8326.c
+@@ -834,14 +834,14 @@ static void es8326_jack_detect_handler(struct work_struct *work)
+ 			#endif
+ 			snd_soc_jack_report(es8326->jack, 0, SND_JACK_HEADSET);
+ 			/* mute adc when mic path switch */
+-			regmap_write(es8326->regmap, ES8326_ADC_SCALE, 0x33);
+ 			regmap_write(es8326->regmap, ES8326_ADC1_SRC, 0x44);
+ 			regmap_write(es8326->regmap, ES8326_ADC2_SRC, 0x66);
+-			es8326->hp = 0;
+ 		}
++		es8326->hp = 0;
+ 		regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x03, 0x01);
+ 		regmap_write(es8326->regmap, ES8326_SYS_BIAS, 0x0a);
+ 		regmap_update_bits(es8326->regmap, ES8326_HP_DRIVER_REF, 0x0f, 0x03);
++		regmap_write(es8326->regmap, ES8326_INT_SOURCE, ES8326_INT_SRC_PIN9);
+ 		/*
+ 		 * Inverted HPJACK_POL bit to trigger one IRQ to double check HP Removal event
+ 		 */
+@@ -864,12 +864,18 @@ static void es8326_jack_detect_handler(struct work_struct *work)
+ 			 * set auto-check mode, then restart jack_detect_work after 400ms.
+ 			 * Don't report jack status.
+ 			 */
++			regmap_write(es8326->regmap, ES8326_INT_SOURCE, 0x00);
+ 			regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x03, 0x01);
++			regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x10, 0x00);
+ 			#ifndef SPACEMIT_CONFIG_CODEC_ES8326
+ 			es8326_enable_micbias(es8326->component);
+ 			#endif
+ 			usleep_range(50000, 70000);
+ 			regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x03, 0x00);
++			regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x10, 0x10);
++			usleep_range(50000, 70000);
++			regmap_write(es8326->regmap, ES8326_INT_SOURCE,
++					(ES8326_INT_SRC_PIN9 | ES8326_INT_SRC_BUTTON));
+ 			regmap_write(es8326->regmap, ES8326_SYS_BIAS, 0x1f);
+ 			regmap_update_bits(es8326->regmap, ES8326_HP_DRIVER_REF, 0x0f, 0x08);
+ 			queue_delayed_work(system_wq, &es8326->jack_detect_work,
+@@ -899,7 +905,6 @@ static void es8326_jack_detect_handler(struct work_struct *work)
+ 			snd_soc_jack_report(es8326->jack,
+ 					SND_JACK_HEADSET, SND_JACK_HEADSET);
+ 
+-			regmap_write(es8326->regmap, ES8326_ADC_SCALE, 0x33);
+ 			regmap_update_bits(es8326->regmap, ES8326_PGA_PDN,
+ 					0x08, 0x08);
+ 			regmap_update_bits(es8326->regmap, ES8326_PGAGAIN,
+@@ -1058,8 +1063,8 @@ static int es8326_init(struct snd_soc_component *component)
+ 	regmap_write(es8326->regmap, ES8326_VMIDSEL, 0x0E);
+ 	regmap_write(es8326->regmap, ES8326_ANA_LP, 0xf0);
+ 	usleep_range(10000, 15000);
+-	regmap_write(es8326->regmap, ES8326_HPJACK_TIMER, 0xe9);
+-	regmap_write(es8326->regmap, ES8326_ANA_MICBIAS, 0xcb);
++	regmap_write(es8326->regmap, ES8326_HPJACK_TIMER, 0xd9);
++	regmap_write(es8326->regmap, ES8326_ANA_MICBIAS, 0xd8);
+ 	/* set headphone default type and detect pin */
+ 	regmap_write(es8326->regmap, ES8326_HPDET_TYPE, 0x83);
+ 	regmap_write(es8326->regmap, ES8326_CLK_RESAMPLE, 0x05);
+@@ -1096,7 +1101,7 @@ static int es8326_init(struct snd_soc_component *component)
+ 
+ 	regmap_write(es8326->regmap, ES8326_ANA_VSEL, 0x7F);
+ 	/* select vdda as micbias source */
+-	regmap_write(es8326->regmap, ES8326_VMIDLOW, 0x23);
++	regmap_write(es8326->regmap, ES8326_VMIDLOW, 0x03);
+ 	/* set dac dsmclip = 1 */
+ 	regmap_write(es8326->regmap, ES8326_DAC_DSM, 0x08);
+ 	regmap_write(es8326->regmap, ES8326_DAC_VPPSCALE, 0x15);
+@@ -1109,8 +1114,7 @@ static int es8326_init(struct snd_soc_component *component)
+ 	es8326_enable_micbias(es8326->component);
+ 	usleep_range(50000, 70000);
+ 	regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x03, 0x00);
+-	regmap_write(es8326->regmap, ES8326_INT_SOURCE,
+-		    (ES8326_INT_SRC_PIN9 | ES8326_INT_SRC_BUTTON));
++	regmap_write(es8326->regmap, ES8326_INT_SOURCE, ES8326_INT_SRC_PIN9);
+ 	regmap_write(es8326->regmap, ES8326_INTOUT_IO,
+ 		     es8326->interrupt_clk);
+ 	regmap_write(es8326->regmap, ES8326_SDINOUT1_IO,
+@@ -1187,8 +1191,8 @@ static int es8326_resume(struct snd_soc_component *component)
+ 	regmap_write(es8326->regmap, ES8326_VMIDSEL, 0x0E);
+ 	regmap_write(es8326->regmap, ES8326_ANA_LP, 0xf0);
+ 	usleep_range(10000, 15000);
+-	regmap_write(es8326->regmap, ES8326_HPJACK_TIMER, 0xe9);
+-	regmap_write(es8326->regmap, ES8326_ANA_MICBIAS, 0xcb);
++	regmap_write(es8326->regmap, ES8326_HPJACK_TIMER, 0xd9);
++	regmap_write(es8326->regmap, ES8326_ANA_MICBIAS, 0xd8);
+ 	/* set headphone default type and detect pin */
+ 	regmap_write(es8326->regmap, ES8326_HPDET_TYPE, 0x83);
+ 	regmap_write(es8326->regmap, ES8326_CLK_RESAMPLE, 0x05);
+@@ -1225,7 +1229,7 @@ static int es8326_resume(struct snd_soc_component *component)
+ 
+ 	regmap_write(es8326->regmap, ES8326_ANA_VSEL, 0x7F);
+ 	/* select vdda as micbias source */
+-	regmap_write(es8326->regmap, ES8326_VMIDLOW, 0x23);
++	regmap_write(es8326->regmap, ES8326_VMIDLOW, 0x03);
+ 	/* set dac dsmclip = 1 */
+ 	regmap_write(es8326->regmap, ES8326_DAC_DSM, 0x08);
+ 	regmap_write(es8326->regmap, ES8326_DAC_VPPSCALE, 0x15);
+@@ -1238,7 +1242,7 @@ static int es8326_resume(struct snd_soc_component *component)
+ 	es8326_enable_micbias(es8326->component);
+ 	usleep_range(50000, 70000);
+ 	regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x03, 0x00);
+-	regmap_write(es8326->regmap, ES8326_INT_SOURCE,
++	regmap_write(es8326->regmap, ES8326_INT_SOURCE, ES8326_INT_SRC_PIN9);
+ 		    (ES8326_INT_SRC_PIN9 | ES8326_INT_SRC_BUTTON));
+ 	regmap_write(es8326->regmap, ES8326_INTOUT_IO,
+ 		     es8326->interrupt_clk);
+@@ -1324,7 +1328,7 @@ static int es8326_probe(struct snd_soc_component *component)
+ 				      &es8326->interrupt_clk);
+ 	if (ret != 0) {
+ 		dev_dbg(component->dev, "interrupt-clk return %d", ret);
+-		es8326->interrupt_clk = 0x45;
++		es8326->interrupt_clk = 0x00;
+ 	}
+ 	dev_dbg(component->dev, "interrupt-clk %x", es8326->interrupt_clk);
+ 
+@@ -1389,8 +1393,13 @@ static int es8326_set_jack(struct snd_soc_component *component,
+ 
+ static void es8326_remove(struct snd_soc_component *component)
+ {
++	struct es8326_priv *es8326 = snd_soc_component_get_drvdata(component);
++
+ 	es8326_disable_jack_detect(component);
+ 	es8326_set_bias_level(component, SND_SOC_BIAS_OFF);
++	regmap_write(es8326->regmap, ES8326_CSM_I2C_STA, 0x01);
++	usleep_range(1000, 3000);
++	regmap_write(es8326->regmap, ES8326_CSM_I2C_STA, 0x00);
+ }
+ 
+ static const struct snd_soc_component_driver soc_component_dev_es8326 = {
+-- 
+2.39.2
+

@@ -1,6 +1,6 @@
-From 19f1ad64f039d60d08cf0bf233e22b6cb59fa48a Mon Sep 17 00:00:00 2001
+From f19f42f8b6a29971ba072b3bd75a0f63dd57e4cf Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Tue, 16 Jul 2024 08:37:14 -0400
+Date: Sat, 20 Jul 2024 10:31:07 -0400
 Subject: [PATCH] add spacemit k1-x_deb1 dts
 
 Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
@@ -13,10 +13,11 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  arch/riscv/boot/dts/spacemit/k1-x-efuse.dtsi  |   52 +
  arch/riscv/boot/dts/spacemit/k1-x-hdmi.dtsi   |   62 +
  arch/riscv/boot/dts/spacemit/k1-x-lcd.dtsi    |  116 +
- arch/riscv/boot/dts/spacemit/k1-x.dtsi        | 2491 +++++++++++++++++
- arch/riscv/boot/dts/spacemit/k1-x_deb1.dts    | 1117 ++++++++
+ arch/riscv/boot/dts/spacemit/k1-x.dtsi        | 2392 +++++++++++++++++
+ arch/riscv/boot/dts/spacemit/k1-x_deb1.dts    | 1110 ++++++++
  .../boot/dts/spacemit/k1-x_opp_table.dtsi     |  110 +
  .../riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi | 1157 ++++++++
+ .../dts/spacemit/k1-x_thermal_cooling.dtsi    |   82 +
  .../dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi    |  104 +
  .../dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi |  157 ++
  .../dts/spacemit/lcd/lcd_icnl9911c_mipi.dtsi  |   96 +
@@ -25,9 +26,8 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  .../lcd/lcd_lt8911_edp_1920x1200.dtsi         |   61 +
  .../spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi |   61 +
  .../lcd/lcd_orisetech_ota7290b_mipi.dtsi      |   66 +
- .../boot/dts/spacemit/m1-x_opp_table.dtsi     |  234 ++
  .../boot/dts/spacemit/spacemit-scmi.dtsi      |   76 +
- 22 files changed, 6370 insertions(+)
+ 22 files changed, 6112 insertions(+)
  create mode 100644 arch/riscv/boot/dts/spacemit/Makefile
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-reserved-mm.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x-camera-sdk.dtsi
@@ -39,6 +39,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_opp_table.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_pinctrl.dtsi
+ create mode 100644 arch/riscv/boot/dts/spacemit/k1-x_thermal_cooling.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_gx09inx101_mipi.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_icnl9911c_mipi.dtsi
@@ -47,7 +48,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1200.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_lt9711_dp_1920x1080.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/lcd/lcd_orisetech_ota7290b_mipi.dtsi
- create mode 100644 arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi
  create mode 100644 arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi
 
 diff --git a/arch/riscv/boot/dts/Makefile b/arch/riscv/boot/dts/Makefile
@@ -617,10 +617,10 @@ index 000000000000..755f032dbe26
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x.dtsi b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
 new file mode 100644
-index 000000000000..82d7e1cd8681
+index 000000000000..110dd58ae3b3
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
-@@ -0,0 +1,2491 @@
+@@ -0,0 +1,2392 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2022 Spacemit, Inc */
 +
@@ -2712,105 +2712,6 @@ index 000000000000..82d7e1cd8681
 +                };
 +
 +		thermal_zones: thermal-zones {
-+			cluster0_thermal {
-+				polling-delay = <0>;
-+				polling-delay-passive = <0>;
-+				thermal-sensors = <&thermal 3>;
-+
-+				trips {
-+					cls0_trip0: cls0-trip-point0 {
-+						temperature = <95000>;
-+						hysteresis = <5000>;
-+						type = "passive";
-+					};
-+
-+					cls0_trip1: cls0-trip-point1 {
-+						temperature = <105000>;
-+						hysteresis = <5000>;
-+						type = "passive";
-+					};
-+
-+					cls0_trip2: cls0-trip-point2 {
-+						temperature = <115000>;
-+						hysteresis = <5000>;
-+						type = "critical";
-+					};
-+				};
-+
-+				cooling-maps {
-+					map0 {
-+						trip = <&cls0_trip0>;
-+/*
-+						cooling-device = <&{/cpus/cpu@3/thermal-hotplug} 0 1>;
-+*/
-+						cooling-device = <&cpu_0 1 2>,
-+								 <&cpu_1 1 2>,
-+								 <&cpu_2 1 2>,
-+								 <&cpu_3 1 2>;
-+					};
-+
-+					map1 {
-+						trip = <&cls0_trip1>;
-+/*
-+						cooling-device = <&{/cpus/cpu@3/thermal-hotplug} 0 1>;
-+*/
-+						cooling-device = <&cpu_0 3 3>,
-+								 <&cpu_1 3 3>,
-+								 <&cpu_2 3 3>,
-+								 <&cpu_3 3 3>;
-+					};
-+				};
-+			};
-+
-+			cluster1_thermal {
-+				polling-delay = <0>;
-+				polling-delay-passive = <0>;
-+				thermal-sensors = <&thermal 4>;
-+
-+				trips {
-+					cls1_trip0: cls1-trip-point0 {
-+						temperature = <95000>;
-+						hysteresis = <5000>;
-+						type = "passive";
-+					};
-+
-+					cls1_trip1: cls1-trip-point1 {
-+						temperature = <105000>;
-+						hysteresis = <5000>;
-+						type = "passive";
-+					};
-+
-+					cls1_trip2: cls1-trip-point2 {
-+						temperature = <115000>;
-+						hysteresis = <5000>;
-+						type = "critical";
-+					};
-+				};
-+
-+				cooling-maps {
-+					map0 {
-+						trip = <&cls1_trip0>;
-+/*
-+						cooling-device = <&{/cpus/cpu@7/thermal-hotplug} 0 1>;
-+*/
-+						cooling-device = <&cpu_4 1 2>,
-+								 <&cpu_5 1 2>,
-+								 <&cpu_6 1 2>,
-+								 <&cpu_7 1 2>;
-+					};
-+
-+					map1 {
-+						trip = <&cls1_trip1>;
-+/*
-+						cooling-device = <&{/cpus/cpu@7/thermal-hotplug} 0 1>;
-+*/
-+						cooling-device = <&cpu_4 3 3>,
-+								 <&cpu_5 3 3>,
-+								 <&cpu_6 3 3>,
-+								 <&cpu_7 3 3>;
-+					};
-+				};
-+			};
 +		};
 +
 +		tcm: tcm@0xd8000000 {
@@ -3114,10 +3015,10 @@ index 000000000000..82d7e1cd8681
 +};
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
 new file mode 100644
-index 000000000000..1f08fcd8b8fd
+index 000000000000..30a52c20c3ac
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/k1-x_deb1.dts
-@@ -0,0 +1,1117 @@
+@@ -0,0 +1,1110 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2023 Spacemit, Inc */
 +
@@ -3131,6 +3032,7 @@ index 000000000000..1f08fcd8b8fd
 +#include "k1-x-lcd.dtsi"
 +#include "k1-x-camera-sdk.dtsi"
 +#include "k1-x_opp_table.dtsi"
++#include "k1-x_thermal_cooling.dtsi"
 +
 +/ {
 +	model = "spacemit k1-x deb1 board";
@@ -4201,14 +4103,6 @@ index 000000000000..1f08fcd8b8fd
 +			};
 +		};
 +	};
-+};
-+
-+&cls0_trip2 {
-+	temperature = <115000>;
-+};
-+
-+&cls1_trip2 {
-+	temperature = <115000>;
 +};
 +
 +&i2s0 {
@@ -5514,6 +5408,94 @@ index 000000000000..f6ed1d715877
 +    };
 +};
 +
+diff --git a/arch/riscv/boot/dts/spacemit/k1-x_thermal_cooling.dtsi b/arch/riscv/boot/dts/spacemit/k1-x_thermal_cooling.dtsi
+new file mode 100644
+index 000000000000..9304607a03ea
+--- /dev/null
++++ b/arch/riscv/boot/dts/spacemit/k1-x_thermal_cooling.dtsi
+@@ -0,0 +1,82 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/* Copyright (c) 2023 Spacemit, Inc */
++
++&thermal_zones {
++	cluster0_thermal {
++		polling-delay = <0>;
++		polling-delay-passive = <0>;
++		thermal-sensors = <&thermal 3>;
++
++		thermal0_trips: trips {
++			cls0_trip0: cls0-trip-point0 {
++				temperature = <95000>;
++				hysteresis = <5000>;
++				type = "passive";
++			};
++
++			cls0_trip1: cls0-trip-point1 {
++				temperature = <105000>;
++				hysteresis = <5000>;
++				type = "passive";
++			};
++
++			cls0_trip2: cls0-trip-point2 {
++				temperature = <115000>;
++				hysteresis = <5000>;
++				type = "critical";
++			};
++		};
++
++		cooling-maps {
++			map0 {
++				trip = <&cls0_trip0>;
++				cooling-device = <&cpu_0 1 2>,
++						 <&cpu_1 1 2>,
++						 <&cpu_2 1 2>,
++						 <&cpu_3 1 2>,
++						 <&cpu_4 1 2>,
++						 <&cpu_5 1 2>,
++						 <&cpu_6 1 2>,
++						 <&cpu_7 1 2>;
++			};
++
++			map1 {
++				trip = <&cls0_trip1>;
++				cooling-device = <&cpu_0 3 3>,
++						 <&cpu_1 3 3>,
++						 <&cpu_2 3 3>,
++						 <&cpu_3 3 3>,
++						 <&cpu_4 3 3>,
++						 <&cpu_5 3 3>,
++						 <&cpu_6 3 3>,
++						 <&cpu_7 3 3>;
++			};
++		};
++	};
++
++	cluster1_thermal {
++		polling-delay = <0>;
++		polling-delay-passive = <0>;
++		thermal-sensors = <&thermal 4>;
++
++		thermal1_trips: trips {
++			cls1_trip0: cls1-trip-point0 {
++				temperature = <95000>;
++				hysteresis = <5000>;
++				type = "passive";
++			};
++
++			cls1_trip1: cls1-trip-point1 {
++				temperature = <105000>;
++				hysteresis = <5000>;
++				type = "passive";
++			};
++
++			cls1_trip2: cls1-trip-point2 {
++				temperature = <115000>;
++				hysteresis = <5000>;
++				type = "critical";
++			};
++		};
++	};
++};
 diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_gc9503v_mipi.dtsi
 new file mode 100644
 index 000000000000..e41a2ce3af40
@@ -5891,75 +5873,75 @@ index 000000000000..fbc3d70bbb60
 +};};
 diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
 new file mode 100644
-index 000000000000..e7952c0d2104
+index 000000000000..37b2ec4cc26d
 --- /dev/null
 +++ b/arch/riscv/boot/dts/spacemit/lcd/lcd_jd9365da_mipi_1280x800.dtsi
 @@ -0,0 +1,66 @@
 +// SPDX-License-Identifier: GPL-2.0
 +
 +/ { lcds: lcds {
-+        lcd_jd9365da_mipi_1280x800: lcd_jd9365da_mipi_1280x800 {
-+                dsi-work-mode = <1>; /* video burst mode*/
-+                dsi-lane-number = <4>;
-+                dsi-color-format = "rgb888";
-+                width-mm = <142>;
-+                height-mm = <228>;
-+                use-dcs-write;
++	lcd_jd9365da_mipi_1280x800: lcd_jd9365da_mipi_1280x800 {
++		dsi-work-mode = <1>; /* video burst mode*/
++		dsi-lane-number = <4>;
++		dsi-color-format = "rgb888";
++		width-mm = <72>;
++		height-mm = <126>;
++		use-dcs-write;
 +
-+                /*mipi info*/
-+                height = <1280>;
-+                width = <800>;
-+                hfp = <16>;
-+                hbp = <48>;
-+                hsync = <16>;
-+                vfp = <8>;
-+                vbp = <4>;
-+                vsync = <4>;
-+                fps = <60>;
-+                work-mode = <0>;
-+                rgb-mode = <3>;
-+                lane-number = <4>;
-+                phy-bit-clock = <480000000>;
-+                //phy-esc-clock = <76800000>;
-+                split-enable = <0>;
-+                eotp-enable = <0>;
-+                burst-mode = <2>;
-+                esd-check-enable = <0>;
++		/*mipi info*/
++		height = <1280>;
++		width = <800>;
++		hfp = <16>;
++		hbp = <48>;
++		hsync = <4>;
++		vfp = <150>;
++		vbp = <32>;
++		vsync = <4>;
++		fps = <60>;
++		work-mode = <0>;
++		rgb-mode = <3>;
++		lane-number = <4>;
++		phy-bit-clock = <624000000>;
++		split-enable = <0>;
++		eotp-enable = <0>;
++		burst-mode = <2>;
++		esd-check-enable = <0>;
 +
-+                /* DSI_CMD, DSI_MODE, timeout, len, cmd */
-+                initial-command = [
-+                        39 01 F0 01 11
-+                        39 01 28 01 29
-+                ];
-+                sleep-in-command = [
-+                        39 01 78 01 28
-+                        39 01 78 01 10
-+                ];
-+                sleep-out-command = [
-+                        39 01 96 01 11
-+                        39 01 32 01 29
-+                ];
-+                read-id-command = [
-+                        37 01 00 01 01
-+                        14 01 00 01 04
-+                ];
++		/* DSI_CMD, DSI_MODE, timeout, len, cmd */
++		initial-command = [
++			39 01 96 01 11
++			39 01 32 01 29
++		];
++		sleep-in-command = [
++			39 01 00 02 26 08
++			39 01 78 01 28
++			39 01 78 01 10
++		];
++		sleep-out-command = [
++			39 01 96 01 11
++			39 01 32 01 29
++		];
++		read-id-command = [
++			37 01 00 01 01
++			14 01 00 01 04
++		];
 +
-+                display-timings {
-+                        timing0 {
-+                                clock-frequency = <68430000>;
-+                                hactive = <800>;
-+                                hfront-porch = <16>;
-+                                hback-porch = <48>;
-+                                hsync-len = <16>;
-+                                vactive = <1280>;
-+                                vfront-porch = <8>;
-+                                vback-porch = <4>;
-+                                vsync-len = <4>;
-+                                vsync-active = <1>;
-+                                hsync-active = <1>;
-+                        };
-+                };
-+        };
++		display-timings {
++			timing0 {
++				clock-frequency = <76800000>;
++				hactive = <800>;
++				hfront-porch = <16>;
++				hback-porch = <48>;
++				hsync-len = <4>;
++				vactive = <1280>;
++				vfront-porch = <150>;
++				vback-porch = <32>;
++				vsync-len = <4>;
++				vsync-active = <1>;
++				hsync-active = <1>;
++			};
++		};
++	};
 +};};
 diff --git a/arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1080.dtsi b/arch/riscv/boot/dts/spacemit/lcd/lcd_lt8911_edp_1920x1080.dtsi
 new file mode 100644
@@ -6234,246 +6216,6 @@ index 000000000000..9e2a12429193
 +		};
 +	};
 +};};
-diff --git a/arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi b/arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi
-new file mode 100644
-index 000000000000..af2458381b89
---- /dev/null
-+++ b/arch/riscv/boot/dts/spacemit/m1-x_opp_table.dtsi
-@@ -0,0 +1,234 @@
-+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
-+/* Copyright (c) 2023 Spacemit, Inc */
-+
-+&cpus {
-+	clst_core_opp_table0: opp_table0 {
-+		compatible = "operating-points-v2";
-+		opp-shared;
-+
-+		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
-+			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
-+		clock-names = "ace0","ace1","tcm","cci","pll3";
-+		cci-hz = /bits/ 64 <614000000>;
-+
-+		opp1800000000 {
-+			opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
-+			tcm-hz = /bits/ 64 <900000000>;
-+			ace-hz = /bits/ 64 <900000000>;
-+			opp-microvolt = <1160000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1600000000 {
-+			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
-+			tcm-hz = /bits/ 64 <800000000>;
-+			ace-hz = /bits/ 64 <800000000>;
-+			opp-microvolt = <1050000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1228800000 {
-+			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
-+			tcm-hz = /bits/ 64 <614400000>;
-+			ace-hz = /bits/ 64 <614400000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1000000000 {
-+			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
-+			tcm-hz = /bits/ 64 <500000000>;
-+			ace-hz = /bits/ 64 <500000000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp819000000 {
-+			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
-+			opp-microvolt = <950000>;
-+			tcm-hz = /bits/ 64 <409500000>;
-+			ace-hz = /bits/ 64 <409500000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp614400000 {
-+			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
-+			tcm-hz = /bits/ 64 <307200000>;
-+			ace-hz = /bits/ 64 <307200000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+	};
-+
-+	clst_core_opp_table1: opp_table1 {
-+		compatible = "operating-points-v2";
-+		opp-shared;
-+
-+		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
-+			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
-+		clock-names = "ace0","ace1","tcm","cci","pll3";
-+		cci-hz = /bits/ 64 <614000000>;
-+
-+		opp1800000000 {
-+			opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
-+			tcm-hz = /bits/ 64 <900000000>;
-+			ace-hz = /bits/ 64 <900000000>;
-+			opp-microvolt = <1100000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1600000000 {
-+			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
-+			tcm-hz = /bits/ 64 <800000000>;
-+			ace-hz = /bits/ 64 <800000000>;
-+			opp-microvolt = <1050000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1228800000 {
-+			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
-+			tcm-hz = /bits/ 64 <614400000>;
-+			ace-hz = /bits/ 64 <614400000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1000000000 {
-+			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
-+			tcm-hz = /bits/ 64 <500000000>;
-+			ace-hz = /bits/ 64 <500000000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp819000000 {
-+			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
-+			opp-microvolt = <950000>;
-+			tcm-hz = /bits/ 64 <409500000>;
-+			ace-hz = /bits/ 64 <409500000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp614400000 {
-+			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
-+			tcm-hz = /bits/ 64 <307200000>;
-+			ace-hz = /bits/ 64 <307200000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+	};
-+
-+	clst_core_opp_table2: opp_table2 {
-+		compatible = "operating-points-v2";
-+		opp-shared;
-+
-+		clocks = <&ccu CLK_CPU_C0_ACE>, <&ccu CLK_CPU_C1_ACE>, <&ccu CLK_CPU_C0_TCM>,
-+			<&ccu CLK_CCI550>, <&ccu CLK_PLL3>;
-+		clock-names = "ace0","ace1","tcm","cci","pll3";
-+		cci-hz = /bits/ 64 <614000000>;
-+
-+		opp1800000000 {
-+			opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
-+			tcm-hz = /bits/ 64 <900000000>;
-+			ace-hz = /bits/ 64 <900000000>;
-+			opp-microvolt = <1050000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1600000000 {
-+			opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
-+			tcm-hz = /bits/ 64 <800000000>;
-+			ace-hz = /bits/ 64 <800000000>;
-+			opp-microvolt = <1050000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1228800000 {
-+			opp-hz = /bits/ 64 <1228800000>, /bits/ 64 <1228800000>;
-+			tcm-hz = /bits/ 64 <614400000>;
-+			ace-hz = /bits/ 64 <614400000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp1000000000 {
-+			opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
-+			tcm-hz = /bits/ 64 <500000000>;
-+			ace-hz = /bits/ 64 <500000000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp819000000 {
-+			opp-hz = /bits/ 64 <819000000>, /bits/ 64 <819000000>;
-+			opp-microvolt = <950000>;
-+			tcm-hz = /bits/ 64 <409500000>;
-+			ace-hz = /bits/ 64 <409500000>;
-+			clock-latency-ns = <200000>;
-+		};
-+
-+		opp614400000 {
-+			opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
-+			tcm-hz = /bits/ 64 <307200000>;
-+			ace-hz = /bits/ 64 <307200000>;
-+			opp-microvolt = <950000>;
-+			clock-latency-ns = <200000>;
-+		};
-+	};
-+};
-+
-+&cpu_0 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_1 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_2 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_3 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_4 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_5 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_6 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
-+
-+&cpu_7 {
-+	clst-supply = <&dcdc_1>;
-+	clocks = <&ccu CLK_CPU_C0_CORE>, <&ccu CLK_CPU_C1_CORE>;
-+	clock-names = "cls0", "cls1";
-+	operating-points-v2 = <&clst_core_opp_table0>, <&clst_core_opp_table1>, <&clst_core_opp_table2>;
-+};
 diff --git a/arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi b/arch/riscv/boot/dts/spacemit/spacemit-scmi.dtsi
 new file mode 100644
 index 000000000000..5f33e7f6a0f6
