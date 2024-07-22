@@ -4,7 +4,10 @@ if [[ -f "/etc/opt/board.txt" ]]; then . /etc/opt/board.txt; fi
 if [[ -f "/boot/useraccount.txt" ]]; then . /boot/useraccount.txt; fi
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 
-create_user(){
+create_user (){
+if [[ ! -z "$NAME" ]]; then NAME=`echo $NAME | sed 's/ //g'`; else NAME=`echo ${DEFAULT_MOTD} | sed 's/ //g'`; fi
+if [[ ! -z "$USERNAME" ]]; then :; else USERNAME="pi"; fi
+if [[ ! -z "$PASSWORD" ]]; then :; else PASSWORD="board"; fi
 adduser ${USERNAME} --gecos ${NAME} --disabled-password
 echo "${USERNAME}:${PASSWORD}" | chpasswd
 adduser ${USERNAME} sudo
@@ -32,91 +35,21 @@ else
 fi
 }
 
-create_sudoers(){
-if [[ -f "/etc/sudoers.d/010_pi-nopasswd" ]]; then rm -f /etc/sudoers.d/010_pi-nopasswd; fi
+create_sudoers (){
 tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
 ${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
 }
 
-account_prompt(){
 echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
-echo ""
-echo -e "\e[1;37mWelcome. Create a User Account\e[0m."
-while true; do
-	echo -e ""
-	echo -en "Name: "
-	read NAME1
-	if [[ ! -z "$NAME1" ]]; then
-		NAME=`echo $NAME1 | sed 's/ //g'`
-	else
-		echo -e ""
-		echo -e "Field blank? Try again."
-		continue
-	fi
-	break
-done
-while true; do
-	echo -en "Username: "
-	read USERNAME
-	if [[ ! -z "$USERNAME" ]]; then
-		:;
-	else
-		echo -e ""
-		echo -e "Field blank? Try again."
-		echo -e ""
-		continue
-	fi
-	break
-done
-while true; do
-	echo -en "Password: "
-	read -s FIRST
-	if [[ ! -z "$FIRST" ]]; then
-		:;
-	else
-		echo -e ""
-		echo -e "Field blank? Try again."
-		echo -e ""
-		continue
-	fi
-	echo ""
-	echo -en "Password (again): "
-	read -s SECOND
-	echo ""
-	if [ "$FIRST" = "$SECOND" ]; then
-		PASSWORD="${FIRST}"
-		echo ""
-		echo -e "Creating a user account for: \e[1;37m${NAME}\e[0m ..."
-	else
-		echo -e "The passwords don't match. Try again."
-		continue
-	fi
-	break
-done
-}
-
-if [[ "$ENABLE" == "true" || "$ENABLE" == "yes" || "$ENABLE" == "enable" ]]; then
-	# headless
-	echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
-	echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
-	echo ""
-	echo -e "Creating a user account for: \e[1;37m${NAME}\e[0m"
-	create_user > /dev/null 2>&1
-	create_sudoers > /dev/null 2>&1
-	rm -f /boot/useraccount.txt
-	echo "Almost done ..."
-	sleep 1
-else
-	# headful
-	account_prompt
-	create_user > /dev/null 2>&1
-	create_sudoers > /dev/null 2>&1
-	rm -f /boot/useraccount.txt
-	echo "Almost done ..."
-	sleep 1
-fi
+echo -e ""
+echo -e "Creating a user account for: \e[1;37m${NAME}\e[0m"
+create_user
+create_sudoers
+rm -f /boot/useraccount.txt
+echo -e "Finishing ..."
+sleep .75
 
 if [[ "$DISTRO" == "Devuan" ]]; then
 	update-rc.d useraccount remove > /dev/null 2>&1
