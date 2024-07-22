@@ -15,6 +15,16 @@ echo ""
 exit 1
 }
 
+uboot_config (){
+# add default builder config options
+if [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_SD_BOOT=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_SD_BOOT=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_EXT4_WRITE=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_EXT4_WRITE=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_FS_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_FS_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+	if [[ `grep -w "CONFIG_CMD_BTRFS=y" "configs/${UBOOT_DEFCONFIG}"` ]]; then :; else echo "CONFIG_CMD_BTRFS=y" >> configs/${UBOOT_DEFCONFIG}; fi
+fi
+}
+
 download_uboot (){
 if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	echo -en "${WHT}u-boot-${UBOOT_VERSION}${FIN} "
@@ -107,12 +117,12 @@ BOOTLOGO="files/boot/uboot/logo/u_boot_logo.bmp"
 BOOTLOGODIR="files/boot/uboot/logo"
 if [[ "$RANDOM_LOGO" == "true" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
 	ls ../../${BOOTLOGODIR}/u_boot_logo*.bmp | shuf -n 100 | xargs -I % cp % ${LOGODIR}/u_boot_logo.bmp
-fi
-if [[ "$RANDOM_LOGO" == "false" ]] && [[ -f "../../${BOOTLOGO}" ]]; then
+else
 	cp -f ../../${BOOTLOGO} ${LOGODIR}/
 fi
 # lib/function/$PLATFORM
-uboot_configs
+uboot_config
+${FAMILY}_uboot_config
 # end
 export ARCH=${ARCH}
 defconfig
