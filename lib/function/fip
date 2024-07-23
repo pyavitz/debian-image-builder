@@ -200,8 +200,10 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 
 meson-gxl (){
 export FIPDIR=$PWD/fip
+if [[ "$HOST_CODENAME" =~ ^(bookworm|noble)$ ]]; then ACSTOOL="python3 $FIPDIR/acs_tool.py"; else ACSTOOL="$FIPDIR/acs_tool.pyc"; fi
 mkdir -p fip
 cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
+cp -f ../../files/boot/amlogic-blx/${BOARD}/* fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -213,7 +215,7 @@ $FIPDIR/blx_fix.sh \
 	fip/bl30_new.bin \
 	bl30
 
-$FIPDIR/acs_tool.pyc \
+${ACSTOOL} \
 	fip/bl2.bin \
 	fip/bl2_acs.bin \
 	fip/acs.bin 0
