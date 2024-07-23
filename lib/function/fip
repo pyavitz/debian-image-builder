@@ -203,7 +203,7 @@ export FIPDIR=$PWD/fip
 if [[ "$HOST_CODENAME" =~ ^(bookworm|noble)$ ]]; then ACSTOOL="python3 $FIPDIR/acs_tool.py"; else ACSTOOL="$FIPDIR/acs_tool.pyc"; fi
 mkdir -p fip
 cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
-cp -f ../../files/boot/amlogic-blx/${BOARD}/* fip/
+cp -fr ../../files/boot/amlogic-blx/${BOARD}/{acs_tool.py,aml_encrypt_gxl} fip/
 cp -f u-boot.bin fip/bl33.bin
 
 $FIPDIR/blx_fix.sh \
@@ -229,15 +229,18 @@ $FIPDIR/blx_fix.sh \
 	fip/bl2_new.bin \
 	bl2
 
+cp -f ../../files/boot/amlogic-blx/${BOARD}/bl30_new.bin fip/
 $FIPDIR/aml_encrypt_gxl --bl3enc \
 	--input fip/bl30_new.bin
 
+cp -f ../../files/boot/amlogic-blx/${BOARD}/bl31.img fip/
 $FIPDIR/aml_encrypt_gxl --bl3enc \
 	--input fip/bl31.img
 
 $FIPDIR/aml_encrypt_gxl --bl3enc \
 	--input fip/bl33.bin
 
+cp -f ../../files/boot/amlogic-blx/${BOARD}/bl2_new.bin fip/
 $FIPDIR/aml_encrypt_gxl --bl2sig \
 	--input fip/bl2_new.bin \
 	--output fip/bl2.n.bin.sig
