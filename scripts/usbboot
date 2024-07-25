@@ -19,7 +19,7 @@ else
 	exit 1
 fi
 # parted offset conversion
-if [[ "$OFFSET" == "4096" || "$OFFSET" == "8192" ]]; then IMG_OFFSET="4MiB"; fi
+if [[ "$OFFSET" =~ ^(4096|8192)$ ]]; then IMG_OFFSET="4MiB"; fi
 if [[ "$OFFSET" == "32768" ]]; then IMG_OFFSET="16MiB"; fi
 
 P_BOOT="p1"
@@ -28,9 +28,7 @@ USB_BOOT_IMAGE="${DTB}-usb-boot.img"
 BOOT_LABEL="BOOT"
 BOOTFS="mkfs -t vfat -n"
 BOOT_SCRIPT="files/boot/usbboot.cmd"
-if [[ -f "$USB_BOOT_IMAGE" ]]; then
-	rm -f $USB_BOOT_IMAGE
-fi
+if [[ -f "$USB_BOOT_IMAGE" ]]; then rm -f $USB_BOOT_IMAGE; fi
 echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 mkdir -p "$IMAGE_FOLDER"
@@ -52,7 +50,8 @@ flash_uboot
 sync
 if [[ -f "${BOOT_SCRIPT}" ]]; then
 	cp -f ${BOOT_SCRIPT} p1/boot.cmd
-	mkimage -C none -A arm -T script -d p1/boot.cmd p1/boot.scr
+	echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> p1/boot.cmd
+	mkimage -C none -A ${ARCH} -T script -d p1/boot.cmd p1/boot.scr
 	sleep .50
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
@@ -61,7 +60,7 @@ if [[ -f "${BOOT_SCRIPT}" ]]; then
 	rmdir p1
 	echo ""
 else
-	echo -e "Missing files/boot/usbboot.cmd"
+	echo -e "${BOOT_SCRIPT}"
 	sleep .50
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
