@@ -58,7 +58,7 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 	fi
 	GIT_URL="https://git.kernel.org/pub/scm/linux/kernel/git/${GIT_REPO}/linux.git"
 	if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -d "${KERNEL}-${VERSION}.backup" ]]; then
-		echo -en "${KERNEL}-${VERSION}"
+		echo -en "${KERNEL}-${VERSION}" | sed -e "s/\b\(.\)/\u\1/g"
 		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
 		rm -fdr ${KERNEL}-${VERSION}
 		echo -en " ${WHT}...${FIN}"
@@ -66,7 +66,7 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
 		if [[ -d "${KERNEL}-${VERSION}" ]]; then
-			echo -en "${KERNEL}-${VERSION}"
+			echo -en "${KERNEL}-${VERSION}" | sed -e "s/\b\(.\)/\u\1/g"
 			echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
 			rm -fdr ${KERNEL}-${VERSION}
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
@@ -78,13 +78,13 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		sleep .50
 		if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -f "${KERNEL}-${VERSION}/Makefile" ]]; then
 			echo ""
-			echo -en "${KERNEL}-${VERSION}"
+			echo -en "${KERNEL}-${VERSION}" | sed -e "s/\b\(.\)/\u\1/g"
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 			cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
 			echo ""
-			echo -en "${KERNEL}-${VERSION}"
+			echo -en "${KERNEL}-${VERSION}" | sed -e "s/\b\(.\)/\u\1/g"
 			echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
 			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
 			exit 1
@@ -97,7 +97,7 @@ fi
 
 download_tarball (){
 if [[ -d "${KERNEL}-${VERSION}" ]]; then
-	echo -en "${KERNEL}-${VERSION}"
+	echo -en "${KERNEL}-${VERSION}" | sed -e "s/\b\(.\)/\u\1/g"
 	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
 	rm -fdr ${KERNEL}-${VERSION}
 	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
