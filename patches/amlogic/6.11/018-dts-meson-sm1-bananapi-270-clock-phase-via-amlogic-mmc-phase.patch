@@ -1,0 +1,58 @@
+From 90bb82da52f5b4759b6b83a657a749587173fde5 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Tue, 22 Aug 2023 09:45:46 -0400
+Subject: [PATCH] dts: meson-sm1-bananapi: 270 clock phase, via
+ amlogic,mmc-phase
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts | 2 ++
+ arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi   | 5 +++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
+index 5f6071ee84a6..d1fe18db18a7 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi-m5.dts
+@@ -216,6 +216,8 @@ &sd_emmc_a {
+ 	vmmc-supply = <&vddao_3v3>;
+ 	vqmmc-supply = <&vddao_1v8>;
+ 
++	amlogic,mmc-phase = <CLK_PHASE_270 CLK_PHASE_0 CLK_PHASE_0>;
++
+ 	rtl8822cs: wifi@1 {
+ 		reg = <1>;
+ 	};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
+index 1f7b26f65274..7072d0e7bd4a 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-bananapi.dtsi
+@@ -8,6 +8,7 @@
+ #include <dt-bindings/leds/common.h>
+ #include <dt-bindings/input/linux-event-codes.h>
+ #include <dt-bindings/gpio/meson-g12a-gpio.h>
++#include <dt-bindings/mmc/meson-gx-mmc.h>
+ 
+ / {
+ 	adc_keys {
+@@ -396,6 +397,8 @@ &sd_emmc_b {
+ 	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_LOW>;
+ 	vmmc-supply = <&tflash_vdd>;
+ 	vqmmc-supply = <&vddio_c>;
++
++	amlogic,mmc-phase = <CLK_PHASE_270 CLK_PHASE_0 CLK_PHASE_0>;
+ };
+ 
+ /* eMMC */
+@@ -415,6 +418,8 @@ &sd_emmc_c {
+ 	mmc-pwrseq = <&emmc_pwrseq>;
+ 	vmmc-supply = <&vddao_3v3>;
+ 	vqmmc-supply = <&emmc_1v8>;
++
++	amlogic,mmc-phase = <CLK_PHASE_270 CLK_PHASE_0 CLK_PHASE_0>;
+ };
+ 
+ &uart_AO {
+-- 
+2.39.2
+
