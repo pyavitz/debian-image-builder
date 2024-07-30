@@ -44,6 +44,11 @@ if test -e ${devtype} ${devnum}:${distro_bootpart} ${platform}/${fdtfile}; then
 elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${platform}/${fdtfile}; then
 	setenv fdtdir boot/${platform}
 fi
+if test -e ${devtype} ${devnum}:${distro_bootpart} overlays.txt; then
+	setenv ovconfig "overlays.txt"
+elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/overlays.txt; then
+	setenv ovconfig "boot/overlays.txt"
+fi
 
 setenv bootargs "${console} rw root=PARTUUID=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
 
@@ -52,11 +57,11 @@ ${loading} ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers} 
 && ${loading} ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr_r} ${fdtdir}/${fdtfile} \
 && ${loading} ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd}
 
-if test -e ${devtype} ${devnum}:${distro_bootpart} ${fdtdir}/overlays/overlays.txt; then
+if test -e ${devtype} ${devnum}:${distro_bootpart} ${ovconfig}; then
 	fdt addr ${fdt_addr_r}
 	fdt resize
 	setexpr fdtovaddr ${fdt_addr_r} + ${fdtoverlay_addr_r}
-	if load ${devtype} ${devnum}:${distro_bootpart} ${fdtovaddr} ${fdtdir}/overlays/overlays.txt \
+	if load ${devtype} ${devnum}:${distro_bootpart} ${fdtovaddr} ${ovconfig} \
 		&& env import -t ${fdtovaddr} ${filesize} && test -n ${overlays}; then
 		echo "Loaded overlay.txt: ${overlays}"
 		for ov in ${overlays}; do
