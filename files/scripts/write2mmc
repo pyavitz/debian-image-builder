@@ -29,8 +29,8 @@ else
 	WARNING_MSG="The $PLATFORM platform is currently not supported."
 	WARNING
 fi
-if [[ "$BOOTCMD" == "true" || "$BOOTINI" == "true" || "$EFI" == "true" || "$PETITBOOT" == "true" ]]; then
-	WARNING_MSG="Only boards using EXTLINUX are currently supported at this time."
+if [[ "$BOOTINI" == "true" || "$EFI" == "true" || "$PETITBOOT" == "true" ]]; then
+	WARNING_MSG="Only boards using BOOTCMD and EXTLINUX are currently supported at this time."
 	WARNING
 fi
 if [[ -d "/usr/lib/u-boot" ]]; then
@@ -635,6 +635,10 @@ if [[ "$EXTLINUX" == "true" ]]; then
 	sed -i "/append/c\\	${CMDLINE}" /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
 	cat /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
 fi
+if [[ "$BOOTCMD" == "true" ]]; then
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
+	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_ROOTFS}/boot/boot.cmd /mnt/${P_ROOTFS}/boot/boot.scr
+fi
 #if [[ "$BOARD" == "bananapif3" ]]; then $EE "env_k1-x.txt"; env_config; fi
 $EE
 $EE "fstab"
@@ -651,6 +655,10 @@ if [[ "$EXTLINUX" == "true" ]]; then
 	$EE "extlinux.conf"
 	sed -i "/append/c\\	${CMDLINE}" /mnt/${P_BOOT}/extlinux/extlinux.conf
 	cat /mnt/${P_BOOT}/extlinux/extlinux.conf
+fi
+if [[ "$BOOTCMD" == "true" ]]; then
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
+	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_BOOT}/boot.cmd /mnt/${P_BOOT}/boot.scr
 fi
 #if [[ "$BOARD" == "bananapif3" ]]; then $EE "env_k1-x.txt"; env_config; fi
 $EE
