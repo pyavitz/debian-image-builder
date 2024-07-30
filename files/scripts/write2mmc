@@ -215,17 +215,18 @@ fi
 # BOOT PARTITION VARIABLES
 if [[ "$P_VALUE" == "p1" ]]; then
 	P_ROOTFS="p1"
-	if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
-		P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
-	fi
+	LOADTYPE="ext4load"
+	if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`; fi
 else
-	if [[ "$B_FSTYPE" == "vfat" || "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+	if [[ "$B_FSTYPE" =~ ^(vfat|ext2|ext4)$ ]]; then
 		if [[ "$P_VALUE" == "p2" ]]; then
 			if [[ "$B_FSTYPE" == "vfat" ]]; then
+				LOADTYPE="fatload"
 				BOOTFS="mkfs.vfat -n"
 				BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
 			fi
-			if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
+			if [[ "$B_FSTYPE" =~ ^(ext2|ext4)$ ]]; then
+				LOADTYPE="${B_FSTYPE}load"
 				EXTFS="${B_FSTYPE}"
 				BOOTFS="mkfs.${EXTFS} -L"
 				BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
@@ -247,7 +248,7 @@ else
 fi
 
 # ROOT PARTITION VARIABLES
-if [[ "$R_FSTYPE" == "btrfs" || "$R_FSTYPE" == "ext4" || "$R_FSTYPE" == "f2fs" || "$R_FSTYPE" == "xfs" ]]; then
+if [[ "$R_FSTYPE" =~ ^(btrfs|ext4|f2fs|xfs)$ ]]; then
 	if [[ "$R_FSTYPE" == "btrfs" ]]; then
 		MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
 		MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
@@ -637,6 +638,7 @@ if [[ "$EXTLINUX" == "true" ]]; then
 fi
 if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_ROOTFS}/boot/boot.cmd /mnt/${P_ROOTFS}/boot/boot.scr
 fi
 #if [[ "$BOARD" == "bananapif3" ]]; then $EE "env_k1-x.txt"; env_config; fi
@@ -658,6 +660,7 @@ if [[ "$EXTLINUX" == "true" ]]; then
 fi
 if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_BOOT}/boot.cmd /mnt/${P_BOOT}/boot.scr
 fi
 #if [[ "$BOARD" == "bananapif3" ]]; then $EE "env_k1-x.txt"; env_config; fi
