@@ -1,0 +1,2620 @@
+From 6c1223691d92fd16598fcb598eda2de347cf24ed Mon Sep 17 00:00:00 2001
+From: James Deng <james.deng@spacemit.com>
+Date: Thu, 1 Aug 2024 22:09:26 +0800
+Subject: [PATCH] Update for v1.0.11
+
+---
+ arch/riscv/dts/Makefile                       |   2 +-
+ arch/riscv/dts/k1-x.dtsi                      |  20 +
+ arch/riscv/dts/k1-x_MUSE-Paper.dts            | 257 +++++++
+ arch/riscv/dts/k1-x_pinctrl.dtsi              | 724 +++++++++---------
+ board/spacemit/k1-x/configs/uboot_fdt.its     |  14 +
+ board/spacemit/k1-x/k1x.c                     |  21 +-
+ configs/k1_defconfig                          |   2 +
+ debian/control                                |   1 +
+ debian/rules                                  |  11 +
+ drivers/clk/spacemit/ccu-k1x.c                |  40 +-
+ drivers/fastboot/fb_spacemit.c                |   1 +
+ drivers/pwm/Kconfig                           |   6 +
+ drivers/pwm/Makefile                          |   1 +
+ drivers/pwm/pwm-pxa.c                         | 156 ++++
+ drivers/reset/reset-spacemit-k1x.c            |  40 +-
+ drivers/video/spacemit/dsi/Makefile           |   1 +
+ .../dsi/include/spacemit_dsi_common.h         |   1 +
+ .../spacemit/dsi/include/spacemit_video_tx.h  |   4 +
+ .../spacemit/dsi/video/lcd/lcd_icnl9951r.c    | 165 ++++
+ .../spacemit/dsi/video/spacemit_mipi_port.c   |  39 +-
+ 20 files changed, 1104 insertions(+), 402 deletions(-)
+ create mode 100755 arch/riscv/dts/k1-x_MUSE-Paper.dts
+ create mode 100644 drivers/pwm/pwm-pxa.c
+ create mode 100644 drivers/video/spacemit/dsi/video/lcd/lcd_icnl9951r.c
+
+diff --git a/arch/riscv/dts/Makefile b/arch/riscv/dts/Makefile
+index 820fdf4b..c7d4ac4e 100644
+--- a/arch/riscv/dts/Makefile
++++ b/arch/riscv/dts/Makefile
+@@ -12,7 +12,7 @@ dtb-$(CONFIG_TARGET_SPACEMIT_K1X) += k1-x_evb.dtb k1-x_deb2.dtb k1-x_deb1.dtb k1
+ 				     k1-x_kx312.dtb k1-x_MINI-PC.dtb k1-x_mingo.dtb k1-x_MUSE-N1.dtb \
+ 				     k1-x_MUSE-Pi.dtb k1-x_spl.dtb k1-x_milkv-jupiter.dtb \
+ 				     k1-x_MUSE-Book.dtb m1-x_milkv-jupiter.dtb \
+-				     k1-x_lpi3a.dtb k1-x_MUSE-Card.dtb
++				     k1-x_lpi3a.dtb k1-x_MUSE-Card.dtb k1-x_MUSE-Paper.dtb \
+ 
+ include $(srctree)/scripts/Makefile.dts
+ 
+diff --git a/arch/riscv/dts/k1-x.dtsi b/arch/riscv/dts/k1-x.dtsi
+index 54cde04a..ce02c4ff 100644
+--- a/arch/riscv/dts/k1-x.dtsi
++++ b/arch/riscv/dts/k1-x.dtsi
+@@ -519,6 +519,26 @@
+ 			status = "disabled";
+                 };
+ 
++		pwm0: pwm@d401a000 {
++			compatible = "spacemit,k1x-pwm";
++			reg = <0x0 0xd401a000 0x0 0x10>;
++			#pwm-cells = <2>;
++			clocks = <&ccu CLK_PWM0>;
++			resets = <&reset RESET_PWM0>;
++			k1x,pwm-disable-fd = <1>;
++			status = "disabled";
++		};
++
++		pwm14: pwm@d4021800 {
++			compatible = "spacemit,k1x-pwm";
++			reg = <0x0 0xd4021800 0x0 0x10>;
++			#pwm-cells = <2>;
++			clocks = <&ccu CLK_PWM14>;
++			resets = <&reset RESET_PWM14>;
++			k1x,pwm-disable-fd;
++			status = "disabled";
++		};
++
+ 		pcie0_rc: pcie@ca000000 {
+ 			compatible = "k1x,dwc-pcie";
+ 			reg = <0x0 0xca000000 0x0 0x00001000>, /* dbi */
+diff --git a/arch/riscv/dts/k1-x_MUSE-Paper.dts b/arch/riscv/dts/k1-x_MUSE-Paper.dts
+new file mode 100755
+index 00000000..98c7eff1
+--- /dev/null
++++ b/arch/riscv/dts/k1-x_MUSE-Paper.dts
+@@ -0,0 +1,257 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/* Copyright (c) 2023 Spacemit, Inc */
++
++/dts-v1/;
++
++#include "k1-x.dtsi"
++#include "k1-x_pinctrl.dtsi"
++#include "k1-x_spm8821.dtsi"
++
++/ {
++	model = "M1-MUSE-PAPER";
++
++	aliases {
++		efuse_power = &ldo_31;
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x00000000 0x00000000 0x00000000 0x80000000>;
++	};
++
++	chosen {
++		bootargs = "earlycon=sbi console=ttyS0,115200 debug loglevel=8,initcall_debug=1 rdinit=/init.tmp";
++		stdout-path = "serial0:115200n8";
++	};
++
++	usb2hub: usb2hub {
++		compatible = "spacemit,usb-hub";
++		vbus-gpios = <&gpio 123 0>;	/* for usb2 hub output vbus */
++		status = "disabled";
++	};
++
++	usb3hub: usb3hub {
++		compatible = "spacemit,usb-hub";
++		vbus-gpios = <&gpio 79 0>;	/* gpio_79 for usb3 pwren */
++		status = "disabled";
++	};
++
++};
++
++&cpus {
++	timebase-frequency = <24000000>;
++};
++
++&uart0 {
++	status = "okay";
++};
++
++&i2c0 {
++	status = "disabled";
++};
++
++&i2c1 {
++	status = "disabled";
++};
++
++&i2c2 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c2_0>;
++	status = "okay";
++
++	eeprom@50{
++		compatible = "atmel,24c02";
++		reg = <0x50>;
++		vin-supply-names = "eeprom_1v8";
++		status = "okay";
++	};
++};
++
++&i2c3 {
++	status = "disabled";
++};
++
++&i2c4 {
++	clock-frequency = <400000>;
++	status = "disabled";
++};
++
++&i2c5 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c5_0>;
++	status = "disabled";
++};
++
++&i2c6 {
++	status = "disabled";
++};
++
++&i2c7 {
++	status = "disabled";
++};
++
++&pinctrl {
++	pinctrl-single,gpio-range = <
++		&range GPIO_49  2 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_3V_DS4)
++		&range GPIO_58  1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_63  1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_64  1 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_65  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_66  2 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range PRI_TDI  2 (MUX_MODE1 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range PRI_TCK  1 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range PRI_TDO  1 (MUX_MODE1 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_74  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_79  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_80  1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_3V_DS4)
++		&range GPIO_81  3 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_90  1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_91  2 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range DVL0     2 (MUX_MODE1 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_110 1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_114 1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_115 2 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_123 1 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++		&range GPIO_124 1 (MUX_MODE0 | EDGE_NONE | PULL_UP   | PAD_1V8_DS2)
++		&range GPIO_125 3 (MUX_MODE0 | EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)
++	>;
++
++	gpio80_pmx_func0: gpio80_pmx_func0 {
++		pinctrl-single,pins = <
++			K1X_PADCONF(GPIO_80, MUX_MODE0, (EDGE_BOTH | PULL_UP | PAD_3V_DS4))  /* mmc cd */
++		>;
++	};
++};
++
++&gpio{
++	gpio-ranges = <
++		&pinctrl 49 GPIO_49 2
++		&pinctrl 58 GPIO_58 1
++		&pinctrl 63 GPIO_63 1
++		&pinctrl 65 GPIO_65 3
++		&pinctrl 70 PRI_TDI 4
++		&pinctrl 74 GPIO_74 1
++		&pinctrl 79 GPIO_79 1
++		&pinctrl 80 GPIO_80 4
++		&pinctrl 90 GPIO_90 3
++		&pinctrl 96 DVL0 2
++		&pinctrl 110 GPIO_110 1
++		&pinctrl 114 GPIO_114 3
++		&pinctrl 123 GPIO_123 5
++	>;
++};
++
++&udc {
++	status = "disabled";
++};
++
++&usbphy1 {
++	status = "disabled";
++};
++
++&ehci1 {
++	vbus-supply = <&usb2hub>;
++	status = "disabled";
++};
++
++&usb2phy {
++	status = "disabled";
++};
++
++&combphy {
++	status = "disabled";
++};
++
++
++&usbdrd3 {
++	status = "disabled";
++	vbus-supply = <&usb3hub>;
++	dwc3@c0a00000 {
++		dr_mode = "host";
++		phy_type = "utmi";
++		snps,dis_enblslpm_quirk;
++		snps,dis_u2_susphy_quirk;
++		snps,dis_u3_susphy_quirk;
++		snps,dis-del-phy-power-chg-quirk;
++		snps,dis-tx-ipgap-linecheck-quirk;
++	};
++};
++
++&sdhci0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_mmc1 &gpio80_pmx_func0>;
++	bus-width = <4>;
++	cd-gpios = <&gpio 80 0>;
++	cap-sd-highspeed;
++	sdh-phy-module = <0>;
++	clk-src-freq = <204800000>;
++	status = "okay";
++};
++
++/* eMMC */
++&sdhci2 {
++	bus-width = <8>;
++	non-removable;
++	mmc-hs400-1_8v;
++	mmc-hs400-enhanced-strobe;
++	sdh-phy-module = <1>;
++	clk-src-freq = <375000000>;
++	status = "okay";
++};
++
++&qspi {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_qspi>;
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <26500000>;
++		m25p,fast-read;
++		broken-flash-reset;
++		status = "okay";
++	};
++};
++
++&efuse {
++	status = "okay";
++};
++
++&dpu {
++	status = "okay";
++};
++
++&ldo_27 {
++	regulator-init-microvolt = <1200000>;
++	regulator-boot-on;
++	regulator-state-mem {
++			regulator-off-in-suspend;
++	};
++};
++
++&ldo_33 {
++	regulator-init-microvolt = <1800000>;
++	regulator-boot-on;
++	regulator-state-mem {
++			regulator-off-in-suspend;
++	};
++};
++
++&mipi_dsi {
++	status = "okay";
++};
++
++&panel {
++	force-attached = "icnl9951r";
++	dcp-gpios = <&gpio 34 0>;
++	dcn-gpios = <&gpio 42 0>;
++	avee-gpios = <&gpio 35 0>;
++	avdd-gpios = <&gpio 36 0>;
++	bl-gpios = <&gpio 44 0>;
++	enable-gpios = <&gpio 31 0>;
++	reset-gpios = <&gpio 30 0>;
++	status = "okay";
++};
+diff --git a/arch/riscv/dts/k1-x_pinctrl.dtsi b/arch/riscv/dts/k1-x_pinctrl.dtsi
+index 878e4693..8d33a203 100644
+--- a/arch/riscv/dts/k1-x_pinctrl.dtsi
++++ b/arch/riscv/dts/k1-x_pinctrl.dtsi
+@@ -7,151 +7,151 @@
+ &pinctrl {
+     pinctrl_uart0_0: uart0_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT3, MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* uart0_txd */
+-            K1X_PADCONF(MMC1_DAT2, MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* uart0_rxd */
++            K1X_PADCONF(MMC1_DAT3,  MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart0_txd */
++            K1X_PADCONF(MMC1_DAT2,  MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart0_rxd */
+         >;
+     };
+ 
+     pinctrl_uart0_1: uart0_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_CMD, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* uart0_txd */
+-            K1X_PADCONF(GPIO_80,  MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))       /* uart0_rxd */
++            K1X_PADCONF(MMC1_CMD,   MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart0_txd */
++            K1X_PADCONF(GPIO_80,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart0_rxd */
+         >;
+     };
+ 
+     pinctrl_uart0_2: uart0_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_68,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))     /* uart0_txd */
+-            K1X_PADCONF(GPIO_69,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))       /* uart0_rxd */
++            K1X_PADCONF(GPIO_68,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart0_txd */
++            K1X_PADCONF(GPIO_69,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart0_rxd */
+         >;
+     };
+ 
+     pinctrl_uart2: uart2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_21,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart2_txd */
+-            K1X_PADCONF(GPIO_22,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart2_rxd */
+-            K1X_PADCONF(GPIO_23,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart2_cts_n */
+-            K1X_PADCONF(GPIO_24,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart2_rts_n */
++            K1X_PADCONF(GPIO_21,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart2_txd */
++            K1X_PADCONF(GPIO_22,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart2_rxd */
++            K1X_PADCONF(GPIO_23,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart2_cts_n */
++            K1X_PADCONF(GPIO_24,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart2_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart3_0: uart3_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_81,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_txd */
+-            K1X_PADCONF(GPIO_82,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_rxd */
+-            K1X_PADCONF(GPIO_83,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_cts_n */
+-            K1X_PADCONF(GPIO_84,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_rts_n */
++            K1X_PADCONF(GPIO_81,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_txd */
++            K1X_PADCONF(GPIO_82,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_rxd */
++            K1X_PADCONF(GPIO_83,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_cts_n */
++            K1X_PADCONF(GPIO_84,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart3_1: uart3_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_18,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* uart3_txd */
+-            K1X_PADCONF(GPIO_19,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* uart3_rxd */
+-            K1X_PADCONF(GPIO_20,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* uart3_cts_n */
+-            K1X_PADCONF(GPIO_21,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart3_rts_n */
++            K1X_PADCONF(GPIO_18,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_txd */
++            K1X_PADCONF(GPIO_19,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_rxd */
++            K1X_PADCONF(GPIO_20,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_cts_n */
++            K1X_PADCONF(GPIO_21,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart3_2: uart3_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_53,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* uart3_txd */
+-            K1X_PADCONF(GPIO_54,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_rxd */
+-            K1X_PADCONF(GPIO_55,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_cts_n */
+-            K1X_PADCONF(GPIO_56,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart3_rts_n */
++            K1X_PADCONF(GPIO_53,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_txd */
++            K1X_PADCONF(GPIO_54,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_rxd */
++            K1X_PADCONF(GPIO_55,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_cts_n */
++            K1X_PADCONF(GPIO_56,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart3_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart4_0: uart4_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(QSPI_DAT1, MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))         /* uart4_txd */
+-            K1X_PADCONF(QSPI_DAT0, MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))         /* uart4_rxd */
++            K1X_PADCONF(QSPI_DAT1,  MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart4_txd */
++            K1X_PADCONF(QSPI_DAT0,  MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart4_rxd */
+         >;
+     };
+ 
+     pinctrl_uart4_1: uart4_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_81,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* uart4_cts_n */
+-            K1X_PADCONF(GPIO_82,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* uart4_rts_n */
+-            K1X_PADCONF(GPIO_83,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* uart4_txd */
+-            K1X_PADCONF(GPIO_84,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* uart4_rxd */
++            K1X_PADCONF(GPIO_81,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_cts_n */
++            K1X_PADCONF(GPIO_82,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rts_n */
++            K1X_PADCONF(GPIO_83,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_txd */
++            K1X_PADCONF(GPIO_84,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rxd */
+         >;
+     };
+ 
+     pinctrl_uart4_2: uart4_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_23, MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* uart4_txd */
+-            K1X_PADCONF(GPIO_24, MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* uart4_rxd */
++            K1X_PADCONF(GPIO_23,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_txd */
++            K1X_PADCONF(GPIO_24,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rxd */
+         >;
+     };
+ 
+     pinctrl_uart4_3: uart4_3_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_33,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_txd */
+-            K1X_PADCONF(GPIO_34,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_rxd */
+-            K1X_PADCONF(GPIO_35,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_cts_n */
+-            K1X_PADCONF(GPIO_36,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_rts_n */
++            K1X_PADCONF(GPIO_33,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_txd */
++            K1X_PADCONF(GPIO_34,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rxd */
++            K1X_PADCONF(GPIO_35,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_cts_n */
++            K1X_PADCONF(GPIO_36,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart4_4: uart4_4_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_111,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_txd */
+-            K1X_PADCONF(GPIO_112,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_rxd */
+-            K1X_PADCONF(GPIO_113,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_cts_n */
+-            K1X_PADCONF(GPIO_114,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart4_rts_n */
++            K1X_PADCONF(GPIO_111,   MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_txd */
++            K1X_PADCONF(GPIO_112,   MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rxd */
++            K1X_PADCONF(GPIO_113,   MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_cts_n */
++            K1X_PADCONF(GPIO_114,   MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart4_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart5_0: uart5_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(QSPI_CLK, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))         /* uart5_txd */
+-            K1X_PADCONF(QSPI_CSI, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))         /* uart5_rxd */
++            K1X_PADCONF(QSPI_CLK,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart5_txd */
++            K1X_PADCONF(QSPI_CSI,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* uart5_rxd */
+         >;
+     };
+ 
+     pinctrl_uart5_1: uart5_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_25,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_txd */
+-            K1X_PADCONF(GPIO_26,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_rxd */
+-            K1X_PADCONF(GPIO_27,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_cts_n */
+-            K1X_PADCONF(GPIO_28,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_rts_n */
++            K1X_PADCONF(GPIO_25,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_txd */
++            K1X_PADCONF(GPIO_26,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_rxd */
++            K1X_PADCONF(GPIO_27,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_cts_n */
++            K1X_PADCONF(GPIO_28,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart5_2: uart5_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_42,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_txd */
+-            K1X_PADCONF(GPIO_43,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_rxd */
+-            K1X_PADCONF(GPIO_44,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_cts_n */
+-            K1X_PADCONF(GPIO_45,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_rts_n */
++            K1X_PADCONF(GPIO_42,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_txd */
++            K1X_PADCONF(GPIO_43,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_rxd */
++            K1X_PADCONF(GPIO_44,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_cts_n */
++            K1X_PADCONF(GPIO_45,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart5_3: uart5_3_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(PRI_TDI,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* uart5_txd */
+-            K1X_PADCONF(PRI_TMS,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* uart5_rxd */
+-            K1X_PADCONF(PRI_TCK,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* uart5_cts_n */
+-            K1X_PADCONF(PRI_TDO,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* uart5_rts_n */
++            K1X_PADCONF(PRI_TDI,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_txd */
++            K1X_PADCONF(PRI_TMS,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_rxd */
++            K1X_PADCONF(PRI_TCK,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_cts_n */
++            K1X_PADCONF(PRI_TDO,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart5_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart6_0: uart6_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_85,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart6_cts_n */
+-            K1X_PADCONF(GPIO_86,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart6_txd */
+-            K1X_PADCONF(GPIO_87,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* uart6_rxd */
+-            K1X_PADCONF(GPIO_90,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* uart6_rts_n */
++            K1X_PADCONF(GPIO_85,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_cts_n */
++            K1X_PADCONF(GPIO_86,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_txd */
++            K1X_PADCONF(GPIO_87,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_rxd */
++            K1X_PADCONF(GPIO_90,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart6_1: uart6_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_00,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart6_txd */
+-            K1X_PADCONF(GPIO_01,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart6_rxd */
+-            K1X_PADCONF(GPIO_02,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart6_cts_n */
+-            K1X_PADCONF(GPIO_03,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart6_rts_n */
++            K1X_PADCONF(GPIO_00,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_txd */
++            K1X_PADCONF(GPIO_01,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_rxd */
++            K1X_PADCONF(GPIO_02,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_cts_n */
++            K1X_PADCONF(GPIO_03,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart6_rts_n */
+         >;
+     };
+ 
+@@ -164,33 +164,33 @@
+ 
+     pinctrl_uart7_0: uart7_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_88,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* uart7_txd */
+-            K1X_PADCONF(GPIO_89,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* uart7_rxd */
++            K1X_PADCONF(GPIO_88,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart7_txd */
++            K1X_PADCONF(GPIO_89,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart7_rxd */
+         >;
+     };
+ 
+     pinctrl_uart7_1: uart7_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_04,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart7_txd */
+-            K1X_PADCONF(GPIO_05,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart7_rxd */
+-            K1X_PADCONF(GPIO_06,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart7_cts_n */
+-            K1X_PADCONF(GPIO_07,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart7_rts_n */
++            K1X_PADCONF(GPIO_04,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart7_txd */
++            K1X_PADCONF(GPIO_05,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart7_rxd */
++            K1X_PADCONF(GPIO_06,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart7_cts_n */
++            K1X_PADCONF(GPIO_07,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart7_rts_n */
+         >;
+     };
+ 
+     pinctrl_uart8_0: uart8_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_82,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* uart8_txd */
+-            K1X_PADCONF(GPIO_83,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* uart8_rxd */
++            K1X_PADCONF(GPIO_82,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart8_txd */
++            K1X_PADCONF(GPIO_83,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart8_rxd */
+         >;
+     };
+ 
+     pinctrl_uart8_1: uart8_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_08,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart8_txd */
+-            K1X_PADCONF(GPIO_09,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart8_rxd */
+-            K1X_PADCONF(GPIO_10,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart8_cts_n */
+-            K1X_PADCONF(GPIO_11,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart8_rts_n */
++            K1X_PADCONF(GPIO_08,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart8_txd */
++            K1X_PADCONF(GPIO_09,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart8_rxd */
++            K1X_PADCONF(GPIO_10,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart8_cts_n */
++            K1X_PADCONF(GPIO_11,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart8_rts_n */
+         >;
+     };
+ 
+@@ -205,642 +205,648 @@
+ 
+     pinctrl_uart9_0: uart9_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_12,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_txd */
+-            K1X_PADCONF(GPIO_13,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_rxd */
++            K1X_PADCONF(GPIO_12,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_txd */
++            K1X_PADCONF(GPIO_13,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_rxd */
+         >;
+     };
+ 
+     pinctrl_uart9_1: uart9_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_110,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_cts_n */
+-            K1X_PADCONF(GPIO_115,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_rts_n */
+-            K1X_PADCONF(GPIO_116,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_txd */
+-            K1X_PADCONF(GPIO_117,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_rxd */
++            K1X_PADCONF(GPIO_110,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_cts_n */
++            K1X_PADCONF(GPIO_115,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_rts_n */
++            K1X_PADCONF(GPIO_116,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_txd */
++            K1X_PADCONF(GPIO_117,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_rxd */
+         >;
+     };
+ 
+     pinctrl_uart9_2: uart9_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(PRI_TCK,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* uart9_txd */
+-            K1X_PADCONF(PRI_TDO,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* uart9_rxd */
++            K1X_PADCONF(PRI_TCK,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_txd */
++            K1X_PADCONF(PRI_TDO,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* uart9_rxd */
+         >;
+     };
+ 
+     pinctrl_i2c0: i2c0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_54,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c0_scl */
+-            K1X_PADCONF(GPIO_55,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c0_sda */
++            K1X_PADCONF(GPIO_54,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c0_scl */
++            K1X_PADCONF(GPIO_55,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c0_sda */
+         >;
+     };
+ 
+     pinctrl_i2c1: i2c1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_56,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c1_scl */
+-            K1X_PADCONF(GPIO_57,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c1_sda */
++            K1X_PADCONF(GPIO_56,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c1_scl */
++            K1X_PADCONF(GPIO_57,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c1_sda */
+         >;
+     };
+ 
+     pinctrl_i2c2_0: i2c2_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_84,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))   /* i2c2_scl */
+-            K1X_PADCONF(GPIO_85,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))   /* i2c2_sda */
++            K1X_PADCONF(GPIO_84,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c2_scl */
++            K1X_PADCONF(GPIO_85,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c2_sda */
+         >;
+     };
+ 
+     pinctrl_i2c2_1: i2c2_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(PRI_TDI,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c2_scl */
+-            K1X_PADCONF(PRI_TMS,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c2_sda */
++            K1X_PADCONF(PRI_TDI,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c2_scl */
++            K1X_PADCONF(PRI_TMS,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c2_sda */
+         >;
+     };
+ 
+     pinctrl_i2c2_2: i2c2_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_68,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c2_scl */
+-            K1X_PADCONF(GPIO_69,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c2_sda */
++            K1X_PADCONF(GPIO_68,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c2_scl */
++            K1X_PADCONF(GPIO_69,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c2_sda */
+         >;
+     };
+ 
+     pinctrl_i2c3_0: i2c3_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_38,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c3_scl */
+-            K1X_PADCONF(GPIO_39,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c3_sda */
++            K1X_PADCONF(GPIO_38,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c3_scl */
++            K1X_PADCONF(GPIO_39,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c3_sda */
+         >;
+     };
+ 
+     pinctrl_i2c3_1: i2c3_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_47,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c3_scl */
+-            K1X_PADCONF(GPIO_48,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c3_sda */
++            K1X_PADCONF(GPIO_47,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c3_scl */
++            K1X_PADCONF(GPIO_48,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c3_sda */
+         >;
+     };
+ 
+     pinctrl_i2c3_2: i2c3_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_77,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c3_scl */
+-            K1X_PADCONF(GPIO_78,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c3_sda */
++            K1X_PADCONF(GPIO_77,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c3_scl */
++            K1X_PADCONF(GPIO_78,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c3_sda */
+         >;
+     };
+ 
+     pinctrl_i2c4_0: i2c4_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_40,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))   /* i2c4_scl */
+-            K1X_PADCONF(GPIO_41,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))   /* i2c4_sda */
++            K1X_PADCONF(GPIO_40,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c4_scl */
++            K1X_PADCONF(GPIO_41,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c4_sda */
+         >;
+     };
+ 
+     pinctrl_i2c4_1: i2c4_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_75,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS0))   /* i2c4_scl */
+-            K1X_PADCONF(GPIO_76,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS0))   /* i2c4_sda */
++            K1X_PADCONF(GPIO_75,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS0))  /* i2c4_scl */
++            K1X_PADCONF(GPIO_76,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS0))  /* i2c4_sda */
+         >;
+     };
+ 
+     pinctrl_i2c4_2: i2c4_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_51,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_3V_DS0))   /* i2c4_scl */
+-            K1X_PADCONF(GPIO_52,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_3V_DS0))   /* i2c4_sda */
++            K1X_PADCONF(GPIO_51,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_3V_DS0))  /* i2c4_scl */
++            K1X_PADCONF(GPIO_52,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_3V_DS0))  /* i2c4_sda */
+         >;
+     };
+ 
+     pinctrl_i2c5_0: i2c5_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_81,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* i2c5_scl */
+-            K1X_PADCONF(GPIO_82,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* i2c5_sda */
++            K1X_PADCONF(GPIO_81,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c5_scl */
++            K1X_PADCONF(GPIO_82,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c5_sda */
+         >;
+     };
+ 
+     pinctrl_i2c5_1: i2c5_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_54,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* i2c5_scl */
+-            K1X_PADCONF(GPIO_55,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* i2c5_sda */
++            K1X_PADCONF(GPIO_54,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c5_scl */
++            K1X_PADCONF(GPIO_55,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c5_sda */
+         >;
+     };
+ 
+     pinctrl_i2c6_0: i2c6_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_83,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* i2c6_scl */
+-            K1X_PADCONF(GPIO_90,    MUX_MODE5, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS0))   /* i2c6_sda */
++            K1X_PADCONF(GPIO_83,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_scl */
++            K1X_PADCONF(GPIO_90,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_sda */
+         >;
+     };
+ 
+     pinctrl_i2c6_1: i2c6_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_118,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c6_scl */
+-            K1X_PADCONF(GPIO_119,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c6_sda */
++            K1X_PADCONF(GPIO_118,   MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_scl */
++            K1X_PADCONF(GPIO_119,   MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_sda */
+         >;
+     };
+ 
+     pinctrl_i2c6_2: i2c6_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_56,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c6_scl */
+-            K1X_PADCONF(GPIO_57,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))    /* i2c6_sda */
++            K1X_PADCONF(GPIO_56,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_scl */
++            K1X_PADCONF(GPIO_57,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_sda */
+         >;
+     };
+ 
+     pinctrl_i2c7: i2c7_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_118,   MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* i2c6_scl */
+-            K1X_PADCONF(GPIO_119,   MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS0))   /* i2c6_sda */
++            K1X_PADCONF(GPIO_118,   MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_scl */
++            K1X_PADCONF(GPIO_119,   MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* i2c6_sda */
+         >;
+     };
+ 
+     pinctrl_i2c8: i2c8_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(PWR_SCL,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* pwr_scl */
+-            K1X_PADCONF(PWR_SDA,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))     /* pwr_sda */
++            K1X_PADCONF(PWR_SCL,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* pwr_scl */
++            K1X_PADCONF(PWR_SDA,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* pwr_sda */
+         >;
+     };
+ 
+     pinctrl_one_wire_0: one_wire_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_110,   MUX_MODE5, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* one_wire */
++            K1X_PADCONF(GPIO_110,   MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* one_wire */
+         >;
+     };
+ 
+     pinctrl_one_wire_1: one_wire_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_47,   MUX_MODE5, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))   /* one_wire */
++            K1X_PADCONF(GPIO_47,    MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* one_wire */
+         >;
+     };
+ 
+     pinctrl_ir_rx_0: ir_rx_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(DVL1,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))        /* ir_rx */
++            K1X_PADCONF(DVL1,       MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* ir_rx */
+         >;
+     };
+ 
+     pinctrl_ir_rx_1: ir_rx_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_79,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))   /* ir_rx */
++            K1X_PADCONF(GPIO_79,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* ir_rx */
+         >;
+     };
+ 
+     pinctrl_ir_rx_2: ir_rx_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_58,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))     /* ir_rx */
++            K1X_PADCONF(GPIO_58,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* ir_rx */
+         >;
+     };
+ 
+     pinctrl_pwm0_0: pwm0_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT3, MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* pwm0 */
++            K1X_PADCONF(MMC1_DAT3,  MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* pwm0 */
+         >;
+     };
+ 
+     pinctrl_pwm0_1: pwm0_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_14,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm0 */
++            K1X_PADCONF(GPIO_14,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm0 */
+         >;
+     };
+ 
+     pinctrl_pwm0_2: pwm0_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_22, MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* pwm0 */
++            K1X_PADCONF(GPIO_22,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm0 */
+         >;
+     };
+ 
+     pinctrl_pwm1_0: pwm1_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT2, MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* pwm1 */
++            K1X_PADCONF(MMC1_DAT2,  MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* pwm1 */
+         >;
+     };
+ 
+     pinctrl_pwm1_1: pwm1_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_29, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))        /* pwm1 */
++            K1X_PADCONF(GPIO_29,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm1 */
+         >;
+     };
+ 
+     pinctrl_pwm1_2: pwm1_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_23, MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))        /* pwm1 */
++            K1X_PADCONF(GPIO_23,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm1 */
+         >;
+     };
+ 
+     pinctrl_pwm2_0: pwm2_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT1, MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* pwm2 */
++            K1X_PADCONF(MMC1_DAT1,  MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* pwm2 */
+         >;
+     };
+ 
+     pinctrl_pwm2_1: pwm2_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_22, MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* pwm2 */
++            K1X_PADCONF(GPIO_22,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm2 */
+         >;
+     };
+ 
+     pinctrl_pwm2_2: pwm2_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_30, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))        /* pwm2 */
++            K1X_PADCONF(GPIO_30,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm2 */
+         >;
+     };
+ 
+     pinctrl_pwm2_3: pwm2_3_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_24, MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))        /* pwm2 */
++            K1X_PADCONF(GPIO_24,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm2 */
+         >;
+     };
+ 
+     pinctrl_pwm3_0: pwm3_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT0, MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* pwm3 */
++            K1X_PADCONF(MMC1_DAT0,  MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* pwm3 */
+         >;
+     };
+ 
+     pinctrl_pwm3_1: pwm3_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_33, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* pwm3 */
++            K1X_PADCONF(GPIO_33,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm3 */
+         >;
+     };
+ 
+     pinctrl_pwm3_2: pwm3_2_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_25, MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))        /* pwm3 */
++            K1X_PADCONF(GPIO_25,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm3 */
+         >;
+     };
+ 
+     pinctrl_pwm4_0: pwm4_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_CMD, MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))          /* pwm4 */
++            K1X_PADCONF(MMC1_CMD,   MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* pwm4 */
+         >;
+     };
+ 
+     pinctrl_pwm4_1: pwm4_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_34, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* pwm4 */
++            K1X_PADCONF(GPIO_34,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm4 */
+         >;
+     };
+ 
+     pinctrl_pwm5_0: pwm5_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_CLK, MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))          /* pwm5 */
++            K1X_PADCONF(MMC1_CLK,   MUX_MODE5, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* pwm5 */
+         >;
+     };
+ 
+     pinctrl_pwm5_1: pwm5_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_35, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* pwm5 */
++            K1X_PADCONF(GPIO_35,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm5 */
+         >;
+     };
+ 
+     pinctrl_pwm6_0: pwm6_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_88,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm6 */
++            K1X_PADCONF(GPIO_88,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm6 */
+         >;
+     };
+ 
+     pinctrl_pwm6_1: pwm6_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_36, MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))         /* pwm6 */
++            K1X_PADCONF(GPIO_36,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm6 */
+         >;
+     };
+ 
+     pinctrl_pwm7_0: pwm7_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_92,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* pwm7 */
++            K1X_PADCONF(GPIO_92,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm7 */
+         >;
+     };
+ 
+     pinctrl_pwm7_1: pwm7_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_37,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm7 */
++            K1X_PADCONF(GPIO_37,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm7 */
+         >;
+     };
+ 
+     pinctrl_pwm8_0: pwm8_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_00,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm8 */
++            K1X_PADCONF(GPIO_00,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm8 */
+         >;
+     };
+ 
+     pinctrl_pwm8_1: pwm8_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_38,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* pwm8 */
++            K1X_PADCONF(GPIO_38,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm8 */
+         >;
+     };
+ 
+     pinctrl_pwm9_0: pwm9_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_01,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm9 */
++            K1X_PADCONF(GPIO_01,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm9 */
+         >;
+     };
+ 
+     pinctrl_pwm9_1: pwm9_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_39,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* pwm9 */
++            K1X_PADCONF(GPIO_39,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm9 */
+         >;
+     };
+ 
+     pinctrl_pwm9_2: pwm9_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_74,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* pwm9 */
++            K1X_PADCONF(GPIO_74,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm9 */
+         >;
+     };
+ 
+     pinctrl_pwm10_0: pwm10_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_02,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm10 */
++            K1X_PADCONF(GPIO_02,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm10 */
+         >;
+     };
+ 
+     pinctrl_pwm10_1: pwm10_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_40,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* pwm10 */
++            K1X_PADCONF(GPIO_40,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm10 */
+         >;
+     };
+ 
+     pinctrl_pwm11_0: pwm11_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_03,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm11 */
++            K1X_PADCONF(GPIO_03,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm11 */
+         >;
+     };
+ 
+     pinctrl_pwm11_1: pwm11_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_41,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* pwm11 */
++            K1X_PADCONF(GPIO_41,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm11 */
+         >;
+     };
+ 
+     pinctrl_pwm12_0: pwm12_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_04,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm12 */
++            K1X_PADCONF(GPIO_04,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm12 */
+         >;
+     };
+ 
+     pinctrl_pwm12_1: pwm12_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_42,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm12 */
++            K1X_PADCONF(GPIO_42,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm12 */
+         >;
+     };
+ 
+     pinctrl_pwm13_0: pwm13_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_05,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm13 */
++            K1X_PADCONF(GPIO_05,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm13 */
+         >;
+     };
+ 
+     pinctrl_pwm13_1: pwm13_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_43,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm13 */
++            K1X_PADCONF(GPIO_43,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm13 */
+         >;
+     };
+ 
+     pinctrl_pwm14_0: pwm14_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_06,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm14 */
++            K1X_PADCONF(GPIO_06,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm14 */
+         >;
+     };
+ 
+     pinctrl_pwm14_1: pwm14_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_44,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm14 */
++            K1X_PADCONF(GPIO_44,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm14 */
+         >;
+     };
+ 
+     pinctrl_pwm15_0: pwm15_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_07,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm15 */
++            K1X_PADCONF(GPIO_07,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm15 */
+         >;
+     };
+ 
+     pinctrl_pwm15_1: pwm15_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_45,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm15 */
++            K1X_PADCONF(GPIO_45,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm15 */
+         >;
+     };
+ 
+     pinctrl_pwm16_0: pwm16_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_09,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm16 */
++            K1X_PADCONF(GPIO_09,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm16 */
+         >;
+     };
+ 
+     pinctrl_pwm16_1: pwm16_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_46,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm16 */
++            K1X_PADCONF(GPIO_46,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm16 */
+         >;
+     };
+ 
+     pinctrl_pwm17_0: pwm17_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_10,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm17 */
++            K1X_PADCONF(GPIO_10,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm17 */
+         >;
+     };
+ 
+     pinctrl_pwm17_1: pwm17_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_53,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm17 */
++            K1X_PADCONF(GPIO_53,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm17 */
+         >;
+     };
+ 
+     pinctrl_pwm18_0: pwm18_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_11,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm18 */
++            K1X_PADCONF(GPIO_11,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm18 */
+         >;
+     };
+ 
+     pinctrl_pwm18_1: pwm18_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_57,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* pwm18 */
++            K1X_PADCONF(GPIO_57,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm18 */
+         >;
+     };
+ 
+     pinctrl_pwm19_0: pwm19_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_13,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* pwm19 */
++            K1X_PADCONF(GPIO_13,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm19 */
+         >;
+     };
+ 
+     pinctrl_pwm19_1: pwm19_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_63,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* pwm19 */
++            K1X_PADCONF(GPIO_63,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pwm19 */
++        >;
++    };
++
++    pinctrl_rpwm2_0: rpwm2_0_grp {
++        pinctrl-single,pins = <
++            K1X_PADCONF(GPIO_79,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_3V_DS4))  /* rcpu_pwm2 */
+         >;
+     };
+ 
+     pinctrl_sspa0_0: sspa0_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_118,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* sspa0_clk */
+-            K1X_PADCONF(GPIO_119,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* sspa0_frm */
+-            K1X_PADCONF(GPIO_120,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa0_txd */
+-            K1X_PADCONF(GPIO_121,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa0_rxd */
+-            K1X_PADCONF(GPIO_122,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa0_sysclk */
++            K1X_PADCONF(GPIO_118,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_clk */
++            K1X_PADCONF(GPIO_119,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_frm */
++            K1X_PADCONF(GPIO_120,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_txd */
++            K1X_PADCONF(GPIO_121,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_rxd */
++            K1X_PADCONF(GPIO_122,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_sysclk */
+         >;
+     };
+ 
+     pinctrl_sspa0_1: sspa0_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_58,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* sspa0_sysclk */
+-            K1X_PADCONF(GPIO_111,   MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* sspa0_clk */
+-            K1X_PADCONF(GPIO_112,   MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* sspa0_frm */
+-            K1X_PADCONF(GPIO_113,   MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* sspa0_txd */
+-            K1X_PADCONF(GPIO_114,   MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* sspa0_rxd */
++            K1X_PADCONF(GPIO_58,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_sysclk */
++            K1X_PADCONF(GPIO_111,   MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_clk */
++            K1X_PADCONF(GPIO_112,   MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_frm */
++            K1X_PADCONF(GPIO_113,   MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_txd */
++            K1X_PADCONF(GPIO_114,   MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa0_rxd */
+         >;
+     };
+ 
+     pinctrl_sspa1: sspa1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_24,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa1_sysclk */
+-            K1X_PADCONF(GPIO_25,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa1_sclk */
+-            K1X_PADCONF(GPIO_26,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa1_frm */
+-            K1X_PADCONF(GPIO_27,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa1_txd */
+-            K1X_PADCONF(GPIO_28,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* sspa1_rxd */
++            K1X_PADCONF(GPIO_24,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa1_sysclk */
++            K1X_PADCONF(GPIO_25,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa1_sclk */
++            K1X_PADCONF(GPIO_26,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa1_frm */
++            K1X_PADCONF(GPIO_27,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa1_txd */
++            K1X_PADCONF(GPIO_28,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS0))  /* sspa1_rxd */
+         >;
+     };
+ 
+     pinctrl_ssp2_0: ssp2_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_75,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_sclk */
+-            K1X_PADCONF(GPIO_76,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_frm */
+-            K1X_PADCONF(GPIO_77,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_txd */
+-            K1X_PADCONF(GPIO_78,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_rxd */
++            K1X_PADCONF(GPIO_75,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp2_sclk */
++            K1X_PADCONF(GPIO_76,    MUX_MODE1, (EDGE_NONE | PULL_UP  | PAD_3V_DS4))  /* ssp2_frm */
++            K1X_PADCONF(GPIO_77,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp2_txd */
++            K1X_PADCONF(GPIO_78,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp2_rxd */
+         >;
+     };
+ 
+     pinctrl_ssp2_1: ssp2_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_64,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_sclk */
+-            K1X_PADCONF(GPIO_65,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_frm */
+-            K1X_PADCONF(GPIO_66,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_txd */
+-            K1X_PADCONF(GPIO_67,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp2_rxd */
++            K1X_PADCONF(GPIO_64,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp2_sclk */
++            K1X_PADCONF(GPIO_65,    MUX_MODE3, (EDGE_NONE | PULL_UP  | PAD_3V_DS4))  /* ssp2_frm */
++            K1X_PADCONF(GPIO_66,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp2_txd */
++            K1X_PADCONF(GPIO_67,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp2_rxd */
+         >;
+     };
+ 
+     pinctrl_ssp3_0: ssp3_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_75,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp3_sclk */
+-            K1X_PADCONF(GPIO_76,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp3_frm */
+-            K1X_PADCONF(GPIO_77,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp3_txd */
+-            K1X_PADCONF(GPIO_78,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* ssp3_rxd */
++            K1X_PADCONF(GPIO_75,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp3_sclk */
++            K1X_PADCONF(GPIO_76,    MUX_MODE2, (EDGE_NONE | PULL_UP  | PAD_3V_DS4))  /* ssp3_frm */
++            K1X_PADCONF(GPIO_77,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp3_txd */
++            K1X_PADCONF(GPIO_78,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* ssp3_rxd */
+         >;
+     };
+ 
+     pinctrl_ssp3_1: ssp3_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_59,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* ssp3_sclk */
+-            K1X_PADCONF(GPIO_60,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* ssp3_frm */
+-            K1X_PADCONF(GPIO_61,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* ssp3_txd */
+-            K1X_PADCONF(GPIO_62,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* ssp3_rxd */
++            K1X_PADCONF(GPIO_59,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* ssp3_sclk */
++            K1X_PADCONF(GPIO_60,    MUX_MODE2, (EDGE_NONE | PULL_UP  | PAD_1V8_DS2))  /* ssp3_frm */
++            K1X_PADCONF(GPIO_61,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* ssp3_txd */
++            K1X_PADCONF(GPIO_62,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* ssp3_rxd */
+         >;
+     };
+ 
+     pinctrl_qspi: qspi_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(QSPI_DAT3, MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))        /* qspi_d3 */
+-            K1X_PADCONF(QSPI_DAT2, MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))        /* qspi_d2 */
+-            K1X_PADCONF(QSPI_DAT1, MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))        /* qspi_d1 */
+-            K1X_PADCONF(QSPI_DAT0, MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))        /* qspi_d1 */
+-            K1X_PADCONF(QSPI_CLK,  MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))        /* qspi_clk */
+-            K1X_PADCONF(QSPI_CSI,  MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_3V_DS4))          /* qspi_csi */
++            K1X_PADCONF(QSPI_DAT3,  MUX_MODE0, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* qspi_d3 */
++            K1X_PADCONF(QSPI_DAT2,  MUX_MODE0, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* qspi_d2 */
++            K1X_PADCONF(QSPI_DAT1,  MUX_MODE0, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* qspi_d1 */
++            K1X_PADCONF(QSPI_DAT0,  MUX_MODE0, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* qspi_d1 */
++            K1X_PADCONF(QSPI_CLK,   MUX_MODE0, (EDGE_NONE | PULL_DIS | PAD_3V_DS4))  /* qspi_clk */
++            K1X_PADCONF(QSPI_CSI,   MUX_MODE0, (EDGE_NONE | PULL_UP  | PAD_3V_DS4))  /* qspi_cs */
+         >;
+     };
+ 
+     pinctrl_mmc1: mmc1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT3, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* mmc1_d3 */
+-            K1X_PADCONF(MMC1_DAT2, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* mmc1_d2 */
+-            K1X_PADCONF(MMC1_DAT1, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* mmc1_d1 */
+-            K1X_PADCONF(MMC1_DAT0, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* mmc1_d0 */
+-            K1X_PADCONF(MMC1_CMD,  MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_3V_DS4))         /* mmc1_cmd */
+-            K1X_PADCONF(MMC1_CLK,  MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))       /* mmc1_clk */
++            K1X_PADCONF(MMC1_DAT3,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_3V_DS4))  /* mmc1_d3 */
++            K1X_PADCONF(MMC1_DAT2,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_3V_DS4))  /* mmc1_d2 */
++            K1X_PADCONF(MMC1_DAT1,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_3V_DS4))  /* mmc1_d1 */
++            K1X_PADCONF(MMC1_DAT0,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_3V_DS4))  /* mmc1_d0 */
++            K1X_PADCONF(MMC1_CMD,   MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_3V_DS4))  /* mmc1_cmd */
++            K1X_PADCONF(MMC1_CLK,   MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_3V_DS4))  /* mmc1_clk */
+         >;
+     };
+ 
+     pinctrl_mmc1_fast: mmc1_fast_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(MMC1_DAT3, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS3))         /* mmc1_d3 */
+-            K1X_PADCONF(MMC1_DAT2, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS3))         /* mmc1_d2 */
+-            K1X_PADCONF(MMC1_DAT1, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS3))         /* mmc1_d1 */
+-            K1X_PADCONF(MMC1_DAT0, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS3))         /* mmc1_d0 */
+-            K1X_PADCONF(MMC1_CMD,  MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS3))         /* mmc1_cmd */
+-            K1X_PADCONF(MMC1_CLK,  MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS3))       /* mmc1_clk */
++            K1X_PADCONF(MMC1_DAT3,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_1V8_DS3))  /* mmc1_d3 */
++            K1X_PADCONF(MMC1_DAT2,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_1V8_DS3))  /* mmc1_d2 */
++            K1X_PADCONF(MMC1_DAT1,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_1V8_DS3))  /* mmc1_d1 */
++            K1X_PADCONF(MMC1_DAT0,  MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_1V8_DS3))  /* mmc1_d0 */
++            K1X_PADCONF(MMC1_CMD,   MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_1V8_DS3))  /* mmc1_cmd */
++            K1X_PADCONF(MMC1_CLK,   MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS3))  /* mmc1_clk */
+         >;
+     };
+ 
+     pinctrl_mmc2: mmc2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_15,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mmc2_data3 */
+-            K1X_PADCONF(GPIO_16,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mmc2_data2 */
+-            K1X_PADCONF(GPIO_17,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mmc2_data1 */
+-            K1X_PADCONF(GPIO_18,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mmc2_data0 */
+-            K1X_PADCONF(GPIO_19,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mmc2_cmd */
+-            K1X_PADCONF(GPIO_20,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mmc2_clk */
++            K1X_PADCONF(GPIO_15,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* mmc2_data3 */
++            K1X_PADCONF(GPIO_16,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* mmc2_data2 */
++            K1X_PADCONF(GPIO_17,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* mmc2_data1 */
++            K1X_PADCONF(GPIO_18,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* mmc2_data0 */
++            K1X_PADCONF(GPIO_19,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* mmc2_cmd */
++            K1X_PADCONF(GPIO_20,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* mmc2_clk */
+         >;
+     };
+ 
+     pinctrl_usb0_0: usb0_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_125,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* vbus_on0 */
+-            K1X_PADCONF(GPIO_126,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* usb_id0 */
+-            K1X_PADCONF(GPIO_127,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* drive_vbus0_iso */
++            K1X_PADCONF(GPIO_125,   MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* vbus_on0 */
++            K1X_PADCONF(GPIO_126,   MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* usb_id0 */
++            K1X_PADCONF(GPIO_127,   MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* drive_vbus0_iso */
+         >;
+     };
+ 
+     pinctrl_usb0_1: usb0_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_64,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* vbus_on0 */
+-            K1X_PADCONF(GPIO_65,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* usb_id0 */
+-            K1X_PADCONF(GPIO_63,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* drive_vbus0_iso */
++            K1X_PADCONF(GPIO_64,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* vbus_on0 */
++            K1X_PADCONF(GPIO_65,    MUX_MODE1, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* usb_id0 */
++            K1X_PADCONF(GPIO_63,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* drive_vbus0_iso */
+         >;
+     };
+ 
+     pinctrl_usb1_0: usb1_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_124,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* drive_vbus1_iso */
++            K1X_PADCONF(GPIO_124,   MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* drive_vbus1_iso */
+         >;
+     };
+ 
+     pinctrl_usb1_1: usb1_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_66,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* drive_vbus1_iso */
++            K1X_PADCONF(GPIO_66,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* drive_vbus1_iso */
+         >;
+     };
+ 
+     pinctrl_usb2_0: usb2_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_121,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* vbus_on2 */
+-            K1X_PADCONF(GPIO_122,    MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* usb_id2 */
+-            K1X_PADCONF(GPIO_123,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* drive_vbus2_iso */
++            K1X_PADCONF(GPIO_121,   MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* vbus_on2 */
++            K1X_PADCONF(GPIO_122,   MUX_MODE2, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* usb_id2 */
++            K1X_PADCONF(GPIO_123,   MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* drive_vbus2_iso */
+         >;
+     };
+ 
+     pinctrl_usb2_1: usb2_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_68,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* vbus_on2 */
+-            K1X_PADCONF(GPIO_69,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* usb_id2 */
+-            K1X_PADCONF(GPIO_67,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* drive_vbus2_iso */
++            K1X_PADCONF(GPIO_68,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* vbus_on2 */
++            K1X_PADCONF(GPIO_69,    MUX_MODE1, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* usb_id2 */
++            K1X_PADCONF(GPIO_67,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* drive_vbus2_iso */
+         >;
+     };
+ 
+     pinctrl_pcie0_0: pcie0_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_15,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* PCIe0_perstn */
+-            K1X_PADCONF(GPIO_16,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* PCIe0_waken */
+-            K1X_PADCONF(GPIO_17,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* PCIe0_clkreqn */
++            K1X_PADCONF(GPIO_15,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_perstn */
++            K1X_PADCONF(GPIO_16,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_waken */
++            K1X_PADCONF(GPIO_17,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie0_1: pcie0_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_29,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_perstn */
+-            K1X_PADCONF(GPIO_30,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_waken */
+-            K1X_PADCONF(GPIO_31,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_clkreqn */
++            K1X_PADCONF(GPIO_29,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_perstn */
++            K1X_PADCONF(GPIO_30,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_waken */
++            K1X_PADCONF(GPIO_31,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie0_2: pcie0_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_110,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_perstn */
+-            K1X_PADCONF(GPIO_115,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_waken */
+-            K1X_PADCONF(GPIO_116,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_clkreqn */
++            K1X_PADCONF(GPIO_110,   MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_perstn */
++            K1X_PADCONF(GPIO_115,   MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_waken */
++            K1X_PADCONF(GPIO_116,   MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie0_3: pcie0_3_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_53,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe0_perstn */
+-            K1X_PADCONF(GPIO_54,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe0_waken */
+-            K1X_PADCONF(GPIO_55,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe0_clkreqn */
++            K1X_PADCONF(GPIO_53,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_perstn */
++            K1X_PADCONF(GPIO_54,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_waken */
++            K1X_PADCONF(GPIO_55,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe0_clkreqn */
+         >;
+     };
+ 
+@@ -854,297 +860,297 @@
+ 
+     pinctrl_pcie1_1: pcie1_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_32,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe1_perstn */
+-            K1X_PADCONF(GPIO_33,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe1_waken */
+-            K1X_PADCONF(GPIO_34,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe1_clkreqn */
++            K1X_PADCONF(GPIO_32,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_perstn */
++            K1X_PADCONF(GPIO_33,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_waken */
++            K1X_PADCONF(GPIO_34,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie1_2: pcie1_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_56,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe1_perstn */
+-            K1X_PADCONF(GPIO_57,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe1_waken */
+-            K1X_PADCONF(GPIO_58,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe1_clkreqn */
++            K1X_PADCONF(GPIO_56,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_perstn */
++            K1X_PADCONF(GPIO_57,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_waken */
++            K1X_PADCONF(GPIO_58,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie1_3: pcie1_3_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_59,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe1_perstn */
+-            K1X_PADCONF(GPIO_60,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe1_waken */
+-            K1X_PADCONF(GPIO_61,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe1_clkreqn */
++            K1X_PADCONF(GPIO_59,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_perstn */
++            K1X_PADCONF(GPIO_60,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_waken */
++            K1X_PADCONF(GPIO_61,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe1_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie2_0: pcie2_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_18,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* PCIe2_perstn */
+-            K1X_PADCONF(GPIO_19,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* PCIe2_waken */
+-            K1X_PADCONF(GPIO_20,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* PCIe2_clkreqn */
++            K1X_PADCONF(GPIO_18,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_perstn */
++            K1X_PADCONF(GPIO_19,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_waken */
++            K1X_PADCONF(GPIO_20,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie2_1: pcie2_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_35,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_perstn */
+-            K1X_PADCONF(GPIO_36,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_waken */
+-            K1X_PADCONF(GPIO_37,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_clkreqn */
++            K1X_PADCONF(GPIO_35,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_perstn */
++            K1X_PADCONF(GPIO_36,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_waken */
++            K1X_PADCONF(GPIO_37,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie2_2: pcie2_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_62,     MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe2_perstn */
+-            K1X_PADCONF(GPIO_74,     MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe2_waken */
+-            K1X_PADCONF(GPIO_117,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_clkreqn */
++            K1X_PADCONF(GPIO_62,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_perstn */
++            K1X_PADCONF(GPIO_74,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_waken */
++            K1X_PADCONF(GPIO_117,   MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie2_3: pcie2_3_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_111,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_perstn */
+-            K1X_PADCONF(GPIO_112,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_waken */
+-            K1X_PADCONF(GPIO_113,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_clkreqn */
++            K1X_PADCONF(GPIO_111,   MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_perstn */
++            K1X_PADCONF(GPIO_112,   MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_waken */
++            K1X_PADCONF(GPIO_113,   MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_clkreqn */
+         >;
+     };
+ 
+     pinctrl_pcie2_4: pcie2_4_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_62,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe2_perstn */
+-            K1X_PADCONF(GPIO_112,   MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* PCIe2_waken */
+-            K1X_PADCONF(GPIO_117,   MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* PCIe2_clkreqn */
++            K1X_PADCONF(GPIO_62,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_perstn */
++            K1X_PADCONF(GPIO_112,   MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_waken */
++            K1X_PADCONF(GPIO_117,   MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* PCIe2_clkreqn */
+         >;
+     };
+ 
+     pinctrl_gmac0: gmac0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_00,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_rxdv */
+-            K1X_PADCONF(GPIO_01,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_rx_d0 */
+-            K1X_PADCONF(GPIO_02,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_rx_d1 */
+-            K1X_PADCONF(GPIO_03,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_rx_clk */
+-            K1X_PADCONF(GPIO_04,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_rx_d2 */
+-            K1X_PADCONF(GPIO_05,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_rx_d3 */
+-            K1X_PADCONF(GPIO_06,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_tx_d0 */
+-            K1X_PADCONF(GPIO_07,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_tx_d1 */
+-            K1X_PADCONF(GPIO_08,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_tx */
+-            K1X_PADCONF(GPIO_09,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_tx_d2 */
+-            K1X_PADCONF(GPIO_10,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_tx_d3 */
+-            K1X_PADCONF(GPIO_11,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_tx_en */
+-            K1X_PADCONF(GPIO_12,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_mdc */
+-            K1X_PADCONF(GPIO_13,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_mdio */
+-            K1X_PADCONF(GPIO_14,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_int_n */
+-            K1X_PADCONF(GPIO_45,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac0_clk_ref */
++            K1X_PADCONF(GPIO_00,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_rxdv */
++            K1X_PADCONF(GPIO_01,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_rx_d0 */
++            K1X_PADCONF(GPIO_02,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_rx_d1 */
++            K1X_PADCONF(GPIO_03,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_rx_clk */
++            K1X_PADCONF(GPIO_04,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_rx_d2 */
++            K1X_PADCONF(GPIO_05,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_rx_d3 */
++            K1X_PADCONF(GPIO_06,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_tx_d0 */
++            K1X_PADCONF(GPIO_07,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_tx_d1 */
++            K1X_PADCONF(GPIO_08,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_tx */
++            K1X_PADCONF(GPIO_09,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_tx_d2 */
++            K1X_PADCONF(GPIO_10,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_tx_d3 */
++            K1X_PADCONF(GPIO_11,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_tx_en */
++            K1X_PADCONF(GPIO_12,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_mdc */
++            K1X_PADCONF(GPIO_13,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_mdio */
++            K1X_PADCONF(GPIO_14,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_int_n */
++            K1X_PADCONF(GPIO_45,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac0_clk_ref */
+         >;
+     };
+ 
+     pinctrl_gmac1: gmac1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_29,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_rxdv */
+-            K1X_PADCONF(GPIO_30,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_rx_d0 */
+-            K1X_PADCONF(GPIO_31,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_rx_d1 */
+-            K1X_PADCONF(GPIO_32,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_rx_clk */
+-            K1X_PADCONF(GPIO_33,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_rx_d2 */
+-            K1X_PADCONF(GPIO_34,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_rx_d3 */
+-            K1X_PADCONF(GPIO_35,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_tx_d0 */
+-            K1X_PADCONF(GPIO_36,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_tx_d1 */
+-            K1X_PADCONF(GPIO_37,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_tx */
+-            K1X_PADCONF(GPIO_38,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_tx_d2 */
+-            K1X_PADCONF(GPIO_39,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_tx_d3 */
+-            K1X_PADCONF(GPIO_40,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_tx_en */
+-            K1X_PADCONF(GPIO_41,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_mdc */
+-            K1X_PADCONF(GPIO_42,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_mdio */
+-            K1X_PADCONF(GPIO_43,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_int_n */
+-            K1X_PADCONF(GPIO_46,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))   /* gmac1_clk_ref */
++            K1X_PADCONF(GPIO_29,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_rxdv */
++            K1X_PADCONF(GPIO_30,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_rx_d0 */
++            K1X_PADCONF(GPIO_31,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_rx_d1 */
++            K1X_PADCONF(GPIO_32,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_rx_clk */
++            K1X_PADCONF(GPIO_33,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_rx_d2 */
++            K1X_PADCONF(GPIO_34,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_rx_d3 */
++            K1X_PADCONF(GPIO_35,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_tx_d0 */
++            K1X_PADCONF(GPIO_36,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_tx_d1 */
++            K1X_PADCONF(GPIO_37,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_tx */
++            K1X_PADCONF(GPIO_38,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_tx_d2 */
++            K1X_PADCONF(GPIO_39,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_tx_d3 */
++            K1X_PADCONF(GPIO_40,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_tx_en */
++            K1X_PADCONF(GPIO_41,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_mdc */
++            K1X_PADCONF(GPIO_42,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_mdio */
++            K1X_PADCONF(GPIO_43,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_int_n */
++            K1X_PADCONF(GPIO_46,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* gmac1_clk_ref */
+         >;
+     };
+ 
+     pinctrl_can_0: can_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_75,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* can_tx0 */
+-            K1X_PADCONF(GPIO_76,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4))    /* can_rx0 */
++            K1X_PADCONF(GPIO_75,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4)) /* can_tx0 */
++            K1X_PADCONF(GPIO_76,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_3V_DS4)) /* can_rx0 */
+         >;
+     };
+ 
+     pinctrl_can_1: can_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_54,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* can_tx0 */
+-            K1X_PADCONF(GPIO_55,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* can_rx0 */
++            K1X_PADCONF(GPIO_54,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2)) /* can_tx0 */
++            K1X_PADCONF(GPIO_55,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2)) /* can_rx0 */
+         >;
+     };
+ 
+     pinctrl_hdmi_0: hdmi_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_86, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* hdmi_tx_hscl */
+-            K1X_PADCONF(GPIO_87, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* hdmi_tx_hsda */
+-            K1X_PADCONF(GPIO_88, MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))       /* hdmi_tx_hcec */
+-            K1X_PADCONF(GPIO_89, MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))       /* hdmi_tx_pdp */
++            K1X_PADCONF(GPIO_86,    MUX_MODE1, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* hdmi_tx_hscl */
++            K1X_PADCONF(GPIO_87,    MUX_MODE1, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* hdmi_tx_hsda */
++            K1X_PADCONF(GPIO_88,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* hdmi_tx_hcec */
++            K1X_PADCONF(GPIO_89,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* hdmi_tx_pdp */
+         >;
+     };
+ 
+     pinctrl_hdmi_1: hdmi_1_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_59, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* hdmi_tx_hscl */
+-            K1X_PADCONF(GPIO_60, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* hdmi_tx_hsda */
+-            K1X_PADCONF(GPIO_61, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* hdmi_tx_hcec */
+-            K1X_PADCONF(GPIO_62, MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* hdmi_tx_pdp */
++            K1X_PADCONF(GPIO_59,    MUX_MODE1, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* hdmi_tx_hscl */
++            K1X_PADCONF(GPIO_60,    MUX_MODE1, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* hdmi_tx_hsda */
++            K1X_PADCONF(GPIO_61,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* hdmi_tx_hcec */
++            K1X_PADCONF(GPIO_62,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* hdmi_tx_pdp */
+         >;
+     };
+ 
+     pinctrl_spi_lcd_0: spi_lcd_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_86,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* dclk */
+-            K1X_PADCONF(GPIO_87,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* dcx */
+-            K1X_PADCONF(GPIO_88,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)) /* din */
+-            K1X_PADCONF(GPIO_89,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)) /* dout0 */
+-            K1X_PADCONF(GPIO_90,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2)) /* dout1 */
+-            K1X_PADCONF(GPIO_91,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* dsi_te */
+-            K1X_PADCONF(GPIO_92,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* smpn_rstb */
++            K1X_PADCONF(GPIO_86,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dclk */
++            K1X_PADCONF(GPIO_87,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dcx */
++            K1X_PADCONF(GPIO_88,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* din */
++            K1X_PADCONF(GPIO_89,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dout0 */
++            K1X_PADCONF(GPIO_90,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dout1 */
++            K1X_PADCONF(GPIO_91,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dsi_te */
++            K1X_PADCONF(GPIO_92,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* smpn_rstb */
+         >;
+     };
+ 
+     pinctrl_spi_lcd_1: spi_lcd_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(PRI_TDI,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* dclk */
+-            K1X_PADCONF(PRI_TMS,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* dcx */
+-            K1X_PADCONF(PRI_TCK,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* din */
+-            K1X_PADCONF(PRI_TDO,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* dout0 */
+-            K1X_PADCONF(GPIO_74,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* dout1 */
+-            K1X_PADCONF(GPIO_114,   MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* dsi_te */
+-            K1X_PADCONF(GPIO_63,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* smpn_rstb */
++            K1X_PADCONF(PRI_TDI,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dclk */
++            K1X_PADCONF(PRI_TMS,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dcx */
++            K1X_PADCONF(PRI_TCK,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* din */
++            K1X_PADCONF(PRI_TDO,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dout0 */
++            K1X_PADCONF(GPIO_74,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dout1 */
++            K1X_PADCONF(GPIO_114,   MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* dsi_te */
++            K1X_PADCONF(GPIO_63,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* smpn_rstb */
+         >;
+     };
+ 
+     pinctrl_camera0: camera0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_53,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* cam_mclk0 */
++            K1X_PADCONF(GPIO_53,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* cam_mclk0 */
+         >;
+     };
+ 
+     pinctrl_camera1: camera1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_58,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* cam_mclk1 */
++            K1X_PADCONF(GPIO_58,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* cam_mclk1 */
+         >;
+     };
+ 
+     pinctrl_camera2: camera2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_120,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* cam_mclk2 */
++            K1X_PADCONF(GPIO_120,   MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* cam_mclk2 */
+         >;
+     };
+ 
+     pinctrl_pmic: pmic_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(VCXO_EN, MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))         /* vcxo_en */
+-            K1X_PADCONF(DVL0,    MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))       /* dvl0 */
+-            K1X_PADCONF(DVL1,    MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))       /* dvl1 */
++            K1X_PADCONF(VCXO_EN,    MUX_MODE0, (EDGE_NONE | PULL_UP   | PAD_1V8_DS2))  /* vcxo_en */
++            K1X_PADCONF(DVL0,       MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* dvl0 */
++            K1X_PADCONF(DVL1,       MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* dvl1 */
+         >;
+     };
+ 
+     pinctrl_mn_clk_0: mn_clk_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_92,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))     /* mn_clk */
++            K1X_PADCONF(GPIO_92,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk */
+         >;
+     };
+ 
+     pinctrl_mn_clk_1: mn_clk_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_81,    MUX_MODE4, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* mn_clk */
++            K1X_PADCONF(GPIO_81,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk */
+         >;
+     };
+ 
+     pinctrl_mn_clk_2: mn_clk_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_44,    MUX_MODE1, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* mn_clk */
++            K1X_PADCONF(GPIO_44,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk */
+         >;
+     };
+ 
+     pinctrl_mn_clk_3: mn_clk_3_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_20,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* mn_clk */
++            K1X_PADCONF(GPIO_20,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk */
+         >;
+     };
+ 
+     pinctrl_mn_clk_4: mn_clk_4_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_23,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* mn_clk */
++            K1X_PADCONF(GPIO_23,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk */
+         >;
+     };
+ 
+     pinctrl_mn_clk_5: mn_clk_5_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_32,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* mn_clk */
++            K1X_PADCONF(GPIO_32,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk */
+         >;
+     };
+ 
+     pinctrl_mn_clk2_0: mn_clk2_0_grp {
+         pinctrl-single,pins = <
+-            K1X_PADCONF(GPIO_91,    MUX_MODE1, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))      /* mn_clk2 */
++            K1X_PADCONF(GPIO_91,    MUX_MODE1, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk2 */
+         >;
+     };
+ 
+     pinctrl_mn_clk2_1: mn_clk2_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_85,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))   /* mn_clk2 */
++            K1X_PADCONF(GPIO_85,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* mn_clk2 */
+         >;
+     };
+ 
+     pinctrl_vcxo_0: vcxo_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(DVL0,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* vcxo_req */
+-            K1X_PADCONF(DVL1,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))    /* vcxo_out */
++            K1X_PADCONF(DVL0,       MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_req */
++            K1X_PADCONF(DVL1,       MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_out */
+         >;
+     };
+ 
+     pinctrl_vcxo_1: vcxo_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_16,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* vcxo_req */
+-            K1X_PADCONF(GPIO_17,    MUX_MODE3, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* vcxo_out */
++            K1X_PADCONF(GPIO_16,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_req */
++            K1X_PADCONF(GPIO_17,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_out */
+         >;
+     };
+ 
+     pinctrl_vcxo_2: vcxo_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_89,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* vcxo_req */
+-            K1X_PADCONF(GPIO_90,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* vcxo_out */
++            K1X_PADCONF(GPIO_89,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_req */
++            K1X_PADCONF(GPIO_90,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_out */
+         >;
+     };
+ 
+     pinctrl_vcxo_out_0: vcxo_out_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_91,    MUX_MODE2, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* vcxo_out_0 */
++            K1X_PADCONF(GPIO_91,    MUX_MODE2, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_out_0 */
+         >;
+     };
+ 
+     pinctrl_vcxo_out_1: vcxo_out_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_12,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* vcxo_out */
++            K1X_PADCONF(GPIO_12,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* vcxo_out */
+         >;
+     };
+ 
+     pinctrl_32k_out_0: 32k_out_0_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_21,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* 32k_out */
++            K1X_PADCONF(GPIO_21,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* 32k_out */
+         >;
+     };
+ 
+     pinctrl_32k_out_1: 32k_out_1_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_31,    MUX_MODE3, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* 32k_out */
++            K1X_PADCONF(GPIO_31,    MUX_MODE3, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* 32k_out */
+         >;
+     };
+ 
+     pinctrl_32k_out_2: 32k_out_2_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(GPIO_28,    MUX_MODE4, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))   /* 32k_out */
++            K1X_PADCONF(GPIO_28,    MUX_MODE4, (EDGE_NONE | PULL_DIS | PAD_1V8_DS2))  /* 32k_out */
+         >;
+     };
+ 
+     pinctrl_pri: pri_grp {
+         pinctrl-single,pins =<
+-            K1X_PADCONF(PRI_TDI,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* pri_tdi */
+-            K1X_PADCONF(PRI_TMS,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* pri_tms */
+-            K1X_PADCONF(PRI_TCK,    MUX_MODE0, (EDGE_NONE | PULL_DOWN | PAD_1V8_DS2))  /* pri_tck */
+-            K1X_PADCONF(PRI_TDO,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))    /* pri_tck */
++            K1X_PADCONF(PRI_TDI,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pri_tdi */
++            K1X_PADCONF(PRI_TMS,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pri_tms */
++            K1X_PADCONF(PRI_TCK,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pri_tck */
++            K1X_PADCONF(PRI_TDO,    MUX_MODE0, (EDGE_NONE | PULL_UP | PAD_1V8_DS2))  /* pri_tck */
+         >;
+     };
+ };
+diff --git a/board/spacemit/k1-x/configs/uboot_fdt.its b/board/spacemit/k1-x/configs/uboot_fdt.its
+index 0e80e06b..ab79a04e 100644
+--- a/board/spacemit/k1-x/configs/uboot_fdt.its
++++ b/board/spacemit/k1-x/configs/uboot_fdt.its
+@@ -145,6 +145,15 @@
+ 				algo = "crc32";
+ 			};
+ 		};
++		fdt_15 {
++			description = "k1-x_MUSE-Paper";
++			type = "flat_dt";
++			compression = "none";
++			data = /incbin/("../dtb/k1-x_MUSE-Paper.dtb");
++			hash-1 {
++				algo = "crc32";
++			};
++		};
+ 	};
+ 
+ 	configurations {
+@@ -219,5 +228,10 @@
+ 			loadables = "uboot";
+ 			fdt = "fdt_14";
+ 		};
++		conf_15 {
++			description = "k1-x_MUSE-Paper";
++			loadables = "uboot";
++			fdt = "fdt_15";
++		};
+ 	};
+ };
+diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
+index 3ca98857..b6f06fbb 100644
+--- a/board/spacemit/k1-x/k1x.c
++++ b/board/spacemit/k1-x/k1x.c
+@@ -61,7 +61,6 @@ enum board_boot_mode get_boot_pin_select(void)
+ 	pr_debug("boot_select:%x\n", boot_select);
+ 
+ 	/*select spl boot device:
+- 
+ 		 b'(bit1)(bit0)
+ 	emmc:b'00, //BOOT_STRAP_BIT_EMMC
+ 	nor :b'10, //BOOT_STRAP_BIT_NOR
+@@ -744,6 +743,7 @@ void refresh_config_info(u8 *eeprom_data)
+ 		char *m_name;
+ 	} info[] = {
+ 		{ TLV_CODE_PRODUCT_NAME,   false, "product_name"},
++		{ TLV_CODE_PART_NUMBER,    false, "part#"},
+ 		{ TLV_CODE_SERIAL_NUMBER,  false, "serial#"},
+ 		{ TLV_CODE_MANUF_DATE,     false, "manufacture_date"},
+ 		{ TLV_CODE_MANUF_NAME,     false, "manufacturer"},
+@@ -1095,6 +1095,24 @@ static int ft_board_cpu_fixup(void *blob, struct bd_info *bd)
+ 	return 0;
+ }
+ 
++static int ft_board_info_fixup(void *blob, struct bd_info *bd)
++{
++	int node;
++	const char *part_number;
++
++	node = fdt_path_offset(blob, "/");
++	if (node < 0) {
++		pr_err("Can't find root node!\n");
++		return -EINVAL;
++	}
++
++	part_number = env_get("part#");
++	if (NULL != part_number)
++		fdt_setprop(blob, node, "part-number", part_number, strlen(part_number));
++
++	return 0;
++}
++
+ int ft_board_setup(void *blob, struct bd_info *bd)
+ {
+ 	struct fdt_memory mem;
+@@ -1116,5 +1134,6 @@ int ft_board_setup(void *blob, struct bd_info *bd)
+ 	}
+ 
+ 	ft_board_cpu_fixup(blob, bd);
++	ft_board_info_fixup(blob, bd);
+ 	return 0;
+ }
+diff --git a/configs/k1_defconfig b/configs/k1_defconfig
+index 52e25266..39844ce6 100644
+--- a/configs/k1_defconfig
++++ b/configs/k1_defconfig
+@@ -212,6 +212,8 @@ CONFIG_DM_REGULATOR=y
+ CONFIG_DM_REGULATOR_SPM8XX=y
+ CONFIG_DM_REGULATOR_SPACEMIT_HUB=y
+ CONFIG_SPL_SPACEMIT_POWER=y
++CONFIG_DM_PWM=y
++CONFIG_PWM_PXA=y
+ CONFIG_RESET_SPACEMIT_K1X=y
+ # CONFIG_SCSI is not set
+ # CONFIG_DM_SCSI is not set
+diff --git a/debian/control b/debian/control
+index 1d83df72..7bbcac00 100644
+--- a/debian/control
++++ b/debian/control
+@@ -25,6 +25,7 @@ Standards-Version: 4.6.2
+ Homepage: https://www.denx.de/wiki/U-Boot/
+ Vcs-Browser: https://salsa.debian.org/debian/u-boot
+ Vcs-Git: https://salsa.debian.org/debian/u-boot.git
++XBS-Commit-Id:
+ 
+ Package: u-boot-spacemit
+ Architecture: all
+diff --git a/debian/rules b/debian/rules
+index 8f795dcd..1caa37ad 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -2,9 +2,20 @@
+ # Always set CROSS_COMPILE, which also works for native builds.
+ export CROSS_COMPILE=riscv64-unknown-linux-gnu-
+ export ARCH=riscv
++
++# 检查是否在 Git 仓库中，并获取 commit ID
++GIT_INSIDE := $(shell git rev-parse --is-inside-work-tree 2>/dev/null)
++ifeq ($(GIT_INSIDE),true)
++	COMMIT_ID := $(shell git rev-parse --short HEAD)
++endif
++
+ %:
+ 	dh $@
+ 
++override_dh_auto_configure:
++	sed -i "s/XBS-Commit-Id:.*/XBS-Commit-Id: $(COMMIT_ID)/" debian/control
++	dh_auto_configure
++
+ override_dh_auto_build:
+ 	make k1_defconfig
+ 	make -j$(nproc)
+diff --git a/drivers/clk/spacemit/ccu-k1x.c b/drivers/clk/spacemit/ccu-k1x.c
+index c976cdda..b1ea5a87 100644
+--- a/drivers/clk/spacemit/ccu-k1x.c
++++ b/drivers/clk/spacemit/ccu-k1x.c
+@@ -653,83 +653,83 @@ static const char *pwm_parent_names[] = {
+ };
+ static SPACEMIT_CCU_MUX_GATE(pwm0_clk, "pwm0_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM0_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm1_clk, "pwm1_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM1_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm2_clk, "pwm2_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM2_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm3_clk, "pwm3_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM3_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm4_clk, "pwm4_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM4_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm5_clk, "pwm5_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM5_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm6_clk, "pwm6_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM6_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm7_clk, "pwm7_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM7_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm8_clk, "pwm8_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM8_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm9_clk, "pwm9_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM9_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm10_clk, "pwm10_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM10_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm11_clk, "pwm11_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM11_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm12_clk, "pwm12_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM12_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm13_clk, "pwm13_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM13_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm14_clk, "pwm14_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM14_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm15_clk, "pwm15_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM15_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm16_clk, "pwm16_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM16_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm17_clk, "pwm17_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM17_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm18_clk, "pwm18_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM18_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static SPACEMIT_CCU_MUX_GATE(pwm19_clk, "pwm19_clk", pwm_parent_names,
+ 	BASE_TYPE_APBC, APBC_PWM19_CLK_RST,
+-	4, 3, 0x3, 0x3, 0x0,
++	4, 3, 0x2, 0x2, 0x0,
+ 	0);
+ static const char *ssp_parent_names[] = { "pll1_d384_6p4", "pll1_d192_12p8", "pll1_d96_25p6",
+ 	"pll1_d48_51p2", "pll1_d768_3p2", "pll1_d1536_1p6", "pll1_d3072_0p8"
+diff --git a/drivers/fastboot/fb_spacemit.c b/drivers/fastboot/fb_spacemit.c
+index ab25ddb1..35c74df9 100644
+--- a/drivers/fastboot/fb_spacemit.c
++++ b/drivers/fastboot/fb_spacemit.c
+@@ -876,6 +876,7 @@ struct oem_config_info
+ };
+ const struct oem_config_info config_info[] = {
+ 	{ "product_name", TLV_CODE_PRODUCT_NAME, 32, NULL },
++	{ "part#", TLV_CODE_PART_NUMBER, 32, NULL },
+ 	{ "serial#", TLV_CODE_SERIAL_NUMBER, 32, NULL },
+ 	{ "ethaddr", TLV_CODE_MAC_BASE, 17, NULL },
+ 	{ "ethsize", TLV_CODE_MAC_SIZE, 6, NULL },/*size must equal or less than 65535*/
+diff --git a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
+index 6e79868d..ace87ca2 100644
+--- a/drivers/pwm/Kconfig
++++ b/drivers/pwm/Kconfig
+@@ -112,6 +112,12 @@ config PWM_SUNXI
+ 	  This PWM is found on H3, A64 and other Allwinner SoCs. It supports a
+ 	  programmable period and duty cycle. A 16-bit counter is used.
+ 
++config PWM_PXA
++	bool "Enable support for PXA PWM"
++	depends on DM_PWM
++	help
++	  This PWM is found on Spacemit-K1x and other SoCs.
++
+ config PWM_TI_EHRPWM
+ 	bool "Enable support for EHRPWM PWM"
+ 	depends on DM_PWM && ARCH_OMAP2PLUS
+diff --git a/drivers/pwm/Makefile b/drivers/pwm/Makefile
+index e4d10c8d..fe9ace67 100644
+--- a/drivers/pwm/Makefile
++++ b/drivers/pwm/Makefile
+@@ -24,3 +24,4 @@ obj-$(CONFIG_PWM_SIFIVE)	+= pwm-sifive.o
+ obj-$(CONFIG_PWM_TEGRA)		+= tegra_pwm.o
+ obj-$(CONFIG_PWM_SUNXI)		+= sunxi_pwm.o
+ obj-$(CONFIG_PWM_TI_EHRPWM)	+= pwm-ti-ehrpwm.o
++obj-$(CONFIG_PWM_PXA)		+= pwm-pxa.o
+diff --git a/drivers/pwm/pwm-pxa.c b/drivers/pwm/pwm-pxa.c
+new file mode 100644
+index 00000000..3bd63c91
+--- /dev/null
++++ b/drivers/pwm/pwm-pxa.c
+@@ -0,0 +1,156 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * drivers/pwm/pwm-pxa.c
++ *
++ * simple driver for PWM (Pulse Width Modulator) controller
++ */
++
++#include <common.h>
++#include <clk.h>
++#include <reset.h>
++#include <dm.h>
++#include <pwm.h>
++#include <div64.h>
++#include <linux/bitops.h>
++#include <linux/io.h>
++#include <div64.h>
++
++/* PWM registers and bits definitions */
++#define PWMCR		(0x00)
++#define PWMDCR		(0x04)
++#define PWMPCR		(0x08)
++
++#define PWMCR_SD	(1 << 6)
++#define PWMDCR_FD	(1 << 10)
++
++struct pxa_pwm_priv {
++	struct clk	clk;
++	struct reset_ctl	reset;
++	void __iomem	*mmio_base;
++	unsigned int num_pwms;
++	int dcr_fd; /* Controller PWM_DCR FD feature */
++};
++
++/*
++ * period_ns = 10^9 * (PRESCALE + 1) * (PV + 1) / PWM_CLK_RATE
++ * duty_ns   = 10^9 * (PRESCALE + 1) * DC / PWM_CLK_RATE
++ */
++static int pxa_pwm_set_config(struct udevice *dev, uint channel,
++				uint period_ns, uint duty_ns)
++{
++	struct pxa_pwm_priv *priv = dev_get_priv(dev);
++	unsigned long long c;
++	unsigned long period_cycles, prescale, pv, dc;
++	int rc;
++
++	c = clk_get_rate(&priv->clk);
++	c = c * period_ns;
++	do_div(c, 1000000000);
++	period_cycles = c;
++
++	if (period_cycles < 1)
++		period_cycles = 1;
++	prescale = (period_cycles - 1) / 1024;
++	pv = period_cycles / (prescale + 1) - 1;
++
++	if (prescale > 63)
++		return -EINVAL;
++
++	if (duty_ns == period_ns) {
++		if(priv->dcr_fd)
++			dc = PWMDCR_FD;
++		else{
++			dc = (pv + 1) * duty_ns / period_ns;
++			if (dc >= PWMDCR_FD) {
++				dc = PWMDCR_FD - 1;
++				pv = dc - 1;
++			}
++		}
++	} else
++		dc = (pv + 1) * duty_ns / period_ns;
++
++	/*
++	 * FIXME: Graceful shutdown mode would cause the function clock
++	 * could not be enabled normally, so chose abrupt shutdown mode.
++	 */
++	prescale |= PWMCR_SD;
++
++	/* NOTE: the clock to PWM has to be enabled first
++	 * before writing to the registers
++	 */
++	rc = clk_enable(&priv->clk);
++	if (rc < 0)
++		return rc;
++
++	writel(prescale, priv->mmio_base + PWMCR);
++	writel(pv, priv->mmio_base + PWMPCR);
++	writel(dc, priv->mmio_base + PWMDCR);
++
++	clk_disable(&priv->clk);
++	rc = clk_enable(&priv->clk);
++	return 0;
++}
++
++static int pxa_pwm_set_enable(struct udevice *dev, uint channel, bool enable)
++{
++	struct pxa_pwm_priv *priv = dev_get_priv(dev);
++
++	if (enable) {
++		printf("!!!!!!!!!!!!!!!!!!\n");
++		return clk_enable(&priv->clk);
++	}
++	else
++		return clk_disable(&priv->clk);
++}
++
++static const struct pwm_ops pxa_pwm_ops = {
++	.set_config	= pxa_pwm_set_config,
++	.set_enable	= pxa_pwm_set_enable,
++};
++
++static int pxa_pwm_probe(struct udevice *dev)
++{
++	struct pxa_pwm_priv *priv = dev_get_priv(dev);
++	int ret = 0;
++
++	priv->dcr_fd = dev_read_u32_default(dev, "k1x,pwm-disable-fd", 0);
++
++	ret = clk_get_by_index(dev,0,&priv->clk);
++	if(ret)
++		return ret;
++
++	ret = reset_get_by_index(dev, 0, &priv->reset);
++	if (ret)
++		return ret;
++	ret = reset_deassert(&priv->reset);
++	if (ret) {
++		pr_err("Failed to de-assert reset for PWM (error %d)\n",ret);
++		goto err_rst;
++	}
++
++	priv->num_pwms = 1;
++
++	priv->mmio_base = dev_read_addr_ptr(dev);
++	if (!priv->mmio_base)
++		return -EINVAL;
++
++	return 0;
++
++err_rst:
++	reset_assert(&priv->reset);
++	return ret;
++}
++
++static const struct udevice_id pxa_pwm_ids[] = {
++	{ .compatible = "spacemit,k1x-pwm", .data = 0 },
++	{ }
++};
++
++U_BOOT_DRIVER(mtk_pwm) = {
++	.name = "pxa_pwm",
++	.id = UCLASS_PWM,
++	.of_match = pxa_pwm_ids,
++	.ops = &pxa_pwm_ops,
++	.probe = pxa_pwm_probe,
++	.priv_auto	= sizeof(struct pxa_pwm_priv),
++};
+diff --git a/drivers/reset/reset-spacemit-k1x.c b/drivers/reset/reset-spacemit-k1x.c
+index 350f5173..e9dd48b6 100644
+--- a/drivers/reset/reset-spacemit-k1x.c
++++ b/drivers/reset/reset-spacemit-k1x.c
+@@ -216,26 +216,26 @@ static const struct spacemit_reset_signal
+ 	[RESET_UART1]   = { APBC_UART1_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+ 	[RESET_UART2]   = { APBC_UART2_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+ 	[RESET_GPIO]    = { APBC_GPIO_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM0]    = { APBC_PWM0_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM1]    = { APBC_PWM1_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM2]    = { APBC_PWM2_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM3]    = { APBC_PWM3_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM4]    = { APBC_PWM4_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM5]    = { APBC_PWM5_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM6]    = { APBC_PWM6_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM7]    = { APBC_PWM7_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM8]    = { APBC_PWM8_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM9]    = { APBC_PWM9_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM10]   = { APBC_PWM10_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM11]   = { APBC_PWM11_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM12]   = { APBC_PWM12_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM13]   = { APBC_PWM13_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM14]   = { APBC_PWM14_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM15]   = { APBC_PWM15_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM16]   = { APBC_PWM16_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM17]   = { APBC_PWM17_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM18]   = { APBC_PWM18_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+-	[RESET_PWM19]   = { APBC_PWM19_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM0]    = { APBC_PWM0_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM1]    = { APBC_PWM1_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM2]    = { APBC_PWM2_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM3]    = { APBC_PWM3_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM4]    = { APBC_PWM4_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM5]    = { APBC_PWM5_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM6]    = { APBC_PWM6_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM7]    = { APBC_PWM7_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM8]    = { APBC_PWM8_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM9]    = { APBC_PWM9_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM10]   = { APBC_PWM10_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM11]   = { APBC_PWM11_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM12]   = { APBC_PWM12_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM13]   = { APBC_PWM13_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM14]   = { APBC_PWM14_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM15]   = { APBC_PWM15_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM16]   = { APBC_PWM16_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM17]   = { APBC_PWM17_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM18]   = { APBC_PWM18_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
++	[RESET_PWM19]   = { APBC_PWM19_CLK_RST, BIT(2)|BIT(0), BIT(0), BIT(2), RST_BASE_TYPE_APBC },
+ 	[RESET_SSP3]    = { APBC_SSP3_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+ 	[RESET_UART3]   = { APBC_UART3_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+ 	[RESET_RTC]     = { APBC_RTC_CLK_RST, BIT(2), 0, BIT(2), RST_BASE_TYPE_APBC },
+diff --git a/drivers/video/spacemit/dsi/Makefile b/drivers/video/spacemit/dsi/Makefile
+index 8f067fd3..7fce381e 100644
+--- a/drivers/video/spacemit/dsi/Makefile
++++ b/drivers/video/spacemit/dsi/Makefile
+@@ -7,6 +7,7 @@ obj-y += video/spacemit_video_tx.o \
+ 		drv/spacemit_dsi_drv.o
+ 
+ obj-y += video/lcd/lcd_icnl9911c.o
++obj-y += video/lcd/lcd_icnl9951r.o
+ obj-y += video/lcd/lcd_gx09inx101.o
+ obj-y += video/lcd/lcd_lt8911ext_edp_1080p.o
+ 
+diff --git a/drivers/video/spacemit/dsi/include/spacemit_dsi_common.h b/drivers/video/spacemit/dsi/include/spacemit_dsi_common.h
+index 56075c3e..177b9c45 100644
+--- a/drivers/video/spacemit/dsi/include/spacemit_dsi_common.h
++++ b/drivers/video/spacemit/dsi/include/spacemit_dsi_common.h
+@@ -139,6 +139,7 @@ int spacemit_dsi_probe(void);
+ int lcd_mipi_probe(void);
+ 
+ int lcd_icnl9911c_init(void);
++int lcd_icnl9951r_init(void);
+ int lcd_gx09inx101_init(void);
+ int lcd_lt8911ext_edp_1080p_init(void);
+ 
+diff --git a/drivers/video/spacemit/dsi/include/spacemit_video_tx.h b/drivers/video/spacemit/dsi/include/spacemit_video_tx.h
+index 32bc2bbf..e68a8893 100644
+--- a/drivers/video/spacemit/dsi/include/spacemit_video_tx.h
++++ b/drivers/video/spacemit/dsi/include/spacemit_video_tx.h
+@@ -155,11 +155,15 @@ struct spacemit_panel_priv {
+ 
+ 	struct gpio_desc dcp;
+ 	struct gpio_desc dcn;
++	struct gpio_desc avee;
++	struct gpio_desc avdd;
+ 	struct gpio_desc bl;
+ 	struct gpio_desc enable;
+ 	struct gpio_desc reset;
+ 	bool dcp_valid;
+ 	bool dcn_valid;
++	bool avee_valid;
++	bool avdd_valid;
+ 	bool bl_valid;
+ 	bool enable_valid;
+ 	bool reset_valid;
+diff --git a/drivers/video/spacemit/dsi/video/lcd/lcd_icnl9951r.c b/drivers/video/spacemit/dsi/video/lcd/lcd_icnl9951r.c
+new file mode 100644
+index 00000000..ec96f4af
+--- /dev/null
++++ b/drivers/video/spacemit/dsi/video/lcd/lcd_icnl9951r.c
+@@ -0,0 +1,165 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2023 Spacemit Co., Ltd.
++ *
++ */
++
++#include <linux/kernel.h>
++#include "../../include/spacemit_dsi_common.h"
++#include "../../include/spacemit_video_tx.h"
++#include <linux/delay.h>
++
++#define UNLOCK_DELAY 0
++
++struct spacemit_mode_modeinfo icnl9951r_spacemit_modelist[] = {
++	{
++		.name = "1200x1920-60",
++		.refresh = 60,
++		.xres = 1200,
++		.yres = 1920,
++		.real_xres = 1200,
++		.real_yres = 1920,
++		.left_margin = 40,
++		.right_margin = 40,
++		.hsync_len = 4,
++		.upper_margin = 32,
++		.lower_margin = 180,
++		.vsync_len = 4,
++		.hsync_invert = 0,
++		.vsync_invert = 0,
++		.invert_pixclock = 0,
++		.pixclock_freq = 87*1000,
++		.pix_fmt_out = OUTFMT_RGB888,
++		.width = 147,
++		.height = 236,
++	},
++};
++
++struct spacemit_mipi_info icnl9951r_mipi_info = {
++	.height = 1920,
++	.width = 1200,
++	.hfp = 48,/* unit: pixel */
++	.hbp = 48,
++	.hsync = 4,
++	.vfp = 180, /*unit: line*/
++	.vbp = 32,
++	.vsync = 4,
++	.fps = 60,
++
++	.work_mode = SPACEMIT_DSI_MODE_VIDEO, /*command_mode, video_mode*/
++	.rgb_mode = DSI_INPUT_DATA_RGB_MODE_888,
++	.lane_number = 4,
++	.phy_bit_clock = 614400000,
++	.phy_esc_clock = 51200000,
++	.split_enable = 0,
++	.eotp_enable = 0,
++
++	.burst_mode = DSI_BURST_MODE_BURST,
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_set_id_cmds[] = {
++	{SPACEMIT_DSI_SET_MAX_PKT_SIZE, SPACEMIT_DSI_LP_MODE, UNLOCK_DELAY, 1, {0x01}},
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_read_id_cmds[] = {
++	{SPACEMIT_DSI_GENERIC_READ1, SPACEMIT_DSI_LP_MODE, UNLOCK_DELAY, 3, {0x04}},
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_set_power_cmds[] = {
++	{SPACEMIT_DSI_SET_MAX_PKT_SIZE, SPACEMIT_DSI_HS_MODE, UNLOCK_DELAY, 1, {0x1}},
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_read_power_cmds[] = {
++	{SPACEMIT_DSI_GENERIC_READ1, SPACEMIT_DSI_HS_MODE, UNLOCK_DELAY, 1, {0xA}},
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_init_cmds[] = {
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   3, {0xF0,0x5A,0x59}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   3, {0xF1,0xA5,0xA6}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB2,0x04,0x03,0x94,0x95,0x77,0x77,0x07,0x90,0x88,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x80,0x80,0x80,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x55,0x11,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB3,0xF3,0x01,0x02,0x09,0x8A,0x85,0x00,0x00,0x57,0x00,0x00,0x11,0x34,0x01,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x03,0x06,0x80,0x80,0x01,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB4,0x0D,0x06,0x1A,0x1D,0x56,0x26,0x01,0xC7,0x33,0x33,0xAA,0x33,0x44,0x26,0x26,0x00,0x02,0x08,0x20,0x30,0x05,0x85,0x23,0x20,0x40,0x11,0x10,0x20,0x00,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB5,0x00,0xA8,0xA9,0x26,0x09,0x25,0x27,0x2D,0x2D,0x1B,0x19,0x17,0x15,0x13,0x11,0x0F,0x0D,0x05,0x23,0x03,0x03,0x03,0x03,0x03,0xC0,0x00,0x01,0x50,0xFF,0xFF,0xE0,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB6,0x00,0xA8,0xA9,0x26,0x08,0x24,0x27,0x2D,0x2D,0x1A,0x18,0x16,0x14,0x12,0x10,0x0E,0x0C,0x04,0x22,0x03,0x03,0x03,0x03,0x03,0xC0,0x00,0x01,0x50,0xFF,0xFF,0xE0,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB7,0x0F,0x03,0xC0,0x00,0x01,0x50,0x0F,0x03,0xC0,0x00,0x01,0x50,0x55,0x55,0x55,0x55,0x55,0x50,0x55,0x55,0x55,0x55,0x55,0x50,0x03,0x03,0xC0,0x00,0x01,0x50,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB8,0x0F,0x03,0xC0,0x00,0x01,0x50,0x0F,0x03,0xC0,0x00,0x01,0x50,0x55,0x55,0x55,0x55,0x55,0x50,0x55,0x55,0x55,0x55,0x55,0x50,0x03,0x03,0xC0,0x00,0x01,0x50,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xB9,0x01,0x55,0x55,0x55,0x55,0x55,0x50,0x55,0x55,0x55,0x55,0x55,0x50,0xFF,0xFF,0xFF,0xFF,0xFD,0x50,0xFF,0xFF,0xFF,0xFF,0xFD,0x50,0x00,0x00,0x00,0x00,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  16, {0xBB,0x01,0x02,0x03,0x0A,0x04,0x13,0x14,0x12,0x16,0x5C,0x00,0x15,0x16,0x03,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xBC,0xFE,0xF8,0xF0,0x00,0x00,0x00,0x00,0x04,0x00,0x05,0x80,0x02,0x24,0x00,0xB9,0x99,0x99,0x00,0xC4,0x09,0xC3,0x86,0x03,0x2E,0x11,0x00,0x00,0x00,0x00,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   8, {0xBD,0xED,0x23,0x42,0x52,0x52,0x1F,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xBE,0x75,0x43,0x7E,0x43,0x0A,0x88,0x58,0x33,0x33,0x33,0x93,0x03,0x18,0x18,0x00,0x00,0x00,0x00,0xB2,0xAF,0xB2,0xAF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  11, {0xBF,0x0C,0x19,0x0C,0x19,0x00,0x11,0x22,0x04,0x58,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  23, {0xC0,0x40,0x90,0x17,0x41,0x23,0x56,0xF7,0x8A,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x3F,0xFF,0x00,0xCC,0x02,0x00,0x01,0xB3}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xC1,0x00,0xB4,0x00,0x1E,0x00,0x20,0x04,0x28,0x28,0x04,0xC7,0x80,0x05,0x12,0xC0,0x23,0x47,0xC0,0x10,0xFF,0x0F,0xE7,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  2,  {0xC2,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xC3,0x00,0xFF,0x42,0x4D,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x97,0x10,0x10,0x2A,0x2A,0x2A,0x2A,0x2A,0x2A,0x2A,0x2A,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  15, {0xC4,0x0C,0x35,0x28,0x49,0x00,0x3F,0x00,0x50,0x00,0x1F,0x00,0xA3,0xF0,0xE7}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0xC5,0x03,0x13,0x10,0x57,0x5D,0x37,0x04,0x05,0x04,0x04,0x19,0x00,0xB4,0x2C,0x2B,0x2B,0xBB,0xAE,0x20,0x00,0x02,0x00,0x80,0x1D,0x15,0x06,0x13,0x64,0xFF,0x03,0x20,0xFF}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  30, {0xC7,0x76,0x54,0x32,0x22,0x34,0x56,0x77,0x77,0x20,0x76,0x54,0x32,0x22,0x34,0x56,0x77,0x77,0x20,0x42,0x00,0x21,0xFF,0xFF,0x04,0x04,0x03,0x0E,0x07,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0x80,0xE8,0xD5,0xB4,0x99,0x82,0x6D,0x5A,0x4A,0x3A,0x09,0xE3,0xC3,0xA2,0x84,0x69,0x3B,0x08,0xDA,0xAF,0xAC,0x83,0x5A,0x2E,0x00,0xD2,0x9A,0x77,0x49,0x3F,0x38,0x32,0x28}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0x81,0xE8,0xD2,0xAE,0x92,0x79,0x65,0x53,0x42,0x34,0x03,0xDC,0xBC,0x9B,0x7F,0x65,0x36,0x03,0xD6,0xAC,0xA9,0x81,0x58,0x2C,0xFF,0xD1,0x99,0x77,0x49,0x3F,0x38,0x32,0x28}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  33, {0x82,0xE8,0xD3,0xB1,0x95,0x7D,0x69,0x56,0x46,0x37,0x06,0xDF,0xBF,0x9E,0x81,0x67,0x38,0x05,0xD8,0xAD,0xAA,0x82,0x59,0x2D,0xFF,0xD1,0x99,0x77,0x49,0x3F,0x38,0x32,0x28}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  26, {0x83,0x09,0x1F,0x12,0x04,0x00,0x1F,0x12,0x04,0x00,0x1F,0x12,0x04,0x00,0x28,0x18,0x08,0x00,0x28,0x18,0x08,0x00,0x28,0x18,0x08,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,  28, {0x84,0xFF,0xFF,0xFA,0xAA,0x95,0x55,0x00,0x00,0x00,0xFF,0xFF,0xFA,0xAA,0x95,0x54,0x00,0x00,0x00,0xFF,0xFF,0xFA,0xAA,0x95,0x54,0x00,0x00,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   8, {0xC8,0x42,0x00,0x48,0xEC,0xE0,0x00,0x23}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   7, {0xD7,0x3F,0x04,0x0A,0x00,0x00,0x06}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   5, {0xD5,0x01,0x30,0xD4,0x10}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   3, {0xF1,0x5A,0x59}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   3, {0xF0,0xA5,0xA6}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   2, {0x35,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 120, 2, {0x11,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 10,  2, {0x29,0x00}},
++	{SPACEMIT_DSI_DCS_LWRITE, SPACEMIT_DSI_LP_MODE, 0,   2, {0xAC,0x05}},
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_sleep_out_cmds[] = {
++	{SPACEMIT_DSI_DCS_SWRITE,SPACEMIT_DSI_LP_MODE, 120, 1, {0x11}},
++	{SPACEMIT_DSI_DCS_SWRITE,SPACEMIT_DSI_LP_MODE, 10,  1, {0x29}},
++};
++
++static struct spacemit_dsi_cmd_desc icnl9951r_sleep_in_cmds[] = {
++	{SPACEMIT_DSI_DCS_LWRITE,SPACEMIT_DSI_LP_MODE, 0,   2, {0xAC,0x0A}},
++	{SPACEMIT_DSI_DCS_SWRITE,SPACEMIT_DSI_LP_MODE, 10,  1, {0x28}},
++	{SPACEMIT_DSI_DCS_SWRITE,SPACEMIT_DSI_LP_MODE, 120, 1, {0x10}},
++};
++
++
++struct lcd_mipi_panel_info lcd_icnl9951r = {
++	.lcd_name = "icnl9951r",
++	.lcd_id = 0x9951,
++	.panel_id0 = 0x99,
++	.power_value = 0x9c,
++	.panel_type = LCD_MIPI,
++	.width_mm = 147,
++	.height_mm = 236,
++	.dft_pwm_bl = 128,
++	.set_id_cmds_num = ARRAY_SIZE(icnl9951r_set_id_cmds),
++	.read_id_cmds_num = ARRAY_SIZE(icnl9951r_read_id_cmds),
++	.init_cmds_num = ARRAY_SIZE(icnl9951r_init_cmds),
++	.set_power_cmds_num = ARRAY_SIZE(icnl9951r_set_power_cmds),
++	.read_power_cmds_num = ARRAY_SIZE(icnl9951r_read_power_cmds),
++	.sleep_out_cmds_num = ARRAY_SIZE(icnl9951r_sleep_out_cmds),
++	.sleep_in_cmds_num = ARRAY_SIZE(icnl9951r_sleep_in_cmds),
++	//.drm_modeinfo = icnl9951r_modelist,
++	.spacemit_modeinfo = icnl9951r_spacemit_modelist,
++	.mipi_info = &icnl9951r_mipi_info,
++	.set_id_cmds = icnl9951r_set_id_cmds,
++	.read_id_cmds = icnl9951r_read_id_cmds,
++	.set_power_cmds = icnl9951r_set_power_cmds,
++	.read_power_cmds = icnl9951r_read_power_cmds,
++	.init_cmds = icnl9951r_init_cmds,
++	.sleep_out_cmds = icnl9951r_sleep_out_cmds,
++	.sleep_in_cmds = icnl9951r_sleep_in_cmds,
++	.bitclk_sel = 3,
++	.bitclk_div = 1,
++	.pxclk_sel = 2,
++	.pxclk_div = 6,
++};
++
++int lcd_icnl9951r_init(void)
++{
++	int ret;
++
++	ret = lcd_mipi_register_panel(&lcd_icnl9951r);
++	return ret;
++}
+diff --git a/drivers/video/spacemit/dsi/video/spacemit_mipi_port.c b/drivers/video/spacemit/dsi/video/spacemit_mipi_port.c
+index 1463501b..fb2c0e5a 100644
+--- a/drivers/video/spacemit/dsi/video/spacemit_mipi_port.c
++++ b/drivers/video/spacemit/dsi/video/spacemit_mipi_port.c
+@@ -41,8 +41,10 @@ static bool __maybe_unused lcd_mipi_readid(struct lcd_mipi_tx_data *video_tx_cli
+ 
+ 		ret = spacemit_mipi_read_cmds(0, &dbuf, video_tx_client->panel_info->read_id_cmds,
+ 				 video_tx_client->panel_info->read_id_cmds_num);
+-		if (ret)
++		if (ret) {
++			pr_info("%s failed!\n", __func__);
+ 			return false;
++		}
+ 		read_id[0] = dbuf.data[0];
+ 		read_id[1] = dbuf.data[1];
+ 		read_id[2] = dbuf.data[2];
+@@ -84,10 +86,20 @@ static int lcd_mipi_dc_enable(bool power_on, struct spacemit_panel_priv *priv)
+ 			dm_gpio_set_value(&priv->dcp, 1);
+ 		if (priv->dcn_valid)
+ 			dm_gpio_set_value(&priv->dcn, 1);
++
++		if (priv->avee_valid)
++			dm_gpio_set_value(&priv->avee, 1);
++		if (priv->avdd_valid)
++			dm_gpio_set_value(&priv->avdd, 1);
+ 	} else {
+ 		if (priv->enable_valid)
+ 			dm_gpio_set_value(&priv->enable, 0);
+ 
++		if (priv->avee_valid)
++			dm_gpio_set_value(&priv->avee, 0);
++		if (priv->avdd_valid)
++			dm_gpio_set_value(&priv->avdd, 0);
++
+ 		if (priv->dcp_valid)
+ 			dm_gpio_set_value(&priv->dcp, 0);
+ 		if (priv->dcn_valid)
+@@ -428,6 +440,10 @@ int lcd_mipi_probe(void)
+ 		tx_device_client.panel_type = LCD_EDP;
+ 		tx_device.panel_type = tx_device_client.panel_type;
+ 		lcd_lt8911ext_edp_1080p_init();
++	} else if(strcmp("icnl9951r", priv->panel_name) == 0) {
++		tx_device_client.panel_type = LCD_MIPI;
++		tx_device.panel_type = tx_device_client.panel_type;
++		lcd_icnl9951r_init();
+ 	} else {
+ 		// lcd_icnl9911c_init();
+ 		lcd_gx09inx101_init();
+@@ -476,6 +492,27 @@ static int spacemit_panel_of_to_plat(struct udevice *dev)
+ 		priv->dcn_valid = true;
+ 	}
+ 
++	ret = gpio_request_by_name(dev, "avee-gpios", 0, &priv->avee,
++				   GPIOD_IS_OUT);
++	if (ret) {
++		pr_debug("%s: Warning: cannot get avee GPIO: ret=%d\n",
++		      __func__, ret);
++		priv->avee_valid = false;
++	} else {
++		priv->avee_valid = true;
++	}
++
++	ret = gpio_request_by_name(dev, "avdd-gpios", 0, &priv->avdd,
++				   GPIOD_IS_OUT);
++	if (ret) {
++		pr_debug("%s: Warning: cannot get avdd GPIO: ret=%d\n",
++		      __func__, ret);
++		priv->avdd_valid = false;
++	} else {
++		priv->avdd_valid = true;
++	}
++
++
+ 	ret = gpio_request_by_name(dev, "bl-gpios", 0, &priv->bl,
+ 				   GPIOD_IS_OUT);
+ 	if (ret) {
+-- 
+2.39.2
+
