@@ -3,6 +3,7 @@
 # ATF BINARY
 atf_bl31 (){ # place bl31 file.
 if [[ "$FAMILY" == "rockchip" ]]; then
+	RK35="../../files/boot/rk35"
 	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
 		if [[ -f "../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
 			cp ../arm-trusted-firmware/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
@@ -12,7 +13,6 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		fi
 	fi
 	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-		RK35="../../files/boot/rk35"
 		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
 			cp -f ${RK35}/${RKBIN_ELF} bl31.elf
 			cp -f ${RK35}/${RKBIN_ELF} atf-bl31
@@ -24,6 +24,12 @@ if [[ "$FAMILY" == "rockchip" ]]; then
 		if [[ "$UBOOT_VERSION" == "v2023.07.02" ]]; then
 			#export BL31="bl31.elf"
 			export ROCKCHIP_TPL="${RKBIN_RAM}"
+		fi
+	fi
+	if [[ "$FAMILY_EXT" == "rk3588" ]]; then
+		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
+			export BL31="${RK35}/${RKBIN_ELF}"
+			export ROCKCHIP_TPL="${RK35}/${RKBIN_RAM}"
 		fi
 	fi
 fi
