@@ -70,41 +70,43 @@ else
 fi
 
 # BIND EMMC
-$EE ""
-$EE "${BLD}If you haven't already, attach the eMMC module and select Bind.${FIN}"
-$EE "${BLD}If this doesn't apply to you, select Skip.${FIN}"
-options=("Bind" "Skip")
-select opt in "${options[@]}"
-do
-	case $opt in
-		"Bind")
-			if [[ "$BOARD" == "lepotato" ]]; then
-				MMC_TARGET="d0074000.mmc"
-				SOC_FAMILY="meson-gx-mmc"
-			fi
-			if [[ "$FAMILY_EXT" == "odroid" ]]; then
-				MMC_TARGET="ffe07000.mmc"
-				SOC_FAMILY="meson-gx-mmc"
-			fi
-			if [[ "$BOARD" == "renegade" || "$BOARD" == "rock64" ]]; then
-				MMC_TARGET="ff520000.mmc"
-				SOC_FAMILY="dwmmc_rockchip"
-			fi
-			if [[ "$BOARD" == "lepotato" || "$FAMILY_EXT" == "odroid" || "$BOARD" == "renegade" || "$BOARD" == "rock64" ]]; then
-				echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
-				sleep .75
-				echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
-				sleep .75
-				#lsblk -dno NAME,SIZE
-			fi
-			break
-			;;
-		"Skip")
-			break
-			;;
-		*) echo "invalid option $REPLY";;
-	esac
-done
+if [[ "$BOARD" =~ ^(lepotato|renegade|rock64)$ || "$FAMILY_EXT" == "odroid" ]]; then
+	$EE ""
+	$EE "${BLD}If you haven't already, attach the eMMC module and select Bind.${FIN}"
+	$EE "${BLD}If this doesn't apply to you, select Skip.${FIN}"
+	options=("Bind" "Skip")
+	select opt in "${options[@]}"
+	do
+		case $opt in
+			"Bind")
+				if [[ "$BOARD" == "lepotato" ]]; then
+					MMC_TARGET="d0074000.mmc"
+					SOC_FAMILY="meson-gx-mmc"
+				fi
+				if [[ "$FAMILY_EXT" == "odroid" ]]; then
+					MMC_TARGET="ffe07000.mmc"
+					SOC_FAMILY="meson-gx-mmc"
+				fi
+				if [[ "$BOARD" =~ ^(renegade|rock64)$ ]]; then
+					MMC_TARGET="ff520000.mmc"
+					SOC_FAMILY="dwmmc_rockchip"
+				fi
+				if [[ "$BOARD" =~ ^(lepotato|renegade|rock64)$ || "$FAMILY_EXT" == "odroid" ]]; then
+					echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/unbind
+					sleep .75
+					echo -n ${MMC_TARGET} > /sys/bus/platform/drivers/${SOC_FAMILY}/bind
+					sleep .75
+					#lsblk -dno NAME,SIZE
+				fi
+				break
+				;;
+			"Skip")
+				break
+				;;
+			*) echo "invalid option $REPLY";;
+		esac
+	done
+fi
 
 # CURRENT
 $EE ""
