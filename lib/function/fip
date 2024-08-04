@@ -31,11 +31,6 @@ fi
 
 # FIRMWARE IMAGE PACKAGE
 meson-g12a (){
-export FIPDIR=$PWD/fip
-mkdir -p fip
-cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
-cp -f u-boot.bin fip/bl33.bin
-
 $FIPDIR/blx_fix.sh \
 	fip/bl30.bin \
 	fip/zero_tmp \
@@ -87,11 +82,6 @@ $FIPDIR/aml_encrypt_g12a --bootmk \
 }
 
 meson-g12b-a311d (){
-export FIPDIR=$PWD/fip
-mkdir -p fip
-cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
-cp -f u-boot.bin fip/bl33.bin
-
 $FIPDIR/blx_fix.sh \
 	fip/bl30.bin \
 	fip/zero_tmp \
@@ -143,11 +133,6 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 }
 
 meson-g12b-s922x (){
-export FIPDIR=$PWD/fip
-mkdir -p fip
-cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
-cp -f u-boot.bin fip/bl33.bin
-
 $FIPDIR/blx_fix.sh \
 	fip/bl30.bin \
 	fip/zero_tmp \
@@ -198,15 +183,54 @@ $FIPDIR/aml_encrypt_g12b --bootmk \
 		--level v3
 }
 
+meson-axg (){
+$FIPDIR/blx_fix.sh \
+	fip/bl30.bin \
+	fip/zero_tmp \
+	fip/bl30_zero.bin \
+	fip/bl301.bin \
+	fip/bl301_zero.bin \
+	fip/bl30_new.bin \
+	bl30
+
+python $FIPDIR/acs_tool.py fip/bl2.bin fip/bl2_acs.bin fip/acs.bin 0
+
+$FIPDIR/blx_fix.sh \
+	fip/bl2_acs.bin \
+	fip/zero_tmp \
+	fip/bl2_zero.bin \
+	fip/bl21.bin \
+	fip/bl21_zero.bin \
+	fip/bl2_new.bin \
+	bl2
+
+$FIPDIR/aml_encrypt_axg --bl3sig --input fip/bl30_new.bin \
+				--output fip/bl30_new.bin.enc \
+				--level v3 --type bl30
+
+$FIPDIR/aml_encrypt_axg --bl3sig --input fip/bl31.img \
+				--output fip/bl31.img.enc \
+				--level v3 --type bl31
+
+$FIPDIR/aml_encrypt_axg --bl3sig --input fip/bl33.bin --compress lz4 \
+				--output fip/bl33.bin.enc \
+				--level v3 --type bl33
+
+$FIPDIR/aml_encrypt_axg --bl2sig --input fip/bl2_new.bin \
+				--output fip/bl2.n.bin.sig
+
+$FIPDIR/aml_encrypt_axg --bootmk \
+	--output fip/u-boot.bin \
+	--bl2 fip/bl2.n.bin.sig \
+	--bl30 fip/bl30_new.bin.enc \
+	--bl31 fip/bl31.img.enc \
+	--bl33 fip/bl33.bin.enc --level v3
+}
+
 meson-gxl (){
 AMLBLX="../../files/boot/amlogic-blx"
-export FIPDIR=$PWD/fip
 if [[ "$HOST_CODENAME" =~ ^(bookworm|noble)$ ]]; then ACSTOOL="python3 $FIPDIR/acs_tool.py"; else ACSTOOL="$FIPDIR/acs_tool.pyc"; fi
-mkdir -p fip
-cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
 cp -fr ${AMLBLX}/gxl/{acs_tool.py,aml_encrypt_gxl} fip/
-cp -f u-boot.bin fip/bl33.bin
-
 $FIPDIR/blx_fix.sh \
 	fip/bl30.bin \
 	fip/zero_tmp \
@@ -255,11 +279,6 @@ $FIPDIR/aml_encrypt_gxl --bootmk \
 }
 
 meson-sm1 (){
-export FIPDIR=$PWD/fip
-mkdir -p fip
-cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
-cp -f u-boot.bin fip/bl33.bin
-
 $FIPDIR/blx_fix.sh \
 	fip/bl30.bin \
 	fip/zero_tmp \

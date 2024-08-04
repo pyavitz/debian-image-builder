@@ -22,6 +22,10 @@ if [[ ! -z $RUN_FIP ]] && [[ -f "u-boot.bin" ]]; then
 	fi
 	echo -en "Firmware Image Package ${PNK}[${FIN}${WHT}"${RUN_FIP}"${FIN}${PNK}]${FIN} "
 	echo -e "${PNK}[${FIN}${WHT}"${BOARD_FIP}"${FIN}${PNK}]${FIN}"
+	export FIPDIR=$PWD/fip
+	mkdir -p fip
+	cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
+	cp -f u-boot.bin fip/bl33.bin
 	${RUN_FIP}
 else
 	report_error
