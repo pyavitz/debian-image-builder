@@ -50,6 +50,30 @@ EOF
 		"${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Kconfig"
 fi
 
+# RTL8189FS
+if [[ "$BOARD" == "gateway-gz80x" ]]; then
+	DRIVER_INFO="Realtek 8189FS"
+	DRIVER="rtl8189fs"
+	DRIVER_URL="https://github.com/jwrdegoede/${DRIVER}_linux.git"
+	driver_download
+	rm -fdr ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}
+	mkdir -p ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ${DRIVER}/{core,hal,include,os_dep,platform} ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}
+	cp -fr ${DRIVER}/{Kconfig,Makefile} ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}/
+	echo "obj-\$(CONFIG_RTL8189FS) += rtl8189fs/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Makefile
+	sed -i "s/^CONFIG_RTW_DEBUG.*/CONFIG_RTW_DEBUG = n/" "${KERNEL}-${VERSION}/drivers/net/wireless/realtek/rtl8189fs/Makefile"
+	cat <<EOF > ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}/Kconfig
+config RTL8189FS
+	tristate "Realtek 8189F SDIO support"
+	depends on USB
+	default m
+	help
+	  Help message of RTL8189FS
+EOF
+	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189fs\/Kconfig"' \
+		"${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Kconfig"
+fi
+
 # RTL8821CU
 if [[ "$BOARD" == "bananapim4zero" ]]; then
 	DRIVER_INFO="Realtek 8821CU"
