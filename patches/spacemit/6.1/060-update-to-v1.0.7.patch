@@ -24,7 +24,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/nvmem/spacemit-efuse.c                | 172 ++++++++
  drivers/opp/core.c                            | 113 ++++++
  drivers/pinctrl/pinctrl-single.c              | 124 +++++-
- drivers/pinctrl/pinctrl-single.c.rej          |  14 +
  drivers/soc/spacemit/Kconfig                  |   9 +
  drivers/soc/spacemit/Makefile                 |  11 +-
  .../soc/spacemit/pm_domain/k1x-pm_domain.c    |   7 +
@@ -37,7 +36,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  28 files changed, 1492 insertions(+), 198 deletions(-)
  create mode 100644 drivers/mtd/spi-nor/fmsh.c
  create mode 100644 drivers/nvmem/spacemit-efuse.c
- create mode 100644 drivers/pinctrl/pinctrl-single.c.rej
  create mode 100644 drivers/soc/spacemit/spacemit-socinfo.c
 
 diff --git a/drivers/clk/spacemit/ccu-spacemit-k1x.c b/drivers/clk/spacemit/ccu-spacemit-k1x.c
@@ -1606,26 +1604,6 @@ index 5ea2f16e41e0..d19c5c015fb4 100644
  	{ },
  };
  MODULE_DEVICE_TABLE(of, pcs_of_match);
-diff --git a/drivers/pinctrl/pinctrl-single.c.rej b/drivers/pinctrl/pinctrl-single.c.rej
-new file mode 100644
-index 000000000000..1a57fe6f5f83
---- /dev/null
-+++ b/drivers/pinctrl/pinctrl-single.c.rej
-@@ -0,0 +1,14 @@
-+--- drivers/pinctrl/pinctrl-single.c
-++++ drivers/pinctrl/pinctrl-single.c
-+@@ -2016,6 +2114,11 @@ static int pcs_probe(struct platform_device *pdev)
-+ 
-+ 	dev_info(pcs->dev, "%i pins, size %u\n", pcs->desc.npins, pcs->size);
-+ 
-++#ifdef CONFIG_SOC_SPACEMIT_K1X
-++	dev_pm_set_wake_irq(&pdev->dev, pcs->socdata.irq );
-++	device_init_wakeup(&pdev->dev, true);
-++#endif
-++
-+ 	return pinctrl_enable(pcs->pctl);
-+ 
-+ free:
 diff --git a/drivers/soc/spacemit/Kconfig b/drivers/soc/spacemit/Kconfig
 index c36e986f25bb..c1c3536488d8 100644
 --- a/drivers/soc/spacemit/Kconfig
