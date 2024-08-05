@@ -1,6 +1,6 @@
-From 5f0bb67fb85257a83e59ebdbf57f378b1383e2d8 Mon Sep 17 00:00:00 2001
+From d35a7e7a55532ce7a85f0f48e3629db216b857f8 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Thu, 11 Jul 2024 07:10:18 -0400
+Date: Sun, 4 Aug 2024 21:13:48 -0400
 Subject: [PATCH] update to v1.0.7
 
 Signed-off-by: James Deng <james.deng@spacemit.com>
@@ -24,6 +24,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/nvmem/spacemit-efuse.c                | 172 ++++++++
  drivers/opp/core.c                            | 113 ++++++
  drivers/pinctrl/pinctrl-single.c              | 124 +++++-
+ drivers/pinctrl/pinctrl-single.c.rej          |  14 +
  drivers/soc/spacemit/Kconfig                  |   9 +
  drivers/soc/spacemit/Makefile                 |  11 +-
  .../soc/spacemit/pm_domain/k1x-pm_domain.c    |   7 +
@@ -33,9 +34,10 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/usb/host/ehci-k1x-ci.c                | 188 +++++++--
  include/linux/pm_opp.h                        |   3 +
  sound/soc/codecs/es8326.c                     |  76 +++-
- 31 files changed, 1750 insertions(+), 304 deletions(-)
+ 28 files changed, 1492 insertions(+), 198 deletions(-)
  create mode 100644 drivers/mtd/spi-nor/fmsh.c
  create mode 100644 drivers/nvmem/spacemit-efuse.c
+ create mode 100644 drivers/pinctrl/pinctrl-single.c.rej
  create mode 100644 drivers/soc/spacemit/spacemit-socinfo.c
 
 diff --git a/drivers/clk/spacemit/ccu-spacemit-k1x.c b/drivers/clk/spacemit/ccu-spacemit-k1x.c
@@ -100,7 +102,7 @@ index 391498a28457..ecf5f265e219 100644
  		 __clk_get_name(hw->clk), old_rate, new_rate);
  	return 0;
 diff --git a/drivers/cpufreq/cpufreq-dt.c b/drivers/cpufreq/cpufreq-dt.c
-index 4aec4b2a5225..957d2c2a58af 100644
+index 8f8f1949d66f..c3b3489deff2 100644
 --- a/drivers/cpufreq/cpufreq-dt.c
 +++ b/drivers/cpufreq/cpufreq-dt.c
 @@ -42,6 +42,7 @@ static struct freq_attr *cpufreq_dt_attr[] = {
@@ -962,10 +964,10 @@ index e347b435a038..dfeacc89f407 100644
  obj-$(CONFIG_MTD_SPI_NOR)	+= spi-nor.o
  
 diff --git a/drivers/mtd/spi-nor/core.c b/drivers/mtd/spi-nor/core.c
-index 5dbf52aa0355..23534c5154c5 100644
+index a9000b0ebe69..1e72bf2cbe72 100644
 --- a/drivers/mtd/spi-nor/core.c
 +++ b/drivers/mtd/spi-nor/core.c
-@@ -1633,6 +1633,7 @@ static const struct spi_nor_manufacturer *manufacturers[] = {
+@@ -1634,6 +1634,7 @@ static const struct spi_nor_manufacturer *manufacturers[] = {
  	&spi_nor_winbond,
  	&spi_nor_xilinx,
  	&spi_nor_xmc,
@@ -974,10 +976,10 @@ index 5dbf52aa0355..23534c5154c5 100644
  
  static const struct flash_info *spi_nor_match_id(struct spi_nor *nor,
 diff --git a/drivers/mtd/spi-nor/core.h b/drivers/mtd/spi-nor/core.h
-index 85b0cf254e97..6cae01a11605 100644
+index 290613fd63ae..3ca2bf5fbb67 100644
 --- a/drivers/mtd/spi-nor/core.h
 +++ b/drivers/mtd/spi-nor/core.h
-@@ -627,6 +627,7 @@ extern const struct spi_nor_manufacturer spi_nor_sst;
+@@ -633,6 +633,7 @@ extern const struct spi_nor_manufacturer spi_nor_sst;
  extern const struct spi_nor_manufacturer spi_nor_winbond;
  extern const struct spi_nor_manufacturer spi_nor_xilinx;
  extern const struct spi_nor_manufacturer spi_nor_xmc;
@@ -1224,7 +1226,7 @@ index 000000000000..782dbf02a8ff
 +MODULE_LICENSE("GPL v2");
 +
 diff --git a/drivers/opp/core.c b/drivers/opp/core.c
-index e87567dbe99f..602c24e1303d 100644
+index 71d3e3ba909a..d48a419265cb 100644
 --- a/drivers/opp/core.c
 +++ b/drivers/opp/core.c
 @@ -624,8 +624,13 @@ EXPORT_SYMBOL_GPL(dev_pm_opp_find_freq_exact);
@@ -1253,7 +1255,7 @@ index e87567dbe99f..602c24e1303d 100644
  }
  EXPORT_SYMBOL_GPL(dev_pm_opp_find_freq_ceil);
  
-@@ -2549,6 +2558,110 @@ int dev_pm_opp_set_config(struct device *dev, struct dev_pm_opp_config *config)
+@@ -2552,6 +2561,110 @@ int dev_pm_opp_set_config(struct device *dev, struct dev_pm_opp_config *config)
  }
  EXPORT_SYMBOL_GPL(dev_pm_opp_set_config);
  
@@ -1365,7 +1367,7 @@ index e87567dbe99f..602c24e1303d 100644
   * dev_pm_opp_clear_config() - Releases resources blocked for OPP configuration.
   * @opp_table: OPP table returned from dev_pm_opp_set_config().
 diff --git a/drivers/pinctrl/pinctrl-single.c b/drivers/pinctrl/pinctrl-single.c
-index d5d4fa84738e..91d02fad612c 100644
+index 5ea2f16e41e0..d19c5c015fb4 100644
 --- a/drivers/pinctrl/pinctrl-single.c
 +++ b/drivers/pinctrl/pinctrl-single.c
 @@ -29,6 +29,11 @@
@@ -1403,7 +1405,7 @@ index d5d4fa84738e..91d02fad612c 100644
  	void *saved_vals;
  	unsigned size;
  	struct device *dev;
-@@ -1431,8 +1445,11 @@ static inline void pcs_irq_set(struct pcs_soc_data *pcs_soc,
+@@ -1430,8 +1444,11 @@ static inline void pcs_irq_set(struct pcs_soc_data *pcs_soc,
  static void pcs_irq_mask(struct irq_data *d)
  {
  	struct pcs_soc_data *pcs_soc = irq_data_get_irq_chip_data(d);
@@ -1416,7 +1418,7 @@ index d5d4fa84738e..91d02fad612c 100644
  }
  
  /**
-@@ -1443,7 +1460,11 @@ static void pcs_irq_unmask(struct irq_data *d)
+@@ -1442,7 +1459,11 @@ static void pcs_irq_unmask(struct irq_data *d)
  {
  	struct pcs_soc_data *pcs_soc = irq_data_get_irq_chip_data(d);
  
@@ -1428,7 +1430,7 @@ index d5d4fa84738e..91d02fad612c 100644
  }
  
  /**
-@@ -1484,6 +1505,7 @@ static int pcs_irq_handle(struct pcs_soc_data *pcs_soc)
+@@ -1483,6 +1504,7 @@ static int pcs_irq_handle(struct pcs_soc_data *pcs_soc)
  		unsigned mask;
  
  		pcswi = list_entry(pos, struct pcs_interrupt, node);
@@ -1436,7 +1438,7 @@ index d5d4fa84738e..91d02fad612c 100644
  		raw_spin_lock(&pcs->lock);
  		mask = pcs->read(pcswi->reg);
  		raw_spin_unlock(&pcs->lock);
-@@ -1492,6 +1514,21 @@ static int pcs_irq_handle(struct pcs_soc_data *pcs_soc)
+@@ -1491,6 +1513,21 @@ static int pcs_irq_handle(struct pcs_soc_data *pcs_soc)
  						  pcswi->hwirq);
  			count++;
  		}
@@ -1458,7 +1460,7 @@ index d5d4fa84738e..91d02fad612c 100644
  	}
  
  	return count;
-@@ -1592,7 +1629,6 @@ static int pcs_irq_init_chained_handler(struct pcs_device *pcs,
+@@ -1591,7 +1628,6 @@ static int pcs_irq_init_chained_handler(struct pcs_device *pcs,
  
  	if (PCS_QUIRK_HAS_SHARED_IRQ) {
  		int res;
@@ -1466,7 +1468,7 @@ index d5d4fa84738e..91d02fad612c 100644
  		res = request_irq(pcs_soc->irq, pcs_irq_handler,
  				  IRQF_SHARED | IRQF_NO_SUSPEND |
  				  IRQF_NO_THREAD,
-@@ -1775,6 +1811,11 @@ static int pcs_quirk_missing_pinctrl_cells(struct pcs_device *pcs,
+@@ -1774,6 +1810,11 @@ static int pcs_quirk_missing_pinctrl_cells(struct pcs_device *pcs,
  	return error;
  }
  
@@ -1478,7 +1480,7 @@ index d5d4fa84738e..91d02fad612c 100644
  static int pcs_probe(struct platform_device *pdev)
  {
  	struct device_node *np = pdev->dev.of_node;
-@@ -1783,11 +1824,44 @@ static int pcs_probe(struct platform_device *pdev)
+@@ -1782,11 +1823,44 @@ static int pcs_probe(struct platform_device *pdev)
  	struct pcs_device *pcs;
  	const struct pcs_soc_data *soc;
  	int ret;
@@ -1523,7 +1525,7 @@ index d5d4fa84738e..91d02fad612c 100644
  	pcs = devm_kzalloc(&pdev->dev, sizeof(*pcs), GFP_KERNEL);
  	if (!pcs)
  		return -ENOMEM;
-@@ -1855,6 +1929,30 @@ static int pcs_probe(struct platform_device *pdev)
+@@ -1854,6 +1928,30 @@ static int pcs_probe(struct platform_device *pdev)
  		return -ENODEV;
  	}
  
@@ -1554,7 +1556,7 @@ index d5d4fa84738e..91d02fad612c 100644
  	platform_set_drvdata(pdev, pcs);
  
  	switch (pcs->width) {
-@@ -1918,6 +2016,11 @@ static int pcs_probe(struct platform_device *pdev)
+@@ -1917,6 +2015,11 @@ static int pcs_probe(struct platform_device *pdev)
  
  	dev_info(pcs->dev, "%i pins, size %u\n", pcs->desc.npins, pcs->size);
  
@@ -1563,10 +1565,10 @@ index d5d4fa84738e..91d02fad612c 100644
 +	device_init_wakeup(&pdev->dev, true);
 +#endif
 +
- 	return pinctrl_enable(pcs->pctl);
+ 	if (pinctrl_enable(pcs->pctl))
+ 		goto free;
  
- free:
-@@ -1935,6 +2038,12 @@ static int pcs_remove(struct platform_device *pdev)
+@@ -1936,6 +2039,12 @@ static int pcs_remove(struct platform_device *pdev)
  
  	pcs_free_resources(pcs);
  
@@ -1579,7 +1581,7 @@ index d5d4fa84738e..91d02fad612c 100644
  	return 0;
  }
  
-@@ -1955,6 +2064,14 @@ static const struct pcs_soc_data pinctrl_single_am437x = {
+@@ -1956,6 +2065,14 @@ static const struct pcs_soc_data pinctrl_single_am437x = {
  	.irq_status_mask = (1 << 30),   /* OMAP_WAKEUP_EVENT */
  };
  
@@ -1594,7 +1596,7 @@ index d5d4fa84738e..91d02fad612c 100644
  static const struct pcs_soc_data pinctrl_single = {
  };
  
-@@ -1970,6 +2087,9 @@ static const struct of_device_id pcs_of_match[] = {
+@@ -1971,6 +2088,9 @@ static const struct of_device_id pcs_of_match[] = {
  	{ .compatible = "ti,am437-padconf", .data = &pinctrl_single_am437x },
  	{ .compatible = "pinctrl-single", .data = &pinctrl_single },
  	{ .compatible = "pinconf-single", .data = &pinconf_single },
@@ -1604,6 +1606,26 @@ index d5d4fa84738e..91d02fad612c 100644
  	{ },
  };
  MODULE_DEVICE_TABLE(of, pcs_of_match);
+diff --git a/drivers/pinctrl/pinctrl-single.c.rej b/drivers/pinctrl/pinctrl-single.c.rej
+new file mode 100644
+index 000000000000..1a57fe6f5f83
+--- /dev/null
++++ b/drivers/pinctrl/pinctrl-single.c.rej
+@@ -0,0 +1,14 @@
++--- drivers/pinctrl/pinctrl-single.c
+++++ drivers/pinctrl/pinctrl-single.c
++@@ -2016,6 +2114,11 @@ static int pcs_probe(struct platform_device *pdev)
++ 
++ 	dev_info(pcs->dev, "%i pins, size %u\n", pcs->desc.npins, pcs->size);
++ 
+++#ifdef CONFIG_SOC_SPACEMIT_K1X
+++	dev_pm_set_wake_irq(&pdev->dev, pcs->socdata.irq );
+++	device_init_wakeup(&pdev->dev, true);
+++#endif
+++
++ 	return pinctrl_enable(pcs->pctl);
++ 
++ free:
 diff --git a/drivers/soc/spacemit/Kconfig b/drivers/soc/spacemit/Kconfig
 index c36e986f25bb..c1c3536488d8 100644
 --- a/drivers/soc/spacemit/Kconfig
