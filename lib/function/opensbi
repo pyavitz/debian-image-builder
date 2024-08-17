@@ -1,30 +1,30 @@
 #!/bin/bash
 
 opensbi_firmware (){
-if [[ `wget -S --spider https://raw.githubusercontent.com/riscv-software-src/opensbi/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	if [[ -d "opensbi" ]] && [[ -d "opensbi.backup" ]]; then
-		echo -en "${WHT}Opensbi v${OPENSBI_TAG}${FIN}"
+if [[ `wget -S --spider ${OPENSBI_URL} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -d "opensbi-${OPENSBI_TAG}" ]] && [[ -d "opensbi-${OPENSBI_TAG}.backup" ]]; then
+		echo -en "${WHT}Opensbi ${OPENSBI_TAG}${FIN}"
 		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
-		rm -fdr opensbi
+		rm -fdr opensbi-${OPENSBI_TAG}
 		echo -en " ${WHT}...${FIN}"
-		mv -f opensbi.backup opensbi
-		cd opensbi
-		git checkout v${OPENSBI_TAG} &> /dev/null
+		mv -f opensbi-${OPENSBI_TAG}.backup opensbi-${OPENSBI_TAG}
+		cd opensbi-${OPENSBI_TAG}
+		if [[ "$VERBOSE" == "1" ]]; then git checkout ${OPENSBI_TAG}; git pull -q; else git checkout ${OPENSBI_TAG} &> /dev/null; git pull -q; fi
 		make clean
 		cd ..
-		cp -r opensbi opensbi.backup
+		cp -r opensbi-${OPENSBI_TAG} opensbi-${OPENSBI_TAG}.backup
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
-		if [[ -d "opensbi" ]]; then rm -fdr opensbi; fi
+		if [[ -d "opensbi-${OPENSBI_TAG}" ]]; then rm -fdr opensbi-${OPENSBI_TAG}; fi
 		echo -en "${WHT}Opensbi v${OPENSBI_TAG}${FIN}"
 		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
-		git clone -q -c advice.detachedHead=false ${OPENSBI_URL} -b v${OPENSBI_TAG}
-		if [[ -d "opensbi" ]]; then
-			cd opensbi
+		git clone -q -c advice.detachedHead=false ${OPENSBI_URL} -b ${OPENSBI_TAG} opensbi-${OPENSBI_TAG}
+		if [[ -d "opensbi-${OPENSBI_TAG}" ]]; then
+			cd opensbi-${OPENSBI_TAG}
 			make clean
 			cd ..
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
-			cp -r opensbi opensbi.backup
+			cp -r opensbi-${OPENSBI_TAG} opensbi-${OPENSBI_TAG}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
 			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
@@ -32,7 +32,7 @@ if [[ `wget -S --spider https://raw.githubusercontent.com/riscv-software-src/ope
 		fi
 	fi
 fi
-cd opensbi
+cd opensbi-${OPENSBI_TAG}
 opensbi_patching
 if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
 ubuild "PLATFORM=${OPENSBI_PLATFORM} PLATFORM_DEFCONFIG=${OPENSBI_DEFCONFIG}"
