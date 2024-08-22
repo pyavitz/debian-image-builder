@@ -61,6 +61,15 @@ if [[ ""$FAMILY_EXT" == "ac2xx"" ]]; then
 fi
 }
 
+amlogic_extra_wireless (){
+if [[ "$BOARD" == "gateway-gz80x" ]]; then
+	if [[ `ls ../../${WIRELESSPATCHES}/rtl8189fs/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${WIRELESSPATCHES}/rtl8189fs" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${WIRELESSPATCHES}/rtl8189fs/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+}
+
 # STAGE1
 flash_uboot (){
 if [ $EMMC -eq 1 ]; then
