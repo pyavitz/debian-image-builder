@@ -1,5 +1,5 @@
 #!/bin/bash
-# Flashes vendor u-boot so you can enter recovery mode.
+# Flash android recovery
 
 if [ "$USER" != "root" ]; then
         echo "Please run this as root or with sudo privileges."
@@ -15,19 +15,19 @@ fi
 if [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; then
 	V_UBOOT="/usr/lib/u-boot/vendor-u-boot.bin"
 else
-	echo "No vendor u-boot binary available."
-	exit 0
+	echo "No recovery binary available."
+	exit 1
 fi
 if [[ `lsblk | grep boot0` ]]; then
 	MMC=`ls /dev/mmcblk*boot0 | sed 's/boot0//g'`
 else
 	echo "Did not detect an eMMC."
-	exit 0
+	exit 1
 fi
 
 if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ -f "/usr/lib/u-boot/vendor-u-boot.bin" ]]; then
 	echo -e ""
-	echo -e "Flashing Vendor U-Boot ..."
+	echo -e "Flashing recovery binary ..."
 	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=1 count=442
 	dd if="${V_UBOOT}" of="${MMC}" conv=fsync bs=512 skip=1 seek=1
 	ROOTFS=`findmnt -v -n -o SOURCE /`
