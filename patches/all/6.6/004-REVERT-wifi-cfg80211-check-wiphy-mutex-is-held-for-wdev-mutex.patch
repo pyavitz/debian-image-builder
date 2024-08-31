@@ -1,0 +1,50 @@
+From 7520e7c47dc01de60fe9e8fe9cfb0b2367e2764c Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sat, 31 Aug 2024 11:13:23 -0400
+Subject: [PATCH] REVERT: wifi: cfg80211: check wiphy mutex is held for wdev
+ mutex
+
+This might seem pretty pointless rather than changing the locking
+immediately, but it seems safer to run for a while with checks and
+the old locking scheme, and then remove the wdev lock later.
+
+https://patchwork.kernel.org/project/linux-wireless/patch/20230828135928.cb773b6c358c.I31b42971dffe8e77248cef445c6563b97f9138b0@changeid/
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ net/wireless/core.h | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index c955be6c6daa..f0a3a2317638 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -228,7 +228,6 @@ void cfg80211_register_wdev(struct cfg80211_registered_device *rdev,
+ static inline void wdev_lock(struct wireless_dev *wdev)
+ 	__acquires(wdev)
+ {
+-	lockdep_assert_held(&wdev->wiphy->mtx);
+ 	mutex_lock(&wdev->mtx);
+ 	__acquire(wdev->mtx);
+ }
+@@ -236,16 +235,11 @@ static inline void wdev_lock(struct wireless_dev *wdev)
+ static inline void wdev_unlock(struct wireless_dev *wdev)
+ 	__releases(wdev)
+ {
+-	lockdep_assert_held(&wdev->wiphy->mtx);
+ 	__release(wdev->mtx);
+ 	mutex_unlock(&wdev->mtx);
+ }
+ 
+-static inline void ASSERT_WDEV_LOCK(struct wireless_dev *wdev)
+-{
+-	lockdep_assert_held(&wdev->wiphy->mtx);
+-	lockdep_assert_held(&wdev->mtx);
+-}
++#define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
+ 
+ static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
+ {
+-- 
+2.39.2
+
