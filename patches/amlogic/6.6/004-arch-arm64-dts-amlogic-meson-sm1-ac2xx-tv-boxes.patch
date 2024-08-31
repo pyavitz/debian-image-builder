@@ -1,6 +1,6 @@
-From ab2e3b0e837fb917f2b6f305235a6af73cdca3c9 Mon Sep 17 00:00:00 2001
+From b9043d48923a85ce16689fc481bc9f03828a7a28 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 31 Aug 2024 10:26:35 -0400
+Date: Sat, 31 Aug 2024 15:23:01 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
 
 H96-MAX X3
@@ -10,14 +10,14 @@ Added support: spdif jack i2c1 openvfd jl2xx1
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  48 +++++
- .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 188 +++++++++++++++++-
- .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 155 ++++++++++++++-
- .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 153 +++++++++++++-
- 4 files changed, 525 insertions(+), 19 deletions(-)
+ .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  36 ++++
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 202 +++++++++++++++++-
+ .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 169 ++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 167 ++++++++++++++-
+ 4 files changed, 555 insertions(+), 19 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
-index 46a34731f7e2..38a5662eab62 100644
+index 46a34731f7e2..9ef6e7b0d956 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 @@ -2,6 +2,7 @@
@@ -28,13 +28,14 @@ index 46a34731f7e2..38a5662eab62 100644
   *
   * AC200/AC202 = S905D3
   * AC213/AC214 = S905X3
-@@ -80,6 +81,20 @@ emmc_1v8: regulator-emmc_1v8 {
+@@ -80,6 +81,21 @@ emmc_1v8: regulator-emmc_1v8 {
  		regulator-always-on;
  	};
  
 +	openvfd: openvfd {
 +		compatible = "open,vfd";
 +		dev_name = "openvfd";
++		status = "disabled";
 + 	};
 +
 +	vddao_1v8: regulator-vddao_1v8 {
@@ -49,7 +50,7 @@ index 46a34731f7e2..38a5662eab62 100644
  	vddao_3v3: regulator-vddao_3v3 {
  		compatible = "regulator-fixed";
  		regulator-name = "VDDAO_3V3";
-@@ -114,6 +129,15 @@ vddio_ao1v8: regulator-vddio_ao1v8 {
+@@ -114,6 +130,15 @@ vddio_ao1v8: regulator-vddio_ao1v8 {
  		regulator-always-on;
  	};
  
@@ -65,7 +66,7 @@ index 46a34731f7e2..38a5662eab62 100644
  	sdio_pwrseq: sdio-pwrseq {
  		compatible = "mmc-pwrseq-simple";
  		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
-@@ -121,6 +145,12 @@ sdio_pwrseq: sdio-pwrseq {
+@@ -121,6 +146,13 @@ sdio_pwrseq: sdio-pwrseq {
  		clock-names = "ext_clock";
  	};
  
@@ -73,12 +74,13 @@ index 46a34731f7e2..38a5662eab62 100644
 +		#sound-dai-cells = <0>;
 +		compatible = "linux,spdif-dit";
 +		sound-name-prefix = "DIT";
++		status = "disabled";
 +	};
 +
  	wifi32k: wifi32k {
  		compatible = "pwm-clock";
  		#clock-cells = <0>;
-@@ -195,6 +225,10 @@ &ir {
+@@ -195,6 +227,10 @@ &ir {
  	pinctrl-names = "default";
  };
  
@@ -89,29 +91,8 @@ index 46a34731f7e2..38a5662eab62 100644
  &pwm_AO_ab {
  	status = "okay";
  	pinctrl-0 = <&pwm_ao_a_pins>;
-@@ -288,6 +322,20 @@ &sd_emmc_c {
- 	vqmmc-supply = <&emmc_1v8>;
- };
- 
-+&spdif_dit {
-+	status = "okay";
-+};
-+
-+&spdifout_a {
-+	pinctrl-0 = <&spdif_out_h_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&openvfd {
-+	status = "okay";
-+};
-+
- &uart_AO {
- 	status = "okay";
- 	pinctrl-0 = <&uart_ao_a_pins>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
-index e6e9410d40cb..e9a176423991 100644
+index e6e9410d40cb..a254b502b2b6 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 @@ -2,25 +2,66 @@
@@ -317,12 +298,16 @@ index e6e9410d40cb..e9a176423991 100644
  };
  
  &ext_mdio {
-@@ -115,18 +237,68 @@ &frddr_c {
+@@ -115,18 +237,82 @@ &frddr_c {
  	status = "okay";
  };
  
 +&ir {
 +	linux,rc-map-name = "rc-x96max";
++};
++
++&openvfd {
++	status = "okay";
 +};
 +
 +&sd_emmc_a {
@@ -333,6 +318,16 @@ index e6e9410d40cb..e9a176423991 100644
 +		reg = <1>;
 +		compatible = "brcm,bcm4335-fmac";
 +	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
 +};
 +
  &tdmif_b {
@@ -386,7 +381,7 @@ index e6e9410d40cb..e9a176423991 100644
  &uart_A {
  	status = "okay";
  
-@@ -135,7 +307,7 @@ &uart_A {
+@@ -135,7 +321,7 @@ &uart_A {
  	uart-has-rtscts;
  
  	bluetooth {
@@ -396,7 +391,7 @@ index e6e9410d40cb..e9a176423991 100644
  		max-speed = <2000000>;
  		clocks = <&wifi32k>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-index fc9b961133cd..56cb5a711181 100644
+index fc9b961133cd..9dfe6616fab4 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 @@ -7,20 +7,37 @@
@@ -545,15 +540,29 @@ index fc9b961133cd..56cb5a711181 100644
  	rx-internal-delay-ps = <800>;
  };
  
-@@ -119,14 +196,80 @@ &ir {
+@@ -119,14 +196,94 @@ &ir {
  	linux,rc-map-name = "rc-x96max";
  };
  
++&openvfd {
++	status = "okay";
++};
++
 +&sd_emmc_a {
 +	/delete-property/ sd-uhs-sdr104;
 +	rtl8822cs: wifi@1 {
 +		reg = <1>;
 +	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
 +};
 +
  &tdmif_b {
@@ -627,7 +636,7 @@ index fc9b961133cd..56cb5a711181 100644
 +	};
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-index 9ea969255b4f..c78b95cbae8a 100644
+index 9ea969255b4f..76e20faa1459 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 @@ -2,25 +2,43 @@
@@ -770,15 +779,29 @@ index 9ea969255b4f..c78b95cbae8a 100644
  &arb {
  	status = "okay";
  };
-@@ -98,14 +175,80 @@ &ir {
+@@ -98,14 +175,94 @@ &ir {
  	linux,rc-map-name = "rc-beelink-gs1";
  };
  
++&openvfd {
++	status = "okay";
++};
++
 +&sd_emmc_a {
 +	/delete-property/ sd-uhs-sdr104;
 +	rtl8822cs: wifi@1 {
 +		reg = <1>;
 +	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
 +};
 +
  &tdmif_b {
