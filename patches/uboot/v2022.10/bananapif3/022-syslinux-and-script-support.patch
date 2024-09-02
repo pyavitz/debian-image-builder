@@ -1,6 +1,6 @@
-From 0096b3b67a2ad1a88ba0d01ba44d712687d963d3 Mon Sep 17 00:00:00 2001
+From 33eab5426f41f6766bb819860bd1ad6558eec660 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Thu, 29 Aug 2024 16:23:42 -0400
+Date: Mon, 2 Sep 2024 14:43:26 -0400
 Subject: [PATCH] Syslinux and script support
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
@@ -12,7 +12,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  4 files changed, 43 insertions(+), 187 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-index 6ee7612d..acb1ef7a 100644
+index 359df590..acb1ef7a 100644
 --- a/board/spacemit/k1-x/k1-x.env
 +++ b/board/spacemit/k1-x/k1-x.env
 @@ -8,168 +8,24 @@ loglevel=8
@@ -123,7 +123,7 @@ index 6ee7612d..acb1ef7a 100644
 -            fi;
 -
 -// Nor+ssd boot combo
--set_nor_args=setenv bootargs "${bootargs}" root=${blk_root} rootfstype=ext4
+-set_nor_args=setenv bootargs "${bootargs}" mtdparts=${mtdparts} root=${blk_root} rootfstype=ext4
 -nor_boot=echo "Try to boot from ${bootfs_devname}${boot_devnum} ..."; \
 -         run commonargs; \
 -         run set_nor_root; \
@@ -205,12 +205,12 @@ index 6ee7612d..acb1ef7a 100644
 +
 +bootcmd=echo "Loading ..."; run autoboot
 diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
-index 70141121..ada5f1fc 100644
+index b6f06fbb..2d54f0c4 100644
 --- a/board/spacemit/k1-x/k1x.c
 +++ b/board/spacemit/k1-x/k1x.c
-@@ -330,8 +330,8 @@ void _load_env_from_blk(struct blk_desc *dev_desc, const char *dev_name, int dev
- #endif
- 	}
+@@ -324,8 +324,8 @@ void _load_env_from_blk(struct blk_desc *dev_desc, const char *dev_name, int dev
+ 	if (part > MAX_SEARCH_PARTITIONS)
+ 		return;
  
 -	env_set("bootfs_part", simple_itoa(part));
 -	env_set("bootfs_devname", dev_name);
@@ -219,7 +219,7 @@ index 70141121..ada5f1fc 100644
  
  	/*load env.txt and import to uboot*/
  	memset((void *)CONFIG_SPL_LOAD_FIT_ADDRESS, 0, CONFIG_ENV_SIZE);
-@@ -510,7 +510,7 @@ void setenv_boot_mode(void)
+@@ -502,7 +502,7 @@ void setenv_boot_mode(void)
  	u32 boot_mode = get_boot_mode();
  	switch (boot_mode) {
  	case BOOT_MODE_NAND:
@@ -228,7 +228,7 @@ index 70141121..ada5f1fc 100644
  		break;
  	case BOOT_MODE_NOR:
  		char *blk_name;
-@@ -521,23 +521,23 @@ void setenv_boot_mode(void)
+@@ -513,23 +513,23 @@ void setenv_boot_mode(void)
  			return;
  		}
  
@@ -260,11 +260,11 @@ index 70141121..ada5f1fc 100644
  	}
  }
 diff --git a/configs/k1_defconfig b/configs/k1_defconfig
-index bbfd65b5..bedb12db 100644
+index 568400e5..f6202596 100644
 --- a/configs/k1_defconfig
 +++ b/configs/k1_defconfig
-@@ -43,6 +43,8 @@ CONFIG_AUTOBOOT_STOP_STR=" "
- CONFIG_AUTOBOOT_KEYED_CTRLC=y
+@@ -39,6 +39,8 @@ CONFIG_AUTOBOOT_KEYED=y
+ CONFIG_AUTOBOOT_STOP_STR="s"
  CONFIG_USE_BOOTCOMMAND=y
  CONFIG_BOOTCOMMAND="bootm 0x11000000"
 +CONFIG_USE_PREBOOT=y
@@ -272,10 +272,10 @@ index bbfd65b5..bedb12db 100644
  CONFIG_LOGLEVEL=7
  CONFIG_SPL_LOGLEVEL=1
  # CONFIG_SYS_DEVICE_NULLDEV is not set
-@@ -278,3 +280,4 @@ CONFIG_PRINT_TIMESTAMP=y
+@@ -275,3 +277,4 @@ CONFIG_PRINT_TIMESTAMP=y
+ # CONFIG_SPL_SHA1 is not set
  # CONFIG_SPL_SHA256 is not set
  CONFIG_ZSTD=y
- CONFIG_FDT_FIXUP_PARTITIONS=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
 diff --git a/include/configs/k1-x.h b/include/configs/k1-x.h
 index f1f4be78..34ad156e 100644
