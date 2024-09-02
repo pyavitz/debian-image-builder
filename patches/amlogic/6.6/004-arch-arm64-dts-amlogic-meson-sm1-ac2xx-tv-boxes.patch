@@ -877,3 +877,37 @@ index 9ea969255b4f..76e20faa1459 100644
 -- 
 2.39.2
 
+From c1c03525e1ecc0e4cc2af55d74b5e144378aac5f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Mon, 2 Sep 2024 07:47:35 -0400
+Subject: [PATCH] meson-sm1-x96-air-gbit: ethmac fixup
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
+index 9dfe6616fab4..c6b0637f9833 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
+@@ -158,10 +158,15 @@ &ethmac {
+ 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
+ 	pinctrl-names = "default";
+ 	phy-mode = "rgmii";
++	amlogic,tx-delay-ns = <2>;
+ 	phy-handle = <&external_phy>;
+ 
++	snps,aal;
++	snps,rxpbl = <1000>;
++	snps,txpbl = <1000>;
++
++	rx-fifo-depth = <4096>;
+ 	tx-fifo-depth = <4096>;
+-	rx-internal-delay-ps = <800>;
+ };
+ 
+ &ext_mdio {
+-- 
+2.39.2
+
