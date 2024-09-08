@@ -1,6 +1,6 @@
-From b9043d48923a85ce16689fc481bc9f03828a7a28 Mon Sep 17 00:00:00 2001
+From f3770c4f0108b06563c9dbdd71465276f4988ce2 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 31 Aug 2024 15:23:01 -0400
+Date: Sun, 8 Sep 2024 08:01:35 -0400
 Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
 
 H96-MAX X3
@@ -10,12 +10,25 @@ Added support: spdif jack i2c1 openvfd jl2xx1
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  36 ++++
- .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 202 +++++++++++++++++-
- .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 169 ++++++++++++++-
- .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 167 ++++++++++++++-
- 4 files changed, 555 insertions(+), 19 deletions(-)
+ arch/arm64/boot/dts/amlogic/Makefile          |   1 +
+ .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  36 +++
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 202 ++++++++++++-
+ .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 176 +++++++++++-
+ .../boot/dts/amlogic/meson-sm1-x96-air-q2.dts | 265 ++++++++++++++++++
+ .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 166 ++++++++++-
+ 6 files changed, 826 insertions(+), 20 deletions(-)
+ create mode 100644 arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-q2.dts
 
+diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+index 8b6f57a94863..e19054a406fc 100644
+--- a/arch/arm64/boot/dts/amlogic/Makefile
++++ b/arch/arm64/boot/dts/amlogic/Makefile
+@@ -76,4 +76,5 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-c4.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
++dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-q2.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 index 46a34731f7e2..9ef6e7b0d956 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
@@ -391,254 +404,9 @@ index e6e9410d40cb..a254b502b2b6 100644
  		max-speed = <2000000>;
  		clocks = <&wifi32k>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-index fc9b961133cd..9dfe6616fab4 100644
+index fc9b961133cd..7f76a6d2f5b1 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-@@ -7,20 +7,37 @@
- /dts-v1/;
- 
- #include "meson-sm1-ac2xx.dtsi"
-+#include <dt-bindings/sound/meson-g12a-toacodec.h>
- #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
- 
- / {
- 	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
- 	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
- 
-+	aliases {
-+		serial2 = &uart_A;
-+		ethernet0 = &ethmac;
-+		rtc1 = &vrtc;
-+	};
-+
- 	sound {
- 		compatible = "amlogic,axg-sound-card";
- 		model = "X96-AIR";
--		audio-aux-devs = <&tdmout_b>;
-+		audio-widgets = "Line", "Lineout";
-+		audio-aux-devs = <&tdmout_b>, <&tdmout_c>;
- 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
- 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
- 				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
--				"TDM_B Playback", "TDMOUT_B OUT";
-+				"TDM_B Playback", "TDMOUT_B OUT",
-+				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
-+				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
-+				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
-+				"TDM_C Playback", "TDMOUT_C OUT",
-+				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
-+				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
-+				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
-+				"Lineout", "ACODEC LOLP",
-+				"Lineout", "ACODEC LORP";
- 
- 		assigned-clocks = <&clkc CLKID_MPLL2>,
- 				  <&clkc CLKID_MPLL0>,
-@@ -42,8 +59,20 @@ dai-link-2 {
- 			sound-dai = <&frddr_c>;
- 		};
- 
--		/* 8ch hdmi interface */
- 		dai-link-3 {
-+			sound-dai = <&toddr_a>;
-+		};
-+
-+		dai-link-4 {
-+			sound-dai = <&toddr_b>;
-+		};
-+
-+		dai-link-5 {
-+			sound-dai = <&toddr_c>;
-+		};
-+
-+		/* 8ch hdmi interface */
-+		dai-link-6 {
- 			sound-dai = <&tdmif_b>;
- 			dai-format = "i2s";
- 			dai-tdm-slot-tx-mask-0 = <1 1>;
-@@ -52,22 +81,69 @@ dai-link-3 {
- 			dai-tdm-slot-tx-mask-3 = <1 1>;
- 			mclk-fs = <256>;
- 
--			codec {
-+			codec-0 {
- 				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
- 			};
-+
-+			codec-1 {
-+				sound-dai = <&toacodec TOACODEC_IN_B>;
-+			};
- 		};
- 
-+               /* i2s jack output interface */
-+               dai-link-7 {
-+                       sound-dai = <&tdmif_c>;
-+                       dai-format = "i2s";
-+                       dai-tdm-slot-tx-mask-0 = <1 1>;
-+                       mclk-fs = <256>;
-+
-+                       codec-0 {
-+                               sound-dai = <&tohdmitx TOHDMITX_I2S_IN_C>;
-+                       };
-+
-+                       codec-1 {
-+                               sound-dai = <&toacodec TOACODEC_IN_C>;
-+                       };
-+               };
-+
- 		/* hdmi glue */
--		dai-link-4 {
-+		dai-link-8 {
- 			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
- 
- 			codec {
- 				sound-dai = <&hdmi_tx>;
- 			};
- 		};
-+
-+		/* acodec glue */
-+		dai-link-9 {
-+			sound-dai = <&toacodec TOACODEC_OUT>;
-+
-+			codec {
-+				sound-dai = <&acodec>;
-+			};
-+		};
-+
-+		/* spdif hdmi or toslink interface */
-+		dai-link-10 {
-+			sound-dai = <&spdifout_a>;
-+
-+			codec-0 {
-+				sound-dai = <&spdif_dit>;
-+			};
-+
-+			codec-1 {
-+				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
-+			};
-+		};
- 	};
- };
- 
-+&acodec {
-+	AVDD-supply = <&vddao_1v8>;
-+	status = "okay";
-+};
-+
- &arb {
- 	status = "okay";
- };
-@@ -81,9 +157,10 @@ &ethmac {
- 
- 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
- 	pinctrl-names = "default";
--	phy-mode = "rgmii-txid";
-+	phy-mode = "rgmii";
- 	phy-handle = <&external_phy>;
- 
-+	tx-fifo-depth = <4096>;
- 	rx-internal-delay-ps = <800>;
- };
- 
-@@ -119,14 +196,94 @@ &ir {
- 	linux,rc-map-name = "rc-x96max";
- };
- 
-+&openvfd {
-+	status = "okay";
-+};
-+
-+&sd_emmc_a {
-+	/delete-property/ sd-uhs-sdr104;
-+	rtl8822cs: wifi@1 {
-+		reg = <1>;
-+	};
-+};
-+
-+&spdif_dit {
-+	status = "okay";
-+};
-+
-+&spdifout_a {
-+	pinctrl-0 = <&spdif_out_h_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
- &tdmif_b {
- 	status = "okay";
- };
- 
-+&tdmif_c {
-+       status = "okay";
-+};
-+
-+&tdmin_a {
-+	status = "okay";
-+};
-+
-+&tdmin_b {
-+	status = "okay";
-+};
-+
-+&tdmin_c {
-+	status = "okay";
-+};
-+
- &tdmout_b {
- 	status = "okay";
- };
- 
-+&tdmout_c {
-+	status = "okay";
-+};
-+
-+&toacodec {
-+       status = "okay";
-+};
-+
- &tohdmitx {
- 	status = "okay";
- };
-+
-+&toddr_a {
-+	status = "okay";
-+};
-+
-+&toddr_b {
-+	status = "okay";
-+};
-+
-+&toddr_c {
-+	status = "okay";
-+};
-+
-+&i2c1 {
-+	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
-+	pinctrl-names = "default";
-+};
-+
-+&uart_A {
-+	status = "okay";
-+	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
-+	pinctrl-names = "default";
-+	uart-has-rtscts;
-+
-+	bluetooth {
-+		compatible = "realtek,rtl8822cs-bt";
-+		max-speed = <1500000>;
-+		clocks = <&wifi32k>;
-+		clock-names = "lpo";
-+		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
-+		reset-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
-+		vbat-supply = <&vddao_3v3>;
-+		vddio-supply = <&vddio_ao1v8>;
-+	};
-+};
-diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-index 9ea969255b4f..76e20faa1459 100644
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 @@ -2,25 +2,43 @@
  /*
   * Copyright (c) 2019 BayLibre SAS. All rights reserved.
@@ -653,7 +421,7 @@ index 9ea969255b4f..76e20faa1459 100644
  #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
  
  / {
- 	compatible = "amediatech,x96-air", "amlogic,sm1";
+ 	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
  	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
  
 +	aliases {
@@ -779,8 +547,27 @@ index 9ea969255b4f..76e20faa1459 100644
  &arb {
  	status = "okay";
  };
-@@ -98,14 +175,94 @@ &ir {
- 	linux,rc-map-name = "rc-beelink-gs1";
+@@ -81,10 +158,16 @@ &ethmac {
+ 
+ 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
+ 	pinctrl-names = "default";
+-	phy-mode = "rgmii-txid";
++	phy-mode = "rgmii";
++	amlogic,tx-delay-ns = <2>;
+ 	phy-handle = <&external_phy>;
+ 
+-	rx-internal-delay-ps = <800>;
++	snps,aal;
++	snps,rxpbl = <1000>;
++	snps,txpbl = <1000>;
++
++	rx-fifo-depth = <4096>;
++	tx-fifo-depth = <4096>;
+ };
+ 
+ &ext_mdio {
+@@ -119,14 +202,93 @@ &ir {
+ 	linux,rc-map-name = "rc-x96max";
  };
  
 +&openvfd {
@@ -788,7 +575,6 @@ index 9ea969255b4f..76e20faa1459 100644
 +};
 +
 +&sd_emmc_a {
-+	/delete-property/ sd-uhs-sdr104;
 +	rtl8822cs: wifi@1 {
 +		reg = <1>;
 +	};
@@ -874,71 +660,9 @@ index 9ea969255b4f..76e20faa1459 100644
 +		vddio-supply = <&vddio_ao1v8>;
 +	};
 +};
--- 
-2.39.2
-
-From c1c03525e1ecc0e4cc2af55d74b5e144378aac5f Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 2 Sep 2024 07:47:35 -0400
-Subject: [PATCH] meson-sm1-x96-air-gbit: ethmac fixup
-
-Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
----
- arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-index 9dfe6616fab4..c6b0637f9833 100644
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-@@ -158,10 +158,15 @@ &ethmac {
- 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
- 	pinctrl-names = "default";
- 	phy-mode = "rgmii";
-+	amlogic,tx-delay-ns = <2>;
- 	phy-handle = <&external_phy>;
- 
-+	snps,aal;
-+	snps,rxpbl = <1000>;
-+	snps,txpbl = <1000>;
-+
-+	rx-fifo-depth = <4096>;
- 	tx-fifo-depth = <4096>;
--	rx-internal-delay-ps = <800>;
- };
- 
- &ext_mdio {
--- 
-2.39.2
-
-From 9f4548ec8d22f1b839ef9d62e64e5936a70406ee Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Thu, 5 Sep 2024 08:43:10 -0400
-Subject: [PATCH] Add X96-AIR Qualcomm Variant
-
-Ethernet is currently getting a DMA reset error.
-Until figured out it is set to operate at a 100MB.
-
-Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
----
- arch/arm64/boot/dts/amlogic/Makefile          |   1 +
- .../dts/amlogic/meson-sm1-x96-air-q2.dts | 265 ++++++++++++++++++
- 2 files changed, 266 insertions(+)
- create mode 100644 arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-q2.dts
-
-diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index 8b6f57a94863..52a95d0b2099 100644
---- a/arch/arm64/boot/dts/amlogic/Makefile
-+++ b/arch/arm64/boot/dts/amlogic/Makefile
-@@ -76,4 +76,5 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-c4.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-odroid-hc4.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-sei610.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-gbit.dtb
-+dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air-q2.dtb
- dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-air.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-q2.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-q2.dts
 new file mode 100644
-index 000000000000..5e3662e0be30
+index 000000000000..c02e5abbe939
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-q2.dts
 @@ -0,0 +1,265 @@
@@ -1205,6 +929,244 @@ index 000000000000..5e3662e0be30
 +		max-speed = <2000000>;
 +		clocks = <&wifi32k>;
 +		clock-names = "lpo";
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
+index 9ea969255b4f..021ef1055d5a 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
+@@ -2,25 +2,43 @@
+ /*
+  * Copyright (c) 2019 BayLibre SAS. All rights reserved.
+  * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
+  */
+ 
+ /dts-v1/;
+ 
+ #include "meson-sm1-ac2xx.dtsi"
++#include <dt-bindings/sound/meson-g12a-toacodec.h>
+ #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+ 
+ / {
+ 	compatible = "amediatech,x96-air", "amlogic,sm1";
+ 	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
+ 
++	aliases {
++		serial2 = &uart_A;
++		ethernet0 = &ethmac;
++		rtc1 = &vrtc;
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "X96-AIR";
+-		audio-aux-devs = <&tdmout_b>;
++		audio-widgets = "Line", "Lineout";
++		audio-aux-devs = <&tdmout_b>, <&tdmout_c>;
+ 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
+ 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
+ 				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
+-				"TDM_B Playback", "TDMOUT_B OUT";
++				"TDM_B Playback", "TDMOUT_B OUT",
++				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
++				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
++				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
++				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
++				"Lineout", "ACODEC LOLP",
++				"Lineout", "ACODEC LORP";
+ 
+ 		assigned-clocks = <&clkc CLKID_MPLL2>,
+ 				  <&clkc CLKID_MPLL0>,
+@@ -42,8 +60,20 @@ dai-link-2 {
+ 			sound-dai = <&frddr_c>;
+ 		};
+ 
+-		/* 8ch hdmi interface */
+ 		dai-link-3 {
++			sound-dai = <&toddr_a>;
++		};
++
++		dai-link-4 {
++			sound-dai = <&toddr_b>;
++		};
++
++		dai-link-5 {
++			sound-dai = <&toddr_c>;
++		};
++
++		/* 8ch hdmi interface */
++		dai-link-6 {
+ 			sound-dai = <&tdmif_b>;
+ 			dai-format = "i2s";
+ 			dai-tdm-slot-tx-mask-0 = <1 1>;
+@@ -52,22 +82,69 @@ dai-link-3 {
+ 			dai-tdm-slot-tx-mask-3 = <1 1>;
+ 			mclk-fs = <256>;
+ 
+-			codec {
++			codec-0 {
+ 				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
+ 			};
++
++			codec-1 {
++				sound-dai = <&toacodec TOACODEC_IN_B>;
++			};
+ 		};
+ 
++               /* i2s jack output interface */
++               dai-link-7 {
++                       sound-dai = <&tdmif_c>;
++                       dai-format = "i2s";
++                       dai-tdm-slot-tx-mask-0 = <1 1>;
++                       mclk-fs = <256>;
++
++                       codec-0 {
++                               sound-dai = <&tohdmitx TOHDMITX_I2S_IN_C>;
++                       };
++
++                       codec-1 {
++                               sound-dai = <&toacodec TOACODEC_IN_C>;
++                       };
++               };
++
+ 		/* hdmi glue */
+-		dai-link-4 {
++		dai-link-8 {
+ 			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
+ 
+ 			codec {
+ 				sound-dai = <&hdmi_tx>;
+ 			};
+ 		};
++
++		/* acodec glue */
++		dai-link-9 {
++			sound-dai = <&toacodec TOACODEC_OUT>;
++
++			codec {
++				sound-dai = <&acodec>;
++			};
++		};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
+ 	};
+ };
+ 
++&acodec {
++	AVDD-supply = <&vddao_1v8>;
++	status = "okay";
++};
++
+ &arb {
+ 	status = "okay";
+ };
+@@ -98,14 +175,93 @@ &ir {
+ 	linux,rc-map-name = "rc-beelink-gs1";
+ };
+ 
++&openvfd {
++	status = "okay";
++};
++
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+ 
++&tdmif_c {
++       status = "okay";
++};
++
++&tdmin_a {
++	status = "okay";
++};
++
++&tdmin_b {
++	status = "okay";
++};
++
++&tdmin_c {
++	status = "okay";
++};
++
+ &tdmout_b {
+ 	status = "okay";
+ };
+ 
++&tdmout_c {
++	status = "okay";
++};
++
++&toacodec {
++       status = "okay";
++};
++
+ &tohdmitx {
+ 	status = "okay";
+ };
++
++&toddr_a {
++	status = "okay";
++};
++
++&toddr_b {
++	status = "okay";
++};
++
++&toddr_c {
++	status = "okay";
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++};
++
++&uart_A {
++	status = "okay";
++	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
++	pinctrl-names = "default";
++	uart-has-rtscts;
++
++	bluetooth {
++		compatible = "realtek,rtl8822cs-bt";
++		max-speed = <1500000>;
++		clocks = <&wifi32k>;
++		clock-names = "lpo";
++		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
++		reset-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
 +	};
 +};
 -- 
