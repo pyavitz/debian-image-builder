@@ -17,6 +17,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12b-aml-gpiomem.dtbo \
 	meson-g12b-bananapi-cm4-gpu.dtbo \
 	meson-g12b-bananapi-cm4-pwm-gpioh-5-fan.dtbo \
+	meson-g12b-bananapi-cm4-wifi-freq-200mhz.dtbo \
 	meson-g12b-bananapi-m2s-rtl8822cs.dtbo \
 	meson-g12b-odroid-n2-canfd0.dtbo \
 	meson-g12b-odroid-n2-i2c0.dtbo \
