@@ -1,21 +1,21 @@
-From 33eab5426f41f6766bb819860bd1ad6558eec660 Mon Sep 17 00:00:00 2001
+From 6d73d4948c01314fd5d1a99bc59ff7b42ccc8ebc Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 2 Sep 2024 14:43:26 -0400
+Date: Tue, 10 Sep 2024 06:31:28 -0400
 Subject: [PATCH] Syslinux and script support
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- board/spacemit/k1-x/k1-x.env | 184 ++++-------------------------------
+ board/spacemit/k1-x/k1-x.env | 185 ++++-------------------------------
  board/spacemit/k1-x/k1x.c    |  20 ++--
  configs/k1_defconfig         |   3 +
  include/configs/k1-x.h       |  23 ++---
- 4 files changed, 43 insertions(+), 187 deletions(-)
+ 4 files changed, 43 insertions(+), 188 deletions(-)
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-index 359df590..acb1ef7a 100644
+index bdb32b35..acb1ef7a 100644
 --- a/board/spacemit/k1-x/k1-x.env
 +++ b/board/spacemit/k1-x/k1-x.env
-@@ -8,168 +8,24 @@ loglevel=8
+@@ -8,169 +8,24 @@ loglevel=8
  stderr=serial
  stdin=serial,usbkbd
  stdout=serial
@@ -76,7 +76,8 @@ index 359df590..acb1ef7a 100644
 -netdev=eth0
 -
 -// Common boot args
--commonargs=setenv bootargs earlycon=${earlycon} earlyprintk quiet splash plymouth.ignore-serial-consoles plymouth.prefer-fbcon console=${console} loglevel=${loglevel} clk_ignore_unused swiotlb=65536 rdinit=${init} workqueue.default_affinity_scope=${workqueue.default_affinity_scope}
+-set_bootargs=setenv bootargs earlycon=${earlycon} earlyprintk quiet splash console=${console} loglevel=${loglevel} clk_ignore_unused swiotlb=65536 rdinit=${init} product_name=${product_name}
+-commonargs=run set_bootargs; setenv bootargs "${bootargs}" plymouth.ignore-serial-consoles plymouth.prefer-fbcon workqueue.default_affinity_scope=${workqueue.default_affinity_scope}
 -
 -//detect product_name from env and select dtb file to load
 -dtb_env=if test -n "${product_name}"; then \
