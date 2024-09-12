@@ -164,9 +164,15 @@ chown root:root /etc/initramfs/post-update.d/99-uimage
 }
 
 flash_tool_part (){
-if [[ -e "${ROOTFS}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+	KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
+	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
+	ROOTFS="/dev/mapper/${LOOP}"
+	sleep .50
 	rm -fr rootfs.PARTITION bootloader.PARTITION
 	dd if=${ROOTFS} bs=1M > rootfs.PARTITION
 	cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
+	sleep .50
+	kpartx -d ${IMAGE_FILE_NAME}
 fi
 }
