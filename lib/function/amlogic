@@ -162,3 +162,11 @@ EOF
 chmod +x /etc/initramfs/post-update.d/99-uimage
 chown root:root /etc/initramfs/post-update.d/99-uimage
 }
+
+flash_tool_part (){
+if [[ -e "${ROOTFS}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+	rm -fr rootfs.PARTITION bootloader.PARTITION
+	dd if=${ROOTFS} bs=1M > rootfs.PARTITION
+	cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
+fi
+}

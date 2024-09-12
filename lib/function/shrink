@@ -48,12 +48,10 @@ IMGSIZE="${CALC}00MB"
 shrink_p1 (){
 ROOTFS_LOOP="/dev/mapper/$LOOP"
 ROOTFS="${ROOTFS_LOOP}"
-if [[ -e "${ROOTFS_LOOP}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
-	rm -fr rootfs.PARTITION bootloader.PARTITION
-	dd if=${ROOTFS_LOOP} bs=1M > rootfs.PARTITION > /dev/null 2>&1
-	cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
-fi
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "$ROOTFS" > /dev/null 2>&1; fi
+if [[ `type flash_tool_part` ]] &>/dev/null; then
+	if [ $VERBOSE -eq 1 ]; then flash_tool_part; else flash_tool_part > /dev/null 2>&1; fi
+fi
 mkdir -p ROOTFS
 sleep .50
 mount "${ROOTFS}" ROOTFS
@@ -94,11 +92,6 @@ BOOT_LOOP="/dev/mapper/$B_LOOP"
 ROOTFS_LOOP="/dev/mapper/$R_LOOP"
 BOOT="${BOOT_LOOP}"
 ROOTFS="${ROOTFS_LOOP}"
-if [[ -e "${ROOTFS_LOOP}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
-	rm -fr rootfs.PARTITION bootloader.PARTITION
-	dd if=${ROOTFS_LOOP} bs=1M > rootfs.PARTITION > /dev/null 2>&1
-	cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
-fi
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "$ROOTFS" > /dev/null 2>&1; fi
 mkdir -p BOOT; mkdir -p ROOTFS
 sleep .50
