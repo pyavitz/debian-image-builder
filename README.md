@@ -35,7 +35,7 @@ Odroid N2
 Odroid N2L
 Odroid N2+
 Radxa Zero
-X96-AIR	GBIT
+X96-AIR	GBIT / Q2
 
 # FREESCALE
 Cubox-I (*)
