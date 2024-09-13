@@ -1,17 +1,19 @@
-From 553914433d7af1bf4d84e16d83e8e5faff4ddffe Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@armbian.com>
-Date: Wed, 14 Aug 2024 11:22:27 -0400
+From bec3a7516ae9ca2f7deca8520ef096b1d927d19a Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Fri, 13 Sep 2024 09:00:18 -0400
 Subject: [PATCH] Add board Amper Gateway AM-GZ80x
 
-Signed-off-by: Patrick Yavitz <pyavitz@armbian.com>
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- arch/arm64/boot/dts/amlogic/Makefile          |  1 +
- .../meson-axg-amper-gateway-am-gz80x.dts   | 87 +++++++++++++++++++
- 2 files changed, 88 insertions(+)
+ arch/arm64/boot/dts/amlogic/Makefile          |   1 +
+ .../meson-axg-amper-gateway-am-gz80x.dts      |  19 ++
+ .../meson-axg-amper-gateway-gz80x.dtsi        | 303 ++++++++++++++++++
+ 3 files changed, 323 insertions(+)
  create mode 100644 arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-am-gz80x.dts
+ create mode 100644 arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-gz80x.dtsi
 
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
-index 0f29517da5ec..7ecdf4af48bd 100644
+index 0f29517da5ec..3eeef9eb30e8 100644
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
 @@ -6,6 +6,7 @@ dtb-$(CONFIG_ARCH_MESON) += amlogic-t7-a311d2-an400.dtb
@@ -24,25 +26,48 @@ index 0f29517da5ec..7ecdf4af48bd 100644
  dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j110-rev-3.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-am-gz80x.dts b/arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-am-gz80x.dts
 new file mode 100644
-index 000000000000..e929c13c953f
+index 000000000000..d630830577bc
 --- /dev/null
 +++ b/arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-am-gz80x.dts
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,19 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright (c) 2024 Patrick Yavitz <pyavitz@armbian.com>
-+ *
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
 + */
 +
 +/dts-v1/;
 +
-+#include "meson-axg-jethome-jethub-j1xx.dtsi"
-+#include <dt-bindings/leds/common.h>
++#include "meson-axg-amper-gateway-gz80x.dtsi"
 +
 +/ {
 +	compatible = "amper,gateway-am-gz80x", "amlogic,a113x", "amlogic,meson-axg";
 +	model = "Amper Gateway AM-GZ80x";
 +
++	/* 1024MB RAM */
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x0 0x0 0x40000000>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-gz80x.dtsi b/arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-gz80x.dtsi
+new file mode 100644
+index 000000000000..9144f51e6206
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/meson-axg-amper-gateway-gz80x.dtsi
+@@ -0,0 +1,303 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
++ */
++
++/dts-v1/;
++
++#include "meson-axg.dtsi"
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/leds/common.h>
++#include <dt-bindings/thermal/thermal.h>
++
++/ {
 +	aliases {
 +		serial0 = &uart_AO;
 +		serial1 = &uart_B;
@@ -79,27 +104,245 @@ index 000000000000..e929c13c953f
 +		};
 + 	};
 +
-+	/* 1024MB RAM */
-+	memory@0 {
-+		device_type = "memory";
-+		reg = <0x0 0x0 0x0 0x40000000>;
++	reserved-memory {
++		linux,cma {
++			size = <0x0 0x400000>;
++		};
++	};
++
++	emmc_pwrseq: emmc-pwrseq {
++		compatible = "mmc-pwrseq-emmc";
++		reset-gpios = <&gpio BOOT_9 GPIO_ACTIVE_LOW>;
++	};
++
++	vcc_3v3: regulator-vcc_3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "VCC_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&vddao_3v3>;
++		regulator-always-on;
++	};
++
++	vcc_5v: regulator-vcc_5v {
++		compatible = "regulator-fixed";
++		regulator-name = "VCC5V";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++	};
++
++	vddao_3v3: regulator-vddao_3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDAO_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&vcc_5v>;
++		regulator-always-on;
++	};
++
++	vddio_ao18: regulator-vddio_ao18 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDIO_AO18";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		vin-supply = <&vddao_3v3>;
++		regulator-always-on;
++	};
++
++	vddio_boot: regulator-vddio_boot {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDIO_BOOT";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&vddao_3v3>;
++		regulator-always-on;
++	};
++
++	vccq_1v8: regulator-vccq_1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "VCCQ_1V8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		vin-supply = <&vddao_3v3>;
++		regulator-always-on;
++	};
++
++	usb_pwr: regulator-usb_pwr {
++		compatible = "regulator-fixed";
++		gpio = <&gpio_ao GPIOAO_5 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		regulator-name = "USB_PWR";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&vcc_5v>;
++		regulator-always-on;
++	};
++
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&gpio GPIOX_7 GPIO_ACTIVE_LOW>;
++		clocks = <&wifi32k>;
++		clock-names = "ext_clock";
++	};
++
++	wifi32k: wifi32k {
++		compatible = "pwm-clock";
++		#clock-cells = <0>;
++		clock-frequency = <32768>;
++		pwms = <&pwm_ab 0 30518 0>; /* PWM_A at 32.768KHz */
++	};
++
++	thermal-zones {
++		cpu_thermal: cpu-thermal {
++			polling-delay-passive = <250>;
++			polling-delay = <1000>;
++			thermal-sensors = <&scpi_sensors 0>;
++			trips {
++				cpu_passive: cpu-passive {
++					temperature = <70000>; /* millicelsius */
++					hysteresis = <2000>; /* millicelsius */
++					type = "passive";
++				};
++
++				cpu_hot: cpu-hot {
++					temperature = <80000>; /* millicelsius */
++					hysteresis = <2000>; /* millicelsius */
++					type = "hot";
++				};
++
++				cpu_critical: cpu-critical {
++					temperature = <100000>; /* millicelsius */
++					hysteresis = <2000>; /* millicelsius */
++					type = "critical";
++				};
++			};
++
++			cpu_cooling_maps: cooling-maps {
++				map0 {
++					trip = <&cpu_passive>;
++					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							<&cpu1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							<&cpu2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							<&cpu3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
++				};
++
++				map1 {
++					trip = <&cpu_hot>;
++					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							<&cpu1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							<&cpu2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							<&cpu3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
++				};
++			};
++		};
++	};
++
++	onewire {
++		compatible = "w1-gpio";
++		gpios = <&gpio GPIOA_14 GPIO_ACTIVE_HIGH>;
 +	};
 +};
 +
-+/delete-node/ &i2c1;
++&cpu0 {
++	#cooling-cells = <2>;
++};
++
++&cpu1 {
++	#cooling-cells = <2>;
++};
++
++&cpu2 {
++	#cooling-cells = <2>;
++};
++
++&cpu3 {
++	#cooling-cells = <2>;
++};
++
++&ethmac {
++	status = "okay";
++	pinctrl-0 = <&eth_rmii_x_pins>;
++	pinctrl-names = "default";
++	phy-mode = "rmii";
++};
++
++/* Peripheral I2C bus (on motherboard) */
++&i2c_AO {
++	status = "okay";
++	pinctrl-0 = <&i2c_ao_sck_10_pins>, <&i2c_ao_sda_11_pins>;
++	pinctrl-names = "default";
++};
++
++&pwm_ab {
++	status = "okay";
++	pinctrl-0 = <&pwm_a_x20_pins>;
++	pinctrl-names = "default";
++};
 +
 +/* wifi module */
 +&sd_emmc_b {
++	status = "okay";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	pinctrl-0 = <&sdio_pins>;
++	pinctrl-1 = <&sdio_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++
++	bus-width = <4>;
++	cap-sd-highspeed;
++	max-frequency = <50000000>;
++	disable-wp;
 +	non-removable;
 +
-+	rtl8189ftv: wifi@1 {
++	mmc-pwrseq = <&sdio_pwrseq>;
++
++	vmmc-supply = <&vddao_3v3>;
++	vqmmc-supply = <&vddio_boot>;
++
++	sdio: wifi@1 {
 +		reg = <1>;
 +	};
++};
++
++/* eMMC Storage */
++&sd_emmc_c {
++	status = "okay";
++	pinctrl-0 = <&emmc_pins>, <&emmc_ds_pins>;
++	pinctrl-1 = <&emmc_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++
++	bus-width = <8>;
++	cap-mmc-highspeed;
++	max-frequency = <200000000>;
++	non-removable;
++	disable-wp;
++	mmc-ddr-1_8v;
++	mmc-hs200-1_8v;
++
++	mmc-pwrseq = <&emmc_pwrseq>;
++
++	vmmc-supply = <&vcc_3v3>;
++	vqmmc-supply = <&vccq_1v8>;
++};
++
++&spicc1 {
++	status = "okay";
++	pinctrl-0 = <&spi1_x_pins>, <&spi1_ss0_x_pins>;
++	pinctrl-names = "default";
 +};
 +
 +&uart_B {
 +	status = "okay";
 +	pinctrl-0 = <&uart_b_z_pins>;
++	pinctrl-names = "default";
++};
++
++/* UART Console */
++&uart_AO {
++	status = "okay";
++	pinctrl-0 = <&uart_ao_a_pins>;
 +	pinctrl-names = "default";
 +};
 +
@@ -111,9 +354,9 @@ index 000000000000..e929c13c953f
 +	reset-gpios = <&gpio GPIOZ_6 GPIO_ACTIVE_HIGH>;
 +};
 +
-+&usb_pwr {
-+	gpio = <&gpio_ao GPIOAO_5 GPIO_ACTIVE_HIGH>;
-+	enable-active-high;
++&usb {
++	status = "okay";
++	vbus-supply = <&usb_pwr>;
 +};
 -- 
 2.39.2
