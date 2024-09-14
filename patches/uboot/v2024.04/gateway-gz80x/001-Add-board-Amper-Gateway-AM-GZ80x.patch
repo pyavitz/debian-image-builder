@@ -1,6 +1,6 @@
-From 4c80a666ad53327ee8e7bb478896fcedbd2bdc73 Mon Sep 17 00:00:00 2001
+From 7b48e534de49863c78517373edc6120fe4e8bc68 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Fri, 13 Sep 2024 08:55:11 -0400
+Date: Sat, 14 Sep 2024 07:11:18 -0400
 Subject: [PATCH] Add board Amper Gateway AM-GZ80x
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
@@ -8,9 +8,9 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  arch/arm/dts/Makefile                         |   1 +
  ...son-axg-amper-gateway-am-gz80x-u-boot.dtsi |   9 +
  .../dts/meson-axg-amper-gateway-am-gz80x.dts  |  19 ++
- .../dts/meson-axg-amper-gateway-gz80x.dtsi    | 303 ++++++++++++++++++
+ .../dts/meson-axg-amper-gateway-gz80x.dtsi    | 310 ++++++++++++++++++
  configs/amper_gateway_am-gz80x_defconfig      |  69 ++++
- 5 files changed, 401 insertions(+)
+ 5 files changed, 408 insertions(+)
  create mode 100644 arch/arm/dts/meson-axg-amper-gateway-am-gz80x-u-boot.dtsi
  create mode 100644 arch/arm/dts/meson-axg-amper-gateway-am-gz80x.dts
  create mode 100644 arch/arm/dts/meson-axg-amper-gateway-gz80x.dtsi
@@ -70,10 +70,10 @@ index 0000000000..d630830577
 +};
 diff --git a/arch/arm/dts/meson-axg-amper-gateway-gz80x.dtsi b/arch/arm/dts/meson-axg-amper-gateway-gz80x.dtsi
 new file mode 100644
-index 0000000000..9144f51e62
+index 0000000000..50fa179a20
 --- /dev/null
 +++ b/arch/arm/dts/meson-axg-amper-gateway-gz80x.dtsi
-@@ -0,0 +1,303 @@
+@@ -0,0 +1,310 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
@@ -96,6 +96,17 @@ index 0000000000..9144f51e62
 +
 +	chosen {
 +		stdout-path = "serial0:115200n8";
++	};
++
++	gpio-keys-polled {
++		compatible = "gpio-keys-polled";
++		poll-interval = <100>;
++
++		button-power {
++			label = "power";
++			linux,code = <KEY_POWER>;
++			gpios = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
++		};
 +	};
 +
 +	leds {
@@ -189,13 +200,14 @@ index 0000000000..9144f51e62
 +
 +	usb_pwr: regulator-usb_pwr {
 +		compatible = "regulator-fixed";
-+		gpio = <&gpio_ao GPIOAO_5 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
 +		regulator-name = "USB_PWR";
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		vin-supply = <&vcc_5v>;
 +		regulator-always-on;
++
++		gpio = <&gpio_ao GPIOAO_5 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
 +	};
 +
 +	sdio_pwrseq: sdio-pwrseq {
@@ -255,11 +267,6 @@ index 0000000000..9144f51e62
 +				};
 +			};
 +		};
-+	};
-+
-+	onewire {
-+		compatible = "w1-gpio";
-+		gpios = <&gpio GPIOA_14 GPIO_ACTIVE_HIGH>;
 +	};
 +};
 +
