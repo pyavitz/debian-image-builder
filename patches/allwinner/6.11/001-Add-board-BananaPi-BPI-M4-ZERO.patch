@@ -1,20 +1,25 @@
-From ab52d896f4625e54be7637f8f612d8a71815ee38 Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 25 Mar 2024 07:56:44 -0400
-Subject: [PATCH] arch: arm64: dts: allwinner: sun50i-h618-bananapi-m4-zero
+From 742bf89853581805805eec8074db3c34f23bc849 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Mon, 23 Sep 2024 07:02:21 -0400
+Subject: [PATCH] Add board BananaPi BPI-M4-ZERO
 
-Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+sun50i-h618-bananapi-m4-zero.dts
+sun50i-h618-bananapi-m4.dtsi
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  arch/arm64/boot/dts/allwinner/Makefile        |   1 +
- .../sun50i-h618-bananapi-m4-zero.dts          | 276 ++++++++++++++++++
- 2 files changed, 277 insertions(+)
+ .../sun50i-h618-bananapi-m4-zero.dts          |  47 +++
+ .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 288 ++++++++++++++++++
+ 3 files changed, 336 insertions(+)
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
+ create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
 
 diff --git a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
-index 21149b346a60..467675cd2867 100644
+index 0db7b60b49a1..199052b43e73 100644
 --- a/arch/arm64/boot/dts/allwinner/Makefile
 +++ b/arch/arm64/boot/dts/allwinner/Makefile
-@@ -43,6 +43,7 @@ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-bigtreetech-cb1-manta.dtb
+@@ -44,6 +44,7 @@ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-bigtreetech-cb1-manta.dtb
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-bigtreetech-pi.dtb
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-orangepi-zero2.dtb
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h616-x96-mate.dtb
@@ -24,13 +29,66 @@ index 21149b346a60..467675cd2867 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h618-orangepi-zero3.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
 new file mode 100644
-index 000000000000..94b940f993d9
+index 000000000000..200e2b2984f8
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,47 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright (c) 2024 Patrick Yavitz <pyavitz@xxxxx.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
++ */
++
++/dts-v1/;
++
++#include "sun50i-h618-bananapi-m4.dtsi"
++
++/ {
++	model = "BananaPi BPI-M4-Zero";
++	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h618";
++};
++
++/* Connected to an on-board RTL8821CU USB WiFi chip. */
++&ehci1 {
++	status = "okay";
++};
++
++&ehci2 {
++	status = "okay";
++};
++
++&ehci3 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&ohci2 {
++	status = "okay";
++};
++
++&ohci3 {
++	status = "okay";
++};
++
++&usbotg {
++	status = "okay";
++	dr_mode = "peripheral";
++};
++
++&usbphy {
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
+new file mode 100644
+index 000000000000..02fd15d3b96b
+--- /dev/null
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
+@@ -0,0 +1,288 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
 + */
 +
 +/dts-v1/;
@@ -44,9 +102,6 @@ index 000000000000..94b940f993d9
 +#include <dt-bindings/leds/common.h>
 +
 +/ {
-+	model = "BananaPi M4 Zero";
-+	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h618";
-+
 +	aliases {
 +		ethernet0 = &emac1;
 +		serial0 = &uart0;
@@ -92,8 +147,17 @@ index 000000000000..94b940f993d9
 +		};
 +	};
 +
-+	reg_vcc5v: regulator-5v {
-+		/* board wide 5V supply directly from the USB-C socket */
++	reg_usb_vbus: regulator-usb-vbus {
++		/* Separate discrete regulator for the USB ports */
++		compatible = "regulator-fixed";
++		regulator-name = "usb-vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc5v>;
++	};
++
++	reg_vcc5v: regulator-vcc5v {
++		/* Board wide 5V supply directly from the USB-C socket */
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc-5v";
 +		regulator-min-microvolt = <5000000>;
@@ -101,13 +165,34 @@ index 000000000000..94b940f993d9
 +		regulator-always-on;
 +	};
 +
-+	reg_usb_vbus: regulator-usb-vbus {
-+		/* separate discrete regulator for the USB ports */
++	reg_vcc3v3: regulator-vcc3v3 {
++		/* SY8089 DC/DC converter */
 +		compatible = "regulator-fixed";
-+		regulator-name = "usb-vbus";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&reg_vcc5v>;
++		regulator-name = "vcc-3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		vin-supply = <&reg_dldo1>;
++	};
++
++	reg_vcc1v8: regulator-vcc1v8 {
++		/* Always on 1.8V/300mA regulator for WiFi and BT IO */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++		vin-supply = <&reg_aldo1>;
++	};
++
++	wifi_pwrseq: wifi-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		clocks = <&rtc CLK_OSC32K_FANOUT>;
++		clock-names = "ext_clock";
++		pinctrl-names = "default";
++		pinctrl-0 = <&clk_losc_32k_pin>;
++		post-power-on-delay-ms = <200>;
++		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
 +	};
 +};
 +
@@ -119,20 +204,8 @@ index 000000000000..94b940f993d9
 +	status = "okay";
 +};
 +
-+/* Connected to an on-board RTL8821CU USB WiFi chip. */
-+&ehci1 {
-+	status = "okay";
-+};
-+
-+&ehci2 {
-+	status = "okay";
-+};
-+
-+&ehci3 {
-+	status = "okay";
-+};
-+
 +&emac1 {
++	status = "disabled";
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&ext_rgmii_pins>;
 +	phy-mode = "rgmii";
@@ -140,12 +213,11 @@ index 000000000000..94b940f993d9
 +	phy-supply = <&reg_dldo1>;
 +	allwinner,rx-delay-ps = <3100>;
 +	allwinner,tx-delay-ps = <700>;
-+	status = "disabled";
 +};
 +
 +&gpu {
-+	mali-supply = <&reg_dcdc1>;
 +	status = "disabled";
++	mali-supply = <&reg_dcdc1>;
 +};
 +
 +&hdmi {
@@ -159,9 +231,9 @@ index 000000000000..94b940f993d9
 +};
 +
 +&ir {
++	status = "disabled";
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&ir_rx_pin>;
-+	status = "disabled";
 +};
 +
 +&mdio1 {
@@ -172,33 +244,33 @@ index 000000000000..94b940f993d9
 +};
 +
 +&mmc0 {
-+	vmmc-supply = <&reg_dldo1>;
++	status = "okay";
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 +	bus-width = <4>;
 +	max-frequency = <50000000>;
-+	status = "okay";
++	vmmc-supply = <&reg_dldo1>;
++};
++
++&mmc1 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc1_pins>;
++	bus-width = <4>;
++	non-removable;
++	mmc-ddr-1_8v;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	vmmc-supply = <&reg_vcc3v3>;
++	vqmmc-supply = <&reg_vcc1v8>;
 +};
 +
 +&mmc2 {
-+	vmmc-supply = <&reg_dldo1>;
-+	vqmmc-supply = <&reg_aldo1>;
++	status = "okay";
 +	bus-width = <8>;
 +	non-removable;
 +	cap-mmc-hw-reset;
 +	mmc-hs200-1_8v;
-+	status = "okay";
-+};
-+
-+&ohci1 {
-+	status = "okay";
-+};
-+
-+&ohci2 {
-+	status = "okay";
-+};
-+
-+&ohci3 {
-+	status = "okay";
++	vmmc-supply = <&reg_dldo1>;
++	vqmmc-supply = <&reg_aldo1>;
 +};
 +
 +&pio {
@@ -207,6 +279,13 @@ index 000000000000..94b940f993d9
 +	vcc-pg-supply = <&reg_dldo1>;
 +	vcc-ph-supply = <&reg_dldo1>;
 +	vcc-pi-supply = <&reg_dldo1>;
++
++	clk_losc_32k_pin: clk-losc-32k-pin {
++		pins = "PG10";
++		function = "clock";
++		drive-strength = <20>;
++		bias-pull-up;
++	};
 +};
 +
 +&r_i2c {
@@ -271,39 +350,30 @@ index 000000000000..94b940f993d9
 +
 +	spidev@1 {
 +		compatible = "rohm,dh2228fv";
-+		status = "disabled";
 +		reg = <1>;
 +		spi-max-frequency = <1000000>;
 +	};
 +};
 +
 +&uart0 {
++	status = "okay";
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&uart0_ph_pins>;
-+	status = "okay";
 +};
 +
 +&uart1 {
++	status = "okay";
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
-+	status = "okay";
++	uart-has-rtscts;
 +};
 +
 +&uart5 {
++	status = "okay";
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&uart5_ph_pins>;
-+	status = "okay";
-+};
 +
-+&usbotg {
-+	dr_mode = "peripheral";
-+	status = "okay";
-+};
-+
-+&usbphy {
-+	usb1_vbus-supply = <&reg_usb_vbus>;
-+	status = "okay";
 +};
 -- 
-2.39.2
+2.39.5
 
