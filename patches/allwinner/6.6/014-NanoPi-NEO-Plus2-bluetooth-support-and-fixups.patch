@@ -1,0 +1,224 @@
+From c8af0416443ee5586f1edef6e5dfa86adddb1833 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Tue, 24 Sep 2024 06:58:44 -0400
+Subject: [PATCH] NanoPi NEO Plus2: bluetooth support and fixups
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../allwinner/sun50i-h5-nanopi-neo-plus2.dts  | 33 ++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+index ec2f828bccbd..0734a8e0cf13 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+@@ -4,6 +4,7 @@
+ 
+ /dts-v1/;
+ #include "sun50i-h5.dtsi"
++#include "sun50i-h5-cpu-opp.dtsi"
+ 
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
+@@ -16,6 +17,7 @@ / {
+ 	aliases {
+ 		ethernet0 = &emac;
+ 		serial0 = &uart0;
++		serial3 = &uart3;
+ 	};
+ 
+ 	chosen {
+@@ -28,12 +30,13 @@ leds {
+ 		led-0 {
+ 			label = "nanopi:green:pwr";
+ 			gpios = <&r_pio 0 10 GPIO_ACTIVE_HIGH>;
+-			default-state = "on";
++			linux,default-trigger = "default-on";
+ 		};
+ 
+ 		led-1 {
+ 			label = "nanopi:red:status";
+ 			gpios = <&pio 0 20 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
+ 		};
+ 	};
+ 
+@@ -77,6 +80,17 @@ reg_vcc3v3: vcc3v3 {
+ 		vin-supply = <&reg_vcc5v>;
+ 	};
+ 
++	rfkill_bt {
++		compatible = "rfkill-gpio";
++		pinctrl-names = "default";
++		pinctrl-0 = <&bt_pwr_pin>;
++		reset-gpios = <&pio 6 13 GPIO_ACTIVE_HIGH>; /* PG13 */
++		clocks = <&osc32k>;
++		clock-frequency = <32768>;
++		rfkill-name = "sunxi-bt";
++		rfkill-type = "bluetooth";
++	};
++
+ 	vdd_cpux: gpio-regulator {
+ 		/* cpu voltage regulator MP2143DJ */
+ 		compatible = "regulator-gpio";
+@@ -108,6 +122,10 @@ &codec {
+ 	status = "okay";
+ };
+ 
++&cpu0 {
++	cpu-supply = <&vdd_cpux>;
++};
++
+ &ehci0 {
+ 	status = "okay";
+ };
+@@ -136,6 +154,7 @@ &mmc0 {
+ 	vmmc-supply = <&reg_vcc3v3>;
+ 	bus-width = <4>;
+ 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
++	disable-wp;
+ 	status = "okay";
+ };
+ 
+@@ -145,6 +164,7 @@ &mmc1 {
+ 	mmc-pwrseq = <&wifi_pwrseq>;
+ 	bus-width = <4>;
+ 	non-removable;
++	keep-power-in-suspend;
+ 	status = "okay";
+ 
+ 	brcmf: wifi@1 {
+@@ -177,6 +197,11 @@ &pio {
+ 	vcc-pd-supply = <&reg_gmac_2v5>;
+ 	vcc-pf-supply = <&reg_vcc3v3>;
+ 	vcc-pg-supply = <&reg_vcc3v3>;
++
++	bt_pwr_pin: bt_pwr_pin@0 {
++		pins = "PG13";
++		function = "gpio_out";
++	};
+ };
+ 
+ &r_pio {
+@@ -189,6 +214,12 @@ &uart0 {
+ 	status = "okay";
+ };
+ 
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart3_pins>, <&uart3_rts_cts_pins>;
++	status = "okay";
++};
++
+ &usb_otg {
+ 	dr_mode = "host";
+ 	status = "okay";
+-- 
+2.39.5
+
+From 1f8174322ce42f7eee50dfe4b897412b81b9cf60 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Tue, 24 Sep 2024 07:05:42 -0400
+Subject: [PATCH] NanoPi NEO Plus2: remove support for mem dynamic freq scaling
+
+The introduction of DRAM devfreq support for Allwinner A64/H5
+has made the unit unstable. So remove support for the driver.
+
+https://lore.kernel.org/linux-arm-kernel/a48923b7-12f9-808e-1171-49b826bd5f1c@samsung.com/T/#ma00a3e07248dc7fb2d300b7c9c409f69ffa64c14
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+index 0734a8e0cf13..1b01d559f558 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+@@ -150,6 +150,10 @@ ext_rgmii_phy: ethernet-phy@7 {
+ 	};
+ };
+ 
++&mbus {
++	/delete-property/ compatible;
++};
++
+ &mmc0 {
+ 	vmmc-supply = <&reg_vcc3v3>;
+ 	bus-width = <4>;
+-- 
+2.39.5
+
+From 492bab2ed0764ddc4949ab9c37fc93ccf004c3e2 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sat, 7 Oct 2023 06:39:41 -0400
+Subject: [PATCH] net: rfkill: rfkill-gpio.c: nanopi neo plus2 bluetooth
+ support
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ net/rfkill/rfkill-gpio.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index e9d1b2f2ff0a..51fc22ddf7b2 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -24,6 +24,7 @@ struct rfkill_gpio_data {
+ 	struct rfkill		*rfkill_dev;
+ 	struct clk		*clk;
+ 
++	int			clk_frequency;
+ 	bool			clk_enabled;
+ };
+ 
+@@ -32,13 +33,13 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
+ 	if (!blocked && !IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+-		clk_enable(rfkill->clk);
++		clk_prepare_enable(rfkill->clk);
+ 
+ 	gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
+ 	gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
+ 
+ 	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+-		clk_disable(rfkill->clk);
++		clk_disable_unprepare(rfkill->clk);
+ 
+ 	rfkill->clk_enabled = !blocked;
+ 
+@@ -92,8 +93,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		name_property = "name";
+ 		type_property = "type";
+ 	}
+-	device_property_read_string(&pdev->dev, name_property, &rfkill->name);
+-	device_property_read_string(&pdev->dev, type_property, &type_name);
++	device_property_read_string(&pdev->dev, "rfkill-name", &rfkill->name);
++	device_property_read_string(&pdev->dev, "rfkill-type", &type_name);
++	device_property_read_u32(&pdev->dev, "clock-frequency", &rfkill->clk_frequency);
+ 
+ 	if (!rfkill->name)
+ 		rfkill->name = dev_name(&pdev->dev);
+@@ -107,6 +109,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
++	if (!IS_ERR(rfkill->clk) && rfkill->clk_frequency > 0) {
++		clk_set_rate(rfkill->clk, rfkill->clk_frequency); 
++	}
+ 
+ 	gpio = devm_gpiod_get_optional(&pdev->dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpio))
+@@ -167,7 +172,7 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
+ #endif
+ 
+-static const struct of_device_id rfkill_of_match[] __maybe_unused = {
++static const struct of_device_id rfkill_of_match[] = { 
+ 	{ .compatible = "rfkill-gpio", },
+ 	{ },
+ };
+-- 
+2.39.2
+

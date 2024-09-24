@@ -1,0 +1,112 @@
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Kryštof Černý <cleverline1mc@gmail.com>
+Date: Thu, 05 Sep 2024 19:37:10 +0200
+Subject: [PATCH v3 1/2] arm64: dts: allwinner: H5: NanoPi Neo Plus2: Fix
+ regulators
+
+Added the main board 5 V supply regulator,
+a 2.5 V supply regulator for GMAC PHY IO and correct vin-supply elements.
+
+Signed-off-by: Kryštof Černý <cleverline1mc@gmail.com>
+---
+ .../dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts   | 25 ++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+index b69032c44557..dee4cd82636b 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+@@ -45,16 +45,40 @@ reg_gmac_3v3: gmac-3v3 {
+ 		startup-delay-us = <100000>;
+ 		enable-active-high;
+ 		gpio = <&pio 3 6 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&reg_vcc3v3>;
++	};
++
++	reg_gmac_2v5: gmac-2v5 {
++		/* 2V5 supply for GMAC PHY IO */
++		compatible = "regulator-fixed";
++		regulator-name = "gmac-2v5";
++		regulator-min-microvolt = <2500000>;
++		regulator-max-microvolt = <2500000>;
++		regulator-always-on;
++		vin-supply = <&reg_vcc3v3>;
++	};
++
++	reg_vcc5v: regulator-vcc5v {
++		/* board 5V supply from micro USB or pin headers */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-5v";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
+ 	};
+ 
+ 	reg_vcc3v3: vcc3v3 {
++		/* board 3V3 supply by SY8089A */
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc3v3";
+ 		regulator-min-microvolt = <3300000>;
+ 		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		vin-supply = <&reg_vcc5v>;
+ 	};
+ 
+ 	vdd_cpux: gpio-regulator {
++		/* cpu voltage regulator MP2143DJ */
+ 		compatible = "regulator-gpio";
+ 		regulator-name = "vdd-cpux";
+ 		regulator-type = "voltage";
+@@ -66,6 +90,7 @@ vdd_cpux: gpio-regulator {
+ 		gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>;
+ 		gpios-states = <0x1>;
+ 		states = <1100000 0>, <1300000 1>;
++		vin-supply = <&reg_vcc5v>;
+ 	};
+ 
+ 	wifi_pwrseq: pwrseq {
+
+-- 
+2.39.2
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Kryštof Černý <cleverline1mc@gmail.com>
+Date: Thu, 05 Sep 2024 19:37:11 +0200
+Subject: [PATCH v3 2/2] arm64: dts: allwinner: H5: NanoPi NEO Plus2: Use
+ regulators for pio
+
+Pin controllers pio and r_pio will have proper regulators assigned.
+
+Signed-off-by: Kryštof Černý <cleverline1mc@gmail.com>
+---
+ arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+index dee4cd82636b..526443bb736c 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h5-nanopi-neo-plus2.dts
+@@ -171,6 +171,18 @@ &ohci3 {
+ 	status = "okay";
+ };
+ 
++&pio {
++	vcc-pa-supply = <&reg_vcc3v3>;
++	vcc-pc-supply = <&reg_vcc3v3>;
++	vcc-pd-supply = <&reg_gmac_2v5>;
++	vcc-pf-supply = <&reg_vcc3v3>;
++	vcc-pg-supply = <&reg_vcc3v3>;
++};
++
++&r_pio {
++	vcc-pl-supply = <&reg_vcc3v3>;
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pa_pins>;
+
+-- 
+2.39.2
+
