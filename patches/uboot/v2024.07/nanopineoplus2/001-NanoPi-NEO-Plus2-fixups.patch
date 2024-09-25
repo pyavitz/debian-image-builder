@@ -1,0 +1,156 @@
+From 40a71dd3de4baeb6935f04ad60f4237850f49ad0 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Wed, 25 Sep 2024 07:00:33 -0400
+Subject: [PATCH] NanoPi NEO Plus2: fixups
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ arch/arm/dts/sun50i-h5-nanopi-neo-plus2.dts | 56 ++++++++++++++++++++-
+ 1 file changed, 54 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/dts/sun50i-h5-nanopi-neo-plus2.dts b/arch/arm/dts/sun50i-h5-nanopi-neo-plus2.dts
+index 4c3921ac23..b4dae101f0 100644
+--- a/arch/arm/dts/sun50i-h5-nanopi-neo-plus2.dts
++++ b/arch/arm/dts/sun50i-h5-nanopi-neo-plus2.dts
+@@ -4,6 +4,7 @@
+ 
+ /dts-v1/;
+ #include "sun50i-h5.dtsi"
++#include "sun50i-h5-cpu-opp.dtsi"
+ 
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
+@@ -16,6 +17,7 @@
+ 	aliases {
+ 		ethernet0 = &emac;
+ 		serial0 = &uart0;
++		serial3 = &uart3;
+ 	};
+ 
+ 	chosen {
+@@ -28,12 +30,13 @@
+ 		led-0 {
+ 			label = "nanopi:green:pwr";
+ 			gpios = <&r_pio 0 10 GPIO_ACTIVE_HIGH>;
+-			default-state = "on";
++			linux,default-trigger = "default-on";
+ 		};
+ 
+ 		led-1 {
+ 			label = "nanopi:red:status";
+-			gpios = <&pio 0 20 GPIO_ACTIVE_HIGH>;
++			gpios = <&pio 0 10 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
+ 		};
+ 	};
+ 
+@@ -45,16 +48,40 @@
+ 		startup-delay-us = <100000>;
+ 		enable-active-high;
+ 		gpio = <&pio 3 6 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&reg_vcc3v3>;
+ 	};
+ 
++	reg_gmac_2v5: gmac-2v5 {
++		/* 2V5 supply for GMAC PHY IO */
++		compatible = "regulator-fixed";
++		regulator-name = "gmac-2v5";
++		regulator-min-microvolt = <2500000>;
++		regulator-max-microvolt = <2500000>;
++		regulator-always-on;
++		vin-supply = <&reg_vcc3v3>;
++	};
++
++	reg_vcc5v: regulator-vcc5v {
++		/* board 5V supply from micro USB or pin headers */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-5v";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++ 	};
++
+ 	reg_vcc3v3: vcc3v3 {
++		/* board 3V3 supply by SY8089A */
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc3v3";
+ 		regulator-min-microvolt = <3300000>;
+ 		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		vin-supply = <&reg_vcc5v>;
+ 	};
+ 
+ 	vdd_cpux: gpio-regulator {
++		/* cpu voltage regulator MP2143DJ */
+ 		compatible = "regulator-gpio";
+ 		regulator-name = "vdd-cpux";
+ 		regulator-type = "voltage";
+@@ -66,6 +93,7 @@
+ 		gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>;
+ 		gpios-states = <0x1>;
+ 		states = <1100000 0>, <1300000 1>;
++		vin-supply = <&reg_vcc5v>;
+ 	};
+ 
+ 	wifi_pwrseq: wifi_pwrseq {
+@@ -83,6 +111,10 @@
+ 	status = "okay";
+ };
+ 
++&cpu0 {
++	cpu-supply = <&vdd_cpux>;
++};
++
+ &ehci0 {
+ 	status = "okay";
+ };
+@@ -111,6 +143,7 @@
+ 	vmmc-supply = <&reg_vcc3v3>;
+ 	bus-width = <4>;
+ 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
++	disable-wp;
+ 	status = "okay";
+ };
+ 
+@@ -120,6 +153,7 @@
+ 	mmc-pwrseq = <&wifi_pwrseq>;
+ 	bus-width = <4>;
+ 	non-removable;
++	keep-power-in-suspend;
+ 	status = "okay";
+ 
+ 	brcmf: wifi@1 {
+@@ -146,12 +180,30 @@
+ 	status = "okay";
+ };
+ 
++&pio {
++	vcc-pa-supply = <&reg_vcc3v3>;
++	vcc-pc-supply = <&reg_vcc3v3>;
++	vcc-pd-supply = <&reg_gmac_2v5>;
++	vcc-pf-supply = <&reg_vcc3v3>;
++	vcc-pg-supply = <&reg_vcc3v3>;
++};
++
++&r_pio {
++	vcc-pl-supply = <&reg_vcc3v3>;
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pa_pins>;
+ 	status = "okay";
+ };
+ 
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart3_pins>, <&uart3_rts_cts_pins>;
++	status = "okay";
++};
++
+ &usb_otg {
+ 	dr_mode = "host";
+ 	status = "okay";
+-- 
+2.39.5
+
