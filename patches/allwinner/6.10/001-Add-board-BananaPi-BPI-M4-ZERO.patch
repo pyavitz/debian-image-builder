@@ -1,6 +1,6 @@
-From f4608511f3c5f4c1e93a67b7bde099b57bf725c1 Mon Sep 17 00:00:00 2001
+From d5fb8618a4ee97313251c89420296610230ce721 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 28 Sep 2024 09:58:26 -0400
+Date: Sat, 28 Sep 2024 23:34:39 -0400
 Subject: [PATCH] Add board BananaPi BPI-M4-ZERO
 
 sun50i-h618-bananapi-m4-zero.dts
@@ -9,9 +9,9 @@ sun50i-h618-bananapi-m4.dtsi
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  arch/arm64/boot/dts/allwinner/Makefile        |   1 +
- .../sun50i-h618-bananapi-m4-zero.dts          |  47 +++
- .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 289 ++++++++++++++++++
- 3 files changed, 337 insertions(+)
+ .../sun50i-h618-bananapi-m4-zero.dts          |  73 +++++
+ .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 266 ++++++++++++++++++
+ 3 files changed, 340 insertions(+)
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
 
@@ -29,10 +29,10 @@ index 0db7b60b49a1..199052b43e73 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h618-orangepi-zero3.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
 new file mode 100644
-index 000000000000..200e2b2984f8
+index 000000000000..8baf98b975be
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,73 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
@@ -45,6 +45,14 @@ index 000000000000..200e2b2984f8
 +/ {
 +	model = "BananaPi BPI-M4-Zero";
 +	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h618";
++
++	aliases {
++		ethernet0 = &emac1;
++		serial5 = &uart5;
++		i2c3 = &i2c3;
++		i2c4 = &i2c4;
++		spi1 = &spi1;
++	};
 +};
 +
 +/* Connected to an on-board RTL8821CU USB WiFi chip. */
@@ -58,6 +66,24 @@ index 000000000000..200e2b2984f8
 +
 +&ehci3 {
 +	status = "okay";
++};
++
++&emac1 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&ext_rgmii_pins>;
++	phy-mode = "rgmii";
++	phy-handle = <&ext_rgmii_phy>;
++	phy-supply = <&reg_dldo1>;
++	allwinner,rx-delay-ps = <3100>;
++	allwinner,tx-delay-ps = <700>;
++};
++
++&mdio1 {
++	ext_rgmii_phy: ethernet-phy@1 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <1>;
++	};
 +};
 +
 +&ohci1 {
@@ -82,10 +108,10 @@ index 000000000000..200e2b2984f8
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
 new file mode 100644
-index 000000000000..776ad8573534
+index 000000000000..0b02c4b6cf64
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
-@@ -0,0 +1,289 @@
+@@ -0,0 +1,266 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
@@ -103,12 +129,7 @@ index 000000000000..776ad8573534
 +
 +/ {
 +	aliases {
-+		ethernet0 = &emac1;
 +		serial0 = &uart0;
-+		serial5 = &uart5;
-+		i2c3 = &i2c3;
-+		i2c4 = &i2c4;
-+		spi1 = &spi1;
 +	};
 +
 +	chosen {
@@ -204,17 +225,6 @@ index 000000000000..776ad8573534
 +	status = "okay";
 +};
 +
-+&emac1 {
-+	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&ext_rgmii_pins>;
-+	phy-mode = "rgmii";
-+	phy-handle = <&ext_rgmii_phy>;
-+	phy-supply = <&reg_dldo1>;
-+	allwinner,rx-delay-ps = <3100>;
-+	allwinner,tx-delay-ps = <700>;
-+};
-+
 +&gpu {
 +	status = "disabled";
 +	mali-supply = <&reg_dcdc1>;
@@ -234,13 +244,6 @@ index 000000000000..776ad8573534
 +	status = "disabled";
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&ir_rx_pin>;
-+};
-+
-+&mdio1 {
-+	ext_rgmii_phy: ethernet-phy@1 {
-+		compatible = "ethernet-phy-ieee802.3-c22";
-+		reg = <1>;
-+	};
 +};
 +
 +&mmc0 {
