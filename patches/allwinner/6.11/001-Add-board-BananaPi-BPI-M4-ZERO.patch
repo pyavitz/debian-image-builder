@@ -1,6 +1,6 @@
-From e20ec9adb01240823276ab7d5c5988a06d9dd63b Mon Sep 17 00:00:00 2001
+From 9f752b768542b5e262c9a4cbd60aa7153309a703 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sun, 29 Sep 2024 14:05:11 -0400
+Date: Thu, 3 Oct 2024 00:08:52 -0400
 Subject: [PATCH] Add board BananaPi BPI-M4-ZERO
 
 sun50i-h618-bananapi-m4-zero.dts
@@ -10,8 +10,8 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  arch/arm64/boot/dts/allwinner/Makefile        |   1 +
  .../sun50i-h618-bananapi-m4-zero.dts          |  73 +++++
- .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 284 ++++++++++++++++++
- 3 files changed, 358 insertions(+)
+ .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 252 ++++++++++++++++++
+ 3 files changed, 326 insertions(+)
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
 
@@ -29,7 +29,7 @@ index 0db7b60b49a1..199052b43e73 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h618-orangepi-zero3.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
 new file mode 100644
-index 000000000000..8baf98b975be
+index 000000000000..61829ab55218
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4-zero.dts
 @@ -0,0 +1,73 @@
@@ -70,8 +70,8 @@ index 000000000000..8baf98b975be
 +
 +&emac1 {
 +	status = "disabled";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&ext_rgmii_pins>;
++	pinctrl-names = "default";
 +	phy-mode = "rgmii";
 +	phy-handle = <&ext_rgmii_phy>;
 +	phy-supply = <&reg_dldo1>;
@@ -108,10 +108,10 @@ index 000000000000..8baf98b975be
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
 new file mode 100644
-index 000000000000..4580ccd80b10
+index 000000000000..a1173d39c9bd
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h618-bananapi-m4.dtsi
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,252 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
@@ -186,32 +186,12 @@ index 000000000000..4580ccd80b10
 +		regulator-always-on;
 +	};
 +
-+	reg_vcc3v3: regulator-vcc3v3 {
-+		/* SY8089 DC/DC converter */
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc-3v3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_dldo1>;
-+	};
-+
-+	reg_vcc1v8: regulator-vcc1v8 {
-+		/* Always on 1.8V/300mA regulator for WiFi and BT IO */
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc-1v8";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_aldo1>;
-+	};
-+
 +	wifi_pwrseq: wifi-pwrseq {
 +		compatible = "mmc-pwrseq-simple";
 +		clocks = <&rtc CLK_OSC32K_FANOUT>;
 +		clock-names = "ext_clock";
++		pinctrl-0 = <&x32clk_fanout_pin>;
 +		pinctrl-names = "default";
-+		pinctrl-0 = <&clk_losc_32k_pin>;
 +		post-power-on-delay-ms = <200>;
 +		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
 +	};
@@ -242,20 +222,20 @@ index 000000000000..4580ccd80b10
 +
 +&i2c3 {
 +	status = "disabled";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&i2c3_pg_pins>;
++	pinctrl-names = "default";
 +};
 +
 +&i2c4 {
 +	status = "disabled";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&i2c4_pg_pins>;
++	pinctrl-names = "default";
 +};
 +
 +&ir {
 +	status = "disabled";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&ir_rx_pin>;
++	pinctrl-names = "default";
 +};
 +
 +&mmc0 {
@@ -269,16 +249,13 @@ index 000000000000..4580ccd80b10
 +
 +&mmc1 {
 +	status = "disabled";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&mmc1_pins>;
 +	bus-width = <4>;
 +	non-removable;
-+	mmc-ddr-1_8v;
 +	mmc-pwrseq = <&wifi_pwrseq>;
-+	vmmc-supply = <&reg_vcc3v3>;
-+	vqmmc-supply = <&reg_vcc1v8>;
++	vmmc-supply = <&reg_dldo1>;
++	vqmmc-supply = <&reg_aldo1>;
 +
-+	brcm: wifi@1 {
++	sdio_wifi: wifi@1 {
 +		reg = <1>;
 +		compatible = "brcm,bcm4329-fmac";
 +		interrupt-parent = <&pio>;
@@ -303,13 +280,6 @@ index 000000000000..4580ccd80b10
 +	vcc-pg-supply = <&reg_dldo1>;
 +	vcc-ph-supply = <&reg_dldo1>;
 +	vcc-pi-supply = <&reg_dldo1>;
-+
-+	clk_losc_32k_pin: clk-losc-32k-pin {
-+		pins = "PG10";
-+		function = "clock";
-+		drive-strength = <20>;
-+		bias-pull-up;
-+	};
 +};
 +
 +&r_i2c {
@@ -366,10 +336,8 @@ index 000000000000..4580ccd80b10
 +
 +&spi1 {
 +	status = "disabled";
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&spi1_pins>, <&spi1_cs1_pin>;
++	pinctrl-names = "default";
 +
 +	spidev@1 {
 +		compatible = "rohm,dh2228fv";
@@ -380,21 +348,21 @@ index 000000000000..4580ccd80b10
 +
 +&uart0 {
 +	status = "okay";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&uart0_ph_pins>;
++	pinctrl-names = "default";
 +};
 +
 +&uart1 {
 +	status = "okay";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
++	pinctrl-names = "default";
 +	uart-has-rtscts;
 +};
 +
 +&uart5 {
 +	status = "okay";
-+	pinctrl-names = "default";
 +	pinctrl-0 = <&uart5_ph_pins>;
++	pinctrl-names = "default";
 +};
 -- 
 2.39.5
