@@ -1,11 +1,11 @@
-From 68054ecc60fdf4bf7b2de3c82caf181347b16c08 Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Mon, 21 Aug 2023 16:10:20 -0400
+From 3ff531e860321ea7cf96be76c4800aff28720840 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Tue, 8 Oct 2024 09:57:34 -0400
 Subject: [PATCH] meson64 general patch set
 
 source: https://github.com/tobetter/linux
 
-Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  .../display/panel/ilitek,ili9881c.yaml        |   1 +
  drivers/gpu/drm/meson/meson_vclk.c            |  18 +
@@ -20,29 +20,27 @@ Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
  drivers/input/touchscreen/Makefile            |   1 +
  drivers/input/touchscreen/dwav-usb-mt.c       | 554 ++++++++++++++++++
  drivers/input/touchscreen/goodix.c            |   3 +
- drivers/pinctrl/meson/pinctrl-meson.c         |  35 ++
- drivers/pinctrl/meson/pinctrl-meson.h         |   1 +
  drivers/spi/spidev.c                          |   2 +
  include/drm/drm_mipi_dbi.h                    |   7 +-
  sound/soc/meson/Kconfig                       |   2 +
  sound/soc/meson/axg-frddr.c                   |   4 +-
- 19 files changed, 912 insertions(+), 9 deletions(-)
+ 17 files changed, 876 insertions(+), 9 deletions(-)
  create mode 100644 drivers/input/touchscreen/dwav-usb-mt.c
 
 diff --git a/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml b/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml
-index c5d1df680858..0f47414e3375 100644
+index baf5dfe5f5eb..51612b77f6dd 100644
 --- a/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml
 +++ b/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml
-@@ -17,6 +17,7 @@ properties:
-     items:
+@@ -18,6 +18,7 @@ properties:
        - enum:
+           - ampire,am8001280g
            - bananapi,lhr050h41
 +          - elida,hj080be31ia1
            - feixin,k101-im2byl02
-           - wanchanglong,w552946aba
-       - const: ilitek,ili9881c
+           - startek,kd050hdfia020
+           - tdo,tl050hdv35
 diff --git a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
-index 2a82119eb58e..eb4c251d79b7 100644
+index 2a942dc6a6dc..c7a98da6b1ce 100644
 --- a/drivers/gpu/drm/meson/meson_vclk.c
 +++ b/drivers/gpu/drm/meson/meson_vclk.c
 @@ -357,6 +357,8 @@ enum {
@@ -85,10 +83,10 @@ index 2a82119eb58e..eb4c251d79b7 100644
  
  		meson_hdmi_pll_set_params(priv, m, frac, od1, od2, od3);
 diff --git a/drivers/gpu/drm/meson/meson_venc.c b/drivers/gpu/drm/meson/meson_venc.c
-index fcd532db19c1..ed532b0cae35 100644
+index 3bf0d6e4fc30..c981d708240f 100644
 --- a/drivers/gpu/drm/meson/meson_venc.c
 +++ b/drivers/gpu/drm/meson/meson_venc.c
-@@ -866,7 +866,7 @@ meson_venc_hdmi_supported_mode(const struct drm_display_mode *mode)
+@@ -868,7 +868,7 @@ meson_venc_hdmi_supported_mode(const struct drm_display_mode *mode)
  			    DRM_MODE_FLAG_PVSYNC | DRM_MODE_FLAG_NVSYNC))
  		return MODE_BAD;
  
@@ -118,11 +116,11 @@ index cd399b0b7181..4b155367c115 100644
  	/* Initialize OSD1 fifo control register */
  	reg = VIU_OSD_DDR_PRIORITY_URGENT |
 diff --git a/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c b/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c
-index 1ec696adf9de..eac81724cede 100644
+index 084c37fa7348..142b38b0a850 100644
 --- a/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c
 +++ b/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c
-@@ -662,6 +662,216 @@ static const struct ili9881c_instr w552946ab_init[] = {
- 	ILI9881C_SWITCH_PAGE_INSTR(0),
+@@ -1223,6 +1223,216 @@ static const struct ili9881c_instr am8001280g_init[] = {
+ 	ILI9881C_COMMAND_INSTR(MIPI_DCS_WRITE_POWER_SAVE, 0x00),
  };
  
 +static const struct ili9881c_instr hj080be31ia1_init[] = {
@@ -338,8 +336,8 @@ index 1ec696adf9de..eac81724cede 100644
  static inline struct ili9881c *panel_to_ili9881c(struct drm_panel *panel)
  {
  	return container_of(panel, struct ili9881c, panel);
-@@ -812,6 +1022,23 @@ static const struct drm_display_mode k101_im2byl02_default_mode = {
- 	.height_mm	= 217,
+@@ -1407,6 +1617,23 @@ static const struct drm_display_mode tl050hdv35_default_mode = {
+ 	.height_mm	= 110,
  };
  
 +static const struct drm_display_mode hj080be31ia1_default_mode = {
@@ -362,8 +360,8 @@ index 1ec696adf9de..eac81724cede 100644
  static const struct drm_display_mode w552946aba_default_mode = {
  	.clock		= 64000,
  
-@@ -944,6 +1171,14 @@ static const struct ili9881c_desc k101_im2byl02_desc = {
- 	.mode_flags = MIPI_DSI_MODE_VIDEO_SYNC_PULSE,
+@@ -1574,6 +1801,14 @@ static const struct ili9881c_desc tl050hdv35_desc = {
+ 		      MIPI_DSI_MODE_LPM,
  };
  
 +static const struct ili9881c_desc hj080be31ia1_desc = {
@@ -377,16 +375,16 @@ index 1ec696adf9de..eac81724cede 100644
  static const struct ili9881c_desc w552946aba_desc = {
  	.init = w552946ab_init,
  	.init_length = ARRAY_SIZE(w552946ab_init),
-@@ -954,6 +1189,7 @@ static const struct ili9881c_desc w552946aba_desc = {
+@@ -1592,6 +1827,7 @@ static const struct ili9881c_desc am8001280g_desc = {
  
  static const struct of_device_id ili9881c_of_match[] = {
  	{ .compatible = "bananapi,lhr050h41", .data = &lhr050h41_desc },
 +	{ .compatible = "elida,hj080be31ia1", .data = &hj080be31ia1_desc },
  	{ .compatible = "feixin,k101-im2byl02", .data = &k101_im2byl02_desc },
- 	{ .compatible = "wanchanglong,w552946aba", .data = &w552946aba_desc },
- 	{ }
+ 	{ .compatible = "startek,kd050hdfia020", .data = &kd050hdfia020_desc },
+ 	{ .compatible = "tdo,tl050hdv35", .data = &tl050hdv35_desc },
 diff --git a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
-index 47b61c3bf145..269d575e5cac 100644
+index 8bcada30af71..e9e11ed1beb6 100644
 --- a/drivers/gpu/drm/tiny/ili9341.c
 +++ b/drivers/gpu/drm/tiny/ili9341.c
 @@ -160,12 +160,14 @@ static const struct drm_driver ili9341_driver = {
@@ -405,10 +403,10 @@ index 47b61c3bf145..269d575e5cac 100644
  };
  MODULE_DEVICE_TABLE(spi, ili9341_id);
 diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index 55a436a6dde9..4c14594a0a82 100644
+index 86820a3d9766..e296e397baa6 100644
 --- a/drivers/hid/hid-ids.h
 +++ b/drivers/hid/hid-ids.h
-@@ -1442,4 +1442,10 @@
+@@ -1470,4 +1470,10 @@
  #define USB_VENDOR_ID_SIGNOTEC			0x2133
  #define USB_DEVICE_ID_SIGNOTEC_VIEWSONIC_PD1011	0x0018
  
@@ -420,10 +418,10 @@ index 55a436a6dde9..4c14594a0a82 100644
 +
  #endif
 diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
-index 3983b4f282f8..38217748b1ec 100644
+index e0bbf0c6345d..c2d0f8d9ef3b 100644
 --- a/drivers/hid/hid-quirks.c
 +++ b/drivers/hid/hid-quirks.c
-@@ -888,6 +888,9 @@ static const struct hid_device_id hid_ignore_list[] = {
+@@ -891,6 +891,9 @@ static const struct hid_device_id hid_ignore_list[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_SYNAPTICS, USB_DEVICE_ID_SYNAPTICS_DPAD) },
  #endif
  	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
@@ -434,10 +432,10 @@ index 3983b4f282f8..38217748b1ec 100644
  };
  
 diff --git a/drivers/i2c/busses/i2c-rk3x.c b/drivers/i2c/busses/i2c-rk3x.c
-index b31cf4f18f85..dc58942796d1 100644
+index 4ef9bad77b85..109e0a1a3664 100644
 --- a/drivers/i2c/busses/i2c-rk3x.c
 +++ b/drivers/i2c/busses/i2c-rk3x.c
-@@ -1228,6 +1228,32 @@ static const struct of_device_id rk3x_i2c_match[] = {
+@@ -1233,6 +1233,32 @@ static const struct of_device_id rk3x_i2c_match[] = {
  };
  MODULE_DEVICE_TABLE(of, rk3x_i2c_match);
  
@@ -470,7 +468,7 @@ index b31cf4f18f85..dc58942796d1 100644
  static int rk3x_i2c_probe(struct platform_device *pdev)
  {
  	struct device_node *np = pdev->dev.of_node;
-@@ -1243,6 +1269,11 @@ static int rk3x_i2c_probe(struct platform_device *pdev)
+@@ -1248,6 +1274,11 @@ static int rk3x_i2c_probe(struct platform_device *pdev)
  	if (!i2c)
  		return -ENOMEM;
  
@@ -482,7 +480,7 @@ index b31cf4f18f85..dc58942796d1 100644
  	match = of_match_node(rk3x_i2c_match, np);
  	i2c->soc_data = match->data;
  
-@@ -1378,6 +1409,7 @@ static int rk3x_i2c_remove(struct platform_device *pdev)
+@@ -1389,6 +1420,7 @@ static void rk3x_i2c_remove(struct platform_device *pdev)
  
  	i2c_del_adapter(&i2c->adap);
  
@@ -491,10 +489,10 @@ index b31cf4f18f85..dc58942796d1 100644
  	clk_unprepare(i2c->pclk);
  	clk_unprepare(i2c->clk);
 diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index 143ff43c67ae..e1f2587fcfec 100644
+index 1ac26fc2e3eb..cd8e99c4787f 100644
 --- a/drivers/input/touchscreen/Kconfig
 +++ b/drivers/input/touchscreen/Kconfig
-@@ -325,6 +325,16 @@ config TOUCHSCREEN_DA9052
+@@ -295,6 +295,16 @@ config TOUCHSCREEN_DA9052
  	  To compile this driver as a module, choose M here: the
  	  module will be called da9052_tsi.
  
@@ -512,10 +510,10 @@ index 143ff43c67ae..e1f2587fcfec 100644
  	tristate "Dynapro serial touchscreen"
  	select SERIO
 diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
-index 159cd5136fdb..004b4091ea75 100644
+index 82bc837ca01e..727f1afedd57 100644
 --- a/drivers/input/touchscreen/Makefile
 +++ b/drivers/input/touchscreen/Makefile
-@@ -33,6 +33,7 @@ obj-$(CONFIG_TOUCHSCREEN_CYTTSP4_SPI)	+= cyttsp4_spi.o
+@@ -30,6 +30,7 @@ obj-$(CONFIG_TOUCHSCREEN_CYTTSP_SPI)	+= cyttsp_spi.o
  obj-$(CONFIG_TOUCHSCREEN_CYTTSP5)	+= cyttsp5.o
  obj-$(CONFIG_TOUCHSCREEN_DA9034)	+= da9034-ts.o
  obj-$(CONFIG_TOUCHSCREEN_DA9052)	+= da9052_tsi.o
@@ -1084,10 +1082,10 @@ index 000000000000..2e1dd0f2986f
 +
 +MODULE_ALIAS("dwav_usb_mt");
 diff --git a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
-index d77f116680a0..916854703530 100644
+index a3e8a51c9144..547b23199cec 100644
 --- a/drivers/input/touchscreen/goodix.c
 +++ b/drivers/input/touchscreen/goodix.c
-@@ -1020,6 +1020,9 @@ static int goodix_get_gpio_config(struct goodix_ts_data *ts)
+@@ -1022,6 +1022,9 @@ static int goodix_get_gpio_config(struct goodix_ts_data *ts)
  			ts->reset_controller_at_probe = true;
  			ts->load_cfg_from_disk = true;
  			ts->irq_pin_access_method = IRQ_PIN_ACCESS_GPIO;
@@ -1097,90 +1095,11 @@ index d77f116680a0..916854703530 100644
  		}
  	}
  
-diff --git a/drivers/pinctrl/meson/pinctrl-meson.c b/drivers/pinctrl/meson/pinctrl-meson.c
-index 530f3f934e19..fad0a2f9cf28 100644
---- a/drivers/pinctrl/meson/pinctrl-meson.c
-+++ b/drivers/pinctrl/meson/pinctrl-meson.c
-@@ -52,6 +52,7 @@
- #include <linux/property.h>
- #include <linux/regmap.h>
- #include <linux/seq_file.h>
-+#include <linux/of_irq.h>
- 
- #include "../core.h"
- #include "../pinctrl-utils.h"
-@@ -602,6 +603,33 @@ static int meson_gpio_get(struct gpio_chip *chip, unsigned gpio)
- 	return !!(val & BIT(bit));
- }
- 
-+static int meson_gpio_to_irq(struct gpio_chip *chip, unsigned int gpio)
-+{
-+	struct meson_pinctrl *pc = gpiochip_get_data(chip);
-+	struct meson_bank *bank;
-+	struct irq_fwspec fwspec;
-+
-+	if (meson_get_bank(pc, gpio, &bank))
-+		return -EINVAL;
-+
-+	if (bank->irq_first < 0) {
-+		dev_warn(pc->dev, "no support irq for pin[%d]\n", gpio);
-+		return -EINVAL;
-+	}
-+
-+	if (!pc->of_irq) {
-+		dev_err(pc->dev, "invalid device node of gpio INTC\n");
-+		return -EINVAL;
-+	}
-+
-+	fwspec.fwnode = of_node_to_fwnode(pc->of_irq);
-+	fwspec.param_count = 2;
-+	fwspec.param[0] = gpio - bank->first + bank->irq_first;
-+	fwspec.param[1] = IRQ_TYPE_NONE;
-+
-+	return irq_create_fwspec_mapping(&fwspec);
-+}
-+
- static int meson_gpiolib_register(struct meson_pinctrl *pc)
- {
- 	int ret;
-@@ -617,6 +645,7 @@ static int meson_gpiolib_register(struct meson_pinctrl *pc)
- 	pc->chip.direction_output = meson_gpio_direction_output;
- 	pc->chip.get = meson_gpio_get;
- 	pc->chip.set = meson_gpio_set;
-+	pc->chip.to_irq = meson_gpio_to_irq;
- 	pc->chip.base = -1;
- 	pc->chip.ngpio = pc->data->num_pins;
- 	pc->chip.can_sleep = false;
-@@ -680,6 +709,12 @@ static int meson_pinctrl_parse_dt(struct meson_pinctrl *pc)
- 	pc->fwnode = gpiochip_node_get_first(pc->dev);
- 	gpio_np = to_of_node(pc->fwnode);
- 
-+	pc->of_irq = of_find_compatible_node(NULL,
-+			NULL, "amlogic,meson-gpio-intc");
-+	if (!pc->of_irq)
-+		pc->of_irq = of_find_compatible_node(NULL,
-+			NULL, "amlogic,meson-gpio-intc-ext");
-+
- 	pc->reg_mux = meson_map_resource(pc, gpio_np, "mux");
- 	if (IS_ERR_OR_NULL(pc->reg_mux)) {
- 		dev_err(pc->dev, "mux registers not found\n");
-diff --git a/drivers/pinctrl/meson/pinctrl-meson.h b/drivers/pinctrl/meson/pinctrl-meson.h
-index 34fc4e8612e4..0f9fa04513ea 100644
---- a/drivers/pinctrl/meson/pinctrl-meson.h
-+++ b/drivers/pinctrl/meson/pinctrl-meson.h
-@@ -134,6 +134,7 @@ struct meson_pinctrl {
- 	struct regmap *reg_ds;
- 	struct gpio_chip chip;
- 	struct fwnode_handle *fwnode;
-+	struct device_node *of_irq;
- };
- 
- #define FUNCTION(fn)							\
 diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
-index 39d94c850839..c9c8f34c98f1 100644
+index 653f82984216..18f2a879bf55 100644
 --- a/drivers/spi/spidev.c
 +++ b/drivers/spi/spidev.c
-@@ -713,6 +713,7 @@ static const struct spi_device_id spidev_spi_ids[] = {
+@@ -711,6 +711,7 @@ static const struct spi_device_id spidev_spi_ids[] = {
  	{ .name = "spi-authenta" },
  	{ .name = "em3581" },
  	{ .name = "si3210" },
@@ -1197,10 +1116,10 @@ index 39d94c850839..c9c8f34c98f1 100644
  };
  MODULE_DEVICE_TABLE(of, spidev_dt_ids);
 diff --git a/include/drm/drm_mipi_dbi.h b/include/drm/drm_mipi_dbi.h
-index 816f196b3d4c..e49bc44c9221 100644
+index f45f9612c0bc..18ef0944b065 100644
 --- a/include/drm/drm_mipi_dbi.h
 +++ b/include/drm/drm_mipi_dbi.h
-@@ -209,12 +209,7 @@ int mipi_dbi_buf_copy(void *dst, struct iosys_map *src, struct drm_framebuffer *
+@@ -221,12 +221,7 @@ int mipi_dbi_buf_copy(void *dst, struct iosys_map *src, struct drm_framebuffer *
  #define mipi_dbi_command(dbi, cmd, seq...) \
  ({ \
  	const u8 d[] = { seq }; \
@@ -1215,7 +1134,7 @@ index 816f196b3d4c..e49bc44c9221 100644
  
  #ifdef CONFIG_DEBUG_FS
 diff --git a/sound/soc/meson/Kconfig b/sound/soc/meson/Kconfig
-index b93ea33739f2..9f5e3952e54e 100644
+index 6458d5dc4902..cb1999529626 100644
 --- a/sound/soc/meson/Kconfig
 +++ b/sound/soc/meson/Kconfig
 @@ -70,6 +70,8 @@ config SND_MESON_AXG_SOUND_CARD
@@ -1228,27 +1147,27 @@ index b93ea33739f2..9f5e3952e54e 100644
  	  Select Y or M to add support for the AXG SoC sound card
  
 diff --git a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
-index 61f9d417fd60..b0f3883af0a9 100644
+index e70c8c34c7db..901bdf9b8658 100644
 --- a/sound/soc/meson/axg-frddr.c
 +++ b/sound/soc/meson/axg-frddr.c
-@@ -106,7 +106,7 @@ static struct snd_soc_dai_driver axg_frddr_dai_drv = {
+@@ -108,7 +108,7 @@ static struct snd_soc_dai_driver axg_frddr_dai_drv = {
  	.name = "FRDDR",
  	.playback = {
  		.stream_name	= "Playback",
 -		.channels_min	= 1,
 +		.channels_min	= 2,
  		.channels_max	= AXG_FIFO_CH_MAX,
- 		.rates		= AXG_FIFO_RATES,
- 		.formats	= AXG_FIFO_FORMATS,
-@@ -181,7 +181,7 @@ static struct snd_soc_dai_driver g12a_frddr_dai_drv = {
+ 		.rates		= SNDRV_PCM_RATE_CONTINUOUS,
+ 		.rate_min	= 5515,
+@@ -185,7 +185,7 @@ static struct snd_soc_dai_driver g12a_frddr_dai_drv = {
  	.name = "FRDDR",
  	.playback = {
  		.stream_name	= "Playback",
 -		.channels_min	= 1,
 +		.channels_min	= 2,
  		.channels_max	= AXG_FIFO_CH_MAX,
- 		.rates		= AXG_FIFO_RATES,
- 		.formats	= AXG_FIFO_FORMATS,
+ 		.rates		= SNDRV_PCM_RATE_CONTINUOUS,
+ 		.rate_min	= 5515,
 -- 
-2.39.2
+2.39.5
 
