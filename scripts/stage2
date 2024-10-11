@@ -53,25 +53,26 @@ echo -n "${TIMEZONE}" > /etc/timezone
 
 apt upgrade -y
 apt dist-upgrade -y
+if [[ "$DISTRO_VERSION" =~ ^(oracular)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
 if [[ "$DISTRO_VERSION" =~ ^(ceres|sid|testing|unstable)$ ]]; then :; else apt autoremove -y; fi
 # network variables
 if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager"; else NETWORKING="ifupdown"; fi
 # install base and extra packages
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} resolvconf haveged ${NETWORKING}
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} resolvconf haveged ${NETWORKING}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
-	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} openresolv haveged ${NETWORKING}
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} openresolv haveged ${NETWORKING}
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi
-	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} dbus-user-session resolvconf haveged ntpdate ${KALI_PKGS} ${NETWORKING}
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} dbus-user-session resolvconf haveged ntpdate ${KALI_PKGS} ${NETWORKING}
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" == "focal" || "$ARCH" == "arm" ]] || [[ "$ARCH" == "riscv" ]]; then UBUNTU_FW=""; fi
 	if [[ "$DISTRO_VERSION" =~ ^(focal|jammy)$ ]]; then RESOLV="openresolv"; else RESOLV="systemd-resolved"; fi
-	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} rng-tools5 ${UBUNTU_FW} ${NETWORKING}
+	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5 ${UBUNTU_FW} ${NETWORKING}
 	if [ $NETWORKMANAGER -eq 0 ] && [[ "$DISTRO_VERSION" == "jammy" ]]; then
 		# disable systemd-networkd and mask systemd-networkd-wait-online
 		systemctl disable systemd-networkd
