@@ -146,7 +146,7 @@ ENABLE_EFI="false"
 IMGSIZE="4096MB"
 
 # Shrink Image
-ENABLE_SHRINK="false"
+ENABLE_SHRINK="true"
 
 # Petitboot (AML ODROID) (not recommended)
 ENABLE_PETITBOOT="false"
