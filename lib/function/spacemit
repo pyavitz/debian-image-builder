@@ -61,6 +61,20 @@ cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAM
 cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
 }
 
+# LINUX
+spacemit_extra_git_patching (){
+# Drop in DTS
+if [[ "$FORCE_GIT" == "true" ]] && [[ -d "../../${GIT_PATCHDIR}/dts" ]]; then
+	if [[ `ls ../../${GIT_PATCHDIR}/dts/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+		echo "# ${GIT_PATCHDIR}/dts" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		ls ../../${GIT_PATCHDIR}/dts/*.dts* | sed 's/..\/..\///g' >> ${LOG_FILE}
+		cp -fr ../../${GIT_PATCHDIR}/dts/*.dts* arch/${ARCH}/boot/dts/${PLATFORM}
+		echo "" >> arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+		cat ../../${GIT_PATCHDIR}/dts/Makefile >> arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+	fi
+fi
+}
+
 # STAGE1
 flash_uboot (){
 dd if=${OUTPUT}/bootinfo_emmc.bin of="${IMAGE_LOOP_DEV}" bs=512 conv=notrunc
