@@ -54,7 +54,11 @@ else
 fi
 
 ROOT="sysroot"
-SOURCES_LIST="${ROOT}/etc/apt/sources.list"
+if [[ "$DISTRO_VERSION" =~ ^(trixie|testing|sid|unstable)$ ]]; then
+	SOURCES_LIST="${ROOT}/etc/apt/sources.list.d/${DISTRO}.sources"
+else
+	SOURCES_LIST="${ROOT}/etc/apt/sources.list"
+fi
 RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
 if [[ -f "$RELEASE_TARBALL" ]]; then ls -ls $RELEASE_TARBALL; exit 0; fi
 CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
@@ -89,6 +93,7 @@ if [ $DEVROOTFS -eq 1 ]; then
 	rm -fr ${ROOT}/root/{rootfs-extra,*.txt}
 	rm -f ${ROOT}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io
 	rm -f ${ROOT}/etc/apt/sources.list
+	rm -f ${SOURCES_LIST}
 fi
 
 # clean up

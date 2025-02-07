@@ -97,7 +97,8 @@ KEY="/usr/share/keyrings/${DISTRO}-archive-keyring.gpg"
 if [[ "$DISTRO" =~ ^(debian|devuan)$ ]]; then DEBOOTSTRAP_SCRIPT="sid"; debootstrap_script; fi
 if [[ "$DISTRO" == "ubuntu" ]]; then DEBOOTSTRAP_SCRIPT="gutsy"; debootstrap_script; fi
 if [[ "$MMDEBSTRAP" == "true" ]]; then
-	mkdir -p ${ROOT}/etc/apt
+	mkdir -p ${ROOT}/etc/apt/sources.list.d/
+	touch ${ROOT}/etc/apt/sources.list # Prevent dups if using deb822 format
 	if [ $VERBOSE -eq 1 ]; then choose_release; else choose_release > /dev/null 2>&1; fi
 	mmdebstrap --skip=check/empty --arch=${ARCH_EXT} --keyring=${KEY} ${DISTRO_VERSION} ${ROOT}
 else

@@ -11,7 +11,7 @@ if [[ "$DISTRO" == "ubuntu" ]]; then MIRROR="${UBUNTU_MIRROR}"; fi; fi; fi; fi; 
 
 debian_release (){
 if [[ "$DISTRO_VERSION" == "bullseye" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
-if [[ "$DISTRO_VERSION" =~ ^(bullseye|bookworm|trixie)$ ]]; then
+if [[ "$DISTRO_VERSION" =~ ^(bullseye|bookworm)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
 deb ${MIRROR} ${DISTRO_VERSION} ${POOL}
 deb ${MIRROR} ${DISTRO_VERSION}-updates ${POOL}
@@ -19,13 +19,34 @@ deb ${MIRROR} ${DISTRO_VERSION}-proposed-updates ${POOL}
 deb ${MIRROR}-security ${DISTRO_VERSION}-security ${POOL}
 deb ${MIRROR} ${DISTRO_VERSION}-backports ${POOL}
 EOF
-else
+fi
+if [[ "$DISTRO_VERSION" =~ ^(trixie|testing)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
-deb ${MIRROR} ${DISTRO_VERSION} ${POOL}
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION} ${DISTRO_VERSION}-updates ${DISTRO_VERSION}-proposed-updates ${DISTRO_VERSION}-backports
+Components: ${POOL}
+Enabled: yes
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: ${MIRROR}-security
+Suites: ${DISTRO_VERSION}-security
+Components: ${POOL}
+Enabled: yes
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 EOF
 fi
-# remove security source until available
-if [[ "$ARCH" == "riscv" ]] && [[ "$DISTRO_VERSION" == "trixie" ]]; then sed -i "4d" ${SOURCES_LIST}; fi
+if [[ "$DISTRO_VERSION" =~ ^(sid|unstable)$ ]]; then
+	tee ${SOURCES_LIST} <<EOF
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION}
+Components: ${POOL}
+Enabled: yes
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+fi
 }
 
 devuan_release (){
@@ -87,7 +108,6 @@ EOF
 }
 
 choose_release (){
-rm -f ${SOURCES_LIST}
 if [[ "$DISTRO" =~ ^(debian|devuan|kali|raspbian|ubuntu)$ ]]; then
 	${DISTRO}_release
 else
