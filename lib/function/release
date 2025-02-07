@@ -11,24 +11,12 @@ if [[ "$DISTRO" == "ubuntu" ]]; then MIRROR="${UBUNTU_MIRROR}"; fi; fi; fi; fi; 
 
 # DEBIAN
 debian_sources_list (){
-if [[ "$DISTRO_VERSION" =~ ^(bullseye)$ ]]; then
-	SOURCES_LIST="${P_VALUE}/etc/apt/sources.list"
-else
-	SOURCES_LIST="${P_VALUE}/etc/apt/sources.list.d/${DISTRO}.sources"
-fi
+SOURCES_LIST="${P_VALUE}/etc/apt/sources.list.d/${DISTRO}.sources"
 }
 
 debian_release (){
 if [[ "$DISTRO_VERSION" == "bullseye" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
-if [[ "$DISTRO_VERSION" =~ ^(bullseye)$ ]]; then
-	tee ${SOURCES_LIST} <<EOF
-deb ${MIRROR} ${DISTRO_VERSION} ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-updates ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-proposed-updates ${POOL}
-deb ${MIRROR}-security ${DISTRO_VERSION}-security ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-backports ${POOL}
-EOF
-elif [[ "$DISTRO_VERSION" =~ ^(bookworm|trixie|testing)$ ]]; then
+if [[ "$DISTRO_VERSION" =~ ^(bullseye|bookworm|trixie|testing)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
 Types: deb
 URIs: ${MIRROR}
@@ -114,28 +102,24 @@ EOF
 
 # UBUNTU
 ubuntu_sources_list (){
-SOURCES_LIST="${P_VALUE}/etc/apt/sources.list"
+SOURCES_LIST="${P_VALUE}/etc/apt/sources.list.d/${DISTRO}.sources"
 }
 
 ubuntu_release (){
 tee ${SOURCES_LIST} <<EOF
-deb ${MIRROR} ${DISTRO_VERSION} main restricted
-deb ${MIRROR} ${DISTRO_VERSION}-updates main restricted
-deb ${MIRROR} ${DISTRO_VERSION} universe
-deb ${MIRROR} ${DISTRO_VERSION}-updates universe
-deb ${MIRROR} ${DISTRO_VERSION} multiverse
-deb ${MIRROR} ${DISTRO_VERSION}-updates multiverse
-deb ${MIRROR} ${DISTRO_VERSION}-backports main restricted universe multiverse
-deb ${MIRROR} ${DISTRO_VERSION}-security main restricted
-deb ${MIRROR} ${DISTRO_VERSION}-security universe
-deb ${MIRROR} ${DISTRO_VERSION}-security multiverse
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION} ${DISTRO_VERSION}-updates ${DISTRO_VERSION}-backports
+Components: main restricted universe multiverse
+Enabled: yes
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
-## Uncomment the following two lines to add software from Canonical's
-## 'partner' repository.
-## This software is not part of Ubuntu, but is offered by Canonical and the
-## respective vendors as a service to Ubuntu users.
-# deb http://archive.canonical.com/ubuntu ${DISTRO_VERSION} partner
-# deb-src http://archive.canonical.com/ubuntu ${DISTRO_VERSION} partner
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION}-security
+Components: main restricted universe multiverse
+Enabled: yes
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 EOF
 }
 
