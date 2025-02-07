@@ -32,7 +32,7 @@ Components: ${POOL}
 Enabled: yes
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 EOF
-elif [[ "$DISTRO_VERSION" =~ ^(sid|unstable)$ ]]; then
+else
 	tee ${SOURCES_LIST} <<EOF
 Types: deb
 URIs: ${MIRROR}
@@ -46,22 +46,35 @@ fi
 
 # DEVUAN
 devuan_sources_list (){
-SOURCES_LIST="${P_VALUE}/etc/apt/sources.list"
+SOURCES_LIST="${P_VALUE}/etc/apt/sources.list.d/${DISTRO}.sources"
 }
 
 devuan_release (){
 if [[ "$DISTRO_VERSION" == "chimaera" ]]; then POOL="main contrib non-free"; else POOL="main contrib non-free non-free-firmware"; fi
 if [[ "$DISTRO_VERSION" =~ ^(chimaera|daedalus)$ ]]; then
 	tee ${SOURCES_LIST} <<EOF
-deb ${MIRROR} ${DISTRO_VERSION} ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-updates ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-proposed-updates ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-security ${POOL}
-deb ${MIRROR} ${DISTRO_VERSION}-backports ${POOL}
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION} ${DISTRO_VERSION}-updates ${DISTRO_VERSION}-proposed-updates ${DISTRO_VERSION}-backports
+Components: ${POOL}
+Enabled: yes
+Signed-By: /usr/share/keyrings/devuan-archive-keyring.gpg
+
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION}-security
+Components: ${POOL}
+Enabled: yes
+Signed-By: /usr/share/keyrings/devuan-archive-keyring.gpg
 EOF
 else
 	tee ${SOURCES_LIST} <<EOF
-deb ${MIRROR} ${DISTRO_VERSION} ${POOL}
+Types: deb
+URIs: ${MIRROR}
+Suites: ${DISTRO_VERSION}
+Components: ${POOL}
+Enabled: yes
+Signed-By: /usr/share/keyrings/devuan-archive-keyring.gpg
 EOF
 fi
 }
