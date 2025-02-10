@@ -1,0 +1,349 @@
+From eeeb124f32741489be0e95fc36ab80695afc53bf Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Thu, 5 Dec 2024 14:02:52 -0500
+Subject: [PATCH] ODROID general patch set
+
+n2plus n2 n2l c4 hc4
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../dts/amlogic/meson-g12b-odroid-n2-plus.dts | 12 ++++-
+ .../boot/dts/amlogic/meson-g12b-odroid-n2.dts |  7 +++
+ .../dts/amlogic/meson-g12b-odroid-n2.dtsi     |  6 +++
+ .../dts/amlogic/meson-g12b-odroid-n2l.dts     |  8 +++
+ .../boot/dts/amlogic/meson-g12b-odroid.dtsi   | 33 +++++++++++-
+ .../boot/dts/amlogic/meson-sm1-odroid-c4.dts  | 33 ++++++++++++
+ .../boot/dts/amlogic/meson-sm1-odroid-hc4.dts | 23 ++++++++
+ .../boot/dts/amlogic/meson-sm1-odroid.dtsi    | 53 +++++++++++++++++++
+ 8 files changed, 173 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
+index ce1198ad34e4..1596177de9dc 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2-plus.dts
+@@ -15,6 +15,17 @@ / {
+ 	model = "Hardkernel ODROID-N2Plus";
+ };
+ 
++&fan {
++	gpio-fan,speed-map = <0 0>, <1600 1>;
++};
++
++&gpu_opp_table {
++	opp-999999984 {
++		opp-hz = /bits/ 64 <999999984>;
++		opp-microvolt = <800000>;
++	};
++};
++
+ &vddcpu_a {
+ 	regulator-min-microvolt = <680000>;
+ 	regulator-max-microvolt = <1040000>;
+@@ -28,4 +39,3 @@ &vddcpu_b {
+ 
+ 	pwms = <&pwm_AO_cd 1 1500 0>;
+ };
+-
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
+index a198a91259ec..b77b2c425d9e 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dts
+@@ -13,3 +13,10 @@ / {
+ 	compatible = "hardkernel,odroid-n2", "amlogic,s922x", "amlogic,g12b";
+ 	model = "Hardkernel ODROID-N2";
+ };
++
++&gpu_opp_table {
++	opp-999999984 {
++		opp-hz = /bits/ 64 <999999984>;
++		opp-microvolt = <800000>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
+index 3bca8023638d..57fca4bceb2c 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2.dtsi
+@@ -264,6 +264,12 @@ &gpio {
+ 		"PIN_36"; /* GPIOX_19 */
+ };
+ 
++&i2c2 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c2_sda_x_pins>, <&i2c2_sck_x_pins>;
++};
++
+ &i2c3 {
+ 	status = "okay";
+ 	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
+index 1b9097a30251..43a40fc7ea18 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid-n2l.dts
+@@ -13,6 +13,10 @@ / {
+ 	compatible = "hardkernel,odroid-n2l", "amlogic,s922x", "amlogic,g12b";
+ 	model = "Hardkernel ODROID-N2L";
+ 
++	aliases {
++		/delete-property/ rtc0;
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "ODROID-N2L";
+@@ -105,6 +109,10 @@ &eth_phy {
+ 	status = "disabled";
+ };
+ 
++&i2c3 {
++	/delete-node/ rtc@51;
++};
++
+ &vddcpu_a {
+ 	regulator-min-microvolt = <680000>;
+ 	regulator-max-microvolt = <1040000>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
+index 09d959aefb18..ae81ca8c281b 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-odroid.dtsi
+@@ -12,6 +12,9 @@
+ / {
+ 	aliases {
+ 		serial0 = &uart_AO;
++		serial1 = &uart_A;
++		serial2 = &uart_B;
++		serial3 = &uart_C;
+ 		ethernet0 = &ethmac;
+ 		rtc1 = &vrtc;
+ 	};
+@@ -20,6 +23,16 @@ chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	reboot: meson64-reboot {
++		compatible = "meson64,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vmmc = <&gpio_ao GPIOAO_8 GPIO_ACTIVE_HIGH>;
++		sd-vqen = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++		sd-vqsw = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_HIGH>;
++	};
++
+ 	memory@0 {
+ 		device_type = "memory";
+ 		reg = <0x0 0x0 0x0 0x40000000>;
+@@ -354,7 +367,7 @@ &sd_emmc_b {
+ 
+ 	bus-width = <4>;
+ 	cap-sd-highspeed;
+-	max-frequency = <50000000>;
++	max-frequency = <100000000>;
+ 	disable-wp;
+ 
+ 	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_LOW>;
+@@ -430,12 +443,30 @@ &toddr_c {
+ 	status = "okay";
+ };
+ 
++&uart_A {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_a_pins>;
++};
++
+ &uart_AO {
+ 	status = "okay";
+ 	pinctrl-0 = <&uart_ao_a_pins>;
+ 	pinctrl-names = "default";
+ };
+ 
++&uart_B {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_b_pins>;
++};
++
++&uart_C {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_c_pins>;
++};
++
+ &usb {
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
+index d04768a66bfe..be90c5f7bd13 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-c4.dts
+@@ -11,6 +11,11 @@ / {
+ 	compatible = "hardkernel,odroid-c4", "amlogic,sm1";
+ 	model = "Hardkernel ODROID-C4";
+ 
++	aliases {
++		i2c0 = &i2c2;
++		i2c1 = &i2c3;
++	};
++
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+@@ -56,3 +61,31 @@ hub_3_0: hub@2 {
+ &ir {
+ 	linux,rc-map-name = "rc-odroid";
+ };
++
++&external_phy {
++	/delete-property/	interrupts;
++	/delete-property/	interrupts-parent;
++};
++
++&i2c2 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c2_sda_x_pins>, <&i2c2_sck_x_pins>;
++};
++
++&i2c3 {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
++};
++
++&gpu_opp_table {
++	opp-999999984 {
++		opp-hz = /bits/ 64 <999999984>;
++		opp-microvolt = <800000>;
++	};
++};
++
++&vddcpu {
++	regulator-max-microvolt = <1030000>;
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
+index 0170139b8d32..e9555c08a3b3 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid-hc4.dts
+@@ -140,3 +140,26 @@ &usb {
+ 	phys = <&usb2_phy0>, <&usb2_phy1>;
+ 	phy-names = "usb2-phy0", "usb2-phy1";
+ };
++
++&external_phy {
++	/delete-property/	interrupts;
++	/delete-property/	interrupts-parent;
++};
++
++&fan0 {
++	fan-supply = <&vcc_5v>;
++	interrupt-parent = <&gpio_intc>;
++	interrupts = <84 IRQ_TYPE_EDGE_FALLING>;
++	pulses-per-revolutions = <2>;
++};
++
++&gpu_opp_table {
++	opp-999999984 {
++		opp-hz = /bits/ 64 <999999984>;
++		opp-microvolt = <800000>;
++	};
++};
++
++&vddcpu {
++	regulator-max-microvolt = <1030000>;
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
+index 7b0e9817a615..4ddc74afdd48 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-odroid.dtsi
+@@ -10,14 +10,34 @@
+ 
+ / {
+ 	aliases {
++		i2c0 = &i2c2;
++		i2c1 = &i2c3;
++		i2c2 = &i2c0;
++		i2c3 = &i2c1;
++		i2c4 = &i2c_AO;
+ 		serial0 = &uart_AO;
++		serial1 = &uart_A;
++		serial2 = &uart_B;
++		serial3 = &uart_C;
++		serial4 = &uart_AO_B;
+ 		ethernet0 = &ethmac;
++		spi0 = &spicc0;
+ 	};
+ 
+ 	chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	reboot: meson64-reboot {
++		compatible = "meson64,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vqen = <&gpio_ao GPIOE_2 GPIO_ACTIVE_HIGH>;
++		sd-vqsw = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
++		sd-vmmc = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++	};
++
+ 	memory@0 {
+ 		device_type = "memory";
+ 		reg = <0x0 0x0 0x0 0x40000000>;
+@@ -441,6 +461,15 @@ &sd_emmc_c {
+ 	vqmmc-supply = <&flash_1v8>;
+ };
+ 
++&spicc0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&spicc0_x_pins>;
++	status = "disabled";
++	num_chipselect = <2>;
++
++	cs-gpios = <&gpio GPIOX_10 GPIO_ACTIVE_LOW>, <&gpio GPIOH_6 GPIO_ACTIVE_LOW>;
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+@@ -453,12 +482,36 @@ &tohdmitx {
+ 	status = "okay";
+ };
+ 
++&uart_A {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_a_pins>;
++};
++
+ &uart_AO {
+ 	status = "okay";
+ 	pinctrl-0 = <&uart_ao_a_pins>;
+ 	pinctrl-names = "default";
+ };
+ 
++&uart_AO_B {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_ao_b_8_9_pins>;
++};
++
++&uart_B {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_b_pins>;
++};
++
++&uart_C {
++	status = "disabled";
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart_c_pins>;
++};
++
+ &usb {
+ 	status = "okay";
+ 	vbus-supply = <&usb_pwr_en>;
+-- 
+2.39.5
+
