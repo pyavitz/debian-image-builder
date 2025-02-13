@@ -187,6 +187,15 @@ if [[ -d "../../${GIT_PATCHDIR}" ]]; then
 fi
 # platform specific patching
 if [[ `type ${FAMILY}_extra_git_patching` ]] &>/dev/null; then ${FAMILY}_extra_git_patching; fi
+# overlays
+if [[ -f "arch/${ARCH}/boot/dts/Makefile" ]] && [[ `ls ../../${GIT_PATCHDIR}/${ARCH}/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+	echo "" >> "arch/${ARCH}/boot/dts/Makefile"
+	echo "subdir-y += overlays" >> "arch/${ARCH}/boot/dts/Makefile"
+	mkdir -p arch/${ARCH}/boot/dts/overlays
+	echo "# ${GIT_PATCHDIR}/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+	ls ../../${GIT_PATCHDIR}/${ARCH}/{Makefile,*.dts} | sed 's/..\/..\///g' >> ${LOG_FILE}
+	cp -fr ../../${GIT_PATCHDIR}/${ARCH}/{Makefile,*.dts} arch/${ARCH}/boot/dts/overlays/
+fi
 }
 
 linux_patching (){
