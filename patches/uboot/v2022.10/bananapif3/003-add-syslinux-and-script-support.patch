@@ -1,6 +1,6 @@
-From dd3fff55e30edcfb824c11c44108be3615de639a Mon Sep 17 00:00:00 2001
+From 4485e0547fb2712b12b69b4b6e69467e99c25020 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 3 Feb 2025 16:52:44 -0500
+Date: Fri, 14 Feb 2025 18:11:42 -0500
 Subject: [PATCH] Add syslinux and script support
 
 The board/spacemit/k1-x/k1-x.env file is deleted by the builder
@@ -8,17 +8,19 @@ before the patch is applied.
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- board/spacemit/k1-x/k1-x.env | 22 ++++++++++++++++++++++
+ board/spacemit/k1-x/k1-x.env | 27 +++++++++++++++++++++++++++
  board/spacemit/k1-x/k1x.c    | 20 ++++++++++----------
  configs/k1_defconfig         |  1 +
  include/configs/k1-x.h       | 23 ++++++++++-------------
- 4 files changed, 43 insertions(+), 23 deletions(-)
+ 4 files changed, 48 insertions(+), 23 deletions(-)
+ create mode 100644 board/spacemit/k1-x/k1-x.env
 
 diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-index e69de29b..2ba4097b 100644
---- a/board/spacemit/k1-x/k1-x.env
+new file mode 100644
+index 00000000..8eb9c525
+--- /dev/null
 +++ b/board/spacemit/k1-x/k1-x.env
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,27 @@
 +// SYSLINUX and SCRIPT Support
 +autoboot=if test -e ${devtype} ${devnum}:${distro_bootpart} /extlinux/extlinux.conf; then \
 +		sysboot ${devtype} ${devnum}:${distro_bootpart} any 0x2000000 /extlinux/extlinux.conf; \
@@ -29,7 +31,7 @@ index e69de29b..2ba4097b 100644
 +	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot/boot.scr; then \
 +		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot/boot.scr; source 0x2000000; \
 +	fi;
-+	nvme scan; sleep .50; nvme part; \
++	nvme part; \
 +	if test -e nvme 0:1 /extlinux/extlinux.conf; then \
 +		sysboot nvme 0:1 any 0x2000000 /extlinux/extlinux.conf; \
 +	elif test -e nvme 0:1 /boot/extlinux/extlinux.conf; then \
@@ -40,7 +42,12 @@ index e69de29b..2ba4097b 100644
 +		load nvme 0:1 0x2000000 /boot/boot.scr; source 0x2000000; \
 +	fi;
 +
-+bootcmd=echo "Loading ..."; usb start; run autoboot
++bootcmd=echo "Loading K1-X Environment ..."; \
++	usb start; \
++	echo ""; \
++	echo "Running NVMe Scan ..."; \
++	nvme scan; \
++	run autoboot
 diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
 index 9210e121..f6c9a5c7 100644
 --- a/board/spacemit/k1-x/k1x.c
