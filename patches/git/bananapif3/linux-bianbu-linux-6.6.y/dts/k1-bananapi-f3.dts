@@ -15,6 +15,11 @@
 / {
 	model = "BananaPi BPI-F3";
 
+	chosen {
+		bootargs = "earlycon=sbi console=ttyS0,115200n8 loglevel=6 swiotlb=65536 rdinit=/init";
+		stdout-path = "serial0:115200n8";
+	};
+
 	cpus: cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -77,6 +82,35 @@
 		};
 	};
 
+	dc_12v: dc-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "dc_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
+	fan: pwm-fan {
+		compatible = "pwm-fan";
+		pwms = <&rpwm2 10000>;
+		#cooling-cells = <2>;
+		cooling-levels = <0 64 128 192 255>;
+		status = "okay";
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led1 {
+			label = "sys-led";
+			gpios = <&gpio 96 0>;
+			linux,default-trigger = "heartbeat";
+			default-state = "on";
+			status = "okay";
+		};
+	};
+
 	memory@0 {
 		device_type = "memory";
 		reg = <0x0 0x00000000 0x0 0x80000000>;
@@ -113,30 +147,6 @@
 		};
 	};
 
-	chosen {
-		bootargs = "earlycon=sbi console=ttyS0,115200n8 loglevel=8 swiotlb=65536 rdinit=/init";
-		stdout-path = "serial0:115200n8";
-	};
-
-	dc_12v: dc-12v {
-		compatible = "regulator-fixed";
-		regulator-name = "dc_12v";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <12000000>;
-		regulator-max-microvolt = <12000000>;
-	};
-
-	vcc4v0_baseboard: vcc4v0-baseboard {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc4v0_baseboard";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <4000000>;
-		regulator-max-microvolt = <4000000>;
-		vin-supply = <&dc_12v>;
-	};
-
 	rf_pwrseq: rf-pwrseq {
 		compatible = "spacemit,rf-pwrseq";
 		//vdd-supply = <&ldo_7>;
@@ -161,24 +171,14 @@
 		};
 	};
 
-	leds {
-		compatible = "gpio-leds";
-
-		led1 {
-			label = "sys-led";
-			gpios = <&gpio 96 0>;
-			linux,default-trigger = "heartbeat";
-			default-state = "on";
-			status = "okay";
-		};
-	};
-
-	fan: pwm-fan {
-		compatible = "pwm-fan";
-		pwms = <&rpwm2 10000>;
-		#cooling-cells = <2>;
-		cooling-levels = <0 64 128 192 255>;
-		status = "okay";
+	vcc4v0_baseboard: vcc4v0-baseboard {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc4v0_baseboard";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <4000000>;
+		regulator-max-microvolt = <4000000>;
+		vin-supply = <&dc_12v>;
 	};
 };
 
