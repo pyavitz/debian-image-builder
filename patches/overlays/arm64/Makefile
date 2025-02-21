@@ -18,7 +18,6 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12b-bananapi-cm4-gpu.dtbo \
 	meson-g12b-bananapi-cm4-i2c2.dtbo \
 	meson-g12b-bananapi-cm4-pwm-gpioh-5-fan.dtbo \
-	meson-g12b-bananapi-cm4-wifi-freq-200mhz.dtbo \
 	meson-g12b-bananapi-m2s-rtl8822cs.dtbo \
 	meson-g12b-odroid-n2-canfd0.dtbo \
 	meson-g12b-odroid-n2-i2c0.dtbo \
@@ -26,8 +25,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12b-odroid-n2-spi.dtbo \
 	meson-g12b-odroid-n2-uart0.dtbo \
 	meson-g12b-odroid-n2-uart1.dtbo \
-	meson-g12b-rpi-cm4-io-j17-fan.dtbo \
-	meson-g12b-rpi-cm4-io-rtc-pcf85063a.dtbo \
+	meson-g12b-waveshare-cm4-wifi-freq-200mhz.dtbo
 	meson-g12-gxl-cma-pool-896MB.dtbo \
 	meson-g12-pwm-gpiox-5-fan.dtbo \
 	meson-gxl-s905x-libretech-cc-i2c-ao.dtbo \
