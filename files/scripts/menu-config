@@ -251,15 +251,15 @@ done
 }
 
 change_hostname(){
-CURRENT=`hostname`
+CURRENT_HOSTNAME=`cat /etc/hostname | sed -n '1p'`
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
-NEWHOST=$(whiptail --backtitle "Menu Interface: Hostname" --title "Current: $CURRENT" --inputbox "Enter new hostname" --nocancel 8 78 3>&1 1>&2 2>&3)
+NEWHOST=$(whiptail --backtitle "Menu Interface: Hostname" --title "Current: $CURRENT_HOSTNAME" --inputbox "Enter new hostname" --nocancel 8 78 3>&1 1>&2 2>&3)
 HOSTNAME="${NEWHOST}"
 export NEWT_COLORS='root=,black roottext=lightgray,black title=black,lightgray'
 if (whiptail --backtitle "Hostname: Confirm" --title "Confirm" --yesno "    Apply new hostname? ${HOSTNAME}" 0 0); then
-	sudo sh -c "echo '$HOSTNAME' > /etc/hostname"
-	sudo sed -i "2s/.*/127.0.1.1	$HOSTNAME/" /etc/hosts
-	if [[ `grep -w "Devuan" "/etc/os-release"` ]]; then
+	sudo sed -i "s/${CURRENT_HOSTNAME}/${HOSTNAME}/g" /etc/hostname
+	sudo sed -i "s/${CURRENT_HOSTNAME}/${HOSTNAME}/g" /etc/hosts
+	if [[ "$DISTRO" == "Devuan" ]]; then
 		sudo service hostname.sh --full-restart
 		sudo service avahi-daemon restart
 	else
