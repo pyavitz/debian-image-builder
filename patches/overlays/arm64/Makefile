@@ -43,6 +43,7 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-sm1-odroid-c4-uart1.dtbo \
 	meson-sm1-odroid-c4-uart2.dtbo \
 	meson-sm1-odroid-c4-uart3.dtbo \
+	meson-sm1-odroid-gpu.dtbo \
 	meson-sm1-x96-air-rtc.dtbo \
 	meson-usb-host-mode.dtbo
 

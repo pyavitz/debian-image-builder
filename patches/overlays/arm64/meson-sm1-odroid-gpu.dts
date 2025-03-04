@@ -1,0 +1,27 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+ 	compatible = "hardkernel,odroid-c4", "hardkernel,odroid-hc4", "amlogic,sm1";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			vddgpu: regulator-vddgpu {
+				compatible = "regulator-fixed";
+				regulator-name = "mali";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <800000>;
+				vin-supply = <&vcc_5v>;
+				regulator-always-on;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&mali>;
+		__overlay__ {
+			mali-supply=<&vddgpu>;
+		};
+	};
+};
