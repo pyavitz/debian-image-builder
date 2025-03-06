@@ -338,13 +338,16 @@ extlinux (){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
 if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
 FDT="../${FAMILY}/${DTB}.dtb"
-FDTDIR="../${FAMILY}/"
+FDTDIR="../${FAMILY}"
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA} init=/sbin/init"
 CHECK=`echo "$INSTALLED_KERNEL" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g'`
 mkdir -p ${BOOT_PATH}/extlinux
 if [[ -f "${BOOT_PATH}/extlinux/extlinux.conf" ]]; then rm -f ${BOOT_PATH}/extlinux/extlinux.conf; fi
 tee ${BOOT_PATH}/extlinux/extlinux.conf <<EOF
-label default
+menu title ${DEFAULT_MOTD}
+timeout 5
+
+label ${CAP_DISTRO} ${CAP_RELEASE}
 	kernel ../${BOOT_KERNEL}
 	initrd ../${BOOT_INITRD}
 	fdtdir ${FDTDIR}
