@@ -1,0 +1,62 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/thermal/thermal.h>
+
+/ {
+	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h618";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			fan: gpio-fan {
+				compatible = "gpio-fan";
+				gpios = <&pio 8 12 GPIO_ACTIVE_HIGH>; /* PI12 */
+				gpio-fan,speed-map = <0 0>, <5000 1>;
+				#cooling-cells = <2>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&cpu_thermal>;
+		polling-delay = <2000>;
+		__overlay__ {
+			trips {
+				cpu_active: cpu-active {
+					temperature = <65000>;
+					hysteresis = <10000>;
+					type = "active";
+				};
+			};
+
+			cooling-maps {
+				map {
+					trip = <&cpu_active>;
+					cooling-device = <&fan THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&ddr_thermal>;
+		__overlay__ {
+			trips {
+				ddr_active: ddr-active {
+					temperature = <65000>;
+					hysteresis = <10000>;
+					type = "active";
+				};
+			};
+
+			cooling-maps {
+				map {
+					trip = <&ddr_active>;
+					cooling-device = <&fan THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+				};
+			};
+		};
+	};
+};

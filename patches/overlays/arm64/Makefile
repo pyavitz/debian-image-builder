@@ -69,6 +69,8 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-h616-spi1-cs0-cs1-spidev.dtbo \
 	sunxi-h616-spi1-cs0-spidev.dtbo \
 	sunxi-h616-spi1-cs1-spidev.dtbo \
+	sunxi-h618-bananapi-m4-pwm1-fan.dtbo \
+	sunxi-h618-bananapi-m4-pwm2-fan.dtbo \
 	sunxi-h618-bananapi-m4-sdio-wifi-bt.dtbo \
 	sunxi-usb-host-mode.dtbo \
 	sunxi-usb-otg-mode.dtbo
