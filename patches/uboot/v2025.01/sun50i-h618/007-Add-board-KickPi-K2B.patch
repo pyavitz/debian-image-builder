@@ -1,13 +1,13 @@
-From aa524f3b2fed04d44e35a39dbcda41ad57f8a3dc Mon Sep 17 00:00:00 2001
+From b11533db72063ed6e4aa029c6e6452e06d52e00c Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Thu, 20 Mar 2025 08:21:42 -0400
+Date: Thu, 20 Mar 2025 23:04:44 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 310 ++++++++++++++++++
- 2 files changed, 340 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 308 ++++++++++++++++++
+ 2 files changed, 338 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..6904f0421ad
+index 00000000000..65c83b5465a
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,308 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -82,16 +82,14 @@ index 00000000000..6904f0421ad
 +		stdout-path = "serial0:115200n8";
 +	};
 +
-+	gpio-keys {
-+		compatible = "gpio-keys";
-+		status = "okay";
++	gpio-keys-polled {
++		compatible = "gpio-keys-polled";
++		poll-interval = <100>;
 +
-+		power {
-+			label = "Power Key";
++		button-power {
++			label = "power";
 +			linux,code = <KEY_POWER>;
-+			gpio = <&pio 2 7 GPIO_ACTIVE_LOW>; /* PC7 */
-+			wakeup-source;
-+			debounce-interval = <100>;
++			gpios = <&pio 2 2 GPIO_ACTIVE_LOW>; /* PC2 */
 +		};
 +	};
 +
