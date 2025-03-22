@@ -1,13 +1,13 @@
-From b11533db72063ed6e4aa029c6e6452e06d52e00c Mon Sep 17 00:00:00 2001
+From 8fc8107b656cd6c40695ccf1de9f32ebaa12cb88 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Thu, 20 Mar 2025 23:04:44 -0400
+Date: Sat, 22 Mar 2025 09:27:01 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 308 ++++++++++++++++++
- 2 files changed, 338 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 317 ++++++++++++++++++
+ 2 files changed, 347 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..65c83b5465a
+index 00000000000..8266aa12c9a
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,317 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -286,48 +286,57 @@ index 00000000000..65c83b5465a
 +		#interrupt-cells = <1>;
 +		interrupt-controller;
 +		interrupt-parent = <&pio>;
-+		interrupts = <2 9 IRQ_TYPE_LEVEL_LOW>;	/* PC9 */
++		//interrupts = <2 9 IRQ_TYPE_LEVEL_LOW>;	/* PC9 */
 +
 +		vin1-supply = <&reg_vcc5v>;
 +		vin2-supply = <&reg_vcc5v>;
 +		vin3-supply = <&reg_vcc5v>;
 +
 +		regulators {
-+			/* Supplies VCC-PLL, so needs to be always on. */
-+			reg_aldo1: aldo1 {
-+				regulator-always-on;
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-name = "vcc1v8";
-+			};
-+
-+			/* Supplies VCC-IO, so needs to be always on. */
-+			reg_dldo1: dldo1 {
-+				regulator-always-on;
-+				regulator-min-microvolt = <3300000>;
-+				regulator-max-microvolt = <3300000>;
-+				regulator-name = "vcc3v3";
-+			};
-+
 +			reg_dcdc1: dcdc1 {
-+				regulator-always-on;
++				regulator-name = "vdd-gpu";
 +				regulator-min-microvolt = <810000>;
 +				regulator-max-microvolt = <990000>;
-+				regulator-name = "vdd-gpu-sys";
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
 +			};
 +
 +			reg_dcdc2: dcdc2 {
-+				regulator-always-on;
-+				regulator-min-microvolt = <810000>;
-+				regulator-max-microvolt = <1100000>;
 +				regulator-name = "vdd-cpu";
++				regulator-min-microvolt = <500000>;
++				regulator-max-microvolt = <1200000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-ramp-delay = <200>;
++				regulator-always-on;
 +			};
 +
 +			reg_dcdc3: dcdc3 {
-+				regulator-always-on;
++				regulator-name = "vcc-dram";
 +				regulator-min-microvolt = <1100000>;
 +				regulator-max-microvolt = <1100000>;
-+				regulator-name = "vdd-dram";
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
++			};
++
++			reg_aldo1: aldo1 {
++				regulator-name = "vcc-1v8";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
++			};
++
++			reg_dldo1: dldo1 {
++				regulator-name = "vcc-3v3";
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-always-on;
 +			};
 +		};
 +	};
