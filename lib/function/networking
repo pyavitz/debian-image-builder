@@ -144,7 +144,7 @@ rm -fdr wireless-regdb
 }
 
 # wireless conf files
-realtek_conf (){
+wireless_conf (){
 mkdir -p /etc/modprobe.d/
 mkdir -p /usr/lib/NetworkManager/conf.d/
 cat <<EOF > /etc/modprobe.d/realtek-wireless.conf
@@ -152,13 +152,10 @@ options 8821cu rtw_led_ctrl=1 rtw_vht_enable=1 rtw_power_mgnt=0 rtw_enusbss=0 rt
 options rtw88_core disable_lps_deep=y
 options rtw88_usb switch_usb_mode=y
 EOF
-if [[ "$BOARD" == "bananapim4zero" ]]; then
-	cat <<EOF > /etc/modprobe.d/aliases-${BOARD}.conf
-softdep rtw88_8821c post: ehci-hcd
-softdep rtw88_8821cu post: ehci-hcd
-softdep 8821cu post: ehci-hcd
+cat <<EOF > /etc/modprobe.d/aic8800-wireless.conf
+options aic8800_fdrv aicwf_dbg_level=0
 EOF
-fi
+
 # Take Realtek wifi dongle out of Driver CDROM Mode
 mkdir -p /etc/udev/rules.d
 cat <<EOF > /etc/udev/rules.d/usb_modeswitch.rules
