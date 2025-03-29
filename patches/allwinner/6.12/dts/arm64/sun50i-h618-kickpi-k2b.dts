@@ -194,13 +194,8 @@
 &mmc0 {
 	status = "okay";
 	bus-width = <4>;
-
-	/delete-property/ cap-sd-highspeed;
-	/delete-property/ cap-mmc-highspeed;
-
 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 	cd-inverted;
-
 	vmmc-supply = <&reg_dldo1>;
 	vqmmc-supply = <&reg_aldo1>;
 };
@@ -209,19 +204,14 @@
 &mmc1 {
 	status = "okay";
 	bus-width = <4>;
-
-	non-removable;
-
-	/delete-property/ cap-sd-highspeed;
-	/delete-property/ cap-mmc-highspeed;
-
-	/* WiFi firmware requires power to be kept while in suspend */
-	keep-power-in-suspend;
-
-	mmc-pwrseq = <&wifi_pwrseq>;
-
+	cap-sdio-irq;
 	cd-gpios = <&pio 6 15 GPIO_ACTIVE_HIGH>; /* PG15 */
-
+	ignore-pm-notify;
+	keep-power-in-suspend;
+	mmc-pwrseq = <&wifi_pwrseq>;
+	no-mmc;
+	no-sd;
+	non-removable;
 	vmmc-supply = <&reg_dldo1>;
 	vqmmc-supply = <&reg_aldo1>;
 
@@ -235,13 +225,9 @@
 	status = "okay";
 	bus-width = <8>;
 	cap-mmc-hw-reset;
+	max-frequency = <100000000>;
 	mmc-hs200-1_8v;
-
 	non-removable;
-
-	/delete-property/ cap-sd-highspeed;
-	/delete-property/ cap-mmc-highspeed;
-
 	vmmc-supply = <&reg_dldo1>;
 	vqmmc-supply = <&reg_aldo1>;
 };

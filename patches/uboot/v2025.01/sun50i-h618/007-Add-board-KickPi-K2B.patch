@@ -1,13 +1,13 @@
-From 8fc8107b656cd6c40695ccf1de9f32ebaa12cb88 Mon Sep 17 00:00:00 2001
+From 4cc1de5615306efc3625637f63f0bf1ef083e58b Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 22 Mar 2025 09:27:01 -0400
+Date: Sat, 29 Mar 2025 10:06:21 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 317 ++++++++++++++++++
- 2 files changed, 347 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 302 ++++++++++++++++++
+ 2 files changed, 332 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..8266aa12c9a
+index 00000000000..60c561c3773
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,317 @@
+@@ -0,0 +1,302 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -180,14 +180,8 @@ index 00000000000..8266aa12c9a
 +&mmc0 {
 +	status = "okay";
 +	bus-width = <4>;
-+
-+	/delete-property/ cap-sd-highspeed;
-+	/delete-property/ cap-mmc-highspeed;
-+
-+	//cd-gpios = <&pio 5 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;	/* PF6 */
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 +	cd-inverted;
-+
 +	vmmc-supply = <&reg_dldo1>;
 +	vqmmc-supply = <&reg_aldo1>;
 +};
@@ -196,19 +190,14 @@ index 00000000000..8266aa12c9a
 +&mmc1 {
 +	status = "okay";
 +	bus-width = <4>;
-+
-+	non-removable;
-+
-+	/delete-property/ cap-sd-highspeed;
-+	/delete-property/ cap-mmc-highspeed;
-+
-+	/* WiFi firmware requires power to be kept while in suspend */
-+	keep-power-in-suspend;
-+
-+	mmc-pwrseq = <&wifi_pwrseq>;
-+
++	cap-sdio-irq;
 +	cd-gpios = <&pio 6 15 GPIO_ACTIVE_HIGH>; /* PG15 */
-+
++	ignore-pm-notify;
++	keep-power-in-suspend;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	no-mmc;
++	no-sd;
++	non-removable;
 +	vmmc-supply = <&reg_dldo1>;
 +	vqmmc-supply = <&reg_aldo1>;
 +
@@ -222,13 +211,9 @@ index 00000000000..8266aa12c9a
 +	status = "okay";
 +	bus-width = <8>;
 +	cap-mmc-hw-reset;
++	max-frequency = <100000000>;
 +	mmc-hs200-1_8v;
-+
 +	non-removable;
-+
-+	/delete-property/ cap-sd-highspeed;
-+	/delete-property/ cap-mmc-highspeed;
-+
 +	vmmc-supply = <&reg_dldo1>;
 +	vqmmc-supply = <&reg_aldo1>;
 +};
