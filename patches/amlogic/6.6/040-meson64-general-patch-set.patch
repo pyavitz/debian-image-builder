@@ -1,6 +1,6 @@
-From 7b030ff2caa9d2ac085c23a58ebd7215210d549c Mon Sep 17 00:00:00 2001
+From 4a6a141633c2a791ee1ef488aaae9adc8df6e67e Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 16 Dec 2024 09:54:00 -0500
+Date: Sun, 30 Mar 2025 12:47:43 -0400
 Subject: [PATCH] meson64 general patch set
 
 source: https://github.com/tobetter/linux
@@ -12,21 +12,25 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  drivers/gpu/drm/meson/meson_venc.c            |   2 +-
  drivers/gpu/drm/meson/meson_viu.c             |   2 +
  drivers/gpu/drm/panel/panel-ilitek-ili9881c.c | 236 ++++++++
+ drivers/gpu/drm/panfrost/panfrost_job.c       |  14 +-
+ drivers/gpu/drm/scheduler/sched_main.c        |   2 +-
  drivers/gpu/drm/tiny/ili9341.c                |   2 +
  drivers/hid/hid-ids.h                         |   6 +
- drivers/hid/hid-quirks.c                      |   3 +
+ drivers/hid/hid-quirks.c                      |   2 +
  drivers/i2c/busses/i2c-rk3x.c                 |  32 +
  drivers/input/touchscreen/Kconfig             |  10 +
  drivers/input/touchscreen/Makefile            |   1 +
  drivers/input/touchscreen/dwav-usb-mt.c       | 554 ++++++++++++++++++
  drivers/input/touchscreen/goodix.c            |   3 +
+ drivers/pinctrl/meson/pinctrl-meson-g12a.c    |  14 +-
  drivers/pinctrl/meson/pinctrl-meson.c         |  35 ++
  drivers/pinctrl/meson/pinctrl-meson.h         |   1 +
  drivers/spi/spidev.c                          |   2 +
  include/drm/drm_mipi_dbi.h                    |   7 +-
  sound/soc/meson/Kconfig                       |   2 +
+ sound/soc/meson/aiu-codec-ctrl.c              | 108 +++-
  sound/soc/meson/axg-frddr.c                   |   4 +-
- 19 files changed, 912 insertions(+), 9 deletions(-)
+ 23 files changed, 1010 insertions(+), 48 deletions(-)
  create mode 100644 drivers/input/touchscreen/dwav-usb-mt.c
 
 diff --git a/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml b/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml
@@ -385,6 +389,83 @@ index bb201f848ae9..fb51df6b1cf0 100644
  	{ .compatible = "feixin,k101-im2byl02", .data = &k101_im2byl02_desc },
  	{ .compatible = "tdo,tl050hdv35", .data = &tl050hdv35_desc },
  	{ .compatible = "wanchanglong,w552946aba", .data = &w552946aba_desc },
+diff --git a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/panfrost_job.c
+index a8b4827dc425..7f106648dabd 100644
+--- a/drivers/gpu/drm/panfrost/panfrost_job.c
++++ b/drivers/gpu/drm/panfrost/panfrost_job.c
+@@ -235,7 +235,7 @@ static void panfrost_job_hw_submit(struct panfrost_job *job, int js)
+ 	if (!atomic_read(&pfdev->reset.pending)) {
+ 		job_write(pfdev, JS_COMMAND_NEXT(js), JS_COMMAND_START);
+ 		dev_dbg(pfdev->dev,
+-			"JS: Submitting atom %p to js[%d][%d] with head=0x%llx AS %d",
++			"Job slot: submitting atom %p to js[%d][%d] with head=0x%llx, as=%d\n",
+ 			job, js, subslot, jc_head, cfg & 0xf);
+ 	}
+ 	spin_unlock(&pfdev->js->job_lock);
+@@ -405,12 +405,12 @@ static void panfrost_job_handle_err(struct panfrost_device *pfdev,
+ 	bool signal_fence = true;
+ 
+ 	if (!panfrost_exception_is_fault(js_status)) {
+-		dev_dbg(pfdev->dev, "js event, js=%d, status=%s, head=0x%x, tail=0x%x",
++		dev_dbg(pfdev->dev, "Job slot event: js=%d, status=%s, head=0x%x, tail=0x%x\n",
+ 			js, exception_name,
+ 			job_read(pfdev, JS_HEAD_LO(js)),
+ 			job_read(pfdev, JS_TAIL_LO(js)));
+ 	} else {
+-		dev_err(pfdev->dev, "js fault, js=%d, status=%s, head=0x%x, tail=0x%x",
++		dev_err(pfdev->dev, "Job slot fault: js=%d, status=%s, head=0x%x, tail=0x%x\n",
+ 			js, exception_name,
+ 			job_read(pfdev, JS_HEAD_LO(js)),
+ 			job_read(pfdev, JS_TAIL_LO(js)));
+@@ -651,7 +651,7 @@ panfrost_reset(struct panfrost_device *pfdev,
+ 				 10, 10000);
+ 
+ 	if (ret)
+-		dev_err(pfdev->dev, "Soft-stop failed\n");
++		dev_err(pfdev->dev, "Failed to complete soft-stop: %d\n", ret);
+ 
+ 	/* Handle the remaining interrupts before we reset. */
+ 	panfrost_job_handle_irqs(pfdev);
+@@ -736,7 +736,7 @@ static enum drm_gpu_sched_stat panfrost_job_timedout(struct drm_sched_job
+ 		return DRM_GPU_SCHED_STAT_NOMINAL;
+ 	}
+ 
+-	dev_err(pfdev->dev, "gpu sched timeout, js=%d, config=0x%x, status=0x%x, head=0x%x, tail=0x%x, sched_job=%p",
++	dev_err(pfdev->dev, "GPU scheduler timeout: js=%d, config=0x%x, status=0x%x, head=0x%x, tail=0x%x, sched_job=%p\n",
+ 		js,
+ 		job_read(pfdev, JS_CONFIG(js)),
+ 		job_read(pfdev, JS_STATUS(js)),
+@@ -819,7 +819,7 @@ int panfrost_job_init(struct panfrost_device *pfdev)
+ 					IRQF_SHARED, KBUILD_MODNAME "-job",
+ 					pfdev);
+ 	if (ret) {
+-		dev_err(pfdev->dev, "failed to request job irq");
++		dev_err(pfdev->dev, "Failed to request job IRQ: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -837,7 +837,7 @@ int panfrost_job_init(struct panfrost_device *pfdev)
+ 				     pfdev->reset.wq,
+ 				     NULL, "pan_js", pfdev->dev);
+ 		if (ret) {
+-			dev_err(pfdev->dev, "Failed to create scheduler: %d.", ret);
++			dev_err(pfdev->dev, "Failed to create scheduler: %d\n", ret);
+ 			goto err_sched;
+ 		}
+ 	}
+diff --git a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/sched_main.c
+index fa4652f23471..bcab6c60a3d8 100644
+--- a/drivers/gpu/drm/scheduler/sched_main.c
++++ b/drivers/gpu/drm/scheduler/sched_main.c
+@@ -1015,7 +1015,7 @@ static int drm_sched_main(void *param)
+ 	struct drm_gpu_scheduler *sched = (struct drm_gpu_scheduler *)param;
+ 	int r;
+ 
+-	sched_set_fifo_low(current);
++	sched_set_fifo(current);
+ 
+ 	while (!kthread_should_stop()) {
+ 		struct drm_sched_entity *entity = NULL;
 diff --git a/drivers/gpu/drm/tiny/ili9341.c b/drivers/gpu/drm/tiny/ili9341.c
 index 47b61c3bf145..269d575e5cac 100644
 --- a/drivers/gpu/drm/tiny/ili9341.c
@@ -405,10 +486,10 @@ index 47b61c3bf145..269d575e5cac 100644
  };
  MODULE_DEVICE_TABLE(spi, ili9341_id);
 diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index f16940f3d93d..0092120774e4 100644
+index 09090803f1dd..c65bfddd3f7e 100644
 --- a/drivers/hid/hid-ids.h
 +++ b/drivers/hid/hid-ids.h
-@@ -1464,4 +1464,10 @@
+@@ -1466,4 +1466,10 @@
  #define USB_VENDOR_ID_SIGNOTEC			0x2133
  #define USB_DEVICE_ID_SIGNOTEC_VIEWSONIC_PD1011	0x0018
  
@@ -420,14 +501,13 @@ index f16940f3d93d..0092120774e4 100644
 +
  #endif
 diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
-index e0bbf0c6345d..c2d0f8d9ef3b 100644
+index 5d7a418ccdbe..4f37912bfd3f 100644
 --- a/drivers/hid/hid-quirks.c
 +++ b/drivers/hid/hid-quirks.c
-@@ -891,6 +891,9 @@ static const struct hid_device_id hid_ignore_list[] = {
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_SYNAPTICS, USB_DEVICE_ID_SYNAPTICS_DPAD) },
+@@ -892,6 +892,8 @@ static const struct hid_device_id hid_ignore_list[] = {
  #endif
  	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
-+
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_QUANTA, USB_DEVICE_ID_QUANTA_HP_5MP_CAMERA_5473) },
 +	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU5) },
 +	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU7PLUS) },
  	{ }
@@ -1097,6 +1177,67 @@ index b068ff8afbc9..a31e70e5f294 100644
  		}
  	}
  
+diff --git a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/pinctrl-meson-g12a.c
+index 2c17891ba6a9..5b3a81fab501 100644
+--- a/drivers/pinctrl/meson/pinctrl-meson-g12a.c
++++ b/drivers/pinctrl/meson/pinctrl-meson-g12a.c
+@@ -270,15 +270,19 @@ static const unsigned int pwm_a_pins[]			= { GPIOX_6 };
+ /* pwm_b */
+ static const unsigned int pwm_b_x7_pins[]		= { GPIOX_7 };
+ static const unsigned int pwm_b_x19_pins[]		= { GPIOX_19 };
++static const unsigned int pwm_b_h7_pins[]		= { GPIOH_7 };
++static const unsigned int pwm_b_z0_pins[]		= { GPIOZ_0 };
+ 
+ /* pwm_c */
+ static const unsigned int pwm_c_c_pins[]		= { GPIOC_4 };
+ static const unsigned int pwm_c_x5_pins[]		= { GPIOX_5 };
+ static const unsigned int pwm_c_x8_pins[]		= { GPIOX_8 };
++static const unsigned int pwm_c_z1_pins[]		= { GPIOZ_1 };
+ 
+ /* pwm_d */
+ static const unsigned int pwm_d_x3_pins[]		= { GPIOX_3 };
+ static const unsigned int pwm_d_x6_pins[]		= { GPIOX_6 };
++static const unsigned int pwm_d_z2_pins[]		= { GPIOZ_2 };
+ 
+ /* pwm_e */
+ static const unsigned int pwm_e_pins[]			= { GPIOX_16 };
+@@ -591,6 +595,9 @@ static struct meson_pmx_group meson_g12a_periphs_groups[] = {
+ 	GROUP(bt565_a_din5,		2),
+ 	GROUP(bt565_a_din6,		2),
+ 	GROUP(bt565_a_din7,		2),
++	GROUP(pwm_b_z0,			5),
++	GROUP(pwm_c_z1,			5),
++	GROUP(pwm_d_z2,			2),
+ 	GROUP(tsin_b_valid_z,		3),
+ 	GROUP(tsin_b_sop_z,		3),
+ 	GROUP(tsin_b_din0_z,		3),
+@@ -723,6 +730,7 @@ static struct meson_pmx_group meson_g12a_periphs_groups[] = {
+ 	GROUP(uart_c_rts,		2),
+ 	GROUP(iso7816_clk_h,		1),
+ 	GROUP(iso7816_data_h,		1),
++	GROUP(pwm_b_h7,			5),
+ 	GROUP(pwm_f_h,			4),
+ 	GROUP(cec_ao_a_h,		4),
+ 	GROUP(cec_ao_b_h,		5),
+@@ -1058,15 +1066,15 @@ static const char * const pwm_a_groups[] = {
+ };
+ 
+ static const char * const pwm_b_groups[] = {
+-	"pwm_b_x7", "pwm_b_x19",
++	"pwm_b_x7", "pwm_b_x19", "pwm_b_h7", "pwm_b_z0",
+ };
+ 
+ static const char * const pwm_c_groups[] = {
+-	"pwm_c_c", "pwm_c_x5", "pwm_c_x8",
++	"pwm_c_c", "pwm_c_x5", "pwm_c_x8", "pwm_c_z1",
+ };
+ 
+ static const char * const pwm_d_groups[] = {
+-	"pwm_d_x3", "pwm_d_x6",
++	"pwm_d_x3", "pwm_d_x6", "pwm_d_z2",
+ };
+ 
+ static const char * const pwm_e_groups[] = {
 diff --git a/drivers/pinctrl/meson/pinctrl-meson.c b/drivers/pinctrl/meson/pinctrl-meson.c
 index 524424ee6c4e..d28f5acd7498 100644
 --- a/drivers/pinctrl/meson/pinctrl-meson.c
@@ -1227,182 +1368,6 @@ index 6458d5dc4902..cb1999529626 100644
  	help
  	  Select Y or M to add support for the AXG SoC sound card
  
-diff --git a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
-index 747a900c0bb2..e38c31a7d86c 100644
---- a/sound/soc/meson/axg-frddr.c
-+++ b/sound/soc/meson/axg-frddr.c
-@@ -108,7 +108,7 @@ static struct snd_soc_dai_driver axg_frddr_dai_drv = {
- 	.name = "FRDDR",
- 	.playback = {
- 		.stream_name	= "Playback",
--		.channels_min	= 1,
-+		.channels_min	= 2,
- 		.channels_max	= AXG_FIFO_CH_MAX,
- 		.rates		= AXG_FIFO_RATES,
- 		.formats	= AXG_FIFO_FORMATS,
-@@ -183,7 +183,7 @@ static struct snd_soc_dai_driver g12a_frddr_dai_drv = {
- 	.name = "FRDDR",
- 	.playback = {
- 		.stream_name	= "Playback",
--		.channels_min	= 1,
-+		.channels_min	= 2,
- 		.channels_max	= AXG_FIFO_CH_MAX,
- 		.rates		= AXG_FIFO_RATES,
- 		.formats	= AXG_FIFO_FORMATS,
--- 
-2.39.5
-
-From 6765eae5b781737cebeb739a00abdb9b7ff74cef Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 14 Dec 2024 23:16:41 -0500
-Subject: [PATCH] meson64 extra general patch set
-
-Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
----
- drivers/gpu/drm/panfrost/panfrost_job.c    |  14 +--
- drivers/gpu/drm/scheduler/sched_main.c     |   2 +-
- drivers/pinctrl/meson/pinctrl-meson-g12a.c |  14 ++-
- sound/soc/meson/aiu-codec-ctrl.c           | 108 +++++++++++++++------
- 4 files changed, 99 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/gpu/drm/panfrost/panfrost_job.c b/drivers/gpu/drm/panfrost/panfrost_job.c
-index a8b4827dc425..7f106648dabd 100644
---- a/drivers/gpu/drm/panfrost/panfrost_job.c
-+++ b/drivers/gpu/drm/panfrost/panfrost_job.c
-@@ -235,7 +235,7 @@ static void panfrost_job_hw_submit(struct panfrost_job *job, int js)
- 	if (!atomic_read(&pfdev->reset.pending)) {
- 		job_write(pfdev, JS_COMMAND_NEXT(js), JS_COMMAND_START);
- 		dev_dbg(pfdev->dev,
--			"JS: Submitting atom %p to js[%d][%d] with head=0x%llx AS %d",
-+			"Job slot: submitting atom %p to js[%d][%d] with head=0x%llx, as=%d\n",
- 			job, js, subslot, jc_head, cfg & 0xf);
- 	}
- 	spin_unlock(&pfdev->js->job_lock);
-@@ -405,12 +405,12 @@ static void panfrost_job_handle_err(struct panfrost_device *pfdev,
- 	bool signal_fence = true;
- 
- 	if (!panfrost_exception_is_fault(js_status)) {
--		dev_dbg(pfdev->dev, "js event, js=%d, status=%s, head=0x%x, tail=0x%x",
-+		dev_dbg(pfdev->dev, "Job slot event: js=%d, status=%s, head=0x%x, tail=0x%x\n",
- 			js, exception_name,
- 			job_read(pfdev, JS_HEAD_LO(js)),
- 			job_read(pfdev, JS_TAIL_LO(js)));
- 	} else {
--		dev_err(pfdev->dev, "js fault, js=%d, status=%s, head=0x%x, tail=0x%x",
-+		dev_err(pfdev->dev, "Job slot fault: js=%d, status=%s, head=0x%x, tail=0x%x\n",
- 			js, exception_name,
- 			job_read(pfdev, JS_HEAD_LO(js)),
- 			job_read(pfdev, JS_TAIL_LO(js)));
-@@ -651,7 +651,7 @@ panfrost_reset(struct panfrost_device *pfdev,
- 				 10, 10000);
- 
- 	if (ret)
--		dev_err(pfdev->dev, "Soft-stop failed\n");
-+		dev_err(pfdev->dev, "Failed to complete soft-stop: %d\n", ret);
- 
- 	/* Handle the remaining interrupts before we reset. */
- 	panfrost_job_handle_irqs(pfdev);
-@@ -736,7 +736,7 @@ static enum drm_gpu_sched_stat panfrost_job_timedout(struct drm_sched_job
- 		return DRM_GPU_SCHED_STAT_NOMINAL;
- 	}
- 
--	dev_err(pfdev->dev, "gpu sched timeout, js=%d, config=0x%x, status=0x%x, head=0x%x, tail=0x%x, sched_job=%p",
-+	dev_err(pfdev->dev, "GPU scheduler timeout: js=%d, config=0x%x, status=0x%x, head=0x%x, tail=0x%x, sched_job=%p\n",
- 		js,
- 		job_read(pfdev, JS_CONFIG(js)),
- 		job_read(pfdev, JS_STATUS(js)),
-@@ -819,7 +819,7 @@ int panfrost_job_init(struct panfrost_device *pfdev)
- 					IRQF_SHARED, KBUILD_MODNAME "-job",
- 					pfdev);
- 	if (ret) {
--		dev_err(pfdev->dev, "failed to request job irq");
-+		dev_err(pfdev->dev, "Failed to request job IRQ: %d\n", ret);
- 		return ret;
- 	}
- 
-@@ -837,7 +837,7 @@ int panfrost_job_init(struct panfrost_device *pfdev)
- 				     pfdev->reset.wq,
- 				     NULL, "pan_js", pfdev->dev);
- 		if (ret) {
--			dev_err(pfdev->dev, "Failed to create scheduler: %d.", ret);
-+			dev_err(pfdev->dev, "Failed to create scheduler: %d\n", ret);
- 			goto err_sched;
- 		}
- 	}
-diff --git a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/sched_main.c
-index fa4652f23471..bcab6c60a3d8 100644
---- a/drivers/gpu/drm/scheduler/sched_main.c
-+++ b/drivers/gpu/drm/scheduler/sched_main.c
-@@ -1015,7 +1015,7 @@ static int drm_sched_main(void *param)
- 	struct drm_gpu_scheduler *sched = (struct drm_gpu_scheduler *)param;
- 	int r;
- 
--	sched_set_fifo_low(current);
-+	sched_set_fifo(current);
- 
- 	while (!kthread_should_stop()) {
- 		struct drm_sched_entity *entity = NULL;
-diff --git a/drivers/pinctrl/meson/pinctrl-meson-g12a.c b/drivers/pinctrl/meson/pinctrl-meson-g12a.c
-index 2c17891ba6a9..5b3a81fab501 100644
---- a/drivers/pinctrl/meson/pinctrl-meson-g12a.c
-+++ b/drivers/pinctrl/meson/pinctrl-meson-g12a.c
-@@ -270,15 +270,19 @@ static const unsigned int pwm_a_pins[]			= { GPIOX_6 };
- /* pwm_b */
- static const unsigned int pwm_b_x7_pins[]		= { GPIOX_7 };
- static const unsigned int pwm_b_x19_pins[]		= { GPIOX_19 };
-+static const unsigned int pwm_b_h7_pins[]		= { GPIOH_7 };
-+static const unsigned int pwm_b_z0_pins[]		= { GPIOZ_0 };
- 
- /* pwm_c */
- static const unsigned int pwm_c_c_pins[]		= { GPIOC_4 };
- static const unsigned int pwm_c_x5_pins[]		= { GPIOX_5 };
- static const unsigned int pwm_c_x8_pins[]		= { GPIOX_8 };
-+static const unsigned int pwm_c_z1_pins[]		= { GPIOZ_1 };
- 
- /* pwm_d */
- static const unsigned int pwm_d_x3_pins[]		= { GPIOX_3 };
- static const unsigned int pwm_d_x6_pins[]		= { GPIOX_6 };
-+static const unsigned int pwm_d_z2_pins[]		= { GPIOZ_2 };
- 
- /* pwm_e */
- static const unsigned int pwm_e_pins[]			= { GPIOX_16 };
-@@ -591,6 +595,9 @@ static struct meson_pmx_group meson_g12a_periphs_groups[] = {
- 	GROUP(bt565_a_din5,		2),
- 	GROUP(bt565_a_din6,		2),
- 	GROUP(bt565_a_din7,		2),
-+	GROUP(pwm_b_z0,			5),
-+	GROUP(pwm_c_z1,			5),
-+	GROUP(pwm_d_z2,			2),
- 	GROUP(tsin_b_valid_z,		3),
- 	GROUP(tsin_b_sop_z,		3),
- 	GROUP(tsin_b_din0_z,		3),
-@@ -723,6 +730,7 @@ static struct meson_pmx_group meson_g12a_periphs_groups[] = {
- 	GROUP(uart_c_rts,		2),
- 	GROUP(iso7816_clk_h,		1),
- 	GROUP(iso7816_data_h,		1),
-+	GROUP(pwm_b_h7,			5),
- 	GROUP(pwm_f_h,			4),
- 	GROUP(cec_ao_a_h,		4),
- 	GROUP(cec_ao_b_h,		5),
-@@ -1058,15 +1066,15 @@ static const char * const pwm_a_groups[] = {
- };
- 
- static const char * const pwm_b_groups[] = {
--	"pwm_b_x7", "pwm_b_x19",
-+	"pwm_b_x7", "pwm_b_x19", "pwm_b_h7", "pwm_b_z0",
- };
- 
- static const char * const pwm_c_groups[] = {
--	"pwm_c_c", "pwm_c_x5", "pwm_c_x8",
-+	"pwm_c_c", "pwm_c_x5", "pwm_c_x8", "pwm_c_z1",
- };
- 
- static const char * const pwm_d_groups[] = {
--	"pwm_d_x3", "pwm_d_x6",
-+	"pwm_d_x3", "pwm_d_x6", "pwm_d_z2",
- };
- 
- static const char * const pwm_e_groups[] = {
 diff --git a/sound/soc/meson/aiu-codec-ctrl.c b/sound/soc/meson/aiu-codec-ctrl.c
 index ee0ef6301010..d074e29f6d0b 100644
 --- a/sound/soc/meson/aiu-codec-ctrl.c
@@ -1548,6 +1513,28 @@ index ee0ef6301010..d074e29f6d0b 100644
  			  aiu_codec_ctrl_mux_put_enum);
  
  static const struct snd_soc_dapm_widget aiu_hdmi_ctrl_widgets[] = {
+diff --git a/sound/soc/meson/axg-frddr.c b/sound/soc/meson/axg-frddr.c
+index 747a900c0bb2..e38c31a7d86c 100644
+--- a/sound/soc/meson/axg-frddr.c
++++ b/sound/soc/meson/axg-frddr.c
+@@ -108,7 +108,7 @@ static struct snd_soc_dai_driver axg_frddr_dai_drv = {
+ 	.name = "FRDDR",
+ 	.playback = {
+ 		.stream_name	= "Playback",
+-		.channels_min	= 1,
++		.channels_min	= 2,
+ 		.channels_max	= AXG_FIFO_CH_MAX,
+ 		.rates		= AXG_FIFO_RATES,
+ 		.formats	= AXG_FIFO_FORMATS,
+@@ -183,7 +183,7 @@ static struct snd_soc_dai_driver g12a_frddr_dai_drv = {
+ 	.name = "FRDDR",
+ 	.playback = {
+ 		.stream_name	= "Playback",
+-		.channels_min	= 1,
++		.channels_min	= 2,
+ 		.channels_max	= AXG_FIFO_CH_MAX,
+ 		.rates		= AXG_FIFO_RATES,
+ 		.formats	= AXG_FIFO_FORMATS,
 -- 
 2.39.5
 

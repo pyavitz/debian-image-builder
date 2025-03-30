@@ -1,6 +1,6 @@
-From 585ef6fd9c7b8e6a1dc991758ed149a8737e1d1e Mon Sep 17 00:00:00 2001
+From b57e32f4fb287eb3e7374180cfe1d104323efc6e Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 10 Feb 2025 06:15:05 -0500
+Date: Sun, 30 Mar 2025 12:54:00 -0400
 Subject: [PATCH] meson64 general patch set
 
 source: https://github.com/tobetter/linux
@@ -15,14 +15,14 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  drivers/gpu/drm/panfrost/panfrost_job.c       |  14 +-
  drivers/gpu/drm/tiny/ili9341.c                |   2 +
  drivers/hid/hid-ids.h                         |   6 +
- drivers/hid/hid-quirks.c                      |   3 +
+ drivers/hid/hid-quirks.c                      |   2 +
  drivers/i2c/busses/i2c-rk3x.c                 |  32 +
  drivers/input/touchscreen/Kconfig             |  10 +
  drivers/input/touchscreen/Makefile            |   1 +
  drivers/input/touchscreen/dwav-usb-mt.c       | 554 ++++++++++++++++++
  drivers/input/touchscreen/goodix.c            |   3 +
  drivers/pinctrl/meson/pinctrl-meson-g12a.c    |  14 +-
- drivers/spi/spidev.c                          |   2 +
+ drivers/spi/spidev.c                          |   3 +
  include/drm/drm_mipi_dbi.h                    |   7 +-
  sound/soc/meson/Kconfig                       |   2 +
  sound/soc/meson/aiu-codec-ctrl.c              | 108 +++-
@@ -470,10 +470,10 @@ index e55029433509..f77e9fbb4c3d 100644
  };
  MODULE_DEVICE_TABLE(spi, ili9341_id);
 diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index c448de53bf91..02fd1c698b72 100644
+index 7e400624908e..b28a857d0740 100644
 --- a/drivers/hid/hid-ids.h
 +++ b/drivers/hid/hid-ids.h
-@@ -1480,4 +1480,10 @@
+@@ -1483,4 +1483,10 @@
  #define USB_VENDOR_ID_SIGNOTEC			0x2133
  #define USB_DEVICE_ID_SIGNOTEC_VIEWSONIC_PD1011	0x0018
  
@@ -484,33 +484,19 @@ index c448de53bf91..02fd1c698b72 100644
 +#define USB_DEVICE_ID_VU7PLUS	0x0705
 +
  #endif
-From e41f81d73fb43ae24ef3583935ec79686048c0e0 Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Tue, 4 Mar 2025 07:27:30 -0500
-Subject: [PATCH] HID_USB_DEVICE: USB_VENDOR_ID_ODROID
-
-Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
----
- drivers/hid/hid-quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
-
 diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
-index 5d7a418ccdbe..9e5eb60e94f3 100644
+index 5d7a418ccdbe..4f37912bfd3f 100644
 --- a/drivers/hid/hid-quirks.c
 +++ b/drivers/hid/hid-quirks.c
-@@ -892,6 +892,9 @@ static const struct hid_device_id hid_ignore_list[] = {
+@@ -892,6 +892,8 @@ static const struct hid_device_id hid_ignore_list[] = {
  #endif
  	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_QUANTA, USB_DEVICE_ID_QUANTA_HP_5MP_CAMERA_5473) },
-+
 +	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU5) },
 +	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU7PLUS) },
  	{ }
  };
  
--- 
-2.39.5
-
 diff --git a/drivers/i2c/busses/i2c-rk3x.c b/drivers/i2c/busses/i2c-rk3x.c
 index d4e9196445c0..3d9244b15627 100644
 --- a/drivers/i2c/busses/i2c-rk3x.c
@@ -1237,18 +1223,23 @@ index e2788bfc5874..9372419a81d7 100644
  
  static const char * const pwm_e_groups[] = {
 diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
-index 58ae4304fdab..6461426118be 100644
+index 58ae4304fdab..65f50af29d37 100644
 --- a/drivers/spi/spidev.c
 +++ b/drivers/spi/spidev.c
-@@ -716,6 +716,7 @@ static const struct spi_device_id spidev_spi_ids[] = {
+@@ -1,3 +1,4 @@
++
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ /*
+  * Simple synchronous userspace interface to SPI devices
+@@ -716,6 +717,7 @@ static const struct spi_device_id spidev_spi_ids[] = {
  	{ .name = /* semtech */ "sx1301" },
  	{ .name = /* silabs */ "em3581" },
  	{ .name = /* silabs */ "si3210" },
-+	{ .name = /* generic */ "spi-dev" },
++	{ .name = "spi-dev" },
  	{},
  };
  MODULE_DEVICE_TABLE(spi, spidev_spi_ids);
-@@ -747,6 +748,7 @@ static const struct of_device_id spidev_dt_ids[] = {
+@@ -747,6 +749,7 @@ static const struct of_device_id spidev_dt_ids[] = {
  	{ .compatible = "semtech,sx1301", .data = &spidev_of_check },
  	{ .compatible = "silabs,em3581", .data = &spidev_of_check },
  	{ .compatible = "silabs,si3210", .data = &spidev_of_check },
