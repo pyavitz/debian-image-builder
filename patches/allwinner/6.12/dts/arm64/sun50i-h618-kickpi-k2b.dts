@@ -83,6 +83,24 @@
 		regulator-name = "vcc-5v";
 	};
 
+	reg_vcc3v3_wifi: regulator-vcc3v3-wifi {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-name = "vcc-3v3-wifi";
+		vin-supply = <&reg_vcc5v>;
+	};
+
+	reg_vcc1v8_wifi: regulator-vcc1v8-wifi {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-name = "vcc-1v8-wifi";
+		vin-supply = <&reg_vcc3v3_wifi>;
+	};
+
 	wifi_pwrseq: wifi-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rtc CLK_OSC32K_FANOUT>;
@@ -212,8 +230,8 @@
 	no-mmc;
 	no-sd;
 	non-removable;
-	vmmc-supply = <&reg_dldo1>;
-	vqmmc-supply = <&reg_aldo1>;
+	vmmc-supply = <&reg_vcc3v3_wifi>;
+	vqmmc-supply = <&reg_vcc1v8_wifi>;
 
 	sdio: wifi@1 {
 		reg = <1>;
@@ -251,7 +269,7 @@
 &pio {
 	vcc-pc-supply = <&reg_dldo1>;
 	vcc-pf-supply = <&reg_dldo1>;
-	vcc-pg-supply = <&reg_aldo1>;
+	vcc-pg-supply = <&reg_vcc1v8_wifi>;
 	vcc-ph-supply = <&reg_dldo1>;
 	vcc-pi-supply = <&reg_dldo1>;
 	vcc-pl-supply = <&reg_aldo1>;

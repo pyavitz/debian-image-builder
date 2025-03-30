@@ -1,13 +1,13 @@
-From 4cc1de5615306efc3625637f63f0bf1ef083e58b Mon Sep 17 00:00:00 2001
+From b8d730955386f7317f2a993abf9082b3f0dd2007 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 29 Mar 2025 10:06:21 -0400
+Date: Sun, 30 Mar 2025 08:35:42 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 302 ++++++++++++++++++
- 2 files changed, 332 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 320 ++++++++++++++++++
+ 2 files changed, 350 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..60c561c3773
+index 00000000000..3947a5b0d1b
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,302 @@
+@@ -0,0 +1,320 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -120,6 +120,24 @@ index 00000000000..60c561c3773
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		regulator-name = "vcc-5v";
++	};
++
++	reg_vcc3v3_wifi: regulator-vcc3v3-wifi {
++		compatible = "regulator-fixed";
++		regulator-always-on;
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-name = "vcc-3v3-wifi";
++		vin-supply = <&reg_vcc5v>;
++	};
++
++	reg_vcc1v8_wifi: regulator-vcc1v8-wifi {
++		compatible = "regulator-fixed";
++		regulator-always-on;
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-name = "vcc-1v8-wifi";
++		vin-supply = <&reg_vcc3v3_wifi>;
 +	};
 +
 +	wifi_pwrseq: wifi-pwrseq {
@@ -198,8 +216,8 @@ index 00000000000..60c561c3773
 +	no-mmc;
 +	no-sd;
 +	non-removable;
-+	vmmc-supply = <&reg_dldo1>;
-+	vqmmc-supply = <&reg_aldo1>;
++	vmmc-supply = <&reg_vcc3v3_wifi>;
++	vqmmc-supply = <&reg_vcc1v8_wifi>;
 +
 +	sdio: wifi@1 {
 +		reg = <1>;
@@ -237,7 +255,7 @@ index 00000000000..60c561c3773
 +&pio {
 +	vcc-pc-supply = <&reg_dldo1>;
 +	vcc-pf-supply = <&reg_dldo1>;
-+	vcc-pg-supply = <&reg_aldo1>;
++	vcc-pg-supply = <&reg_vcc1v8_wifi>;
 +	vcc-ph-supply = <&reg_dldo1>;
 +	vcc-pi-supply = <&reg_dldo1>;
 +	vcc-pl-supply = <&reg_aldo1>;
