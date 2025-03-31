@@ -83,22 +83,13 @@
 		regulator-name = "vcc-5v";
 	};
 
-	reg_vcc3v3_wifi: regulator-vcc3v3-wifi {
+	reg_vcc3v3: vcc3v3 {
+		/* Discrete 3.3V regulator */
 		compatible = "regulator-fixed";
-		regulator-always-on;
+		regulator-name = "vcc-3v3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		regulator-name = "vcc-3v3-wifi";
-		vin-supply = <&reg_vcc5v>;
-	};
-
-	reg_vcc1v8_wifi: regulator-vcc1v8-wifi {
-		compatible = "regulator-fixed";
 		regulator-always-on;
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		regulator-name = "vcc-1v8-wifi";
-		vin-supply = <&reg_vcc3v3_wifi>;
 	};
 
 	wifi_pwrseq: wifi-pwrseq {
@@ -107,14 +98,14 @@
 		clock-names = "ext_clock";
 		pinctrl-0 = <&x32clk_fanout_pin>;
 		pinctrl-names = "default";
-		//post-power-on-delay-ms = <200>;
+		post-power-on-delay-ms = <200>;
 		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
 	};
-//
-//	btlpm: btlpm {
-//		enable-gpios = <&pio 6 16 GPIO_ACTIVE_HIGH>;
-//		reset-gpios = <&pio 6 19 GPIO_ACTIVE_LOW>;
-//	};
+
+	btlpm: btlpm {
+		enable-gpios = <&pio 6 16 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 6 19 GPIO_ACTIVE_LOW>;
+	};
 };
 
 &codec {
@@ -214,8 +205,9 @@
 	bus-width = <4>;
 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 	cd-inverted;
+	disable-wp;
+	max-frequency = <100000000>;
 	vmmc-supply = <&reg_dldo1>;
-	vqmmc-supply = <&reg_aldo1>;
 };
 
 /* SDIO */
@@ -223,15 +215,14 @@
 	status = "okay";
 	bus-width = <4>;
 	cap-sdio-irq;
-	//cd-gpios = <&pio 6 15 GPIO_ACTIVE_HIGH>; /* PG15 */
 	ignore-pm-notify;
 	keep-power-in-suspend;
 	mmc-pwrseq = <&wifi_pwrseq>;
 	no-mmc;
 	no-sd;
 	non-removable;
-	vmmc-supply = <&reg_vcc3v3_wifi>;
-	vqmmc-supply = <&reg_vcc1v8_wifi>;
+	vmmc-supply = <&reg_dldo1>;
+	vqmmc-supply = <&reg_aldo1>;
 
 	sdio: wifi@1 {
 		reg = <1>;
@@ -267,12 +258,12 @@
 };
 
 &pio {
-	vcc-pc-supply = <&reg_dldo1>;
+	vcc-pc-supply = <&reg_aldo1>;
 	vcc-pf-supply = <&reg_dldo1>;
-	vcc-pg-supply = <&reg_vcc1v8_wifi>;
+	vcc-pg-supply = <&reg_aldo1>;
 	vcc-ph-supply = <&reg_dldo1>;
 	vcc-pi-supply = <&reg_dldo1>;
-	vcc-pl-supply = <&reg_aldo1>;
+	vcc-pl-supply = <&reg_dldo1>;
 
 	// PI16 required for sys_led
 	ext_rgmii_pins: rgmii-pins {
@@ -312,7 +303,6 @@
 
 &r_i2c {
 	status = "okay";
-
 	axp313: pmic@36 {
 		compatible = "x-powers,axp313a";
 		reg = <0x36>;
@@ -325,50 +315,39 @@
 		vin3-supply = <&reg_vcc5v>;
 
 		regulators {
-			reg_dcdc1: dcdc1 {
-				regulator-name = "vdd-gpu";
-				regulator-min-microvolt = <810000>;
-				regulator-max-microvolt = <990000>;
-				regulator-step-delay-us = <25>;
-				regulator-final-delay-us = <50>;
-				regulator-always-on;
-			};
-
-			reg_dcdc2: dcdc2 {
-				regulator-name = "vdd-cpu";
-				regulator-min-microvolt = <500000>;
-				regulator-max-microvolt = <1200000>;
-				regulator-step-delay-us = <25>;
-				regulator-final-delay-us = <50>;
-				regulator-ramp-delay = <200>;
-				regulator-always-on;
-			};
-
-			reg_dcdc3: dcdc3 {
-				regulator-name = "vcc-dram";
-				regulator-min-microvolt = <1100000>;
-				regulator-max-microvolt = <1100000>;
-				regulator-step-delay-us = <25>;
-				regulator-final-delay-us = <50>;
-				regulator-always-on;
-			};
-
 			reg_aldo1: aldo1 {
-				regulator-name = "vcc-1v8";
+				regulator-always-on;
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
-				regulator-step-delay-us = <25>;
-				regulator-final-delay-us = <50>;
-				regulator-always-on;
+				regulator-name = "vcc-1v8-pll";
 			};
 
 			reg_dldo1: dldo1 {
-				regulator-name = "vcc-3v3";
+				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
-				regulator-step-delay-us = <25>;
-				regulator-final-delay-us = <50>;
+				regulator-name = "vcc-3v3-io";
+			};
+
+			reg_dcdc1: dcdc1 {
 				regulator-always-on;
+				regulator-min-microvolt = <810000>;
+				regulator-max-microvolt = <990000>;
+				regulator-name = "vdd-gpu-sys";
+			};
+
+			reg_dcdc2: dcdc2 {
+				regulator-always-on;
+				regulator-min-microvolt = <810000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-name = "vdd-cpu";
+			};
+
+			reg_dcdc3: dcdc3 {
+				regulator-always-on;
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <1500000>;
+				regulator-name = "vdd-dram";
 			};
 		};
 	};

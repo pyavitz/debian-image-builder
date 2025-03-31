@@ -1,13 +1,13 @@
-From b8d730955386f7317f2a993abf9082b3f0dd2007 Mon Sep 17 00:00:00 2001
+From dfc1f7925d8c2e482985d43e7c490786d7e67a36 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sun, 30 Mar 2025 08:35:42 -0400
+Date: Mon, 31 Mar 2025 09:06:20 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 320 ++++++++++++++++++
- 2 files changed, 350 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 313 ++++++++++++++++++
+ 2 files changed, 343 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..3947a5b0d1b
+index 00000000000..09f133abe3e
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,320 @@
+@@ -0,0 +1,313 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -122,22 +122,13 @@ index 00000000000..3947a5b0d1b
 +		regulator-name = "vcc-5v";
 +	};
 +
-+	reg_vcc3v3_wifi: regulator-vcc3v3-wifi {
++	reg_vcc3v3: vcc3v3 {
++		/* Discrete 3.3V regulator */
 +		compatible = "regulator-fixed";
-+		regulator-always-on;
++		regulator-name = "vcc-3v3";
 +		regulator-min-microvolt = <3300000>;
 +		regulator-max-microvolt = <3300000>;
-+		regulator-name = "vcc-3v3-wifi";
-+		vin-supply = <&reg_vcc5v>;
-+	};
-+
-+	reg_vcc1v8_wifi: regulator-vcc1v8-wifi {
-+		compatible = "regulator-fixed";
 +		regulator-always-on;
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		regulator-name = "vcc-1v8-wifi";
-+		vin-supply = <&reg_vcc3v3_wifi>;
 +	};
 +
 +	wifi_pwrseq: wifi-pwrseq {
@@ -146,7 +137,7 @@ index 00000000000..3947a5b0d1b
 +		clock-names = "ext_clock";
 +		pinctrl-0 = <&x32clk_fanout_pin>;
 +		pinctrl-names = "default";
-+		//post-power-on-delay-ms = <200>;
++		post-power-on-delay-ms = <200>;
 +		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
 +	};
 +};
@@ -200,8 +191,8 @@ index 00000000000..3947a5b0d1b
 +	bus-width = <4>;
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 +	cd-inverted;
++	max-frequency = <100000000>;
 +	vmmc-supply = <&reg_dldo1>;
-+	vqmmc-supply = <&reg_aldo1>;
 +};
 +
 +/* SDIO */
@@ -209,15 +200,14 @@ index 00000000000..3947a5b0d1b
 +	status = "okay";
 +	bus-width = <4>;
 +	cap-sdio-irq;
-+	//cd-gpios = <&pio 6 15 GPIO_ACTIVE_HIGH>; /* PG15 */
 +	ignore-pm-notify;
 +	keep-power-in-suspend;
 +	mmc-pwrseq = <&wifi_pwrseq>;
 +	no-mmc;
 +	no-sd;
 +	non-removable;
-+	vmmc-supply = <&reg_vcc3v3_wifi>;
-+	vqmmc-supply = <&reg_vcc1v8_wifi>;
++	vmmc-supply = <&reg_dldo1>;
++	vqmmc-supply = <&reg_aldo1>;
 +
 +	sdio: wifi@1 {
 +		reg = <1>;
@@ -255,7 +245,7 @@ index 00000000000..3947a5b0d1b
 +&pio {
 +	vcc-pc-supply = <&reg_dldo1>;
 +	vcc-pf-supply = <&reg_dldo1>;
-+	vcc-pg-supply = <&reg_vcc1v8_wifi>;
++	vcc-pg-supply = <&reg_aldo1>;
 +	vcc-ph-supply = <&reg_dldo1>;
 +	vcc-pi-supply = <&reg_dldo1>;
 +	vcc-pl-supply = <&reg_aldo1>;
@@ -269,7 +259,23 @@ index 00000000000..3947a5b0d1b
 +		drive-strength = <40>;
 +	};
 +
-+	// PC0 required for &spi0
++	//  Add I2C PH Pins
++	i2c1_ph_pins: i2c1-ph-pins {
++		pins = "PH0", "PH1";
++		function = "i2c1";
++	};
++
++	i2c2_ph_pins: i2c2-ph-pins {
++		pins = "PH2", "PH3";
++		function = "i2c2";
++	};
++
++	i2c4_ph_pins: i2c4-ph-pins {
++		pins = "PH6", "PH7";
++		function = "i2c4";
++	};
++
++	// PC0 required for spi0
 +	mmc2_pins: mmc2-pins {
 +		pins = "PC1", "PC5", "PC6",
 +		       "PC8", "PC9", "PC10", "PC11",
@@ -282,64 +288,51 @@ index 00000000000..3947a5b0d1b
 +
 +&r_i2c {
 +	status = "okay";
-+
 +	axp313: pmic@36 {
 +		compatible = "x-powers,axp313a";
 +		reg = <0x36>;
 +		#interrupt-cells = <1>;
 +		interrupt-controller;
 +		interrupt-parent = <&pio>;
-+		//interrupts = <2 9 IRQ_TYPE_LEVEL_LOW>;	/* PC9 */
 +
 +		vin1-supply = <&reg_vcc5v>;
 +		vin2-supply = <&reg_vcc5v>;
 +		vin3-supply = <&reg_vcc5v>;
 +
 +		regulators {
-+			reg_dcdc1: dcdc1 {
-+				regulator-name = "vdd-gpu";
-+				regulator-min-microvolt = <810000>;
-+				regulator-max-microvolt = <990000>;
-+				regulator-step-delay-us = <25>;
-+				regulator-final-delay-us = <50>;
-+				regulator-always-on;
-+			};
-+
-+			reg_dcdc2: dcdc2 {
-+				regulator-name = "vdd-cpu";
-+				regulator-min-microvolt = <500000>;
-+				regulator-max-microvolt = <1200000>;
-+				regulator-step-delay-us = <25>;
-+				regulator-final-delay-us = <50>;
-+				regulator-ramp-delay = <200>;
-+				regulator-always-on;
-+			};
-+
-+			reg_dcdc3: dcdc3 {
-+				regulator-name = "vcc-dram";
-+				regulator-min-microvolt = <1100000>;
-+				regulator-max-microvolt = <1100000>;
-+				regulator-step-delay-us = <25>;
-+				regulator-final-delay-us = <50>;
-+				regulator-always-on;
-+			};
-+
 +			reg_aldo1: aldo1 {
-+				regulator-name = "vcc-1v8";
++				regulator-always-on;
 +				regulator-min-microvolt = <1800000>;
 +				regulator-max-microvolt = <1800000>;
-+				regulator-step-delay-us = <25>;
-+				regulator-final-delay-us = <50>;
-+				regulator-always-on;
++				regulator-name = "vcc-1v8-pll";
 +			};
 +
 +			reg_dldo1: dldo1 {
-+				regulator-name = "vcc-3v3";
++				regulator-always-on;
 +				regulator-min-microvolt = <3300000>;
 +				regulator-max-microvolt = <3300000>;
-+				regulator-step-delay-us = <25>;
-+				regulator-final-delay-us = <50>;
++				regulator-name = "vcc-3v3-io";
++			};
++
++			reg_dcdc1: dcdc1 {
 +				regulator-always-on;
++				regulator-min-microvolt = <810000>;
++				regulator-max-microvolt = <990000>;
++				regulator-name = "vdd-gpu-sys";
++			};
++
++			reg_dcdc2: dcdc2 {
++				regulator-always-on;
++				regulator-min-microvolt = <810000>;
++				regulator-max-microvolt = <1100000>;
++				regulator-name = "vdd-cpu";
++			};
++
++			reg_dcdc3: dcdc3 {
++				regulator-always-on;
++				regulator-min-microvolt = <1500000>;
++				regulator-max-microvolt = <1500000>;
++				regulator-name = "vdd-dram";
 +			};
 +		};
 +	};
