@@ -1,13 +1,13 @@
-From dfc1f7925d8c2e482985d43e7c490786d7e67a36 Mon Sep 17 00:00:00 2001
+From 1d3810a5516353794911bf68c19c416872f26298 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 31 Mar 2025 09:06:20 -0400
+Date: Wed, 2 Apr 2025 11:30:55 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 313 ++++++++++++++++++
- 2 files changed, 343 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 312 ++++++++++++++++++
+ 2 files changed, 342 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..09f133abe3e
+index 00000000000..7907c659d7f
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,313 @@
+@@ -0,0 +1,312 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -125,10 +125,11 @@ index 00000000000..09f133abe3e
 +	reg_vcc3v3: vcc3v3 {
 +		/* Discrete 3.3V regulator */
 +		compatible = "regulator-fixed";
-+		regulator-name = "vcc-3v3";
++		regulator-always-on;
 +		regulator-min-microvolt = <3300000>;
 +		regulator-max-microvolt = <3300000>;
-+		regulator-always-on;
++		regulator-name = "vcc-3v3";
++		vin-supply = <&reg_vcc5v>;
 +	};
 +
 +	wifi_pwrseq: wifi-pwrseq {
@@ -169,7 +170,7 @@ index 00000000000..09f133abe3e
 +};
 +
 +&ehci3 {
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&ir {
@@ -191,7 +192,7 @@ index 00000000000..09f133abe3e
 +	bus-width = <4>;
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 +	cd-inverted;
-+	max-frequency = <100000000>;
++	disable-wp;
 +	vmmc-supply = <&reg_dldo1>;
 +};
 +
@@ -199,7 +200,6 @@ index 00000000000..09f133abe3e
 +&mmc1 {
 +	status = "okay";
 +	bus-width = <4>;
-+	cap-sdio-irq;
 +	ignore-pm-notify;
 +	keep-power-in-suspend;
 +	mmc-pwrseq = <&wifi_pwrseq>;
@@ -239,7 +239,7 @@ index 00000000000..09f133abe3e
 +};
 +
 +&ohci3 {
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&pio {
@@ -248,7 +248,6 @@ index 00000000000..09f133abe3e
 +	vcc-pg-supply = <&reg_aldo1>;
 +	vcc-ph-supply = <&reg_dldo1>;
 +	vcc-pi-supply = <&reg_dldo1>;
-+	vcc-pl-supply = <&reg_aldo1>;
 +
 +	// PI16 required for sys_led
 +	ext_rgmii_pins: rgmii-pins {
@@ -345,7 +344,7 @@ index 00000000000..09f133abe3e
 +};
 +
 +&uart1 {
-+	status = "disabled";
++	status = "okay";
 +	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
 +	pinctrl-names = "default";
 +	uart-has-rtscts;

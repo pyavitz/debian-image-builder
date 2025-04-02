@@ -86,10 +86,11 @@
 	reg_vcc3v3: vcc3v3 {
 		/* Discrete 3.3V regulator */
 		compatible = "regulator-fixed";
-		regulator-name = "vcc-3v3";
+		regulator-always-on;
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		regulator-always-on;
+		regulator-name = "vcc-3v3";
+		vin-supply = <&reg_vcc5v>;
 	};
 
 	wifi_pwrseq: wifi-pwrseq {
@@ -100,11 +101,6 @@
 		pinctrl-names = "default";
 		post-power-on-delay-ms = <200>;
 		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
-	};
-
-	btlpm: btlpm {
-		enable-gpios = <&pio 6 16 GPIO_ACTIVE_HIGH>;
-		reset-gpios = <&pio 6 19 GPIO_ACTIVE_LOW>;
 	};
 };
 
@@ -144,11 +140,11 @@
 };
 
 &ehci3 {
-	status = "okay";
+	status = "disabled";
 };
 
 &gpu {
-	status = "disabled";
+	status = "okay";
 	mali-supply = <&reg_dcdc1>;
 };
 
@@ -206,7 +202,6 @@
 	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 	cd-inverted;
 	disable-wp;
-	max-frequency = <100000000>;
 	vmmc-supply = <&reg_dldo1>;
 };
 
@@ -214,7 +209,7 @@
 &mmc1 {
 	status = "okay";
 	bus-width = <4>;
-	cap-sdio-irq;
+	ctl-spec-caps = <0x8>;
 	ignore-pm-notify;
 	keep-power-in-suspend;
 	mmc-pwrseq = <&wifi_pwrseq>;
@@ -254,16 +249,15 @@
 };
 
 &ohci3 {
-	status = "okay";
+	status = "disabled";
 };
 
 &pio {
-	vcc-pc-supply = <&reg_aldo1>;
+	vcc-pc-supply = <&reg_dldo1>;
 	vcc-pf-supply = <&reg_dldo1>;
 	vcc-pg-supply = <&reg_aldo1>;
 	vcc-ph-supply = <&reg_dldo1>;
 	vcc-pi-supply = <&reg_dldo1>;
-	vcc-pl-supply = <&reg_dldo1>;
 
 	// PI16 required for sys_led
 	ext_rgmii_pins: rgmii-pins {
