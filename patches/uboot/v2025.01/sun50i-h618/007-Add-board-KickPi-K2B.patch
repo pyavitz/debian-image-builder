@@ -1,13 +1,13 @@
-From 1d3810a5516353794911bf68c19c416872f26298 Mon Sep 17 00:00:00 2001
+From d569ab162727e885d0c22160b446661eff294719 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Wed, 2 Apr 2025 11:30:55 -0400
+Date: Fri, 4 Apr 2025 12:57:23 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 312 ++++++++++++++++++
- 2 files changed, 342 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 310 ++++++++++++++++++
+ 2 files changed, 340 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..7907c659d7f
+index 00000000000..975c6abb5f1
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,310 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -193,6 +193,7 @@ index 00000000000..7907c659d7f
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 +	cd-inverted;
 +	disable-wp;
++	max-frequency = <50000000>;
 +	vmmc-supply = <&reg_dldo1>;
 +};
 +
@@ -200,11 +201,9 @@ index 00000000000..7907c659d7f
 +&mmc1 {
 +	status = "okay";
 +	bus-width = <4>;
-+	ignore-pm-notify;
 +	keep-power-in-suspend;
++	max-frequency = <100000000>;
 +	mmc-pwrseq = <&wifi_pwrseq>;
-+	no-mmc;
-+	no-sd;
 +	non-removable;
 +	vmmc-supply = <&reg_dldo1>;
 +	vqmmc-supply = <&reg_aldo1>;
@@ -219,7 +218,6 @@ index 00000000000..7907c659d7f
 +	status = "okay";
 +	bus-width = <8>;
 +	cap-mmc-hw-reset;
-+	max-frequency = <100000000>;
 +	mmc-hs200-1_8v;
 +	non-removable;
 +	vmmc-supply = <&reg_dldo1>;
