@@ -9,21 +9,20 @@ ROOTFS_ARCH="rootfs-${ARCH_EXT}"
 STATIC="qemu-aarch64-static"
 
 # device information
-SERIES="rk3588"
+SERIES="rk3566"
 FAMILY="rockchip"
-FAMILY_EXT="rk3588"
-DTB="${SERIES}-orangepi-5-plus"
+FAMILY_EXT="rk356x"
+DTB="${SERIES}-radxa-zero-3w"
 
 # default config
-LINUX_DEFCONFIG="orangepi-5_defconfig"
-#LINUX_DEFCONFIG="rockchip_linux_defconfig" # vendor
-UBOOT_DEFCONFIG="_defconfig"
+LINUX_DEFCONFIG="rockchip64_defconfig"
+UBOOT_DEFCONFIG="radxa-zero-3-rk3566_defconfig"
 
 # partition scheme
 GPT="true"
 EFI="false"
-VFAT="true"
-P_VALUE="p2"
+VFAT="false"
+P_VALUE="p1"
 OFFSET="32768"
 
 # boot config
@@ -33,13 +32,15 @@ BOOTINI="false"
 BOOTCMD="false"
 
 # arm trusted firmware
-ATF_PLAT=""
-ATF_EXT=""
-RKBIN_ELF=""
-RKBIN_RAM=""
+ATF_PLAT="rk3568"
+ATF_EXT="PLAT=${ATF_PLAT} bl31"
+RKBIN_COMMIT="f43a462e7a1429a9d407ae52b4745033034a6cf9"
+RKBIN_DIR="rkbin-${RKBIN_COMMIT}/bin/rk35"
+RKBIN_ELF="bl31.elf"
+RKBIN_RAM="rk3566_ddr_1056MHz_v1.23.bin"
 
 # output
-BOARD="orangepi5plus"
+BOARD="radxazero3w"
 OUTPUT="output/${BOARD}"
 
 # extlinux and bootcmd
@@ -49,17 +50,21 @@ BOOTCMD_FDTOVERLAYS=""
 EXTLINUX_FDTOVERLAYS="#fdtoverlays"
 
 # cmdline
-CONSOLE="console=ttyS2,115200n8 console=tty1"
+CONSOLE="console=tty1 console=ttyS2,115200n8"
 LOGLEVEL="loglevel=1"
-EXTRA="net.ifnames=0 rootflags=data=writeback"
+EXTRA="net.ifnames=0"
 
 # motd
-DEFAULT_MOTD="OrangePi 5 Plus"
+DEFAULT_MOTD="Radxa Zero 3W"
+
+# customize
+#MODULES_BLACKLIST=""
+#MODULES_LOAD=""
 
 # patches
-LINUX_PATCHING="false"
+LINUX_PATCHING="true"
 UBOOT_PATCHDIR="patches/uboot"
-LINUX_PATCHDIR="patches/${FAMILY}/${FAMILY_EXT}"
+LINUX_PATCHDIR="patches/${FAMILY}"
 
 # image
 IMG_EXP="${DTB}-*.img*"
@@ -68,30 +73,30 @@ IMG_EXP="${DTB}-*.img*"
 RANDOM_LOGO="false"
 
 # precompiled
-PRECOMPILED_UBOOT="true"
-PKGVERSION="2017.09"
+PRECOMPILED_UBOOT="false"
+PKGVERSION=""
 PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
 
-# force git (https://github.com/orangepi-xunlong/linux-orangepi/)
-FORCE_GIT="true"
-GIT_OWN="orangepi-xunlong"
-GIT_REPO="linux-orangepi"
-GIT_BRANCH="orange-pi-5.10-rk3588"
-GIT_URL="https://github.com"
-GIT_BLOB="blob"
+# force git
+FORCE_GIT="false"
+GIT_OWN=""
+GIT_REPO=""
+GIT_BRANCH=""
+GIT_URL=""
+GIT_BLOB=""
 # git patching
 GIT_PATCHING="false"
 GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
 
 # override userdata file
-FORCE_VERSION="false"
-FORCE_LINUX_VERSION=""
-FORCE_UBOOT_VERSION=""
+FORCE_VERSION="true"
+FORCE_LINUX_VERSION="" # currently defined by scripts/linux
+FORCE_UBOOT_VERSION="v2025.04"
 
 # devicetree and platform
 DEVICETREE="${DTB}.dtb"
 PLATFORM="${FAMILY}"
 
 # kernel package name (if shared patching set to true)
-COMMON_PKG="false"
-COMMON_PKGNAME="rk"
+COMMON_PKG="true"
+COMMON_PKGNAME="rockchip"

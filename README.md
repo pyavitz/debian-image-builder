@@ -35,16 +35,8 @@ Odroid N2+
 Radxa Zero
 X96-AIR	GBIT / QCOM
 
-# FREESCALE
-Cubox-I (*)
-
 # ROCKCHIP
-Indiedroid Nova (*)
-Khadas Edge2 (*)
-Odroid M1 (*)
-OrangePi 5 (*)
-OrangePi 5 Plus (*)
-Rock 5B	(*)
+Radxa Zero 3W (*)
 
 # SAMSUNG
 Odroid XU4

@@ -2,34 +2,46 @@
 
 # ATF BINARY
 atf_bl31 (){ # place bl31 file.
-if [[ "$FAMILY" == "rockchip" ]]; then
-	RK35="../../files/boot/rk35"
-	if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-		if [[ -f "../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
-			cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
-			cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
+if [[ -f "../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
+	cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
+	cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
+else
+		report_atf_error
+fi
+if [[ -f "${RKBIN_ELF}" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_RAM}" ]]; then
+	export BL31="${RKBIN_ELF}"
+	export ROCKCHIP_TPL="../${RKBIN_DIR}/${RKBIN_RAM}"
+elif [[ -f "../${RKBIN_DIR}/${RKBIN_ELF}" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_RAM}" ]]; then
+	export BL31="../${RKBIN_DIR}/${RKBIN_ELF}"
+	export ROCKCHIP_TPL="../${RKBIN_DIR}/${RKBIN_RAM}"
+else
+		report_error
+fi
+}
+
+# RKBIN RKBIN_COMMIT
+rockchip_loader_binaries (){
+GIT_RKBIN_URL="https://github.com/rockchip-linux/rkbin.git"
+rkbin_download
+}
+
+# RKBIN DOWNLOAD
+rkbin_download (){
+if [[ `wget -S --spider https://github.com/rockchip-linux/rkbin/blob/master/README 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ -d "rkbin-${RKBIN_COMMIT}" ]]; then
+		echo -en "${WHT}RKBIN ${RKBIN_COMMIT}${FIN}"
+		echo -e " ${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+	else
+		rm -fdr rkbin-*
+		echo -en "${WHT}RKBIN ${RKBIN_COMMIT}${FIN}"
+		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+		git clone --depth=1 -q -c advice.detachedHead=false ${GIT_RKBIN_URL} rkbin-${RKBIN_COMMIT}
+		if [[ -d "rkbin-${RKBIN_COMMIT}" ]]; then
+			cd rkbin-${RKBIN_COMMIT}; git checkout -q ${RKBIN_COMMIT}
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
-			report_atf_error
-		fi
-	fi
-	if [[ "$FAMILY_EXT" == "rk356x" ]]; then
-		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
-			cp -f ${RK35}/${RKBIN_ELF} bl31.elf
-			cp -f ${RK35}/${RKBIN_ELF} atf-bl31
-			cp -f ${RK35}/${RKBIN_RAM} .
-			cp -f ${RKBIN_RAM} ram_init.bin
-		else
-			report_atf_error
-		fi
-		if [[ "$UBOOT_VERSION" == "v2023.07.02" ]]; then
-			#export BL31="bl31.elf"
-			export ROCKCHIP_TPL="${RKBIN_RAM}"
-		fi
-	fi
-	if [[ "$FAMILY_EXT" == "rk3588" ]]; then
-		if [[ -f "${RK35}/${RKBIN_ELF}" ]] && [[ -f "${RK35}/${RKBIN_RAM}" ]]; then
-			export BL31="${RK35}/${RKBIN_ELF}"
-			export ROCKCHIP_TPL="${RK35}/${RKBIN_RAM}"
+			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			exit 1
 		fi
 	fi
 fi
@@ -37,94 +49,36 @@ fi
 
 # U-BOOT
 rockchip_uboot_config (){
-if [[ "$BOARD" == "renegade" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
-	echo "CONFIG_USE_PREBOOT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_BOARD_LATE_INIT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_CMD_GPIO=y" >> configs/${UBOOT_DEFCONFIG}
-fi
-if [[ "$BOARD" == "nanopct4" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
-	if [[ "$UBOOT_VERSION" =~ ^(v2023.04|v2023.07.02|v2023.10)$ ]]; then
-		:;
-	else
-		echo "CONFIG_MISC=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_PHY_ROCKCHIP_INNO_USB2=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_PHY_ROCKCHIP_TYPEC=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_USB_DWC3_GENERIC=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_DISPLAY_ROCKCHIP_EDP=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_OF_LIBFDT_OVERLAY=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_USE_PREBOOT=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_PCIE_DW_ROCKCHIP=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_ROCKCHIP_USB2_PHY=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_USB_DWC2=y" >> configs/${UBOOT_DEFCONFIG}
-	fi
-fi
-if [[ "$BOARD" == "nanopir4se" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
-	echo "CONFIG_MMC_IO_VOLTAGE=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_SPL_MMC_IO_VOLTAGE=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_MMC_UHS_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_SPL_MMC_UHS_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_SPL_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
-fi
-if [[ "$BOARD" == "rockpro64" || "$BOARD" == "pinebookpro" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
-	echo "CONFIG_PCIE_DW_ROCKCHIP=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_OF_LIBFDT_OVERLAY=y" >> configs/${UBOOT_DEFCONFIG}
-fi
 if [[ "$FAMILY_EXT" == "rk356x" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 	echo "CONFIG_BOOTMETH_SCRIPT=y" >> configs/${UBOOT_DEFCONFIG}
 	echo "CONFIG_OF_LIBFDT_OVERLAY=y" >> configs/${UBOOT_DEFCONFIG}
 	echo "CONFIG_DM_VIDEO=y" >> configs/${UBOOT_DEFCONFIG}
-	if [[ "$BOARD" == "nanopir5c" || "$BOARD" == "nanopir5s" ]]; then
-		echo "CONFIG_MMC_IO_VOLTAGE=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_SPL_MMC_IO_VOLTAGE=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_MMC_UHS_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
-		echo "CONFIG_SPL_MMC_UHS_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
-	fi
 fi
 }
 
 uboot_output (){
-if [[ "$ARCH" == "arm" ]]; then
-	# u-boot v2023.07.02
-	if [[ -f "u-boot-rockchip.bin" ]]; then
-		mkdir -p ../../${OUTPUT}
-		cp -f u-boot-rockchip.bin ../../${OUTPUT}/
-		uboot_packaging
-		echo ""
-	else
-		report_error
-	fi
-fi
-if [[ "$ARCH" == "arm64" ]]; then
-	if [[ -f "idbloader.img" ]] && [[ -f "u-boot.itb" ]]; then
-		mkdir -p ../../${OUTPUT}
-		cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
-		cp -f u-boot.itb ../../${OUTPUT}/
-		uboot_packaging
-		echo ""
-	else
-		report_error
-	fi
+if [[ -f "idbloader.img" ]] && [[ -f "u-boot.itb" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
+	cp -f u-boot.itb ../../${OUTPUT}/u-boot.bin
+	uboot_packaging
+	echo ""
+else
+	report_error
 fi
 }
 
 rockchip_uboot_run (){
 sources_dir
-if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]]; then
-	arm_trusted_firmware
-fi
+if [[ "$FAMILY_EXT" =~ ^(rk356x)$ ]]; then rockchip_loader_binaries; fi
+arm_trusted_firmware
 uboot_run
 uboot_output
 }
 
 rockchip_uboot_packaging (){
-if [[ "$ARCH" == "arm" ]]; then
-	cp -f u-boot-rockchip.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$ARCH" == "arm64" ]]; then
-	cp -f idbloader.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/idbloader.bin
-	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
+cp -f idbloader.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/idbloader.bin
+cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
 }
 
 # LINUX
@@ -142,20 +96,8 @@ fi
 
 # STAGE1
 flash_uboot (){
-if [[ "$ARCH" == "arm" ]]; then
-	dd if="${OUTPUT}/u-boot-rockchip.bin" of="${IMAGE_LOOP_DEV}" seek=64
-fi
 if [[ "$ARCH" == "arm64" ]]; then
 	dd if="${OUTPUT}/idbloader.bin" of="${IMAGE_LOOP_DEV}" seek=64
-	dd if="${OUTPUT}/u-boot.itb" of="${IMAGE_LOOP_DEV}" seek=16384
+	dd if="${OUTPUT}/u-boot.bin" of="${IMAGE_LOOP_DEV}" seek=16384
 fi
-}
-
-# STAGE2
-rk3288_udev_rules (){
-echo "# USB" > /etc/udev/rules.d/10-usb-led.rules
-echo 'ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo default-on > /sys/class/leds/led-1/trigger"' >> /etc/udev/rules.d/10-usb-led.rules
-echo 'ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", RUN+="/bin/sh -c echo none > /sys/class/leds/led-1/trigger"' >> /etc/udev/rules.d/10-usb-led.rules
-sed -i "s/echo default-on > \/sys\/class\/leds\/led-1\/trigger/'echo default-on > \/sys\/class\/leds\/led-1\/trigger'/g" /etc/udev/rules.d/10-usb-led.rules
-sed -i "s/echo none > \/sys\/class\/leds\/led-1\/trigger/'echo none > \/sys\/class\/leds\/led-1\/trigger'/g" /etc/udev/rules.d/10-usb-led.rules
 }
