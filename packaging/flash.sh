@@ -100,11 +100,11 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/u-boot-rockchip.bin" ]]; then
 	# flash binary
 	dd if="${DIR}/u-boot-rockchip.bin" of="${MMC}" seek=64
 fi
-if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${DIR}/u-boot.itb" ]]; then
+if [[ "$FAMILY" == "rockchip" ]] && [[ -f "${DIR}/idbloader.bin" ]] && [[ -f "${DIR}/u-boot.bin" ]]; then
 	sleep .50
 	# flash loader and binary
 	dd if="${DIR}/idbloader.bin" of="${MMC}" seek=64
-	dd if="${DIR}/u-boot.itb" of="${MMC}" seek=16384
+	dd if="${DIR}/u-boot.bin" of="${MMC}" seek=16384
 fi
 # samsung / odroid xu4 / emmc
 if [[ "$FAMILY" == "samsung" ]] && [[ "$BOARD" == "odroidxu4" ]]; then
