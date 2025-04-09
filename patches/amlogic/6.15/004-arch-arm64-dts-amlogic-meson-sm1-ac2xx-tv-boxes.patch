@@ -1,0 +1,890 @@
+From dc44052eb1abb0064d9c50f7abb5457a39395220 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Wed, 13 Nov 2024 10:26:47 -0500
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
+
+H96-MAX X3
+X96-AIR GBIT
+
+Added support: spdif jack i2c1 openvfd jl2xx1
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  36 ++++
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 202 +++++++++++++++++-
+ .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 176 ++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 166 +++++++++++++-
+ 4 files changed, 560 insertions(+), 20 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
+index d1fa8b8bf795..3442c1e0bcce 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
+@@ -2,6 +2,7 @@
+ /*
+  * Copyright (c) 2019 BayLibre SAS. All rights reserved.
+  * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
+  *
+  * AC200/AC202 = S905D3
+  * AC213/AC214 = S905X3
+@@ -80,6 +81,21 @@ emmc_1v8: regulator-emmc-1v8 {
+ 		regulator-always-on;
+ 	};
+ 
++	openvfd: openvfd {
++		compatible = "open,vfd";
++		dev_name = "openvfd";
++		status = "disabled";
++ 	};
++
++	vddao_1v8: regulator-vddao_1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDAO_1V8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		vin-supply = <&vddao_3v3>;
++		regulator-always-on;
++	};
++
+ 	vddao_3v3: regulator-vddao-3v3 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "VDDAO_3V3";
+@@ -114,6 +130,15 @@ vddio_ao1v8: regulator-vddio-ao1v8 {
+ 		regulator-always-on;
+ 	};
+ 
++	vddgpu: regulator-vddgpu {
++		compatible = "regulator-fixed";
++		regulator-name = "mali";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		vin-supply = <&ao_5v>;
++		regulator-always-on;
++	};
++
+ 	sdio_pwrseq: sdio-pwrseq {
+ 		compatible = "mmc-pwrseq-simple";
+ 		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
+@@ -121,6 +146,13 @@ sdio_pwrseq: sdio-pwrseq {
+ 		clock-names = "ext_clock";
+ 	};
+ 
++	spdif_dit: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "linux,spdif-dit";
++		sound-name-prefix = "DIT";
++		status = "disabled";
++	};
++
+ 	wifi32k: wifi32k {
+ 		compatible = "pwm-clock";
+ 		#clock-cells = <0>;
+@@ -195,6 +227,10 @@ &ir {
+ 	pinctrl-names = "default";
+ };
+ 
++&mali {
++	mali-supply=<&vddgpu>;
++};
++
+ &pwm_AO_ab {
+ 	status = "okay";
+ 	pinctrl-0 = <&pwm_ao_a_pins>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
+index 7b3a014d4cde..c188e75e5e0b 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
+@@ -2,25 +2,66 @@
+ /*
+  * Copyright (c) 2019 BayLibre SAS. All rights reserved.
+  * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
+  */
+ 
+ /dts-v1/;
+ 
+ #include "meson-sm1-ac2xx.dtsi"
++#include <dt-bindings/leds/common.h>
++#include <dt-bindings/sound/meson-g12a-toacodec.h>
+ #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+ 
+ / {
+ 	compatible = "haochuangyi,h96-max", "amlogic,sm1";
+ 	model = "Shenzhen Haochuangyi Technology Co., Ltd H96 Max";
+ 
++	aliases {
++		serial2 = &uart_A;
++		ethernet0 = &ethmac;
++		rtc1 = &vrtc;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-blue {
++			color = <LED_COLOR_ID_BLUE>;
++			function = LED_FUNCTION_STATUS;
++			gpios = <&gpio_ao GPIOAO_11 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
++			panic-indicator;
++		};
++	};
++
++	reboot: meson64-reboot {
++		compatible = "meson64,reboot";
++		sys_reset = <0x84000009>;
++		sys_poweroff = <0x84000008>;
++
++		sd-vqen = <&gpio_ao GPIOE_2 GPIO_ACTIVE_HIGH>;
++		sd-vqsw = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
++		sd-vmmc = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_HIGH>;
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "H96-MAX";
+-		audio-aux-devs = <&tdmout_b>;
++		audio-widgets = "Line", "Lineout";
++		audio-aux-devs = <&tdmout_b>, <&tdmout_c>;
+ 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
+ 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
+ 				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
+-				"TDM_B Playback", "TDMOUT_B OUT";
++				"TDM_B Playback", "TDMOUT_B OUT",
++				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
++				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
++				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
++				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
++				"Lineout", "ACODEC LOLP",
++				"Lineout", "ACODEC LORP";
+ 
+ 		clocks = <&clkc CLKID_MPLL2>,
+ 			 <&clkc CLKID_MPLL0>,
+@@ -46,8 +87,20 @@ dai-link-2 {
+ 			sound-dai = <&frddr_c>;
+ 		};
+ 
+-		/* 8ch hdmi interface */
+ 		dai-link-3 {
++			sound-dai = <&toddr_a>;
++		};
++
++		dai-link-4 {
++			sound-dai = <&toddr_b>;
++		};
++
++		dai-link-5 {
++			sound-dai = <&toddr_c>;
++		};
++
++		/* 8ch hdmi interface */
++		dai-link-6 {
+ 			sound-dai = <&tdmif_b>;
+ 			dai-format = "i2s";
+ 			dai-tdm-slot-tx-mask-0 = <1 1>;
+@@ -56,22 +109,69 @@ dai-link-3 {
+ 			dai-tdm-slot-tx-mask-3 = <1 1>;
+ 			mclk-fs = <256>;
+ 
+-			codec {
++			codec-0 {
+ 				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
+ 			};
++
++			codec-1 {
++				sound-dai = <&toacodec TOACODEC_IN_B>;
++			};
+ 		};
+ 
++               /* i2s jack output interface */
++               dai-link-7 {
++                       sound-dai = <&tdmif_c>;
++                       dai-format = "i2s";
++                       dai-tdm-slot-tx-mask-0 = <1 1>;
++                       mclk-fs = <256>;
++
++                       codec-0 {
++                               sound-dai = <&tohdmitx TOHDMITX_I2S_IN_C>;
++                       };
++
++                       codec-1 {
++                               sound-dai = <&toacodec TOACODEC_IN_C>;
++                       };
++               };
++
+ 		/* hdmi glue */
+-		dai-link-4 {
++		dai-link-8 {
+ 			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
+ 
+ 			codec {
+ 				sound-dai = <&hdmi_tx>;
+ 			};
+ 		};
++
++		/* acodec glue */
++		dai-link-9 {
++			sound-dai = <&toacodec TOACODEC_OUT>;
++
++			codec {
++				sound-dai = <&acodec>;
++			};
++		};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
+ 	};
+ };
+ 
++&acodec {
++	AVDD-supply = <&vddao_1v8>;
++	status = "okay";
++};
++
+ &arb {
+ 	status = "okay";
+ };
+@@ -80,15 +180,37 @@ &clkc_audio {
+ 	status = "okay";
+ };
+ 
++&cpu_opp_table {
++	opp-2016000000 {
++		opp-hz = /bits/ 64 <2016000000>;
++		opp-microvolt = <1000000>;
++		turbo-mode;
++	};
++
++	opp-2100000000 {
++		opp-hz = /bits/ 64 <2100000000>;
++		opp-microvolt = <1022000>;
++		turbo-mode;
++	};
++
++	/delete-node/ opp-2200000000;
++};
++
+ &ethmac {
+ 	status = "okay";
+ 
+ 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
+ 	pinctrl-names = "default";
+-	phy-mode = "rgmii-txid";
++	phy-mode = "rgmii";
++	amlogic,tx-delay-ns = <2>;
+ 	phy-handle = <&external_phy>;
+ 
+-	rx-internal-delay-ps = <800>;
++	snps,aal;
++	snps,rxpbl = <1000>;
++	snps,txpbl = <1000>;
++
++	rx-fifo-depth = <4096>;
++	tx-fifo-depth = <4096>;
+ };
+ 
+ &ext_mdio {
+@@ -119,18 +241,82 @@ &frddr_c {
+ 	status = "okay";
+ };
+ 
++&ir {
++	linux,rc-map-name = "rc-x96max";
++};
++
++&openvfd {
++	status = "okay";
++};
++
++&sd_emmc_a {
++	sd-uhs-sdr50;
++	cap-mmc-highspeed;
++
++	brcmf: wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4335-fmac";
++	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+ 
++&tdmif_c {
++       status = "okay";
++};
++
++&tdmin_a {
++	status = "okay";
++};
++
++&tdmin_b {
++	status = "okay";
++};
++
++&tdmin_c {
++	status = "okay";
++};
++
+ &tdmout_b {
+ 	status = "okay";
+ };
+ 
++&tdmout_c {
++	status = "okay";
++};
++
++&toacodec {
++       status = "okay";
++};
++
+ &tohdmitx {
+ 	status = "okay";
+ };
+ 
++&toddr_a {
++	status = "okay";
++};
++
++&toddr_b {
++	status = "okay";
++};
++
++&toddr_c {
++	status = "okay";
++};
++
+ &uart_A {
+ 	status = "okay";
+ 
+@@ -139,7 +325,7 @@ &uart_A {
+ 	uart-has-rtscts;
+ 
+ 	bluetooth {
+-		compatible = "brcm,bcm43438-bt";
++		compatible = "brcm,bcm4335a0";
+ 		shutdown-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
+ 		max-speed = <2000000>;
+ 		clocks = <&wifi32k>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
+index e4a3a2a8ad06..272100824617 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
+@@ -2,25 +2,43 @@
+ /*
+  * Copyright (c) 2019 BayLibre SAS. All rights reserved.
+  * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
+  */
+ 
+ /dts-v1/;
+ 
+ #include "meson-sm1-ac2xx.dtsi"
++#include <dt-bindings/sound/meson-g12a-toacodec.h>
+ #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+ 
+ / {
+ 	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
+ 	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
+ 
++	aliases {
++		serial2 = &uart_A;
++		ethernet0 = &ethmac;
++		rtc1 = &vrtc;
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "X96-AIR";
+-		audio-aux-devs = <&tdmout_b>;
++		audio-widgets = "Line", "Lineout";
++		audio-aux-devs = <&tdmout_b>, <&tdmout_c>;
+ 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
+ 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
+ 				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
+-				"TDM_B Playback", "TDMOUT_B OUT";
++				"TDM_B Playback", "TDMOUT_B OUT",
++				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
++				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
++				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
++				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
++				"Lineout", "ACODEC LOLP",
++				"Lineout", "ACODEC LORP";
+ 
+ 		clocks = <&clkc CLKID_MPLL2>,
+ 			 <&clkc CLKID_MPLL0>,
+@@ -46,8 +64,20 @@ dai-link-2 {
+ 			sound-dai = <&frddr_c>;
+ 		};
+ 
+-		/* 8ch hdmi interface */
+ 		dai-link-3 {
++			sound-dai = <&toddr_a>;
++		};
++
++		dai-link-4 {
++			sound-dai = <&toddr_b>;
++		};
++
++		dai-link-5 {
++			sound-dai = <&toddr_c>;
++		};
++
++		/* 8ch hdmi interface */
++		dai-link-6 {
+ 			sound-dai = <&tdmif_b>;
+ 			dai-format = "i2s";
+ 			dai-tdm-slot-tx-mask-0 = <1 1>;
+@@ -56,22 +86,69 @@ dai-link-3 {
+ 			dai-tdm-slot-tx-mask-3 = <1 1>;
+ 			mclk-fs = <256>;
+ 
+-			codec {
++			codec-0 {
+ 				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
+ 			};
++
++			codec-1 {
++				sound-dai = <&toacodec TOACODEC_IN_B>;
++			};
+ 		};
+ 
++               /* i2s jack output interface */
++               dai-link-7 {
++                       sound-dai = <&tdmif_c>;
++                       dai-format = "i2s";
++                       dai-tdm-slot-tx-mask-0 = <1 1>;
++                       mclk-fs = <256>;
++
++                       codec-0 {
++                               sound-dai = <&tohdmitx TOHDMITX_I2S_IN_C>;
++                       };
++
++                       codec-1 {
++                               sound-dai = <&toacodec TOACODEC_IN_C>;
++                       };
++               };
++
+ 		/* hdmi glue */
+-		dai-link-4 {
++		dai-link-8 {
+ 			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
+ 
+ 			codec {
+ 				sound-dai = <&hdmi_tx>;
+ 			};
+ 		};
++
++		/* acodec glue */
++		dai-link-9 {
++			sound-dai = <&toacodec TOACODEC_OUT>;
++
++			codec {
++				sound-dai = <&acodec>;
++			};
++		};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
+ 	};
+ };
+ 
++&acodec {
++	AVDD-supply = <&vddao_1v8>;
++	status = "okay";
++};
++
+ &arb {
+ 	status = "okay";
+ };
+@@ -85,10 +162,16 @@ &ethmac {
+ 
+ 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
+ 	pinctrl-names = "default";
+-	phy-mode = "rgmii-txid";
++	phy-mode = "rgmii";
++	amlogic,tx-delay-ns = <2>;
+ 	phy-handle = <&external_phy>;
+ 
+-	rx-internal-delay-ps = <800>;
++	snps,aal;
++	snps,rxpbl = <1000>;
++	snps,txpbl = <1000>;
++
++	rx-fifo-depth = <4096>;
++	tx-fifo-depth = <4096>;
+ };
+ 
+ &ext_mdio {
+@@ -123,14 +206,93 @@ &ir {
+ 	linux,rc-map-name = "rc-x96max";
+ };
+ 
++&openvfd {
++	status = "okay";
++};
++
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+ 
++&tdmif_c {
++       status = "okay";
++};
++
++&tdmin_a {
++	status = "okay";
++};
++
++&tdmin_b {
++	status = "okay";
++};
++
++&tdmin_c {
++	status = "okay";
++};
++
+ &tdmout_b {
+ 	status = "okay";
+ };
+ 
++&tdmout_c {
++	status = "okay";
++};
++
++&toacodec {
++       status = "okay";
++};
++
+ &tohdmitx {
+ 	status = "okay";
+ };
++
++&toddr_a {
++	status = "okay";
++};
++
++&toddr_b {
++	status = "okay";
++};
++
++&toddr_c {
++	status = "okay";
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++};
++
++&uart_A {
++	status = "okay";
++	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
++	pinctrl-names = "default";
++	uart-has-rtscts;
++
++	bluetooth {
++		compatible = "realtek,rtl8822cs-bt";
++		max-speed = <1500000>;
++		clocks = <&wifi32k>;
++		clock-names = "lpo";
++		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
++		reset-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
+index fff92e0d6dd5..d3d9c92b2bd0 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
+@@ -2,25 +2,43 @@
+ /*
+  * Copyright (c) 2019 BayLibre SAS. All rights reserved.
+  * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
+  */
+ 
+ /dts-v1/;
+ 
+ #include "meson-sm1-ac2xx.dtsi"
++#include <dt-bindings/sound/meson-g12a-toacodec.h>
+ #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+ 
+ / {
+ 	compatible = "amediatech,x96-air", "amlogic,sm1";
+ 	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
+ 
++	aliases {
++		serial2 = &uart_A;
++		ethernet0 = &ethmac;
++		rtc1 = &vrtc;
++	};
++
+ 	sound {
+ 		compatible = "amlogic,axg-sound-card";
+ 		model = "X96-AIR";
+-		audio-aux-devs = <&tdmout_b>;
++		audio-widgets = "Line", "Lineout";
++		audio-aux-devs = <&tdmout_b>, <&tdmout_c>;
+ 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
+ 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
+ 				"TDMOUT_B IN 2", "FRDDR_C OUT 1",
+-				"TDM_B Playback", "TDMOUT_B OUT";
++				"TDM_B Playback", "TDMOUT_B OUT",
++				"TDMOUT_C IN 0", "FRDDR_A OUT 2",
++				"TDMOUT_C IN 1", "FRDDR_B OUT 2",
++				"TDMOUT_C IN 2", "FRDDR_C OUT 2",
++				"TDM_C Playback", "TDMOUT_C OUT",
++				"SPDIFOUT_A IN 0", "FRDDR_A OUT 3",
++				"SPDIFOUT_A IN 1", "FRDDR_B OUT 3",
++				"SPDIFOUT_A IN 2", "FRDDR_C OUT 3",
++				"Lineout", "ACODEC LOLP",
++				"Lineout", "ACODEC LORP";
+ 
+ 		clocks = <&clkc CLKID_MPLL2>,
+ 			 <&clkc CLKID_MPLL0>,
+@@ -46,8 +64,20 @@ dai-link-2 {
+ 			sound-dai = <&frddr_c>;
+ 		};
+ 
+-		/* 8ch hdmi interface */
+ 		dai-link-3 {
++			sound-dai = <&toddr_a>;
++		};
++
++		dai-link-4 {
++			sound-dai = <&toddr_b>;
++		};
++
++		dai-link-5 {
++			sound-dai = <&toddr_c>;
++		};
++
++		/* 8ch hdmi interface */
++		dai-link-6 {
+ 			sound-dai = <&tdmif_b>;
+ 			dai-format = "i2s";
+ 			dai-tdm-slot-tx-mask-0 = <1 1>;
+@@ -56,22 +86,69 @@ dai-link-3 {
+ 			dai-tdm-slot-tx-mask-3 = <1 1>;
+ 			mclk-fs = <256>;
+ 
+-			codec {
++			codec-0 {
+ 				sound-dai = <&tohdmitx TOHDMITX_I2S_IN_B>;
+ 			};
++
++			codec-1 {
++				sound-dai = <&toacodec TOACODEC_IN_B>;
++			};
+ 		};
+ 
++               /* i2s jack output interface */
++               dai-link-7 {
++                       sound-dai = <&tdmif_c>;
++                       dai-format = "i2s";
++                       dai-tdm-slot-tx-mask-0 = <1 1>;
++                       mclk-fs = <256>;
++
++                       codec-0 {
++                               sound-dai = <&tohdmitx TOHDMITX_I2S_IN_C>;
++                       };
++
++                       codec-1 {
++                               sound-dai = <&toacodec TOACODEC_IN_C>;
++                       };
++               };
++
+ 		/* hdmi glue */
+-		dai-link-4 {
++		dai-link-8 {
+ 			sound-dai = <&tohdmitx TOHDMITX_I2S_OUT>;
+ 
+ 			codec {
+ 				sound-dai = <&hdmi_tx>;
+ 			};
+ 		};
++
++		/* acodec glue */
++		dai-link-9 {
++			sound-dai = <&toacodec TOACODEC_OUT>;
++
++			codec {
++				sound-dai = <&acodec>;
++			};
++		};
++
++		/* spdif hdmi or toslink interface */
++		dai-link-10 {
++			sound-dai = <&spdifout_a>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++
++			codec-1 {
++				sound-dai = <&tohdmitx TOHDMITX_SPDIF_IN_A>;
++			};
++		};
+ 	};
+ };
+ 
++&acodec {
++	AVDD-supply = <&vddao_1v8>;
++	status = "okay";
++};
++
+ &arb {
+ 	status = "okay";
+ };
+@@ -102,14 +179,93 @@ &ir {
+ 	linux,rc-map-name = "rc-beelink-gs1";
+ };
+ 
++&openvfd {
++	status = "okay";
++};
++
++&sd_emmc_a {
++	rtl8822cs: wifi@1 {
++		reg = <1>;
++	};
++};
++
++&spdif_dit {
++	status = "okay";
++};
++
++&spdifout_a {
++	pinctrl-0 = <&spdif_out_h_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &tdmif_b {
+ 	status = "okay";
+ };
+ 
++&tdmif_c {
++       status = "okay";
++};
++
++&tdmin_a {
++	status = "okay";
++};
++
++&tdmin_b {
++	status = "okay";
++};
++
++&tdmin_c {
++	status = "okay";
++};
++
+ &tdmout_b {
+ 	status = "okay";
+ };
+ 
++&tdmout_c {
++	status = "okay";
++};
++
++&toacodec {
++       status = "okay";
++};
++
+ &tohdmitx {
+ 	status = "okay";
+ };
++
++&toddr_a {
++	status = "okay";
++};
++
++&toddr_b {
++	status = "okay";
++};
++
++&toddr_c {
++	status = "okay";
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_sda_h6_pins>, <&i2c1_sck_h7_pins>;
++	pinctrl-names = "default";
++};
++
++&uart_A {
++	status = "okay";
++	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
++	pinctrl-names = "default";
++	uart-has-rtscts;
++
++	bluetooth {
++		compatible = "realtek,rtl8822cs-bt";
++		max-speed = <1500000>;
++		clocks = <&wifi32k>;
++		clock-names = "lpo";
++		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
++		reset-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
++	};
++};
+-- 
+2.39.5
+

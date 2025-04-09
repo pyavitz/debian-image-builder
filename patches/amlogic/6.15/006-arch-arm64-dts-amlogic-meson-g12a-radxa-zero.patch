@@ -1,0 +1,198 @@
+From 44d4ee05e6bdd7f27adf1ec2c5cf6929b7977fdf Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@xxxxx.com>
+Date: Mon, 25 Mar 2024 15:01:22 -0400
+Subject: [PATCH] arch: arm64: dts: amlogic: meson-g12a-radxa-zero
+
+Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+---
+ .../boot/dts/amlogic/meson-g12-common.dtsi    | 32 +++++++++
+ .../dts/amlogic/meson-g12a-radxa-zero.dts     | 66 ++++++++++++++++++-
+ arch/arm64/boot/dts/amlogic/meson-g12a.dtsi   |  6 ++
+ 3 files changed, 103 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+index 9d5eab6595d0..5b6d1d4ad366 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+@@ -798,6 +798,22 @@ mux {
+ 						};
+ 					};
+ 
++					pwm_b_h7_pins: pwm-b-h7 {
++						mux {
++							groups = "pwm_b_h7";
++							function = "pwm_b";
++							bias-disable;
++						};
++					};
++
++					pwm_b_z0_pins: pwm-b-z0 {
++						mux {
++							groups = "pwm_b_z0";
++							function = "pwm_b";
++							bias-disable;
++						};
++					};
++
+ 					pwm_c_c_pins: pwm-c-c {
+ 						mux {
+ 							groups = "pwm_c_c";
+@@ -822,6 +838,14 @@ mux {
+ 						};
+ 					};
+ 
++					pwm_c_z1_pins: pwm-c-z1 {
++						mux {
++							groups = "pwm_c_z1";
++							function = "pwm_c";
++							bias-disable;
++						};
++					};
++
+ 					pwm_d_x3_pins: pwm-d-x3 {
+ 						mux {
+ 							groups = "pwm_d_x3";
+@@ -838,6 +862,14 @@ mux {
+ 						};
+ 					};
+ 
++					pwm_d_z2_pins: pwm-d-z2 {
++						mux {
++							groups = "pwm_d_z2";
++							function = "pwm_d";
++							bias-disable;
++						};
++					};
++
+ 					pwm_e_pins: pwm-e {
+ 						mux {
+ 							groups = "pwm_e";
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+index 15b9bc280706..65e1d0e41665 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a-radxa-zero.dts
+@@ -15,6 +15,19 @@ / {
+ 
+ 	aliases {
+ 		serial0 = &uart_AO;
++		serial1 = &uart_AO_B;
++		serial2 = &uart_A;
++		serial3 = &uart_B;
++		serial4 = &uart_C;
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c_AO;
++		spi0 = &spicc0;
++		spi1 = &spicc1;
++		spi2 = &spifc;
++		rtc1 = &vrtc;
+ 	};
+ 
+ 	chosen {
+@@ -60,6 +73,17 @@ sdio_pwrseq: sdio-pwrseq {
+ 		clock-names = "ext_clock";
+ 	};
+ 
++	typec2_vbus: regulator-typec2_vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "TYPEC2_VBUS";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&ao_5v>;
++
++		gpio = <&gpio_ao GPIOAO_7 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
+ 	ao_5v: regulator-ao-5v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "AO_5V";
+@@ -190,6 +214,18 @@ wifi32k: wifi32k {
+ 	};
+ };
+ 
++&ao_pinctrl {
++	/* Ensure the TYPE C controller irq pin is not driven by the SoC */
++	fusb302_irq_pins: fusb302_irq {
++		mux {
++			groups = "GPIOAO_5";
++			function = "gpio_aobus";
++			bias-pull-up;
++			output-disable;
++		};
++	};
++};
++
+ &arb {
+ 	status = "okay";
+ };
+@@ -277,6 +313,26 @@ &ir {
+ 	pinctrl-names = "default";
+ };
+ 
++&i2c3 {
++	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	fusb302@22 {
++		compatible = "fcs,fusb302";
++		reg = <0x22>;
++
++		pinctrl-0 = <&fusb302_irq_pins>;
++		pinctrl-names = "default";
++		interrupt-parent = <&gpio_intc>;
++		interrupts = <5 IRQ_TYPE_LEVEL_LOW>;
++
++		vbus-supply = <&typec2_vbus>;
++
++		status = "okay";
++	};
++};
++
+ &pwm_AO_cd {
+ 	pinctrl-0 = <&pwm_ao_d_e_pins>;
+ 	pinctrl-names = "default";
+@@ -309,7 +365,7 @@ &sd_emmc_a {
+ 
+ 	bus-width = <4>;
+ 	cap-sd-highspeed;
+-	sd-uhs-sdr50;
++	cap-mmc-highspeed;
+ 	max-frequency = <100000000>;
+ 
+ 	non-removable;
+@@ -401,3 +457,11 @@ &uart_AO {
+ &usb {
+ 	status = "okay";
+ };
++
++&usb2_phy0 {
++	phy-supply = <&typec2_vbus>;
++};
++
++&usb3_pcie_phy {
++	phy-supply = <&typec2_vbus>;
++};
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi
+index 543e70669df5..6b71be4eb848 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12a.dtsi
+@@ -93,6 +93,12 @@ opp-1800000000 {
+ 			opp-hz = /bits/ 64 <1800000000>;
+ 			opp-microvolt = <981000>;
+ 		};
++
++		opp-2004000000 {
++			opp-hz = /bits/ 64 <2004000000>;
++			opp-microvolt = <1022000>;
++			turbo-mode;
++		};
+ 	};
+ };
+ 
+-- 
+2.39.2
+
