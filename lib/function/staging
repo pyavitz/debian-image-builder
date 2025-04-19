@@ -28,9 +28,9 @@ fi
 single_partition (){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
 if [[ "$GPT" == "true" ]]; then
-	sgdisk -og "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -n 1:${OFFSET} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
-	sgdisk -evp "${IMAGE_FOLDER}${IMAGE_FILE_NAME}"
+	parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
+	mklabel gpt \
+	mkpart 1 ext2 ${PART_OFFSET} 100%
 else
 	parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 	mklabel msdos \

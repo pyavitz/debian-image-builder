@@ -1,0 +1,16 @@
+#!/bin/bash
+# RADXA ZERO 3W LED TRIGGERS
+
+LED1="green:heartbeat"
+if [ -f "/sys/class/leds/${LED1}/trigger" ]; then
+	GREEN_LED="/sys/class/leds/${LED1}/trigger"
+	if [ -e $GREEN_LED ]; then
+		ROOT_DEVICE=`findmnt -v -n -o SOURCE /`
+		ROOT_DEVICE=${ROOT_DEVICE/\/dev\//}
+		ROOT_DEVICE=${ROOT_DEVICE/mmcblk/mmc}
+		ROOT_DEVICE=${ROOT_DEVICE/p[0-9]/}
+		echo -n "$ROOT_DEVICE" > $GREEN_LED
+	fi
+fi
+
+exit 0
