@@ -57,7 +57,12 @@ fi
 }
 
 uboot_output (){
-if [[ -f "idbloader.img" ]] && [[ -f "u-boot.itb" ]]; then
+if [[ "$UBOOT_RK_BIN" == "true" ]] && [[ -f "u-boot-rockchip.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f u-boot-rockchip.bin ../../${OUTPUT}/
+	uboot_packaging
+	echo ""
+elif [[ -f "idbloader.img" ]] && [[ -f "u-boot.itb" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
 	cp -f u-boot.itb ../../${OUTPUT}/u-boot.bin
@@ -77,8 +82,12 @@ uboot_output
 }
 
 rockchip_uboot_packaging (){
-cp -f idbloader.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/idbloader.bin
-cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+if [[ "$UBOOT_RK_BIN" == "true" ]]; then
+	cp -f u-boot-rockchip.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+else
+	cp -f idbloader.img ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/idbloader.bin
+	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+fi
 }
 
 # LINUX
@@ -96,7 +105,9 @@ fi
 
 # STAGE1
 flash_uboot (){
-if [[ "$ARCH" == "arm64" ]]; then
+if [[ "$UBOOT_RK_BIN" == "true" ]]; then
+	dd if="${OUTPUT}/u-boot-rockchip.bin" of="${IMAGE_LOOP_DEV}" seek=64
+else
 	dd if="${OUTPUT}/idbloader.bin" of="${IMAGE_LOOP_DEV}" seek=64
 	dd if="${OUTPUT}/u-boot.bin" of="${IMAGE_LOOP_DEV}" seek=16384
 fi
