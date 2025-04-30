@@ -183,11 +183,15 @@ cd ~
 if [[ "$EFI" == "true" ]]; then
 	# uefi kernel, initrd, dtb and grub cfg script
 	mkdir -p /etc/initramfs/post-update.d/
-	mv -f /root/99-uefi /etc/initramfs/post-update.d/
+	if [[ "$FAMILY" == "generic" ]]; then
+		mv -f /root/99-uefi-generic /etc/initramfs/post-update.d/99-uefi
+	else
+		mv -f /root/99-uefi /etc/initramfs/post-update.d/
+	fi
 	chmod +x /etc/initramfs/post-update.d/99-uefi
 	chown root:root /etc/initramfs/post-update.d/99-uefi
 else
-	rm -f /root/99-uefi
+	rm -f /root/99-uefi*
 fi
 
 # alsa asound.state file

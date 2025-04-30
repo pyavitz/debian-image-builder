@@ -88,12 +88,14 @@ B_LOOP=`echo "$LOOP" | sed -n '1p'`
 R_LOOP=`echo "$LOOP" | sed -n '2p'`
 BOOT_LOOP="/dev/mapper/$B_LOOP"
 ROOTFS_LOOP="/dev/mapper/$R_LOOP"
-BOOT="${BOOT_LOOP}"
+if [[ "$EFI" == "true" ]]; then EFI_BOOT="${BOOT_LOOP}"; else BOOT="${BOOT_LOOP}"; fi
 ROOTFS="${ROOTFS_LOOP}"
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "$ROOTFS" > /dev/null 2>&1; fi
-mkdir -p BOOT; mkdir -p ROOTFS
+if [[ "$EFI" == "true" ]]; then mkdir -p EFI; else mkdir -p BOOT; fi
+mkdir -p ROOTFS
 sleep .50
-mount "${BOOT}" BOOT; mount "${ROOTFS}" ROOTFS
+if [[ "$EFI" == "true" ]]; then mount "${EFI_BOOT}" EFI; else mount "${BOOT}" BOOT; fi
+mount "${ROOTFS}" ROOTFS
 sleep .50
 calculate
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
@@ -104,7 +106,7 @@ uuid
 echo -en "Shrink ${PNK}[${FIN}${WHT}enabled${FIN}${PNK}]${FIN}"
 sleep 1
 echo -en " ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
-cp -fr BOOT/* p1/
+if [[ "$EFI" == "true" ]] then cp -fr EFI/* p1/; else cp -fr BOOT/* p1/; fi
 if [ $VERBOSE -eq 1 ]; then
 	if [[ "$FSTYPE" == "btrfs" ]]; then cp -axv ROOTFS/@/* p2/; else cp -axv ROOTFS/* p2/; fi
 else
@@ -112,9 +114,10 @@ else
 fi
 sleep .75
 echo -en " ${PNK}[${FIN}${YLW}finishing${FIN}${PNK}]${FIN}"
-umount BOOT; umount ROOTFS
+if [[ "$EFI" == "true" ]]; then umount EFI; else umount BOOT; fi
+umount ROOTFS
 sleep .75
-rm -fdr BOOT; rm -fdr ROOTFS
+rm -fdr BOOT EFI; rm -fdr ROOTFS
 kpartx -d shrink.img
 rm -f shrink.img
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
