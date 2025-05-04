@@ -99,7 +99,8 @@
 		clock-names = "ext_clock";
 		pinctrl-0 = <&x32clk_fanout_pin>;
 		pinctrl-names = "default";
-		post-power-on-delay-ms = <200>;
+		post-power-on-delay-ms = <100>;
+		power-off-delay-us = <5000000>;
 		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
 	};
 };
@@ -206,13 +207,15 @@
 	vmmc-supply = <&reg_dldo1>;
 };
 
-/* SDIO BROKEN */
+/* SDIO */
 &mmc1 {
-	status = "disabled";
+	status = "okay";
 	bus-width = <4>;
 	keep-power-in-suspend;
 	max-frequency = <100000000>;
 	mmc-pwrseq = <&wifi_pwrseq>;
+	no-mmc;
+	no-sd;
 	non-removable;
 	vmmc-supply = <&reg_dldo1>;
 	vqmmc-supply = <&reg_aldo1>;
