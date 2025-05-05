@@ -134,3 +134,20 @@ if [[ -f "/usr/local/sbin/bthelper" ]]; then
 	chmod +x /usr/local/sbin/bthelper
 fi
 }
+
+kickpik2b_bthelper (){
+echo  ""
+echo -e "Installing bluetooth helper ..."
+sleep .50
+cat <<EOF > "/usr/local/sbin/bthelper"
+#!/bin/bash
+# KickPi K2B Bluetooth helper
+
+rfkill unblock all
+sleep 1
+hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep
+
+exit 0
+EOF
+chmod +x /usr/local/sbin/bthelper
+}

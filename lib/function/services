@@ -78,14 +78,13 @@ WantedBy=multi-user.target
 EOF
 }
 
-# pine64 bluetooth
-pine64_bt_service (){
+# kickpik2b bluetooth
+kickpik2b_bt_service (){
 tee /etc/systemd/system/bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
 ConditionPathExists=/usr/local/sbin/bthelper
-After=network.target network-online.target
-Before=bluetooth.service
+After=network.target network-online.target bluetooth.service
 
 [Service]
 Type=forking
@@ -94,7 +93,7 @@ ExecStart=/usr/local/sbin/bthelper &>/dev/null
 [Install]
 WantedBy=multi-user.target
 EOF
-#systemctl enable bthelper
+systemctl enable bthelper
 }
 
 # nanopi bluetooth
@@ -115,6 +114,25 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 systemctl enable bthelper
+}
+
+# pine64 bluetooth
+pine64_bt_service (){
+tee /etc/systemd/system/bthelper.service <<EOF
+[Unit]
+Description=Bluetooth Helper
+ConditionPathExists=/usr/local/sbin/bthelper
+After=network.target network-online.target
+Before=bluetooth.service
+
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/bthelper &>/dev/null
+
+[Install]
+WantedBy=multi-user.target
+EOF
+#systemctl enable bthelper
 }
 
 # leds
