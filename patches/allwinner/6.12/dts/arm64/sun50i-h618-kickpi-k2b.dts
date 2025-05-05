@@ -93,6 +93,16 @@
 		vin-supply = <&reg_vcc5v>;
 	};
 
+	rfkill_bt {
+		compatible = "rfkill-gpio";
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_pwr_pin>;
+		reset-gpios = <&pio 6 19 GPIO_ACTIVE_LOW>; /* PG19 */
+		clocks = <&rtc CLK_OSC32K_FANOUT>;
+		rfkill-name = "sunxi-bt";
+		rfkill-type = "bluetooth";
+	};
+
 	wifi_pwrseq: wifi-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rtc CLK_OSC32K_FANOUT>;
@@ -258,6 +268,13 @@
 	vcc-pg-supply = <&reg_aldo1>;
 	vcc-ph-supply = <&reg_dldo1>;
 	vcc-pi-supply = <&reg_dldo1>;
+
+	// Bluetooth
+	bt_pwr_pin: bt-pwr-pin {
+		pins = "PG16", "PG17";
+		function = "gpio_out";
+		bias-pull-up;
+	};
 
 	// PI16 required for sys_led
 	ext_rgmii_pins: rgmii-pins {
