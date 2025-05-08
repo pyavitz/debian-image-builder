@@ -93,16 +93,6 @@
 		vin-supply = <&reg_vcc5v>;
 	};
 
-	rfkill_bt {
-		compatible = "rfkill-gpio";
-		pinctrl-names = "default";
-		pinctrl-0 = <&bt_pwr_pin>;
-		reset-gpios = <&pio 6 19 GPIO_ACTIVE_LOW>; /* PG19 */
-		clocks = <&rtc CLK_OSC32K_FANOUT>;
-		rfkill-name = "sunxi-bt";
-		rfkill-type = "bluetooth";
-	};
-
 	wifi_pwrseq: wifi-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rtc CLK_OSC32K_FANOUT>;
@@ -111,7 +101,8 @@
 		pinctrl-names = "default";
 		post-power-on-delay-ms = <100>;
 		power-off-delay-us = <5000000>;
-		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
+		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>, /* PG18 */
+			      <&pio 6 19 GPIO_ACTIVE_HIGH>; /* PG19 */
 	};
 };
 
@@ -400,7 +391,6 @@
 	status = "okay";
 	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
 	pinctrl-names = "default";
-	uart-has-rtscts;
 };
 
 &uart5 {

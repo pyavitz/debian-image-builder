@@ -84,11 +84,15 @@ tee /etc/systemd/system/bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
 ConditionPathExists=/usr/local/sbin/bthelper
-After=network.target network-online.target bluetooth.service
+After=bluetooth.service bluetooth.target getty.target
+Requires=bluetooth.service bluetooth.target getty.target
 
-[Service]
-Type=forking
-ExecStart=/usr/local/sbin/bthelper &>/dev/null
+Type=simple
+ExecStartPre=/usr/sbin/rfkill unblock all
+ExecStart=/usr/bin/hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep
+TimeoutSec=0
+RemainAfterExit=yes
+SysVStartPriority=99
 
 [Install]
 WantedBy=multi-user.target
