@@ -1,13 +1,13 @@
-From d569ab162727e885d0c22160b446661eff294719 Mon Sep 17 00:00:00 2001
+From fd096826603d5048dfc3c961d0f260dc54d55dae Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Fri, 4 Apr 2025 12:57:23 -0400
+Date: Thu, 8 May 2025 21:13:47 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  30 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 310 ++++++++++++++++++
- 2 files changed, 340 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 315 ++++++++++++++++++
+ 2 files changed, 345 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -49,10 +49,10 @@ index 00000000000..2c28fdca85d
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..975c6abb5f1
+index 00000000000..be7025562de
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,315 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -132,14 +132,16 @@ index 00000000000..975c6abb5f1
 +		vin-supply = <&reg_vcc5v>;
 +	};
 +
-+	wifi_pwrseq: wifi-pwrseq {
++	sdio_pwrseq: sdio-pwrseq {
 +		compatible = "mmc-pwrseq-simple";
 +		clocks = <&rtc CLK_OSC32K_FANOUT>;
 +		clock-names = "ext_clock";
 +		pinctrl-0 = <&x32clk_fanout_pin>;
 +		pinctrl-names = "default";
-+		post-power-on-delay-ms = <200>;
-+		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>; /* PG18 */
++		post-power-on-delay-ms = <100>;
++		power-off-delay-us = <5000000>;
++		reset-gpios = <&pio 6 18 GPIO_ACTIVE_LOW>, /* PG18 */
++			      <&pio 6 19 GPIO_ACTIVE_HIGH>; /* PG19 */
 +	};
 +};
 +
@@ -203,7 +205,9 @@ index 00000000000..975c6abb5f1
 +	bus-width = <4>;
 +	keep-power-in-suspend;
 +	max-frequency = <100000000>;
-+	mmc-pwrseq = <&wifi_pwrseq>;
++	mmc-pwrseq = <&sdio_pwrseq>;
++	no-mmc;
++	no-sd;
 +	non-removable;
 +	vmmc-supply = <&reg_dldo1>;
 +	vqmmc-supply = <&reg_aldo1>;
@@ -246,6 +250,7 @@ index 00000000000..975c6abb5f1
 +	vcc-pg-supply = <&reg_aldo1>;
 +	vcc-ph-supply = <&reg_dldo1>;
 +	vcc-pi-supply = <&reg_dldo1>;
++	vcc-pl-supply = <&reg_aldo1>;
 +
 +	// PI16 required for sys_led
 +	ext_rgmii_pins: rgmii-pins {

@@ -93,7 +93,7 @@
 		vin-supply = <&reg_vcc5v>;
 	};
 
-	wifi_pwrseq: wifi-pwrseq {
+	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rtc CLK_OSC32K_FANOUT>;
 		clock-names = "ext_clock";
@@ -214,7 +214,7 @@
 	bus-width = <4>;
 	keep-power-in-suspend;
 	max-frequency = <100000000>;
-	mmc-pwrseq = <&wifi_pwrseq>;
+	mmc-pwrseq = <&sdio_pwrseq>;
 	no-mmc;
 	no-sd;
 	non-removable;
@@ -259,13 +259,6 @@
 	vcc-pg-supply = <&reg_aldo1>;
 	vcc-ph-supply = <&reg_dldo1>;
 	vcc-pi-supply = <&reg_dldo1>;
-
-	// Bluetooth
-	bt_pwr_pin: bt-pwr-pin {
-		pins = "PG16", "PG17";
-		function = "gpio_out";
-		bias-pull-up;
-	};
 
 	// PI16 required for sys_led
 	ext_rgmii_pins: rgmii-pins {
@@ -391,6 +384,7 @@
 	status = "okay";
 	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
 	pinctrl-names = "default";
+	uart-has-rtscts;
 };
 
 &uart5 {
