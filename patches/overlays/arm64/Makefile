@@ -61,6 +61,8 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-h616-pg-6-7-uart1.dtbo \
 	sunxi-h616-pg-8-9-rts-cts-uart1.dtbo \
 	sunxi-h616-ph-2-3-uart5.dtbo \
+	sunxi-h616-ph-5-6-uart2.dtbo \
+	sunxi-h616-ph-7-8-rts-cts-uart2.dtbo \
 	sunxi-h616-pi-13-14-uart4.dtbo \
 	sunxi-h616-pi-15-16-rts-cts-uart4.dtbo \
 	sunxi-h616-spi1-cs0-cs1-spidev.dtbo \
