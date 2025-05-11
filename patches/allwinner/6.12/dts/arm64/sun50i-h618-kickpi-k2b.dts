@@ -124,10 +124,10 @@
 	status = "okay";
 	pinctrl-0 = <&ext_rgmii_pins>;
 	pinctrl-names = "default";
-	phy-mode = "rgmii-rxid";
+	phy-mode = "rgmii";
 	phy-handle = <&ext_rgmii_phy>;
-	phy-supply = <&reg_dldo1>;
-	allwinner,tx-delay-ps = <500>;
+	allwinner,tx-delay-ps = <700>;
+	allwinner,rx-delay-ps = <1700>;
 };
 
 &ehci0 {
@@ -193,8 +193,11 @@
 
 &mdio0 {
 	ext_rgmii_phy: ethernet-phy@1 {
-		compatible = "ethernet-phy-ieee802.3-c22";
+		compatible = "ethernet-phy-id001c.c916";
 		reg = <1>;
+		reset-assert-us = <20000>;
+		reset-deassert-us = <100000>;
+		reset-gpios = <&pio 8 6 GPIO_ACTIVE_LOW>; /* PI6 */
 	};
 };
 
