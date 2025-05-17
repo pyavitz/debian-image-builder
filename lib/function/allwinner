@@ -134,27 +134,7 @@ chmod +x /usr/local/sbin/bthelper
 }
 
 kickpik2b_bthelper (){
-cat <<EOF > "/usr/local/sbin/bthelper"
-#!/bin/bash
-
-reset_bt (){
-sleep 1
-killall hciattach
-sleep 1
-hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
-rfkill unblock all
-}
-
-if [[ ! -e /sys/class/bluetooth/hci0 ]]; then
-	hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
-	rfkill unblock all
-fi
-sleep 6
-if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; sleep 2; fi
-if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; fi
-
-exit 0
-EOF
-sed -i 's/[[  ]]/`hciconfig | grep -w "DOWN"` ]/g' /usr/local/sbin/bthelper
+mv -f ${BOARD}-bthelper /usr/local/sbin/bthelper
 chmod +x /usr/local/sbin/bthelper
+rm -f ${BOARD}-bthelper
 }

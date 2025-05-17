@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#set -x
+
+reset_bt (){
+sleep 1
+killall hciattach
+sleep 1
+hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
+rfkill unblock all
+}
+
+if [[ ! -e /sys/class/bluetooth/hci0 ]]; then
+	hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
+	rfkill unblock all
+fi
+sleep 6
+if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; sleep 2; fi
+if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; fi
+
+exit 0
