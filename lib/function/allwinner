@@ -104,7 +104,7 @@ dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1
 }
 
 # STAGE2
-pine64_bthelper (){
+pinea64plus_bthelper (){
 echo  ""
 echo -e "Installing bluetooth helper ..."
 sleep .50
@@ -133,4 +133,26 @@ EOF
 if [[ -f "/usr/local/sbin/bthelper" ]]; then
 	chmod +x /usr/local/sbin/bthelper
 fi
+}
+
+kickpik2b_bthelper (){
+#!/bin/bash
+
+reset_bt (){
+sleep 1
+killall hciattach
+sleep 1
+hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
+rfkill unblock all
+}
+
+if [[ ! `ls /sys/class/bluetooth/hci0` ]] > /dev/null 2>&1; then
+	hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
+	rfkill unblock all
+fi
+sleep 6
+if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; sleep 2; fi
+if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; fi
+
+exit 0
 }
