@@ -130,12 +130,11 @@ if [[ -f "/sys/class/rfkill/rfkill0/state" ]]; then
 	hciconfig hci0 up
 fi
 EOF
-if [[ -f "/usr/local/sbin/bthelper" ]]; then
-	chmod +x /usr/local/sbin/bthelper
-fi
+chmod +x /usr/local/sbin/bthelper
 }
 
 kickpik2b_bthelper (){
+cat <<EOF > "/usr/local/sbin/bthelper"
 #!/bin/bash
 
 reset_bt (){
@@ -146,7 +145,7 @@ hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
 rfkill unblock all
 }
 
-if [[ ! `ls /sys/class/bluetooth/hci0` ]] > /dev/null 2>&1; then
+if [[ ! -e /sys/class/bluetooth/hci0 ]]; then
 	hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
 	rfkill unblock all
 fi
@@ -155,4 +154,6 @@ if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; sleep 2; fi
 if [[ `hciconfig | grep -w "DOWN"` ]]; then reset_bt; fi
 
 exit 0
+EOF
+chmod +x /usr/local/sbin/bthelper
 }
