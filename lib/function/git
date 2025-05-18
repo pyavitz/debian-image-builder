@@ -63,14 +63,14 @@ fi
 
 git_option (){
 GIT_HASH=`git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git | grep -w "refs/heads/${GIT_BRANCH}" | sed -n '1p' | sed "s/refs\/heads\/${GIT_BRANCH}//g" | sed s/'\s'//g`
-if [[ -f "../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]]; then
+if [[ -f "../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]]; then
 	:;
 else
-	rm -f ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
+	rm -f ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 	rm -fdr ${GIT_REPO}-${GIT_BRANCH}
 fi
-if [[ -f "../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}" ]]; then
-	source ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
+if [[ -f "../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}" ]]; then
+	source ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 	if [[ "$GIT_FAST" == "true" ]]; then GIT_OPT="--depth 1"; else GIT_OPT=""; fi
 else
 	while :
@@ -83,8 +83,8 @@ else
 	if [ $? -gt 128 ]; then
 		echo -e "Default selected."
 		mkdir -p ../.cache
-		echo 'GIT_FAST="true"' > ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
-		echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
+		echo 'GIT_FAST="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+		echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 		GIT_OPT="--depth 1"
 		echo -e ""
 		break
@@ -92,15 +92,15 @@ else
 	case $REPLY in
 		[1]*)
 			mkdir -p ../.cache
-			echo 'GIT_FAST="true"' > ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
-			echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
+			echo 'GIT_FAST="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+			echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 			GIT_OPT="--depth 1"
 			echo -e ""
 			break
 			;;
 		[2]*)
 			mkdir -p ../.cache
-			echo 'GIT_FAST="false"' > ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
+			echo 'GIT_FAST="false"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 			GIT_OPT=""
 			echo -e ""
 			break
@@ -121,7 +121,7 @@ if [[ "$GIT_COMMIT" == "$GIT_HASH" ]]; then
 else
 	echo -en " ${PNK}[${FIN}${WHT}${GIT_HASH}${FIN}${PNK}]${FIN}"
 	echo -en " ${PNK}[${FIN}${WHT}mismatch${FIN}${PNK}]${FIN}"
-	sed -i 's/^GIT_COMMIT=.*/GIT_COMMIT="'"${GIT_HASH}"'"/' ../.cache/git_fast.${GIT_REPO}-${GIT_BRANCH}
+	sed -i 's/^GIT_COMMIT=.*/GIT_COMMIT="'"${GIT_HASH}"'"/' ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 	echo -en " ${PNK}[${FIN}${YLW}purging${FIN}${PNK}]${FIN}"
 	rm -fdr ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
 	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
