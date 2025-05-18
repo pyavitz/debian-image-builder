@@ -3,14 +3,14 @@
 git_download (){
 if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRANCH} 2>&1 | grep -w "refs/heads/${GIT_BRANCH}"` ]]; then
 	git_option
-	if [[ "$GIT_FAST" == "true" ]]; then git_verify; fi
+	if [[ "$GIT_SHALLOW" == "true" ]]; then git_verify; fi
 	if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -d "${GIT_REPO}-${GIT_BRANCH}.backup" ]]; then
 		echo -en "${GIT_REPO}-${GIT_BRANCH}"
 		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
 		rm -fdr ${GIT_REPO}-${GIT_BRANCH}
 		echo -en " ${WHT}...${FIN}"
 		mv -f ${GIT_REPO}-${GIT_BRANCH}.backup ${GIT_REPO}-${GIT_BRANCH}
-		if [[ "$GIT_FAST" == "false" ]]; then
+		if [[ "$GIT_SHALLOW" == "false" ]]; then
 			cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean > /dev/null 2>&1; cd ..
 		else
 			cd ${GIT_REPO}-${GIT_BRANCH}; make clean > /dev/null 2>&1; cd ..
@@ -71,7 +71,7 @@ else
 fi
 if [[ -f "../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}" ]]; then
 	source ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-	if [[ "$GIT_FAST" == "true" ]]; then GIT_OPT="--depth 1"; else GIT_OPT=""; fi
+	if [[ "$GIT_SHALLOW" == "true" ]]; then GIT_OPT="--depth 1"; else GIT_OPT=""; fi
 else
 	while :
 	do
@@ -83,7 +83,7 @@ else
 	if [ $? -gt 128 ]; then
 		echo -e "Default selected."
 		mkdir -p ../.cache
-		echo 'GIT_FAST="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+		echo 'GIT_SHALLOW="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 		echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 		GIT_OPT="--depth 1"
 		echo -e ""
@@ -92,7 +92,7 @@ else
 	case $REPLY in
 		[1]*)
 			mkdir -p ../.cache
-			echo 'GIT_FAST="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+			echo 'GIT_SHALLOW="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 			echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 			GIT_OPT="--depth 1"
 			echo -e ""
@@ -100,7 +100,7 @@ else
 			;;
 		[2]*)
 			mkdir -p ../.cache
-			echo 'GIT_FAST="false"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+			echo 'GIT_SHALLOW="false"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 			GIT_OPT=""
 			echo -e ""
 			break
