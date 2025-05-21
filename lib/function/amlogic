@@ -176,15 +176,36 @@ chown root:root /etc/initramfs/post-update.d/99-uimage
 }
 
 flash_tool_part (){
-if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
-	KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
-	LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
-	ROOTFS="/dev/mapper/${LOOP}"
-	sleep .50
-	rm -fr rootfs.PARTITION bootloader.PARTITION
-	dd if=${ROOTFS} bs=1M > rootfs.PARTITION
-	cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
-	sleep .50
-	kpartx -d ${IMAGE_FILE_NAME}
+if [[ "$P_VALUE" == "p1" ]]; then
+	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
+		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
+		ROOTFS="/dev/mapper/${LOOP}"
+		sleep .50
+		rm -fr rootfs.PARTITION bootloader.PARTITION
+		dd if=${ROOTFS} bs=1M > rootfs.PARTITION
+		cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
+		sleep .50
+		kpartx -d ${IMAGE_FILE_NAME}
+	fi
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
+		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
+		B_LOOP=`echo "$LOOP" | sed -n '1p'`
+		R_LOOP=`echo "$LOOP" | sed -n '2p'`
+		BOOT_LOOP="/dev/mapper/$B_LOOP"
+		ROOTFS_LOOP="/dev/mapper/$R_LOOP"
+		BOOT="${BOOT_LOOP}"
+		ROOTFS="${ROOTFS_LOOP}"
+		sleep .50
+		rm -fr rootfs.PARTITION bootloader.PARTITION
+		dd if=${BOOT} bs=1M > boot.PARTITION
+		dd if=${ROOTFS} bs=1M > rootfs.PARTITION
+		cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
+		sleep .50
+		kpartx -d ${IMAGE_FILE_NAME}
+	fi
 fi
 }
