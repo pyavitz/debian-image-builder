@@ -105,6 +105,37 @@ fi
 }
 
 # STAGE2
+amlogic_extra_firmware (){
+if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
+	# TV BOXES
+	git clone --depth=1 -q -b h96max-x3 https://github.com/pyavitz/firmware.git
+	rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+	git clone --depth=1 -q -b ath10k https://github.com/pyavitz/firmware.git
+	cp -fr firmware/* /lib/firmware; rm -fdr firmware
+fi
+if [[ "$FAMILY" == "amlogic" ]]; then
+	cd ~
+	${ARIA2} https://github.com/LibreELEC/meson-firmware/archive/refs/heads/master.tar.gz
+	tar xf meson-firmware-master.tar.gz
+	cp -fr meson-firmware-master/meson/* /lib/firmware/meson
+	rm -fdr meson-firmware-master*
+	mkdir -p /lib/firmware/ene-ub6250
+	cd /lib/firmware/ene-ub6250
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_init.bin
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/ms_rdwr.bin
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/msp_rdwr.bin
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init1.bin
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_init2.bin
+	${ARIA2} https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/+/main/ene-ub6250/sd_rdwr.bin
+	chown -R root:root /lib/firmware/ene-ub6250
+	cd ~
+fi
+if [[ "$BOARD" == "radxazero" ]]; then
+	git clone --depth=1 -q -b radxa https://github.com/pyavitz/firmware.git
+	rm -f firmware/README.md; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+fi
+}
+
 odroid_udev_rules (){
 tee /etc/udev/rules.d/10-odroid.rules <<EOF
 KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
