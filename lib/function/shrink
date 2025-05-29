@@ -16,7 +16,7 @@ if [[ "$P_VALUE" == "p2" ]]; then shrink_p2; fi
 }
 
 calculate (){
-DU=`du -sh ROOTFS | sed 's/ROOTFS//g' | sed s/'\s'//g | sed 's/G//g'`
+DU=`du -sh ${ROOTFS_LABEL} | sed "s/${ROOTFS_LABEL}//g" | sed s/'\s'//g | sed 's/G//g'`
 if [[ "$P_VALUE" == "p1" ]]; then CALC=$(echo $DU + 0.6 | bc | sed 's/\.//g'); fi
 if [[ "$P_VALUE" == "p2" ]]; then CALC=$(echo $DU + 1.0 | bc | sed 's/\.//g'); fi
 GB=$(echo $CALC | head -c 1)
@@ -49,9 +49,9 @@ shrink_p1 (){
 ROOTFS_LOOP="/dev/mapper/$LOOP"
 ROOTFS="${ROOTFS_LOOP}"
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "$ROOTFS" > /dev/null 2>&1; fi
-mkdir -p ROOTFS
+mkdir -p ${ROOTFS_LABEL}
 sleep .50
-mount "${ROOTFS}" ROOTFS
+mount "${ROOTFS}" ${ROOTFS_LABEL}
 sleep .50
 calculate
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
@@ -62,12 +62,12 @@ uuid
 echo -en "Shrink ${PNK}[${FIN}${WHT}enabled${FIN}${PNK}]${FIN}"
 sleep 1
 echo -en " ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
-if [ $VERBOSE -eq 1 ]; then cp -axv ROOTFS/* p1/; else cp -ax ROOTFS/* p1/; fi
+if [ $VERBOSE -eq 1 ]; then cp -axv ${ROOTFS_LABEL}/* p1/; else cp -ax ${ROOTFS_LABEL}/* p1/; fi
 sleep .75
 echo -en " ${PNK}[${FIN}${YLW}finishing${FIN}${PNK}]${FIN}"
-umount ROOTFS
+umount ${ROOTFS_LABEL}
 sleep .75
-rm -fdr ROOTFS
+rm -fdr ${ROOTFS_LABEL}
 kpartx -d shrink.img
 rm -f shrink.img
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
@@ -92,10 +92,10 @@ if [[ "$EFI" == "true" ]]; then EFI_BOOT="${BOOT_LOOP}"; else BOOT="${BOOT_LOOP}
 ROOTFS="${ROOTFS_LOOP}"
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "$ROOTFS" > /dev/null 2>&1; fi
 if [[ "$EFI" == "true" ]]; then mkdir -p EFI; else mkdir -p BOOT; fi
-mkdir -p ROOTFS
+mkdir -p ${ROOTFS_LABEL}
 sleep .50
 if [[ "$EFI" == "true" ]]; then mount "${EFI_BOOT}" EFI; else mount "${BOOT}" BOOT; fi
-mount "${ROOTFS}" ROOTFS
+mount "${ROOTFS}" ${ROOTFS_LABEL}
 sleep .50
 calculate
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
@@ -108,16 +108,16 @@ sleep 1
 echo -en " ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
 if [[ "$EFI" == "true" ]] then cp -fr EFI/* p1/; else cp -fr BOOT/* p1/; fi
 if [ $VERBOSE -eq 1 ]; then
-	if [[ "$FSTYPE" == "btrfs" ]]; then cp -axv ROOTFS/@/* p2/; else cp -axv ROOTFS/* p2/; fi
+	if [[ "$FSTYPE" == "btrfs" ]]; then cp -axv ${ROOTFS_LABEL}/@/* p2/; else cp -axv ${ROOTFS_LABEL}/* p2/; fi
 else
-	if [[ "$FSTYPE" == "btrfs" ]]; then cp -ax ROOTFS/@/* p2/; else cp -ax ROOTFS/* p2/; fi
+	if [[ "$FSTYPE" == "btrfs" ]]; then cp -ax ${ROOTFS_LABEL}/@/* p2/; else cp -ax ${ROOTFS_LABEL}/* p2/; fi
 fi
 sleep .75
 echo -en " ${PNK}[${FIN}${YLW}finishing${FIN}${PNK}]${FIN}"
 if [[ "$EFI" == "true" ]]; then umount EFI; else umount BOOT; fi
-umount ROOTFS
+umount ${ROOTFS_LABEL}
 sleep .75
-rm -fdr BOOT EFI; rm -fdr ROOTFS
+rm -fdr BOOT EFI; rm -fdr ${ROOTFS_LABEL}
 kpartx -d shrink.img
 rm -f shrink.img
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi

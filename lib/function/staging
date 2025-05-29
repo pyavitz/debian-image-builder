@@ -1,24 +1,31 @@
 #!/bin/bash
 
 filesystem (){
+DISTRO_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
 if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; else EXTFS="ext4"; fi
 if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
-if [[ "$EFI" == "true" ]]; then BOOT_LABEL="EFI"; else BOOT_LABEL="BOOT"; fi
+if [[ "$EFI" == "true" ]]; then
+	BOOT_LABEL="EFI"
+	ROOTFS_LABEL="${DISTRO_LABEL}"
+	else
+	BOOT_LABEL="BOOT"
+	ROOTFS_LABEL="ROOTFS"
+fi
 if [[ "$P_VALUE" == "p2" ]]; then MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${IMAGE_LOOP_DEV_BOOT}"; fi
 if [[ "$FSTYPE" == "ext4" ]]; then
-	MAKE_ROOTFS="mkfs.ext4 -L ROOTFS ${IMAGE_LOOP_DEV_ROOTFS}"
+	MAKE_ROOTFS="mkfs.ext4 -L ${ROOTFS_LABEL} ${IMAGE_LOOP_DEV_ROOTFS}"
 	MOUNT_ROOTFS="mount -o defaults,noatime ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
 	ROOTFS_TABLE="ext4	defaults,noatime,commit=600,errors=remount-ro 0 1"
 	ROOT_FSTYPE="rootfstype=ext4"
 fi
 if [[ "$FSTYPE" == "btrfs" ]]; then
-	MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${IMAGE_LOOP_DEV_ROOTFS}"
+	MAKE_ROOTFS="mkfs.btrfs -f -L ${ROOTFS_LABEL} ${IMAGE_LOOP_DEV_ROOTFS}"
 	MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
 	ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
 	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
 fi
 if [[ "$FSTYPE" == "xfs" ]]; then
-	MAKE_ROOTFS="mkfs.xfs -f -L ROOTFS ${IMAGE_LOOP_DEV_ROOTFS}"
+	MAKE_ROOTFS="mkfs.xfs -f -L ${ROOTFS_LABEL} ${IMAGE_LOOP_DEV_ROOTFS}"
 	MOUNT_ROOTFS="mount -o defaults,noatime ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
 	ROOTFS_TABLE="xfs	defaults,noatime 0 1"
 	ROOT_FSTYPE="rootfstype=xfs"

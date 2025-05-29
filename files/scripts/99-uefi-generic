@@ -1,6 +1,8 @@
 #!/bin/bash
 # UEFI/GRUB post update file management
 
+DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
+DISTRO_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
 if [[ -f "/etc/opt/board.txt" ]]; then
 	. /etc/opt/board.txt
 else
@@ -10,19 +12,19 @@ fi
 if [[ "$FSTYPE" == "ext4" ]]; then
 	FSMOD="ext2"
 	ROOT_FSTYPE="rootfstype=ext4"
-	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=${DISTRO_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
 	INITRD="initrd (hd0,2)/boot/initrd.gz"
 fi
 if [[ "$FSTYPE" == "btrfs" ]]; then
 	FSMOD="btrfs"
 	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-	LINUX="linux (hd0,2)/@/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	LINUX="linux (hd0,2)/@/boot/Image ${CONSOLE} rw root=LABEL=${DISTRO_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
 	INITRD="initrd (hd0,2)/@/boot/initrd.gz"
 fi
 if [[ "$FSTYPE" == "xfs" ]]; then
 	FSMOD="xfs"
 	ROOT_FSTYPE="rootfstype=xfs"
-	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=ROOTFS rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=${DISTRO_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
 	INITRD="initrd (hd0,2)/boot/initrd.gz"
 fi
 
