@@ -1,12 +1,11 @@
 #!/bin/bash
 
 filesystem (){
-DISTRO_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
 if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; else EXTFS="ext4"; fi
 if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$EFI" == "true" ]]; then
 	BOOT_LABEL="EFI"
-	ROOTFS_LABEL="${DISTRO_LABEL}"
+	ROOTFS_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
 	else
 	BOOT_LABEL="BOOT"
 	ROOTFS_LABEL="ROOTFS"
