@@ -33,18 +33,17 @@ if [[ ! -f "/lib/firmware/xc3028L-v36.fw" ]]; then ${ARIA2} https://github.com/a
 if [[ ! -f "/lib/firmware/xc4000-1.4.fw" ]]; then ${ARIA2} https://github.com/armbian/firmware/raw/master/xc4000-1.4.fw; fi
 if [[ ! -f "/lib/firmware/dvb-fe-xc4000-1.4.fw" ]]; then ln -s /lib/firmware/xc4000-1.4.fw /lib/firmware/dvb-fe-xc4000-1.4.fw; fi
 cd ~
-echo ""
 }
 
 # regulatory db
 wireless_regdb (){
 echo ""
-echo -e "Adding regulatory db ..."
+echo -e "Updating regulatory db ..."
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	echo 'KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"' > /etc/udev/rules.d/60-regdb.rules
 fi
-git clone --depth=1 https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
-sleep .50
+git clone --depth=1 -q https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
+sleep .25
 cd wireless-regdb
 cp -f regulatory.db /lib/firmware/regulatory.db
 cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
