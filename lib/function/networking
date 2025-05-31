@@ -35,10 +35,8 @@ if [[ ! -f "/lib/firmware/dvb-fe-xc4000-1.4.fw" ]]; then ln -s /lib/firmware/xc4
 cd ~
 }
 
-# regulatory db
+# Update regulatory db
 wireless_regdb (){
-echo ""
-echo -e "Updating regulatory db ..."
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	echo 'KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"' > /etc/udev/rules.d/60-regdb.rules
 fi
@@ -199,22 +197,24 @@ if [[ -f "/root/ifupdown.credentials" ]]; then
 	chmod +x /usr/local/bin/credentials
 	chown root:root /usr/local/bin/credentials
 	rm -f /root/networkmanager.credentials
-	echo "# activate service" > /boot/credentials.txt
-	echo 'ENABLE="false"' >> /boot/credentials.txt
-	echo "" >> /boot/credentials.txt
-	echo "# input wifi credentials" >> /boot/credentials.txt
-	echo 'SSID=""' >> /boot/credentials.txt
-	echo 'PASSKEY=""' >> /boot/credentials.txt
-	echo 'COUNTRYCODE=""' >> /boot/credentials.txt
-	echo "# set static ip address" >> /boot/credentials.txt
-	echo 'MANUAL="false"' >> /boot/credentials.txt
-	echo 'IPADDR=""' >> /boot/credentials.txt
-	echo 'NETMASK=""' >> /boot/credentials.txt
-	echo 'GATEWAY=""' >> /boot/credentials.txt
-	echo 'NAMESERVERS=""' >> /boot/credentials.txt
-	echo "" >> /boot/credentials.txt
-	echo "# change hostname" >> /boot/credentials.txt
-	echo HOSTNAME='"'$CURRENT_HOSTNAME'"' >> /boot/credentials.txt
+	cat <<EOF > /boot/credentials.txt
+# Enable service
+ENABLE="false"
+
+# Input credentials
+SSID=""
+PASSKEY=""
+COUNTRYCODE=""
+# Set static ip address
+MANUAL="false"
+IPADDR=""
+NETMASK=""
+GATEWAY=""
+NAMESERVERS=""
+
+# Change hostname
+HOSTNAME="$CURRENT_HOSTNAME"
+EOF
 fi
 }
 
@@ -225,20 +225,22 @@ if [[ -f "/root/networkmanager.credentials" ]]; then
 	chmod +x /usr/local/bin/credentials
 	chown root:root /usr/local/bin/credentials
 	rm -f /root/ifupdown.credentials
-	echo "# activate service" > /boot/credentials.txt
-	echo 'ENABLE="false"' >> /boot/credentials.txt
-	echo "" >> /boot/credentials.txt
-	echo "# input wifi credentials" >> /boot/credentials.txt
-	echo 'SSID=""' >> /boot/credentials.txt
-	echo 'PASSKEY=""' >> /boot/credentials.txt
-	echo 'COUNTRYCODE=""' >> /boot/credentials.txt
-	echo "# set static ip address" >> /boot/credentials.txt
-	echo 'MANUAL="false"' >> /boot/credentials.txt
-	echo 'IPADDR=""' >> /boot/credentials.txt
-	echo 'GATEWAY=""' >> /boot/credentials.txt
-	echo 'DNS=""' >> /boot/credentials.txt
-	echo "" >> /boot/credentials.txt
-	echo "# change hostname" >> /boot/credentials.txt
-	echo HOSTNAME='"'$CURRENT_HOSTNAME'"' >> /boot/credentials.txt
+	cat <<EOF > /boot/credentials.txt
+# Enable service
+ENABLE="false"
+
+# Input credentials
+SSID=""
+PASSKEY=""
+COUNTRYCODE=""
+# Set static ip address
+MANUAL="false"
+IPADDR=""
+GATEWAY=""
+DNS=""
+
+# Change hostname
+HOSTNAME="$CURRENT_HOSTNAME"
+EOF
 fi
 }
