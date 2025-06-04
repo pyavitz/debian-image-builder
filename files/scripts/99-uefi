@@ -3,30 +3,28 @@
 
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
 ROOTFS_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
-if [[ -f "/etc/opt/board.txt" ]]; then
-	. /etc/opt/board.txt
-else
-	exit 0
+if [[ -f "/etc/opt/board.txt" ]]; then . /etc/opt/board.txt; else exit 0; fi
+if [[ "$ARCH" == "arm" ]]; then
+	EFI_BOOT="BOOTARM"
+elif [[ "$ARCH" == "arm64" ]]; then
+	EFI_BOOT="BOOTAA64"
 fi
-
 if [[ "$FSTYPE" == "ext4" ]]; then
 	FSMOD="ext2"
 	ROOT_FSTYPE="rootfstype=ext4"
-	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=${ROOTFS_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	CMDLINE="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=${ROOTFS_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
 	INITRD="initrd (hd0,2)/boot/initrd.gz"
 	DEVICETREE="devicetree (hd0,2)/boot/${FAMILY}/${DTB}.dtb"
-fi
-if [[ "$FSTYPE" == "btrfs" ]]; then
+elif [[ "$FSTYPE" == "btrfs" ]]; then
 	FSMOD="btrfs"
 	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-	LINUX="linux (hd0,2)/@/boot/Image ${CONSOLE} rw root=LABEL=${ROOTFS_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	CMDLINE="linux (hd0,2)/@/boot/Image ${CONSOLE} rw root=LABEL=${ROOTFS_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
 	INITRD="initrd (hd0,2)/@/boot/initrd.gz"
 	DEVICETREE="devicetree (hd0,2)/@/boot/${FAMILY}/${DTB}.dtb"
-fi
-if [[ "$FSTYPE" == "xfs" ]]; then
+elif [[ "$FSTYPE" == "xfs" ]]; then
 	FSMOD="xfs"
 	ROOT_FSTYPE="rootfstype=xfs"
-	LINUX="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=${ROOTFS_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
+	CMDLINE="linux (hd0,2)/boot/Image ${CONSOLE} rw root=LABEL=${ROOTFS_LABEL} rootwait ${ROOT_FSTYPE} fsck.repair=yes loglevel=1 ${EXTRA}"
 	INITRD="initrd (hd0,2)/boot/initrd.gz"
 	DEVICETREE="devicetree (hd0,2)/boot/${FAMILY}/${DTB}.dtb"
 fi
@@ -42,7 +40,7 @@ menuentry "${DEFAULT_MOTD}" {
 	insmod ${FSMOD}
 	set root=hd0,${PTYPE}1
 	echo "Loading kernel ..."
-	${LINUX}
+	${CMDLINE}
 	echo "Loading ramdisk ..."
 	${INITRD}
 	echo "Loading devicetree ..."
@@ -51,21 +49,14 @@ menuentry "${DEFAULT_MOTD}" {
 EOF
 }
 
-if [[ -f "/etc/opt/grub.cfg" ]]; then :; else default_cfg; fi
+if [[ ! -f "/etc/opt/grub.cfg" ]]; then default_cfg; fi
 if [[ -d "/boot/efi" ]]; then
 	mkdir -p /boot/efi/EFI/BOOT
-	if [[ -f "/boot/efi/EFI/BOOT/BOOTARM.EFI" ]]; then
-		rm -f /boot/efi/EFI/BOOT/BOOTARM.BAK
-		mv -f /boot/efi/EFI/BOOT/BOOTARM.EFI /boot/efi/EFI/BOOT/BOOTARM.BAK
+	if [[ -f "/boot/efi/EFI/BOOT/${EFI_BOOT}.EFI" ]]; then
+		rm -f /boot/efi/EFI/BOOT/${EFI_BOOT}.BAK
+		mv -f /boot/efi/EFI/BOOT/${EFI_BOOT}.EFI /boot/efi/EFI/BOOT/${EFI_BOOT}.BAK
 	fi
-	if [[ -f "/boot/efi/EFI/BOOT/BOOTAA64.EFI" ]]; then
-		rm -f /boot/efi/EFI/BOOT/BOOTAA64.BAK
-		mv -f /boot/efi/EFI/BOOT/BOOTAA64.EFI /boot/efi/EFI/BOOT/BOOTAA64.BAK
-	fi
-	if [[ "$ARCH" == "arm" ]]; then
-		grub-mkstandalone -O arm-efi -o /boot/efi/EFI/BOOT/BOOTARM.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg"
-	fi
-	if [[ "$ARCH" == "arm64" ]]; then
-		grub-mkstandalone -O arm64-efi -o /boot/efi/EFI/BOOT/BOOTAA64.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg"
-	fi
+	grub-mkstandalone -O ${ARCH}-efi -o /boot/efi/EFI/BOOT/${EFI_BOOT}.EFI "/boot/grub/grub.cfg=/etc/opt/grub.cfg"
 fi
+
+exit 0
