@@ -61,13 +61,11 @@ if [[ "$UBOOT_RK_BIN" == "true" ]] && [[ -f "u-boot-rockchip.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f u-boot-rockchip.bin ../../${OUTPUT}/
 	uboot_packaging
-	echo ""
 elif [[ -f "idbloader.img" ]] && [[ -f "u-boot.itb" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f idbloader.img ../../${OUTPUT}/idbloader.bin
 	cp -f u-boot.itb ../../${OUTPUT}/u-boot.bin
 	uboot_packaging
-	echo ""
 else
 	report_error
 fi
@@ -128,8 +126,8 @@ if [[ -f "/lib/firmware/brcm/brcmfmac4356-sdio.bin" ]] && [[ -f "/lib/firmware/b
 	ln -s /lib/firmware/brcm/brcmfmac4356-sdio.bin /lib/firmware/brcm/brcmfmac4356-sdio.friendlyarm,nanopc-t4.bin
 	ln -s /lib/firmware/brcm/brcmfmac4356-sdio.txt /lib/firmware/brcm/brcmfmac4356-sdio.friendlyarm,nanopc-t4.txt
 fi
-if [[ "$BOARD" == "radxazero3w" ]] && [[ -d "/lib/firmware/aic8800/SDIO/aic8800" ]] && [[ -d "/lib/firmware/aic8800/SDIO/aic8800D80" ]]; then
-	mv /lib/firmware/aic8800/SDIO/aic8800 /lib/firmware/aic8800/SDIO/aic8800-orig
-	ln -s /lib/firmware/aic8800/SDIO/aic8800D80 /lib/firmware/aic8800/SDIO/aic8800
+if [[ "$BOARD" == "radxazero3w" ]]; then
+	mkdir -p /lib/firmware/updates
+	ln -s /lib/firmware/aic8800/SDIO/aic8800D80 /lib/firmware/updates/aic8800
 fi
 }
