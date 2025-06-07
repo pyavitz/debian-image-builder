@@ -4,15 +4,10 @@
 install_firmware (){
 ARIA2="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 echo ""
-echo "Adding ${DEFAULT_MOTD} firmware ..."
-sleep .50
-mkdir -p /lib/firmware/brcm
 cd ~
-${ARIA2} https://github.com/armbian/firmware/archive/master.tar.gz
-tar xf firmware-master.tar.gz
-rm -fdr firmware-master/{.git,ath11k,README.md}
-cp -fr firmware-master/* /lib/firmware
-rm -fdr firmware-master firmware-master.tar.gz master.tar.gz
+mkdir -p /lib/firmware/brcm
+git clone --depth=1 https://github.com/armbian/firmware.git
+rm -fdr firmware/{.git,README.md}; cp -fr firmware/* /lib/firmware; rm -fdr firmware
 mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
 cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
 install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem

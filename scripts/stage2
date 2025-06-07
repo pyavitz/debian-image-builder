@@ -252,19 +252,15 @@ chmod +x /usr/local/bin/write2mmc
 chown root:root /usr/local/bin/write2mmc
 
 # scripts
-echo ""
-echo "Moving scripts ..."
-sleep 1s
+sleep .50
 mkdir -p /usr/local/bin
 mkdir -p /usr/local/sbin
 mv -f {add-overlay,bootcmd,menu-config,menu-config-update,setup,smon,sysinfo} /usr/local/bin/
-if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]] && [[ -f "/root/amlmixer" ]]; then
-	mv -f amlmixer /usr/local/bin/
-fi
+if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]]; then mv -f amlmixer /usr/local/bin/; fi
 # tweaks
 if [[ -f "/usr/bin/tweaks" ]]; then tweaks_service > /dev/null 2>&1; fi
-if [ $NETWORKMANAGER -eq 0 ]; then wget -cq --show-progress ${SCRIPTS_URL}swh -P /usr/local/bin/; fi
-wget -cq --show-progress ${SCRIPTS_URL}governor -P /usr/local/bin/
+if [ $NETWORKMANAGER -eq 0 ]; then wget -cq ${SCRIPTS_URL}swh -P /usr/local/bin/; fi
+wget -cq ${SCRIPTS_URL}governor -P /usr/local/bin/
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
 chmod +x /usr/local/sbin/firstboot
@@ -404,8 +400,7 @@ wireless_regdb
 
 # sudoers file
 if [ $USERACCT -eq 0 ]; then
-	echo ""
-	tee /etc/sudoers.d/010_${USERNAME}-nopasswd <<EOF
+	cat <<EOF > "/etc/sudoers.d/010_${USERNAME}-nopasswd"
 ${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
 fi
@@ -420,7 +415,6 @@ if [[ "$BOARD" == "odroidc1" ]]; then make_uimage; fi
 
 # u-boot and kernel packages
 echo ""
-echo "Installing linux and u-boot package ..."
 apt update
 apt upgrade -y
 if [[ "$EFI" == "true" ]]; then apt install -y grub-efi; fi
@@ -480,13 +474,10 @@ if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
 	sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged
 fi
 
-echo ""
-echo "Enabling Services ..."
 if [[ "$BOARD" == "nanopineoplus2" ]]; then
 	if [[ "$DISTRO" == "devuan" ]]; then :; else nanopi_bt_service > /dev/null 2>&1; fi
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
-	echo "== Sysvinit"
 	enable_sysvinit > /dev/null 2>&1
 else
 	firstboot_service > /dev/null 2>&1
@@ -494,7 +485,6 @@ else
 	led_service > /dev/null 2>&1
 	if [[ -f "/usr/local/sbin/led-trigger" ]]; then :; else systemctl disable leds > /dev/null 2>&1; fi
 	rc-local_service > /dev/null 2>&1
-	echo "== Systemd"
 	enable_systemd > /dev/null 2>&1
 fi
 
