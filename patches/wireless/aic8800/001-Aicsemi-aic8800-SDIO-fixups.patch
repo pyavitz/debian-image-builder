@@ -7,36 +7,36 @@ Source: https://github.com/radxa-pkg/aic8800
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../net/wireless/aic8800/aic8800_bsp/Makefile |  4 +-
- .../aic8800/aic8800_bsp/aic_bsp_driver.c      |  4 ++
- .../wireless/aic8800/aic8800_fdrv/rwnx_main.c | 42 ++++++++++++++++++-
- .../aic8800/aic8800_fdrv/rwnx_mod_params.c    | 15 +++++--
- .../aic8800/aic8800_fdrv/rwnx_msg_tx.c        |  2 +
- .../aic8800/aic8800_fdrv/rwnx_platform.c      |  4 ++
- .../aic8800/aic8800_fdrv/rwnx_radar.c         |  8 ++++
- .../wireless/aic8800/aic8800_fdrv/rwnx_tdls.c |  1 +
- .../wireless/aic8800/aic8800_fdrv/rwnx_tx.c   |  1 +
- .../wireless/aic8800/aic8800_fdrv/rwnx_txq.c  |  1 +
+ .../net/wireless/aic8800_sdio/aic8800_bsp/Makefile |  4 +-
+ .../aic8800_sdio/aic8800_bsp/aic_bsp_driver.c      |  4 ++
+ .../wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c | 42 ++++++++++++++++++-
+ .../aic8800_sdio/aic8800_fdrv/rwnx_mod_params.c    | 15 +++++--
+ .../aic8800_sdio/aic8800_fdrv/rwnx_msg_tx.c        |  2 +
+ .../aic8800_sdio/aic8800_fdrv/rwnx_platform.c      |  4 ++
+ .../aic8800_sdio/aic8800_fdrv/rwnx_radar.c         |  8 ++++
+ .../wireless/aic8800_sdio/aic8800_fdrv/rwnx_tdls.c |  1 +
+ .../wireless/aic8800_sdio/aic8800_fdrv/rwnx_tx.c   |  1 +
+ .../wireless/aic8800_sdio/aic8800_fdrv/rwnx_txq.c  |  1 +
  10 files changed, 75 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/aic8800/aic8800_bsp/Makefile b/drivers/net/wireless/aic8800/aic8800_bsp/Makefile
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_bsp/Makefile b/drivers/net/wireless/aic8800_sdio/aic8800_bsp/Makefile
 index bcccfbdbbfc0..a835b95ad9a6 100644
---- a/drivers/net/wireless/aic8800/aic8800_bsp/Makefile
-+++ b/drivers/net/wireless/aic8800/aic8800_bsp/Makefile
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_bsp/Makefile
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_bsp/Makefile
 @@ -1,7 +1,7 @@
  CONFIG_SDIO_SUPPORT := y
  CONFIG_SDIO_PWRCTRL := n
 -CONFIG_AIC_FW_PATH = "/vendor/etc/firmware"
 -#CONFIG_AIC_FW_PATH = "/lib/firmware/aic8800"
 +#CONFIG_AIC_FW_PATH = "/vendor/etc/firmware"
-+CONFIG_AIC_FW_PATH = "/lib/firmware/aic8800_fw/SDIO/aic8800D80"
++CONFIG_AIC_FW_PATH = "/lib/firmware/aic8800/SDIO/"
  export CONFIG_AIC_FW_PATH
  ccflags-y += -DCONFIG_AIC_FW_PATH=\"$(CONFIG_AIC_FW_PATH)\"
  
-diff --git a/drivers/net/wireless/aic8800/aic8800_bsp/aic_bsp_driver.c b/drivers/net/wireless/aic8800/aic8800_bsp/aic_bsp_driver.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c b/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c
 index 5d7e6bbb3968..478b556182ae 100644
---- a/drivers/net/wireless/aic8800/aic8800_bsp/aic_bsp_driver.c
-+++ b/drivers/net/wireless/aic8800/aic8800_bsp/aic_bsp_driver.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c
 @@ -468,8 +468,12 @@ void rwnx_rx_handle_msg(struct aic_sdio_dev *sdiodev, struct ipc_e2a_msg *msg)
  }
  
@@ -50,10 +50,10 @@ index 5d7e6bbb3968..478b556182ae 100644
  
  #define MD5(x) x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10],x[11],x[12],x[13],x[14],x[15]
  #define MD5PINRT "file md5:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\r\n"
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c
 index 86567f95a3f3..0922668941d3 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c
 @@ -770,7 +770,9 @@ static void rwnx_csa_finish(struct work_struct *ws)
  		cfg80211_disconnected(vif->ndev, 0, NULL, 0, 0, GFP_KERNEL);
  		#endif
@@ -208,10 +208,10 @@ index 86567f95a3f3..0922668941d3 100644
  
  module_init(rwnx_mod_init);
  module_exit(rwnx_mod_exit);
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_mod_params.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_mod_params.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_mod_params.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_mod_params.c
 index 4aa6eba9c51b..47d5872957cb 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_mod_params.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_mod_params.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_mod_params.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_mod_params.c
 @@ -1550,7 +1550,10 @@ if (rwnx_hw->mod_params->custregd) {
                 "\n\n%s: CAUTION: USING PERMISSIVE CUSTOM REGULATORY RULES\n\n",
                 __func__);
@@ -249,10 +249,10 @@ index 4aa6eba9c51b..47d5872957cb 100644
      wiphy->regulatory_flags |= REGULATORY_WIPHY_SELF_MANAGED;
  
      rtnl_lock();
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_msg_tx.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_msg_tx.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_msg_tx.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_msg_tx.c
 index 0d5007a756ff..92ec5cf4f2b3 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_msg_tx.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_msg_tx.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_msg_tx.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_msg_tx.c
 @@ -525,6 +525,7 @@ int rwnx_send_add_if (struct rwnx_hw *rwnx_hw, const unsigned char *mac,
  	case NL80211_IFTYPE_P2P_CLIENT:
  		add_if_req_param->p2p = true;
@@ -269,10 +269,10 @@ index 0d5007a756ff..92ec5cf4f2b3 100644
  	#endif /* CONFIG_RWNX_FULLMAC */
  	case NL80211_IFTYPE_AP:
  		add_if_req_param->type = MM_AP;
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_platform.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_platform.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c
 index a422ed13bd2b..3ddec732b581 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_platform.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_platform.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c
 @@ -225,8 +225,12 @@ static int rwnx_plat_tl4_fw_upload(struct rwnx_plat *rwnx_plat, u8 *fw_addr,
  #endif
  
@@ -286,10 +286,10 @@ index a422ed13bd2b..3ddec732b581 100644
  
  #if 0
  /**
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_radar.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_radar.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_radar.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_radar.c
 index c50f2d2b16cc..176a83cc9354 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_radar.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_radar.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_radar.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_radar.c
 @@ -1399,7 +1399,11 @@ static void rwnx_radar_cac_work(struct work_struct *ws)
  					#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
  					   &ctxt->chan_def,
@@ -314,10 +314,10 @@ index c50f2d2b16cc..176a83cc9354 100644
  		rwnx_chanctx_unlink(radar->cac_vif);
  	}
  
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tdls.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tdls.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tdls.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tdls.c
 index 34196edac508..7d9afb935ac7 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tdls.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tdls.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tdls.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tdls.c
 @@ -257,6 +257,7 @@ static u8 rwnx_ac_from_wmm(int ac)
  	switch (ac) {
  	default:
@@ -326,10 +326,10 @@ index 34196edac508..7d9afb935ac7 100644
  	case 0:
  		return AC_BE;
  	case 1:
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tx.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tx.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tx.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tx.c
 index c15f3be6cda9..d3b61e3dd5d0 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tx.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_tx.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tx.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_tx.c
 @@ -325,6 +325,7 @@ u16 rwnx_select_txq(struct rwnx_vif *rwnx_vif, struct sk_buff *skb)
  		/* AP_VLAN interface is not used for a 4A STA,
  		   fallback searching sta amongs all AP's clients */
@@ -338,10 +338,10 @@ index c15f3be6cda9..d3b61e3dd5d0 100644
  	case NL80211_IFTYPE_AP:
  	case NL80211_IFTYPE_P2P_GO:
  	{
-diff --git a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_txq.c b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_txq.c
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_txq.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_txq.c
 index 5468c3a5e067..9bdc07268407 100644
---- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_txq.c
-+++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_txq.c
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_txq.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_txq.c
 @@ -640,6 +640,7 @@ static inline void rwnx_txq_vif_for_each_sta(struct rwnx_hw *rwnx_hw, struct rwn
  	}
  	case NL80211_IFTYPE_AP_VLAN:
