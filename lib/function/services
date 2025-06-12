@@ -88,8 +88,9 @@ Requires=bluetooth.service bluetooth.target getty.target
 
 [Service]
 Type=simple
-ExecStartPre=/usr/sbin/rfkill unblock all
-ExecStart=/usr/local/sbin/bthelper
+ExecStartPre=/usr/bin/hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
+ExecStart=/usr/sbin/rfkill unblock all
+ExecStartPost=/usr/local/sbin/bthelper
 TimeoutSec=0
 RemainAfterExit=yes
 SysVStartPriority=99
