@@ -90,13 +90,13 @@ fi
 
 # LINUX
 rockchip_extra_patching (){
-# rockchip: all
-if [[ "$FAMILY" == "rockchip" ]] && [[ -d "../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" ]]; then
-	if [[ "$FAMILY_EXT" =~ ^(rk3288|rk3328|rk3399)$ ]]; then
-		if [[ `ls ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
-			echo "# ${LINUX_PATCHDIR}/../all/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-			for i in ../../${LINUX_PATCHDIR}/../all/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
-		fi
+if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}/*.dts* | sed 's/..\/..\///g' >> ${LOG_FILE}
+		cp -fr ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}/*.dts* arch/${ARCH}/boot/dts/${PLATFORM}
+		echo "" >> arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+		cat ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}/Makefile >> arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
 	fi
 fi
 }
