@@ -34,7 +34,8 @@ Radxa Zero
 X96-AIR	GBIT / QCOM
 
 # ROCKCHIP
-Radxa Zero 3W (*)
+NanoPi R3S
+Radxa Zero 3W
 
 # SAMSUNG
 Odroid XU4
