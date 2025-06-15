@@ -1,0 +1,119 @@
+From 8c8495e0979a2dd84d669f21fd086ad1db197a5f Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sun, 15 Jun 2025 08:09:55 -0400
+Subject: [PATCH] NanoPi R3S Fixups
+
+Fixups courtesy of Armbian
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../boot/dts/rockchip/rk3566-nanopi-r3s.dts   | 41 ++++++++++++++-----
+ 1 file changed, 30 insertions(+), 11 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3566-nanopi-r3s.dts b/arch/arm64/boot/dts/rockchip/rk3566-nanopi-r3s.dts
+index fb1f65c86883..413daa2468b2 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3566-nanopi-r3s.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3566-nanopi-r3s.dts
+@@ -1,7 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+ /*
+  * Copyright (c) 2020 Rockchip Electronics Co., Ltd.
+- *
+  * Copyright (c) 2024 FriendlyElec Computer Tech. Co., Ltd.
+  * (http://www.friendlyelec.com)
+  *
+@@ -9,6 +8,7 @@
+  */
+ 
+ /dts-v1/;
++
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
+ #include <dt-bindings/leds/common.h>
+@@ -17,8 +17,8 @@
+ #include "rk3566.dtsi"
+ 
+ / {
+-	model = "FriendlyElec NanoPi R3S";
+ 	compatible = "friendlyarm,nanopi-r3s", "rockchip,rk3566";
++	model = "FriendlyElec NanoPi R3S";
+ 
+ 	aliases {
+ 		ethernet0 = &gmac1;
+@@ -137,18 +137,27 @@ &cpu3 {
+ };
+ 
+ &gmac1 {
++	phy-mode = "rgmii";
++	clock_in_out = "output";
++
++	snps,reset-gpio = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
++	snps,reset-active-low;
++	/* Reset time is 15ms, 50ms for rtl8211f */
++	snps,reset-delays-us = <0 15000 50000>;
+ 	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>;
+ 	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>, <&cru CLK_MAC1_2TOP>;
+ 	assigned-clock-rates = <0>, <125000000>;
+-	clock_in_out = "output";
+-	phy-mode = "rgmii-id";
+-	phy-handle = <&rgmii_phy1>;
++
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&gmac1m0_miim
+ 		     &gmac1m0_tx_bus2_level3
+ 		     &gmac1m0_rx_bus2
+ 		     &gmac1m0_rgmii_clk_level2
+ 		     &gmac1m0_rgmii_bus_level3>;
++	tx_delay = <0x3c>;
++	rx_delay = <0x2f>;
++
++	phy-handle = <&rgmii_phy1>;
+ 	status = "okay";
+ };
+ 
+@@ -409,10 +418,8 @@ rgmii_phy1: ethernet-phy@1 {
+ 		interrupt-parent = <&gpio4>;
+ 		interrupts = <RK_PC3 IRQ_TYPE_LEVEL_LOW>;
+ 		pinctrl-names = "default";
+-		pinctrl-0 = <&eth_phy_reset_pin>;
+-		reset-assert-us = <20000>;
+-		reset-deassert-us = <100000>;
+-		reset-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&gmac_int>;
++		realtek,ledsel = <0xae00>;
+ 	};
+ };
+ 
+@@ -421,6 +428,18 @@ &pcie2x1 {
+ 	pinctrl-0 = <&pcie_reset_h>;
+ 	reset-gpios = <&gpio4 RK_PC6 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
++	
++	pcie@0,0 {
++		reg = <0x00000000 0 0 0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		r8169: pcie@1,0 {
++			reg = <0x000000 0 0 0 0>;
++			local-mac-address = [ 00 00 00 00 00 00 ];
++			realtek,ledsel = <0x870>;
++		};
++	};
+ };
+ 
+ &pinctrl {
+@@ -439,8 +458,8 @@ wan_led_pin: wan-led-pin {
+ 	};
+ 
+ 	gmac {
+-		eth_phy_reset_pin: eth-phy-reset-pin {
+-			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_up>;
++		gmac_int: gmac-int {
++			rockchip,pins = <4 RK_PC3 RK_FUNC_GPIO &pcfg_pull_up>;
+ 		};
+ 	};
+ 
+-- 
+2.43.0
+
