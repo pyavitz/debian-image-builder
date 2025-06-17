@@ -36,6 +36,7 @@ if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]]; then
 	cp -fr ${DRIVER}/src/SDIO/driver_fw/driver/${DRIVER} ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
 	echo "obj-\$(CONFIG_AIC_WLAN_SUPPORT) += ${DRIVER}_sdio/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/Makefile
 	sed -i 's/MAKEFLAGS +=-j$(shell nproc)/#MAKEFLAGS +=-j$(shell nproc)/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Makefile
+	sed -i 's/CONFIG_GPIO_WAKEUP = n/CONFIG_GPIO_WAKEUP = y/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Makefile
 	sed -i 's/CONFIG_SDIO_PWRCTRL := y/CONFIG_SDIO_PWRCTRL := n/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/${DRIVER}_bsp/Makefile
 	sed -i '/source "drivers\/net\/wireless\/admtek\/Kconfig"/a source "drivers\/net\/wireless\/aic8800_sdio\/Kconfig"' \
 		"${KERNEL}-${VERSION}/drivers/net/wireless/Kconfig"
