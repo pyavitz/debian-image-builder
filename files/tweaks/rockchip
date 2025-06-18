@@ -13,60 +13,13 @@ else
 fi
 
 # Overclock
-if [[ "$FAMILY_EXT" == "rk3328" || "$FAMILY_EXT" == "rk3399" ]] && [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
+if [[ "$SERIES" == "rk3566" ]] && [[ -f "/sys/devices/system/cpu/cpufreq/boost" ]]; then
 	if [ $overclock -eq 1 ]; then
 		echo "1" > /sys/devices/system/cpu/cpufreq/boost
-		sleep .25
-		echo "1512000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
-		sleep .25
 		governor -r
 	else
 		echo "0" > /sys/devices/system/cpu/cpufreq/boost
-		sleep .25
-		echo "1416000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
-		sleep .25
 		governor -r
-	fi
-fi
-if [[ "$BOARD" == "tinker" ]] && [[ -f "/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq" ]]; then
-	if [ $overclock -eq 1 ]; then
-		sleep .25
-		echo "1800000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
-		sleep .25
-		governor -r
-	else
-		sleep .25
-		echo "1608000" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
-		sleep .25
-		governor -r
-	fi
-fi
-
-# Restart auto-negotiation on ethernet
-if [[ "$BOARD" == "tinker" ]]; then
-	if [[ -f "/sys/class/net/eth0/carrier" ]] && [[ `grep "1" /sys/class/net/eth0/carrier` ]]; then
-		if [[ `curl -I https://github.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-			:;
-		else
-			sleep 5; ethtool -r eth0;
-		fi
-	fi
-fi
-
-# NanoPi R4SE Networking Tweak
-if [[ "$BOARD" == "nanopir4se" ]]; then
-	MACDEV=`findmnt -v -n -o SOURCE / | sed 's/dev//g' | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##' | sed 's/p1//g' | sed 's/p2//'`
-	if [[ -f /sys/class/block/$MACDEV/device/cid ]]; then
-		HASHDEV=`sha256sum /sys/class/block/$MACDEV/device/cid`
-		MACADDR=`echo "${HASHDEV}" | dd bs=1 count=12 2>/dev/null | sed 's/../&:/g; s/:$//'`
-	else
-		MACADDR=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
-	fi
-	if [[ -e "/sys/class/net/eth0" ]]; then
-		ip link set dev eth0 address $MACADDR
-	fi
-	if [[ -e "/sys/class/net/eth1" ]]; then
-		ip link set dev eth1 address $MACADDR
 	fi
 fi
 
