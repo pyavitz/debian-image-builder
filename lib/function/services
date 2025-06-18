@@ -255,7 +255,7 @@ fi
 }
 
 rockchip_systemd (){
-tee /etc/systemd/system/tweaks.service <<EOF
+sudo tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
 Description=Rockchip System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
@@ -273,7 +273,7 @@ StandardError=journal+console
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable tweaks
+sudo systemctl enable tweaks
 }
 
 radxazero_systemd (){
@@ -449,7 +449,7 @@ else
 	if [[ "$BOARD" =~ ^(nanopir5c|nanopir5s)$ ]]; then nanopi5_systemd; fi
 	if [[ "$BOARD" =~ ^(orangepi3|orangepi3lts)$ ]]; then orangepi3_systemd; fi
 	if [[ "$FAMILY_EXT" =~ ^(ac2xx|bananapi|odroid)$ ]]; then ${FAMILY_EXT}_systemd; fi
-	if [[ "$FAMILY_EXT" =~ ^(rk3288|rk3328|rk3399)$ ]]; then rockchip_systemd; fi
+	if [[ "$SERIES" =~ ^(rk3566)$ ]]; then rockchip_systemd; fi
 fi
 }
 
