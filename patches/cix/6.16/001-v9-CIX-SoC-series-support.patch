@@ -1,0 +1,1949 @@
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 3/9] arm64: Kconfig: add ARCH_CIX for cix silicons
+Date: Mon,  9 Jun 2025 11:16:21 +0800
+
+From: Fugang Duan <fugang.duan@cixtech.com>
+
+Add ARCH_CIX for CIX SoC series support.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Fugang Duan <fugang.duan@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+ arch/arm64/Kconfig.platforms | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
+index a541bb029aa4..5eda66aea359 100644
+--- a/arch/arm64/Kconfig.platforms
++++ b/arch/arm64/Kconfig.platforms
+@@ -106,6 +106,12 @@ config ARCH_BLAIZE
+ 	help
+ 	  This enables support for the Blaize SoC family
+ 
++config ARCH_CIX
++	bool "Cixtech SoC family"
++	help
++	  This enables support for the Cixtech SoC family,
++	  like P1(sky1).
++
+ config ARCH_EXYNOS
+ 	bool "Samsung Exynos SoC family"
+ 	select COMMON_CLK_SAMSUNG
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 0/9] arm64: Introduce CIX P1 (SKY1) SoC
+Date: Mon,  9 Jun 2025 11:16:18 +0800
+
+Cixtech P1 (internal name sky1) is high performance generic Armv9 SoC.
+Orion O6 is the Arm V9 Motherboard built by Radxa. You could find brief
+introduction for SoC and related boards at:
+https://radxa.com/products/orion/o6#overview
+
+Currently, to run upstream kernel at Orion O6 board, you need to
+use BIOS released by Radxa, and add "clk_ignore_unused=1" at bootargs.
+https://docs.radxa.com/en/orion/o6/bios/install-bios
+
+In this series, we add initial SoC and board support for Kernel building.
+Since mailbox is used for SCMI clock communication, mailbox driver is added
+in this series for the minimum SoC support.
+
+Patch 1-2: add dt-binding doc for CIX and its sky1 SoC
+Patch 3: add Arm64 build support
+Patch 4-5: add CIX mailbox driver which needs to support SCMI clock protocol.
+Patch 6: add Arm64 defconfig support
+Patch 7-8: add initial dts support for SoC and Orion O6 board
+Patch 9: add MAINTAINERS entry
+
+Below are the review status:
+Patch 1-4: received public Reviewed-by or Acked-by tags
+Patch 6-7: received public Reviewed-by or Acked-by tags
+Patch 8: received public Tested-by tags
+
+Changes for v9:
+- Rebase to v6.16-rc1
+- Patch 5: address comments from Jassi Brar
+- Patch 9: Add CIX mailbox information at MAINTAINER file
+
+Changes for v8:
+- Patch 6: add Krzysztof Kozlowski's Reviewed-by tag
+- Patch 7: add Krzysztof Kozlowski's Acked-by tag
+
+Changes for v7:
+- Patch 8:
+	- Refine *_scmi_mem nodes for their properties ordering
+	- Delete Krzysztof Kozlowski and Fugang Duan's tag due to substantial changes
+	- Add two Tested-by tags from Enric Balletbo i Serra and Kajetan Puchalski
+- Patch 4: Add Krzysztof Kozlowski's Reviewed-by tag
+- Squash two patches as one for arm64 defconfig
+- Rename clock binding file from sky1-clk.h to cix,sky1.h
+- Some of my Sob are missing, add them
+
+Changes for v6:
+- Rebase to v6.15-rc2
+- Add mailbox driver
+- Add device tree description for uart, mailbox and scmi firmware (for clock).
+
+Changes for v5:
+- Patch 5: Delete pmu-spe node which need to refine, and add it in future
+- Patch 6: Refine MAINTAINERS for all CIX SoC and adding code tree location
+
+Changes for v4:
+- Move add MAINTAINERS entry patch to the last, and add two dts files entry in it. 
+- Add three Krzysztof Kozlowski's Reviewed-by Tags
+- For sky1.dtsi, makes below changes:
+	- Add ppi-partition entry for gic-v3 node, and let pmu-a520 and pmu-a720's interrupt entry
+	get its handle
+	- Remove gic-v3's #redistributor-regions and redistributor-stride properties
+	- Change gic-v3's #interrupt-cells as 4, and change all interrupt specifiers accordingly
+	- Remove "arm,no-tick-in-suspend" for timer due to global counter is at always-on power domain
+	- Remove timer's clock frequency due to firmware has already set it
+
+Changes for v3:
+- Patch 1: Add Krzysztof Kozlowski's Acked-by Tag
+- Patch 2: Add Krzysztof Kozlowski's Reviewed-by Tag
+- Patch 6: Fix two dts coding sytle issues
+
+Changes for v2:
+- Pass dts build check with below commands:
+make O=$OUTKNL dt_binding_check DT_SCHEMA_FILES=vendor-prefixes.yaml
+make O=$OUTKNL dt_binding_check DT_SCHEMA_FILES=arm/cix.yaml
+make O=$OUTKNL CHECK_DTBS=y W=1 cix/sky1-orion-o6.dtb
+- Re-order the patch set, and move vendor-perfixes to the 1st patch.
+- Patch 4: Ordered Kconfig config entry by alpha-numerically
+- Patch 5: Corrects the Ack tag's name
+- Patch 6: see below.
+1) Corrects the SoF tag's name
+2) Fix several coding sytle issues
+3) move linux,cma node to dts file
+4) delete memory node, memory size is passed by firmware
+5) delete uart2 node which will be added in future patches
+6) Improve for pmu and cpu node to stands for more specific cpu model
+7) Improve the timer node and add hypervisor virtual timer irq
+
+Fugang Duan (1):
+  arm64: Kconfig: add ARCH_CIX for cix silicons
+
+Gary Yang (1):
+  dt-bindings: clock: cix: Add CIX sky1 scmi clock id
+
+Guomin Chen (2):
+  dt-bindings: mailbox: add cix,sky1-mbox
+  mailbox: add CIX mailbox driver
+
+Peter Chen (5):
+  dt-bindings: vendor-prefixes: Add CIX Technology Group Co., Ltd.
+  dt-bindings: arm: add CIX P1 (SKY1) SoC
+  arm64: defconfig: Enable CIX SoC
+  arm64: dts: cix: Add sky1 base dts initial support
+  MAINTAINERS: Add CIX SoC maintainer entry
+
+ .../devicetree/bindings/arm/cix.yaml          |  26 +
+ .../bindings/mailbox/cix,sky1-mbox.yaml       |  71 ++
+ .../devicetree/bindings/vendor-prefixes.yaml  |   2 +
+ MAINTAINERS                                   |  13 +
+ arch/arm64/Kconfig.platforms                  |   6 +
+ arch/arm64/boot/dts/Makefile                  |   1 +
+ arch/arm64/boot/dts/cix/Makefile              |   2 +
+ arch/arm64/boot/dts/cix/sky1-orion-o6.dts     |  39 ++
+ arch/arm64/boot/dts/cix/sky1.dtsi             | 331 +++++++++
+ arch/arm64/configs/defconfig                  |   2 +
+ drivers/mailbox/Kconfig                       |  10 +
+ drivers/mailbox/Makefile                      |   2 +
+ drivers/mailbox/cix-mailbox.c                 | 635 ++++++++++++++++++
+ include/dt-bindings/clock/cix,sky1.h          | 279 ++++++++
+ 14 files changed, 1419 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/arm/cix.yaml
+ create mode 100644 Documentation/devicetree/bindings/mailbox/cix,sky1-mbox.yaml
+ create mode 100644 arch/arm64/boot/dts/cix/Makefile
+ create mode 100644 arch/arm64/boot/dts/cix/sky1-orion-o6.dts
+ create mode 100644 arch/arm64/boot/dts/cix/sky1.dtsi
+ create mode 100644 drivers/mailbox/cix-mailbox.c
+ create mode 100644 include/dt-bindings/clock/cix,sky1.h
+
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 8/9] arm64: dts: cix: Add sky1 base dts initial support
+Date: Mon,  9 Jun 2025 11:16:26 +0800
+
+CIX SKY1 SoC is high performance Armv9 SoC designed by Cixtech,
+and Orion O6 is the motherboard launched by Radxa. See below for
+detail:
+https://docs.radxa.com/en/orion/o6/getting-started/introduction
+
+In this commit, it only adds limited components for running initramfs
+at Orion O6.
+
+Tested-by: Enric Balletbo i Serra <eballetb@redhat.com>
+Tested-by: Kajetan Puchalski <kajetan.puchalski@arm.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+Signed-off-by: Guomin Chen <Guomin.Chen@cixtech.com>
+Signed-off-by: Gary Yang <gary.yang@cixtech.com>
+---
+Changes for v7:
+- Refine *_scmi_mem nodes for their properties ordering
+- Delete Krzysztof Kozlowski and Fugang Duan's tag due to substantial changes
+- Add two Tested-by tags from Enric Balletbo i Serra and Kajetan Puchalski
+
+Changes for v6:
+- Add mailbox, scmi and uart support
+
+Changes for v5:
+- Delete pmu-spe node which need to refine, and add it in future
+
+Changes for v4:
+- Add ppi-partition entry for gic-v3 node, and let pmu-a520 and pmu-a720's interrupt entry
+get its handle
+- Remove gic-v3's #redistributor-regions and redistributor-stride properties
+- Change gic-v3's #interrupt-cells as 4, and change all interrupt specifiers accordingly
+- Remove "arm,no-tick-in-suspend" for timer due to global counter is at always-on power domain
+- Remove timer's clock frequency due to firmware has already set it
+- Add Krzysztof Kozlowski's reviewed-by
+
+Changes for v3:
+- Fix two dts coding sytle issues 
+
+Changes for v2:
+- Corrects the SoF tag's name
+- Fix several coding sytle issues
+- move linux,cma node to dts file
+- delete memory node, memory size is passed by firmware
+- delete uart2 node which will be added in future patches
+- Improve for pmu and cpu node to stands for more specific cpu model
+- Improve the timer node and add hypervisor virtual timer irq
+- Pass "make O=$OUTKNL CHECK_DTBS=y W=1 cix/sky1-orion-o6.dtb"
+
+ arch/arm64/boot/dts/Makefile              |   1 +
+ arch/arm64/boot/dts/cix/Makefile          |   2 +
+ arch/arm64/boot/dts/cix/sky1-orion-o6.dts |  39 +++
+ arch/arm64/boot/dts/cix/sky1.dtsi         | 331 ++++++++++++++++++++++
+ 4 files changed, 373 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/cix/Makefile
+ create mode 100644 arch/arm64/boot/dts/cix/sky1-orion-o6.dts
+ create mode 100644 arch/arm64/boot/dts/cix/sky1.dtsi
+
+diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
+index 79b73a21ddc2..8e7ccd0027bd 100644
+--- a/arch/arm64/boot/dts/Makefile
++++ b/arch/arm64/boot/dts/Makefile
+@@ -13,6 +13,7 @@ subdir-y += bitmain
+ subdir-y += blaize
+ subdir-y += broadcom
+ subdir-y += cavium
++subdir-y += cix
+ subdir-y += exynos
+ subdir-y += freescale
+ subdir-y += hisilicon
+diff --git a/arch/arm64/boot/dts/cix/Makefile b/arch/arm64/boot/dts/cix/Makefile
+new file mode 100644
+index 000000000000..ed3713982012
+--- /dev/null
++++ b/arch/arm64/boot/dts/cix/Makefile
+@@ -0,0 +1,2 @@
++# SPDX-License-Identifier: GPL-2.0
++dtb-$(CONFIG_ARCH_CIX) += sky1-orion-o6.dtb
+diff --git a/arch/arm64/boot/dts/cix/sky1-orion-o6.dts b/arch/arm64/boot/dts/cix/sky1-orion-o6.dts
+new file mode 100644
+index 000000000000..d74964d53c3b
+--- /dev/null
++++ b/arch/arm64/boot/dts/cix/sky1-orion-o6.dts
+@@ -0,0 +1,39 @@
++// SPDX-License-Identifier: BSD-3-Clause
++/*
++ * Copyright 2025 Cix Technology Group Co., Ltd.
++ *
++ */
++
++/dts-v1/;
++
++#include "sky1.dtsi"
++/ {
++	model = "Radxa Orion O6";
++	compatible = "radxa,orion-o6", "cix,sky1";
++
++	aliases {
++		serial2 = &uart2;
++	};
++
++	chosen {
++		stdout-path = &uart2;
++	};
++
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0x0 0x28000000>;
++			linux,cma-default;
++		};
++	};
++
++};
++
++&uart2 {
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/cix/sky1.dtsi b/arch/arm64/boot/dts/cix/sky1.dtsi
+new file mode 100644
+index 000000000000..9c723917d8ca
+--- /dev/null
++++ b/arch/arm64/boot/dts/cix/sky1.dtsi
+@@ -0,0 +1,331 @@
++// SPDX-License-Identifier: BSD-3-Clause
++/*
++ * Copyright 2025 Cix Technology Group Co., Ltd.
++ *
++ */
++
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/clock/cix,sky1.h>
++
++/ {
++	interrupt-parent = <&gic>;
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	cpus {
++		#address-cells = <2>;
++		#size-cells = <0>;
++
++		cpu0: cpu@0 {
++			compatible = "arm,cortex-a520";
++			enable-method = "psci";
++			reg = <0x0 0x0>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <403>;
++		};
++
++		cpu1: cpu@100 {
++			compatible = "arm,cortex-a520";
++			enable-method = "psci";
++			reg = <0x0 0x100>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <403>;
++		};
++
++		cpu2: cpu@200 {
++			compatible = "arm,cortex-a520";
++			enable-method = "psci";
++			reg = <0x0 0x200>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <403>;
++		};
++
++		cpu3: cpu@300 {
++			compatible = "arm,cortex-a520";
++			enable-method = "psci";
++			reg = <0x0 0x300>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <403>;
++		};
++
++		cpu4: cpu@400 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0x400>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu5: cpu@500 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0x500>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu6: cpu@600 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0x600>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu7: cpu@700 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0x700>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu8: cpu@800 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0x800>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu9: cpu@900 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0x900>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu10: cpu@a00 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0xa00>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu11: cpu@b00 {
++			compatible = "arm,cortex-a720";
++			enable-method = "psci";
++			reg = <0x0 0xb00>;
++			device_type = "cpu";
++			capacity-dmips-mhz = <1024>;
++		};
++
++		cpu-map {
++			cluster0 {
++				core0 {
++					cpu = <&cpu0>;
++				};
++				core1 {
++					cpu = <&cpu1>;
++				};
++				core2 {
++					cpu = <&cpu2>;
++				};
++				core3 {
++					cpu = <&cpu3>;
++				};
++				core4 {
++					cpu = <&cpu4>;
++				};
++				core5 {
++					cpu = <&cpu5>;
++				};
++				core6 {
++					cpu = <&cpu6>;
++				};
++				core7 {
++					cpu = <&cpu7>;
++				};
++				core8 {
++					cpu = <&cpu8>;
++				};
++				core9 {
++					cpu = <&cpu9>;
++				};
++				core10 {
++					cpu = <&cpu10>;
++				};
++				core11 {
++					cpu = <&cpu11>;
++				};
++			};
++		};
++	};
++
++	firmware {
++		ap_to_pm_scmi: scmi {
++			compatible = "arm,scmi";
++			mbox-names = "tx", "rx";
++			mboxes = <&mbox_ap2pm 8>, <&mbox_pm2ap 8>;
++			shmem = <&ap2pm_scmi_mem &pm2ap_scmi_mem>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			scmi_clk: protocol@14 {
++				reg = <0x14>;
++				#clock-cells = <1>;
++			};
++
++		};
++	};
++
++	pmu-a520 {
++		compatible = "arm,cortex-a520-pmu";
++		interrupts = <GIC_PPI 7 IRQ_TYPE_LEVEL_LOW &ppi_partition0>;
++	};
++
++	pmu-a720 {
++		compatible = "arm,cortex-a720-pmu";
++		interrupts = <GIC_PPI 7 IRQ_TYPE_LEVEL_LOW &ppi_partition1>;
++	};
++
++	psci {
++		compatible = "arm,psci-1.0";
++		method = "smc";
++	};
++
++	soc@0 {
++		compatible = "simple-bus";
++		ranges = <0 0 0 0 0x20 0>;
++		dma-ranges;
++		#address-cells = <2>;
++		#size-cells = <2>;
++
++		uart0: serial@40b0000 {
++			compatible = "arm,pl011", "arm,primecell";
++			reg = <0x0 0x040b0000 0x0 0x1000>;
++			interrupts = <GIC_SPI 296 IRQ_TYPE_LEVEL_HIGH 0>;
++			clocks = <&scmi_clk CLK_TREE_FCH_UART0_FUNC>, <&scmi_clk CLK_TREE_FCH_UART0_APB>;
++			clock-names = "uartclk", "apb_pclk";
++			status = "disabled";
++		};
++
++		uart1: serial@40c0000 {
++			compatible = "arm,pl011", "arm,primecell";
++			reg = <0x0 0x040c0000 0x0 0x1000>;
++			interrupts = <GIC_SPI 297 IRQ_TYPE_LEVEL_HIGH 0>;
++			clocks = <&scmi_clk CLK_TREE_FCH_UART1_FUNC>, <&scmi_clk CLK_TREE_FCH_UART1_APB>;
++			clock-names = "uartclk", "apb_pclk";
++			status = "disabled";
++		};
++
++		uart2: serial@40d0000 {
++			compatible = "arm,pl011", "arm,primecell";
++			reg = <0x0 0x040d0000 0x0 0x1000>;
++			interrupts = <GIC_SPI 298 IRQ_TYPE_LEVEL_HIGH 0>;
++			clocks = <&scmi_clk CLK_TREE_FCH_UART2_FUNC>, <&scmi_clk CLK_TREE_FCH_UART2_APB>;
++			clock-names = "uartclk", "apb_pclk";
++			status = "disabled";
++		};
++
++		uart3: serial@40e0000 {
++			compatible = "arm,pl011", "arm,primecell";
++			reg = <0x0 0x040e0000 0x0 0x1000>;
++			interrupts = <GIC_SPI 299 IRQ_TYPE_LEVEL_HIGH 0>;
++			clocks = <&scmi_clk CLK_TREE_FCH_UART3_FUNC>, <&scmi_clk CLK_TREE_FCH_UART3_APB>;
++			clock-names = "uartclk", "apb_pclk";
++			status = "disabled";
++		};
++
++		mbox_ap2se: mailbox@5060000 {
++			compatible = "cix,sky1-mbox";
++			reg = <0x0 0x05060000 0x0 0x10000>;
++			interrupts = <GIC_SPI 378 IRQ_TYPE_LEVEL_HIGH 0>;
++			#mbox-cells = <1>;
++			cix,mbox-dir = "tx";
++		};
++
++		mbox_se2ap: mailbox@5070000 {
++			compatible = "cix,sky1-mbox";
++			reg = <0x0 0x05070000 0x0 0x10000>;
++			interrupts = <GIC_SPI 379 IRQ_TYPE_LEVEL_HIGH 0>;
++			#mbox-cells = <1>;
++			cix,mbox-dir = "rx";
++		};
++
++		ap2pm_scmi_mem: ap2pm-shmem@6590000 {
++			compatible = "arm,scmi-shmem";
++			reg = <0x0 0x06590000 0x0 0x80>;
++			reg-io-width = <4>;
++		};
++
++		mbox_ap2pm: mailbox@6590080 {
++			compatible = "cix,sky1-mbox";
++			reg = <0x0 0x06590080 0x0 0xff80>;
++			interrupts = <GIC_SPI 363 IRQ_TYPE_LEVEL_HIGH 0>;
++			#mbox-cells = <1>;
++			cix,mbox-dir = "tx";
++		};
++
++		pm2ap_scmi_mem: pm2ap-shmem@65a0000 {
++			compatible = "arm,scmi-shmem";
++			reg = <0x0 0x065a0000 0x0 0x80>;
++			reg-io-width = <4>;
++		};
++
++		mbox_pm2ap: mailbox@65a0080 {
++			compatible = "cix,sky1-mbox";
++			reg = <0x0 0x065a0080 0x0 0xff80>;
++			interrupts = <GIC_SPI 359 IRQ_TYPE_LEVEL_HIGH 0>;
++			#mbox-cells = <1>;
++			cix,mbox-dir = "rx";
++		};
++
++		mbox_sfh2ap: mailbox@8090000 {
++			compatible = "cix,sky1-mbox";
++			reg = <0x0 0x08090000 0x0 0x10000>;
++			interrupts = <GIC_SPI 391 IRQ_TYPE_LEVEL_HIGH 0>;
++			#mbox-cells = <1>;
++			cix,mbox-dir = "rx";
++		};
++
++		mbox_ap2sfh: mailbox@80a0000 {
++			compatible = "cix,sky1-mbox";
++			reg = <0x0 0x080a0000 0x0 0x10000>;
++			interrupts = <GIC_SPI 392 IRQ_TYPE_LEVEL_HIGH 0>;
++			#mbox-cells = <1>;
++			cix,mbox-dir = "tx";
++		};
++
++		gic: interrupt-controller@e010000 {
++			compatible = "arm,gic-v3";
++			reg = <0x0 0x0e010000 0 0x10000>,	/* GICD */
++			      <0x0 0x0e090000 0 0x300000>;       /* GICR * 12 */
++			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW 0>;
++			#interrupt-cells = <4>;
++			interrupt-controller;
++			#address-cells = <2>;
++			#size-cells = <2>;
++			ranges;
++
++			gic_its: msi-controller@e050000 {
++				compatible = "arm,gic-v3-its";
++				reg = <0x0 0x0e050000 0x0 0x30000>;
++				msi-controller;
++				#msi-cells = <1>;
++			};
++
++			ppi-partitions {
++				ppi_partition0: interrupt-partition-0 {
++					affinity = <&cpu0 &cpu1 &cpu2 &cpu3>;
++				};
++
++				ppi_partition1: interrupt-partition-1 {
++					affinity = <&cpu4 &cpu5 &cpu6 &cpu7 &cpu8 &cpu9 &cpu10 &cpu11>;
++				};
++			};
++		};
++	};
++
++	timer {
++		compatible = "arm,armv8-timer";
++		interrupt-names = "sec-phys", "phys", "virt", "hyp-phys", "hyp-virt";
++		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_LOW 0>,
++			     <GIC_PPI 14 IRQ_TYPE_LEVEL_LOW 0>,
++			     <GIC_PPI 11 IRQ_TYPE_LEVEL_LOW 0>,
++			     <GIC_PPI 10 IRQ_TYPE_LEVEL_LOW 0>,
++			     <GIC_PPI 12 IRQ_TYPE_LEVEL_LOW 0>;
++	};
++};
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 1/9] dt-bindings: vendor-prefixes: Add CIX Technology Group Co., Ltd.
+Date: Mon,  9 Jun 2025 11:16:19 +0800
+
+CIX Technology Group Co., Ltd. is a high performance Arm SoC design
+company. Link: https://www.cixtech.com/.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Acked-by: Fugang Duan <fugang.duan@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+ Documentation/devicetree/bindings/vendor-prefixes.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/vendor-prefixes.yaml b/Documentation/devicetree/bindings/vendor-prefixes.yaml
+index 5d2a7a8d3ac6..f258c1f53b3c 100644
+--- a/Documentation/devicetree/bindings/vendor-prefixes.yaml
++++ b/Documentation/devicetree/bindings/vendor-prefixes.yaml
+@@ -306,6 +306,8 @@ patternProperties:
+     description: Cirrus Logic, Inc.
+   "^cisco,.*":
+     description: Cisco Systems, Inc.
++  "^cix,.*":
++    description: CIX Technology Group Co., Ltd.
+   "^clockwork,.*":
+     description: Clockwork Tech LLC
+   "^cloos,.*":
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 4/9] dt-bindings: mailbox: add cix,sky1-mbox
+Date: Mon,  9 Jun 2025 11:16:22 +0800
+
+From: Guomin Chen <Guomin.Chen@cixtech.com>
+
+Add a dt-binding for the Cixtech Mailbox Controller.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Peter Chen <peter.chen@cixtech.com>
+Signed-off-by: Guomin Chen <Guomin.Chen@cixtech.com>
+Signed-off-by: Lihua Liu <Lihua.Liu@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+Changes for v7:
+- Add Krzysztof Kozlowski Reviewed-by tag
+- Add my Sob tag
+
+Changes for v3:
+- Replace the direction attribute of the mailbox with the strings "rx" and "tx"
+
+ .../bindings/mailbox/cix,sky1-mbox.yaml       | 71 +++++++++++++++++++
+ 1 file changed, 71 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/mailbox/cix,sky1-mbox.yaml
+
+diff --git a/Documentation/devicetree/bindings/mailbox/cix,sky1-mbox.yaml b/Documentation/devicetree/bindings/mailbox/cix,sky1-mbox.yaml
+new file mode 100644
+index 000000000000..216186f7cc4d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/mailbox/cix,sky1-mbox.yaml
+@@ -0,0 +1,71 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/mailbox/cix,sky1-mbox.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Cixtech mailbox controller
++
++maintainers:
++  - Guomin Chen <Guomin.Chen@cixtech.com>
++
++description:
++  The Cixtech mailbox controller, used in the Cixtech Sky1 SoC,
++  is used for message transmission between multiple processors
++  within the SoC, such as the AP, PM, audio DSP, SensorHub MCU,
++  and others
++
++  Each Cixtech mailbox controller is unidirectional, so they are
++  typically used in pairs-one for receiving and one for transmitting.
++
++  Each Cixtech mailbox supports 11 channels with different transmission modes
++    channel 0-7 - Fast channel with 32bit transmit register and IRQ support
++    channel 8   - Doorbell mode,using the mailbox as an interrupt-generating
++                   mechanism.
++    channel 9   - Fifo based channel with 32*32bit depth fifo and IRQ support
++    channel 10  - Reg based channel with 32*32bit transmit register and
++                   Doorbell+transmit acknowledgment IRQ support
++
++properties:
++  compatible:
++    const: cix,sky1-mbox
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  "#mbox-cells":
++    const: 1
++
++  cix,mbox-dir:
++    $ref: /schemas/types.yaml#/definitions/string
++    description: Direction of the mailbox relative to the AP
++    enum: [tx, rx]
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - "#mbox-cells"
++  - cix,mbox-dir
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        mbox_ap2pm: mailbox@30000000 {
++            compatible = "cix,sky1-mbox";
++            reg = <0 0x30000000 0 0x10000>;
++            interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH 0>;
++            #mbox-cells = <1>;
++            cix,mbox-dir = "tx";
++        };
++    };
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 2/9] dt-bindings: arm: add CIX P1 (SKY1) SoC
+Date: Mon,  9 Jun 2025 11:16:20 +0800
+
+Add device tree bindings for CIX P1 (Internal name sky1) Arm SoC,
+it consists several SoC models like CP8180, CD8180, etc.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Acked-by: Fugang Duan <fugang.duan@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+ .../devicetree/bindings/arm/cix.yaml          | 26 +++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/arm/cix.yaml
+
+diff --git a/Documentation/devicetree/bindings/arm/cix.yaml b/Documentation/devicetree/bindings/arm/cix.yaml
+new file mode 100644
+index 000000000000..114dab4bc4d2
+--- /dev/null
++++ b/Documentation/devicetree/bindings/arm/cix.yaml
+@@ -0,0 +1,26 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/arm/cix.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: CIX platforms
++
++maintainers:
++  - Peter Chen <peter.chen@cixtech.com>
++  - Fugang Duan <fugang.duan@cixtech.com>
++
++properties:
++  $nodename:
++    const: '/'
++  compatible:
++    oneOf:
++
++      - description: Radxa Orion O6
++        items:
++          - const: radxa,orion-o6
++          - const: cix,sky1
++
++additionalProperties: true
++
++...
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 9/9] MAINTAINERS: Add CIX SoC maintainer entry
+Date: Mon,  9 Jun 2025 11:16:27 +0800
+
+Using this entry as the maintainers information for CIX SoCs.
+
+Acked-by: Fugang Duan <fugang.duan@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+Changes for v9:
+- Add mailbox driver information
+
+ MAINTAINERS | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a92290fffa16..7f8bee29bb8f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2473,6 +2473,19 @@ F:	arch/arm/boot/compressed/misc-ep93xx.h
+ F:	arch/arm/mach-ep93xx/
+ F:	drivers/iio/adc/ep93xx_adc.c
+ 
++ARM/CIX SOC SUPPORT
++M:	Peter Chen <peter.chen@cixtech.com>
++M:	Fugang Duan <fugang.duan@cixtech.com>
++R:	CIX Linux Kernel Upstream Group <cix-kernel-upstream@cixtech.com>
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++S:	Maintained
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/peter.chen/cix.git
++F:	Documentation/devicetree/bindings/arm/cix.yaml
++F:	Documentation/devicetree/bindings/mailbox/cix,sky1-mbox.yaml
++F:	arch/arm64/boot/dts/cix/
++F:	drivers/mailbox/cix-mailbox.c
++K:	\bcix\b
++
+ ARM/CLKDEV SUPPORT
+ M:	Russell King <linux@armlinux.org.uk>
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 7/9] dt-bindings: clock: cix: Add CIX sky1 scmi clock id
+Date: Mon,  9 Jun 2025 11:16:25 +0800
+
+From: Gary Yang <gary.yang@cixtech.com>
+
+Add device tree bindings for the scmi clock id on
+Cix sky1 platform.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Peter Chen <peter.chen@cixtech.com>
+Signed-off-by: Gary Yang <gary.yang@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+Changes for v8:
+- Add Krzysztof Kozlowski's Acked-by tag
+
+Changes for v7:
+- Rename clock binding file from sky1-clk.h to cix,sky1.h
+- Add my Sob
+
+ include/dt-bindings/clock/cix,sky1.h | 279 +++++++++++++++++++++++++++
+ 1 file changed, 279 insertions(+)
+ create mode 100644 include/dt-bindings/clock/cix,sky1.h
+
+diff --git a/include/dt-bindings/clock/cix,sky1.h b/include/dt-bindings/clock/cix,sky1.h
+new file mode 100644
+index 000000000000..9245ebd1e80a
+--- /dev/null
++++ b/include/dt-bindings/clock/cix,sky1.h
+@@ -0,0 +1,279 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
++/*
++ * Copyright 2024-2025 Cix Technology Group Co., Ltd.
++ */
++
++#ifndef _DT_BINDINGS_CLK_CIX_SKY1_H
++#define _DT_BINDINGS_CLK_CIX_SKY1_H
++
++#define CLK_TREE_CPU_GICxCLK			0
++#define CLK_TREE_CPU_PPUCLK			1
++#define CLK_TREE_CPU_PERIPHCLK			2
++#define CLK_TREE_DSU_CLK			3
++#define CLK_TREE_DSU_PCLK			4
++#define CLK_TREE_CPU_CLK_BC0			5
++#define CLK_TREE_CPU_CLK_BC1			6
++#define CLK_TREE_CPU_CLK_BC2			7
++#define CLK_TREE_CPU_CLK_BC3			8
++#define CLK_TREE_CPU_CLK_MC0			9
++#define CLK_TREE_CPU_CLK_MC1			10
++#define CLK_TREE_CPU_CLK_MC2			11
++#define CLK_TREE_CPU_CLK_MC3			12
++#define CLK_TREE_CPU_CLK_LC0			13
++#define CLK_TREE_CPU_CLK_LC1			14
++#define CLK_TREE_CPU_CLK_LC2			15
++#define CLK_TREE_CPU_CLK_LC3			16
++#define CLK_TREE_CSI_CTRL0_PCLK			17
++#define CLK_TREE_CSI_CTRL1_PCLK			18
++#define CLK_TREE_CSI_CTRL2_PCLK			19
++#define CLK_TREE_CSI_CTRL3_PCLK			20
++#define CLK_TREE_CSI_DMA0_PCLK			21
++#define CLK_TREE_CSI_DMA1_PCLK			22
++#define CLK_TREE_CSI_DMA2_PCLK			23
++#define CLK_TREE_CSI_DMA3_PCLK			24
++#define CLK_TREE_CSI_PHY0_PSM			25
++#define CLK_TREE_CSI_PHY1_PSM			26
++#define CLK_TREE_CSI_PHY0_APBCLK		27
++#define CLK_TREE_CSI_PHY1_APBCLK		28
++#define CLK_TREE_FCH_APB_CLK			29
++#define CLK_TREE_GPU_CLK_400M			30
++#define CLK_TREE_GPU_CLK_CORE			31
++#define CLK_TREE_GPU_CLK_STACKS			32
++#define CLK_TREE_DP0_PIXEL0			33
++#define CLK_TREE_DP0_PIXEL1			34
++#define CLK_TREE_DP1_PIXEL0			35
++#define CLK_TREE_DP1_PIXEL1			36
++#define CLK_TREE_DP2_PIXEL0			37
++#define CLK_TREE_DP2_PIXEL1			38
++#define CLK_TREE_DP3_PIXEL0			39
++#define CLK_TREE_DP3_PIXEL1			40
++#define CLK_TREE_DP4_PIXEL0			41
++#define CLK_TREE_DP4_PIXEL1			42
++#define CLK_TREE_DPU_CLK			43
++#define CLK_TREE_DPU0_ACLK			44
++#define CLK_TREE_DPU1_ACLK			45
++#define CLK_TREE_DPU2_ACLK			46
++#define CLK_TREE_DPU3_ACLK			47
++#define CLK_TREE_DPU4_ACLK			48
++#define CLK_TREE_DPC0_VIDCLK0			49
++#define CLK_TREE_DPC0_VIDCLK1			50
++#define CLK_TREE_DPC1_VIDCLK0			51
++#define CLK_TREE_DPC1_VIDCLK1			52
++#define CLK_TREE_DPC2_VIDCLK0			53
++#define CLK_TREE_DPC2_VIDCLK1			54
++#define CLK_TREE_DPC3_VIDCLK0			55
++#define CLK_TREE_DPC3_VIDCLK1			56
++#define CLK_TREE_DPC4_VIDCLK0			57
++#define CLK_TREE_DPC4_VIDCLK1			58
++#define CLK_TREE_DPC0_APBCLK			59
++#define CLK_TREE_DPC1_APBCLK			60
++#define CLK_TREE_DPC2_APBCLK			61
++#define CLK_TREE_DPC3_APBCLK			62
++#define CLK_TREE_DPC4_APBCLK			63
++#define CLK_TREE_NPU_MEMCLK			64
++#define CLK_TREE_NPU_SYSCLK			65
++#define CLK_TREE_NPU_DBGCLK			66
++#define CLK_TREE_VPU_APBCLK			67
++#define CLK_TREE_ISP_ACLK			68
++#define CLK_TREE_ISP_SCLK			69
++#define CLK_TREE_AUDIO_CLK4			70
++#define CLK_TREE_AUDIO_CLK5			71
++#define CLK_TREE_CAMERA_MCLK0			72
++#define CLK_TREE_CAMERA_MCLK1			73
++#define CLK_TREE_CAMERA_MCLK2			74
++#define CLK_TREE_CAMERA_MCLK3			75
++#define CLK_TREE_AUDIO_CLK0			76
++#define CLK_TREE_AUDIO_CLK1			77
++#define CLK_TREE_AUDIO_CLK2			78
++#define CLK_TREE_AUDIO_CLK3			79
++#define CLK_TREE_MM_NI700_CLK			80
++#define CLK_TREE_SYS_NI700_CLK			81
++#define CLK_TREE_GMAC0_ACLK			82
++#define CLK_TREE_GMAC1_ACLK			83
++#define CLK_TREE_GMAC0_DIV_ACLK			84
++#define CLK_TREE_GMAC0_DIV_TXCLK		85
++#define CLK_TREE_GMAC0_RGMII0_TXCLK		86
++#define CLK_TREE_GMAC1_DIV_ACLK			87
++#define CLK_TREE_GMAC1_DIV_TXCLK		88
++#define CLK_TREE_GMAC1_RGMII0_TXCLK		89
++#define CLK_TREE_GMAC0_PCLK			90
++#define CLK_TREE_GMAC1_PCLK			91
++#define CLK_TREE_USB2_0_AXI_GATE		92
++#define CLK_TREE_USB2_0_APB_GATE		93
++#define CLK_TREE_USB2_1_AXI_GATE		94
++#define CLK_TREE_USB2_1_APB_GATE		95
++#define CLK_TREE_USB2_2_AXI_GATE		96
++#define CLK_TREE_USB2_2_APB_GATE		97
++#define CLK_TREE_USB2_3_AXI_GATE		98
++#define CLK_TREE_USB2_3_APB_GATE		99
++#define CLK_TREE_USB2_0_PHY_GATE		100
++#define CLK_TREE_USB2_1_PHY_GATE		101
++#define CLK_TREE_USB2_2_PHY_GATE		102
++#define CLK_TREE_USB2_3_PHY_GATE		103
++#define CLK_TREE_USB3C_DRD_AXI_GATE		104
++#define CLK_TREE_USB3C_DRD_APB_GATE		105
++#define CLK_TREE_USB3C_DRD_PHY2_GATE		106
++#define CLK_TREE_USB3C_DRD_PHY3_GATE		107
++#define CLK_TREE_USB3C_0_AXI_GATE		108
++#define CLK_TREE_USB3C_0_APB_GATE		109
++#define CLK_TREE_USB3C_0_PHY2_GATE		110
++#define CLK_TREE_USB3C_0_PHY3_GATE		111
++#define CLK_TREE_USB3C_1_AXI_GATE		112
++#define CLK_TREE_USB3C_1_APB_GATE		113
++#define CLK_TREE_USB3C_1_PHY2_GATE		114
++#define CLK_TREE_USB3C_1_PHY3_GATE		115
++#define CLK_TREE_USB3C_2_AXI_GATE		116
++#define CLK_TREE_USB3C_2_APB_GATE		117
++#define CLK_TREE_USB3C_2_PHY2_GATE		118
++#define CLK_TREE_USB3C_2_PHY3_GATE		119
++#define CLK_TREE_USB3A_0_AXI_GATE		120
++#define CLK_TREE_USB3A_0_APB_GATE		121
++#define CLK_TREE_USB3A_0_PHY2_GATE		122
++#define CLK_TREE_USB3A_1_AXI_GATE		123
++#define CLK_TREE_USB3A_1_APB_GATE		124
++#define CLK_TREE_USB3A_1_PHY2_GATE		125
++#define CLK_TREE_USB3A_PHY3_GATE		126
++#define CLK_TREE_USB2_0_CLK_SOF			127
++#define CLK_TREE_USB2_1_CLK_SOF			128
++#define CLK_TREE_USB2_2_CLK_SOF			129
++#define CLK_TREE_USB2_3_CLK_SOF			130
++#define CLK_TREE_USB3C_DRD_CLK_SOF		131
++#define CLK_TREE_USB3C_H0_CLK_SOF		132
++#define CLK_TREE_USB3C_H1_CLK_SOF		133
++#define CLK_TREE_USB3C_H2_CLK_SOF		134
++#define CLK_TREE_USB3A_H0_CLK_SOF		135
++#define CLK_TREE_USB3A_H1_CLK_SOF		136
++#define CLK_TREE_USB2_0_CLK_LPM			137
++#define CLK_TREE_USB2_1_CLK_LPM			138
++#define CLK_TREE_USB2_2_CLK_LPM			139
++#define CLK_TREE_USB2_3_CLK_LPM			140
++#define CLK_TREE_USB3C_DRD_CLK_LPM		141
++#define CLK_TREE_USB3C_H0_CLK_LPM		142
++#define CLK_TREE_USB3C_H1_CLK_LPM		143
++#define CLK_TREE_USB3C_H2_CLK_LPM		144
++#define CLK_TREE_USB3A_H0_CLK_LPM		145
++#define CLK_TREE_USB3A_H1_CLK_LPM		146
++#define CLK_TREE_USB2_0_PHY_REF			147
++#define CLK_TREE_USB2_1_PHY_REF			148
++#define CLK_TREE_USB2_2_PHY_REF			149
++#define CLK_TREE_USB2_3_PHY_REF			150
++#define CLK_TREE_USB3C_DRD_PHY_REF		151
++#define CLK_TREE_USB3C_H0_PHY_REF		152
++#define CLK_TREE_USB3C_H1_PHY_REF		153
++#define CLK_TREE_USB3C_H2_PHY_REF		154
++#define CLK_TREE_USB3A_H0_PHY_REF		155
++#define CLK_TREE_USB3A_H1_PHY_REF		156
++#define CLK_TREE_USB3C_DRD_PHY_x4_REF		157
++#define CLK_TREE_USB3C_H0_PHY_x4_REF		158
++#define CLK_TREE_USB3C_H1_PHY_x4_REF		159
++#define CLK_TREE_USB3C_H2_PHY_x4_REF		160
++#define CLK_TREE_USB3A_PHY_x2_REF		161
++#define CLK_TREE_PCIE_X8CTRL_APB		162
++#define CLK_TREE_PCIE_X4CTRL_APB		163
++#define CLK_TREE_PCIE_X2CTRL_APB		164
++#define CLK_TREE_PCIE_X1_0CTRL_APB		165
++#define CLK_TREE_PCIE_X1_1CTRL_APB		166
++#define CLK_TREE_PCIE_X8_PHY_APB		167
++#define CLK_TREE_PCIE_X4_PHY_APB		168
++#define CLK_TREE_PCIE_X211_PHY_APB		169
++#define CLK_TREE_PCIE_NI700_CLK			170
++#define CLK_TREE_PCIE_CTRL0_CLK			171
++#define CLK_TREE_PCIE_CTRL1_CLK			172
++#define CLK_TREE_PCIE_CTRL2_CLK			173
++#define CLK_TREE_PCIE_CTRL3_CLK			174
++#define CLK_TREE_PCIE_CTRL4_CLK			175
++#define CLK_TREE_CSI_CTRL0_SYSCLK		176
++#define CLK_TREE_CSI_CTRL1_SYSCLK		177
++#define CLK_TREE_CSI_CTRL2_SYSCLK		178
++#define CLK_TREE_CSI_CTRL3_SYSCLK		179
++#define CLK_TREE_CSI_CTRL0_PIXEL0_CLK		180
++#define CLK_TREE_CSI_CTRL0_PIXEL1_CLK		181
++#define CLK_TREE_CSI_CTRL0_PIXEL2_CLK		182
++#define CLK_TREE_CSI_CTRL0_PIXEL3_CLK		183
++#define CLK_TREE_CSI_CTRL1_PIXEL0_CLK		184
++#define CLK_TREE_CSI_CTRL2_PIXEL0_CLK		185
++#define CLK_TREE_CSI_CTRL2_PIXEL1_CLK		186
++#define CLK_TREE_CSI_CTRL2_PIXEL2_CLK		187
++#define CLK_TREE_CSI_CTRL2_PIXEL3_CLK		188
++#define CLK_TREE_CSI_CTRL3_PIXEL0_CLK		189
++#define CLK_TREE_CI700_GCLK0			190
++#define CLK_TREE_DDRC0_ACLK_CLK			191
++#define CLK_TREE_DDRC1_ACLK_CLK			192
++#define CLK_TREE_DDRC2_ACLK_CLK			193
++#define CLK_TREE_DDRC3_ACLK_CLK			194
++#define CLK_TREE_DDRC0_DFICLK_CLK		195
++#define CLK_TREE_DDRC1_DFICLK_CLK		196
++#define CLK_TREE_DDRC2_DFICLK_CLK		197
++#define CLK_TREE_DDRC3_DFICLK_CLK		198
++#define CLK_TREE_PHY0_SYNC_CLK			199
++#define CLK_TREE_PHY1_SYNC_CLK			200
++#define CLK_TREE_PHY2_SYNC_CLK			201
++#define CLK_TREE_PHY3_SYNC_CLK			202
++#define CLK_TREE_PHY0_BYPASS_CLK		203
++#define CLK_TREE_PHY1_BYPASS_CLK		204
++#define CLK_TREE_PHY2_BYPASS_CLK		205
++#define CLK_TREE_PHY3_BYPASS_CLK		206
++#define CLK_TREE_DDRC_0_APB			207
++#define CLK_TREE_DDRC_1_APB			208
++#define CLK_TREE_DDRC_2_APB			209
++#define CLK_TREE_DDRC_3_APB			210
++#define CLK_TREE_TZC400_0_APB			211
++#define CLK_TREE_TZC400_1_APB			212
++#define CLK_TREE_TZC400_2_APB			213
++#define CLK_TREE_TZC400_3_APB			214
++#define CLK_TREE_S5_SENSOR_HUB_25M		215
++#define CLK_TREE_S5_SENSOR_HUB_400M		216
++#define CLK_TREE_S5_CSS600_100M			217
++#define CLK_TREE_S5_DFD_800M			218
++#define CLK_TREE_S5_CSU_SE_800M			219
++#define CLK_TREE_S5_CSU_PM_800M			220
++#define CLK_TREE_PCIE_REF_B0			221
++#define CLK_TREE_PCIE_REF_B1			222
++#define CLK_TREE_PCIE_REF_B2			223
++#define CLK_TREE_PCIE_REF_B3			224
++#define CLK_TREE_PCIE_REF_B4			225
++#define CLK_TREE_PCIE_REF_PHY_X8		226
++#define CLK_TREE_PCIE_REF_PHY_X4		227
++#define CLK_TREE_PCIE_REF_PHY_X211		228
++#define CLK_TREE_GMAC_REC_CLK			229
++#define CLK_TREE_GPUTOP_PLL			230
++#define CLK_TREE_GPUCORE_PLL			231
++#define CLK_TREE_CPU_PLL_LIT			232
++#define CLK_TREE_CPU_PLL0			233
++#define CLK_TREE_CPU_PLL1			234
++#define CLK_TREE_CPU_PLL2			235
++#define CLK_TREE_CPU_PLL3			236
++#define CLK_TREE_FCH_I3C0_FUNC			237
++#define CLK_TREE_FCH_I3C1_FUNC			238
++#define CLK_TREE_FCH_DMA_ACLK			239
++#define CLK_TREE_FCH_XSPI_FUNC			240
++#define CLK_TREE_FCH_XSPI_MACLK			241
++#define CLK_TREE_FCH_TIMER_FUN			242
++#define CLK_TREE_FCH_APB_IO_S0			243
++#define CLK_TREE_FCH_I3C0_APB			244
++#define CLK_TREE_FCH_I3C1_APB			245
++#define CLK_TREE_FCH_UART0_APB			246
++#define CLK_TREE_FCH_UART1_APB			247
++#define CLK_TREE_FCH_UART2_APB			248
++#define CLK_TREE_FCH_UART3_APB			249
++#define CLK_TREE_FCH_SPI0_APB			250
++#define CLK_TREE_FCH_SPI1_APB			251
++#define CLK_TREE_FCH_XSPI_APB			252
++#define CLK_TREE_FCH_I2C0_APB			253
++#define CLK_TREE_FCH_I2C1_APB			254
++#define CLK_TREE_FCH_I2C2_APB			255
++#define CLK_TREE_FCH_I2C3_APB			256
++#define CLK_TREE_FCH_I2C4_APB			257
++#define CLK_TREE_FCH_I2C5_APB			258
++#define CLK_TREE_FCH_I2C6_APB			259
++#define CLK_TREE_FCH_I2C7_APB			260
++#define CLK_TREE_FCH_TIMER_APB			261
++#define CLK_TREE_FCH_GPIO_APB			262
++#define CLK_TREE_FCH_UART0_FUNC			263
++#define CLK_TREE_FCH_UART1_FUNC			264
++#define CLK_TREE_FCH_UART2_FUNC			265
++#define CLK_TREE_FCH_UART3_FUNC			266
++/* 267~271 not used by AP, skip */
++#define CLK_TREE_GPU_CLK_200M			272
++
++#endif
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 5/9] mailbox: add CIX mailbox driver
+Date: Mon,  9 Jun 2025 11:16:23 +0800
+
+From: Guomin Chen <Guomin.Chen@cixtech.com>
+
+The CIX mailbox controller, used in the Cix SoCs, like sky1.
+facilitates message transmission between multiple processors
+within the SoC, such as the AP, PM, audio DSP, SensorHub MCU,
+and others.
+
+Reviewed-by: Peter Chen <peter.chen@cixtech.com>
+Signed-off-by: Guomin Chen <Guomin.Chen@cixtech.com>
+Signed-off-by: Gary Yang <gary.yang@cixtech.com>
+Signed-off-by: Lihua Liu <Lihua.Liu@cixtech.com>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+Changes for v9:
+- Move macro definitions above where they are used
+- Remove the brackets around the number
+- Merging and sorting local variable definitions
+- free the irq in the error path
+
+Changes for v3 (As mailbox patch set):
+- Update MODULE_AUTHOR.
+- Remove the extra blank lines.
+
+Changes for v2 (As mailbox patch set):
+- Update the real name and email address.
+- Remove the ACPI header files.
+- Update the Copyright from 2024 to 2025.
+- Update the Module License from "GPL" to "GPL v2"
+- Add an interface for message length to limit potential out-of-bound access
+
+ drivers/mailbox/Kconfig       |  10 +
+ drivers/mailbox/Makefile      |   2 +
+ drivers/mailbox/cix-mailbox.c | 635 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 647 insertions(+)
+ create mode 100644 drivers/mailbox/cix-mailbox.c
+
+diff --git a/drivers/mailbox/Kconfig b/drivers/mailbox/Kconfig
+index 68eeed660a4a..4fef4797b110 100644
+--- a/drivers/mailbox/Kconfig
++++ b/drivers/mailbox/Kconfig
+@@ -340,4 +340,14 @@ config THEAD_TH1520_MBOX
+ 	  kernel is running, and E902 core used for power management among other
+ 	  things.
+ 
++config CIX_MBOX
++        tristate "CIX Mailbox"
++        depends on ARCH_CIX || COMPILE_TEST
++        depends on OF
++        help
++          Mailbox implementation for CIX IPC system. The controller supports
++          11 mailbox channels with different operating mode and every channel
++          is unidirectional. Say Y here if you want to use the CIX Mailbox
++          support.
++
+ endif
+diff --git a/drivers/mailbox/Makefile b/drivers/mailbox/Makefile
+index 13a3448b3271..786a46587ba1 100644
+--- a/drivers/mailbox/Makefile
++++ b/drivers/mailbox/Makefile
+@@ -72,3 +72,5 @@ obj-$(CONFIG_QCOM_CPUCP_MBOX)	+= qcom-cpucp-mbox.o
+ obj-$(CONFIG_QCOM_IPCC)		+= qcom-ipcc.o
+ 
+ obj-$(CONFIG_THEAD_TH1520_MBOX)	+= mailbox-th1520.o
++
++obj-$(CONFIG_CIX_MBOX)	+= cix-mailbox.o
+diff --git a/drivers/mailbox/cix-mailbox.c b/drivers/mailbox/cix-mailbox.c
+new file mode 100644
+index 000000000000..eecb53d59dfe
+--- /dev/null
++++ b/drivers/mailbox/cix-mailbox.c
+@@ -0,0 +1,635 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright 2025 Cix Technology Group Co., Ltd.
++ */
++
++#include <linux/device.h>
++#include <linux/err.h>
++#include <linux/io.h>
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/mailbox_controller.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++
++#include "mailbox.h"
++
++/*
++ * The maximum transmission size is 32 words or 128 bytes.
++ */
++#define CIX_MBOX_MSG_LEN	32	/* Max length = 32 words */
++#define MBOX_MSG_LEN_MASK	0x7fL	/* Max length = 128 bytes */
++
++/* Register define */
++#define REG_MSG(n)	(0x0 + 0x4*(n))			/* 0x0~0x7c */
++#define REG_DB_ACK	REG_MSG(CIX_MBOX_MSG_LEN)	/* 0x80 */
++#define ERR_COMP	(REG_DB_ACK + 0x4)		/* 0x84 */
++#define ERR_COMP_CLR	(REG_DB_ACK + 0x8)		/* 0x88 */
++#define REG_F_INT(IDX)	(ERR_COMP_CLR + 0x4*(IDX+1))	/* 0x8c~0xa8 */
++#define FIFO_WR		(REG_F_INT(MBOX_FAST_IDX+1))	/* 0xac */
++#define FIFO_RD		(FIFO_WR + 0x4)			/* 0xb0 */
++#define FIFO_STAS	(FIFO_WR + 0x8)			/* 0xb4 */
++#define FIFO_WM		(FIFO_WR + 0xc)			/* 0xb8 */
++#define INT_ENABLE	(FIFO_WR + 0x10)		/* 0xbc */
++#define INT_ENABLE_SIDE_B	(FIFO_WR + 0x14)	/* 0xc0 */
++#define INT_CLEAR	(FIFO_WR + 0x18)		/* 0xc4 */
++#define INT_STATUS	(FIFO_WR + 0x1c)		/* 0xc8 */
++#define FIFO_RST	(FIFO_WR + 0x20)		/* 0xcc */
++
++/* [0~7] Fast channel
++ * [8] doorbell base channel
++ * [9]fifo base channel
++ * [10] register base channel
++ */
++#define MBOX_FAST_IDX		7
++#define MBOX_DB_IDX		8
++#define MBOX_FIFO_IDX		9
++#define MBOX_REG_IDX		10
++#define CIX_MBOX_CHANS		11
++
++#define MBOX_TX		0
++#define MBOX_RX		1
++
++#define DB_INT_BIT	BIT(0)
++#define DB_ACK_INT_BIT	BIT(1)
++
++#define FIFO_WM_DEFAULT		CIX_MBOX_MSG_LEN
++#define FIFO_STAS_WMK		BIT(0)
++#define FIFO_STAS_FULL		BIT(1)
++#define FIFO_STAS_EMPTY		BIT(2)
++#define FIFO_STAS_UFLOW		BIT(3)
++#define FIFO_STAS_OFLOW		BIT(4)
++
++#define FIFO_RST_BIT		BIT(0)
++
++#define DB_INT			BIT(0)
++#define ACK_INT			BIT(1)
++#define FIFO_FULL_INT		BIT(2)
++#define FIFO_EMPTY_INT		BIT(3)
++#define FIFO_WM01_INT		BIT(4)
++#define FIFO_WM10_INT		BIT(5)
++#define FIFO_OFLOW_INT		BIT(6)
++#define FIFO_UFLOW_INT		BIT(7)
++#define FIFO_N_EMPTY_INT	BIT(8)
++#define FAST_CH_INT(IDX)	BIT((IDX)+9)
++
++#define SHMEM_OFFSET 0x80
++
++enum cix_mbox_chan_type {
++	CIX_MBOX_TYPE_DB,
++	CIX_MBOX_TYPE_REG,
++	CIX_MBOX_TYPE_FIFO,
++	CIX_MBOX_TYPE_FAST,
++};
++
++struct cix_mbox_con_priv {
++	enum cix_mbox_chan_type type;
++	struct mbox_chan	*chan;
++	int index;
++};
++
++struct cix_mbox_priv {
++	struct device *dev;
++	int irq;
++	int dir;
++	bool tx_irq_mode;	/* flag of enabling tx's irq mode */
++	void __iomem *base;	/* region for mailbox */
++	unsigned int chan_num;
++	struct cix_mbox_con_priv con_priv[CIX_MBOX_CHANS];
++	struct mbox_chan mbox_chans[CIX_MBOX_CHANS];
++	struct mbox_controller mbox;
++	bool use_shmem;
++};
++
++/*
++ * The CIX mailbox supports four types of transfers:
++ * CIX_MBOX_TYPE_DB, CIX_MBOX_TYPE_FAST, CIX_MBOX_TYPE_REG, and CIX_MBOX_TYPE_FIFO.
++ * For the REG and FIFO types of transfers, the message format is as follows:
++ */
++union cix_mbox_msg_reg_fifo {
++	u32 length;	/* unit is byte */
++	u32 buf[CIX_MBOX_MSG_LEN]; /* buf[0] must be the byte length of this array */
++};
++
++static struct cix_mbox_priv *to_cix_mbox_priv(struct mbox_controller *mbox)
++{
++	return container_of(mbox, struct cix_mbox_priv, mbox);
++}
++
++static void cix_mbox_write(struct cix_mbox_priv *priv, u32 val, u32 offset)
++{
++	if (priv->use_shmem)
++		iowrite32(val, priv->base + offset - SHMEM_OFFSET);
++	else
++		iowrite32(val, priv->base + offset);
++}
++
++static u32 cix_mbox_read(struct cix_mbox_priv *priv, u32 offset)
++{
++	if (priv->use_shmem)
++		return ioread32(priv->base + offset - SHMEM_OFFSET);
++	else
++		return ioread32(priv->base + offset);
++}
++
++static bool mbox_fifo_empty(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++
++	return ((cix_mbox_read(priv, FIFO_STAS) & FIFO_STAS_EMPTY) ? true : false);
++}
++
++/*
++ *The transmission unit of the CIX mailbox is word.
++ *The byte length should be converted into the word length.
++ */
++static inline u32 mbox_get_msg_size(void *msg)
++{
++	u32 len;
++
++	len = ((u32 *)msg)[0] & MBOX_MSG_LEN_MASK;
++	return DIV_ROUND_UP(len, 4);
++}
++
++static int cix_mbox_send_data_db(struct mbox_chan *chan, void *data)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++
++	/* trigger doorbell irq */
++	cix_mbox_write(priv, DB_INT_BIT, REG_DB_ACK);
++
++	return 0;
++}
++
++static int cix_mbox_send_data_reg(struct mbox_chan *chan, void *data)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	union cix_mbox_msg_reg_fifo *msg = data;
++	u32 len, i;
++
++	if (!data)
++		return -EINVAL;
++
++	len = mbox_get_msg_size(data);
++	for (i = 0; i < len; i++)
++		cix_mbox_write(priv, msg->buf[i], REG_MSG(i));
++
++	/* trigger doorbell irq */
++	cix_mbox_write(priv, DB_INT_BIT, REG_DB_ACK);
++
++	return 0;
++}
++
++static int cix_mbox_send_data_fifo(struct mbox_chan *chan, void *data)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	union cix_mbox_msg_reg_fifo *msg = data;
++	u32 len, val_32, i;
++
++	if (!data)
++		return -EINVAL;
++
++	len = mbox_get_msg_size(data);
++	cix_mbox_write(priv, len, FIFO_WM);
++	for (i = 0; i < len; i++)
++		cix_mbox_write(priv, msg->buf[i], FIFO_WR);
++
++	/* Enable fifo empty interrupt */
++	val_32 = cix_mbox_read(priv, INT_ENABLE);
++	val_32 |= FIFO_EMPTY_INT;
++	cix_mbox_write(priv, val_32, INT_ENABLE);
++
++	return 0;
++}
++
++static int cix_mbox_send_data_fast(struct mbox_chan *chan, void *data)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	struct cix_mbox_con_priv *cp = chan->con_priv;
++	u32 *arg = (u32 *)data;
++	int index = cp->index;
++
++	if (!data)
++		return -EINVAL;
++
++	if (index < 0 || index > MBOX_FAST_IDX) {
++		dev_err(priv->dev, "Invalid Mbox index %d\n", index);
++		return -EINVAL;
++	}
++
++	cix_mbox_write(priv, arg[0], REG_F_INT(index));
++
++	return 0;
++}
++
++static int cix_mbox_send_data(struct mbox_chan *chan, void *data)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	struct cix_mbox_con_priv *cp = chan->con_priv;
++
++	if (priv->dir != MBOX_TX) {
++		dev_err(priv->dev, "Invalid Mbox dir %d\n", priv->dir);
++		return -EINVAL;
++	}
++
++	switch (cp->type) {
++	case CIX_MBOX_TYPE_DB:
++		cix_mbox_send_data_db(chan, data);
++		break;
++	case CIX_MBOX_TYPE_REG:
++		cix_mbox_send_data_reg(chan, data);
++		break;
++	case CIX_MBOX_TYPE_FIFO:
++		cix_mbox_send_data_fifo(chan, data);
++		break;
++	case CIX_MBOX_TYPE_FAST:
++		cix_mbox_send_data_fast(chan, data);
++		break;
++	default:
++		dev_err(priv->dev, "Invalid channel type: %d\n", cp->type);
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static void cix_mbox_isr_db(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	u32 int_status;
++
++	int_status = cix_mbox_read(priv, INT_STATUS);
++
++	if (priv->dir == MBOX_RX) {
++		/* rx interrupt is triggered */
++		if (int_status & DB_INT) {
++			cix_mbox_write(priv, DB_INT, INT_CLEAR);
++			mbox_chan_received_data(chan, NULL);
++			/* trigger ack interrupt */
++			cix_mbox_write(priv, DB_ACK_INT_BIT, REG_DB_ACK);
++		}
++	} else {
++		/* tx ack interrupt is triggered */
++		if (int_status & ACK_INT) {
++			cix_mbox_write(priv, ACK_INT, INT_CLEAR);
++			mbox_chan_received_data(chan, NULL);
++		}
++	}
++}
++
++static void cix_mbox_isr_reg(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	u32 int_status;
++
++	int_status = cix_mbox_read(priv, INT_STATUS);
++
++	if (priv->dir == MBOX_RX) {
++		/* rx interrupt is triggered */
++		if (int_status & DB_INT) {
++			u32 data[CIX_MBOX_MSG_LEN], len, i;
++
++			cix_mbox_write(priv, DB_INT, INT_CLEAR);
++			data[0] = cix_mbox_read(priv, REG_MSG(0));
++			len = mbox_get_msg_size(data);
++			for (i = 1; i < len; i++)
++				data[i] = cix_mbox_read(priv, REG_MSG(i));
++
++			/* trigger ack interrupt */
++			cix_mbox_write(priv, DB_ACK_INT_BIT, REG_DB_ACK);
++			mbox_chan_received_data(chan, data);
++		}
++	} else {
++		/* tx ack interrupt is triggered */
++		if (int_status & ACK_INT) {
++			cix_mbox_write(priv, ACK_INT, INT_CLEAR);
++			mbox_chan_txdone(chan, 0);
++		}
++	}
++}
++
++static void cix_mbox_isr_fifo(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	u32 int_status, status;
++
++	int_status = cix_mbox_read(priv, INT_STATUS);
++
++	if (priv->dir == MBOX_RX) {
++		/* FIFO waterMark interrupt is generated */
++		if (int_status & (FIFO_FULL_INT | FIFO_WM01_INT)) {
++			u32 data[CIX_MBOX_MSG_LEN] = { 0 }, i = 0;
++
++			cix_mbox_write(priv, (FIFO_FULL_INT | FIFO_WM01_INT), INT_CLEAR);
++			do {
++				data[i++] = cix_mbox_read(priv, FIFO_RD);
++			} while (!mbox_fifo_empty(chan) && i < CIX_MBOX_MSG_LEN);
++
++			mbox_chan_received_data(chan, data);
++		}
++		/* FIFO underflow is generated */
++		if (int_status & FIFO_UFLOW_INT) {
++			status = cix_mbox_read(priv, FIFO_STAS);
++			dev_err(priv->dev, "fifo underflow: int_stats %d\n", status);
++			cix_mbox_write(priv, FIFO_UFLOW_INT, INT_CLEAR);
++		}
++	} else {
++		/* FIFO empty interrupt is generated */
++		if (int_status & FIFO_EMPTY_INT) {
++			u32 val_32;
++
++			cix_mbox_write(priv, FIFO_EMPTY_INT, INT_CLEAR);
++			/* Disable empty irq*/
++			val_32 = cix_mbox_read(priv, INT_ENABLE);
++			val_32 &= ~FIFO_EMPTY_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE);
++			mbox_chan_txdone(chan, 0);
++		}
++		/* FIFO overflow is generated */
++		if (int_status & FIFO_OFLOW_INT) {
++			status = cix_mbox_read(priv, FIFO_STAS);
++			dev_err(priv->dev, "fifo overlow: int_stats %d\n", status);
++			cix_mbox_write(priv, FIFO_OFLOW_INT, INT_CLEAR);
++		}
++	}
++}
++
++static void cix_mbox_isr_fast(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	struct cix_mbox_con_priv *cp = chan->con_priv;
++	u32 int_status, data;
++
++	/* no irq will be trigger for TX dir mbox */
++	if (priv->dir != MBOX_RX)
++		return;
++
++	int_status = cix_mbox_read(priv, INT_STATUS);
++
++	if (int_status & FAST_CH_INT(cp->index)) {
++		cix_mbox_write(priv, FAST_CH_INT(cp->index), INT_CLEAR);
++		data = cix_mbox_read(priv, REG_F_INT(cp->index));
++		mbox_chan_received_data(chan, &data);
++	}
++}
++
++static irqreturn_t cix_mbox_isr(int irq, void *arg)
++{
++	struct mbox_chan *chan = arg;
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	struct cix_mbox_con_priv *cp = chan->con_priv;
++
++	switch (cp->type) {
++	case CIX_MBOX_TYPE_DB:
++		cix_mbox_isr_db(chan);
++		break;
++	case CIX_MBOX_TYPE_REG:
++		cix_mbox_isr_reg(chan);
++		break;
++	case CIX_MBOX_TYPE_FIFO:
++		cix_mbox_isr_fifo(chan);
++		break;
++	case CIX_MBOX_TYPE_FAST:
++		cix_mbox_isr_fast(chan);
++		break;
++	default:
++		dev_err(priv->dev, "Invalid channel type: %d\n", cp->type);
++		return IRQ_NONE;
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int cix_mbox_startup(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	struct cix_mbox_con_priv *cp = chan->con_priv;
++	int index = cp->index, ret;
++	u32 val_32;
++
++	ret = request_irq(priv->irq, cix_mbox_isr, 0,
++			  dev_name(priv->dev), chan);
++	if (ret) {
++		dev_err(priv->dev, "Unable to acquire IRQ %d\n", priv->irq);
++		return ret;
++	}
++
++	switch (cp->type) {
++	case CIX_MBOX_TYPE_DB:
++		/* Overwrite txdone_method for DB channel */
++		chan->txdone_method = TXDONE_BY_ACK;
++		fallthrough;
++	case CIX_MBOX_TYPE_REG:
++		if (priv->dir == MBOX_TX) {
++			/* Enable ACK interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE);
++			val_32 |= ACK_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE);
++		} else {
++			/* Enable Doorbell interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE_SIDE_B);
++			val_32 |= DB_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE_SIDE_B);
++		}
++		break;
++	case CIX_MBOX_TYPE_FIFO:
++		/* reset fifo */
++		cix_mbox_write(priv, FIFO_RST_BIT, FIFO_RST);
++		/* set default watermark */
++		cix_mbox_write(priv, FIFO_WM_DEFAULT, FIFO_WM);
++		if (priv->dir == MBOX_TX) {
++			/* Enable fifo overflow interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE);
++			val_32 |= FIFO_OFLOW_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE);
++		} else {
++			/* Enable fifo full/underflow interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE_SIDE_B);
++			val_32 |= FIFO_UFLOW_INT|FIFO_WM01_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE_SIDE_B);
++		}
++		break;
++	case CIX_MBOX_TYPE_FAST:
++		/* Only RX channel has intterupt */
++		if (priv->dir == MBOX_RX) {
++			if (index < 0 || index > MBOX_FAST_IDX) {
++				dev_err(priv->dev, "Invalid index %d\n", index);
++				ret = -EINVAL;
++				goto failed;
++			}
++			/* enable fast channel interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE_SIDE_B);
++			val_32 |= FAST_CH_INT(index);
++			cix_mbox_write(priv, val_32, INT_ENABLE_SIDE_B);
++		}
++		break;
++	default:
++		dev_err(priv->dev, "Invalid channel type: %d\n", cp->type);
++		ret = -EINVAL;
++		goto failed;
++	}
++	return 0;
++
++failed:
++	free_irq(priv->irq, chan);
++	return ret;
++}
++
++static void cix_mbox_shutdown(struct mbox_chan *chan)
++{
++	struct cix_mbox_priv *priv = to_cix_mbox_priv(chan->mbox);
++	struct cix_mbox_con_priv *cp = chan->con_priv;
++	int index = cp->index;
++	u32 val_32;
++
++	switch (cp->type) {
++	case CIX_MBOX_TYPE_DB:
++	case CIX_MBOX_TYPE_REG:
++		if (priv->dir == MBOX_TX) {
++			/* Disable ACK interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE);
++			val_32 &= ~ACK_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE);
++		} else if (priv->dir == MBOX_RX) {
++			/* Disable Doorbell interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE_SIDE_B);
++			val_32 &= ~DB_INT;
++			cix_mbox_write(priv, val_32, INT_ENABLE_SIDE_B);
++		}
++		break;
++	case CIX_MBOX_TYPE_FIFO:
++		if (priv->dir == MBOX_TX) {
++			/* Disable empty/fifo overflow irq*/
++			val_32 = cix_mbox_read(priv, INT_ENABLE);
++			val_32 &= ~(FIFO_EMPTY_INT | FIFO_OFLOW_INT);
++			cix_mbox_write(priv, val_32, INT_ENABLE);
++		} else if (priv->dir == MBOX_RX) {
++			/* Disable fifo WM01/underflow interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE_SIDE_B);
++			val_32 &= ~(FIFO_UFLOW_INT | FIFO_WM01_INT);
++			cix_mbox_write(priv, val_32, INT_ENABLE_SIDE_B);
++		}
++		break;
++	case CIX_MBOX_TYPE_FAST:
++		if (priv->dir == MBOX_RX) {
++			if (index < 0 || index > MBOX_FAST_IDX) {
++				dev_err(priv->dev, "Invalid index %d\n", index);
++				break;
++			}
++			/* Disable fast channel interrupt */
++			val_32 = cix_mbox_read(priv, INT_ENABLE_SIDE_B);
++			val_32 &= ~FAST_CH_INT(index);
++			cix_mbox_write(priv, val_32, INT_ENABLE_SIDE_B);
++		}
++		break;
++
++	default:
++		dev_err(priv->dev, "Invalid channel type: %d\n", cp->type);
++		break;
++	}
++
++	free_irq(priv->irq, chan);
++}
++
++static const struct mbox_chan_ops cix_mbox_chan_ops = {
++	.send_data = cix_mbox_send_data,
++	.startup = cix_mbox_startup,
++	.shutdown = cix_mbox_shutdown,
++};
++
++static void cix_mbox_init(struct cix_mbox_priv *priv)
++{
++	struct cix_mbox_con_priv *cp;
++	int i;
++
++	for (i = 0; i < CIX_MBOX_CHANS; i++) {
++		cp = &priv->con_priv[i];
++		cp->index = i;
++		cp->chan = &priv->mbox_chans[i];
++		priv->mbox_chans[i].con_priv = cp;
++		if (cp->index <= MBOX_FAST_IDX)
++			cp->type = CIX_MBOX_TYPE_FAST;
++		if (cp->index == MBOX_DB_IDX) {
++			cp->type = CIX_MBOX_TYPE_DB;
++			priv->use_shmem = true;
++		}
++		if (cp->index == MBOX_FIFO_IDX)
++			cp->type = CIX_MBOX_TYPE_FIFO;
++		if (cp->index == MBOX_REG_IDX)
++			cp->type = CIX_MBOX_TYPE_REG;
++	}
++}
++
++static int cix_mbox_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct cix_mbox_priv *priv;
++	const char *dir_str;
++	int ret;
++
++	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	priv->dev = dev;
++	priv->base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(priv->base))
++		return PTR_ERR(priv->base);
++
++	priv->irq = platform_get_irq(pdev, 0);
++	if (priv->irq < 0)
++		return priv->irq;
++
++	if (device_property_read_string(dev, "cix,mbox-dir", &dir_str)) {
++		dev_err(priv->dev, "cix,mbox_dir property not found\n");
++		return -EINVAL;
++	}
++
++	if (!strcmp(dir_str, "tx"))
++		priv->dir = 0;
++	else if (!strcmp(dir_str, "rx"))
++		priv->dir = 1;
++	else {
++		dev_err(priv->dev, "cix,mbox_dir=%s is not expected\n", dir_str);
++		return -EINVAL;
++	}
++
++	cix_mbox_init(priv);
++
++	priv->mbox.dev = dev;
++	priv->mbox.ops = &cix_mbox_chan_ops;
++	priv->mbox.chans = priv->mbox_chans;
++	priv->mbox.txdone_irq = true;
++	priv->mbox.num_chans = CIX_MBOX_CHANS;
++	priv->mbox.of_xlate = NULL;
++
++	platform_set_drvdata(pdev, priv);
++	ret = devm_mbox_controller_register(dev, &priv->mbox);
++	if (ret)
++		dev_err(dev, "Failed to register mailbox %d\n", ret);
++
++	return ret;
++}
++
++static const struct of_device_id cix_mbox_dt_ids[] = {
++	{ .compatible = "cix,sky1-mbox" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, cix_mbox_dt_ids);
++
++static struct platform_driver cix_mbox_driver = {
++	.probe = cix_mbox_probe,
++	.driver = {
++		.name = "cix_mbox",
++		.of_match_table = cix_mbox_dt_ids,
++	},
++};
++
++static int __init cix_mailbox_init(void)
++{
++	return platform_driver_register(&cix_mbox_driver);
++}
++arch_initcall(cix_mailbox_init);
++
++MODULE_AUTHOR("Cix Technology Group Co., Ltd.");
++MODULE_DESCRIPTION("CIX mailbox driver");
++MODULE_LICENSE("GPL");
+-- 
+2.25.1
+
+
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Peter Chen <peter.chen@cixtech.com>
+Subject: [PATCH v9 6/9] arm64: defconfig: Enable CIX SoC
+Date: Mon,  9 Jun 2025 11:16:24 +0800
+
+- Enable CIX SoC support at ARM64 defconfig
+- Enable CIX mailbox
+At CIX SoC platforms, the clock handling uses Arm SCMI protocol,
+the physical clock access is at sub processor, so it needs to enable
+mailbox by default.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Peter Chen <peter.chen@cixtech.com>
+---
+Changes for v8:
+- Add Krzysztof Kozlowski's Reviewed-by tag
+Changes for v7:
+- Add both CIX SoC and mailbox configuration at one patch
+
+ arch/arm64/configs/defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 897fc686e6a9..181c5f91b032 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -45,6 +45,7 @@ CONFIG_ARCH_BCMBCA=y
+ CONFIG_ARCH_BRCMSTB=y
+ CONFIG_ARCH_BERLIN=y
+ CONFIG_ARCH_BLAIZE=y
++CONFIG_ARCH_CIX=y
+ CONFIG_ARCH_EXYNOS=y
+ CONFIG_ARCH_SPARX5=y
+ CONFIG_ARCH_K3=y
+@@ -1445,6 +1446,7 @@ CONFIG_BCM2835_MBOX=y
+ CONFIG_QCOM_APCS_IPC=y
+ CONFIG_MTK_ADSP_MBOX=m
+ CONFIG_QCOM_IPCC=y
++CONFIG_CIX_MBOX=y
+ CONFIG_ROCKCHIP_IOMMU=y
+ CONFIG_TEGRA_IOMMU_SMMU=y
+ CONFIG_ARM_SMMU=y
+-- 
+2.25.1
+
