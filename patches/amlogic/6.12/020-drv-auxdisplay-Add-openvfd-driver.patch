@@ -1,8 +1,9 @@
-From 9b2ed8829079444d26d2ec9a9452ef92c01d0549 Mon Sep 17 00:00:00 2001
+From 4587414e58419be8871cebaa32dae10af421a9f4 Mon Sep 17 00:00:00 2001
 From: uniqfreq <flippy@sina.com>
-Date: Tue, 11 Mar 2025 22:35:33 +0800
+Date: Sun, 22 Jun 2025 18:53:32 -0400
 Subject: [PATCH] drv: auxdisplay: Add openvfd driver
 
+Signed-off-by: uniqfreq <flippy@sina.com>
 ---
  drivers/auxdisplay/Kconfig                    |   24 +
  drivers/auxdisplay/Makefile                   |    1 +
@@ -24,39 +25,6 @@ Subject: [PATCH] drv: auxdisplay: Add openvfd driver
  .../openvfd/controllers/fonts/icons16x16_v.h  |   23 +
  .../openvfd/controllers/fonts/icons32x32_h.h  |   23 +
  .../openvfd/controllers/fonts/icons32x32_v.h  |   23 +
- .../fonts/icons_source/16/00none.bmp          |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/01channel.bmp       |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/02temp.bmp          |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/03calendar.bmp      |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/04media.bmp         |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/05tv.bmp            |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/10eth.bmp           |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/11wifi.bmp          |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/12play.bmp          |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/13pause.bmp         |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/14usb.bmp           |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/15sd.bmp            |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/16bt.bmp            |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/17apps.bmp          |  Bin 0 -> 126 bytes
- .../fonts/icons_source/16/18setup.bmp         |  Bin 0 -> 126 bytes
- .../fonts/icons_source/32/00none.bmp          |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/01channel.bmp       |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/02temp.bmp          |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/03calendar.bmp      |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/04media.bmp         |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/05tv.bmp            |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/10eth.bmp           |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/11wifi.bmp          |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/12play.bmp          |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/13pause.bmp         |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/14usb.bmp           |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/15sd.bmp            |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/16bt.bmp            |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/17apps.bmp          |  Bin 0 -> 190 bytes
- .../fonts/icons_source/32/18setup.bmp         |  Bin 0 -> 190 bytes
- .../fonts/icons_source/degree16x32.bmp        |  Bin 0 -> 190 bytes
- .../fonts/icons_source/degree24x48.bmp        |  Bin 0 -> 254 bytes
- .../fonts/icons_source/degree32x64.bmp        |  Bin 0 -> 318 bytes
  .../openvfd/controllers/gfx_mono_ctrl.c       |  986 +++++++++++++++
  .../openvfd/controllers/gfx_mono_ctrl.h       |   58 +
  .../auxdisplay/openvfd/controllers/hd44780.c  |  760 ++++++++++++
@@ -78,7 +46,7 @@ Subject: [PATCH] drv: auxdisplay: Add openvfd driver
  .../auxdisplay/openvfd/protocols/protocol.h   |   25 +
  drivers/auxdisplay/openvfd/protocols/spi_sw.c |  194 +++
  drivers/auxdisplay/openvfd/protocols/spi_sw.h |   14 +
- 74 files changed, 6980 insertions(+)
+ 41 files changed, 6980 insertions(+)
  create mode 100644 drivers/auxdisplay/openvfd/Makefile
  create mode 100644 drivers/auxdisplay/openvfd/controllers/controller.h
  create mode 100644 drivers/auxdisplay/openvfd/controllers/controller_list.h
@@ -97,39 +65,6 @@ Subject: [PATCH] drv: auxdisplay: Add openvfd driver
  create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h
  create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h
  create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/00none.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/01channel.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/02temp.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/03calendar.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/04media.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/05tv.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/10eth.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/11wifi.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/12play.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/13pause.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/14usb.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/15sd.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/16bt.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/17apps.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/18setup.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/00none.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/01channel.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/02temp.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/03calendar.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/04media.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/05tv.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/10eth.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/11wifi.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/12play.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/13pause.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/14usb.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/15sd.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/16bt.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/17apps.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/18setup.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree16x32.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree24x48.bmp
- create mode 100644 drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree32x64.bmp
  create mode 100644 drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c
  create mode 100644 drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h
  create mode 100644 drivers/auxdisplay/openvfd/controllers/hd44780.c
@@ -153,12 +88,12 @@ Subject: [PATCH] drv: auxdisplay: Add openvfd driver
  create mode 100644 drivers/auxdisplay/openvfd/protocols/spi_sw.h
 
 diff --git a/drivers/auxdisplay/Kconfig b/drivers/auxdisplay/Kconfig
-index 77646ea60..3745d540c 100644
+index 2a9bb31633a7..ef532117937f 100644
 --- a/drivers/auxdisplay/Kconfig
 +++ b/drivers/auxdisplay/Kconfig
-@@ -536,6 +536,30 @@ config TM1628
- 	  It's a 3-wire SPI device controlling a two-dimensional grid of
- 	  LEDs. Dimming is applied to all outputs through an internal PWM.
+@@ -541,6 +541,30 @@ config ARM_CHARLCD
+ 
+ endif # AUXDISPLAY
  
 +config OPENVFD
 +	tristate "OpenVFD LED display driver"
@@ -185,20 +120,20 @@ index 77646ea60..3745d540c 100644
 +	    Sources: https://github.com/arthur-liberman/linux_openvfd
 +
  #
- # Character LCD with non-conforming interface section
+ # Deprecated options
  #
 diff --git a/drivers/auxdisplay/Makefile b/drivers/auxdisplay/Makefile
-index 82818251f..a62daa7e9 100644
+index f5c13ed1cd4f..339c5cd23725 100644
 --- a/drivers/auxdisplay/Makefile
 +++ b/drivers/auxdisplay/Makefile
-@@ -17,3 +17,4 @@ obj-$(CONFIG_MAX6959)		+= max6959.o
+@@ -16,3 +16,4 @@ obj-$(CONFIG_LINEDISP)		+= line-display.o
+ obj-$(CONFIG_MAX6959)		+= max6959.o
  obj-$(CONFIG_PARPORT_PANEL)	+= panel.o
  obj-$(CONFIG_SEG_LED_GPIO)	+= seg-led-gpio.o
- obj-$(CONFIG_TM1628)		+= tm1628.o
 +obj-$(CONFIG_OPENVFD)		+= openvfd/
 diff --git a/drivers/auxdisplay/openvfd/Makefile b/drivers/auxdisplay/openvfd/Makefile
 new file mode 100644
-index 000000000..fb2e2973e
+index 000000000000..fb2e2973e975
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/Makefile
 @@ -0,0 +1,14 @@
@@ -218,7 +153,7 @@ index 000000000..fb2e2973e
 +openvfd-objs += openvfd_drv.o
 diff --git a/drivers/auxdisplay/openvfd/controllers/controller.h b/drivers/auxdisplay/openvfd/controllers/controller.h
 new file mode 100644
-index 000000000..ad3a210fd
+index 000000000000..ad3a210fd941
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/controller.h
 @@ -0,0 +1,28 @@
@@ -252,7 +187,7 @@ index 000000000..ad3a210fd
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/controller_list.h b/drivers/auxdisplay/openvfd/controllers/controller_list.h
 new file mode 100644
-index 000000000..6af7f3706
+index 000000000000..6af7f3706121
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/controller_list.h
 @@ -0,0 +1,12 @@
@@ -270,7 +205,7 @@ index 000000000..6af7f3706
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/dummy.c b/drivers/auxdisplay/openvfd/controllers/dummy.c
 new file mode 100644
-index 000000000..8090c2714
+index 000000000000..8090c27144a4
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/dummy.c
 @@ -0,0 +1,99 @@
@@ -375,7 +310,7 @@ index 000000000..8090c2714
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/dummy.h b/drivers/auxdisplay/openvfd/controllers/dummy.h
 new file mode 100644
-index 000000000..8f4a3ae07
+index 000000000000..8f4a3ae07557
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/dummy.h
 @@ -0,0 +1,8 @@
@@ -389,7 +324,7 @@ index 000000000..8f4a3ae07
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/fd628.c b/drivers/auxdisplay/openvfd/controllers/fd628.c
 new file mode 100644
-index 000000000..463c97fba
+index 000000000000..463c97fbaece
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fd628.c
 @@ -0,0 +1,391 @@
@@ -786,7 +721,7 @@ index 000000000..463c97fba
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/fd628.h b/drivers/auxdisplay/openvfd/controllers/fd628.h
 new file mode 100644
-index 000000000..50e3f823c
+index 000000000000..50e3f823c19c
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fd628.h
 @@ -0,0 +1,8 @@
@@ -800,7 +735,7 @@ index 000000000..50e3f823c
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/fd650.c b/drivers/auxdisplay/openvfd/controllers/fd650.c
 new file mode 100644
-index 000000000..bbd594783
+index 000000000000..bbd594783071
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fd650.c
 @@ -0,0 +1,317 @@
@@ -1123,7 +1058,7 @@ index 000000000..bbd594783
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/fd650.h b/drivers/auxdisplay/openvfd/controllers/fd650.h
 new file mode 100644
-index 000000000..cbfd06e96
+index 000000000000..cbfd06e964cb
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fd650.h
 @@ -0,0 +1,8 @@
@@ -1137,7 +1072,7 @@ index 000000000..cbfd06e96
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h
 new file mode 100644
-index 000000000..7e1a8044c
+index 000000000000..7e1a8044cfcf
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_h.h
 @@ -0,0 +1,112 @@
@@ -1255,7 +1190,7 @@ index 000000000..7e1a8044c
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h
 new file mode 100644
-index 000000000..07cfa2971
+index 000000000000..07cfa2971fa4
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk16x32_v.h
 @@ -0,0 +1,107 @@
@@ -1368,7 +1303,7 @@ index 000000000..07cfa2971
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h
 new file mode 100644
-index 000000000..7c510d38c
+index 000000000000..7c510d38c4c8
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk24x48_v.h
 @@ -0,0 +1,107 @@
@@ -1481,7 +1416,7 @@ index 000000000..7c510d38c
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h
 new file mode 100644
-index 000000000..2831a2ac6
+index 000000000000..2831a2ac6f3c
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/Grotesk32x64_h.h
 @@ -0,0 +1,112 @@
@@ -1599,7 +1534,7 @@ index 000000000..2831a2ac6
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h
 new file mode 100644
-index 000000000..bf3d42fef
+index 000000000000..bf3d42fef45a
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/Retro8x16_v.h
 @@ -0,0 +1,107 @@
@@ -1712,7 +1647,7 @@ index 000000000..bf3d42fef
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h
 new file mode 100644
-index 000000000..4062959a7
+index 000000000000..4062959a7cc0
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_h.h
 @@ -0,0 +1,23 @@
@@ -1741,7 +1676,7 @@ index 000000000..4062959a7
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h
 new file mode 100644
-index 000000000..0ce317220
+index 000000000000..0ce317220ca2
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons16x16_v.h
 @@ -0,0 +1,23 @@
@@ -1770,7 +1705,7 @@ index 000000000..0ce317220
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h
 new file mode 100644
-index 000000000..b18cf4807
+index 000000000000..b18cf480779f
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_h.h
 @@ -0,0 +1,23 @@
@@ -1799,7 +1734,7 @@ index 000000000..b18cf4807
 +};
 diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h
 new file mode 100644
-index 000000000..001ce8060
+index 000000000000..001ce806074d
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/fonts/icons32x32_v.h
 @@ -0,0 +1,23 @@
@@ -1826,428 +1761,9 @@ index 000000000..001ce8060
 +0xF0,0xF8,0x1C,0x0E,0x07,0x03,0x83,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x03,0x03,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x83,0x03,0x07,0x0E,0x1C,0xF8,0xF0,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00,0x00,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x00,0x00,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x00,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00,0x00,0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x00,0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x7F,0x00,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x03,0x07,0x0E,0x1C,0x38,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x38,0x1C,0x0E,0x07,0x03,0x00,0x00,  // Apps
 +0x00,0x00,0x00,0xC0,0xE0,0xF0,0xF8,0xF8,0xF0,0xF0,0xE0,0xE0,0xF0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF8,0xE0,0xE0,0xE0,0xF0,0xF8,0xF8,0xF0,0xE0,0xC0,0x00,0x00,0x00,0xE0,0xE0,0xE0,0xE0,0xF1,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x1F,0x0F,0x07,0x07,0x07,0x07,0x07,0x07,0x0F,0x1F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF1,0xF0,0xE0,0xE0,0xE0,0x07,0x07,0x07,0x0F,0x8F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF8,0xF0,0xE0,0xE0,0xE0,0xE0,0xE0,0xE0,0xF0,0xF8,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x8F,0x07,0x07,0x07,0x07,0x00,0x00,0x00,0x03,0x07,0x0F,0x1F,0x1F,0x0F,0x07,0x07,0x07,0x1F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x0F,0x07,0x07,0x07,0x0F,0x1F,0x1F,0x0F,0x07,0x03,0x00,0x00,0x00,  // Setup
 +};
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/00none.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/00none.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..3245df4a86e17aa2e5cea2657ae5dc5061bf9465
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR90000000000000000000000000000000000000000000000
-g000000000000000000000000000000000000G@vY(*OVf
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/01channel.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/01channel.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..7a3cc5b631af74bf00291c0923e03a298f9147f4
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR900000003Zke02nX;00ck)00V#k0Dt@d0DuAj0DuAj0KfVG
-g0DuAj0KfVG0DuAj0KfVG0DuAj0DuAj0Dt@d0OVW|Hvj+t
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/02temp.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/02temp.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..28b5f7400924b5567e1322f07f14e0c0bb73e62a
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9005|{u0000005|{u00Dpi06Clh00Dpi00Eo;00Dpi00Eo;
-g00Dpi00Y1P00-az00-az00-az00-az00Y1P0Gy5vcmMzZ
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/03calendar.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/03calendar.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..fdcf03742025d8855739372decb9a5bbcc27ed32
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9001RLN02ELF06+Ku06+u)0DuAj0EXHC0EXHC0DuAj0Jhoy
-g0Jhoy0DuAj0Jg#a0Jg#a0DuAj06+u)06+Ku0A*DZaR2}S
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/04media.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/04media.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..9de7ab50e0e984cccff16d424bc55648fab2526c
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR900RR2~0II400RR2~0H6v00HO*20HX>30HcZk0HewP0HcZk
-g0HX>30HO*20H6v00RR2~0II400RR2~0000004@p_JOBUy
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/05tv.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/05tv.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..3d6f017363f81f5f3e2debd608cf4d46b4af0351
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR900000002lxO01N;C00v+H00Y1P0Dt@d0RR2~0Qd#~0GI**
-g0FVLz0Pq3;0FVLz0FVLz0Qd#~0RR2~0Dt@d0RMavP5=M^
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/10eth.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/10eth.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..a13e4095196e47fb13b266f20f61bccece0b1df7
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9000+PT00ck)00ck)00ck)00+PT009610096106+Ku03Zke
-g03Zke0Qf!t0Ei+00Ei+00Ei+00Qf!t000000GcEXAOHXW
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/11wifi.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/11wifi.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..8067df68b01637d2b294abfb1c3083aaae7ba2bb
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR90000000000000Y1P03Y}O06aVZ0CA200B7a^01xm003LV%
-g02mkm00Dpi00Y1P00Y1P00Dpi00000000000NO$gz5oCK
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/12play.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/12play.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..5ba5a4712b22bc46f20342ae37befaff8037ec5b
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9000;m801N;C01f~E01p5F01tow01v<b01w~*01xm001w~*
-g01v<b01tow01p5F01f~E01N;C00;m8000000C1`b&Hw-a
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/13pause.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/13pause.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..a3a1299cb341b845942184ae3cc73c157ae63793
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR90030{~06u&G06u&G06u&G06u&G06u&G06u&G06u&G06u&G
-g06u&G06u&G06u&G06u&G06u&G030{~0000000W5*?EnA(
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/14usb.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/14usb.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..33d344327790ff573f65018ea893f389c22e4589
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0K^Ue0K^Ue
-z0000000000000000RR900000000Dpi00Dpi00Dpi01bcu01co301dDJ00p1`00*D|
-g00ZCv00F=N00Dpi00Dpi00Y1P00Y1P00Dpi07oeg>Hq)$
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/15sd.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/15sd.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..308195a99c14fca77a762879e274dcdbaa4b6dc0
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9000aC000aa800~q801;FG03lQW03lQW03ZYa03ZYa050SJ
-g04S6I04|gO03wtC050SJ03ZYa06+Wy000000IJFjg#Z8m
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/16bt.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/16bt.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..8724944f102bd46f80d1440b807d20c48d759f0c
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR90000000096100Dpi00BS%00|%f00kfb00Te(00Dpi00Dpi
-g00Te(00kfb00|%f00BS%00Dpi009610000002iVNeE<Le
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/17apps.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/17apps.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..a6a7517e7c22a623a77b837fc920f93022763d74
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9006+Ku06+u)0DuAj0G{#y0G{#y0G{#y0G{#y0DuAj0G{#y
-g0G{#y0G{#y0G{#y0DuAj06+u)06+Ku000000Qi3u&j0`b
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/18setup.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/16/18setup.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..543d838ed38a3e34e72fbd4fc4b12ea1cdf559a3
-GIT binary patch
-literal 126
-zcmV-^0D=EPO@06X0000006qW!04M+e01yBG01yBG009620000006+i$0000000000
-z0000000000000000RR9000Y1P03*Zz0Dt}f06+Wy06+Wy06u&G0Q^4y0QesO0QesO
-g0Q^4y06u&G06+Wy06+Wy0Dt}f03*Zz00Y1P0N~jcB>(^b
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/00none.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/00none.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..6066e1b32a55670d779e65752ae9073ed1bd45f1
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90000000000000000000000000000000000000000000000
-z00000000000000000000000000000000000000000000000000000000000000000
-s0000000000000000000000000000000000000000000000000006v`sa{vGU
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/01channel.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/01channel.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..9309fd344925f6a3860231d9acea04d38d7bfd88
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR9000DpizyQDjfB;|v001xs000;a000aa000Is000AE0005N
-z00aO3;0OQz@D2a~I1B&)7z_Xa7z_Xa7!3dam<<2_m<#{_7z_Xa7!3dam<<2_m<#{_
-s7z_Xa7!3dam<<2_m<#{_7!Cjc7zY3Va0CDU-~s>tzyJUM000000Q;6FbpQYW
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/02temp.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/02temp.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..2b4f8281ff2e024e640ca330e57ad0ba406b97e0
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR900005N000AE000Is000CK000CK000CK000CK000CK000CK
-z000CK000CK000D#000Hh000Hh000Hh000Hh000Hh000Hh000Hh000fx000@x000x@
-s001}k001ZQ001ZQ001ZQ001}k000x@000;a000g+000Bv0000002u%negFUf
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/03calendar.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/03calendar.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..9950c54ad04a2c1e149d6a273b4b569b1f372e1b
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR9000+PifDgbAzz)C-zzo0)z&!u_@O=OL`2YX^{Qv*|{NMlp
-z9KZko48Q;Y48Q;Y48T0|%)mVJ%)mVJ%)mVJ%)kHu48Q;Y49`6C%+EaY%+EaY%+EaY
-s%)kHu48Q;Y49`6949`6949`6949`6948Q;Y4B!9&9Do1+_&@*u@CPVIOaK4?
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/04media.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/04media.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..9bfc2f06564e8a14c687daf9f58a64e463b3493e
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR9000000000000RR90|NsC0|Hd(lW5zLzW5zLzWB>pE|NsC0
-z|HA+P!^0Q=!^0i`!^0nd!^0oo!^0o&!^0o=!^0o&!^0oo!^0nd!^0i`!^0Q=!@~do
-s!~g&P|NsC0|Hd(lW5zLzW5zLzWB>pE|NsC0{{R3000000000000BV6tVgLXD
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/05tv.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/05tv.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..a070256966905ec748a0d9ac9fa42d63551004ef
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0K^Ue0K^Ue
-z0000000000000000RR900000000Dpi00F=N00H0t008g^004L#002BZ0016%000m0
-z000Nz03ZMV_&@*u{D1%d{(tZQK7YUf9)G|94s*Z&4sn104s(D24u60E4u60E4s(D2
-s4sn104s(D24u60E4u8M^4u8M^9)I8f9)JJ;{(t}f{6GKy_y7O^0M=78lK=n!
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/10eth.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/10eth.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..e151b42c22b648d2a566b010b68d96ecbc82f73c
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90002Mm002Mm001yB001yB001yB001yB001yB001yB002Mm
-z002Mm0009300093000930009301yBFzz_fbzzhHYzzhHYzzhHYzzhHY!2iGx{QtlY
-s{J_8r48Xt)48Xt)48Xt)48Xt)48Xt)4FA9n{QtlY`~Uy|000000KFh7{Qv*}
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/11wifi.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/11wifi.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..e5c9624fc9402309f22a436fa9c351c449f0ad9e
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90000000000000000000Nz001BO004jf00IC1fCK;kzz6^T
-z;1Bp8@E_m@_&<OF{67ca{5~J}d>lXgH~@eC0096000I0zfCKm+zysh1zyZU<fB*;J
-s000m0000m0000m0000m0000Nz000BP000000000000000000000Ezo8v;Y7A
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/12play.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/12play.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..cb8374d3bfffdf5785a32ab84025a053b381c637
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90006)M007_s008g+008&^008^|008~~009300094h0095M
-z0095s0095+0095^0095|0095~00960009600095~0095|0095^0095+0095s0095M
-s0094h00930008~~008^|008&^008g+007_s006)M00000000000L26_X8-^I
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/13pause.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/13pause.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..06f1de82ebc6a52282defae7cb56a0afc3f845c8
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR9000Zz3zz6sr;1B#i@DKby@DKby@DKby@DKby@DKby@DKby
-z@DKby@DKby@DKby@DKby@DKby@DKby@DKby@DKby@DKby@DKby@DKby@DKby@DKby
-s@DKby@DKby@DKby@DKby@DKby@DKby@CW!G-~;dvzyJUM000000HY{I*8l(j
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/14usb.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/14usb.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..3e8e8ec5af7b4f32915347a25d84c6816098ac0b
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90004jf004jf003YH003rY003rY003rY003rY003YH003YH
-z00IC1fCK;kzy<&SU<L<pU<L??U<L??U<L??U<MEPU<LpHU<L?qU<L??U<L??U<L??
-sU<L;WU<LpHU<MEHU<LpPU<LpPU<LpPU<MEHU<LpHU<d#I-~<2vz%<Y%!T<mO
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/15sd.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/15sd.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..fecbe0838b49cecd089a67f264191da180232d2e
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90000mF@BknG@BlafFaU4>FaYB-Fag6eFav`#Fb4xOFb)GV
-zFbo4TFbo4TFbo4TFbn_yFbn_yFbn_yFbn_yFbw?sFbw?uFbu%QFbu%MFbw>|Fbw>|
-sFboXCFboXGFbw?uFbw?sFbn_yFbn_yFc1I#@DKn0@Bjb+000000HwVt+yDRo
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/16bt.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/16bt.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..6524fc44634ba8c04d20c64d7eb5f9828544ac13
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90000000000000093000Ak000BP000Bv000AU0009x006@r
-z0083-0046i0028200192000kg000Nz000BP000BP000Nz000kg00192002820046i
-s0083-006@r0009x000AU000Bv000BP000Ak00093000000000007VrQcK`qY
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/17apps.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/17apps.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..631d77c31447fe6ff8a68ecb302d52615f121fc2
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR9001yBFz#sqr;5YyPaBu(sIN$&P9KZko48i>V48#2Y48#2Y
-z48#2Y48#2Y48#2Y48#2Y48#2Y48Q;Y48Q;Y48#2Y48#2Y48#2Y48#2Y48#2Y48#2Y
-s48#2Y48i>V48Q;Y4B!9&9B=>tI5+?Ra3BBw;1B=*zyJUM000000B|TpX#fBK
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/18setup.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/32/18setup.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..ebd36fd2b4c614ccaa9227798bb25673fb9b8bc1
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e03ZMW03ZMW00962000000Du4h0000000000
-z0000000000000000RR90000Nz000Nz000Nz00Rf`zz5Iq;1B=*@E`yG_#glO_z(a8
-z@CX0@;0OQz;0O30;1BQ*`2XMs|Nr0z|Nr0z|Nr0z|Nr0z|Nr0z{~z!V@CW!G;0OQz
-s;0OQz;1B=*@E`yG_#glO_z(a8@CT3a-~$ifzyJr}000Nz000Nz03^0hp#T5?
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree16x32.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree16x32.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..3faf901d0ea4753ace00c39524c2bd878ed7b2ee
-GIT binary patch
-literal 190
-zcmV;v073skO}+pC0000006qW!04M+e01yBG03ZMW00962000000Du4h0000000000
-z0000000000000000RR90000000000000+PT01w~*032`t05~`R05BK;05BK;05BK;
-z05~`R032`t01w~*00+PT000000000000000000000000000000000000000000000
-s000000000000000000000000000000000000000000000000000G^Wzp8x;=
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree24x48.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree24x48.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..49ffbbc70e989ab4adf2946eacfbe02891391ba1
-GIT binary patch
-literal 254
-zcmV<a00I9(P5uA?0000006qW!04M+e02lxO05AXm00962000000KfnM0000000000
-z0000000000000000RR9000000000000000000I6000I6000aL301t=201t=203HG0
-z02~0|02~0|02~0|02~0|02~0|03HG001t=201t=200aL300I6000I600000000000
-z00000000000000000000000000000000000000000000000000000000000000000
-z00000000000000000000000000000000000000000000000000000000000000000
-E0F4D0Jpcdz
-
-literal 0
-KcmV+b0RR6000031
-
-diff --git a/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree32x64.bmp b/drivers/auxdisplay/openvfd/controllers/fonts/icons_source/degree32x64.bmp
-new file mode 100644
-index 0000000000000000000000000000000000000000..ba4dbf2e02180af02bcdef67701f1011ae6438f9
-GIT binary patch
-literal 318
-zcmV-E0m1%4O+Ent0000006qW!04M+e03ZMW06+i$0096200000000310000000000
-z0000000000000000RR900000000000000000000000000000lb002Mm0095|00H=Z
-z00H1000Y1e00V#r00)2vfCm5rfCm5rfCm5rfCm5rfCqpFfCGRB00Y1e00H10008)Y
-z004jd002Mm000lb00000000000000000000000000000000000000000000000000
-z00000000000000000000000000000000000000000000000000000000000000000
-z00000000000000000000000000000000000000000000000000000000000000000
-Q0000000000000000NPy_?f?J)
-
-literal 0
-KcmV+b0RR6000031
-
 diff --git a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c
 new file mode 100644
-index 000000000..07e5e2926
+index 000000000000..07e5e2926d40
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.c
 @@ -0,0 +1,986 @@
@@ -3239,7 +2755,7 @@ index 000000000..07e5e2926
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h
 new file mode 100644
-index 000000000..43570ad10
+index 000000000000..43570ad10185
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/gfx_mono_ctrl.h
 @@ -0,0 +1,58 @@
@@ -3303,7 +2819,7 @@ index 000000000..43570ad10
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/hd44780.c b/drivers/auxdisplay/openvfd/controllers/hd44780.c
 new file mode 100644
-index 000000000..24dbbbdc9
+index 000000000000..24dbbbdc9d32
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/hd44780.c
 @@ -0,0 +1,760 @@
@@ -4069,7 +3585,7 @@ index 000000000..24dbbbdc9
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/hd44780.h b/drivers/auxdisplay/openvfd/controllers/hd44780.h
 new file mode 100644
-index 000000000..a276e873c
+index 000000000000..a276e873c851
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/hd44780.h
 @@ -0,0 +1,8 @@
@@ -4083,7 +3599,7 @@ index 000000000..a276e873c
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/il3829.c b/drivers/auxdisplay/openvfd/controllers/il3829.c
 new file mode 100644
-index 000000000..8bab4e8e6
+index 000000000000..8bab4e8e6ce9
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/il3829.c
 @@ -0,0 +1,513 @@
@@ -4602,7 +4118,7 @@ index 000000000..8bab4e8e6
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/il3829.h b/drivers/auxdisplay/openvfd/controllers/il3829.h
 new file mode 100644
-index 000000000..f81202a55
+index 000000000000..f81202a55e30
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/il3829.h
 @@ -0,0 +1,8 @@
@@ -4616,7 +4132,7 @@ index 000000000..f81202a55
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/pcd8544.c b/drivers/auxdisplay/openvfd/controllers/pcd8544.c
 new file mode 100644
-index 000000000..117be9c03
+index 000000000000..117be9c035bf
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/pcd8544.c
 @@ -0,0 +1,210 @@
@@ -4832,7 +4348,7 @@ index 000000000..117be9c03
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/pcd8544.h b/drivers/auxdisplay/openvfd/controllers/pcd8544.h
 new file mode 100644
-index 000000000..a32f82a87
+index 000000000000..a32f82a8798e
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/pcd8544.h
 @@ -0,0 +1,8 @@
@@ -4846,7 +4362,7 @@ index 000000000..a32f82a87
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c b/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c
 new file mode 100644
-index 000000000..c3c3310bd
+index 000000000000..c3c3310bdcce
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/seg7_ctrl.c
 @@ -0,0 +1,106 @@
@@ -4958,7 +4474,7 @@ index 000000000..c3c3310bd
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/ssd1306.c b/drivers/auxdisplay/openvfd/controllers/ssd1306.c
 new file mode 100644
-index 000000000..98c75a278
+index 000000000000..98c75a278f97
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/ssd1306.c
 @@ -0,0 +1,353 @@
@@ -5317,7 +4833,7 @@ index 000000000..98c75a278
 +}
 diff --git a/drivers/auxdisplay/openvfd/controllers/ssd1306.h b/drivers/auxdisplay/openvfd/controllers/ssd1306.h
 new file mode 100644
-index 000000000..1169caaf8
+index 000000000000..1169caaf8f4f
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/controllers/ssd1306.h
 @@ -0,0 +1,8 @@
@@ -5331,7 +4847,7 @@ index 000000000..1169caaf8
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/glyphs.h b/drivers/auxdisplay/openvfd/glyphs.h
 new file mode 100644
-index 000000000..2e3badfa4
+index 000000000000..2e3badfa4d12
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/glyphs.h
 @@ -0,0 +1,339 @@
@@ -5676,7 +5192,7 @@ index 000000000..2e3badfa4
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/openvfd_drv.c b/drivers/auxdisplay/openvfd/openvfd_drv.c
 new file mode 100644
-index 000000000..aae40b0e9
+index 000000000000..aae40b0e9001
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/openvfd_drv.c
 @@ -0,0 +1,1089 @@
@@ -6771,7 +6287,7 @@ index 000000000..aae40b0e9
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/auxdisplay/openvfd/openvfd_drv.h b/drivers/auxdisplay/openvfd/openvfd_drv.h
 new file mode 100644
-index 000000000..75f0dac86
+index 000000000000..75f0dac868e7
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/openvfd_drv.h
 @@ -0,0 +1,315 @@
@@ -7092,7 +6608,7 @@ index 000000000..75f0dac86
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/protocols/i2c_hw.c b/drivers/auxdisplay/openvfd/protocols/i2c_hw.c
 new file mode 100644
-index 000000000..9ffcc6ebd
+index 000000000000..9ffcc6ebddcc
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/i2c_hw.c
 @@ -0,0 +1,161 @@
@@ -7259,7 +6775,7 @@ index 000000000..9ffcc6ebd
 +}
 diff --git a/drivers/auxdisplay/openvfd/protocols/i2c_hw.h b/drivers/auxdisplay/openvfd/protocols/i2c_hw.h
 new file mode 100644
-index 000000000..73f90b08b
+index 000000000000..73f90b08b15d
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/i2c_hw.h
 @@ -0,0 +1,8 @@
@@ -7273,7 +6789,7 @@ index 000000000..73f90b08b
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/protocols/i2c_sw.c b/drivers/auxdisplay/openvfd/protocols/i2c_sw.c
 new file mode 100644
-index 000000000..f0bf75f3a
+index 000000000000..f0bf75f3a9c1
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/i2c_sw.c
 @@ -0,0 +1,257 @@
@@ -7536,7 +7052,7 @@ index 000000000..f0bf75f3a
 +}
 diff --git a/drivers/auxdisplay/openvfd/protocols/i2c_sw.h b/drivers/auxdisplay/openvfd/protocols/i2c_sw.h
 new file mode 100644
-index 000000000..cbe32cd32
+index 000000000000..cbe32cd32df1
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/i2c_sw.h
 @@ -0,0 +1,13 @@
@@ -7555,7 +7071,7 @@ index 000000000..cbe32cd32
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/protocols/protocol.h b/drivers/auxdisplay/openvfd/protocols/protocol.h
 new file mode 100644
-index 000000000..b6f7b7736
+index 000000000000..b6f7b773699f
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/protocol.h
 @@ -0,0 +1,25 @@
@@ -7586,7 +7102,7 @@ index 000000000..b6f7b7736
 +#endif
 diff --git a/drivers/auxdisplay/openvfd/protocols/spi_sw.c b/drivers/auxdisplay/openvfd/protocols/spi_sw.c
 new file mode 100644
-index 000000000..9ecd71ba5
+index 000000000000..9ecd71ba53ed
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/spi_sw.c
 @@ -0,0 +1,194 @@
@@ -7786,7 +7302,7 @@ index 000000000..9ecd71ba5
 +}
 diff --git a/drivers/auxdisplay/openvfd/protocols/spi_sw.h b/drivers/auxdisplay/openvfd/protocols/spi_sw.h
 new file mode 100644
-index 000000000..2a3de0470
+index 000000000000..2a3de0470511
 --- /dev/null
 +++ b/drivers/auxdisplay/openvfd/protocols/spi_sw.h
 @@ -0,0 +1,14 @@
