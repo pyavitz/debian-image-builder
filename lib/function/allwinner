@@ -102,6 +102,13 @@ flash_uboot (){
 dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1024 seek=8
 }
 
+allwinner_stage1_extra_firmware (){
+if [[ "$BOARD" == "bananapim4zero" ]]; then
+	mkdir -p ${P_VALUE}/lib/firmware/updates/brcm
+	cp -r files/firmware/brcm/* ${P_VALUE}/lib/firmware/updates/brcm
+fi
+}
+
 # STAGE2
 allwinner_extra_firmware (){
 if [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.bin" ]] && [[ -f "/lib/firmware/brcm/brcmfmac43430-sdio.txt" ]]; then

@@ -104,23 +104,8 @@ if [[ ! -z $FAMILY ]]; then
 	cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt
 	files
 	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
-	if [[ "$BOARD" == "bananapim4zero" ]]; then
-		mkdir -p ${P_VALUE}/lib/firmware/updates/brcm
-		cp -r files/firmware/brcm/* ${P_VALUE}/lib/firmware/updates/brcm
-	fi
-	if [[ "$BOARD" == "cuboxi" ]]; then
-		mkdir -p ${P_VALUE}/lib/firmware/{qcom,vpu}
-		cp -r files/firmware/qcom/* ${P_VALUE}/lib/firmware/qcom
-		cp -r files/firmware/vpu/* ${P_VALUE}/lib/firmware/vpu
-	fi
-	if [[ "$FAMILY_EXT" == "imx8" ]]; then
-		mkdir -p ${P_VALUE}/lib/firmware/microchip
-		cp -r files/firmware/microchip/* ${P_VALUE}/lib/firmware/microchip
-	fi
-	if [[ "$FAMILY" == "spacemit" ]]; then
-		mkdir -p ${P_VALUE}/lib/firmware
-		cp -r files/firmware/spacemit/* ${P_VALUE}/lib/firmware
-	fi
+	# board and family specific firmware
+	if [[ `type ${FAMILY}_stage1_extra_firmware` ]] &>/dev/null; then ${FAMILY}_stage1_extra_firmware; fi
 	# alsa.state
 	if [[ -f "files/asound/${BOARD}.state" ]]; then
 		cp files/asound/${BOARD}.state ${P_VALUE}/root/asound.state

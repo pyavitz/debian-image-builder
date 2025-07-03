@@ -83,6 +83,13 @@ dd if=${OUTPUT}/fw_dynamic.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1280 conv=notr
 dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=2048 conv=notrunc
 }
 
+spacemit_stage1_extra_firmware (){
+if [[ "$FAMILY" == "spacemit" ]]; then
+	mkdir -p ${P_VALUE}/lib/firmware
+	cp -r files/firmware/spacemit/* ${P_VALUE}/lib/firmware
+fi
+}
+
 # STAGE2
 spacemit_extra_firmware (){
 if [[ "$BOARD" == "bananapif3" ]]; then bananapif3_vpu_firmware; fi
