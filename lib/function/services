@@ -83,18 +83,20 @@ aic_bt_service (){
 tee /etc/systemd/system/bthelper.service <<EOF
 [Unit]
 Description=Bluetooth Helper
-After=bluetooth.service
-Requires=bluetooth.service
+After=bluetooth.service bluetooth.target getty.target
+Requires=bluetooth.service bluetooth.target getty.target
 
 [Service]
 Type=idle
-ExecStartPre=/usr/bin/sleep 2
+ExecStartPre=/usr/sbin/rfkill unblock all
 ExecStart=/usr/bin/hciattach -s 1500000 /dev/ttyS1 any 1500000 flow nosleep > /dev/null 2>&1
 ExecStartPost=/usr/local/sbin/bthelper
+TimeoutStartSec=15
 RemainAfterExit=yes
+SysVStartPriority=99
 
 [Install]
-WantedBy=bluetooth.target
+WantedBy=multi-user.target
 EOF
 systemctl enable bthelper
 }
