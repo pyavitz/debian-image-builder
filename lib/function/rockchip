@@ -2,17 +2,19 @@
 
 # ATF BINARY
 atf_bl31 (){ # place bl31 file.
-if [[ -f "../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
-	cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
-	cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
-else
-		report_atf_error
+if [[ "$ATF_EN" == "true" ]]; then
+	if [[ -f "../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf" ]]; then
+		cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf bl31.elf
+		cp ../arm-trusted-firmware-${TAG}/build/${ATF_PLAT}/release/bl31/bl31.elf atf-bl31
+	else
+			report_atf_error
+	fi
 fi
-if [[ -f "${RKBIN_ELF}" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_RAM}" ]]; then
-	export BL31="${RKBIN_ELF}"
+if [[ "$ATF_EN" == "true" ]] && [[ -f "${RKBIN_ELF}" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_RAM}" ]]; then
+	export BL31="${RKBIN_ELF}" # ATF elf
 	export ROCKCHIP_TPL="../${RKBIN_DIR}/${RKBIN_RAM}"
-elif [[ -f "../${RKBIN_DIR}/${RKBIN_ELF}" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_RAM}" ]]; then
-	export BL31="../${RKBIN_DIR}/${RKBIN_ELF}"
+elif [[ "$ATF_EN" == "false" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_ELF}" ]] && [[ -f "../${RKBIN_DIR}/${RKBIN_RAM}" ]]; then
+	export BL31="../${RKBIN_DIR}/${RKBIN_ELF}" # RKBIN elf
 	export ROCKCHIP_TPL="../${RKBIN_DIR}/${RKBIN_RAM}"
 else
 		report_error
@@ -72,8 +74,8 @@ fi
 
 rockchip_uboot_run (){
 sources_dir
-if [[ "$FAMILY_EXT" =~ ^(rk356x)$ ]]; then rockchip_loader_binaries; fi
-arm_trusted_firmware
+if [[ "$FAMILY_EXT" =~ ^(rk356x|rk358x)$ ]]; then rockchip_loader_binaries; fi
+if [[ "$ATF_EN" == "true" ]]; then arm_trusted_firmware; fi
 uboot_run
 uboot_output
 }
