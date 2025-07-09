@@ -160,6 +160,12 @@ if [ -d $tmpdir/$linux_path ]; then
 		chmod +x arch/$karch/boot/dts/overlays/*.dtbo
 		cp -r arch/$karch/boot/dts/overlays/*.dtbo "$tmpdir/$linux_path/overlays"
 	fi
+	# install mainline overlays
+	if ls arch/$karch/boot/dts/$platform/*.dtbo > /dev/null 2>&1; then
+		mkdir -p "$tmpdir/$linux_path/overlays"
+		chmod +x arch/$karch/boot/dts/$platform/*.dtbo
+		cp -r arch/$karch/boot/dts/$platform/*.dtbo "$tmpdir/$linux_path/overlays"
+	fi
 	if [ -d "$tmpdir/$linux_path/overlays" ]; then
 		mkdir -p "$tmpdir/$boot_path/overlays"
 		cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
