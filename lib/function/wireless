@@ -31,7 +31,9 @@ if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]]; then
 	DRIVER_INFO="Aicsemi aic8800"
 	DRIVER="aic8800"
 	DRIVER_URL="https://github.com/radxa-pkg/${DRIVER}.git"
+	AIC_COMMIT="fc7cbdd1791416c2457fa27a59e508bf325c9c3f"
 	driver_download
+	cd ${DRIVER}; git checkout -q ${AIC_COMMIT}; cd ..
 	rm -fdr ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
 	cp -fr ${DRIVER}/src/SDIO/driver_fw/driver/${DRIVER} ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
 	echo "obj-\$(CONFIG_AIC_WLAN_SUPPORT) += ${DRIVER}_sdio/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/Makefile
