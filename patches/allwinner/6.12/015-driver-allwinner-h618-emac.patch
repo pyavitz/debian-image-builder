@@ -1,8 +1,9 @@
-From c66d2fed3fda3ef390b3419a3fa20d5903e61047 Mon Sep 17 00:00:00 2001
+From 6f5f94505ea5dd3a660a32637807598ee3e35068 Mon Sep 17 00:00:00 2001
 From: chraac <chraac@gmail.com>
-Date: Fri, 16 Aug 2024 16:44:41 +0800
-Subject: driver: allwinner h618 emac
+Date: Sat, 12 Jul 2025 09:28:57 -0400
+Subject: [PATCH] driver: allwinner h618 emac
 
+Signed-off-by: chraac <chraac@gmail.com>
 ---
  drivers/gpio/gpiolib-of.c                     |   29 +-
  drivers/mfd/Kconfig                           |   10 +
@@ -27,7 +28,7 @@ Subject: driver: allwinner h618 emac
  create mode 100644 include/linux/mfd/ac200.h
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
-index 626daedb0169..58e3fc68cc21 100644
+index 36f8c7bb79d8..6593098acfbb 100644
 --- a/drivers/gpio/gpiolib-of.c
 +++ b/drivers/gpio/gpiolib-of.c
 @@ -25,21 +25,6 @@
@@ -52,7 +53,7 @@ index 626daedb0169..58e3fc68cc21 100644
  /**
   * of_gpio_named_count() - Count GPIOs for a device
   * @np:		device node to count GPIOs for
-@@ -428,6 +413,20 @@ static struct gpio_desc *of_get_named_gpiod_flags(const struct device_node *np,
+@@ -437,6 +422,20 @@ static struct gpio_desc *of_get_named_gpiod_flags(const struct device_node *np,
  	return desc;
  }
  
@@ -74,12 +75,12 @@ index 626daedb0169..58e3fc68cc21 100644
   * of_get_named_gpio() - Get a GPIO number to use with GPIO API
   * @np:		device node to get GPIO from
 diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
-index 912cb6bc4942..50c1025fec88 100644
+index f9325bcce1b9..8b028102874b 100644
 --- a/drivers/mfd/Kconfig
 +++ b/drivers/mfd/Kconfig
-@@ -215,6 +215,16 @@ config MFD_AC200
+@@ -203,6 +203,16 @@ config MFD_AC100
  	  This driver include only the core APIs. You have to select individual
- 	  components like Ethernet PHY or codec under the corresponding menus.
+ 	  components like codecs or RTC under the corresponding menus.
  
 +config MFD_AC200_SUNXI
 +	tristate "X-Powers AC200 (Sunxi)"
@@ -95,14 +96,14 @@ index 912cb6bc4942..50c1025fec88 100644
  	tristate
  	select MFD_CORE
 diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
-index 4e297962d4a8..e17981cbb613 100644
+index 2a9f91e81af8..8c514ac8ad91 100644
 --- a/drivers/mfd/Makefile
 +++ b/drivers/mfd/Makefile
-@@ -146,6 +146,7 @@ obj-$(CONFIG_MFD_DA9052_I2C)	+= da9052-i2c.o
+@@ -145,6 +145,7 @@ obj-$(CONFIG_MFD_DA9052_SPI)	+= da9052-spi.o
+ obj-$(CONFIG_MFD_DA9052_I2C)	+= da9052-i2c.o
  
  obj-$(CONFIG_MFD_AC100)		+= ac100.o
- obj-$(CONFIG_MFD_AC200)		+= ac200.o
-+obj-$(CONFIG_MFD_AC200_SUNXI)		+= sunxi-ac200.o
++obj-$(CONFIG_MFD_AC200_SUNXI)	+= sunxi-ac200.o
  obj-$(CONFIG_MFD_AXP20X)	+= axp20x.o
  obj-$(CONFIG_MFD_AXP20X_I2C)	+= axp20x-i2c.o
  obj-$(CONFIG_MFD_AXP20X_RSB)	+= axp20x-rsb.o
@@ -3702,12 +3703,12 @@ index 000000000000..926516835023
 +}
 +MODULE_LICENSE("Dual BSD/GPL");
 diff --git a/drivers/net/phy/Kconfig b/drivers/net/phy/Kconfig
-index be4670e6b266..3acef4104e06 100644
+index 01b235b3bb7e..a0b89c25605b 100644
 --- a/drivers/net/phy/Kconfig
 +++ b/drivers/net/phy/Kconfig
-@@ -91,6 +91,14 @@ config AC200_PHY
+@@ -84,6 +84,14 @@ config AIR_EN8811H_PHY
  	help
- 	  Fast ethernet PHY as found in X-Powers AC200 multi-function device.
+ 	  Currently supports the Airoha EN8811H PHY.
  
 +config AC200_PHY_SUNXI
 +	tristate "AC200 EPHY(Sunxi)"
@@ -3721,14 +3722,14 @@ index be4670e6b266..3acef4104e06 100644
  	tristate "AMD and Altima PHYs"
  	help
 diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
-index 4bba8c64bcc9..4594dfec64a4 100644
+index 90f886844381..5c1110d6082e 100644
 --- a/drivers/net/phy/Makefile
 +++ b/drivers/net/phy/Makefile
-@@ -34,6 +34,7 @@ sfp-obj-$(CONFIG_SFP)		+= sfp-bus.o
+@@ -33,6 +33,7 @@ obj-$(CONFIG_SFP)		+= sfp.o
+ sfp-obj-$(CONFIG_SFP)		+= sfp-bus.o
  obj-y				+= $(sfp-obj-y) $(sfp-obj-m)
  
- obj-$(CONFIG_AC200_PHY)		+= ac200-phy.o
-+obj-$(CONFIG_AC200_PHY_SUNXI)		+= sunxi-ephy.o
++obj-$(CONFIG_AC200_PHY_SUNXI)	+= sunxi-ephy.o
  obj-$(CONFIG_ADIN_PHY)		+= adin.o
  obj-$(CONFIG_ADIN1100_PHY)	+= adin1100.o
  obj-$(CONFIG_AIR_EN8811H_PHY)   += air_en8811h.o
@@ -4510,5 +4511,5 @@ index d0f66a5e1b2a..71349cac1a67 100644
  
  #include <linux/errno.h>
 -- 
-2.35.3
+2.43.0
 
