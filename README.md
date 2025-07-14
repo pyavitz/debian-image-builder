@@ -5,20 +5,8 @@
 (*) Work in progress
 
 # ALLWINNER
-BananaPi M2 Zero (*)
 BananaPi M4 Zero
-BananaPi P2 Zero (*)
-Cubietruck (*)
-NanoPi M1
-NanoPi NEO
-NanoPi NEO Plus2
-NanoPi R1
-OrangePi 3 LTS (*)
-OrangePi One
-OrangePi PC
-OrangePi R1 (*)
-PineA64+
-Tritium
+KickPi K2B
 
 # AMLOGIC
 BananaPi CM4
@@ -26,7 +14,6 @@ BananaPi M2S
 H96-MAX X3
 Le Potato
 Odroid C4
-Odroid HC4
 Odroid N2
 Odroid N2L
 Odroid N2+
