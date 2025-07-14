@@ -36,10 +36,13 @@ if [[ "$DISTRO" == "ubuntu" ]]; then
 fi
 git clone --depth=1 -q https://kernel.googlesource.com/pub/scm/linux/kernel/git/sforshee/wireless-regdb
 sleep .25
-cd wireless-regdb
-cp -f regulatory.db /lib/firmware/regulatory.db
-cp -f regulatory.db.p7s /lib/firmware/regulatory.db.p7s
-cd ~
+if [[ -f "wireless-regdb/regulatory.db" ]] && [[ -f "wireless-regdb/regulatory.db.p7s" ]]; then
+	mkdir -p /lib/firmware/updates
+	cp -fr wireless-regdb/{regulatory.db,regulatory.db.p7s} /lib/firmware/updates/
+else
+	echo -e ""
+	echo -e "ERR: Missing regulatory db files?"
+fi
 rm -fdr wireless-regdb
 }
 
