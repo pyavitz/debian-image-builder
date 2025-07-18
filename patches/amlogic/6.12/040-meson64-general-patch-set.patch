@@ -15,7 +15,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  drivers/gpu/drm/panfrost/panfrost_job.c       |  14 +-
  drivers/gpu/drm/tiny/ili9341.c                |   2 +
  drivers/hid/hid-ids.h                         |   6 +
- drivers/hid/hid-quirks.c                      |   2 +
  drivers/i2c/busses/i2c-rk3x.c                 |  32 +
  drivers/input/touchscreen/Kconfig             |  10 +
  drivers/input/touchscreen/Makefile            |   1 +
@@ -469,21 +468,6 @@ index 8bcada30af71..e9e11ed1beb6 100644
  	{ }
  };
  MODULE_DEVICE_TABLE(spi, ili9341_id);
-diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index c6ae7c4268b8..00c1b5a48d17 100644
---- a/drivers/hid/hid-ids.h
-+++ b/drivers/hid/hid-ids.h
-@@ -1477,4 +1477,10 @@
- #define USB_VENDOR_ID_SIGNOTEC			0x2133
- #define USB_DEVICE_ID_SIGNOTEC_VIEWSONIC_PD1011	0x0018
- 
-+#define USB_DEVICE_ID_DWAV_MULTITOUCH	0x0005
-+
-+#define USB_VENDOR_ID_ODROID	0x16b4
-+#define USB_DEVICE_ID_VU5	0x0704
-+#define USB_DEVICE_ID_VU7PLUS	0x0705
-+
- #endif
 diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
 index 5d7a418ccdbe..4f37912bfd3f 100644
 --- a/drivers/hid/hid-quirks.c
@@ -1381,4 +1365,31 @@ index e70c8c34c7db..901bdf9b8658 100644
  		.rate_min	= 5515,
 -- 
 2.39.5
+
+From da5a45d968bf744ce4bb21991a457023c56f9026 Mon Sep 17 00:00:00 2001
+From: Hyeonki Hong <hhk7734@gmail.com>
+Date: Fri, 18 Jul 2025 09:50:19 -0400
+Subject: [PATCH] ODROID-COMMON: input/touchscreen: Add D-WAV Multitouch
+ driver.
+
+Signed-off-by: Hyeonki Hong <hhk7734@gmail.com>
+---
+ drivers/hid/hid-quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
+index 80372342c176..92472ae7bb2f 100644
+--- a/drivers/hid/hid-quirks.c
++++ b/drivers/hid/hid-quirks.c
+@@ -897,6 +897,8 @@ static const struct hid_device_id hid_ignore_list[] = {
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_QUANTA, USB_DEVICE_ID_QUANTA_HP_5MP_CAMERA_5473) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_SMARTLINKTECHNOLOGY, USB_DEVICE_ID_SMARTLINKTECHNOLOGY_4155) },
++	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU5) },
++	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU7PLUS) },
+ 	{ }
+ };
+ 
+-- 
+2.43.0
 

@@ -15,7 +15,6 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  drivers/gpu/drm/panfrost/panfrost_job.c       |  14 +-
  drivers/gpu/drm/tiny/ili9341.c                |   2 +
  drivers/hid/hid-ids.h                         |   6 +
- drivers/hid/hid-quirks.c                      |   2 +
  drivers/i2c/busses/i2c-rk3x.c                 |  32 +
  drivers/input/touchscreen/Kconfig             |  10 +
  drivers/input/touchscreen/Makefile            |   1 +
@@ -484,19 +483,6 @@ index 7e400624908e..b28a857d0740 100644
 +#define USB_DEVICE_ID_VU7PLUS	0x0705
 +
  #endif
-diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
-index 5d7a418ccdbe..4f37912bfd3f 100644
---- a/drivers/hid/hid-quirks.c
-+++ b/drivers/hid/hid-quirks.c
-@@ -892,6 +892,8 @@ static const struct hid_device_id hid_ignore_list[] = {
- #endif
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_QUANTA, USB_DEVICE_ID_QUANTA_HP_5MP_CAMERA_5473) },
-+	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU5) },
-+	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU7PLUS) },
- 	{ }
- };
- 
 diff --git a/drivers/i2c/busses/i2c-rk3x.c b/drivers/i2c/busses/i2c-rk3x.c
 index d4e9196445c0..3d9244b15627 100644
 --- a/drivers/i2c/busses/i2c-rk3x.c
@@ -1386,4 +1372,31 @@ index e70c8c34c7db..901bdf9b8658 100644
  		.rate_min	= 5515,
 -- 
 2.39.5
+
+From 4bb209f50d22426ada22f4ca5d4b80bb922531d1 Mon Sep 17 00:00:00 2001
+From: Hyeonki Hong <hhk7734@gmail.com>
+Date: Fri, 18 Jul 2025 09:53:59 -0400
+Subject: [PATCH] ODROID-COMMON: input/touchscreen: Add D-WAV Multitouch
+ driver.
+
+Signed-off-by: Hyeonki Hong <hhk7734@gmail.com>
+---
+ drivers/hid/hid-quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
+index 06c27308e497..691144a5e8f4 100644
+--- a/drivers/hid/hid-quirks.c
++++ b/drivers/hid/hid-quirks.c
+@@ -907,6 +907,8 @@ static const struct hid_device_id hid_ignore_list[] = {
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_YEALINK, USB_DEVICE_ID_YEALINK_P1K_P4K_B2K) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_QUANTA, USB_DEVICE_ID_QUANTA_HP_5MP_CAMERA_5473) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_SMARTLINKTECHNOLOGY, USB_DEVICE_ID_SMARTLINKTECHNOLOGY_4155) },
++	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU5) },
++	{ HID_USB_DEVICE(USB_VENDOR_ID_ODROID, USB_DEVICE_ID_VU7PLUS) },
+ 	{ }
+ };
+ 
+-- 
+2.43.0
 
