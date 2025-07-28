@@ -80,8 +80,8 @@ Hostname:		# Set custom system hostname
 
 Distribution
 Distro:			# Supported: debian, devuan and ubuntu
-Release:		# Debian: bullseye, bookworm, trixie, testing, unstable and sid
-			# Devuan: chimaera, daedalus, excalibur, testing, unstable and ceres
+Release:		# Debian: bookworm, trixie, testing, unstable and sid
+			# Devuan: daedalus, excalibur, testing, unstable and ceres
 			# https://www.devuan.org/os/announce/excalibur-usrmerge-announce-2024-02-20.html
 			# Kali: kali-last-snapshot and kali-rolling
 			# Ubuntu: focal, jammy and noble
