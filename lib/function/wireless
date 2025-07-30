@@ -26,14 +26,10 @@ if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]]; then
 	DRIVER_URL="https://github.com/radxa-pkg/${DRIVER}.git"
 	WL_COMMIT="fc7cbdd1791416c2457fa27a59e508bf325c9c3f"
 	driver_download
-	cd ${DRIVER}; git checkout -q ${WL_COMMIT}; cd ..
+	cd ${DRIVER}; git checkout -q ${WL_COMMIT}; series_patching; cd ..
 	rm -fdr ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
-	cp -fr ${DRIVER} ${DRIVER}_sdio
-	cd ${DRIVER}_sdio
-	series_patching
-	cd ..; cp -fr ${DRIVER}_sdio/src/SDIO/driver_fw/driver/${DRIVER} ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
-	rm -fdr ${DRIVER}_sdio
-	cd ${DRIVER}; git checkout -q main; cd ..
+	cp -fr ${DRIVER}/src/SDIO/driver_fw/driver/${DRIVER} ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
+	cd ${DRIVER}; git reset -q --hard; git checkout -q main; cd ..
 	echo "obj-\$(CONFIG_AIC_WLAN_SUPPORT) += ${DRIVER}_sdio/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/Makefile
 	sed -i 's/MAKEFLAGS +=-j$(shell nproc)/#MAKEFLAGS +=-j$(shell nproc)/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Makefile
 	sed -i 's/CONFIG_GPIO_WAKEUP = n/CONFIG_GPIO_WAKEUP = y/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Makefile
