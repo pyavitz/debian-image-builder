@@ -1,0 +1,24 @@
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c b/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c
+index 40d51a7130d9..f1c356306c80 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/tx_msg.c
+@@ -317,7 +317,15 @@ void sprdwl_dequeue_data_list(struct mbuf_t *head, int num)
+ /* seam for tx_thread */
+ void tx_down(struct sprdwl_tx_msg *tx_msg)
+ {
+-	wait_for_completion(&tx_msg->tx_completed);
++	int ret;
++	while (1) {
++		ret = wait_for_completion_interruptible(&tx_msg->tx_completed);
++		if (ret == -ERESTARTSYS) {
++			continue;
++		}
++
++		return;
++	}
+ }
+ 
+ void tx_up(struct sprdwl_tx_msg *tx_msg)
+-- 
+2.39.2
+

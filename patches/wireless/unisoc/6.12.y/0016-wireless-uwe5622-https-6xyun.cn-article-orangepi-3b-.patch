@@ -1,0 +1,31 @@
+From f59cb1111a3dd9b1e339b3c6552bc6a69fc43725 Mon Sep 17 00:00:00 2001
+From: misuzu <bakalolka@gmail.com>
+Date: Wed, 23 Apr 2025 22:57:02 +0300
+Subject: [PATCH 16/18] wireless: uwe5622:
+ https://6xyun.cn/article/orangepi-3b-drive-uwe5622
+
+---
+ drivers/net/wireless/uwe5622/unisocwifi/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/main.c b/drivers/net/wireless/uwe5622/unisocwifi/main.c
+index bf2ec6c29e8e..a0daf80361a7 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/main.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/main.c
+@@ -945,11 +945,13 @@ static int sprdwl_set_mac(struct net_device *dev, void *addr)
+ 			vif->has_rand_mac = true;
+ 			memcpy(vif->random_mac, sa->sa_data, ETH_ALEN);
+ 			memcpy(dev->dev_addr, sa->sa_data, ETH_ALEN);
++			memcpy(dev->dev_addr_shadow, sa->sa_data, ETH_ALEN);
+ 		} else {
+ 			vif->has_rand_mac = false;
+ 			netdev_info(dev, "need clear random mac for sta/softap mode\n");
+ 			memset(vif->random_mac, 0, ETH_ALEN);
+ 			memcpy(dev->dev_addr, vif->mac, ETH_ALEN);
++			memcpy(dev->dev_addr_shadow, vif->mac, ETH_ALEN);
+ 		}
+ 	}
+ 	/*return success to pass vts test*/
+-- 
+2.49.0
+

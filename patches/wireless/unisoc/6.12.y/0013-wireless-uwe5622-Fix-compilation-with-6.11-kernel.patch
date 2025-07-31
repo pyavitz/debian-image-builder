@@ -1,0 +1,80 @@
+From 7a05771828635c2668cd2f8c70c4237c22d4bed9 Mon Sep 17 00:00:00 2001
+From: misuzu <bakalolka@gmail.com>
+Date: Wed, 23 Apr 2025 22:41:43 +0300
+Subject: [PATCH 13/18] wireless: uwe5622: Fix compilation with 6.11 kernel
+
+---
+ drivers/net/wireless/uwe5622/tty-sdio/tty.c                | 4 ++--
+ drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c | 4 ++--
+ drivers/net/wireless/uwe5622/unisocwifi/wl_core.c          | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/uwe5622/tty-sdio/tty.c b/drivers/net/wireless/uwe5622/tty-sdio/tty.c
+index f6506d9632a5..79cef4a8d061 100644
+--- a/drivers/net/wireless/uwe5622/tty-sdio/tty.c
++++ b/drivers/net/wireless/uwe5622/tty-sdio/tty.c
+@@ -781,7 +781,7 @@ static void  mtty_shutdown(struct platform_device *pdev)
+ }
+ #endif
+ 
+-static int  mtty_remove(struct platform_device *pdev)
++static void mtty_remove(struct platform_device *pdev)
+ {
+ 	struct mtty_device *mtty = platform_get_drvdata(pdev);
+ 
+@@ -800,7 +800,7 @@ static int  mtty_remove(struct platform_device *pdev)
+ //#endif
+ 	bluesleep_exit();
+ 
+-	return 0;
++	return;
+ }
+ 
+ static const struct of_device_id mtty_match_table[] = {
+diff --git a/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c b/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c
+index b243b39c2133..1558f1c03de0 100644
+--- a/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c
++++ b/drivers/net/wireless/uwe5622/unisocwcn/platform/wcn_boot.c
+@@ -3862,7 +3862,7 @@ static int marlin_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int  marlin_remove(struct platform_device *pdev)
++static void marlin_remove(struct platform_device *pdev)
+ {
+ #if (defined(CONFIG_BT_WAKE_HOST_EN) && defined(CONFIG_AW_BOARD))
+ 	marlin_unregistsr_bt_wake();
+@@ -3903,7 +3903,7 @@ static int  marlin_remove(struct platform_device *pdev)
+ 
+ 	WCN_INFO("marlin_remove ok!\n");
+ 
+-	return 0;
++	return;
+ }
+ 
+ static void marlin_shutdown(struct platform_device *pdev)
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/wl_core.c b/drivers/net/wireless/uwe5622/unisocwifi/wl_core.c
+index 4ffaacb58de5..cce2ff37866d 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/wl_core.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/wl_core.c
+@@ -779,7 +779,7 @@ static int sprdwl_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static int sprdwl_remove(struct platform_device *pdev)
++static void sprdwl_remove(struct platform_device *pdev)
+ {
+ 	struct sprdwl_intf *intf = platform_get_drvdata(pdev);
+ 	struct sprdwl_priv *priv = intf->priv;
+@@ -800,7 +800,7 @@ static int sprdwl_remove(struct platform_device *pdev)
+ 	stop_marlin(MARLIN_WIFI);
+ 	wl_info("%s\n", __func__);
+ 
+-	return 0;
++	return;
+ }
+ 
+ static const struct of_device_id sprdwl_of_match[] = {
+-- 
+2.49.0
+

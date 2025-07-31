@@ -1,0 +1,44 @@
+From 0af8eda454208aa9c834fecdfea8029de97390c5 Mon Sep 17 00:00:00 2001
+From: misuzu <bakalolka@gmail.com>
+Date: Wed, 23 Apr 2025 22:54:24 +0300
+Subject: [PATCH 17/18] wireless: uwe5622: Fix Makefiles
+
+---
+ drivers/net/wireless/uwe5622/Makefile           | 2 +-
+ drivers/net/wireless/uwe5622/unisocwcn/Makefile | 7 ++++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/uwe5622/Makefile b/drivers/net/wireless/uwe5622/Makefile
+index a5767f50df80..dfa95009d29a 100644
+--- a/drivers/net/wireless/uwe5622/Makefile
++++ b/drivers/net/wireless/uwe5622/Makefile
+@@ -2,7 +2,7 @@ obj-$(CONFIG_AW_WIFI_DEVICE_UWE5622) += unisocwcn/
+ obj-$(CONFIG_WLAN_UWE5622)    += unisocwifi/
+ obj-$(CONFIG_TTY_OVERY_SDIO)  += tty-sdio/
+ 
+-UNISOCWCN_DIR := $(shell cd $(src)/unisocwcn/ && /bin/pwd)
++UNISOCWCN_DIR := $(srctree)/drivers/net/wireless/uwe5622/unisocwcn/
+ UNISOC_BSP_INCLUDE := $(UNISOCWCN_DIR)/include
+ export UNISOC_BSP_INCLUDE
+ 
+diff --git a/drivers/net/wireless/uwe5622/unisocwcn/Makefile b/drivers/net/wireless/uwe5622/unisocwcn/Makefile
+index f9c595747547..514e7cf26372 100644
+--- a/drivers/net/wireless/uwe5622/unisocwcn/Makefile
++++ b/drivers/net/wireless/uwe5622/unisocwcn/Makefile
+@@ -129,9 +129,10 @@ ccflags-y += -DCONFIG_WCN_BOOT
+ ccflags-y += -DCONFIG_WCN_UTILS
+ 
+ #### include path ######
+-ccflags-y += -I$(src)/include/
+-ccflags-y += -I$(src)/platform/
+-ccflags-y += -I$(src)/platform/rf/
++UNISOCWCN_DIR := $(srctree)/drivers/net/wireless/uwe5622/unisocwcn/
++ccflags-y += -I$(UNISOCWCN_DIR)/include/
++ccflags-y += -I$(UNISOCWCN_DIR)/platform/
++ccflags-y += -I$(UNISOCWCN_DIR)/rf/
+ 
+ #### add cflag for Customer ######
+ ### ---------- Hisilicon start ---------- ###
+-- 
+2.49.0
+

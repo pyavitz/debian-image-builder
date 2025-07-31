@@ -1,0 +1,29 @@
+From 0009d558288b58824933d43f0a855ef891398223 Mon Sep 17 00:00:00 2001
+From: John Doe <john.doe@somewhere.on.planet>
+Date: Thu, 6 Jun 2024 13:25:27 +0000
+Subject: [PATCH 12/18] Patching kernel rockchip64 files
+ drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+
+Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+---
+ drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+index 55c76b74195a..5cf058b493f3 100644
+--- a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+@@ -3426,7 +3426,9 @@ void sprdwl_event_chan_changed(struct sprdwl_vif *vif, u8 *data, u16 len)
+ 						NL80211_CHAN_HT20);
+ 		else
+ 			wl_err("%s, ch is null!\n", __func__);
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,19, 2))
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,9, 0))
++		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0);
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(5,19, 2))
+ 		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0, 0);
+ #else
+ 		cfg80211_ch_switch_notify(vif->ndev, &chandef);
+-- 
+2.49.0
+
