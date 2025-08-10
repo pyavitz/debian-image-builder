@@ -137,6 +137,24 @@ EOF
 #systemctl enable bthelper
 }
 
+# rfkill
+rfkill_unblock_all_service (){
+tee /etc/systemd/system/rfkill-unblock@.service <<EOF
+[Unit]
+Description=RFKill-Unblock All Devices
+Before=bluetooth.target network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/rfkill unblock all
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable rfkill-unblock@all.service
+}
+
 # leds
 led_service (){
 tee /etc/systemd/system/leds.service <<EOF
