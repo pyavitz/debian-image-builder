@@ -589,7 +589,10 @@ if [[ `echo $NODE | grep "sd[a-z]"` ]] || [[ `echo $NODE | grep "nvme[0-9][a-z][
 	do
 		case $opt in
 			"Yes")
+				# Flash U-Boot to the eMMC
 				EMMC_TRUE="true"
+				USER_DEVICE_NODE="${DEVICE_NODE}"
+				DEVICE_NODE="${EMMC}"
 				break
 				;;
 			"No")
@@ -607,28 +610,10 @@ else
 	flash_uboot > /dev/null 2>&1
 fi
 
-env_config (){
-if [[ "$P_VALUE" == "p1" ]]; then
-	rm -f /mnt/${P_ROOTFS}/env_k1-x.txt
-	rm -f /mnt/${P_ROOTFS}/boot/env_k1-x.txt
-	cp -f ${UBOOT_DIR}/env_k1-x.txt /mnt/${P_ROOTFS}
-	sed -i "s/^knl_name=.*/knl_name=boot\/Image.itb/" /mnt/${P_ROOTFS}/env_k1-x.txt
-	sed -i "s/^ramdisk_name=.*/ramdisk_name=boot\/initrd.gz/" /mnt/${P_ROOTFS}/env_k1-x.txt
-	sed -i "s/^dtb_dir=.*/dtb_dir=boot\/spacemit/" /mnt/${P_ROOTFS}/env_k1-x.txt
-	sed -i "s/^mmc_rootfstype=.*/mmc_rootfstype=${R_FSTYPE}/" /mnt/${P_ROOTFS}/env_k1-x.txt
-	sed -i "s/^partuuid=.*/partuuid=${ROOT_PARTUUID}/" /mnt/${P_ROOTFS}/env_k1-x.txt
+# Use user defined DEVICE_NODE
+if [[ -v "USER_DEVICE_NODE" && ! -z "$USER_DEVICE_NODE" ]]; then
+	DEVICE_NODE="${USER_DEVICE_NODE}"
 fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	rm -f /mnt/${P_BOOT}/env_k1-x.txt
-	rm -f /mnt/${P_ROOTFS}/env_k1-x.txt
-	cp -f ${UBOOT_DIR}/env_k1-x.txt /mnt/${P_BOOT}
-	sed -i "s/^knl_name=.*/knl_name=Image.itb/" /mnt/${P_BOOT}/env_k1-x.txt
-	sed -i "s/^ramdisk_name=.*/ramdisk_name=initrd.gz/" /mnt/${P_BOOT}/env_k1-x.txt
-	sed -i "s/^dtb_dir=.*/dtb_dir=spacemit/" /mnt/${P_BOOT}/env_k1-x.txt
-	sed -i "s/^mmc_rootfstype=.*/mmc_rootfstype=${R_FSTYPE}/" /mnt/${P_BOOT}/env_k1-x.txt
-	sed -i "s/^partuuid=.*/partuuid=${ROOT_PARTUUID}/" /mnt/${P_BOOT}/env_k1-x.txt
-fi
-}
 
 # FINISH
 p1_boot (){
@@ -643,7 +628,6 @@ if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_ROOTFS}/boot/boot.cmd /mnt/${P_ROOTFS}/boot/boot.scr
 fi
-#if [[ "$BOARD" == "bananapif3" ]]; then $EE "env_k1-x.txt"; env_config; fi
 $EE
 $EE "fstab"
 rm -f /mnt/${P_ROOTFS}/etc/fstab
@@ -665,7 +649,6 @@ if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_BOOT}/boot.cmd /mnt/${P_BOOT}/boot.scr
 fi
-#if [[ "$BOARD" == "bananapif3" ]]; then $EE "env_k1-x.txt"; env_config; fi
 $EE
 $EE "fstab"
 rm -f /mnt/${P_ROOTFS}/etc/fstab
