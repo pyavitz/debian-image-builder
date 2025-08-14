@@ -465,6 +465,12 @@ EOF
 	ln -sf /etc/newt/palette.dark  /etc/alternatives/newt-palette
 fi
 
+# Add color to serial console
+if [[ -f "/etc/bash.bashrc" ]]; then
+	echo "export TERM=xterm-256color" >> /etc/bash.bashrc
+	echo 'export PS1="\[\033[1;38;5;196m\]\h\[\033[1;48;5;11;38;5;17m\]\u\[\033[0;32m\]\w\[\033[0m\]: "' >> /etc/bash.bashrc
+fi
+
 # udev rules
 if [[ "$FAMILY_EXT" =~ ^(odroid|ac2xx|rk3288)$ ]]; then ${FAMILY_EXT}_udev_rules > /dev/null 2>&1; fi
 if [[ "$FAMILY" == "amlogic" ]]; then aml_gpiomem_rules; fi
