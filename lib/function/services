@@ -428,15 +428,16 @@ After=bluetooth.service
 
 [Service]
 Type=simple
-ExecStartPre=/usr/sbin/rfkill unblock all
+ExecStartPre=/usr/local/sbin/sprd-bthelper
 ExecStart=/usr/local/sbin/hciattach_opi -s 1500000 /dev/ttyBT0 sprd > /dev/null 2>&1
+ExecStartPost=/usr/sbin/rfkill unblock all
 TimeoutSec=0
 RemainAfterExit=true
 
 [Install]
 WantedBy=multi-user.target
 EOF
-	#systemctl enable bthelper
+	systemctl enable bthelper
 fi
 }
 

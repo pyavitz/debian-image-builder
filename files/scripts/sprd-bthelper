@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+# Generate Spoof MAC Addr
+MACDEV=`findmnt -v -n -o SOURCE / | sed 's/dev//g' | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##' | sed 's/p1//g' | sed 's/p2//'`
+if [[ -e /sys/class/block/${MACDEV}/device/cid ]]; then
+	HASHDEV=`sha256sum /sys/class/block/${MACDEV}/device/cid`
+	BTADDR=`echo "${HASHDEV}" | dd bs=1 count=12 2>/dev/null | sed 's/../&:/g; s/:$//' | sed 's/^../02/'`
+else
+	echo -e "WARNING: /sys/class/block/${MACDEV}/device/cid was not found." > /tmp/macaddr-error.txt
+	exit 1
+fi
+
+if [[ ! -f "/etc/default/sprd_bt_addr" ]]; then
+	echo "$BTADDR" > "/etc/default/sprd_bt_addr"
+fi
+
+exit 0
