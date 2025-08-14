@@ -8,7 +8,7 @@ if [[ -e /sys/class/block/${MACDEV}/device/cid ]]; then
 	HASHDEV=`sha256sum /sys/class/block/${MACDEV}/device/cid`
 	BTADDR=`echo "${HASHDEV}" | dd bs=1 count=12 2>/dev/null | sed 's/../&:/g; s/:$//' | sed 's/^../02/'`
 else
-	echo -e "WARNING: /sys/class/block/${MACDEV}/device/cid was not found." > /tmp/macaddr-error.txt
+	echo "Failed to find MAC device" >&2
 	exit 1
 fi
 
