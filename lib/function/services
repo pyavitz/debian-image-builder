@@ -137,6 +137,26 @@ EOF
 #systemctl enable bthelper
 }
 
+sprd_bt_service (){
+tee /etc/systemd/system/bthelper.service <<EOF
+[Unit]
+Description=Bluetooth Helper
+After=bluetooth.service bluetooth.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/local/sbin/bthelper
+ExecStart=/usr/local/sbin/hciattach_opi -s 1500000 /dev/ttyBT0 sprd > /dev/null 2>&1
+ExecStartPost=/usr/sbin/rfkill unblock all
+TimeoutSec=0
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable bthelper
+}
+
 # rfkill
 rfkill_unblock_all_service (){
 tee /etc/systemd/system/rfkill-unblock@.service <<EOF
@@ -419,26 +439,6 @@ StandardError=journal+console
 WantedBy=multi-user.target
 EOF
 systemctl enable tweaks
-
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	tee /etc/systemd/system/bthelper.service <<EOF
-[Unit]
-Description=Bluetooth Helper
-After=bluetooth.service
-
-[Service]
-Type=simple
-ExecStartPre=/usr/local/sbin/bthelper
-ExecStart=/usr/local/sbin/hciattach_opi -s 1500000 /dev/ttyBT0 sprd > /dev/null 2>&1
-ExecStartPost=/usr/sbin/rfkill unblock all
-TimeoutSec=0
-RemainAfterExit=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-	systemctl enable bthelper
-fi
 }
 
 restart_tweaks (){
