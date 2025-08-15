@@ -1,6 +1,6 @@
-From 28ab8720c7ccd2278309ab76d7f0f5330ec243f0 Mon Sep 17 00:00:00 2001
+From 62c304895d50673bb3ad7525ee6ec5ff94c16b65 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Thu, 7 Aug 2025 10:40:02 -0400
+Date: Fri, 15 Aug 2025 07:20:56 -0400
 Subject: [PATCH] lwfinger/rtw88 549f33c361a2569733ba73e47d7e3986ca7e55d6
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
@@ -23,7 +23,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  drivers/net/wireless/realtek/rtw88/mac.c      |    38 +-
  drivers/net/wireless/realtek/rtw88/mac.h      |     3 +
  drivers/net/wireless/realtek/rtw88/mac80211.c |    82 +-
- drivers/net/wireless/realtek/rtw88/main.c     |   263 +-
+ drivers/net/wireless/realtek/rtw88/main.c     |   259 +-
  drivers/net/wireless/realtek/rtw88/main.h     |   276 +-
  drivers/net/wireless/realtek/rtw88/pci.c      |    78 +-
  drivers/net/wireless/realtek/rtw88/pci.h      |     5 +
@@ -80,7 +80,7 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  drivers/net/wireless/realtek/rtw88/tx.h       |     4 +-
  drivers/net/wireless/realtek/rtw88/usb.c      |   317 +-
  drivers/net/wireless/realtek/rtw88/usb.h      |     6 +
- 75 files changed, 65990 insertions(+), 772 deletions(-)
+ 75 files changed, 65988 insertions(+), 770 deletions(-)
  create mode 100644 drivers/net/wireless/realtek/rtw88/bitfield.h
  create mode 100644 drivers/net/wireless/realtek/rtw88/compiler.h
  create mode 100644 drivers/net/wireless/realtek/rtw88/convert_firmware.c
@@ -28765,7 +28765,7 @@ index b39e90fb66b4..f7c6e0a8d018 100644
  	.suspend		= rtw_ops_suspend,
  	.resume			= rtw_ops_resume,
 diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index a808af2f085e..dcd04c02c47d 100644
+index 01c8b748b20b..dcd04c02c47d 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.c
 +++ b/drivers/net/wireless/realtek/rtw88/main.c
 @@ -19,6 +19,7 @@
@@ -28864,24 +28864,6 @@ index a808af2f085e..dcd04c02c47d 100644
  	/* fw supports only one station associated to enter lps, if there are
  	 * more than two stations associated to the AP, then we can not enter
  	 * lps, because fw does not handle the overlapped beacon interval
-@@ -329,7 +355,7 @@ int rtw_sta_add(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
- 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
- 	int i;
- 
--	if (vif->type == NL80211_IFTYPE_STATION) {
-+	if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls) {
- 		si->mac_id = rtwvif->mac_id;
- 	} else {
- 		si->mac_id = rtw_acquire_macid(rtwdev);
-@@ -366,7 +392,7 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
- 
- 	cancel_work_sync(&si->rc_work);
- 
--	if (vif->type != NL80211_IFTYPE_STATION)
-+	if (vif->type != NL80211_IFTYPE_STATION || sta->tdls)
- 		rtw_release_macid(rtwdev, si->mac_id);
- 	if (fw_exist)
- 		rtw_fw_media_status_report(rtwdev, si->mac_id, false);
 @@ -562,6 +588,7 @@ EXPORT_SYMBOL(rtw_dump_reg);
  void rtw_vif_assoc_changed(struct rtw_vif *rtwvif,
  			   struct ieee80211_bss_conf *conf)
