@@ -1,0 +1,86 @@
+From mboxrd@z Thu Jan  1 00:00:00 1970
+From: Luke Lu <luke.lu@libre.computer>
+Subject: [PATCH net v4] net: phy: meson-gxl: implement meson_gxl_phy_resume()
+Date: Wed,  9 Aug 2023 21:49:46 +0000
+From: Da Xue <da@libre.computer>
+
+While testing the suspend/resume function, we found the ethernet
+is broken if using internal PHY of Amlogic meson GXL SoC.
+After system resume back, the ethernet is down, no carrier found.
+
+	eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state
+		DOWN group default qlen 1000
+
+In this patch, we re-initialize the internal PHY to fix this problem.
+
+	eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP
+		group default qlen 1000
+
+Fixes: 7334b3e47aee ("net: phy: Add Meson GXL Internal PHY driver")
+Signed-off-by: Da Xue <da@libre.computer>
+Signed-off-by: Luke Lu <luke.lu@libre.computer>
+
+---
+Note, we don't Cc stable kernel tree in this patch intentionally, since
+there will be a cherry-pick failure if apply this patch from kernel version
+less than v6.2, it's not a logic failure but due to the changes too close.
+
+Please check commit 69ff53e4a4c9 ("net: phy: meson-gxl: use MMD access dummy stubs for GXL, internal PHY")
+We plan to slightly rework the patch, and send it to stable tree separately
+once this patch is accepted into mainline.
+
+v4:
+ - refactor commit message to better explain the problem & fix
+ - check return value of genphy_resume()
+ - add 'net' annotation
+ - add Fixes tag
+
+v3: https://lore.kernel.org/netdev/20230808050016.1911447-1-da@libre.computer
+ - fix missing parameter of genphy_resume()
+
+v2: https://lore.kernel.org/netdev/20230804201903.1303713-1-da@libre.computer
+ - call generic genphy_resume()
+
+v1: https://lore.kernel.org/all/CACqvRUZRyXTVQyy9bUviQZ+_moLQBjPc6nin_NQC+CJ37yNnLw@mail.gmail.com
+---
+ drivers/net/phy/meson-gxl.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/phy/meson-gxl.c b/drivers/net/phy/meson-gxl.c
+index bb9b33b6bce2..9ebe09b0cd8c 100644
+--- a/drivers/net/phy/meson-gxl.c
++++ b/drivers/net/phy/meson-gxl.c
+@@ -132,6 +132,21 @@ static int meson_gxl_config_init(struct phy_device *phydev)
+ 	return 0;
+ }
+ 
++static int meson_gxl_phy_resume(struct phy_device *phydev)
++{
++	int ret;
++
++	ret = genphy_resume(phydev);
++	if (ret)
++		return ret;
++
++	ret = meson_gxl_config_init(phydev);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
+ /* This function is provided to cope with the possible failures of this phy
+  * during aneg process. When aneg fails, the PHY reports that aneg is done
+  * but the value found in MII_LPA is wrong:
+@@ -196,7 +211,7 @@ static struct phy_driver meson_gxl_phy[] = {
+ 		.config_intr	= smsc_phy_config_intr,
+ 		.handle_interrupt = smsc_phy_handle_interrupt,
+ 		.suspend        = genphy_suspend,
+-		.resume         = genphy_resume,
++		.resume         = meson_gxl_phy_resume,
+ 		.read_mmd	= genphy_read_mmd_unsupported,
+ 		.write_mmd	= genphy_write_mmd_unsupported,
+ 	}, {
+-- 
+2.40.1
+
