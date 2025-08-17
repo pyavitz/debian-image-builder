@@ -1,6 +1,6 @@
-From f97274de3903276d9ad7d573a8bde896f30e5781 Mon Sep 17 00:00:00 2001
+From 0d77bfb43c27fd94f58f4d6981839aee290dd694 Mon Sep 17 00:00:00 2001
 From: Phil Elwell <phil@raspberrypi.com>
-Date: Sat, 16 Aug 2025 20:14:08 -0400
+Date: Sat, 16 Aug 2025 20:34:59 -0400
 Subject: [PATCH] hwmon: emc2305: fixups for driver submitted to mailing lists
 
 The driver had a number of issues, checkpatch warnings/errors,
@@ -33,11 +33,11 @@ As this is all downstream only, revert to u8 to match 5.15.
 
 Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
 ---
- drivers/hwmon/emc2305.c | 110 ++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 106 insertions(+), 4 deletions(-)
+ drivers/hwmon/emc2305.c | 111 ++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 107 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/hwmon/emc2305.c b/drivers/hwmon/emc2305.c
-index 60809289f816..0a4378845230 100644
+index 60809289f816..66ba8800970c 100644
 --- a/drivers/hwmon/emc2305.c
 +++ b/drivers/hwmon/emc2305.c
 @@ -15,12 +15,13 @@
@@ -218,7 +218,7 @@ index 60809289f816..0a4378845230 100644
  	}
  
  	data->hwmon_dev = devm_hwmon_device_register_with_info(dev, "emc2305", data,
-@@ -713,21 +797,39 @@ static int emc2305_probe(struct i2c_client *client)
+@@ -713,21 +797,40 @@ static int emc2305_probe(struct i2c_client *client)
  			return ret;
  	}
  
@@ -232,6 +232,7 @@ index 60809289f816..0a4378845230 100644
  }
  
  static const struct of_device_id of_emc2305_match_table[] = {
++	{ .compatible = "smsc,emc2305" },
  	{ .compatible = "microchip,emc2305", },
 +	{ .compatible = "microchip,emc2303", },
 +	{ .compatible = "microchip,emc2302", },
