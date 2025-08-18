@@ -77,6 +77,9 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-usb-host-mode.dtbo \
 	sunxi-usb-otg-mode.dtbo
 
+dtbo-$(CONFIG_ARCH_ROCKCHIP) += \
+	rk3566-radxa-zero-3w-ant.dtbo
+
 targets += dtbs dtbs_install
 targets += $(dtbo-y)
 
