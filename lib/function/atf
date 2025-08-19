@@ -2,10 +2,9 @@
 
 # ATF
 arm_trusted_firmware (){
-TAG="lts-v2.12.5"
 GIT_ATF_URL="https://github.com/ARM-software/arm-trusted-firmware.git"
 if [[ "$FAMILY_EXT" =~ ^(sun50i|rk356x|rk358x)$ ]]; then
-	atf_download; cd arm-trusted-firmware-${TAG}; atf_patching; echo ""
+	atf_download; cd arm-trusted-firmware-${ATF_TAG}; atf_patching; echo ""
 	if [ $CROSSCOMPILE -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
 		echo -e "  GCC     ${CROSS_COMPILE}${COMPILER}"
@@ -22,28 +21,28 @@ fi
 
 atf_download (){
 if [[ `wget -S --spider https://github.com/ARM-software/arm-trusted-firmware/blob/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	if [[ -d "arm-trusted-firmware-${TAG}" ]] && [[ -d "arm-trusted-firmware-${TAG}.backup" ]]; then
-		echo -en "${WHT}Trusted Firmware-A ${TAG}${FIN}"
+	if [[ -d "arm-trusted-firmware-${ATF_TAG}" ]] && [[ -d "arm-trusted-firmware-${ATF_TAG}.backup" ]]; then
+		echo -en "${WHT}Trusted Firmware-A ${ATF_TAG}${FIN}"
 		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
-		rm -fdr arm-trusted-firmware-${TAG}
+		rm -fdr arm-trusted-firmware-${ATF_TAG}
 		echo -en " ${WHT}...${FIN}"
-		mv -f arm-trusted-firmware-${TAG}.backup arm-trusted-firmware-${TAG}
-		cd arm-trusted-firmware-${TAG}
+		mv -f arm-trusted-firmware-${ATF_TAG}.backup arm-trusted-firmware-${ATF_TAG}
+		cd arm-trusted-firmware-${ATF_TAG}
 		make realclean > /dev/null 2>&1
 		cd ..
-		cp -r arm-trusted-firmware-${TAG} arm-trusted-firmware-${TAG}.backup
+		cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware-${ATF_TAG}.backup
 		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
-		rm -fdr arm-trusted-firmware-${TAG} arm-trusted-firmware arm-trusted-firmware.backup
-		echo -en "${WHT}Trusted Firmware-A ${TAG}${FIN}"
+		rm -fdr arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware arm-trusted-firmware.backup
+		echo -en "${WHT}Trusted Firmware-A ${ATF_TAG}${FIN}"
 		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
-		git clone --depth=1 -b ${TAG} -q -c advice.detachedHead=false ${GIT_ATF_URL} arm-trusted-firmware-${TAG}
-		if [[ -d "arm-trusted-firmware-${TAG}" ]]; then
-			cd arm-trusted-firmware-${TAG}
+		git clone --depth=1 -b ${ATF_TAG} -q -c advice.detachedHead=false ${GIT_ATF_URL} arm-trusted-firmware-${ATF_TAG}
+		if [[ -d "arm-trusted-firmware-${ATF_TAG}" ]]; then
+			cd arm-trusted-firmware-${ATF_TAG}
 			make realclean > /dev/null 2>&1
 			cd ..
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
-			cp -r arm-trusted-firmware-${TAG} arm-trusted-firmware-${TAG}.backup
+			cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware-${ATF_TAG}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
 			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
