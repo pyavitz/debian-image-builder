@@ -7,6 +7,7 @@
 # ALLWINNER
 BananaPi M4 Zero
 KickPi K2B
+OrangePi 3 LTS
 
 # AMLOGIC
 BananaPi CM4
@@ -21,7 +22,7 @@ Radxa Zero
 X96-AIR	GBIT / QCOM
 
 # ROCKCHIP
-NanoPi R3S
+NanoPi R3S / LTS
 Radxa Zero 3W
 
 # SAMSUNG
