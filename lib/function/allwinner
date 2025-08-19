@@ -9,16 +9,10 @@ if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6|sun50i-h618)$ ]]; then
 	else
 		report_atf_error
 	fi
-	if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
-		if [[ "$HOST_CODENAME" == "bullseye" ]]; then
-			cp ../../files/boot/crust/${SERIES}-scp.bin scp.bin
-		else
-			if [[ -f "../crust/build/scp/scp.bin" ]]; then
-				cp ../crust/build/scp/scp.bin scp.bin
-			else
-				report_crust_error
-			fi
-		fi
+	if [[ -f "../crust-${CRUST_TAG}/build/scp/scp.bin" ]]; then
+		cp ../crust-${CRUST_TAG}/build/scp/scp.bin scp.bin
+	else
+		report_crust_error
 	fi
 fi
 }

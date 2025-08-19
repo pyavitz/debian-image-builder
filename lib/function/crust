@@ -1,11 +1,11 @@
 #!/bin/bash
 
 crust_defconfig (){
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	echo "CONFIG_PLATFORM_H6=y" > configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_CIR=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_I2C_PINS_PL0_PL1=y" >> configs/${UBOOT_DEFCONFIG}
-	echo "CONFIG_MFD_AXP20X=y" >> configs/${UBOOT_DEFCONFIG}
+if [[ "$BOARD" == "orangepi3lts" && ! -f "configs/${CRUST_DEFCONFIG}" ]]; then
+	echo "CONFIG_PLATFORM_H6=y" > configs/${CRUST_DEFCONFIG}
+	echo "CONFIG_CIR=y" >> configs/${CRUST_DEFCONFIG}
+	echo "CONFIG_I2C_PINS_PL0_PL1=y" >> configs/${CRUST_DEFCONFIG}
+	echo "CONFIG_MFD_AXP20X=y" >> configs/${CRUST_DEFCONFIG}
 fi
 }
 
@@ -14,30 +14,41 @@ crust_firmware (){
 # apt install gcc-or1k-elf
 # The package isn't currently available in the Debian Bullseye repo.
 # For the time being we will use precompiled binaries.
+CRUST_TAG="v0.6"
+GIT_CRUST_URL="https://github.com/crust-firmware/crust.git"
 if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
-	if [[ -d "crust" ]]; then
-		echo -en "${WHT}Crust${FIN} "
-		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-		cd crust
-		make clean
-		git config pull.rebase false
-		echo -en "${PNK}[${FIN}${WHT}pulling${FIN}${PNK}]${FIN} "
-		git pull -q
-		echo_bdone
-	else
-		echo -en "${WHT}Crust${FIN} "
-		echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-		git clone -q https://github.com/crust-firmware/crust.git
-		if [[ -d "crust" ]]; then
-			cd crust
-			make clean
-			echo_bdone
+	if [[ `wget -S --spider https://raw.githubusercontent.com/crust-firmware/crust/refs/heads/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+		if [[ -d "crust-${CRUST_TAG}" ]] && [[ -d "crust-${CRUST_TAG}.backup" ]]; then
+			echo -en "${WHT}Crust ${CRUST_TAG}${FIN}"
+			echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+			rm -fdr crust-${CRUST_TAG}
+			echo -en " ${WHT}...${FIN}"
+			mv -f crust-${CRUST_TAG}.backup crust-${CRUST_TAG}
+			cd crust-${CRUST_TAG}
+			make clean > /dev/null 2>&1
+			cd ..
+			cp -r crust-${CRUST_TAG} crust-${CRUST_TAG}.backup
+			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
-			echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-			exit 1
+			rm -fdr crust-${CRUST_TAG} crust crust.backup
+			echo -en "${WHT}Crust ${CRUST_TAG}${FIN}"
+			echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+			git clone --depth=1 -b ${CRUST_TAG} -q -c advice.detachedHead=false ${GIT_CRUST_URL} crust-${CRUST_TAG}
+			if [[ -d "crust-${CRUST_TAG}" ]]; then
+				cd crust-${CRUST_TAG}
+				make clean > /dev/null 2>&1
+				cd ..
+				echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+				cp -r crust-${CRUST_TAG} crust-${CRUST_TAG}.backup
+				echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			else
+				echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+				exit 1
+			fi
 		fi
 	fi
 	echo ""
+	cd crust-${CRUST_TAG}
 	crust_defconfig
 	if [[ -f "configs/${CRUST_DEFCONFIG}" ]]; then
 		if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
@@ -51,7 +62,6 @@ if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
 		read -p "Press enter to continue."
 		exit 1
 	fi
-	if [[ "$BOARD" == "orangepi3lts" ]]; then rm -f configs/${UBOOT_DEFCONFIG}; fi
 	cd ..
 	echo ""
 fi
