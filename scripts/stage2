@@ -445,15 +445,17 @@ if [[ -f "/etc/bash.bashrc" ]]; then
 fi
 
 # udev rules
-if [[ "$FAMILY_EXT" =~ ^(odroid|ac2xx|rk3288)$ ]]; then ${FAMILY_EXT}_udev_rules > /dev/null 2>&1; fi
+if [[ `type ${BOARD}_udev_rules` ]] &>/dev/null; then ${BOARD}_udev_rules; fi
+if [[ `type ${FAMILY_EXT}_udev_rules` ]] &>/dev/null; then ${FAMILY_EXT}_udev_rules > /dev/null 2>&1; fi
 if [[ "$FAMILY" == "amlogic" ]]; then aml_gpiomem_rules; fi
-if [[ "$BOARD" == "gateway-gz80x" ]]; then ${BOARD}_udev_rules; fi
 router_udev_rules
 
-# services
+# Not sure why I this is needed any longer?
 if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
 	sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged
 fi
+
+# services
 if [[ "$DISTRO" == "devuan" ]]; then
 	enable_sysvinit > /dev/null 2>&1
 else
