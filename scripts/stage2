@@ -208,31 +208,7 @@ fi
 
 # bluetooth helper
 if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then rfkill_unblock_all_service > /dev/null 2>&1; fi
-if [[ "$BOARD" =~ ^(pinea64plus)$ ]]; then
-	${BOARD}_bthelper
-	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then ${BOARD}_bt_service > /dev/null 2>&1; fi
-fi
-if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]]; then
-	mv -f aic-bthelper /usr/local/sbin/bthelper
-	chmod +x /usr/local/sbin/bthelper
-	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then aic_bt_service > /dev/null 2>&1; fi
-fi
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	# bluetooth
-	mv -f sprd-bthelper /usr/local/sbin/bthelper
-	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then sprd_bt_service > /dev/null 2>&1; fi
-fi
-if [[ "$BOARD" == "nanopineoplus2" ]]; then
-	echo ""
-	echo "Installing brcm patchram plus ..."
-	cd ~
-	git clone -q --depth=1 https://github.com/pyavitz/brcm_patchram_plus.git patchram
-	cd patchram
-	make
-	cp -f brcm_patchram_plus /usr/bin
-	cd ~
-	rm -fdr patchram
-fi
+if [[ `type ${FAMILY}_bluetooth` ]] &>/dev/null; then ${FAMILY}_bluetooth; fi
 
 # linux modules
 if [[ -v "MODULES_LOAD" ]] && [[ ! -z "$MODULES_LOAD" ]]; then
@@ -275,10 +251,6 @@ chmod +x /usr/bin/growpart
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-if [[ "$BOARD" == "nanopineoplus2" ]]; then
-	mv -f nanopi-bthelper /usr/local/sbin/bthelper
-	chmod +x /usr/local/sbin/bthelper
-fi
 if [[ "$BOARD" == "tinker" ]]; then
 	mv -f rtc-ds1307 /usr/local/sbin/
 	chmod +x /usr/local/sbin/rtc-ds1307
@@ -290,11 +262,7 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	mv -f credentials.init /etc/init.d/credentials
 	mv -f governor.init /etc/init.d/governor
 	mv -f zramswap.init /etc/init.d/zramswap
-	if [[ "$BOARD" == "pinea64plus" ]]; then
-		mv -f bthelper.init /etc/init.d/bthelper
-		rm -f /etc/init.d/leds
-	fi
-	if [[ "$BOARD" == "nanopineoplus2" ]]; then mv -f bthelper.init /etc/init.d/bthelper; fi
+	mv -f bthelper.init /etc/init.d/bthelper
 fi
 
 # motd
@@ -485,10 +453,6 @@ router_udev_rules
 # services
 if [[ "$FAMILY" == "rockchip" ]] && [[ -f "/etc/default/haveged" ]]; then
 	sed -i 's/#DAEMON_ARGS=""/DAEMON_ARGS="-w 1024"/g' /etc/default/haveged
-fi
-
-if [[ "$BOARD" == "nanopineoplus2" ]]; then
-	if [[ "$DISTRO" == "devuan" ]]; then :; else nanopi_bt_service > /dev/null 2>&1; fi
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	enable_sysvinit > /dev/null 2>&1

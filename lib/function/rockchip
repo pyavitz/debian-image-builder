@@ -123,3 +123,11 @@ if [[ -f "/lib/firmware/brcm/brcmfmac4356-sdio.bin" ]] && [[ -f "/lib/firmware/b
 	ln -s /lib/firmware/brcm/brcmfmac4356-sdio.txt /lib/firmware/brcm/brcmfmac4356-sdio.friendlyarm,nanopc-t4.txt
 fi
 }
+
+rockchip_bluetooth (){
+if [[ "$BOARD" =~ ^(radxazero3w)$ ]]; then
+	mv -f aic-bthelper /usr/local/sbin/bthelper
+	chmod +x /usr/local/sbin/bthelper
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then aic_bt_service > /dev/null 2>&1; fi
+fi
+}

@@ -116,23 +116,45 @@ if [[ "$BOARD" == "cubietruck" ]]; then
 fi
 }
 
-pinea64plus_bthelper (){
-echo  ""
-echo -e "Installing bluetooth helper ..."
-sleep .50
-git clone https://github.com/lwfinger/rtl8723bs_bt.git
-cd rtl8723bs_bt
-make
-make install
-mv rtk_hciattach /usr/local/bin/
-cd ~
-rm -fdr rtl8723bs_bt
-mkdir -p /etc/modules-load.d/
-echo "r8723bs" > /etc/modules-load.d/pine64.conf
-echo "hci_uart" >> /etc/modules-load.d/pine64.conf
-mkdir -p /etc/modprobe.d/
-echo "options r8723bs rtw_power_mgnt=0" > /etc/modprobe.d/wifi-pwrmgnt.conf
-cat <<EOF > "/usr/local/sbin/bthelper"
+allwinner_bluetooth (){
+if [[ "$BOARD" =~ ^(kickpik2b)$ ]]; then
+	mv -f aic-bthelper /usr/local/sbin/bthelper
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then aic_bt_service > /dev/null 2>&1; fi
+fi
+if [[ "$BOARD" == "nanopineoplus2" ]]; then
+	echo ""
+	echo "Installing brcm patchram plus ..."
+	cd ~
+	git clone -q --depth=1 https://github.com/pyavitz/brcm_patchram_plus.git patchram
+	cd patchram
+	make
+	cp -f brcm_patchram_plus /usr/bin
+	cd ~
+	rm -fdr patchram
+	mv -f nanopi-bthelper /usr/local/sbin/bthelper
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then nanopi_bt_service > /dev/null 2>&1; fi
+fi
+if [[ "$BOARD" == "orangepi3lts" ]]; then
+	mv -f sprd-bthelper /usr/local/sbin/bthelper
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then sprd_bt_service > /dev/null 2>&1; fi
+fi
+if [[ "$BOARD" =~ ^(pinea64plus)$ ]]; then
+	echo  ""
+	echo -e "Installing ${BOARD} helper ..."
+	sleep .50
+	git clone https://github.com/lwfinger/rtl8723bs_bt.git
+	cd rtl8723bs_bt
+	make
+	make install
+	mv rtk_hciattach /usr/local/bin/
+	cd ~
+	rm -fdr rtl8723bs_bt
+	mkdir -p /etc/modules-load.d/
+	echo "r8723bs" > /etc/modules-load.d/pine64.conf
+	echo "hci_uart" >> /etc/modules-load.d/pine64.conf
+	mkdir -p /etc/modprobe.d/
+	echo "options r8723bs rtw_power_mgnt=0" > /etc/modprobe.d/wifi-pwrmgnt.conf
+	cat <<EOF > "/usr/local/sbin/bthelper"
 #!/bin/bash
 if [[ -f "/sys/class/rfkill/rfkill0/state" ]]; then
 	echo "1" > /sys/class/rfkill/rfkill0/state
@@ -142,5 +164,7 @@ if [[ -f "/sys/class/rfkill/rfkill0/state" ]]; then
 	hciconfig hci0 up
 fi
 EOF
-chmod +x /usr/local/sbin/bthelper
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then ${BOARD}_bt_service > /dev/null 2>&1; fi
+fi
+if [[ -f "/usr/local/sbin/bthelper" ]]; then chmod +x /usr/local/sbin/bthelper; fi
 }
