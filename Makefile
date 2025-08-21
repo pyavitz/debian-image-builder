@@ -186,6 +186,9 @@ endif
 ifdef compiler
 	@$(shell sed -i "s/^COMPILER=.*/COMPILER="'"${compiler}"'"/" userdata.txt)
 endif
+ifdef extra_wifi
+	@$(shell sed -i "s/^EXTRA_WIFI=.*/EXTRA_WIFI="'"${extra_wifi}"'"/" kernel.txt)
+endif
 ifdef menuconfig
 	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"${menuconfig}"'"/" userdata.txt)
 endif

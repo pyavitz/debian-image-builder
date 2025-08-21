@@ -20,7 +20,7 @@ fi
 extra_wireless (){
 report_error
 # AIC8800
-if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
+if [[ "$FAMILY" =~ ^(allwinner|rockchip)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Aicsemi aic8800"
 	DRIVER="aic8800"
 	DRIVER_URL="https://github.com/radxa-pkg/${DRIVER}.git"
@@ -30,10 +30,11 @@ if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]] && [[ "$EXTRA_WIFI" == "true" ]];
 	rm -fdr ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
 	cp -fr ${DRIVER}/src/SDIO/driver_fw/driver/${DRIVER} ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio
 	cd ${DRIVER}; git reset -q --hard; git checkout -q main; cd ..
-	echo "obj-\$(CONFIG_AIC_WLAN_SUPPORT) += ${DRIVER}_sdio/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/Makefile
 	sed -i 's/MAKEFLAGS +=-j$(shell nproc)/#MAKEFLAGS +=-j$(shell nproc)/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Makefile
 	sed -i 's/CONFIG_GPIO_WAKEUP = n/CONFIG_GPIO_WAKEUP = y/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Makefile
 	sed -i 's/CONFIG_SDIO_PWRCTRL := y/CONFIG_SDIO_PWRCTRL := n/g' ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/${DRIVER}_bsp/Makefile
+	sed -i '/obj-$(CONFIG_WLAN_VENDOR_ADMTEK) += admtek/a obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800_sdio/' \
+		"${KERNEL}-${VERSION}/drivers/net/wireless/Makefile"
 	sed -i '/source "drivers\/net\/wireless\/admtek\/Kconfig"/a source "drivers\/net\/wireless\/aic8800_sdio\/Kconfig"' \
 		"${KERNEL}-${VERSION}/drivers/net/wireless/Kconfig"
 	cat <<EOF > ${KERNEL}-${VERSION}/drivers/net/wireless/${DRIVER}_sdio/Kconfig
@@ -93,7 +94,7 @@ EOF
 fi
 
 # RTL8189FS
-if [[ "$BOARD" == "gateway-gz80x" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
+if [[ "$FAMILY" =~ ^(amlogic)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek 8189FS"
 	DRIVER="rtl8189fs"
 	DRIVER_URL="-b ${DRIVER} https://github.com/jwrdegoede/rtl8189ES_linux.git"
@@ -114,7 +115,10 @@ config RTL8189FS
 EOF
 	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189fs\/Kconfig"' \
 		"${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Kconfig"
+fi
+
 # RTL8723DS
+if [[ "$FAMILY" =~ ^(amlogic)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek 8723DS"
 	DRIVER="rtl8723ds"
 	DRIVER_URL="https://github.com/armbian/rtl8723ds.git"
@@ -138,7 +142,7 @@ EOF
 fi
 
 # RTL8821CU
-if [[ "$BOARD" == "bananapim4zero" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
+if [[ "$FAMILY" =~ ^(allwinner)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek 8821CU"
 	DRIVER="rtl8821cu"
 	DRIVER_URL="https://github.com/morrownr/8821cu-20210916.git"
