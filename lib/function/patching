@@ -130,26 +130,20 @@ if [[ -d "../../${LPATCHESALL}/${LINUX_VERSION}" ]]; then
 	fi
 fi
 # wireless
-if [ $RTW88 -eq 1 ] && [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
+if [[ "$RTW88" == "true" ]] && [[ -d "../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/rtw88/${LINUX_VERSION}/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 	rm -fdr drivers/net/wireless/realtek/rtw88.bak
 fi
-if [ $RTW88 -eq 1 ] || [ $RTW88_DEVEL -eq 1 ]; then
+if [[ "$RTW88" == "true" ]] || [[ "$RTW88_DEVEL" == "true" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/hack/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${WIRELESSPATCHES}/rtw88/hack" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${WIRELESSPATCHES}/rtw88/hack/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
-if [ $RTW88_DEVEL -eq 1 ]; then
-	if [[ `ls ../../${WIRELESSPATCHES}/rtw88/lwfinger/*.patch` ]] > /dev/null 2>&1; then
-		echo "# ${WIRELESSPATCHES}/rtw88/lwfinger" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-		for i in ../../${WIRELESSPATCHES}/rtw88/lwfinger/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
-	fi
-fi
-# board specific wireless
+# wireless (board specific)
 if [[ `type ${FAMILY}_extra_wireless` ]] &>/dev/null; then ${FAMILY}_extra_wireless; fi
 # general
 if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}" ]]; then
@@ -213,12 +207,11 @@ if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 # add dtclist initrd and headers-byteshift.patch
 if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]] && [[ -f "../../packaging/initrd" ]]; then
 	mv ../../dtclist.txt dtclist.txt
-	cp -f ../../packaging/headers-byteshift.patch .
-	cp -f ../../packaging/initrd .
+	cp -f ../../packaging/{headers-byteshift.patch,initrd} .
 	sed -i 's/^ARCH=.*/ARCH="'"${ARCH}"'"/' initrd
 else
 	echo -e "lib/function/patching: An essential builddeb file is missing."
-	exit 0
+	exit 1
 fi
 # custom linux logo
 if [[ -v "LINUX_LOGO" ]] && [[ ! -z "$LINUX_LOGO" ]]; then

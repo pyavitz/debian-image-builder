@@ -20,7 +20,7 @@ fi
 extra_wireless (){
 report_error
 # AIC8800
-if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]]; then
+if [[ "$BOARD" =~ ^(kickpik2b|radxazero3w)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Aicsemi aic8800"
 	DRIVER="aic8800"
 	DRIVER_URL="https://github.com/radxa-pkg/${DRIVER}.git"
@@ -70,7 +70,7 @@ EOF
 fi
 
 # RTL8189ES
-if [[ "$BOARD" == "orangepir1" ]]; then
+if [[ "$BOARD" == "orangepir1" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek 8189ES"
 	DRIVER="rtl8189es"
 	DRIVER_URL="https://github.com/jwrdegoede/${DRIVER}_linux.git"
@@ -93,7 +93,7 @@ EOF
 fi
 
 # RTL8189FS
-if [[ "$BOARD" == "gateway-gz80x" ]]; then
+if [[ "$BOARD" == "gateway-gz80x" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek 8189FS"
 	DRIVER="rtl8189fs"
 	DRIVER_URL="-b ${DRIVER} https://github.com/jwrdegoede/rtl8189ES_linux.git"
@@ -114,10 +114,7 @@ config RTL8189FS
 EOF
 	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8189fs\/Kconfig"' \
 		"${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Kconfig"
-fi
-
 # RTL8723DS
-if [[ "$BOARD" == "gateway-gz80x" ]]; then
 	DRIVER_INFO="Realtek 8723DS"
 	DRIVER="rtl8723ds"
 	DRIVER_URL="https://github.com/armbian/rtl8723ds.git"
@@ -141,7 +138,7 @@ EOF
 fi
 
 # RTL8821CU
-if [[ "$BOARD" == "bananapim4zero" ]]; then
+if [[ "$BOARD" == "bananapim4zero" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek 8821CU"
 	DRIVER="rtl8821cu"
 	DRIVER_URL="https://github.com/morrownr/8821cu-20210916.git"
@@ -164,23 +161,8 @@ EOF
 		"${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Kconfig"
 fi
 
-# RTL8852BS
-if [[ "$BOARD" == "bananapif3" ]]; then
-	DRIVER_INFO="Realtek 8852BS"
-	DRIVER="rtl8852bs"
-	DRIVER_URL="https://github.com/pyavitz/${DRIVER}.git"
-	driver_download
-	rm -fdr ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}
-	mkdir -p ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}
-	cp -fr ${DRIVER}/* ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}/
-	rm -f ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}/README.md
-	echo "obj-\$(CONFIG_RTL8852BS)		+= rtl8852bs/" >> ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Makefile
-	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8852bs\/Kconfig"' \
-		"${KERNEL}-${VERSION}/drivers/net/wireless/realtek/Kconfig"
-fi
-
-# RTW88
-if [ $RTW88_DEVEL -eq 1 ]; then
+# RTW88 DEVEL
+if [[ "$RTW88_DEVEL" == "true" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	DRIVER_INFO="Realtek WiFi 5"
 	DRIVER="rtw88"
 	DRIVER_URL="https://github.com/lwfinger/${DRIVER}.git"
@@ -194,7 +176,7 @@ fi
 }
 
 report_error (){
-if [ $RTW88 -eq 1 ] && [ $RTW88_DEVEL -eq 1 ]; then
+if [[ "$RTW88" == "true" ]] && [[ "$RTW88_DEVEL" == "true" ]]; then
 	echo -e "Both RTW88 and RTW88_DEVEL can not be enabled."
 	exit 1
 fi
