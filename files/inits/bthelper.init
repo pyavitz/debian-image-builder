@@ -21,10 +21,14 @@ case "$1" in
 			log_daemon_msg "$DEFAULT_MOTD Bluetooth helper"
 			if [[ "$BOARD" == "nanopineoplus2" ]]; then
 				/usr/local/sbin/bthelper start 2>/dev/null
+			elif [[ "$BOARD" == "orangepi3lts" ]]; then
+				/usr/local/sbin/bthelper 2>/dev/null
+				/usr/local/sbin/hciattach_opi -s 1500000 /dev/ttyBT0 sprd > /dev/null 2>&1
 			else
 				/usr/local/sbin/bthelper 2>/dev/null
 			fi
 			log_end_msg $?
+			/usr/sbin/rfkill unblock all
 		fi
 		exit 0
 		;;
