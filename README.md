@@ -33,10 +33,9 @@ BananaPi BPI-F3
 ```
 </details>
 
-### Host dependencies for Debian Bookworm and Ubuntu Jammy Jellyfish / Noble Numbat
-* **Debian Bookworm** (arm arm64)
-* **Ubuntu Jammy Jellyfish** (arm arm64)
-* **Ubuntu Noble Numbat** (recommended) (arm arm64 riscv)
+### Host dependencies for Debian Trixie and Ubuntu Noble Numbat
+* **Debian Trixie** (arm arm64 riscv) (testing)
+* **Ubuntu Noble Numbat** (arm arm64 riscv) (recommended)
 
 **Install options:**
 * Run the `./install.sh` script (recommended)
