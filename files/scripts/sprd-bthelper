@@ -16,4 +16,12 @@ if [[ ! -f "/etc/default/sprd_bt_addr" ]]; then
 	echo "$BTADDR" > "/etc/default/sprd_bt_addr"
 fi
 
+# Attach Bluetooth HCI UART
+sleep .50
+if ! hciattach_opi -s 1500000 /dev/ttyBT0 sprd > /dev/null 2>&1; then
+	echo "Failed to attach HCI device" >&2
+	exit 1
+fi
+rfkill unblock all
+
 exit 0
