@@ -132,13 +132,6 @@ ENABLE_PETITBOOT="false"
 # Compression Types: xz zst
 IMG_COMPRESSION="xz"
 ```
-#### User defconfig
-
-```sh
-# config placement: defconfig/$NAME_defconfig
-The config menu will append _defconfig to the end of the name in the
-userdata.txt file.
-```
 #### User patches
 
 ```sh
