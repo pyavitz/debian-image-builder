@@ -10,7 +10,7 @@ if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6|sun50i-h618)$ ]]; then
 		report_atf_error
 	fi
 fi
-if [[ "$SERIES" =~ ^(sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
+if [[ "$SERIES" =~ ^(sun8i-h3|sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
 	if [[ -f "../crust-${CRUST_TAG}/build/scp/scp.bin" ]]; then
 		cp ../crust-${CRUST_TAG}/build/scp/scp.bin scp.bin
 	else
@@ -46,10 +46,8 @@ fi
 
 allwinner_uboot_run (){
 sources_dir
-if [[ "$ARCH" == "arm64" ]]; then
-	arm_trusted_firmware
-	if [[ "$HOST_CODENAME" == "bullseye" ]]; then :; else crust_firmware; fi
-fi
+if [[ "$ARCH" == "arm64" ]]; then arm_trusted_firmware; fi
+crust_firmware
 uboot_run
 uboot_output
 }
