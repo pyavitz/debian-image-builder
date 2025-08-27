@@ -54,15 +54,17 @@ case $selection in
 		exit 0
 		;;
 	2 )
-		if [ $LOGGING -eq 1 ]; then
+		if [[ "$FAMILY" == "generic" ]]; then
+			:;
+		elif [ $LOGGING -eq 1 ]; then
 			echo LOGNAME=$1 > logger.txt
 			echo 'LOGFILE="$LOGNAME-u-boot"' >> logger.txt
 			./scripts/loggit make "uboot" "board=$1"
 		else
 			make "uboot" "board=$1"
 		fi
-		if [ -e $MAKE_OUTPUT/*.itb ]; then
-			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/*.itb; ls $MAKE_OUTPUT/u-boot-*.deb" 30 75;
+		if [[ "$FAMILY" == "generic" ]]; then
+			:;
 		else
 			dialog --prgbox "Results:" "ls $MAKE_OUTPUT/*.bin; ls $MAKE_OUTPUT/u-boot-*.deb" 30 75;
 		fi
