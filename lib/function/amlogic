@@ -138,25 +138,6 @@ if [[ "$BOARD" == "radxazero" ]]; then
 fi
 }
 
-odroid_udev_rules (){
-tee /etc/udev/rules.d/10-odroid.rules <<EOF
-KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
-
-# Automatic Disk Scheduler
-ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
-ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1",ATTR{queue/scheduler}="deadline"
-ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
-EOF
-}
-
-aml_gpiomem_rules (){
-echo 'SUBSYSTEM=="aml-gpiomem", GROUP="gpio", MODE="0660"' > /etc/udev/rules.d/10-aml-gpiomem.rules
-}
-
-gateway-gz80x_udev_rules (){
-echo 'KERNEL=="ttyAML2", NAME="tts/%n", SYMLINK+="zwave", GROUP="dialout", MODE="0660"' > /etc/udev/rules.d/10-zwave.rules
-}
-
 ac2xx_udev_rules (){
 if [[ "$BOARD" == "x96air" ]]; then
 	# udev rules
@@ -188,6 +169,26 @@ EOF
 	sed -i 's/grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"/`grep -w "enabled" "\/sys\/class\/drm\/card0-HDMI-A-1\/enabled"`/g' /usr/local/sbin/hdmi-led-trigger
 	chmod +x /usr/local/sbin/hdmi-led-trigger
 fi
+}
+
+amlogic_udev_rules (){
+echo '#SUBSYSTEM=="rtc", KERNEL=="rtc1", SYMLINK+="rtc" OPTIONS+="link_priority=-100"' | tee /etc/udev/rules.d/10-${FAMILY}-rtc.rules
+echo 'SUBSYSTEM=="aml-gpiomem", GROUP="gpio", MODE="0660"' > /etc/udev/rules.d/10-${FAMILY}-gpiomem.rules
+}
+
+gateway-gz80x_udev_rules (){
+echo 'KERNEL=="ttyAML2", NAME="tts/%n", SYMLINK+="zwave", GROUP="dialout", MODE="0660"' > /etc/udev/rules.d/10-zwave.rules
+}
+
+odroid_udev_rules (){
+tee /etc/udev/rules.d/10-odroid.rules <<EOF
+KERNEL=="event*", SUBSYSTEM=="input", MODE="0777"
+
+# Automatic Disk Scheduler
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1",ATTR{queue/scheduler}="deadline"
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}=="0",ATTR{queue/scheduler}="noop"
+EOF
 }
 
 make_uimage (){
