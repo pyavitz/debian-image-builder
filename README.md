@@ -88,8 +88,8 @@ Release:			# Debian: bookworm, trixie, testing, unstable and sid
 Network Manager		# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
-U-Boot:				# Supported: v2024.01
-Branch:				# Supported: 6.6.y and "maybe" current stable / rc
+U-Boot:				# Default: v2025.01
+Branch:				# Default: 6.12.y
 Build:				# Kernel build version number
 Menuconfig:			# Run uboot and kernel menuconfig
 Compiler:			# GNU Compiler Collection / Clang
