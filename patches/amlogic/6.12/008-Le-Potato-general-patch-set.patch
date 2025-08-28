@@ -1,20 +1,21 @@
-From 036184123512b1b67243511b14cedd9478a2a49b Mon Sep 17 00:00:00 2001
+From 2f66b8c193ebc06788e73b05f96a354fb1634b52 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 15 Feb 2025 07:37:01 -0500
+Date: Thu, 28 Aug 2025 09:20:25 -0400
 Subject: [PATCH] Le Potato general patch set
 
 Change model name
+Add kaslr-seed
+
+Original source: Libre Computer
 Increase the max sdcard freq
 Add power management and vrtc
 Add i2c_AO node
 
-Original source: Libre Computer
-
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- arch/arm64/boot/dts/amlogic/meson-gx.dtsi         |  9 +++++++++
- .../dts/amlogic/meson-gxl-s905x-libretech-cc.dts  | 15 ++++++++++++---
- 2 files changed, 21 insertions(+), 3 deletions(-)
+ arch/arm64/boot/dts/amlogic/meson-gx.dtsi        |  9 +++++++++
+ .../dts/amlogic/meson-gxl-s905x-libretech-cc.dts | 16 +++++++++++++---
+ 2 files changed, 22 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-gx.dtsi b/arch/arm64/boot/dts/amlogic/meson-gx.dtsi
 index 2673f0dbafe7..81ac2bff38fe 100644
@@ -44,7 +45,7 @@ index 2673f0dbafe7..81ac2bff38fe 100644
  				compatible = "amlogic,meson-gx-ao-cec";
  				reg = <0x0 0x00100 0x0 0x14>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts b/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts
-index 401064b0428d..9de1ba3d2b03 100644
+index 401064b0428d..96f4e734da6c 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-gxl-s905x-libretech-cc.dts
 @@ -15,11 +15,13 @@
@@ -63,7 +64,15 @@ index 401064b0428d..9de1ba3d2b03 100644
  	};
  
  	dio2133: analog-amplifier {
-@@ -311,7 +313,7 @@ &sd_emmc_b {
+@@ -31,6 +33,7 @@ dio2133: analog-amplifier {
+ 
+ 	chosen {
+ 		stdout-path = "serial0:115200n8";
++		kaslr-seed = <0xfeedbeef 0xc0def00d>;
+ 	};
+ 
+ 	cvbs-connector {
+@@ -311,7 +314,7 @@ &sd_emmc_b {
  
  	bus-width = <4>;
  	cap-sd-highspeed;
@@ -72,7 +81,7 @@ index 401064b0428d..9de1ba3d2b03 100644
  	disable-wp;
  
  	cd-gpios = <&gpio CARD_6 GPIO_ACTIVE_LOW>;
-@@ -345,6 +347,13 @@ &uart_AO {
+@@ -345,6 +348,13 @@ &uart_AO {
  	pinctrl-names = "default";
  };
  
@@ -87,5 +96,5 @@ index 401064b0428d..9de1ba3d2b03 100644
  	status = "okay";
  	dr_mode = "host";
 -- 
-2.39.5
+2.43.0
 
