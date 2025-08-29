@@ -24,13 +24,11 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 		sleep .50
 		if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -f "${GIT_REPO}-${GIT_BRANCH}/Makefile" ]]; then
 			cd ${GIT_REPO}-${GIT_BRANCH}; make clean > /dev/null 2>&1; cd ..
-			echo ""
 			echo -en "${GIT_REPO}-${GIT_BRANCH}"
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 			cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 		else
-			echo ""
 			echo -en "${GIT_REPO}-${GIT_BRANCH}"
 			echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
 			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
@@ -73,56 +71,28 @@ if [[ -f "../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}" ]]; then
 	source ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
 	if [[ "$GIT_SHALLOW" == "true" ]]; then GIT_OPT="--depth 1"; else GIT_OPT=""; fi
 else
-	while :
-	do
-	echo -e "How would you like to handle downloads?"
-	echo -e " 1) shallow clone (default)"
-	echo -e " 2) full clone"
-	echo -e ""
-	read -t10 -p "Prompt: "
-	if [ $? -gt 128 ]; then
-		echo -e "Default selected."
-		mkdir -p ../.cache
-		echo 'GIT_SHALLOW="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-		echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-		GIT_OPT="--depth 1"
-		echo -e ""
-		break
-	fi
-	case $REPLY in
-		[1]*)
-			mkdir -p ../.cache
-			echo 'GIT_SHALLOW="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-			echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-			GIT_OPT="--depth 1"
-			echo -e ""
-			break
-			;;
-		[2]*)
-			mkdir -p ../.cache
-			echo 'GIT_SHALLOW="false"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-			GIT_OPT=""
-			echo -e ""
-			break
-			;;
-		*)
-			echo -e "Enter 1 or 2"
-			;;
-		esac
-	done
+	mkdir -p ../.cache
+	echo 'GIT_SHALLOW="true"' > ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+	echo GIT_COMMIT='"'${GIT_HASH}'"' >> ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
+	GIT_OPT="--depth 1"
 fi
+GIT_HASH_SHORT=`echo "${GIT_HASH}" | sed 's/^\(.\{7\}\).*/\1/'`
+GIT_COMMIT_SHORT=`echo "${GIT_COMMIT}" | sed 's/^\(.\{7\}\).*/\1/'`
 }
 
 git_verify (){
-echo -en "commit"
+echo -en "Commit:"
 if [[ "$GIT_COMMIT" == "$GIT_HASH" ]]; then
-	echo -en " ${PNK}[${FIN}${WHT}${GIT_COMMIT}${FIN}${PNK}]${FIN}"
+	echo -en " ${GIT_COMMIT_SHORT}"
+	sleep .50
 	echo -e " ${PNK}[${FIN}${GRN}ok${FIN}${PNK}]${FIN}"
 else
-	echo -en " ${PNK}[${FIN}${WHT}${GIT_HASH}${FIN}${PNK}]${FIN}"
-	echo -en " ${PNK}[${FIN}${WHT}mismatch${FIN}${PNK}]${FIN}"
+	
+	echo -en " ${GIT_HASH_SHORT}"
+	sleep .50
+	echo -e " ${ITL}NEW!${FIN}"
 	sed -i 's/^GIT_COMMIT=.*/GIT_COMMIT="'"${GIT_HASH}"'"/' ../.cache/git_shallow.${GIT_REPO}-${GIT_BRANCH}
-	echo -en " ${PNK}[${FIN}${WHT}purging${FIN}${PNK}]${FIN}"
+	echo -en "Removing: ${GIT_COMMIT_SHORT}"
 	rm -fdr ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
 	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	echo ""
