@@ -171,8 +171,8 @@ endif
 ifdef precompiled
 	@echo 'PRECOMPILED_UBOOT="$(precompiled)"' >> override.txt
 endif
-ifdef force_version
-	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
+ifdef force
+	@echo 'FORCE_VERSION="$(force)"' >> override.txt
 endif
 	$(call build_uboot)
 
@@ -203,11 +203,11 @@ ifdef version
 	@$(shell sed -i "s/^VERSION=.*/VERSION="'"${version}"'"/" userdata.txt)
 endif
 # edit board file
-ifdef force_git
-	@echo 'FORCE_GIT="$(force_git)"' > override.txt
+ifdef git
+	@echo 'FORCE_GIT="$(git)"' > override.txt
 endif
-ifdef force_version
-	@echo 'FORCE_VERSION="$(force_version)"' >> override.txt
+ifdef force
+	@echo 'FORCE_VERSION="$(force)"' >> override.txt
 endif
 ifdef patching
 	@echo 'LINUX_PATCHING="$(patching)"' >> override.txt
