@@ -1,7 +1,8 @@
 #!/bin/bash
 
 filesystem (){
-if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; else EXTFS="ext4"; fi
+if [[ "$BOOT_EXT4" == "true" ]] || [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then EXTFS="ext4"; fi
+if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; fi
 if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$EFI" == "true" ]]; then
 	BOOT_LABEL="EFI"
@@ -387,7 +388,10 @@ if [[ "$ENABLE_EFI" == "true" ]]; then
 	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then sed -i 's/VFAT="false"/VFAT="true"/g' board.txt; fi
 	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
 fi
-if [[ "$ENABLE_VFAT" == "true" ]]; then
+if [[ "$BOOT_EXT4" == "true" ]]; then
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
+fi
+if [[ "$BOOT_VFAT" == "true" ]]; then
 	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then sed -i 's/VFAT="false"/VFAT="true"/g' board.txt; fi
 	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
 fi
