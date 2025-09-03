@@ -160,7 +160,7 @@ fi
 if [[ "$BOOT_VFAT" == "true" ]] && [[ "$EFI" == "true" ]]; then
 	BOOTFS_TABLE="/boot/efi	vfat	defaults,flush 0 2"
 fi
-if [[ "$VFAT" == "false" ]] && [[ "$EFI" == "false" ]]; then
+if [[ "$BOOT_VFAT" == "false" ]] && [[ "$EFI" == "false" ]]; then
 	BOOTFS_TABLE="/boot	${EXTFS}	rw,relatime,errors=continue 0 2"
 fi
 tee p2/etc/fstab <<EOF
@@ -215,7 +215,6 @@ BOOT_EXT4="$BOOT_EXT4"
 BOOT_VFAT="$BOOT_VFAT"
 EFI="$EFI"
 GPT="$GPT"
-VFAT="$VFAT"
 OFFSET="$OFFSET"
 P_VALUE="$P_VALUE"
 
@@ -283,7 +282,7 @@ if [[ -f "files/boot/scripts/odroid-boot-logo.bmp.gz" ]]; then
 fi
 if [[ -f "p1/config.ini" ]]; then
 	sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
-	if [[ "$FSTYPE" == "ext4" || "$FSTYPE" == "xfs" ]]; then
+	if [[ "$FSTYPE" =~ ^(ext4|xfs)$ ]]; then
 		sed -i "s/rootfstype=/rootfstype=${ROOT_FSTYPE}/g" p1/config.ini;
 	fi
 	if [[ "$FSTYPE" == "btrfs" ]]; then
@@ -323,7 +322,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$BOOT_VFAT" == "true" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"fatload"'"/g' ${BOOT_PATH}/boot.cmd; fi
-	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$VFAT" == "false" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' \
+	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$BOOT_VFAT" == "false" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' \
 		${BOOT_PATH}/boot.cmd; fi
 fi
 echo "" >> ${BOOT_PATH}/boot.cmd
