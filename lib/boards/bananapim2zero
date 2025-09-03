@@ -17,13 +17,15 @@ DTB="${SERIES}-bananapi-m2-zero"
 # default config
 LINUX_DEFCONFIG="sunxi_defconfig"
 UBOOT_DEFCONFIG="bananapi_m2_zero_defconfig"
+CRUST_DEFCONFIG="bananapi_m2_plus_h3_defconfig"
 
-# partition scheme
-GPT="false"
-EFI="false"
-VFAT="false"
-P_VALUE="p1"
+# partition layout
+BOOT_EXT4="false" # change P_VALUE to p2 if enabled
+BOOT_VFAT="false" # change P_VALUE to p2 if enabled
+EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="false" # set to true if rockchip
 OFFSET="4096"
+P_VALUE="p1" # p1 = single partition
 
 # boot config
 EXTLINUX="true"
@@ -38,11 +40,11 @@ OUTPUT="output/${BOARD}"
 # extlinux and bootcmd
 BOOT_KERNEL="Image"
 BOOT_INITRD="uInitrd"
-BOOTCMD_FDTOVERLAYS=""
+BOOTCMD_FDTOVERLAYS="#overlays="
 EXTLINUX_FDTOVERLAYS="#fdtoverlays"
 
 # cmdline
-CONSOLE="console=ttyS0,115200n8 console=tty1"
+CONSOLE="console=tty1 console=ttyS0,115200n8"
 LOGLEVEL="loglevel=1"
 EXTRA="net.ifnames=0"
 
@@ -78,8 +80,8 @@ GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
 
 # override userdata file
 FORCE_VERSION="true"
-FORCE_LINUX_VERSION=""
-FORCE_UBOOT_VERSION="v2024.07"
+FORCE_LINUX_VERSION="6.12.y"
+FORCE_UBOOT_VERSION="v2025.07"
 
 # devicetree and platform
 DEVICETREE="${DTB}.dtb"

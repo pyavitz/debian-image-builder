@@ -1,9 +1,10 @@
 #!/bin/bash
 
 filesystem (){
-if [[ "$BOOT_EXT4" == "true" ]] || [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then EXTFS="ext4"; fi
-if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; fi
-if [[ "$VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; else BOOTFS="mkfs.${EXTFS} -L"; fi
+if [[ "$BOOT_EXT4" == "true" ]]; then EXTFS="ext4"; BOOTFS="mkfs.${EXTFS} -L"; fi
+if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then EXTFS="ext4"; BOOTFS="mkfs.${EXTFS} -L"; fi
+if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; BOOTFS="mkfs.${EXTFS} -L"; fi
+if [[ "$BOOT_VFAT" == "true" ]]; then BOOTFS="mkfs -t vfat -n"; fi
 if [[ "$EFI" == "true" ]]; then
 	BOOT_LABEL="EFI"
 	ROOTFS_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
@@ -61,7 +62,7 @@ $MOUNT_ROOTFS
 
 dual_partition (){
 truncate -s ${IMGSIZE} "${IMAGE_FOLDER}${IMAGE_FILE_NAME}";
-if [[ "$VFAT" == "true" ]]; then
+if [[ "$BOOT_VFAT" == "true" ]]; then
 	if [[ "$GPT" == "true" ]]; then
 		parted --script "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" \
 		mklabel gpt \
@@ -153,10 +154,10 @@ EOF
 
 p2_fstab (){
 rm -f p2/etc/fstab
-if [[ "$VFAT" == "true" ]] && [[ "$EFI" == "false" ]]; then
+if [[ "$BOOT_VFAT" == "true" ]] && [[ "$EFI" == "false" ]]; then
 	BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
 fi
-if [[ "$VFAT" == "true" ]] && [[ "$EFI" == "true" ]]; then
+if [[ "$BOOT_VFAT" == "true" ]] && [[ "$EFI" == "true" ]]; then
 	BOOTFS_TABLE="/boot/efi	vfat	defaults,flush 0 2"
 fi
 if [[ "$VFAT" == "false" ]] && [[ "$EFI" == "false" ]]; then
@@ -210,11 +211,13 @@ FAMILY_EXT="$FAMILY_EXT"
 DTB="$DTB"
 
 # partition scheme
-GPT="$GPT"
+BOOT_EXT4="$BOOT_EXT4"
+BOOT_VFAT="$BOOT_VFAT"
 EFI="$EFI"
+GPT="$GPT"
 VFAT="$VFAT"
-P_VALUE="$P_VALUE"
 OFFSET="$OFFSET"
+P_VALUE="$P_VALUE"
 
 # filesystem
 FSTYPE="$FSTYPE"
@@ -319,7 +322,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' ${BOOT_PATH}/boot.cmd
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
-	if [[ "$VFAT" == "true" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"fatload"'"/g' ${BOOT_PATH}/boot.cmd; fi
+	if [[ "$BOOT_VFAT" == "true" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"fatload"'"/g' ${BOOT_PATH}/boot.cmd; fi
 	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$VFAT" == "false" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' \
 		${BOOT_PATH}/boot.cmd; fi
 fi
@@ -367,11 +370,6 @@ EOF
 customize_image (){
 if [[ ! -f "custom.txt" ]]; then echo "custom.txt is missing! Run make config."; exit 1; fi
 # Edit board.txt variables before the file gets sourced
-if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]] && [[ "$ENABLE_PETITBOOT" == "true" ]]; then
-	sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
-	sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
-	sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
-fi
 if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then
 	# U-Boot doesn't support booting directly from these fstypes so force a boot partition
 	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
@@ -380,19 +378,25 @@ if [[ "$ENABLE_BOOTCMD" == "true" ]] && [[ "$ENABLE_PETITBOOT" == "false" ]]; th
 	if [[ `grep -w 'EXTLINUX="true"' "board.txt"` ]]; then sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt; fi
 	if [[ `grep -w 'BOOTCMD="false"' "board.txt"` ]]; then sed -i 's/BOOTCMD="false"/BOOTCMD="true"/g' board.txt; fi
 fi
+if [[ "$ENABLE_BOOT_EXT4" == "true" ]]; then
+	if [[ `grep -w 'BOOT_EXT4="false"' "board.txt"` ]]; then sed -i 's/BOOT_EXT4="false"/BOOT_EXT4="true"/g' board.txt; fi
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
+fi
+if [[ "$ENABLE_BOOT_VFAT" == "true" ]]; then
+	if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
+fi
 if [[ "$ENABLE_EFI" == "true" ]]; then
 	sed -i 's/EFI="false"/EFI="true"/g' board.txt
 	if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]] && [[ `grep -w 'GPT="false"' "board.txt"` ]]; then
 		sed -i 's/GPT="false"/GPT="true"/g' board.txt
 	fi
-	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then sed -i 's/VFAT="false"/VFAT="true"/g' board.txt; fi
+	if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
 	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
 fi
-if [[ "$BOOT_EXT4" == "true" ]]; then
-	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
-fi
-if [[ "$BOOT_VFAT" == "true" ]]; then
-	if [[ `grep -w 'VFAT="false"' "board.txt"` ]]; then sed -i 's/VFAT="false"/VFAT="true"/g' board.txt; fi
-	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
+if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]] && [[ "$ENABLE_PETITBOOT" == "true" ]]; then
+	sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
+	sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
+	sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
 fi
 }

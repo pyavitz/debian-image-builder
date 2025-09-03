@@ -5,15 +5,17 @@
 (*) Work in progress
 
 # ALLWINNER
-BananaPi M4 Zero
+BananaPi BPI-M2-Zero
+BananaPi BPI-M4-Zero
+FriendlyElec NanoPi M1
 KickPi K2B
 OrangePi 3 LTS
 
 # AMLOGIC
-BananaPi CM4
-BananaPi M2S
+BananaPi BPI-CM4
+BananaPi BPI-M2S
 H96-MAX X3
-Le Potato
+Libre Computer Le Potato
 Odroid C4
 Odroid N2
 Odroid N2L
@@ -22,7 +24,7 @@ Radxa Zero
 X96-AIR	GBIT / QCOM
 
 # ROCKCHIP
-NanoPi R3S / LTS
+FriendlyElec NanoPi R3S / LTS
 Radxa Zero 3W
 
 # SAMSUNG
