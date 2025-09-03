@@ -471,7 +471,8 @@ else
 	firstboot_service > /dev/null 2>&1
 	governor_service > /dev/null 2>&1
 	led_service > /dev/null 2>&1
-	if [[ -f "/usr/local/sbin/led-trigger" ]]; then :; else systemctl disable leds > /dev/null 2>&1; fi
+	if [[ "$BOARD" =~ ^(bananapim4zero|radxazero)$ ]]; then disable_wifi_powersave_service > /dev/null 2>&1; fi
+	if [[ ! -f "/usr/local/sbin/led-trigger" ]]; then systemctl disable leds > /dev/null 2>&1; fi
 	rc-local_service > /dev/null 2>&1
 	enable_systemd > /dev/null 2>&1
 fi
