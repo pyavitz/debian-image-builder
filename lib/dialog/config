@@ -2,8 +2,8 @@
 
 source lib/function/config
 # builder and profile versions
-BUILDER="7.2"
-PROFILE="1.5"
+BUILDER="7.3"
+PROFILE="1.6"
 
 # depends
 if [[ `command -v curl` ]]; then :; else sudo apt install curl; fi
@@ -25,8 +25,6 @@ VERSION="6.12.y"
 COMPILER="gcc"
 CCACHE="1"
 NETWORKMANAGER="1"
-RTW88="true"
-RTW88_DEVEL="false"
 USERACCT="0"
 USER_PKGS="htop libsensors-dev rsyslog"
 LOCALE="en_US.UTF-8"
@@ -117,15 +115,12 @@ echo COMPRESS_IMG= >> tmp0
 echo USCRIPTS= >> tmp0
 echo USERACCT= >> tmp0
 echo 'DEVROOTFS="1"' >> tmp0
-echo 'EMMC="0"' >> tmp0
 echo 'ROOTPASSWD="0"' >> tmp0
 echo USER_PKGS='"'${USER_PKGS}'"' >> tmp0
 echo CORES=\`nproc\` >> tmp0
 echo 'CFLAGS=""' >> tmp0
 echo 'KBUSER="henery"' >> tmp0
 echo 'KBHOST="hawk"' >> tmp0
-echo "RTW88=${RTW88}" >> tmp0
-echo "RTW88_DEVEL=${RTW88_DEVEL}" >> tmp0
 echo LOCALE='"'${LOCALE}'"' >> tmp0
 echo LOCALE_LC_ALL='"'${LOCALE_LC_ALL}'"' >> tmp0
 echo TIMEZONE='"'${TIMEZONE}'"' >> tmp0
@@ -155,16 +150,15 @@ sed -i '1i### USER INFORMATION' userdata.txt
 sed -i '6i### DISTRIBUTION AND RELEASE' userdata.txt
 sed -i '10i### UBOOT AND LINUX KERNEL' userdata.txt
 sed -i '17i### CUSTOM' userdata.txt
-sed -i '29i### COMPILER TUNING' userdata.txt
-sed -i '32i### WHOAMI AND HOST' userdata.txt
-sed -i '35i### EXTRA WIRELESS' userdata.txt
-sed -i '38i### LOCALES TIMEZONE AND NAMESERVERS' userdata.txt
-sed -i '44i### DO NOT EDIT BELOW THIS LINE' userdata.txt
+sed -i '28i### COMPILER TUNING' userdata.txt
+sed -i '31i### WHOAMI AND HOST' userdata.txt
+sed -i '34i### LOCALES TIMEZONE AND NAMESERVERS' userdata.txt
+sed -i '40i### DO NOT EDIT BELOW THIS LINE' userdata.txt
 
 # custom dot txt
 if [[ -f "custom.txt" ]]; then
 	. custom.txt
-	if [[ "$CUSTOM" == "$BUILDER" ]]; then :; else custom_txt; fi
+	if [[ ! "$CUSTOM" == "$BUILDER" ]]; then custom_txt; fi
 else
 	custom_txt
 fi
@@ -172,7 +166,7 @@ fi
 # kernel preferences
 if [[ -f "kernel.txt" ]]; then
 	. kernel.txt
-	if [[ "$KERNEL_PREFERENCES" == "$BUILDER" ]]; then :; else kernel_txt; fi
+	if [[ ! "$KERNEL_PREFERENCES" == "$BUILDER" ]]; then kernel_txt; fi
 else
 	kernel_txt
 fi
@@ -180,7 +174,7 @@ fi
 # rootfs / image mirrors
 if [[ -f "mirror.txt" ]]; then
 	. mirror.txt
-	if [[ "$MIRROR_LIST" == "$BUILDER" ]]; then :; else mirror_txt; fi
+	if [[ ! "$MIRROR_LIST" == "$BUILDER" ]]; then mirror_txt; fi
 else
 	mirror_txt
 fi
@@ -194,7 +188,7 @@ if [[ -f "userdata.txt" ]]; then
 	sed -i 's/=1/="1"/g' userdata.txt
 	sed -i 's/=false/="false"/g' userdata.txt
 	sed -i 's/=true/="true"/g' userdata.txt
-	sed -i '5G;9G;16G;28G;31G;34G;37G;43G' userdata.txt
+	sed -i '5G;9G;16G;27G;30G;33G;39G' userdata.txt
 	echo -e "userdata.txt file created."
 	exit 0
 fi
