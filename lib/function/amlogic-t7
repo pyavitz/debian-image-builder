@@ -91,3 +91,23 @@ else
 	report_error
 fi
 }
+
+# LINUX
+amlogic_extra_git (){
+if [[ "$SERIES" == "amlogic-t7" ]]; then
+	if [[ -v "GIT_EXTRA" ]] && [[ ! -z "$GIT_EXTRA" ]]; then git clone --depth=1 ${GIT_EXTRA}; fi
+fi
+}
+
+amlogic_extra_git_patching (){
+# Drop in DTS
+if [[ "$SERIES" == "amlogic-t7" ]] && [[ "$FORCE_GIT" == "true" ]] && [[ -d "../../${GIT_PATCHDIR}/dts" ]]; then
+	if [[ `ls ../../${GIT_PATCHDIR}/dts/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+		echo "# ${GIT_PATCHDIR}/dts" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		ls ../../${GIT_PATCHDIR}/dts/*.dts* | sed 's/..\/..\///g' >> ${LOG_FILE}
+		cp -fr ../../${GIT_PATCHDIR}/dts/*.dts* common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}
+		echo "" >> common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+		cat ../../${GIT_PATCHDIR}/dts/Makefile >> common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+	fi
+fi
+}

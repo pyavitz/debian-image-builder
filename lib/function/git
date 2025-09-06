@@ -23,7 +23,9 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 		git clone ${GIT_OPT} -b ${GIT_BRANCH} ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}
 		sleep .50
 		if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -f "${GIT_REPO}-${GIT_BRANCH}/Makefile" ]]; then
-			cd ${GIT_REPO}-${GIT_BRANCH}; make clean > /dev/null 2>&1; cd ..
+			cd ${GIT_REPO}-${GIT_BRANCH}
+			if [[ `type ${FAMILY}_extra_git` ]] &>/dev/null; then ${FAMILY}_extra_git; fi
+			make clean > /dev/null 2>&1; cd ..
 			echo -en "${GIT_REPO}-${GIT_BRANCH}"
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 			cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
