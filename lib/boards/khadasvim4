@@ -18,12 +18,13 @@ DTB="${SERIES}-a311d2-khadas-vim4n"
 LINUX_DEFCONFIG="amlogic-t7_defconfig"
 UBOOT_DEFCONFIG="kvim4_defconfig"
 
-# partition scheme
-GPT="false"
-EFI="false"
-VFAT="false"
-P_VALUE="p1"
+# partition layout
+BOOT_EXT4="false" # change P_VALUE to p2 if enabled
+BOOT_VFAT="false" # change P_VALUE to p2 if enabled
+EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="false" # set to true if rockchip
 OFFSET="8192"
+P_VALUE="p1" # p1 = single partition
 
 # boot config
 EXTLINUX="false"
@@ -39,7 +40,7 @@ BOARD_FIP=""
 BOARD="khadasvim4"
 OUTPUT="output/${BOARD}"
 
-# extlinux and bootcmd
+# extlinux and bootcmd / bootini
 BOOT_KERNEL="Image"
 BOOT_INITRD="uInitrd"
 BOOTCMD_FDTOVERLAYS="#overlays="
@@ -51,7 +52,7 @@ LOGLEVEL="loglevel=1"
 EXTRA="net.ifnames=0 no_console_suspend fan=auto"
 
 # Serial
-DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyAML0 921600 vt100"
+DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyS0 921600 vt100"
 
 # motd
 DEFAULT_MOTD="Khadas VIM4"
