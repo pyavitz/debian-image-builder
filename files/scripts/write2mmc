@@ -29,7 +29,7 @@ else
 	WARNING_MSG="The $PLATFORM platform is currently not supported."
 	WARNING
 fi
-if [[ "$BOOTINI" == "true" || "$EFI" == "true" || "$PETITBOOT" == "true" ]]; then
+if [[ "$EFI" == "true" || "$PETITBOOT" == "true" ]]; then
 	WARNING_MSG="Only boards using BOOTCMD and EXTLINUX are currently supported at this time."
 	WARNING
 fi
@@ -628,6 +628,10 @@ if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_ROOTFS}/boot/boot.cmd /mnt/${P_ROOTFS}/boot/boot.scr
 fi
+if [[ "$BOOTINI" == "ini" ]]; then
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.ini
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.ini
+fi
 $EE
 $EE "fstab"
 rm -f /mnt/${P_ROOTFS}/etc/fstab
@@ -648,6 +652,10 @@ if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_BOOT}/boot.cmd /mnt/${P_BOOT}/boot.scr
+fi
+if [[ "$BOOTINI" == "true" ]]; then
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.ini
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.ini
 fi
 $EE
 $EE "fstab"
