@@ -343,6 +343,37 @@ EOF
 mkimage -C none -A ${ARCH} -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
 }
 
+bootini (){
+echo -en "$BOARD: "; echo -e "Installing boot script ..."
+if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
+rm -f ${BOOT_PATH}/boot.ini
+cp -f files/boot/scripts/${SERIES}-boot.ini ${BOOT_PATH}/boot.ini
+sed -i 's/^setenv rootfstype "".*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/g' ${BOOT_PATH}/boot.ini
+sed -i 's/^setenv kernel "".*/setenv kernel "'"${BOOT_KERNEL}"'"/g' ${BOOT_PATH}/boot.ini
+sed -i 's/^setenv initramfs "".*/setenv initramfs "'"${BOOT_INITRD}"'"/g' ${BOOT_PATH}/boot.ini
+if [[ "$P_VALUE" == "p1" ]]; then
+	sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' ${BOOT_PATH}/boot.ini
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	if [[ "$BOOT_VFAT" == "true" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"fatload"'"/g' ${BOOT_PATH}/boot.ini; fi
+	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$BOOT_VFAT" == "false" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' \
+		${BOOT_PATH}/boot.ini; fi
+fi
+cat <<EOF > "${BOOT_PATH}/uconfig.txt"
+# U-BOOT CONFIG
+bootlabel=${DEFAULT_MOTD}
+console=${CONSOLE}
+extra=${EXTRA}
+fdtfile=${DTB}.dtb
+platform=${FAMILY}
+verbose=${LOGLEVEL}
+
+# OVERLAYS
+${BOOTCMD_FDTOVERLAYS}
+#user_overlays=
+EOF
+}
+
 extlinux (){
 echo -en "$BOARD: "; echo -e "extlinux.conf"
 if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi

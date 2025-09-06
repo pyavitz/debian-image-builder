@@ -313,12 +313,21 @@ if [[ "$DISTRO_VERSION" == "bookworm" ]]; then
 fi
 
 # debian trixie fixups (until proper solution found)
-if [[ "$ARCH" == "arm" && "$DISTRO_VERSION" =~ ^(excalibur|trixie)$ ]]; then
+if [[ "$ARCH" == "arm" && "$DISTRO_VERSION" =~ ^(excalibur|trixie|kali-rolling)$ ]]; then
 	mv -f /usr/share/initramfs-tools/hooks/kmod /etc/opt/kmod.orig
 	mv -f /root/kmod /usr/share/initramfs-tools/hooks/
 	chmod +x /usr/share/initramfs-tools/hooks/kmod
 else
 	rm -f /root/kmod
+fi
+
+# More recent hook-functions are not supported on amlogic-t7 5.15.y kernels
+if [[ "$SERIES" == "amlogic-t7" ]]; then
+	# current "hook-functions" file taken from Ubuntu Noble
+	mv -f /usr/share/initramfs-tools/hook-functions /etc/opt/hook-functions.orig
+	mv -f /root/hook-functions /usr/share/initramfs-tools/
+else
+	rm -f /root/hook-functions
 fi
 
 # clean
@@ -471,7 +480,7 @@ else
 	firstboot_service > /dev/null 2>&1
 	governor_service > /dev/null 2>&1
 	led_service > /dev/null 2>&1
-	if [[ "$BOARD" =~ ^(bananapim2zero|bananapim4zero|radxazero)$ ]]; then disable_wifi_powersave_service > /dev/null 2>&1; fi
+	if [[ "$BOARD" =~ ^(bananapim2zero|bananapim4zero|khadasvim4|radxazero)$ ]]; then disable_wifi_powersave_service > /dev/null 2>&1; fi
 	if [[ ! -f "/usr/local/sbin/led-trigger" ]]; then systemctl disable leds > /dev/null 2>&1; fi
 	rc-local_service > /dev/null 2>&1
 	enable_systemd > /dev/null 2>&1

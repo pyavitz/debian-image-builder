@@ -133,6 +133,9 @@ if [[ ! -z $FAMILY ]]; then
 		mkdir -p ${P_VALUE}/usr/local/bin
 		cp files/blob/vfdservice ${P_VALUE}/usr/local/bin/
 	fi
+	if [[ "$BOARD" == "khadasvim4" ]] && [[ -d "files/bsp/khadasvim4/etc" ]]; then
+		cp -fr files/bsp/khadasvim4/etc/* ${P_VALUE}/etc/
+	fi
 fi
 # user account service
 if [ $USERACCT -eq 1 ]; then
@@ -163,6 +166,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	if [ $VERBOSE -eq 1 ]; then e4defrag -c ${P_VALUE}; else e4defrag -c ${P_VALUE} > /dev/null 2>&1; fi
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
 	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
+	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
 	umount p1
 	echo ""
 	# finish
@@ -220,7 +224,7 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
 	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
 	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
-	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootini > /dev/null 2>&1; fi
+	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
 	if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ "AML_EMMC" == "false" ]]; then
 		cp -f ${OUTPUT}/chainload.bin p1/
 		cp -fr files/boot/scripts/{aml_autoscript.cmd,s905_autoscript.cmd} p1/

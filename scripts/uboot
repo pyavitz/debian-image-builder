@@ -27,7 +27,10 @@ if [[ "$FAMILY" == "generic" ]]; then
 elif [[ "$PRECOMPILED_UBOOT" == "true" ]]; then
 	uboot_precompiled_packaging
 else
-	if [[ "$FAMILY" == "amlogic" ]]; then . lib/function/fip; fi
+	if [[ "$FAMILY" == "amlogic" ]]; then
+		. lib/function/fip
+		if [[ "$SERIES" == "amlogic-t7" ]]; then . lib/function/${SERIES}; fi
+	fi
 	if [[ "$FAMILY" =~ ^(allwinner|freescale|rockchip)$ ]]; then . lib/function/atf; . lib/function/crust; fi
 	if [[ "$FAMILY" == "spacemit" ]]; then . lib/function/opensbi; fi
 	${FAMILY}_uboot_run

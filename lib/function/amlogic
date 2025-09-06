@@ -38,9 +38,9 @@ fi
 
 amlogic_uboot_run (){
 sources_dir
-download_fip
+if [[ ! -z $RUN_FIP ]]; then download_fip; fi
 uboot_run
-uboot_output
+if [[ `type ${FAMILY}_uboot_output` ]] &>/dev/null; then ${FAMILY}_uboot_output; else uboot_output; fi
 }
 
 amlogic_uboot_packaging (){
@@ -135,6 +135,12 @@ fi
 if [[ "$BOARD" == "radxazero" ]]; then
 	git clone --depth=1 -q -b radxa https://github.com/pyavitz/firmware.git
 	rm -fdr firmware/{.git,README.md}; cp -fr firmware/* /lib/firmware; rm -fdr firmware
+fi
+}
+
+amlogic_bluetooth (){
+if [[ "$BOARD" =~ ^(khadasvim4)$ ]]; then
+	if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then khadasvim4_bt_service > /dev/null 2>&1; fi
 fi
 }
 

@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# architecture
+ARCH="arm64"
+ARCH_EXT="arm64"
+DEBARCH=""
+CROSS_COMPILE="aarch64-linux-gnu-"
+ROOTFS_ARCH="rootfs-${ARCH_EXT}"
+STATIC="qemu-aarch64-static"
+
+# device information
+SERIES="amlogic-t7"
+FAMILY="amlogic"
+FAMILY_EXT="khadas"
+DTB="${SERIES}-a311d2-khadas-vim4n"
+
+# default config
+LINUX_DEFCONFIG="amlogic-t7_defconfig"
+UBOOT_DEFCONFIG="kvim4_defconfig"
+
+# partition layout
+BOOT_EXT4="false" # change P_VALUE to p2 if enabled
+BOOT_VFAT="false" # change P_VALUE to p2 if enabled
+EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="false" # set to true if rockchip
+OFFSET="8192"
+P_VALUE="p1" # p1 = single partition
+
+# boot config
+EXTLINUX="false"
+PETITBOOT="false"
+BOOTINI="true"
+BOOTCMD="false"
+
+# firmware image package
+RUN_FIP=""
+BOARD_FIP=""
+
+# output
+BOARD="khadasvim4"
+OUTPUT="output/${BOARD}"
+
+# extlinux and bootcmd / bootini
+BOOT_KERNEL="Image"
+BOOT_INITRD="uInitrd"
+BOOTCMD_FDTOVERLAYS="#overlays="
+EXTLINUX_FDTOVERLAYS="#fdtoverlays"
+
+# cmdline
+CONSOLE="earlycon=aml-uart,0xfe078000 console=tty1 console=ttyS0,921600n8"
+LOGLEVEL="loglevel=1"
+EXTRA="net.ifnames=0 no_console_suspend fan=auto"
+
+# Serial
+DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyS0 921600 vt100"
+
+# motd
+DEFAULT_MOTD="Khadas VIM4"
+
+# customize
+#MODULES_LOAD="drivetemp"
+
+# patches
+LINUX_PATCHING="false"
+UBOOT_PATCHDIR="patches/uboot"
+LINUX_PATCHDIR="patches/${FAMILY}"
+
+# image
+IMG_EXP="${DTB}-*.img*"
+
+# uboot logo
+RANDOM_LOGO="false"
+
+# precompiled
+PRECOMPILED_UBOOT="false"
+PKGVERSION=""
+PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
+
+# force git (https://github.com/khadas/linux.git)
+# devel (https://github.com/CoreELEC/linux-amlogic/tree/5.15.170_202508)
+FORCE_GIT="true"
+GIT_OWN="khadas"
+GIT_REPO="linux"
+GIT_BRANCH="khadas-vims-5.15.y"
+GIT_URL="https://github.com"
+GIT_BLOB="blob"
+GIT_EXTRA="${GIT_URL}/${GIT_OWN}/common_drivers.git --depth=1 -b ${GIT_BRANCH}"
+# git patching
+GIT_PATCHING="true"
+GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
+# u-boot (if variable GIT_UBOOT_URL not found ignore) (https://github.com/CoreELEC/u-boot.git)
+GIT_UBOOT_OWN="CoreELEC"
+GIT_UBOOT_TAG="khadas-vims-v2019.01" # tag or branch
+GIT_UBOOT_URL="${GIT_URL}/${GIT_UBOOT_OWN}/u-boot.git"
+
+# override userdata file
+FORCE_VERSION="true"
+FORCE_LINUX_VERSION=""
+FORCE_UBOOT_VERSION="v2019.01"
+
+# devicetree and platform
+DEVICETREE="${DTB}.dtb amlogic-t7-a311d2-khadas-vim4.dtb t7c_a311d2_khadas_vim4n.dtb kvim4.dtb kvim4n.dtb"
+PLATFORM="${FAMILY}"
+
+# kernel package name (if shared patching set to true)
+COMMON_PKG="false"
+COMMON_PKGNAME="meson"
+
+# custom builddeb variables
+#CUSTOM_KERNEL_IMAGE="Image"
+#CUSTOM_BOOT_PATH="boot/dtb/${PLATFORM}"
+#CUSTOM_LINUX_PATH="usr/lib/linux-image-${COMMON_PKGNAME}" # common package
+CUSTOM_LINUX_PATH="usr/lib/linux-image-${SERIES}"

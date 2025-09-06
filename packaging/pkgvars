@@ -16,11 +16,14 @@ fi
 # kernel image
 if [[ "$ARCH" == "arm" ]]; then KIMAGE="zImage"; fi
 if [[ "$ARCH" =~ ^(arm64|riscv)$ ]]; then KIMAGE="Image"; fi
-if [[ -v "KERNEL_IMAGE" ]] && [[ ! -z "$KERNEL_IMAGE" ]]; then KIMAGE="${KERNEL_IMAGE}"; fi
 # install target
 if [[ "$ARCH" == "arm" ]]; then LINUX_PATH="usr/lib/${LINUX_IMAGE}"; fi
 if [[ "$ARCH" =~ ^(arm64|riscv)$ ]]; then LINUX_PATH="usr/lib/${LINUX_IMAGE}/${PLATFORM}"; fi
 INSTALL_PATH="boot/${PLATFORM}"
+# custom pkgvars
+if [[ -v "CUSTOM_BOOT_PATH" && ! -z "$CUSTOM_BOOT_PATH" ]]; then INSTALL_PATH="${CUSTOM_BOOT_PATH}"; fi
+if [[ -v "CUSTOM_LINUX_PATH" && ! -z "$CUSTOM_LINUX_PATH" ]]; then LINUX_PATH="${CUSTOM_LINUX_PATH}"; fi
+if [[ -v "CUSTOM_KERNEL_IMAGE" && ! -z "$CUSTOM_KERNEL_IMAGE" ]]; then KIMAGE="${CUSTOM_KERNEL_IMAGE}"; fi
 # create packaging variables
 cat <<EOF > "scripts/package/pkgvars"
 # packaging variables
