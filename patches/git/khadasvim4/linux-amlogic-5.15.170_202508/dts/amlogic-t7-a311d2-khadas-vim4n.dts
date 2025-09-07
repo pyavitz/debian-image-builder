@@ -7,6 +7,10 @@
 	coreelec-dt-id = "t7c_a311d2_khadas_vim4n";
 	amlogic-dt-id = "t7c_a311d2_an400-8g";
 
+	aliases {
+		i2c6 = &i2c_AO_A;
+	};
+
 	sdcard_power: regulator-sdcard {
 		compatible = "regulator-fixed";
 		regulator-name = "SDCARD_POWER";
@@ -27,6 +31,39 @@
 		gpios-states = <1>;
 		states = <1800000 1
 				3300000 0>;
+	};
+};
+
+&i2c_AO_A {
+	status = "okay";
+	pinctrl-names="default";
+	pinctrl-0=<&i2c0_ao_pins1>;
+	clock-frequency = <100000>; /* default 100k */
+
+	hym8563-rtc@51 {
+		compatible = "haoyu,hym8563";
+		reg = <0x51>;
+	};
+
+	khadas-mcu@18 {
+		compatible = "khadas-mcu";
+		reg = <0x18>;
+		fan,trig_temp_level0 = <50>;
+		fan,trig_temp_level1 = <60>;
+		fan,trig_temp_level2 = <70>;
+		fan,trig_temp_level3 = <80>;
+		hwver = "VIM4.V12"; /* Will be updated in uboot. */
+	};
+
+	khadas-kxtj3@e {
+		compatible = "kxtj3";
+		reg = <0x0E>;
+		type = <2>;
+		layout = <0>;
+		irq_enable = <0>;
+		poll_delay_ms = <30>;
+		irq-gpio = <&gpio GPIOY_3 IRQ_TYPE_EDGE_RISING>;
+		status = "okay";
 	};
 };
 
@@ -54,6 +91,14 @@
 	vqmmc-supply = <&vddio_card>;
 };
 
+&smmu {
+	status = "okay";
+};
+
 &pcie {
+	status = "okay";
+};
+
+&pcie_dma_ops_mm {
 	status = "okay";
 };
