@@ -114,22 +114,32 @@ User service:			# Create user during first boot (bypass the user information abo
 * custom.txt
 ```sh
 # Boot Partition
-ENABLE_VFAT="false"
+ENABLE_BOOT_EXT4="false"
+ENABLE_BOOT_VFAT="false"
 
 # Root Filesystem Types: ext4 btrfs xfs
 FSTYPE="ext4"
 
+# Use a boot script instead of extlinux
+ENABLE_BOOTCMD="false"
+
 # UEFI Options (WIP)
 ENABLE_EFI="false"
 
-# Image Size: 4096MB
+# Write image directly to eMMC (Amlogic Only)
+AML_EMMC="false"
+
+# Petitboot (AML ODROID) (obsolete)
+ENABLE_PETITBOOT="false"
+
+# Bootstrap: if false use debootstrap
+MMDEBSTRAP="true"
+
+# Image Size: 3584MB 4096MB
 IMGSIZE="4096MB"
 
 # Shrink Image
 ENABLE_SHRINK="true"
-
-# Petitboot (AML ODROID) (not recommended)
-ENABLE_PETITBOOT="false"
 
 # Compression Types: xz zst
 IMG_COMPRESSION="xz"
