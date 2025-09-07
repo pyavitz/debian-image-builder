@@ -2,66 +2,70 @@
 
 # U-BOOT
 amlogic_uboot_download (){
-GIT_UBOOT_HASH=`git ls-remote --heads ${GIT_UBOOT_URL} | grep -w "refs/heads/${GIT_UBOOT_TAG}" | sed -n '1p' | sed "s/refs\/heads\/${GIT_UBOOT_TAG}//g" | sed s/'\s'//g`
-GIT_UBOOT_COMMIT="4a16015168d00d08487781fc914e048944554c6e"
-# Khadas VIM4 Compiler Toolchain
 if [[ "$SERIES" == "amlogic-t7" ]]; then
 	if [[ "$HOST_ARCH" == "x86_64"  ]]; then TC_ARCH="linux-x64"; else TC_ARCH="linux-${ARCH}"; fi
-	# Pull from Armbian Mirror
+	# Download toolchain from Armbian Mirror
 	TC_URL="https://mirrors.dotsrc.org/armbian-dl/_toolchain"
+	# Khadas VIM4 Compiler Toolchain
 	ARM64_COMPILER="gcc-linaro-7.3.1-2018.05-${HOST_ARCH}_aarch64-elf"
 	RISCV_COMPILER="xpack-riscv-none-embed-gcc-8.3.0-1.2"
-	if [[ ! -d "${ARM64_COMPILER}" ]] && [[ ! -d "${RISCV_COMPILER}" ]]; then
-		if [[ `wget -S --spider ${TC_URL}/${ARM64_COMPILER}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] && \
-			[[ `wget -S --spider ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	if [[ ! -d "${ARM64_COMPILER}" ]]; then
+		if [[ `wget -S --spider ${TC_URL}/${ARM64_COMPILER}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 			echo -en "${WHT}${ARM64_COMPILER}${FIN} "
 			echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
 			aria2c -q ${TC_URL}/${ARM64_COMPILER}.tar.xz
-			echo_bdone
 			if [[ -f "${ARM64_COMPILER}.tar.xz" ]]; then
-				echo -en "${WHT}${ARM64_COMPILER}${FIN} "
 				echo -en "${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
 				tar xf ${ARM64_COMPILER}.tar.xz
-				echo_bdone
+				if [[ ! -d "${ARM64_COMPILER}" ]]; then report_error; else echo_bdone; fi
+			else
+				echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+				exit 1
 			fi
-			echo -en "${WHT}${RISCV_COMPILER}-${TC_ARCH}${FIN} "
-			echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-			aria2c -q ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz
-			echo_bdone
-			if [[ -f "${RISCV_COMPILER}-${TC_ARCH}.tar.gz" ]]; then
-				echo -en "${WHT}${RISCV_COMPILER}-${TC_ARCH}${FIN} "
-				echo -en "${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
-				tar xf ${RISCV_COMPILER}-${TC_ARCH}.tar.gz
-				echo_bdone
-			fi
-		else
-			if [[ ! -d "${ARM64_COMPILER}" ]] && [[ ! -d "${RISCV_COMPILER}" ]]; then report_error; fi
 		fi
 	fi
-fi
-if [[ ! "$GIT_UBOOT_COMMIT" == "$GIT_UBOOT_HASH" ]]; then rm -fdr ${BOARD}-u-boot-${GIT_UBOOT_TAG}; fi
-if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-	echo -en "${WHT}${BOARD}-u-boot-${GIT_UBOOT_TAG}${FIN} "
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
-	cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}
-	make clean > /dev/null 2>&1
-	echo -en "${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN} "
-	cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
-	# Fake defconfig (required by builder)
-	touch u-boot/configs/${UBOOT_DEFCONFIG}
-	echo_bdone
-else
-	echo -en "${WHT}${BOARD}-u-boot-${GIT_UBOOT_TAG}${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN} "
-	git clone -q -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${BOARD}-u-boot-${GIT_UBOOT_TAG}
+	if [[ ! -d "${RISCV_COMPILER}" ]]; then
+		if [[ `wget -S --spider ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+			echo -en "${WHT}${RISCV_COMPILER}${FIN} "
+			echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+			aria2c -q ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz
+			if [[ -f "${RISCV_COMPILER}-${TC_ARCH}.tar.gz" ]]; then
+				echo -en "${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
+				tar xf ${RISCV_COMPILER}-${TC_ARCH}.tar.gz
+				if [[ ! -d "${RISCV_COMPILER}" ]]; then report_error; else echo_bdone; fi
+			else
+				echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+				exit 1
+			fi
+		fi
+	fi
+	GIT_UBOOT_HASH=`git ls-remote --heads ${GIT_UBOOT_URL} | grep -w "refs/heads/${GIT_UBOOT_TAG}" | sed -n '1p' | sed "s/refs\/heads\/${GIT_UBOOT_TAG}//g" | sed s/'\s'//g`
+	GIT_UBOOT_COMMIT="4a16015168d00d08487781fc914e048944554c6e"
+	if [[ ! "$GIT_UBOOT_COMMIT" == "$GIT_UBOOT_HASH" ]]; then rm -fdr ${BOARD}-u-boot-${GIT_UBOOT_TAG}; fi
 	if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-		cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}; make clean > /dev/null 2>&1; cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
+		echo -en "${WHT}${BOARD}-u-boot-${GIT_UBOOT_TAG}${FIN} "
+		echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+		cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}
+		make clean > /dev/null 2>&1
+		echo -en "${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN} "
+		cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
 		# Fake defconfig (required by builder)
 		touch u-boot/configs/${UBOOT_DEFCONFIG}
 		echo_bdone
 	else
-		echo -e "${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
-		exit 1
+		git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${BOARD}-u-boot-${GIT_UBOOT_TAG}
+		if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
+			cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}; make clean > /dev/null 2>&1; cd ..;
+			echo -en "${WHT}${BOARD}-u-boot-${GIT_UBOOT_TAG}${FIN} "
+			echo -en "${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN} "
+			cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
+			echo -e "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			# Fake defconfig (required by builder)
+			touch u-boot/configs/${UBOOT_DEFCONFIG}
+		else
+			echo -e "${RED}Download Failed!${FIN}"
+			exit 1
+		fi
 	fi
 fi
 }
