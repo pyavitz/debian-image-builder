@@ -94,45 +94,9 @@ IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
 mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
-if [[ ! -z $P_VALUE ]]; then
-	${DISTRO}_sources_list
-	setup
-fi
+if [[ ! -z $P_VALUE ]]; then ${DISTRO}_sources_list; setup; fi
 # setup stage2
-if [[ ! -z $FAMILY ]]; then
-	cp scripts/stage2 ${P_VALUE}/root
-	cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt
-	files
-	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
-	# alsa.state
-	if [[ -f "files/asound/${BOARD}.state" ]]; then
-		cp files/asound/${BOARD}.state ${P_VALUE}/root/asound.state
-	fi
-	if [[ -f "files/asound/${BOARD}.conf" ]]; then
-		cp files/asound/${BOARD}.conf ${P_VALUE}/root/asound.conf
-	fi
-	# board support package files
-	if [[ -d "files/bsp/${BOARD}/etc" ]]; then
-		mkdir -p ${P_VALUE}/etc
-		cp -fr files/bsp/${BOARD}/etc/* ${P_VALUE}/etc/
-	fi
-	# board / family firmware and binary blobs
-	if [[ `type ${FAMILY}_stage1_extra_firmware` ]] &>/dev/null; then ${FAMILY}_stage1_extra_firmware; fi
-	# led trigger scripts
-	if [[ -f "files/led-trigger/${BOARD}" ]]; then
-		cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger
-	fi
-	# system tweak scripts
-	if [[ -f "files/tweaks/${BOARD}" ]]; then
-		mkdir -p ${P_VALUE}/usr/bin
-		cp files/tweaks/${BOARD} ${P_VALUE}/usr/bin/tweaks
-	fi
-fi
-# user account service
-if [ $USERACCT -eq 1 ]; then
-	mkdir -p ${P_VALUE}/root/useracct;
-	cp -r files/useracct/* ${P_VALUE}/root/useracct;
-fi
+if [[ ! -z $FAMILY ]]; then files; fi
 # user scripts stage1
 if [ $USCRIPTS -eq 1 ]; then uscripts_stage1; fi
 echo ""

@@ -238,16 +238,39 @@ EOF
 }
 
 files (){
+# add u-boot and kernel debs
+cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
+# add stage2 script
+cp scripts/stage2 ${P_VALUE}/root
+# add board, user data and function files
+cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt
 cp lib/function/networking ${P_VALUE}/root/networking.txt
 cp lib/function/services ${P_VALUE}/root/services.txt
 cp lib/source ${P_VALUE}/root/source.txt
 cp board.txt ${P_VALUE}/root
 cp userdata.txt ${P_VALUE}/root
+# add misc files
 cp files/scripts/* ${P_VALUE}/root
 cp files/users/* ${P_VALUE}/root
+# add misc firmware
 cp -f files/firmware/{fw-0a5c_21e8.hcd,UPDATE.mem} ${P_VALUE}/root
+# add devuan inits
 if [[ "$DISTRO" == "devuan" ]]; then cp files/inits/*.init ${P_VALUE}/root; fi
+# install board information
 board_information
+# add alsa conf files
+if [[ -f "files/asound/${BOARD}.state" ]]; then cp files/asound/${BOARD}.state ${P_VALUE}/root/asound.state; fi
+if [[ -f "files/asound/${BOARD}.conf" ]]; then cp files/asound/${BOARD}.conf ${P_VALUE}/root/asound.conf; fi
+# board support package files
+if [[ -d "files/bsp/${BOARD}/etc" ]]; then mkdir -p ${P_VALUE}/etc; cp -fr files/bsp/${BOARD}/etc/* ${P_VALUE}/etc/; fi
+# board / family firmware and binary blobs
+if [[ `type ${FAMILY}_stage1_extra_firmware` ]] &>/dev/null; then ${FAMILY}_stage1_extra_firmware; fi
+# led trigger scripts
+if [[ -f "files/led-trigger/${BOARD}" ]]; then cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger; fi
+# system tweak scripts
+if [[ -f "files/tweaks/${BOARD}" ]]; then mkdir -p ${P_VALUE}/usr/bin; cp files/tweaks/${BOARD} ${P_VALUE}/usr/bin/tweaks; fi
+# user account service
+if [ $USERACCT -eq 1 ]; then mkdir -p ${P_VALUE}/root/useracct; cp -r files/useracct/* ${P_VALUE}/root/useracct; fi
 }
 
 # rename and check for compression
