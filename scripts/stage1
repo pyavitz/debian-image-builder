@@ -100,12 +100,10 @@ if [[ ! -z $P_VALUE ]]; then
 fi
 # setup stage2
 if [[ ! -z $FAMILY ]]; then
-	cp scripts/stage2 ${P_VALUE}/root;
+	cp scripts/stage2 ${P_VALUE}/root
 	cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt
 	files
 	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
-	# board and family specific firmware
-	if [[ `type ${FAMILY}_stage1_extra_firmware` ]] &>/dev/null; then ${FAMILY}_stage1_extra_firmware; fi
 	# alsa.state
 	if [[ -f "files/asound/${BOARD}.state" ]]; then
 		cp files/asound/${BOARD}.state ${P_VALUE}/root/asound.state
@@ -113,28 +111,21 @@ if [[ ! -z $FAMILY ]]; then
 	if [[ -f "files/asound/${BOARD}.conf" ]]; then
 		cp files/asound/${BOARD}.conf ${P_VALUE}/root/asound.conf
 	fi
-	# led trigger
+	# board support package files
+	if [[ -d "files/bsp/${BOARD}/etc" ]]; then
+		mkdir -p ${P_VALUE}/etc
+		cp -fr files/bsp/${BOARD}/etc/* ${P_VALUE}/etc/
+	fi
+	# board / family firmware and binary blobs
+	if [[ `type ${FAMILY}_stage1_extra_firmware` ]] &>/dev/null; then ${FAMILY}_stage1_extra_firmware; fi
+	# led trigger scripts
 	if [[ -f "files/led-trigger/${BOARD}" ]]; then
 		cp files/led-trigger/${BOARD} ${P_VALUE}/root/led-trigger
 	fi
-	# tweaks
+	# system tweak scripts
 	if [[ -f "files/tweaks/${BOARD}" ]]; then
 		mkdir -p ${P_VALUE}/usr/bin
 		cp files/tweaks/${BOARD} ${P_VALUE}/usr/bin/tweaks
-	fi
-	# blob
-	if [[ "$BOARD" == "orangepi3lts" ]]; then
-		# bluetooth
-		mkdir -p ${P_VALUE}/usr/local/sbin
-		cp files/blob/hciattach_opi ${P_VALUE}/usr/local/sbin/
-	fi
-	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
-		# vfd
-		mkdir -p ${P_VALUE}/usr/local/bin
-		cp files/blob/vfdservice ${P_VALUE}/usr/local/bin/
-	fi
-	if [[ "$BOARD" == "khadasvim4" ]] && [[ -d "files/bsp/khadasvim4/etc" ]]; then
-		cp -fr files/bsp/khadasvim4/etc/* ${P_VALUE}/etc/
 	fi
 fi
 # user account service

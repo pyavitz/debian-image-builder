@@ -92,8 +92,14 @@ dd if=${OUTPUT}/u-boot-sunxi-with-spl.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1
 
 allwinner_stage1_extra_firmware (){
 if [[ "$BOARD" == "bananapim4zero" ]]; then
+	# wireless firmware
 	mkdir -p ${P_VALUE}/lib/firmware/updates/brcm
 	cp -r files/firmware/brcm/* ${P_VALUE}/lib/firmware/updates/brcm
+fi
+# custom hciattach binary (bluetooth)
+if [[ "$BOARD" == "orangepi3lts" ]]; then
+	mkdir -p ${P_VALUE}/usr/local/sbin
+	cp files/blob/hciattach_opi ${P_VALUE}/usr/local/sbin/
 fi
 }
 
