@@ -271,6 +271,26 @@ if [[ -f "files/led-trigger/${BOARD}" ]]; then cp files/led-trigger/${BOARD} ${P
 if [[ -f "files/tweaks/${BOARD}" ]]; then mkdir -p ${P_VALUE}/usr/bin; cp files/tweaks/${BOARD} ${P_VALUE}/usr/bin/tweaks; fi
 # user account service
 if [ $USERACCT -eq 1 ]; then mkdir -p ${P_VALUE}/root/useracct; cp -r files/useracct/* ${P_VALUE}/root/useracct; fi
+# arm debian trixie fixups
+if [[ "$ARCH" == "arm" && "$DISTRO_VERSION" =~ ^(excalibur|trixie|kali-rolling)$ && -f "files/bsp/${ARCH}/usr/share/initramfs-tools/hooks/kmod" ]]; then
+	mkdir -p ${P_VALUE}/etc/opt
+	mkdir -p ${P_VALUE}/usr/share/initramfs-tools/hooks
+	if [[ -f "${P_VALUE}/usr/share/initramfs-tools/hooks/kmod" ]]; then
+		mv -f ${P_VALUE}/usr/share/initramfs-tools/hooks/kmod ${P_VALUE}/etc/opt/kmod.orig
+	fi
+	cp -f files/bsp/${ARCH}/usr/share/initramfs-tools/hooks/kmod ${P_VALUE}/usr/share/initramfs-tools/hooks/
+	chmod +x /usr/share/initramfs-tools/hooks/kmod
+fi
+# More recent hook-functions are not supported on amlogic-t7 5.15.y kernels
+if [[ "$SERIES" == "amlogic-t7" && -f "files/bsp/${BOARD}/usr/share/initramfs-tools/hook-functions" ]]; then
+	# current "hook-functions" file taken from Ubuntu Noble
+	mkdir -p ${P_VALUE}/etc/opt
+	mkdir -p ${P_VALUE}/usr/share/initramfs-tools
+	if [[ -f "${P_VALUE}/usr/share/initramfs-tools/hook-functions" ]]; then
+		mv -f ${P_VALUE}/usr/share/initramfs-tools/hook-functions ${P_VALUE}/etc/opt/hook-functions.orig
+	fi
+	cp -f files/bsp/${BOARD}/usr/share/initramfs-tools/hook-functions ${P_VALUE}/usr/share/initramfs-tools/
+fi
 }
 
 # rename and check for compression
