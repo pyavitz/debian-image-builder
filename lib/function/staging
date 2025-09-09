@@ -281,7 +281,7 @@ if [[ "$ARCH" == "arm" && "$DISTRO_VERSION" =~ ^(excalibur|trixie|kali-rolling)$
 	cp -f files/bsp/${ARCH}/usr/share/initramfs-tools/hooks/kmod ${P_VALUE}/usr/share/initramfs-tools/hooks/
 	chmod +x /usr/share/initramfs-tools/hooks/kmod
 fi
-# More recent hook-functions are not supported on amlogic-t7 5.15.y kernels
+# more recent hook-functions are not supported on amlogic-t7 5.15.y kernels
 if [[ "$SERIES" == "amlogic-t7" && -f "files/bsp/${BOARD}/usr/share/initramfs-tools/hook-functions" ]]; then
 	# current "hook-functions" file taken from Ubuntu Noble
 	mkdir -p ${P_VALUE}/etc/opt
@@ -291,6 +291,9 @@ if [[ "$SERIES" == "amlogic-t7" && -f "files/bsp/${BOARD}/usr/share/initramfs-to
 	fi
 	cp -f files/bsp/${BOARD}/usr/share/initramfs-tools/hook-functions ${P_VALUE}/usr/share/initramfs-tools/
 fi
+# do not accept new conf files in an unattended install (remove file at the end of stage2)
+mkdir -p ${P_VALUE}/etc/apt/apt.conf.d
+echo 'Dpkg::Options {"--force-confold";};' > ${P_VALUE}/etc/apt/apt.conf.d/71debconf
 }
 
 # rename and check for compression
