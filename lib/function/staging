@@ -51,9 +51,7 @@ mkdir -p ${P_ROOTFS}
 filesystem
 $MAKE_ROOTFS
 mount "${IMAGE_LOOP_DEV_ROOTFS}" ${P_ROOTFS}
-if [[ "$FSTYPE" == "btrfs" ]]; then
-	btrfs subvolume create ${P_ROOTFS}/@
-fi
+if [[ "$FSTYPE" == "btrfs" ]]; then btrfs subvolume create ${P_ROOTFS}/@; fi
 flash_uboot
 sync
 umount ${P_ROOTFS}
@@ -100,14 +98,8 @@ $MAKE_BOOTFS
 $MAKE_ROOTFS
 mount "${IMAGE_LOOP_DEV_BOOT}" ${P_BOOT}
 mount "${IMAGE_LOOP_DEV_ROOTFS}" ${P_ROOTFS}
-if [[ "$FSTYPE" == "btrfs" ]]; then
-	btrfs subvolume create ${P_ROOTFS}/@
-fi
-if [[ "$PETITBOOT" == "true" || "$BOOTINI" == "true" ]] && [[ "$FAMILY_EXT" == "odroid" || "$BOARD" == "odroidc1" ]] ; then
-	flash_vendor-uboot
-else
-	flash_uboot
-fi
+if [[ "$FSTYPE" == "btrfs" ]]; then btrfs subvolume create ${P_ROOTFS}/@; fi
+if [[ "$PETITBOOT" == "true" && "$FAMILY_EXT" == "odroid" ]]; then flash_vendor-uboot; else flash_uboot; fi
 sync
 umount ${P_ROOTFS}
 $MOUNT_ROOTFS
@@ -122,15 +114,8 @@ if [[ "$OFFSET" == "204800" ]]; then PART_OFFSET="100MiB"; fi
 # boot partition size
 if [[ "$EFI" == "true" ]]; then BSIZE="128MiB"; else BSIZE="512MiB"; fi
 # partition values
-if [[ "$P_VALUE" == "p1" ]]; then
-	P_ROOTFS="p1"
-	single_partition
-fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	P_BOOT="p1"
-	P_ROOTFS="p2"
-	dual_partition
-fi
+if [[ "$P_VALUE" == "p1" ]]; then P_ROOTFS="p1"; single_partition; fi
+if [[ "$P_VALUE" == "p2" ]]; then P_BOOT="p1"; P_ROOTFS="p2"; dual_partition; fi
 }
 
 uuid (){
@@ -296,62 +281,19 @@ mkdir -p ${P_VALUE}/etc/apt/apt.conf.d
 echo 'Dpkg::Options {"--force-confold";};' > ${P_VALUE}/etc/apt/apt.conf.d/71debconf
 }
 
-# rename and check for compression
-finish_image (){
-IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
-IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
-if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; else echo -e "Build error: ${IMAGE_FILE_NAME}"; exit 1; fi
-if [ $COMPRESS_IMG -eq 1 ]; then
-	echo_compress
-	if [[ "$IMG_COMPRESSION" == "xz" ]]; then xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}; fi
-	if [[ "$IMG_COMPRESSION" == "zst" ]]; then zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}; fi
-	if [[ -f "${IMAGE_FIN_NAME}.${IMG_COMPRESSION}" ]]; then
-		sha256sum ${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
-		sha256sum --check ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
-	fi
-fi
-}
+uconfig_txt (){
+cat <<EOF > "${BOOT_PATH}/uconfig.txt"
+# U-BOOT CONFIG
+bootlabel=${DEFAULT_MOTD}
+console=${CONSOLE}
+extra=${EXTRA}
+fdtfile=${DTB}.dtb
+platform=${FAMILY}
+verbose=${LOGLEVEL}
 
-# odroid boot.cmd
-odroid_bootcmd (){
-rm -f p1/{boot.cmd,config.ini}
-VENDOR_KERNEL=`sed 's/INSTALLED_KERNEL="//g' kernel.release | grep -o '^...'`
-if [[ "$VENDOR_KERNEL" == "4.9" ]]; then
-	cp files/boot/scripts/${FAMILY_EXT}-vendor-boot.cmd p1/boot.cmd;
-	cp files/boot/scripts/${FAMILY_EXT}-vendor-config.ini p1/config.ini;
-else
-	cp files/boot/scripts/${FAMILY_EXT}-boot.cmd p1/boot.cmd;
-	cp files/boot/scripts/${FAMILY_EXT}-config.ini p1/config.ini;
-fi
-if [[ -f "files/boot/scripts/odroid-boot-logo.bmp.gz" ]]; then
-	cp files/boot/scripts/odroid-boot-logo.bmp.gz p1/boot-logo.bmp.gz;
-fi
-if [[ -f "p1/config.ini" ]]; then
-	sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini;
-	if [[ "$FSTYPE" =~ ^(ext4|xfs)$ ]]; then
-		sed -i "s/rootfstype=/rootfstype=${ROOT_FSTYPE}/g" p1/config.ini;
-	fi
-	if [[ "$FSTYPE" == "btrfs" ]]; then
-		sed -i 's/rootfstype=/rootfstype="'"${ROOT_FSTYPE}"'"/g' p1/config.ini;
-	fi
-	sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini;
-	mkimage -C none -A ${ARCH} -T script -d p1/boot.cmd p1/boot.scr;
-fi
-}
-
-# odroid c1
-odroid_bootini (){
-rm -f p1/boot.ini
-cp -f files/boot/scripts/${BOARD}-boot.ini p1/boot.ini
-sed -i "s/root=PARTUUID=/root=PARTUUID=${ROOT_PARTUUID}/g" p1/boot.ini
-sed -i "s/rootfstype=/${ROOT_FSTYPE}/g" p1/boot.ini
-tee --append p1/boot.ini <<EOF
-fatload mmc 0:1 0x20800000 uImage
-fatload mmc 0:1 0x22000000 uInitrd
-fatload mmc 0:1 0x21800000 amlogic/meson8b-odroidc1.dtb
-fdt addr 21800000
-
-bootm 0x20800000 0x22000000 0x21800000
+# OVERLAYS
+${BOOTCMD_FDTOVERLAYS}
+#user_overlays=
 EOF
 }
 
@@ -373,20 +315,9 @@ if [[ "$P_VALUE" == "p2" ]]; then
 fi
 echo "" >> ${BOOT_PATH}/boot.cmd
 echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> ${BOOT_PATH}/boot.cmd
-cat <<EOF > "${BOOT_PATH}/uconfig.txt"
-# U-BOOT CONFIG
-bootlabel=${DEFAULT_MOTD}
-console=${CONSOLE}
-extra=${EXTRA}
-fdtfile=${DTB}.dtb
-platform=${FAMILY}
-verbose=${LOGLEVEL}
-
-# OVERLAYS
-${BOOTCMD_FDTOVERLAYS}
-#user_overlays=
-EOF
 mkimage -C none -A ${ARCH} -T script -d ${BOOT_PATH}/boot.cmd ${BOOT_PATH}/boot.scr
+# u-boot user config file
+uconfig_txt
 }
 
 bootini (){
@@ -405,19 +336,8 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]] && [[ "$BOOT_VFAT" == "false" ]]; then sed -i 's/^setenv loading "".*/setenv loading "'"ext4load"'"/g' \
 		${BOOT_PATH}/boot.ini; fi
 fi
-cat <<EOF > "${BOOT_PATH}/uconfig.txt"
-# U-BOOT CONFIG
-bootlabel=${DEFAULT_MOTD}
-console=${CONSOLE}
-extra=${EXTRA}
-fdtfile=${DTB}.dtb
-platform=${FAMILY}
-verbose=${LOGLEVEL}
-
-# OVERLAYS
-${BOOTCMD_FDTOVERLAYS}
-#user_overlays=
-EOF
+# u-boot user config file
+uconfig_txt
 }
 
 extlinux (){
@@ -441,6 +361,19 @@ label ${CAP_DISTRO} ${CAP_RELEASE}
 	${EXTLINUX_FDTOVERLAYS}
 	${CMDLINE}
 EOF
+}
+
+# odroid boot script and env file
+odroid_bootcmd (){
+rm -f p1/{boot.cmd,config.ini}
+cp files/boot/scripts/${FAMILY_EXT}-boot.cmd p1/boot.cmd
+cp files/boot/scripts/${FAMILY_EXT}-config.ini p1/config.ini
+if [[ -f "files/boot/scripts/${FAMILY_EXT}-boot-logo.bmp.gz" ]]; then cp files/boot/scripts/${FAMILY_EXT}-boot-logo.bmp.gz p1/boot-logo.bmp.gz; fi
+sed -i "s/uuid=PARTUUID=/uuid=PARTUUID=${ROOT_PARTUUID}/g" p1/config.ini
+if [[ "$FSTYPE" =~ ^(ext4|xfs)$ ]]; then sed -i "s/rootfstype=/rootfstype=${ROOT_FSTYPE}/g" p1/config.ini; fi
+if [[ "$FSTYPE" == "btrfs" ]]; then sed -i 's/rootfstype=/rootfstype="'"${ROOT_FSTYPE}"'"/g' p1/config.ini; fi
+sed -i "s/fdtfile=/fdtfile=${DTB}.dtb/g" p1/config.ini
+mkimage -C none -A ${ARCH} -T script -d p1/boot.cmd p1/boot.scr
 }
 
 customize_image (){
@@ -474,5 +407,21 @@ if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]] && [[ "$ENABLE_PETITBOOT" =
 	sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
 	sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
 	sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
+fi
+}
+
+# rename and check for compression
+finish_image (){
+IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
+IMAGE_FIN_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
+if [[ -f "${IMAGE_FILE_NAME}" ]]; then mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}; else echo -e "Build error: ${IMAGE_FILE_NAME}"; exit 1; fi
+if [ $COMPRESS_IMG -eq 1 ]; then
+	echo_compress
+	if [[ "$IMG_COMPRESSION" == "xz" ]]; then xz -zev --threads=${CORES} ${IMAGE_FIN_NAME}; fi
+	if [[ "$IMG_COMPRESSION" == "zst" ]]; then zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${IMAGE_FIN_NAME}; fi
+	if [[ -f "${IMAGE_FIN_NAME}.${IMG_COMPRESSION}" ]]; then
+		sha256sum ${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
+		sha256sum --check ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
+	fi
 fi
 }
