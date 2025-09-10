@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
+
 # U-BOOT
 amlogic_uboot_download (){
 if [[ "$SERIES" == "amlogic-t7" ]]; then
@@ -12,10 +14,12 @@ if [[ "$SERIES" == "amlogic-t7" ]]; then
 	if [[ ! -d "${ARM64_COMPILER}" ]]; then
 		if [[ `wget -S --spider ${TC_URL}/${ARM64_COMPILER}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 			echo -en "${WHT}${ARM64_COMPILER}${FIN} "
+			sleep .25
 			echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-			aria2c -q ${TC_URL}/${ARM64_COMPILER}.tar.xz
+			sleep .50
+			${DOWNLOAD} ${TC_URL}/${ARM64_COMPILER}.tar.xz
 			if [[ -f "${ARM64_COMPILER}.tar.xz" ]]; then
-				echo -en "${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
+				echo -en " ${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
 				tar xf ${ARM64_COMPILER}.tar.xz
 				if [[ ! -d "${ARM64_COMPILER}" ]]; then report_error; else echo_bdone; fi
 			else
@@ -27,10 +31,12 @@ if [[ "$SERIES" == "amlogic-t7" ]]; then
 	if [[ ! -d "${RISCV_COMPILER}" ]]; then
 		if [[ `wget -S --spider ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 			echo -en "${WHT}${RISCV_COMPILER}${FIN} "
+			sleep .25
 			echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
-			aria2c -q ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz
+			sleep .50
+			${DOWNLOAD} ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz
 			if [[ -f "${RISCV_COMPILER}-${TC_ARCH}.tar.gz" ]]; then
-				echo -en "${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
+				echo -en " ${PNK}[${FIN}${WHT}extracting${FIN}${PNK}]${FIN} "
 				tar xf ${RISCV_COMPILER}-${TC_ARCH}.tar.gz
 				if [[ ! -d "${RISCV_COMPILER}" ]]; then report_error; else echo_bdone; fi
 			else
