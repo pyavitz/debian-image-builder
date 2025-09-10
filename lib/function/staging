@@ -158,12 +158,17 @@ EOF
 setup (){
 if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
 if [ $VERBOSE -eq 1 ]; then uuid; else uuid > /dev/null 2>&1; fi
-if [[ -f "${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz" ]]; then
+if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
+	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
+else
+	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-minimal-${ROOTFS_ARCH}.tar.xz
+fi
+if [[ -f "${RELEASE_TARBALL}" ]]; then
 	echo -en "${WHT}Extracting rootfs${FIN} "
-	tar -xf ${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz -C ${P_VALUE}/
+	tar -xf ${RELEASE_TARBALL} -C ${P_VALUE}/
 	echo_bdone
 else
-	echo -e "${YLW}Missing rootfs tarball${FIN}?"
+	echo -e "${YLW}Missing ${RELEASE_TARBALL}${FIN}?"
 	make cleanup > /dev/null 2>&1
 	exit 0
 fi
