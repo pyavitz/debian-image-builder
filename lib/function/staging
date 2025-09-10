@@ -156,22 +156,21 @@ EOF
 }
 
 setup (){
-if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
-if [ $VERBOSE -eq 1 ]; then uuid; else uuid > /dev/null 2>&1; fi
 if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
 	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
 else
 	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-minimal-${ROOTFS_ARCH}.tar.xz
 fi
-if [[ -f "${RELEASE_TARBALL}" ]]; then
-	echo -en "${WHT}Extracting rootfs${FIN} "
-	tar -xf ${RELEASE_TARBALL} -C ${P_VALUE}/
-	echo_bdone
-else
+if [[ ! -f "${RELEASE_TARBALL}" ]]; then
 	echo -e "${YLW}Missing ${RELEASE_TARBALL}${FIN}?"
-	make cleanup > /dev/null 2>&1
+	make clean > /dev/null 2>&1
 	exit 0
 fi
+if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
+if [ $VERBOSE -eq 1 ]; then uuid; else uuid > /dev/null 2>&1; fi
+echo -en "${WHT}Extracting rootfs${FIN} "
+tar -xf ${RELEASE_TARBALL} -C ${P_VALUE}/
+echo_bdone
 mkdir -p ${P_VALUE}/etc/apt/apt.conf.d ${P_VALUE}/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "${P_VALUE}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p ${P_VALUE}/usr/bin
@@ -229,7 +228,12 @@ EOF
 
 files (){
 # add u-boot and kernel debs
-cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
+if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
+	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
+else
+	cp ${OUTPUT}/linux-image-*.deb ${P_VALUE}/root
+	if [[ ! "$FAMILY" == "generic" ]]; then cp ${OUTPUT}/u-boot-*.deb ${P_VALUE}/root; fi
+fi
 # add stage2 script
 cp scripts/stage2 ${P_VALUE}/root
 # add board, user data and function files
@@ -237,6 +241,7 @@ cp lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt
 cp lib/function/networking ${P_VALUE}/root/networking.txt
 cp lib/function/services ${P_VALUE}/root/services.txt
 cp lib/source ${P_VALUE}/root/source.txt
+echo "MINIMAL_ROOTFS=${MINIMAL_ROOTFS}" >> ${P_VALUE}/root/source.txt
 cp board.txt ${P_VALUE}/root
 cp userdata.txt ${P_VALUE}/root
 # add misc files

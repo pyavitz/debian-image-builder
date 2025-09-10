@@ -42,21 +42,21 @@ echo -n "${TIMEZONE}" > /etc/timezone
 
 apt upgrade -y
 apt dist-upgrade -y
-if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} resolvconf haveged
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} resolvconf haveged ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} openresolv haveged
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} openresolv haveged ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} dbus-user-session resolvconf haveged ${KALI_PKGS}
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} dbus-user-session resolvconf haveged ${KALI_PKGS} ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO_VERSION" =~ ^(jammy|noble)$ ]]; then WIRELESS="iw wireless-tools"; else WIRELESS="iw"; fi
 	if [[ "$DISTRO_VERSION" =~ ^(focal|jammy)$ ]]; then RESOLV="resolvconf"; else RESOLV="systemd-resolved"; fi
-	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5
+	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5 ${PKGS_FULL}
 fi
 
 apt -y clean
