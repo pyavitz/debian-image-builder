@@ -311,7 +311,14 @@ bootcmd (){
 echo -en "$BOARD: "; echo -e "Installing boot script ..."
 if [[ "$P_VALUE" == "p1" ]]; then BOOT_PATH="p1/boot"; else BOOT_PATH="p1"; fi
 rm -f ${BOOT_PATH}/{boot.cmd,boot.scr}
-cp -f files/boot/scripts/boot.cmd ${BOOT_PATH}/
+if [[ -f "files/boot/scripts/${SERIES}-boot.cmd" ]]; then
+	cp -f files/boot/scripts/${SERIES}-boot.cmd ${BOOT_PATH}/boot.cmd
+elif [[ -f "files/boot/scripts/boot.cmd" ]]; then
+	cp -f files/boot/scripts/boot.cmd ${BOOT_PATH}/
+else
+	echo "No boot.cmd file found?"
+	exit 1
+fi
 sed -i 's/^setenv rootfstype "".*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/g' ${BOOT_PATH}/boot.cmd
 sed -i 's/^setenv kernel "".*/setenv kernel "'"${BOOT_KERNEL}"'"/g' ${BOOT_PATH}/boot.cmd
 sed -i 's/^setenv initramfs "".*/setenv initramfs "'"${BOOT_INITRD}"'"/g' ${BOOT_PATH}/boot.cmd
