@@ -626,11 +626,13 @@ fi
 if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_ROOTFS}/boot/uconfig.txt
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_ROOTFS}/boot/boot.cmd /mnt/${P_ROOTFS}/boot/boot.scr
 fi
 if [[ "$BOOTINI" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.ini
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.ini
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_ROOTFS}/boot/uconfig.txt
 fi
 $EE
 $EE "fstab"
@@ -651,11 +653,13 @@ fi
 if [[ "$BOOTCMD" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_BOOT}/uconfig.txt
 	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_BOOT}/boot.cmd /mnt/${P_BOOT}/boot.scr
 fi
 if [[ "$BOOTINI" == "true" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.ini
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.ini
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_BOOT}/uconfig.txt
 fi
 $EE
 $EE "fstab"
