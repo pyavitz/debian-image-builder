@@ -4,24 +4,6 @@ setenv rootfstype ""
 setenv kernel ""
 setenv initramfs ""
 
-if test -e mmc 0:1 boot.scr; then
-	setenv devtype mmc
-	setenv devnum 0
-	setenv distro_bootpart 2
-elif test -e mmc 0:1 boot/boot.scr; then
-	setenv devtype mmc
-	setenv devnum 0
-	setenv distro_bootpart 1
-elif test -e mmc 1:1 boot.scr; then
-	setenv devtype mmc
-	setenv devnum 1
-	setenv distro_bootpart 2
-elif test -e mmc 1:1 boot/boot.scr; then
-	setenv devtype mmc
-	setenv devnum 1
-	setenv distro_bootpart 1
-fi
-
 # Load uconfig.txt
 if test -e ${devtype} ${devnum}:${distro_bootpart} uconfig.txt; then
 	setenv uconfig "uconfig.txt"
@@ -38,16 +20,14 @@ if test -e ${devtype} ${devnum}:${distro_bootpart} boot.scr; then
 	setenv initrd ${initramfs}
 	setenv fdtdir ${platform}
 	setenv user_overlay_dir user-overlays
-	fsuuid ${devtype} ${devnum}:2 rootdev
 elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/boot.scr; then
 	setenv fk_kvers boot/${kernel}
 	setenv initrd boot/${initramfs}
 	setenv fdtdir boot/${platform}
 	setenv user_overlay_dir boot/user-overlays
-	fsuuid ${devtype} ${devnum}:1 rootdev
 fi
 
-setenv bootargs "${console} root=UUID=${rootdev} rw ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait partition_type=generic ${bootargs} init=/sbin/init"
+setenv bootargs "${console} root=${rootdev} rw ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait partition_type=generic ${bootargs} init=/sbin/init"
 
 setenv loading ""
 ${loading} ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd} \
