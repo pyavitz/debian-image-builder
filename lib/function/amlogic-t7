@@ -2,7 +2,7 @@
 
 DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
 # Mirrors
-AM_URL="https://mirrors.dotsrc.org/armbian-dl/_toolchain"
+AB_URL="https://mirrors.dotsrc.org/armbian-dl/_toolchain"
 GH_URL="https://github.com/pyavitz/debian-image-builder/releases/tag/toolchain"
 # Khadas VIM4 Compiler Toolchain
 if [[ "$HOST_ARCH" == "x86_64"  ]]; then TC_ARCH="linux-x64"; fi
@@ -10,13 +10,14 @@ if [[ "$HOST_ARCH" == "aarch64"  ]]; then TC_ARCH="linux-${ARCH}"; fi
 ARM64_COMPILER="gcc-linaro-7.3.1-2018.05-${HOST_ARCH}_aarch64-elf"
 RISCV_COMPILER="xpack-riscv-none-embed-gcc-8.3.0-1.2"
 
+# TOOLCHAIN MIRROR
 khadasvim4_toolchain_mirror (){
-if [[ `wget -S --spider ${AM_URL}/${ARM64_COMPILER}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] && \
-	[[ `wget -S --spider ${AM_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then TC_URL="${AM_URL}"
+if [[ `wget -S --spider ${AB_URL}/${ARM64_COMPILER}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] && \
+	[[ `wget -S --spider ${AB_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then TC_URL="${AB_URL}"
 elif [[ `wget -S --spider ${GH_URL}/${ARM64_COMPILER}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]] && \
 	[[ `wget -S --spider ${GH_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then TC_URL="${GH_URL}"
 else
-	echo -e "${BOARD} toolchain mirror function failed to find tarball(s)."
+	echo -e "${DEFAULT_MOTD} toolchain mirror function failed to find tarball(s)."
 	echo -e "Check that you are connected to the webs and try again."
 	exit 1
 fi
@@ -28,7 +29,7 @@ if [[ ! -d "${ARM64_COMPILER}" ]]; then
 	${BOARD}_toolchain_mirror
 	echo -en "${WHT}${ARM64_COMPILER}${FIN} "
 	sleep .25
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}starting download${FIN}${PNK}]${FIN} "
 	sleep .50
 	${DOWNLOAD} ${TC_URL}/${ARM64_COMPILER}.tar.xz
 	if [[ -f "${ARM64_COMPILER}.tar.xz" ]]; then
@@ -44,7 +45,7 @@ if [[ ! -d "${RISCV_COMPILER}" ]]; then
 	${BOARD}_toolchain_mirror
 	echo -en "${WHT}${RISCV_COMPILER}${FIN} "
 	sleep .25
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	echo -en "${PNK}[${FIN}${WHT}starting download${FIN}${PNK}]${FIN} "
 	sleep .50
 	${DOWNLOAD} ${TC_URL}/${RISCV_COMPILER}-${TC_ARCH}.tar.gz
 	if [[ -f "${RISCV_COMPILER}-${TC_ARCH}.tar.gz" ]]; then
@@ -74,7 +75,7 @@ if [[ "$SERIES" == "amlogic-t7" ]]; then
 		cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
 		# Fake defconfig (required by builder)
 		touch u-boot/configs/${UBOOT_DEFCONFIG}
-		echo_bdone
+		echo -e "${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
 	else
 		git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${BOARD}-u-boot-${GIT_UBOOT_TAG}
 		if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
