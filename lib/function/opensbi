@@ -1,27 +1,26 @@
 #!/bin/bash
 
 opensbi_firmware (){
-if [[ `wget -S --spider ${OPENSBI_URL} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]] && [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}.backup" ]]; then
-		echo -en "${WHT}${BOARD}-opensbi-${OPENSBI_TAG}${FIN}"
-		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]] && [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}.backup" ]]; then
+	echo -en "${WHT}${BOARD}-opensbi-${OPENSBI_TAG}${FIN}"
+	echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+	rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}
+	echo -en " ${WHT}...${FIN}"
+	mv -f ${BOARD}-opensbi-${OPENSBI_TAG}.backup ${BOARD}-opensbi-${OPENSBI_TAG}
+	cd ${BOARD}-opensbi-${OPENSBI_TAG}
+	make clean
+	cd ..
+	cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
+	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+else
+	if [[ `wget -S --spider ${OPENSBI_URL} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 		rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}
-		echo -en " ${WHT}...${FIN}"
-		mv -f ${BOARD}-opensbi-${OPENSBI_TAG}.backup ${BOARD}-opensbi-${OPENSBI_TAG}
-		cd ${BOARD}-opensbi-${OPENSBI_TAG}
-		make clean
-		cd ..
-		cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-	else
-		if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]]; then rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}; fi
-		echo -en "${WHT}${BOARD}-opensbi-${OPENSBI_TAG}${FIN}"
-		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
-		git clone -q -c advice.detachedHead=false --depth=1 ${OPENSBI_URL} -b ${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}
+		git clone -c advice.detachedHead=false --depth=1 ${OPENSBI_URL} -b ${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}
 		if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]]; then
 			cd ${BOARD}-opensbi-${OPENSBI_TAG}
 			make clean
 			cd ..
+			echo -en "${WHT}${BOARD}-opensbi-${OPENSBI_TAG}${FIN}"
 			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
 			cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
 			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
