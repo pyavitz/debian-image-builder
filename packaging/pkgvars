@@ -74,9 +74,7 @@ set -e
 
 # clean
 rm -fdr /usr/lib/u-boot
-if [ -d /usr/lib/${PKGNAME} ]; then
-	rm -fr /usr/lib/${PKGNAME}/*
-fi
+rm -fdr /usr/lib/${PKGNAME}
 
 exit 0
 EOF
@@ -92,14 +90,6 @@ set -e
 # symlink
 if [ -d /usr/lib/${PKGNAME} ]; then
 	ln -s /usr/lib/${PKGNAME} /usr/lib/u-boot
-fi
-
-# broadcom
-if [ -d /boot/broadcom ]; then
-	if [ -f /usr/lib/${PKGNAME}/u-boot.bin ]; then
-		rm -f /boot/broadcom/u-boot.bin
-		cp -fr /usr/lib/${PKGNAME}/u-boot.bin /boot/broadcom/
-	fi
 fi
 
 exit 0
@@ -120,49 +110,23 @@ fi
 
 # u-boot precompiled packaging
 uboot_precompiled_packaging (){
+if [[ "$PRECOMPILED_UBOOT" == "true" ]] && [[ ! `ls ${PRECOMPILED_UBOOT_DIR}/*.bin` ]] > /dev/null 2>&1; then
+	echo "ERR: No U-Boot binary found!"
+	exit 1
+fi
 PKGNAME="u-boot-${SERIES}-${BOARD}"
 BV="${BUILD_VERSION}"
 mkdir -p ${OUTPUT}/
 echo -e "Using precompiled binaries."
 # add binary(ies) to output directory
-if [[ "$BOARD" == "ft20" ]]; then cp -f ${PRECOMPILED_UBOOT_DIR}/u-boot.bin ${OUTPUT}/; fi
-if [[ "$BOARD" == "lepotato" || "$BOARD" == "odroidn2l" ]]; then
-	if [[ -f "${PRECOMPILED_UBOOT_DIR}/u-boot.bin" ]]; then cp -f ${PRECOMPILED_UBOOT_DIR}/u-boot.bin ${OUTPUT}/; fi
-	if [[ -f "${PRECOMPILED_UBOOT_DIR}/u-boot.bin.sd.bin" ]]; then cp -f ${PRECOMPILED_UBOOT_DIR}/u-boot.bin.sd.bin ${OUTPUT}/; fi
-fi
-if [[ "$BOARD" == "odroidc1" ]]; then
-	cp -f ${PRECOMPILED_UBOOT_DIR}/bl1.bin ${OUTPUT}/
-	cp -f ${PRECOMPILED_UBOOT_DIR}/u-boot.bin ${OUTPUT}/
-fi
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	cp -f ${PRECOMPILED_UBOOT_DIR}/u-boot-sunxi-with-spl.bin ${OUTPUT}/
-fi
-if [[ "$BOARD" =~ ^(indiedroid-nova|khadasedge2|orangepi5|orangepi5plus|radxae25|rock5b)$ ]]; then
-	cp -f ${PRECOMPILED_UBOOT_DIR}/idbloader.bin ${OUTPUT}/
-	cp -f ${PRECOMPILED_UBOOT_DIR}/u-boot.itb ${OUTPUT}/
-fi
+cp -r ${PRECOMPILED_UBOOT_DIR}/*.bin ${OUTPUT}/
 cd ${OUTPUT}/
-if [[ -d "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}" ]]; then rm -fdr "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}"; fi
-if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then rm -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb"; fi
+rm -fdr "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}*"
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/DEBIAN
 mkdir -p ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 # add binary(ies) to deb package
-if [[ "$BOARD" == "ft20" ]]; then cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/; fi
-if [[ "$BOARD" == "lepotato" || "$BOARD" == "odroidn2l" ]]; then
-	if [[ -f "u-boot.bin" ]]; then cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/; fi
-	if [[ -f "u-boot.bin.sd.bin" ]]; then cp -f u-boot.bin.sd.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/; fi
-fi
-if [[ "$BOARD" == "odroidc1" ]]; then
-	cp -f bl1.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	cp -f u-boot.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$BOARD" == "orangepi3lts" ]]; then
-	cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
-if [[ "$BOARD" =~ ^(indiedroid-nova|khadasedge2|orangepi5|orangepi5plus|radxae25|rock5b)$ ]]; then
-	cp -f idbloader.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-fi
+cp -r *.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+# add flash script
 cp -f ../../packaging/flash.sh ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 chmod +x ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/flash.sh
 # control file
@@ -182,9 +146,7 @@ set -e
 
 # clean
 rm -fdr /usr/lib/u-boot
-if [ -d /usr/lib/${PKGNAME} ]; then
-	rm -fr /usr/lib/${PKGNAME}/*
-fi
+rm -fr /usr/lib/${PKGNAME}
 
 exit 0
 EOF
@@ -208,17 +170,10 @@ EOF
 fi
 
 # build deb package
-if [[ `ls ${PKGNAME}_*.deb` ]] > /dev/null 2>&1; then
-	mkdir -p tmp/
-	mv -f ${PKGNAME}_*.deb tmp/
-fi
+if [[ `ls ${PKGNAME}_*.deb` ]] > /dev/null 2>&1; then mkdir -p tmp/; mv -f ${PKGNAME}_*.deb tmp/; fi
 dpkg-deb -Z${COMPRESSION} --build --root-owner-group ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}
 if [[ -f "${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb" ]]; then
 	rm -fdr ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}
-	if [[ -f "u-boot.itb" ]]; then
-		# if found list image tree blob
-		ls -ls u-boot.itb
-	fi
-	ls -ls {*.bin,${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb};
+	ls -ls {*.bin,${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}.deb}
 fi
 }
