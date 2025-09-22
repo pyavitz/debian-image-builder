@@ -19,7 +19,7 @@ CLN=./scripts/clean
 CLEAN=sudo ./scripts/clean
 
 # purge
-PURGE=$(shell sudo rm -fdr sources; if [ -d .cache ]; then sudo rm -f .cache/git_fast.*; fi)
+PURGE=$(shell sudo rm -fdr sources; if [ -d .cache ]; then sudo rm -f .cache/git_*; fi)
 PURGEALL=$(shell sudo rm -fdr sources output; if [ -d .cache ]; then sudo rm -f .cache/git_*; fi)
 PURGELOG=$(shell sudo rm -fdr output/logs)
 
