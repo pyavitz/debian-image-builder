@@ -1,13 +1,13 @@
-From 7e3cbdf04b745a635838e95c7ce99e39de6c422b Mon Sep 17 00:00:00 2001
+From e870612834c20e707fcc4997e8baa06347f61a92 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Wed, 30 Jul 2025 07:32:57 -0400
+Date: Wed, 24 Sep 2025 18:35:59 -0400
 Subject: [PATCH] Add board KickPi K2B
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
  configs/kickpi_k2b_defconfig                  |  34 ++
- .../allwinner/sun50i-h618-kickpi-k2b.dts      | 315 ++++++++++++++++++
- 2 files changed, 349 insertions(+)
+ .../allwinner/sun50i-h618-kickpi-k2b.dts      | 326 ++++++++++++++++++
+ 2 files changed, 360 insertions(+)
  create mode 100644 configs/kickpi_k2b_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 
@@ -53,10 +53,10 @@ index 00000000000..912b4633dd1
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
 new file mode 100644
-index 00000000000..95659012770
+index 00000000000..431b8447c51
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-kickpi-k2b.dts
-@@ -0,0 +1,315 @@
+@@ -0,0 +1,326 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (C) 2025 Patrick Yavitz <pyavitz@gmail.com>
@@ -147,10 +147,9 @@ index 00000000000..95659012770
 +	status = "okay";
 +	pinctrl-0 = <&ext_rgmii_pins>;
 +	pinctrl-names = "default";
-+	phy-mode = "rgmii";
++	phy-mode = "rgmii-id";
 +	phy-handle = <&ext_rgmii_phy>;
-+	allwinner,tx-delay-ps = <700>;
-+	allwinner,rx-delay-ps = <1700>;
++	phy-supply = <&reg_aldo1>;
 +};
 +
 +&ehci0 {
@@ -176,9 +175,10 @@ index 00000000000..95659012770
 +};
 +
 +&mdio0 {
-+	ext_rgmii_phy: ethernet-phy@1 {
-+		compatible = "ethernet-phy-id001c.c916";
-+		reg = <1>;
++	ext_rgmii_phy: ethernet-phy@0 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <0>;
++
 +		reset-assert-us = <20000>;
 +		reset-deassert-us = <100000>;
 +		reset-gpios = <&pio 8 6 GPIO_ACTIVE_LOW>; /* PI6 */
@@ -309,6 +309,8 @@ index 00000000000..95659012770
 +				regulator-always-on;
 +				regulator-min-microvolt = <1800000>;
 +				regulator-max-microvolt = <1800000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
 +				regulator-name = "vcc-1v8-pll";
 +			};
 +
@@ -316,6 +318,8 @@ index 00000000000..95659012770
 +				regulator-always-on;
 +				regulator-min-microvolt = <3300000>;
 +				regulator-max-microvolt = <3300000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
 +				regulator-name = "vcc-3v3-io";
 +			};
 +
@@ -323,6 +327,8 @@ index 00000000000..95659012770
 +				regulator-always-on;
 +				regulator-min-microvolt = <810000>;
 +				regulator-max-microvolt = <990000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
 +				regulator-name = "vdd-gpu-sys";
 +			};
 +
@@ -330,6 +336,9 @@ index 00000000000..95659012770
 +				regulator-always-on;
 +				regulator-min-microvolt = <810000>;
 +				regulator-max-microvolt = <1100000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
++				regulator-ramp-delay = <200>; /* FIXME */
 +				regulator-name = "vdd-cpu";
 +			};
 +
@@ -337,6 +346,8 @@ index 00000000000..95659012770
 +				regulator-always-on;
 +				regulator-min-microvolt = <1100000>;
 +				regulator-max-microvolt = <1500000>;
++				regulator-step-delay-us = <25>;
++				regulator-final-delay-us = <50>;
 +				regulator-name = "vdd-dram";
 +			};
 +		};

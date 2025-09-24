@@ -127,10 +127,9 @@
 	status = "okay";
 	pinctrl-0 = <&ext_rgmii_pins>;
 	pinctrl-names = "default";
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	phy-handle = <&ext_rgmii_phy>;
-	allwinner,tx-delay-ps = <700>;
-	allwinner,rx-delay-ps = <2300>;
+	phy-supply = <&reg_aldo1>;
 };
 
 &ehci0 {
@@ -195,9 +194,10 @@
 };
 
 &mdio0 {
-	ext_rgmii_phy: ethernet-phy@1 {
-		compatible = "ethernet-phy-id001c.c916";
-		reg = <1>;
+	ext_rgmii_phy: ethernet-phy@0 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0>;
+
 		reset-assert-us = <20000>;
 		reset-deassert-us = <100000>;
 		reset-gpios = <&pio 8 6 GPIO_ACTIVE_LOW>; /* PI6 */
@@ -322,6 +322,8 @@
 				regulator-always-on;
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
+				regulator-step-delay-us = <25>;
+				regulator-final-delay-us = <50>;
 				regulator-name = "vcc-1v8-pll";
 			};
 
@@ -329,6 +331,8 @@
 				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
+				regulator-step-delay-us = <25>;
+				regulator-final-delay-us = <50>;
 				regulator-name = "vcc-3v3-io";
 			};
 
@@ -336,6 +340,8 @@
 				regulator-always-on;
 				regulator-min-microvolt = <810000>;
 				regulator-max-microvolt = <990000>;
+				regulator-step-delay-us = <25>;
+				regulator-final-delay-us = <50>;
 				regulator-name = "vdd-gpu-sys";
 			};
 
@@ -343,6 +349,9 @@
 				regulator-always-on;
 				regulator-min-microvolt = <810000>;
 				regulator-max-microvolt = <1100000>;
+				regulator-step-delay-us = <25>;
+				regulator-final-delay-us = <50>;
+				regulator-ramp-delay = <200>; /* FIXME */
 				regulator-name = "vdd-cpu";
 			};
 
@@ -350,6 +359,8 @@
 				regulator-always-on;
 				regulator-min-microvolt = <1100000>;
 				regulator-max-microvolt = <1500000>;
+				regulator-step-delay-us = <25>;
+				regulator-final-delay-us = <50>;
 				regulator-name = "vdd-dram";
 			};
 		};
