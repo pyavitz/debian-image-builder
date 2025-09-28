@@ -150,74 +150,69 @@ menu:
 
 # U-BOOT
 uboot:
-	@rm -f override.txt
-# edit user data file
+	@rm -f ignore.txt
 ifdef build
-	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
+	@echo 'BUILD_VERSION="$(build)"' >> ignore.txt
 endif
 ifdef compiler
-	@$(shell sed -i "s/^COMPILER=.*/COMPILER="'"${compiler}"'"/" userdata.txt)
+	@echo 'COMPILER="$(compiler)"' >> ignore.txt
 endif
 ifdef menuconfig
-	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"${menuconfig}"'"/" userdata.txt)
+	@echo 'MENUCONFIG="$(menuconfig)"' >> ignore.txt
 endif
 ifdef version
-	@$(shell sed -i "s/^UBOOT_VERSION=.*/UBOOT_VERSION="'"${version}"'"/" userdata.txt)
+	@echo 'UBOOT_VERSION="$(version)"' >> ignore.txt
 endif
 ifdef verbose
-	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
+	@echo 'VERBOSE="$(verbose)"' >> ignore.txt
 endif
-# edit board file
 ifdef precompiled
-	@echo 'PRECOMPILED_UBOOT="$(precompiled)"' >> override.txt
+	@echo 'PRECOMPILED_UBOOT="$(precompiled)"' >> ignore.txt
 endif
 ifdef force
-	@echo 'FORCE_VERSION="$(force)"' >> override.txt
+	@echo 'FORCE_VERSION="$(force)"' >> ignore.txt
 endif
 	$(call build_uboot)
 
 # KERNEL
 kernel:
-	@rm -f override.txt
-# edit user data file
+	@rm -f ignore.txt
 ifdef build
-	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"${build}"'"/" userdata.txt)
+	@echo 'BUILD_VERSION="$(build)"' >> ignore.txt
 endif
 ifdef compiler
-	@$(shell sed -i "s/^COMPILER=.*/COMPILER="'"${compiler}"'"/" userdata.txt)
+	@echo 'COMPILER="$(compiler)"' >> ignore.txt
 endif
 ifdef extra_wifi
-	@$(shell sed -i "s/^EXTRA_WIFI=.*/EXTRA_WIFI="'"${extra_wifi}"'"/" kernel.txt)
+	@echo 'EXTRA_WIFI="$(extra_wifi)"' >> ignore.txt
 endif
 ifdef menuconfig
-	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"${menuconfig}"'"/" userdata.txt)
+	@echo 'MENUCONFIG="$(menuconfig)"' >> ignore.txt
 endif
 ifdef myconfig
-	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"1"'"/" userdata.txt)
-	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"${myconfig}_defconfig"'"/" userdata.txt)
+	@echo 'CUSTOM_DEFCONFIG="1"' >> ignore.txt
+	@echo 'MYCONFIG="${myconfig}_defconfig"' >> ignore.txt
 endif
 ifdef verbose
-	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"${verbose}"'"/" userdata.txt)
+	@echo 'VERBOSE="$(verbose)"' >> ignore.txt
 endif
 ifdef version
-	@$(shell sed -i "s/^VERSION=.*/VERSION="'"${version}"'"/" userdata.txt)
+	@echo 'VERSION="$(version)"' >> ignore.txt
 endif
-# edit board file
 ifdef git
-	@echo 'FORCE_GIT="$(git)"' > override.txt
+	@echo 'FORCE_GIT="$(git)"' >> ignore.txt
 endif
 ifdef force
-	@echo 'FORCE_VERSION="$(force)"' >> override.txt
+	@echo 'FORCE_VERSION="$(force)"' >> ignore.txt
 endif
 ifdef patching
-	@echo 'LINUX_PATCHING="$(patching)"' >> override.txt
+	@echo 'LINUX_PATCHING="$(patching)"' >> ignore.txt
 endif
 	$(call build_kernel)
 
 # ROOTFS
 rootfs:
-	@rm -f override.txt
-# edit board file
+# edit user data file
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
 endif
@@ -231,7 +226,6 @@ endif
 
 # IMAGE
 image:
-	@rm -f override.txt
 # edit user data file
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
@@ -264,6 +258,7 @@ reset:
 	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"_defconfig"'"/" userdata.txt)
+	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"0"'"/" userdata.txt)
 
 list:
 	# Boards

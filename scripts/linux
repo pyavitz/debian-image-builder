@@ -8,20 +8,20 @@ source lib/function/git
 source lib/function/patching
 source lib/function/compilers
 source userdata.txt
-if [[ -f "board.txt" ]]; then :; else noboard; fi
-# override the board file
-if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
-# debug switch
-if [ $VERBOSE -eq 1 ]; then set -x; fi
+if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source board.txt
 source kernel.txt
+# ignore board and userdata file
+if [[ -f "ignore.txt" ]]; then . ignore.txt; rm -f ignore.txt; fi
+# debug switch
+if [ $VERBOSE -eq 1 ]; then set -x; fi
 if [[ -v "SPOOF_HOST" && ! -z "$SPOOF_HOST" ]]; then HOST_CODENAME="${SPOOF_HOST}"; fi
 source lib/function/${FAMILY}
 if [[ -f "lib/function/${SERIES}" ]]; then . lib/function/${SERIES}; fi
 source lib/function/wireless
 # override userdata file
 if [[ "$FORCE_VERSION" == "true" ]]; then
-	if [ -z $FORCE_LINUX_VERSION ]; then :; else VERSION="${FORCE_LINUX_VERSION}"; fi
+	if [ ! -z $FORCE_LINUX_VERSION ]; then VERSION="${FORCE_LINUX_VERSION}"; fi
 fi
 if [[ "$FORCE_GIT" == "false" ]]; then
 	if [[ "$VERSION" =~ ^([0-9].[0-9].y|[0-9].[0-9][0-9].y|stable|rc)$ ]]; then linux_prng; fi

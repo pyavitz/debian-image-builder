@@ -67,9 +67,7 @@ UBUNTU_FW="linux-firmware-mediatek-aiot"
 uscripts_pre-stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then
 	source files/userscripts/uscripts
-	if [[ `type run_function0` ]] &>/dev/null; then
-		run_function0
-	fi
+	if [[ `type run_function0` ]] &>/dev/null; then run_function0; fi
 fi
 }
 
@@ -80,9 +78,7 @@ if [[ -f "files/userscripts/uscripts" ]]; then
 	if [[ -f "${P_VALUE}/root/userscripts/README.md" ]]; then
 		rm -f ${P_VALUE}/root/userscripts/README.md;
 	fi
-	if [[ `type run_function1` ]] &>/dev/null; then
-		run_function1
-	fi
+	if [[ `type run_function1` ]] &>/dev/null; then run_function1; fi
 fi
 }
 
@@ -102,16 +98,6 @@ if [[ -e "/root/userscripts" ]]; then rm -fdr /root/userscripts; fi
 uscripts_fin-stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then
 	source files/userscripts/uscripts
-	if [[ `type run_function3` ]] &>/dev/null; then
-		run_function3
-	fi
+	if [[ `type run_function3` ]] &>/dev/null; then run_function3; fi
 fi
-}
-
-override_board (){
-if [[ ! -z "$FORCE_GIT" ]]; then sed -i 's/^FORCE_GIT=.*/FORCE_GIT="'"${FORCE_GIT}"'"/' board.txt; fi
-if [[ ! -z "$FORCE_VERSION" ]]; then sed -i 's/^FORCE_VERSION=.*/FORCE_VERSION="'"${FORCE_VERSION}"'"/' board.txt; fi
-if [[ ! -z "$LINUX_PATCHING" ]]; then sed -i 's/^LINUX_PATCHING=.*/LINUX_PATCHING="'"${LINUX_PATCHING}"'"/' board.txt; fi
-if [[ ! -z "$PRECOMPILED_UBOOT" ]]; then sed -i 's/^PRECOMPILED_UBOOT=.*/PRECOMPILED_UBOOT="'"${PRECOMPILED_UBOOT}"'"/' board.txt; fi
-rm -f override.txt
 }

@@ -7,17 +7,18 @@ source lib/function/uboot
 source lib/function/patching
 source lib/function/compilers
 # override the board file
-if [[ -f "board.txt" ]] && [[ -f "override.txt" ]]; then . override.txt; override_board; fi
 if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source lib/function/${FAMILY}
 source userdata.txt
+# ignore board and userdata file
+if [[ -f "ignore.txt" ]]; then . ignore.txt; rm -f ignore.txt; fi
 # debug switch
 if [ $VERBOSE -eq 1 ]; then set -x; fi
 # compile native or cross
 compile
 # override the user data file
 if [[ "$FORCE_VERSION" == "true" ]]; then
-	if [ -z $FORCE_UBOOT_VERSION ]; then :; else UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
+	if [ ! -z $FORCE_UBOOT_VERSION ]; then UBOOT_VERSION="${FORCE_UBOOT_VERSION}"; fi
 fi
 # compiler
 uboot_compilers
