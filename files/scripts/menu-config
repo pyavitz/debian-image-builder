@@ -44,7 +44,9 @@ if [[ "$DISCOVER" == "$BOARD" ]]; then
 	if [[ "$BOARD" =~ ^(bananapicm4|odroidn2l|odroidn2plus|odroidxu4)$ ]]; then
 		FAN_CTRL="1"; else FAN_CTRL="0"; fi
 	# fan control: gpio header fan is not supported
-	if [[ "$MODEL" == "BananaPi BPI-CM4IO Baseboard with BPI-CM4 Module" ]]; then FAN_CTRL="0"; fi
+	if [[ -e "/proc/device-tree/model" ]]; then
+		if [[ "$MODEL" == "BananaPi BPI-CM4IO Baseboard with BPI-CM4 Module" ]]; then FAN_CTRL="0"; fi
+	fi
 	# home assistant
 	if [[ "$FAMILY_EXT" =~ ^(bananapi|odroid)$ ]] && [[ "$DISTRO_CODENAME" == "bookworm" ]]; then
 		SUPPORTED_HA="1"; else SUPPORTED_HA="0"; fi
