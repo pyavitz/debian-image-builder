@@ -487,7 +487,9 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		rm -fdr /mnt/${P_BOOT}/{LOST.DIR,Android}
 	fi
 fi
-cp -axv . /mnt/${P_ROOTFS}
+#cp -axv . /mnt/${P_ROOTFS}
+tar --exclude='./proc' --exclude='./run' --exclude='./sys' --exclude='./tmp' -C . -cpf - . | tar -C /mnt/${P_ROOTFS} -xf -
+mkdir -p /mnt/${P_ROOTFS}/{proc,run,sys}
 if [[ "$P_VALUE" == "p1" ]]; then
 	mkdir -p /mnt/${P_ROOTFS}/boot
 	cp -ax /boot/* /mnt/${P_ROOTFS}/boot/
@@ -497,9 +499,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 		rm -fdr /mnt/${P_ROOTFS}/boot/{LOST.DIR,Android}
 	fi
 fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	rm -fdr /mnt/${P_ROOTFS}/boot/*
-fi
+if [[ "$P_VALUE" == "p2" ]]; then rm -fdr /mnt/${P_ROOTFS}/boot/*; fi
 }
 
 if [[ "$VERBOSITY" = "1" ]]; then
