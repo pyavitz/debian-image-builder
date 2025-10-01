@@ -104,7 +104,6 @@ Name:					# Name of _defconfig (must be placed in defconfig dir.)
 User options
 Logging:				# Logging > output/logs/$board-*.log (Menu interface only)
 Verbosity:				# Verbose
-Devel Rootfs:			# Developer rootfs tarball
 Compress img:			# Auto compress img > img.xz
 User scripts:			# Review the README in the files/userscripts directory
 User service:			# Create user during first boot (bypass the user information above)
@@ -134,6 +133,9 @@ ENABLE_PETITBOOT="false"
 
 # Bootstrap: if false use debootstrap
 MMDEBSTRAP="true"
+
+# Create minimal rootfs tarball
+MINIMAL_ROOTFS="false"
 
 # Image Size: 3584MB 4096MB
 IMGSIZE="4096MB"
