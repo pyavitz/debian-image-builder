@@ -153,10 +153,8 @@ Patches "-p1" placed in patches/userpatches are applied during compilation.
 ## Usage
 * Review the [Wiki](https://github.com/pyavitz/debian-image-builder/wiki)
 #### /boot/useraccount.txt
-* Headless: ENABLE="true" and fill in the variables (recommended)
-* Headful: ENABLE="false" and get prompted to create a user account
+* If left blank it defaults to pi:board
 ```sh
-ENABLE="false"			# Enable service
 NAME=""					# Your name
 USERNAME=""				# Username
 PASSWORD=""				# Password
