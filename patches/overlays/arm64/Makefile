@@ -14,7 +14,6 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-2-gpioao-3.dtbo \
 	meson-g12a-radxa-zero-uart-ao-b-on-gpioao-8-gpioao-9.dtbo \
 	meson-g12a-radxa-zero-uart-ee-c.dtbo \
-	meson-g12b-aml-gpiomem.dtbo \
 	meson-g12b-bananapi-cm4-gpu.dtbo \
 	meson-g12b-bananapi-cm4-i2c2.dtbo \
 	meson-g12b-bananapi-cm4-pwm-gpioh-5-fan.dtbo \
@@ -28,7 +27,6 @@ dtbo-$(CONFIG_ARCH_MESON) += \
 	meson-g12-gxl-cma-pool-896MB.dtbo \
 	meson-g12-pwm-gpiox-5-fan.dtbo \
 	meson-gxl-s905x-libretech-cc-i2c-ao.dtbo \
-	meson-sm1-aml-gpiomem.dtbo \
 	meson-sm1-odroid-c4-canfd0.dtbo \
 	meson-sm1-odroid-c4-i2c0.dtbo \
 	meson-sm1-odroid-c4-i2c1.dtbo \
