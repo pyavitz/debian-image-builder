@@ -1,0 +1,107 @@
+From 4ad183c567300b97ca58bd486f35be180d40be6c Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Wed, 22 Oct 2025 14:43:31 -0400
+Subject: [PATCH] clk: meson: g12a: Fix kernel warnings when no display
+ attached
+
+When booting SM1 or G12A boards without a dislay attached to HDMI,
+the kernel shows the following warning:
+
+[CRTC:46:meson_crtc] vblank wait timed out
+WARNING: CPU: 2 PID: 265 at drivers/gpu/drm/drm_atomic_helper.c:1682 drm_atomic_helper_wait_for_vblanks.part.0+0x240/0x264
+CPU: 2 UID: 0 PID: 265 Comm: setfont Tainted: G         C
+Tainted: [C]=CRAP
+pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : drm_atomic_helper_wait_for_vblanks.part.0+0x240/0x264
+lr : drm_atomic_helper_wait_for_vblanks.part.0+0x240/0x264
+Call trace:
+ drm_atomic_helper_wait_for_vblanks.part.0+0x240/0x264
+ drm_atomic_helper_commit_tail_rpm+0x84/0xa0
+ commit_tail+0xa4/0x18c
+ drm_atomic_helper_commit+0x164/0x178
+ drm_atomic_commit+0xb4/0xec
+ drm_client_modeset_commit_atomic+0x210/0x270
+ drm_client_modeset_commit_locked+0x5c/0x188
+ drm_fb_helper_pan_display+0xb8/0x1d4
+ fb_pan_display+0x7c/0x120
+ bit_update_start+0x20/0x48
+ fbcon_switch+0x418/0x54c
+ el0t_64_sync+0x194/0x198
+
+This happens when the kernel disables the unused clocks.
+Sometimes this causes the boot to hang.
+
+By (re)adding the flag CLK_IGNORE_UNUSED to the VCLK2 clocks, these
+clocks will not be disabled.
+
+This partially reverts commit b70cb1a21a54 ("clk: meson: g12a:
+make VCLK2 and ENCL clock path configurable by CCF").
+
+Fixes: b70cb1a21a54 ("clk: meson: g12a: make VCLK2 and ENCL clock path configurable by CCF").
+Signed-off-by: Martijn van Deventer <linux@martijnvandeventer.nl>
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+---
+ drivers/clk/meson/g12a.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/clk/meson/g12a.c b/drivers/clk/meson/g12a.c
+index 66f0e817e416..1a3d084cb504 100644
+--- a/drivers/clk/meson/g12a.c
++++ b/drivers/clk/meson/g12a.c
+@@ -3355,7 +3355,7 @@ static struct clk_regmap g12a_vclk2_div = {
+ 			&g12a_vclk2_input.hw
+ 		},
+ 		.num_parents = 1,
+-		.flags = CLK_SET_RATE_GATE,
++		.flags = CLK_SET_RATE_GATE | CLK_IGNORE_UNUSED,
+ 	},
+ };
+ 
+@@ -3391,7 +3391,7 @@ static struct clk_regmap g12a_vclk2 = {
+ 		.ops = &meson_vclk_gate_ops,
+ 		.parent_hws = (const struct clk_hw *[]) { &g12a_vclk2_div.hw },
+ 		.num_parents = 1,
+-		.flags = CLK_SET_RATE_PARENT,
++		.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
+ 	},
+ };
+ 
+@@ -3475,7 +3475,7 @@ static struct clk_regmap g12a_vclk2_div1 = {
+ 		.ops = &clk_regmap_gate_ops,
+ 		.parent_hws = (const struct clk_hw *[]) { &g12a_vclk2.hw },
+ 		.num_parents = 1,
+-		.flags = CLK_SET_RATE_PARENT,
++		.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
+ 	},
+ };
+ 
+@@ -3489,7 +3489,7 @@ static struct clk_regmap g12a_vclk2_div2_en = {
+ 		.ops = &clk_regmap_gate_ops,
+ 		.parent_hws = (const struct clk_hw *[]) { &g12a_vclk2.hw },
+ 		.num_parents = 1,
+-		.flags = CLK_SET_RATE_PARENT,
++		.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
+ 	},
+ };
+ 
+@@ -3503,7 +3503,7 @@ static struct clk_regmap g12a_vclk2_div4_en = {
+ 		.ops = &clk_regmap_gate_ops,
+ 		.parent_hws = (const struct clk_hw *[]) { &g12a_vclk2.hw },
+ 		.num_parents = 1,
+-		.flags = CLK_SET_RATE_PARENT,
++		.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
+ 	},
+ };
+ 
+@@ -3517,7 +3517,7 @@ static struct clk_regmap g12a_vclk2_div6_en = {
+ 		.ops = &clk_regmap_gate_ops,
+ 		.parent_hws = (const struct clk_hw *[]) { &g12a_vclk2.hw },
+ 		.num_parents = 1,
+-		.flags = CLK_SET_RATE_PARENT,
++		.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
+ 	},
+ };
+ 
+-- 
+2.43.0
+
