@@ -5,10 +5,9 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 	git_option
 	if [[ "$GIT_SHALLOW" == "true" ]]; then git_verify; fi
 	if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -d "${GIT_REPO}-${GIT_BRANCH}.backup" ]]; then
-		echo -en "${GIT_REPO}-${GIT_BRANCH}"
-		echo -en " ${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN}"
+		echo -en "${GIT_REPO}-${GIT_BRANCH}:"
+		echo -en " Restoring"
 		rm -fdr ${GIT_REPO}-${GIT_BRANCH}
-		echo -en " ${WHT}...${FIN}"
 		mv -f ${GIT_REPO}-${GIT_BRANCH}.backup ${GIT_REPO}-${GIT_BRANCH}
 		if [[ "$GIT_SHALLOW" == "false" ]]; then
 			cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean > /dev/null 2>&1; cd ..
@@ -16,7 +15,7 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 			cd ${GIT_REPO}-${GIT_BRANCH}; make clean > /dev/null 2>&1; cd ..
 		fi
 		cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		echo -e ", done."
 	else
 		echo -e "This may take a while ..."
 		echo ""
@@ -26,14 +25,14 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 			cd ${GIT_REPO}-${GIT_BRANCH}
 			if [[ `type ${FAMILY}_extra_git` ]] &>/dev/null; then ${FAMILY}_extra_git; fi
 			make clean > /dev/null 2>&1; cd ..
-			echo -en "${GIT_REPO}-${GIT_BRANCH}"
-			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+			echo -en "${GIT_REPO}-${GIT_BRANCH}:"
+			echo -en " Creating backup"
 			cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
-			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			echo -e ", done."
 		else
-			echo -en "${GIT_REPO}-${GIT_BRANCH}"
-			echo -en " ${PNK}[${FIN}${WHT}download${FIN}${PNK}]${FIN}"
-			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			echo -en "${GIT_REPO}-${GIT_BRANCH}:"
+			echo -en " Download"
+			echo -e ", failed."
 			exit 0
 		fi
 	fi
