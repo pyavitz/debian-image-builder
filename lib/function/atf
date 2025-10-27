@@ -22,30 +22,29 @@ fi
 atf_download (){
 if [[ `wget -S --spider https://github.com/ARM-software/arm-trusted-firmware/blob/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	if [[ -d "arm-trusted-firmware-${ATF_TAG}" ]] && [[ -d "arm-trusted-firmware-${ATF_TAG}.backup" ]]; then
-		echo -en "${WHT}Trusted Firmware-A ${ATF_TAG}${FIN}"
-		echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+		echo -en "Trusted Firmware-A ${ATF_TAG}:"
+		echo -en " Restoring"
 		rm -fdr arm-trusted-firmware-${ATF_TAG}
-		echo -en " ${WHT}...${FIN}"
 		mv -f arm-trusted-firmware-${ATF_TAG}.backup arm-trusted-firmware-${ATF_TAG}
 		cd arm-trusted-firmware-${ATF_TAG}
 		make realclean > /dev/null 2>&1
 		cd ..
 		cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware-${ATF_TAG}.backup
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+		echo -e ", done."
 	else
 		rm -fdr arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware arm-trusted-firmware.backup
-		echo -en "${WHT}Trusted Firmware-A ${ATF_TAG}${FIN}"
-		echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+		echo -en "Trusted Firmware-A ${ATF_TAG}:"
+		echo -en " Cloning"
 		git clone --depth=1 -b ${ATF_TAG} -q -c advice.detachedHead=false ${GIT_ATF_URL} arm-trusted-firmware-${ATF_TAG}
 		if [[ -d "arm-trusted-firmware-${ATF_TAG}" ]]; then
 			cd arm-trusted-firmware-${ATF_TAG}
 			make realclean > /dev/null 2>&1
 			cd ..
-			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+			echo -en ", creating backup"
 			cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware-${ATF_TAG}.backup
-			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			echo -e ", done."
 		else
-			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			echo -e ", failed."
 			exit 1
 		fi
 	fi

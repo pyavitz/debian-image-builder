@@ -2,16 +2,15 @@
 
 opensbi_firmware (){
 if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]] && [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}.backup" ]]; then
-	echo -en "${WHT}${BOARD}-opensbi-${OPENSBI_TAG}${FIN}"
-	echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+	echo -en "${BOARD}-opensbi-${OPENSBI_TAG}:"
+	echo -en " Restoring"
 	rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}
-	echo -en " ${WHT}...${FIN}"
 	mv -f ${BOARD}-opensbi-${OPENSBI_TAG}.backup ${BOARD}-opensbi-${OPENSBI_TAG}
 	cd ${BOARD}-opensbi-${OPENSBI_TAG}
 	make clean
 	cd ..
 	cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+	echo -e ", done."
 else
 	if [[ `wget -S --spider ${OPENSBI_URL} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 		rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}
@@ -20,12 +19,12 @@ else
 			cd ${BOARD}-opensbi-${OPENSBI_TAG}
 			make clean
 			cd ..
-			echo -en "${WHT}${BOARD}-opensbi-${OPENSBI_TAG}${FIN}"
-			echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+			echo -en "${BOARD}-opensbi-${OPENSBI_TAG}:"
+			echo -en " Creating backup"
 			cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
-			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			echo -e ", done."
 		else
-			echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+			echo -e ", failed."
 			exit 1
 		fi
 	fi

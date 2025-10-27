@@ -19,30 +19,29 @@ GIT_CRUST_URL="https://github.com/crust-firmware/crust.git"
 if [[ "$SERIES" =~ ^(sun8i-h2-plus|sun8i-h3|sun50i-a64|sun50i-h5|sun50i-h6)$ ]]; then
 	if [[ `wget -S --spider https://raw.githubusercontent.com/crust-firmware/crust/refs/heads/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 		if [[ -d "crust-${CRUST_TAG}" ]] && [[ -d "crust-${CRUST_TAG}.backup" ]]; then
-			echo -en "${WHT}Crust ${CRUST_TAG}${FIN}"
-			echo -en " ${PNK}[${FIN}${YLW}restoring${FIN}${PNK}]${FIN}"
+			echo -en "Crust ${CRUST_TAG}:"
+			echo -en " Restoring"
 			rm -fdr crust-${CRUST_TAG}
-			echo -en " ${WHT}...${FIN}"
 			mv -f crust-${CRUST_TAG}.backup crust-${CRUST_TAG}
 			cd crust-${CRUST_TAG}
 			make clean > /dev/null 2>&1
 			cd ..
 			cp -r crust-${CRUST_TAG} crust-${CRUST_TAG}.backup
-			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+			echo -e ", done."
 		else
 			rm -fdr crust-${CRUST_TAG} crust crust.backup
-			echo -en "${WHT}Crust ${CRUST_TAG}${FIN}"
-			echo -en " ${PNK}[${FIN}${WHT}cloning${FIN}${PNK}]${FIN}"
+			echo -en "Crust ${CRUST_TAG}:"
+			echo -en " Cloning"
 			git clone --depth=1 -b ${CRUST_TAG} -q -c advice.detachedHead=false ${GIT_CRUST_URL} crust-${CRUST_TAG}
 			if [[ -d "crust-${CRUST_TAG}" ]]; then
 				cd crust-${CRUST_TAG}
 				make clean > /dev/null 2>&1
 				cd ..
-				echo -en " ${PNK}[${FIN}${WHT}creating backup${FIN}${PNK}]${FIN}"
+				echo -en ", creating backup"
 				cp -r crust-${CRUST_TAG} crust-${CRUST_TAG}.backup
-				echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+				echo -e ", done."
 			else
-				echo -e " ${PNK}[${FIN}${RED}failed${FIN}${PNK}]${FIN}"
+				echo -e ", failed."
 				exit 1
 			fi
 		fi

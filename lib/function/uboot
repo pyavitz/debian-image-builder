@@ -26,26 +26,26 @@ fi
 
 download_uboot (){
 if [[ `wget -S --spider https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	echo -en "${WHT}U-Boot-${UBOOT_VERSION}${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	echo -en "U-Boot-${UBOOT_VERSION}:"
+	echo -en " Downloading"
 	aria2c -q https://github.com/pyavitz/debian-image-builder/releases/download/u-boot/u-boot-${UBOOT_VERSION}.tar.gz
-	echo_bdone
+	echo -e ", done."
 elif [[ `wget -S --spider https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	echo -en "${WHT}U-Boot-${UBOOT_VERSION}${FIN} "
-	echo -en "${PNK}[${FIN}${WHT}downloading${FIN}${PNK}]${FIN} "
+	echo -en "U-Boot-${UBOOT_VERSION}:"
+	echo -en " Downloading"
 	aria2c -q https://source.denx.de/u-boot/u-boot/-/archive/${UBOOT_VERSION}/u-boot-${UBOOT_VERSION}.tar.gz
-	echo_bdone
+	echo -e ", done."
 else
 	echo ""
-	echo -e "${WHT}${UBOOT_VERSION} not found?${FIN}"
+	echo -e "${UBOOT_VERSION} not found?"
 	exit 1
 fi
 }
 
 download (){
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
-	echo -en "${WHT}U-Boot-${UBOOT_VERSION}${FIN} "
-	echo -e "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN}"
+	echo -en "U-Boot-${UBOOT_VERSION}"
+	echo -e ", found."
 else
 	download_uboot
 fi

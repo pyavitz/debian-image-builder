@@ -8,15 +8,14 @@ if [[ -f "../${BOARD}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" ]]; then cp ".
 # U-BOOT
 spacemit_uboot_download (){
 if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-	echo -en "${WHT}${BOARD}-u-boot-${GIT_UBOOT_TAG}${FIN} "
-	echo -en "${PNK}[${FIN}${YLW}found${FIN}${PNK}]${FIN} "
+	echo -en "${BOARD}-u-boot-${GIT_UBOOT_TAG}:"
 	cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}
 	make clean
-	echo -en "${PNK}[${FIN}${WHT}restoring${FIN}${PNK}]${FIN} "
+	echo -en " Restoring"
 	cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
 	# They edit this file to much so lets just remove it and add our own
 	rm -f u-boot/board/spacemit/k1-x/k1-x.env
-	echo_bdone
+	echo -e ", done."
 else
 	git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL}
 	if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
