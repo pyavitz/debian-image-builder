@@ -37,7 +37,6 @@ else
 	echo ""
 	echo -e "Missing dependency: curl"
 	sudo apt install -y curl
-	exit 1
 fi
 if [[ `command -v make` ]]; then
 	:;
@@ -45,7 +44,6 @@ else
 	echo ""
 	echo -e "Missing dependency: make"
 	sudo apt install -y make
-	exit 1
 fi
 echo -en "${TXT}Checking Host Machine:${FIN} "
 sleep .50
