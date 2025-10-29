@@ -8,7 +8,7 @@
 BananaPi BPI-M2-Zero
 BananaPi BPI-M4-Zero
 FriendlyElec NanoPi M1
-KickPi K2B (REV 1.1) *
+KickPi K2B
 OrangePi 3 LTS
 
 # AMLOGIC
