@@ -127,9 +127,11 @@
 	status = "okay";
 	pinctrl-0 = <&ext_rgmii_pins>;
 	pinctrl-names = "default";
-	phy-mode = "rgmii-id";
+	phy-mode = "rgmii";
 	phy-handle = <&ext_rgmii_phy>;
-	phy-supply = <&reg_aldo1>;
+	phy-supply = <&reg_dldo1>;
+	allwinner,tx-delay-ps = <700>;
+	allwinner,rx-delay-ps = <2000>;
 };
 
 &ehci0 {
@@ -196,8 +198,7 @@
 &mdio0 {
 	ext_rgmii_phy: ethernet-phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
-		reg = <0>;
-
+		reg = <0x0>;
 		reset-assert-us = <20000>;
 		reset-deassert-us = <100000>;
 		reset-gpios = <&pio 8 6 GPIO_ACTIVE_LOW>; /* PI6 */
@@ -275,6 +276,7 @@
 		       "PI11", "PI12", "PI13", "PI14", "PI15";
 		function = "emac0";
 		drive-strength = <40>;
+		bias-pull-up;
 	};
 
 	/* Add I2C PH Pins */
@@ -357,7 +359,7 @@
 
 			reg_dcdc3: dcdc3 {
 				regulator-always-on;
-				regulator-min-microvolt = <1100000>;
+				regulator-min-microvolt = <1500000>;
 				regulator-max-microvolt = <1500000>;
 				regulator-step-delay-us = <25>;
 				regulator-final-delay-us = <50>;

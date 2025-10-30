@@ -177,6 +177,18 @@ if [[ "$RTW88_DEVEL" == "true" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
 	rm -fdr ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}/{alt_rtl8821ce,README.md}
 	cp -fr ../${WIRELESSPATCHES}/rtw88/{Kconfig,Makefile} ${KERNEL}-${VERSION}/drivers/net/wireless/realtek/${DRIVER}/
 fi
+
+# SWT6621S
+if [[ "$BOARD" =~ ^(kickpik2b-v2)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
+	rm -rf ${KERNEL}-${VERSION}/drivers/net/wireless/vs6621s
+	mkdir -p ${KERNEL}-${VERSION}/drivers/net/wireless/vs6621s
+	cp -fr ../patches/wireless/vs6621s/vs6621s ${KERNEL}-${VERSION}/drivers/net/wireless/
+	cp -fr ../patches/wireless/vs6621s/include/linux/platform_data/* ${KERNEL}-${VERSION}/include/linux/platform_data/
+
+	sed -i '/obj-$(CONFIG_WLAN_VENDOR_TI) += ti/a obj-$(CONFIG_WLAN_VENDOR_SWT6621S) += vs6621s/' \
+		"${KERNEL}-${VERSION}/drivers/net/wireless/Makefile"
+	sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/vs6621s\/Kconfig"' "${KERNEL}-${VERSION}/drivers/net/wireless/Kconfig"
+fi
 }
 
 report_error (){
