@@ -36,7 +36,7 @@ BananaPi BPI-F3
 </details>
 
 ### Supported Hosts: Debian Trixie and Ubuntu Noble Numbat
-* **Debian Trixie** (arm arm64 riscv) (testing)
+* **Debian Trixie** (arm arm64 riscv) (recommended)
 * **Ubuntu Noble Numbat** (arm arm64 riscv) (recommended)
 
 **Install options:**
