@@ -253,31 +253,31 @@ fi
 if [[ "$R_FSTYPE" =~ ^(btrfs|ext4|f2fs|xfs)$ ]]; then
 	if [[ "$R_FSTYPE" == "btrfs" ]]; then
 		MAKE_ROOTFS="mkfs.btrfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-		MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /transfer/${P_ROOTFS}"
 		ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
 		ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
-		RESIZEFS="btrfs filesystem resize max /mnt/${P_ROOTFS}"
+		RESIZEFS="btrfs filesystem resize max /transfer/${P_ROOTFS}"
 	fi
 	if [[ "$R_FSTYPE" == "ext4" ]]; then
 		MAKE_ROOTFS="mkfs.ext4 -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-		MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /transfer/${P_ROOTFS}"
 		ROOTFS_TABLE="ext4	defaults,noatime,commit=600,errors=remount-ro 0 1"
 		ROOT_FSTYPE="rootfstype=ext4"
 		RESIZEFS="resize2fs ${DEVICE_NODE}${P_ROOTFS}"
 	fi
 	if [[ "$R_FSTYPE" == "f2fs" ]]; then
 		MAKE_ROOTFS="mkfs.f2fs -f -l ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-		MOUNT_ROOTFS="mount -o rw,acl,active_logs=6,background_gc=on,user_xattr ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o rw,acl,active_logs=6,background_gc=on,user_xattr ${DEVICE_NODE}${P_ROOTFS} /transfer/${P_ROOTFS}"
 		ROOTFS_TABLE="f2fs	rw,acl,active_logs=6,background_gc=on,user_xattr 0 0"
 		ROOT_FSTYPE="rootfstype=f2fs"
 		RESIZEFS="resize.f2fs ${DEVICE_NODE}${P_ROOTFS}"
 	fi
 	if [[ "$R_FSTYPE" == "xfs" ]]; then
 		MAKE_ROOTFS="mkfs.xfs -f -L ROOTFS ${DEVICE_NODE}${P_ROOTFS}"
-		MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /mnt/${P_ROOTFS}"
+		MOUNT_ROOTFS="mount -o defaults,noatime ${DEVICE_NODE}${P_ROOTFS} /transfer/${P_ROOTFS}"
 		ROOTFS_TABLE="xfs	defaults,noatime 0 1"
 		ROOT_FSTYPE="rootfstype=xfs"
-		RESIZEFS="xfs_growfs -d /mnt/${P_ROOTFS}"
+		RESIZEFS="xfs_growfs -d /transfer/${P_ROOTFS}"
 	fi
 else
 	$EE ""
@@ -361,12 +361,12 @@ fi
 partprobe "${DEVICE_NODE}"
 sleep 1.25
 if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
-	mkdir -p /mnt/${P_ROOTFS}
+	mkdir -p /transfer/${P_ROOTFS}
 	echo 'y' | $MAKE_ROOTFS
 	sleep .50
-	mount "${DEVICE_NODE}${P_ROOTFS}" /mnt/${P_ROOTFS}
+	mount "${DEVICE_NODE}${P_ROOTFS}" /transfer/${P_ROOTFS}
 	sync
-	umount /mnt/${P_ROOTFS}
+	umount /transfer/${P_ROOTFS}
 	sleep .50
 	$MOUNT_ROOTFS
 	bash growpart ${DEVICE_NODE} 1
@@ -421,18 +421,18 @@ fi
 partprobe "${DEVICE_NODE}"
 sleep 1.25
 if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
-	mkdir -p /mnt/${P_BOOT}
-	mkdir -p /mnt/${P_ROOTFS}
+	mkdir -p /transfer/${P_BOOT}
+	mkdir -p /transfer/${P_ROOTFS}
 	echo 'y' | $MAKE_BOOTFS
 	echo 'y' | $MAKE_ROOTFS
 	sleep .50
-	mount "${DEVICE_NODE}${P_BOOT}" /mnt/${P_BOOT}
-	mount "${DEVICE_NODE}${P_ROOTFS}" /mnt/${P_ROOTFS}
+	mount "${DEVICE_NODE}${P_BOOT}" /transfer/${P_BOOT}
+	mount "${DEVICE_NODE}${P_ROOTFS}" /transfer/${P_ROOTFS}
 	if [[ "$R_FSTYPE" == "btrfs" ]]; then
-		btrfs subvolume create /mnt/${P_ROOTFS}/@
+		btrfs subvolume create /transfer/${P_ROOTFS}/@
 	fi
 	sync
-	umount /mnt/${P_ROOTFS}
+	umount /transfer/${P_ROOTFS}
 	sleep .50
 	if [[ "$R_FSTYPE" == "f2fs" ]]; then
 		$RESIZEFS
@@ -481,25 +481,25 @@ fi
 transfer (){
 cd /
 if [[ "$P_VALUE" == "p2" ]]; then
-	cp -ax /boot/* /mnt/${P_BOOT}/
+	cp -ax /boot/* /transfer/${P_BOOT}/
 	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
-		rm -f /mnt/${P_BOOT}/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
-		rm -fdr /mnt/${P_BOOT}/{LOST.DIR,Android}
+		rm -f /transfer/${P_BOOT}/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
+		rm -fdr /transfer/${P_BOOT}/{LOST.DIR,Android}
 	fi
 fi
-#cp -axv . /mnt/${P_ROOTFS}
-tar --exclude='./mnt' --exclude='./proc' --exclude='./run' --exclude='./sys' --exclude='./tmp' -C . -cpf - . | tar -C /mnt/${P_ROOTFS} -xf -
-mkdir -p /mnt/${P_ROOTFS}/{proc,run,sys,tmp}
+#cp -axv . /transfer/${P_ROOTFS}
+tar --exclude='./transfer' --exclude='./proc' --exclude='./run' --exclude='./sys' --exclude='./tmp' -C . -cpf - . | tar -C /transfer/${P_ROOTFS} -xf -
+mkdir -p /transfer/${P_ROOTFS}/{proc,run,sys,tmp}
 if [[ "$P_VALUE" == "p1" ]]; then
-	mkdir -p /mnt/${P_ROOTFS}/boot
-	cp -ax /boot/* /mnt/${P_ROOTFS}/boot/
-	rm -fdr /mnt/${P_ROOTFS}/boot/lost+found
+	mkdir -p /transfer/${P_ROOTFS}/boot
+	cp -ax /boot/* /transfer/${P_ROOTFS}/boot/
+	rm -fdr /transfer/${P_ROOTFS}/boot/lost+found
 	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
-		rm -f /mnt/${P_ROOTFS}/boot/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
-		rm -fdr /mnt/${P_ROOTFS}/boot/{LOST.DIR,Android}
+		rm -f /transfer/${P_ROOTFS}/boot/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
+		rm -fdr /transfer/${P_ROOTFS}/boot/{LOST.DIR,Android}
 	fi
 fi
-if [[ "$P_VALUE" == "p2" ]]; then rm -fdr /mnt/${P_ROOTFS}/boot/*; fi
+if [[ "$P_VALUE" == "p2" ]]; then rm -fdr /transfer/${P_ROOTFS}/boot/*; fi
 }
 
 if [[ "$VERBOSITY" = "1" ]]; then
@@ -618,24 +618,24 @@ p1_boot (){
 $EE
 if [[ "$EXTLINUX" == "true" ]]; then
 	$EE "extlinux.conf"
-	sed -i "/append/c\\	${CMDLINE}" /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
-	cat /mnt/${P_ROOTFS}/boot/extlinux/extlinux.conf
+	sed -i "/append/c\\	${CMDLINE}" /transfer/${P_ROOTFS}/boot/extlinux/extlinux.conf
+	cat /transfer/${P_ROOTFS}/boot/extlinux/extlinux.conf
 fi
 if [[ "$BOOTCMD" == "true" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.cmd
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_ROOTFS}/boot/uconfig.txt
-	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_ROOTFS}/boot/boot.cmd /mnt/${P_ROOTFS}/boot/boot.scr
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/uconfig.txt
+	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_ROOTFS}/boot/boot.cmd /transfer/${P_ROOTFS}/boot/boot.scr
 fi
 if [[ "$BOOTINI" == "true" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.ini
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_ROOTFS}/boot/boot.ini
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_ROOTFS}/boot/uconfig.txt
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/uconfig.txt
 fi
 $EE
 $EE "fstab"
-rm -f /mnt/${P_ROOTFS}/etc/fstab
-tee /mnt/${P_ROOTFS}/etc/fstab <<EOF
+rm -f /transfer/${P_ROOTFS}/etc/fstab
+tee /transfer/${P_ROOTFS}/etc/fstab <<EOF
 UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
 tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
@@ -645,24 +645,24 @@ p2_boot (){
 $EE
 if [[ "$EXTLINUX" == "true" ]]; then
 	$EE "extlinux.conf"
-	sed -i "/append/c\\	${CMDLINE}" /mnt/${P_BOOT}/extlinux/extlinux.conf
-	cat /mnt/${P_BOOT}/extlinux/extlinux.conf
+	sed -i "/append/c\\	${CMDLINE}" /transfer/${P_BOOT}/extlinux/extlinux.conf
+	cat /transfer/${P_BOOT}/extlinux/extlinux.conf
 fi
 if [[ "$BOOTCMD" == "true" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.cmd
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_BOOT}/uconfig.txt
-	mkimage -C none -A ${ARCH} -T script -d /mnt/${P_BOOT}/boot.cmd /mnt/${P_BOOT}/boot.scr
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
+	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_BOOT}/boot.cmd /transfer/${P_BOOT}/boot.scr
 fi
 if [[ "$BOOTINI" == "true" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /mnt/${P_BOOT}/boot.ini
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /mnt/${P_BOOT}/boot.ini
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /mnt/${P_BOOT}/uconfig.txt
+	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
+	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
+	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
 fi
 $EE
 $EE "fstab"
-rm -f /mnt/${P_ROOTFS}/etc/fstab
-tee /mnt/${P_ROOTFS}/etc/fstab <<EOF
+rm -f /transfer/${P_ROOTFS}/etc/fstab
+tee /transfer/${P_ROOTFS}/etc/fstab <<EOF
 UUID=${BOOT_UUID}	${BOOTFS_TABLE}
 UUID=${ROOT_UUID}	/	${ROOTFS_TABLE}
 tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
@@ -677,17 +677,14 @@ if [[ -v "LOGLEVEL" ]]; then :; else LOGLEVEL="loglevel=1"; fi
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA} init=/sbin/init"
 if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then p1_boot; else p1_boot > /dev/null 2>&1; fi
-	rm -fdr /mnt/${P_ROOTFS}/mnt/*
-	umount /mnt/${P_ROOTFS}
-	rm -fdr /mnt/${P_ROOTFS}
+	umount /transfer/${P_ROOTFS}
+	rm -fdr /transfer
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then p2_boot; else p2_boot > /dev/null 2>&1; fi
-	rm -fdr /mnt/${P_ROOTFS}/mnt/*
-	umount /mnt/${P_BOOT}
-	umount /mnt/${P_ROOTFS}
-	rm -fdr /mnt/${P_BOOT}
-	rm -fdr /mnt/${P_ROOTFS}
+	umount /transfer/${P_BOOT}
+	umount /transfer/${P_ROOTFS}
+	rm -fdr /transfer
 fi
 
 if [[ "$VERBOSITY" = "0" ]]; then $EE "[done]"; fi
