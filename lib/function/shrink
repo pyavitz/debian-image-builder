@@ -59,12 +59,12 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
-echo -en "Shrink ${PNK}[${FIN}${WHT}enabled${FIN}${PNK}]${FIN}"
+echo -en "Resizing image to"
 sleep 1
-echo -en " ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
+echo -en " ${IMGSIZE}:"
 if [ $VERBOSE -eq 1 ]; then cp -axv ${ROOTFS_LABEL}/* p1/; else cp -ax ${ROOTFS_LABEL}/* p1/; fi
 sleep .75
-echo -en " ${PNK}[${FIN}${YLW}finishing${FIN}${PNK}]${FIN}"
+echo -en " Finishing"
 umount ${ROOTFS_LABEL}
 sleep .75
 rm -fdr ${ROOTFS_LABEL}
@@ -81,7 +81,7 @@ mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
 if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1
-echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+echo -e ", done."
 }
 
 shrink_p2 (){
@@ -104,9 +104,9 @@ mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 partition > /dev/null 2>&1
 uuid
-echo -en "Shrink ${PNK}[${FIN}${WHT}enabled${FIN}${PNK}]${FIN}"
+echo -en "Resizing image to"
 sleep 1
-echo -en " ${PNK}[${FIN}${WHT}${IMGSIZE}${FIN}${PNK}]${FIN}"
+echo -en " ${IMGSIZE}:"
 if [[ "$EFI" == "true" ]] then cp -fr EFI/* p1/; else cp -fr BOOT/* p1/; fi
 if [ $VERBOSE -eq 1 ]; then
 	if [[ "$FSTYPE" == "btrfs" ]]; then cp -axv ${ROOTFS_LABEL}/@/* p2/; else cp -axv ${ROOTFS_LABEL}/* p2/; fi
@@ -114,7 +114,7 @@ else
 	if [[ "$FSTYPE" == "btrfs" ]]; then cp -ax ${ROOTFS_LABEL}/@/* p2/; else cp -ax ${ROOTFS_LABEL}/* p2/; fi
 fi
 sleep .75
-echo -en " ${PNK}[${FIN}${YLW}finishing${FIN}${PNK}]${FIN}"
+echo -en " Finishing"
 if [[ "$EFI" == "true" ]]; then umount EFI; else umount BOOT; fi
 umount ${ROOTFS_LABEL}
 sleep .75
@@ -133,5 +133,5 @@ mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
 if [ $RAM -ne 0 ]; then umount "${IMAGE_FOLDER}"; fi
 rmdir "${IMAGE_FOLDER}"
 rmdir p1 p2
-echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
+echo -e ", done."
 }
