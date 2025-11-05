@@ -88,7 +88,11 @@ PROXY=""
 IMAGE_FOLDER="img/"
 DEVICE_SOC="${DTB}"
 IMAGE_DATE="$(date +%F)"
-IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
+if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
+	IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-${DISTRO_VERSION}-${IMAGE_DATE}.img"
+else
+	IMAGE_FILE_NAME="${DEVICE_SOC}-${DISTRO}-minimal-${DISTRO_VERSION}-${IMAGE_DATE}.img"
+fi
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
 mkdir -p "$IMAGE_FOLDER"
 if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
