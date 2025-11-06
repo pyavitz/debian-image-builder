@@ -1,13 +1,16 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 11c26cb54c944c7d3964027014043359635845c9 Mon Sep 17 00:00:00 2001
 From: John Doe <john.doe@somewhere.on.planet>
-Date: Tue, 28 Jan 2025 12:13:35 +0800
-Subject: Patching NanoPi-R3S LEDs
+Date: Thu, 6 Nov 2025 16:44:18 -0500
+Subject: [PATCH] Fixup NanoPi R3S ledss
 
 Signed-off-by: John Doe <john.doe@somewhere.on.planet>
 ---
+ drivers/net/ethernet/realtek/r8169_main.c | 11 +++++++++++
+ drivers/net/phy/realtek/realtek_main.c    | 11 +++++++++++
+ 2 files changed, 22 insertions(+)
 
 diff --git a/drivers/net/ethernet/realtek/r8169_main.c b/drivers/net/ethernet/realtek/r8169_main.c
-index 111111111111..222222222222 100644
+index d18734fe12e4..92ea306456eb 100644
 --- a/drivers/net/ethernet/realtek/r8169_main.c
 +++ b/drivers/net/ethernet/realtek/r8169_main.c
 @@ -21,6 +21,7 @@
@@ -18,7 +21,7 @@ index 111111111111..222222222222 100644
  #include <linux/tcp.h>
  #include <linux/interrupt.h>
  #include <linux/dma-mapping.h>
-@@ -2438,6 +2439,15 @@ void r8169_apply_firmware(struct rtl8169_private *tp)
+@@ -2373,6 +2374,15 @@ void r8169_apply_firmware(struct rtl8169_private *tp)
  	}
  }
  
@@ -34,7 +37,7 @@ index 111111111111..222222222222 100644
  static void rtl8168_config_eee_mac(struct rtl8169_private *tp)
  {
  	/* Adjust EEE LED frequency */
-@@ -3449,6 +3459,7 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
+@@ -3390,6 +3400,7 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
  	rtl_eri_write(tp, 0xb8, ERIAR_MASK_0011, 0x0000);
  
  	rtl8168_config_eee_mac(tp);
@@ -43,11 +46,11 @@ index 111111111111..222222222222 100644
  	RTL_W8(tp, DLLPR, RTL_R8(tp, DLLPR) & ~PFM_EN);
  	RTL_W8(tp, MISC_1, RTL_R8(tp, MISC_1) & ~PFM_D3COLD_EN);
 diff --git a/drivers/net/phy/realtek/realtek_main.c b/drivers/net/phy/realtek/realtek_main.c
-index 111111111111..222222222222 100644
+index 16a347084293..2f4d65d0a0dd 100644
 --- a/drivers/net/phy/realtek/realtek_main.c
 +++ b/drivers/net/phy/realtek/realtek_main.c
-@@ -135,6 +135,15 @@ static int rtl821x_write_page(struct phy_device *phydev, int page)
- 	return __phy_write(phydev, RTL821x_PAGE_SELECT, page);
+@@ -214,6 +214,15 @@ static int rtl821x_modify_ext_page(struct phy_device *phydev, u16 ext_page,
+ 	return phy_restore_page(phydev, oldpage, ret);
  }
  
 +static void rtl821x_led_of_init(struct phy_device *phydev)
@@ -62,15 +65,15 @@ index 111111111111..222222222222 100644
  static int rtl821x_probe(struct phy_device *phydev)
  {
  	struct device *dev = &phydev->mdio.dev;
-@@ -460,6 +469,8 @@ static int rtl8211f_config_init(struct phy_device *phydev)
- 	if (ret)
- 		return ret;
+@@ -238,6 +247,8 @@ static int rtl821x_probe(struct phy_device *phydev)
+ 	if (of_property_read_bool(dev->of_node, "realtek,aldps-enable"))
+ 		priv->phycr1 |= RTL8211F_ALDPS_PLL_OFF | RTL8211F_ALDPS_ENABLE | RTL8211F_ALDPS_XTAL_OFF;
  
 +	rtl821x_led_of_init(phydev);
 +
+ 	priv->has_phycr2 = !(phy_id == RTL_8211FVD_PHYID);
  	if (priv->has_phycr2) {
- 		ret = phy_modify_paged(phydev, 0xa43, RTL8211F_PHYCR2,
- 				       RTL8211F_CLKOUT_EN, priv->phycr2);
+ 		ret = phy_read_paged(phydev, RTL8211F_PHYCR_PAGE, RTL8211F_PHYCR2);
 -- 
-Armbian
+2.43.0
 
