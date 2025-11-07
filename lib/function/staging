@@ -161,13 +161,13 @@ fi
 if [[ ! -f "${RELEASE_TARBALL}" ]]; then
 	echo -e "${YLW}Missing ${RELEASE_TARBALL}${FIN}?"
 	make clean > /dev/null 2>&1
-	exit 0
+	exit 1
 fi
 if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
 if [ $VERBOSE -eq 1 ]; then uuid; else uuid > /dev/null 2>&1; fi
-echo -en "${WHT}Extracting rootfs${FIN} "
+echo -en "Extracting: ${RELEASE_TARBALL}"
 tar -xf ${RELEASE_TARBALL} -C ${P_VALUE}/
-echo_bdone
+echo -e ", done."
 mkdir -p ${P_VALUE}/etc/apt/apt.conf.d ${P_VALUE}/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "${P_VALUE}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
 mkdir -p ${P_VALUE}/usr/bin
