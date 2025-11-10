@@ -45,11 +45,11 @@ apt dist-upgrade -y
 if [[ "$MINIMAL_ROOTFS" == "true" ]]; then PKGS_FULL=""; fi
 if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} resolvconf haveged ${PKGS_FULL}
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} resolvconf haveged netplug ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} openresolv haveged ${PKGS_FULL}
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} openresolv haveged netplug ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi
@@ -57,7 +57,7 @@ if [[ "$DISTRO" == "kali" ]]; then
 fi
 if [[ "$DISTRO" == "ubuntu" ]]; then
 	if [[ "$DISTRO_VERSION" =~ ^(focal|jammy)$ ]]; then RESOLV="resolvconf"; else RESOLV="systemd-resolved"; fi
-	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5 ${PKGS_FULL}
+	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5 netplug ${PKGS_FULL}
 fi
 
 apt -y clean
