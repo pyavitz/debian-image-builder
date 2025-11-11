@@ -38,16 +38,12 @@ fi
 if [[ "$DISTRO" =~ ^(devuan|kali|raspbian)$ ]]; then ${DISTRO}_keyring; fi
 if [[ "$HOST_MACHINE" == "Ubuntu" ]]; then :; else if [[ "$DISTRO" == "ubuntu" ]]; then ${DISTRO}_keyring; fi; fi
 # check for qemu
-if [[ `command -v ${STATIC}` ]]; then
-	:;
-else
+if [[ ! `command -v ${STATIC}` ]]; then
 	echo -e "Missing depends: ${STATIC}"
 	echo -e "Run ./install.sh"
 	exit 1
 fi
-if [[ `command -v mmdebstrap` ]]; then
-	:;
-else
+if [[ ! `command -v mmdebstrap` ]]; then
 	echo -e "Missing depends: mmdebstrap"
 	apt install -y mmdebstrap
 fi

@@ -71,9 +71,7 @@ if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then
 	exit 0
 fi
 # check for qemu
-if [[ `command -v ${STATIC}` ]]; then
-	:;
-else
+if [[ ! `command -v ${STATIC}` ]]; then
 	echo -e "Missing depends: ${STATIC}"
 	echo -e "Run ./install.sh"
 	exit 1
@@ -99,7 +97,7 @@ if [ $RAM -ne 0 ]; then mount -t tmpfs -o size=4G tmpfs $IMAGE_FOLDER; fi
 sources_list # apt distro.sources list
 setup
 # setup stage2
-if [[ ! -z $FAMILY ]]; then files; fi
+files
 # user scripts stage1
 if [ $USCRIPTS -eq 1 ]; then uscripts_stage1; fi
 echo ""
