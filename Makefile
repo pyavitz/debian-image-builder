@@ -216,6 +216,9 @@ rootfs:
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
 endif
+ifdef minimal
+	@$(shell sed -i "s/^MINIMAL_ROOTFS=.*/MINIMAL_ROOTFS="'"${minimal}"'"/" custom.txt)
+endif
 ifdef release
 	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
 endif
@@ -229,6 +232,9 @@ image:
 # edit user data file
 ifdef distro
 	@$(shell sed -i "s/^DISTRO=.*/DISTRO="'"${distro}"'"/" userdata.txt)
+endif
+ifdef minimal
+	@$(shell sed -i "s/^MINIMAL_ROOTFS=.*/MINIMAL_ROOTFS="'"${minimal}"'"/" custom.txt)
 endif
 ifdef release
 	@$(shell sed -i "s/^DISTRO_VERSION=.*/DISTRO_VERSION="'"${release}"'"/" userdata.txt)
@@ -255,8 +261,9 @@ check:
 
 reset:
 	@$(shell sed -i "s/^BUILD_VERSION=.*/BUILD_VERSION="'"1"'"/" userdata.txt)
-	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"0"'"/" userdata.txt)
 	@$(shell sed -i "s/^CUSTOM_DEFCONFIG=.*/CUSTOM_DEFCONFIG="'"0"'"/" userdata.txt)
+	@$(shell sed -i "s/^MENUCONFIG=.*/MENUCONFIG="'"0"'"/" userdata.txt)
+	@$(shell sed -i "s/^MINIMAL_ROOTFS=.*/MINIMAL_ROOTFS="'"false"'"/" custom.txt)
 	@$(shell sed -i "s/^MYCONFIG=.*/MYCONFIG="'"_defconfig"'"/" userdata.txt)
 	@$(shell sed -i "s/^VERBOSE=.*/VERBOSE="'"0"'"/" userdata.txt)
 
