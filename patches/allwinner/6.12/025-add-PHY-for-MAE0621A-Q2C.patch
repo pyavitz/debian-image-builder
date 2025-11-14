@@ -1,22 +1,24 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 8d9b8a04cc99f95747946233db46bf1b3eec089a Mon Sep 17 00:00:00 2001
 From: kickpi <info@kickpi.com>
-Date: Wed, 13 Aug 2025 09:26:43 +0000
-Subject: add PHY for MAE0621A-Q2C
+Date: Fri, 14 Nov 2025 10:05:06 -0500
+Subject: [PATCH] add PHY for MAE0621A-Q2C
 
+Signed-off-by: kickpi <info@kickpi.com>
 ---
- arch/arm/Kconfig                                  |   2 +-
- drivers/net/ethernet/stmicro/stmmac/stmmac_main.c |   8 +
- drivers/net/phy/Kconfig                           |   5 +
- drivers/net/phy/Makefile                          |   2 +
- drivers/net/phy/maxio.c                           | 442 ++++++++++
- drivers/net/phy/phy_device.c                      |   9 +
+ arch/arm/Kconfig                              |   2 +-
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c |   8 +
+ drivers/net/phy/Kconfig                       |   5 +
+ drivers/net/phy/Makefile                      |   2 +
+ drivers/net/phy/maxio.c                       | 442 ++++++++++++++++++
+ drivers/net/phy/phy_device.c                  |   9 +
  6 files changed, 467 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/phy/maxio.c
 
 diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 111111111111..222222222222 100644
+index d5bf16462bdb..94687ec32e83 100644
 --- a/arch/arm/Kconfig
 +++ b/arch/arm/Kconfig
-@@ -1453,7 +1453,7 @@ config STACKPROTECTOR_PER_TASK
+@@ -1378,7 +1378,7 @@ config STACKPROTECTOR_PER_TASK
  	depends on STACKPROTECTOR && CURRENT_POINTER_IN_TPIDRURO && !XIP_DEFLATED_DATA
  	depends on GCC_PLUGINS || CC_HAVE_STACKPROTECTOR_TLS
  	select GCC_PLUGIN_ARM_SSP_PER_TASK if !CC_HAVE_STACKPROTECTOR_TLS
@@ -26,10 +28,10 @@ index 111111111111..222222222222 100644
  	  Due to the fact that GCC uses an ordinary symbol reference from
  	  which to load the value of the stack canary, this value can only
 diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-index 111111111111..222222222222 100644
+index 04bacb04770f..305a5fecda8a 100644
 --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
 +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-@@ -50,6 +50,9 @@
+@@ -51,6 +51,9 @@
  #include "dwxgmac2.h"
  #include "hwif.h"
  
@@ -39,23 +41,23 @@ index 111111111111..222222222222 100644
  /* As long as the interface is active, we keep the timestamping counter enabled
   * with fine resolution and binary rollover. This avoid non-monotonic behavior
   * (clock jumps) when changing timestamping settings at runtime.
-@@ -7732,6 +7735,11 @@ int stmmac_resume(struct device *dev)
+@@ -8031,6 +8034,11 @@ int stmmac_resume(struct device *dev)
  	stmmac_free_tx_skbufs(priv);
  	stmmac_clear_descriptors(priv, &priv->dma_conf);
  
-+        if (ndev->phydev->drv->config_init) {
-+               if (ndev->phydev->phy_id == MAXIO_PHY_MAE0621A_Q2C_ID || ndev->phydev->phy_id == MAXIO_PHY_MAE0621A_Q3C_ID)
-+                       ndev->phydev->drv->config_init(ndev->phydev);
-+        }
++	if (ndev->phydev->drv->config_init) {
++		if (ndev->phydev->phy_id == MAXIO_PHY_MAE0621A_Q2C_ID || ndev->phydev->phy_id == MAXIO_PHY_MAE0621A_Q3C_ID)
++			ndev->phydev->drv->config_init(ndev->phydev);
++	}
 +
- 	stmmac_hw_setup(ndev, false);
- 	stmmac_init_coalesce(priv);
- 	stmmac_set_rx_mode(ndev);
+ 	ret = stmmac_hw_setup(ndev, false);
+ 	if (ret < 0) {
+ 		netdev_err(priv->dev, "%s: Hw setup failed\n", __func__);
 diff --git a/drivers/net/phy/Kconfig b/drivers/net/phy/Kconfig
-index 111111111111..222222222222 100644
+index 01b235b3bb7e..90dfecf27e09 100644
 --- a/drivers/net/phy/Kconfig
 +++ b/drivers/net/phy/Kconfig
-@@ -297,6 +297,11 @@ config REALTEK_PHY
+@@ -363,6 +363,11 @@ config REALTEK_PHY
  	help
  	  Supports the Realtek 821x PHY.
  
@@ -68,10 +70,10 @@ index 111111111111..222222222222 100644
  	tristate "Renesas PHYs"
  	help
 diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
-index 111111111111..222222222222 100644
+index 90f886844381..c01cab606627 100644
 --- a/drivers/net/phy/Makefile
 +++ b/drivers/net/phy/Makefile
-@@ -89,3 +89,5 @@ obj-$(CONFIG_STE10XP)		+= ste10Xp.o
+@@ -103,3 +103,5 @@ obj-$(CONFIG_STE10XP)		+= ste10Xp.o
  obj-$(CONFIG_TERANETICS_PHY)	+= teranetics.o
  obj-$(CONFIG_VITESSE_PHY)	+= vitesse.o
  obj-$(CONFIG_XILINX_GMII2RGMII) += xilinx_gmii2rgmii.o
@@ -79,7 +81,7 @@ index 111111111111..222222222222 100644
 +
 diff --git a/drivers/net/phy/maxio.c b/drivers/net/phy/maxio.c
 new file mode 100644
-index 000000000000..111111111111
+index 000000000000..848a5cb70809
 --- /dev/null
 +++ b/drivers/net/phy/maxio.c
 @@ -0,0 +1,442 @@
@@ -526,10 +528,10 @@ index 000000000000..111111111111
 +
 +
 diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
-index 111111111111..222222222222 100644
+index 834624a61060..8bd8b3d119e1 100644
 --- a/drivers/net/phy/phy_device.c
 +++ b/drivers/net/phy/phy_device.c
-@@ -902,6 +902,15 @@ static int get_phy_c22_id(struct mii_bus *bus, int addr, u32 *phy_id)
+@@ -949,6 +949,15 @@ static int get_phy_c22_id(struct mii_bus *bus, int addr, u32 *phy_id)
  {
  	int phy_reg;
  
@@ -546,5 +548,5 @@ index 111111111111..222222222222 100644
  	phy_reg = mdiobus_read(bus, addr, MII_PHYSID1);
  	if (phy_reg < 0) {
 -- 
-Armbian
+2.43.0
 
