@@ -1,0 +1,273 @@
+#!/bin/bash
+
+# enable additional modules
+broadcom_extra_modules (){
+BRCM_MODULES="CONFIG_MODULE_SIG=y CONFIG_CIFS_POSIX=y CONFIG_EFI=y CONFIG_DMI=y CONFIG_SYSFB_SIMPLEFB=y \n
+	CONFIG_EFI_ARMSTUB_DTB_LOADER=y CONFIG_EFI_BOOTLOADER_CONTROL=y CONFIG_RESET_ATTACK_MITIGATION=y \n
+	CONFIG_NVME_HWMON=y CONFIG_ZRAM_BACKEND_LZ4=y CONFIG_ZRAM_BACKEND_LZ4HC=y CONFIG_ZRAM_BACKEND_ZSTD=y \n
+	CONFIG_ZRAM_BACKEND_DEFLATE=y CONFIG_ZRAM_BACKEND_LZO=y"
+
+if [[ -v "BRCM_MODULES" ]] && [[ ! -z "$BRCM_MODULES" ]]; then
+	# insert additional modules
+	echo -e ${BRCM_MODULES} | tr ' ' '\n' | tee -a brcm_modlist.txt > /dev/null 2>&1
+	for MODLIST in `cat brcm_modlist.txt`; do
+		if [[ `grep -w "${MODLIST}" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "${MODLIST}" >> "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"; fi
+		rm -f brcm_modlist.txt
+	done
+fi
+}
+
+# boot firmware
+broadcom_extra_git (){
+FIRMWARE="https://github.com/raspberrypi/firmware.git"
+rm -fdr firmware
+git clone -q --depth=1 --filter=blob:none --sparse  ${FIRMWARE} boot-firmware
+cd boot-firmware
+git sparse-checkout add boot &> /dev/null
+rm -fdr boot/{overlays,*.dtb,kernel*}
+mv boot ../firmware
+cd ..
+rm -fdr boot-firmware
+RPI_FW=( "firmware/fixup4.dat" "firmware/fixup4cd.dat" "firmware/fixup4db.dat" "firmware/fixup4x.dat" "firmware/start4.elf" \
+	 "firmware/start4cd.elf" "firmware/start4db.elf" "firmware/start4x.elf" "firmware/bootcode.bin" "firmware/fixup.dat" \
+	 "firmware/fixup_cd.dat" "firmware/fixup_db.dat" "firmware/fixup_x.dat" "firmware/start.elf" "firmware/start_cd.elf" \
+	 "firmware/start_db.elf" "firmware/start_x.elf" )
+RPI_FW_CHK="true"
+
+for bins in "${RPI_FW[@]}"; do
+	if [[ ! -f "$bins" ]]; then
+		echo -e "Error: '$bins' missing."
+		RPI_FW_CHK="false"
+		break
+	fi
+done
+if "$RPI_FW_CHK"; then
+	:;
+else
+	echo -e "RPI FW Check, Failed."; echo ""
+	exit 1
+fi
+}
+
+# STAGE1
+brcm_cmdline (){
+rm -f p1/cmdline.txt
+cat <<EOF > "p1/cmdline.txt"
+${CONSOLE} root=PARTUUID=${ROOT_PARTUUID} ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA} rootwait
+EOF
+}
+
+config_dot_txt (){
+rm -f p1/config.txt
+cat <<EOF > "p1/config.txt"
+arm_64bit=1
+initramfs initrd.gz followkernel
+
+# uncomment if you get no picture on HDMI for a default "safe" mode
+#hdmi_safe=1
+
+# uncomment this if your display has a black border of unused pixels visible
+# and your display can output without overscan
+disable_overscan=1
+
+# uncomment the following to adjust overscan. Use positive numbers if console
+# goes off screen, and negative if there is too much border
+#overscan_left=16
+#overscan_right=16
+#overscan_top=16
+#overscan_bottom=16
+
+# uncomment to force a console size. By default it will be display's size minus
+# overscan.
+#framebuffer_width=1280
+#framebuffer_height=720
+
+# uncomment if hdmi display is not detected and composite is being output
+#hdmi_force_hotplug=1
+
+# uncomment to force a specific HDMI mode (this will force VGA)
+#hdmi_group=1
+#hdmi_mode=1
+
+# uncomment to force a HDMI mode rather than DVI. This can make audio work in
+# DMT (computer monitor) modes
+#hdmi_drive=2
+
+# uncomment to increase signal to HDMI, if you have interference, blanking, or
+# no display
+#config_hdmi_boost=4
+
+# uncomment for composite PAL
+#sdtv_mode=2
+
+# camera
+#start_x=1
+#gpu_mem=128
+
+# automatically load overlays for detected cameras
+#camera_auto_detect=1
+
+# automatically load overlays for detected DSI displays
+#display_auto_detect=1
+
+# uncomment to overclock: https://www.tomshardware.com/how-to/overclock-any-raspberry-pi
+#arm_freq=
+#gpu_freq=
+#core_freq=
+#over_voltage=
+#force_turbo=1
+
+# uncomment some or all of these to enable the optional hardware interfaces
+#dtparam=i2c_arm=on
+#dtparam=i2s=on
+#dtparam=spi=on
+
+# uncomment this to enable infrared communication.
+#dtoverlay=gpio-ir,gpio_pin=17
+#dtoverlay=gpio-ir-tx,gpio_pin=18
+
+# additional overlays and parameters are documented /boot/overlays/README
+
+# enable audio (loads snd_bcm2835)
+dtparam=audio=on
+
+# enable uart
+enable_uart=0
+
+# disable wifi and bluetooth
+#dtoverlay=disable-wifi
+#dtoverlay=disable-bt
+#dtoverlay=pi3-disable-wifi
+#dtoverlay=pi3-disable-bt
+#dtoverlay=disable-wifi-pi5
+#dtoverlay=disable-bt-pi5
+
+# remove test rainbow
+disable_splash=1
+
+# disables the warning overlays
+avoid_warnings=1
+
+# gpio fan (headers)
+#dtoverlay=gpio-fan,gpiopin=12,temp=55000,hyst=2000
+
+[cm4]
+otg_mode=1
+
+[cm5]
+dtoverlay=dwc2,dr_mode=host
+
+[pi4]
+dtoverlay=vc4-kms-v3d,cma-512
+#dtoverlay=vc4-kms-v3d-pi4
+#dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+arm_boost=1
+#disable_fw_kms_setup=1
+
+[pi5]
+dtoverlay=vc4-kms-v3d,cma-512
+#dtoverlay=vc4-kms-v3d-pi5
+#dtoverlay=vc4-fkms-v3d
+max_framebuffers=0
+arm_boost=1
+usb_max_current_enable=1
+disable_fw_kms_setup=1
+
+# pi5 overclock 3000mhz
+#over_voltage_delta=50000
+#arm_freq=3000
+#gpu_freq=1000
+
+# pwm fan
+#dtparam=fan_temp0=50000
+#dtparam=fan_temp0_hyst=2000
+#dtparam=fan_temp0_speed=75
+#dtparam=fan_temp1=55000
+#dtparam=fan_temp1_hyst=2000
+#dtparam=fan_temp1_speed=125
+#dtparam=fan_temp2=60000
+#dtparam=fan_temp2_hyst=3000
+#dtparam=fan_temp2_speed=175
+#dtparam=fan_temp3=65000
+#dtparam=fan_temp3_hyst=3000
+#dtparam=fan_temp3_speed=250
+EOF
+}
+
+flash_uboot (){
+echo ""
+}
+
+# STAGE2
+# firmware
+install_brcm_firmware (){
+echo ""
+mkdir -p /lib/firmware/brcm
+mkdir -p /lib/firmware/updates
+# firmware-brcm80211_20241210-1+rpt3_all
+BRCM_FW="https://github.com/pyavitz/firmware.git -b brcm"
+git clone -q --depth=1 --filter=blob:none --sparse ${BRCM_FW} /lib/firmware/updates
+cd /lib/firmware/updates
+git sparse-checkout add brcm cypress
+cd ~
+mv fw-0a5c_21e8.hcd /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+cp /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A1-0a5c-21e8.hcd
+chown root:root /lib/firmware/brcm/BCM20702A0-0a5c-21e8.hcd
+install -Dm644 UPDATE.mem /lib/firmware/updates/renesas_usb_fw.mem
+rm -f UPDATE.mem
+ln -sr /lib/firmware /etc/firmware
+# realtek firmware
+if [[ `wget -S --spider https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	mkdir -p /lib/firmware/updates/rtl_nic
+	cd /lib/firmware/updates/rtl_nic
+	wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz
+	if [[ -f "rtl_nic.tar.gz" ]]; then tar xf rtl_nic.tar.gz; rm -f rtl_nic.tar.gz; fi
+fi
+cd ~
+git clone --depth=1 -q -b realtek https://github.com/pyavitz/firmware.git
+rm -fdr firmware/{.git,README.md}; cp -fr firmware/* /lib/firmware/updates; rm -fdr firmware
+}
+
+# rpi-eeprom
+find_eeprom (){
+EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==1) {print substr($2, 1, length($2)-3)}}' | sed 's/[()]//g')
+if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+	wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1_all.deb
+	wget -cq --show-progress ${ERURL}rpi-eeprom-images_${EEPROM_VERSION}-1_all.deb
+else
+	EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==10) {print substr($2, 1, length($2)-3)}}' | sed 's/[()]//g')
+	if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
+		wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1_all.deb
+		wget -cq --show-progress ${ERURL}rpi-eeprom-images_${EEPROM_VERSION}-1_all.deb
+	else
+		EEPROM_VERSION="28.8"
+		wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1_all.deb
+		wget -cq --show-progress ${ERURL}rpi-eeprom-images_${EEPROM_VERSION}-1_all.deb
+	fi
+fi
+}
+
+eeprom_support (){
+echo ""
+ERURL="https://archive.raspberrypi.org/debian/pool/main/r/rpi-eeprom/"
+CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/pios/trixie/debian/changelog"
+mkdir -p ~/eeprom; cd ~/eeprom
+find_eeprom
+CTRL=`ar t rpi-eeprom_${EEPROM_VERSION}-1_all.deb | grep "control"`
+if [[ -f "rpi-eeprom_${EEPROM_VERSION}-1_all.deb" ]]; then
+	apt install binutils flashrom pciutils python3 python3-pycryptodome -y
+	ar x rpi-eeprom_${EEPROM_VERSION}-1_all.deb; rm -f {data.tar.xz,debian-binary}
+	mkdir tmp; mv ${CTRL} tmp/; cd tmp
+	tar xf ${CTRL}; rm ${CTRL}
+	sed -i "s/^Depends.*/Depends: python3, binutils, pciutils, python3-pycryptodome/" control
+	tar -cJf ${CTRL} *
+	mv ${CTRL} ../; cd ..
+	ar r rpi-eeprom_${EEPROM_VERSION}-1_all.deb ${CTRL}
+	rm -fdr ${CTRL} tmp
+	dpkg -i rpi-eeprom-images_${EEPROM_VERSION}-1_all.deb rpi-eeprom_${EEPROM_VERSION}-1_all.deb
+	cd ..
+fi
+rm -fdr eeprom
+}

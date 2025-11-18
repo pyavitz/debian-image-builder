@@ -95,6 +95,15 @@ else
 	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
 	# Defined in pkgvars
 	cp arch/$karch/boot/$kimage "$tmpdir/boot/Image"
+	if [ "$platform" = "broadcom" ]; then
+		mkdir -p "$tmpdir/$boot_path"
+		cp arch/$karch/boot/$kimage "$tmpdir/$boot_path/kernel_2712.img"
+		install -m 0644 firmware/bootcode.bin "$tmpdir/$boot_path"
+		install -m 0644 firmware/fixup*.dat "$tmpdir/$boot_path"
+		install -m 0644 firmware/start*.elf "$tmpdir/$boot_path"
+		if [ -f firmware/LICENCE.broadcom ]; then install -m 0644 firmware/LICENCE.broadcom "$tmpdir/$boot_path"; fi
+		if [ -f firmware/COPYING.linux ]; then install -m 0644 firmware/COPYING.linux "$tmpdir/$boot_path"; fi
+	fi
 fi
 cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
 
@@ -215,7 +224,7 @@ set -e
 
 rm -fr /boot/{Image*,vmlinuz-*,System.map-*,config-*}
 rm -fr /boot/{initrd.gz,uInitrd,initrd.img-*}
-rm -fr /boot/$platform/*.dtb
+rm -fr /boot/$platform/{Image,*.dtb,initrd.gz,bootcode.bin,fixup*.dat,start*.elf,LICENCE.broadcom,COPYING.linux};
 rm -fdr /boot/$platform/overlays
 rm -f /etc/initramfs/post-update.d/99-initrd
 

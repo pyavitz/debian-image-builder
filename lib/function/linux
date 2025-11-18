@@ -196,6 +196,8 @@ bconfig (){
 echo_defconfig
 if [[ -f "../${DEF}/${LINUX_DEFCONFIG}" ]]; then
 	cp -f ../${DEF}/${LINUX_DEFCONFIG} arch/${ARCH}/configs/
+elif [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	:;
 else
 	echo ""
 	echo -e "${LINUX_DEFCONFIG} was not found."
@@ -204,8 +206,8 @@ else
 	read -p "Press enter to continue."
 	exit 1
 fi
-# lib/function/modconfig
 linux_configs
+if [[ `type ${FAMILY}_extra_modules` ]] &>/dev/null; then ${FAMILY}_extra_modules; fi
 kbuild "${LINUX_DEFCONFIG}"
 echo ""
 }

@@ -108,6 +108,8 @@ $MOUNT_ROOTFS
 partition (){
 # offset first partition by
 PART_OFFSET="${OFFSET}"
+# don't support EFI on raspberrypi
+if [[ "$FAMILY" == "broadcom" ]]; then EFI="false"; fi
 # boot partition size
 if [[ "$EFI" == "true" ]]; then BSIZE="128MiB"; else BSIZE="512MiB"; fi
 # partition values
@@ -137,7 +139,11 @@ EOF
 p2_fstab (){
 rm -f p2/etc/fstab
 if [[ "$BOOT_VFAT" == "true" ]] && [[ "$EFI" == "false" ]]; then
-	BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+	if [[ "$FAMILY" == "broadcom" ]]; then
+		BOOTFS_TABLE="/boot/broadcom	vfat	defaults,flush 0 2"
+	else
+		BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+	fi
 fi
 if [[ "$BOOT_VFAT" == "true" ]] && [[ "$EFI" == "true" ]]; then
 	BOOTFS_TABLE="/boot/efi	vfat	defaults,flush 0 2"
@@ -283,6 +289,11 @@ if [[ "$SERIES" == "amlogic-t7" && -f "files/bsp/${BOARD}/usr/share/initramfs-to
 	fi
 	cp -f files/bsp/${BOARD}/usr/share/initramfs-tools/hook-functions ${P_VALUE}/usr/share/initramfs-tools/
 fi
+# raspberrypi udev rules
+if [[ "$FAMILY" == "broadcom" ]] && [[ -d "files/bsp/${BOARD}" ]]; then
+	mkdir -p ${P_VALUE}/etc/udev/rules.d
+	cp -r files/bsp/${BOARD}/etc/udev/rules.d/*.rules ${P_VALUE}/etc/udev/rules.d/
+fi	
 # do not accept new conf files in an unattended install (remove file at the end of stage2)
 mkdir -p ${P_VALUE}/etc/apt/apt.conf.d
 echo 'Dpkg::Options {"--force-confold";};' > ${P_VALUE}/etc/apt/apt.conf.d/71debconf

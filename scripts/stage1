@@ -40,7 +40,7 @@ if [[ -d "sysroot" ]] || [[ -d "p1" ]] || [[ -d "BOOT" ]] || [[ -f "shrink.img" 
 if [ $VERBOSE -eq 1 ]; then set -eux -o pipefail; else set -eu -o pipefail; fi
 mirrors
 # check output
-if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ "$FAMILY" == "generic" ]]; then
+if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ "$FAMILY" =~ ^(broadcom|generic)$ ]]; then
 	:;
 elif [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
 	:;
@@ -142,7 +142,11 @@ fi
 
 # mount and chroot p2
 if [[ "$P_VALUE" == "p2" ]]; then
-	if [[ "$EFI" == "true" ]]; then
+	if [[ "$FAMILY" == "broadcom" ]]; then
+		P_BRCM="p2/boot/broadcom"
+		mkdir -p ${P_BRCM}
+		mount -o bind p1 ${P_BRCM}
+	elif [[ "$EFI" == "true" ]]; then
 		P_EFI="p2/boot/efi"
 		mkdir -p ${P_EFI}
 		mount -o bind p1 ${P_EFI}
@@ -157,7 +161,13 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	# unmount
 	umount p2/dev/pts
 	umount p2/dev
-	if [[ "$EFI" == "true" ]]; then umount ${P_EFI}; else umount ${P_NORM}; fi
+	if [[ "$FAMILY" == "broadcom" ]]; then
+		umount ${P_BRCM}
+	elif [[ "$EFI" == "true" ]]; then
+		umount ${P_EFI}
+	else
+		umount ${P_NORM}
+	fi
 	if [[ -f "p2/usr/bin/${STATIC}" ]]; then rm -f p2/usr/bin/${STATIC}; fi
 	cp -f p2/root/kernel.release .
 	rm p2/root/stage2
@@ -181,6 +191,7 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
 	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
 	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
+	if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]]; then brcm_cmdline; config_dot_txt; fi
 	if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ "AML_EMMC" == "false" ]]; then
 		cp -f ${OUTPUT}/chainload.bin p1/
 		cp -fr files/boot/scripts/{aml_autoscript.cmd,s905_autoscript.cmd} p1/
