@@ -241,7 +241,10 @@ if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]]; then mv -f amlmixer /
 if [[ -f "/usr/bin/tweaks" ]]; then tweaks_service > /dev/null 2>&1; fi
 if [ $NETWORKMANAGER -eq 0 ]; then wget -cq ${SCRIPTS_URL}swh -P /usr/local/bin/; fi
 wget -cq ${SCRIPTS_URL}governor -P /usr/local/bin/
-if [[ "$FAMILY" == "broadcom" ]]; then wget -cq ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/; fi
+if [[ "$FAMILY" == "broadcom" ]]; then
+	wget -cq ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/
+	wget -cq https://raw.githubusercontent.com/pyavitz/rpi-img-builder/refs/heads/master/files/scripts/transfer -P /usr/local/bin/
+fi
 if [[ -v "GOVERNOR" && ! -z "$GOVERNOR" ]]; then echo GOVERNOR='"'${GOVERNOR}'"' > /etc/default/governor; fi
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
