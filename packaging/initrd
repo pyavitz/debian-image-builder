@@ -2,6 +2,7 @@
 
 ARCH=""
 INITRD="/boot/initrd.gz"
+INITRD_BRCM="/boot/broadcom/initrd.gz"
 UINITRD="/boot/uInitrd"
 
 failed (){
@@ -11,9 +12,17 @@ exit 1
 }
 
 if [[ -d "/boot" ]] && [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
-	echo "update-initramfs: Generating ${INITRD}"
 	rm -fr /boot/{initrd.gz,initrd.img-*-bak}
-	cp -f /boot/initrd.img-* ${INITRD}
+	if [[ -d "/boot/broadcom" ]]; then
+		echo "update-initramfs: Generating ${INITRD_BRCM}"
+		rm -f /boot/broadcom/initrd.gz
+		cp -f /boot/initrd.img-* ${INITRD_BRCM}
+		rm -f /boot/firmware
+		ln -s /boot/broadcom /boot/firmware
+	else
+		echo "update-initramfs: Generating ${INITRD}"
+		cp -f /boot/initrd.img-* ${INITRD}
+	fi
 fi
 
 if [ "$#" -eq 2 ]; then

@@ -56,6 +56,7 @@ if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute)$ ]]; then WIRELE
 if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager"; else NETWORKING="ifupdown"; fi
 # install base and extra packages
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
+	if [[ "$FAMILY" == "broadcom" ]]; then DEBIAN_FW=""; fi
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} resolvconf haveged netplug ${NETWORKING} ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
@@ -240,6 +241,7 @@ if [[ "$SERIES" =~ ^(meson-g12a|meson-g12b|meson-sm1)$ ]]; then mv -f amlmixer /
 if [[ -f "/usr/bin/tweaks" ]]; then tweaks_service > /dev/null 2>&1; fi
 if [ $NETWORKMANAGER -eq 0 ]; then wget -cq ${SCRIPTS_URL}swh -P /usr/local/bin/; fi
 wget -cq ${SCRIPTS_URL}governor -P /usr/local/bin/
+if [[ "$FAMILY" == "broadcom" ]]; then wget -cq ${SCRIPTS_URL}deb-eeprom -P /usr/local/bin/; fi
 if [[ -v "GOVERNOR" && ! -z "$GOVERNOR" ]]; then echo GOVERNOR='"'${GOVERNOR}'"' > /etc/default/governor; fi
 mv -f growpart /usr/bin/
 mv -f firstboot /usr/local/sbin/
@@ -328,7 +330,7 @@ if [ $USERACCT -eq 0 ]; then
 fi
 
 # firmware
-install_firmware
+if [[ "$FAMILY" == "broadcom" ]]; then install_brcm_firmware; else install_firmware; fi
 if [[ `type ${FAMILY}_extra_firmware` ]] &>/dev/null; then ${FAMILY}_extra_firmware; fi
 
 # network setup
@@ -381,6 +383,9 @@ fi
 if [[ `grep -w "COMPRESS=zstd" "/etc/initramfs-tools/initramfs.conf"` ]]; then
 	sed -i 's/COMPRESS=zstd/COMPRESS=xz/g' /etc/initramfs-tools/initramfs.conf
 fi
+
+# raspberrypi eeprom
+if [[ "$FAMILY" == "broadcom" ]]; then eeprom_support; fi
 
 # uimage
 if [[ "$BOARD" == "odroidc1" ]]; then make_uimage; fi
