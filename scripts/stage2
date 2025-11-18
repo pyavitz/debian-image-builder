@@ -55,8 +55,8 @@ if [[ "$DISTRO_VERSION" =~ ^(ceres|sid|testing|unstable)$ ]]; then :; else apt a
 if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
 if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager"; else NETWORKING="ifupdown"; fi
 # install base and extra packages
+if [[ "$FAMILY" == "broadcom" ]]; then DEBIAN_FW=""; fi
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
-	if [[ "$FAMILY" == "broadcom" ]]; then DEBIAN_FW=""; fi
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} resolvconf haveged netplug ${NETWORKING} ${PKGS_FULL}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
