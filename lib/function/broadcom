@@ -1,29 +1,5 @@
 #!/bin/bash
 
-# enable additional modules
-broadcom_extra_modules (){
-if [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	# remove localversion
-	if [[ `grep -w "CONFIG_LOCALVERSION=" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then sed -i 's/CONFIG_LOCALVERSION=/# CONFIG_LOCALVERSION=/g' arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-	# hardcode i2c-dev
-	if [[ `grep -w "CONFIG_I2C_CHARDEV=m" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then sed -i 's/CONFIG_I2C_CHARDEV=m/CONFIG_I2C_CHARDEV=y/g' arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
-fi
-
-BRCM_MODULES="CONFIG_MODULE_SIG=y CONFIG_CIFS_POSIX=y CONFIG_EFI=y CONFIG_DMI=y CONFIG_SYSFB_SIMPLEFB=y \n
-	CONFIG_EFI_ARMSTUB_DTB_LOADER=y CONFIG_EFI_BOOTLOADER_CONTROL=y CONFIG_RESET_ATTACK_MITIGATION=y \n
-	CONFIG_NVME_HWMON=y CONFIG_ZRAM_BACKEND_LZ4=y CONFIG_ZRAM_BACKEND_LZ4HC=y CONFIG_ZRAM_BACKEND_ZSTD=y \n
-	CONFIG_ZRAM_BACKEND_DEFLATE=y CONFIG_ZRAM_BACKEND_LZO=y"
-
-if [[ -v "BRCM_MODULES" ]] && [[ ! -z "$BRCM_MODULES" ]]; then
-	# insert additional modules
-	echo -e ${BRCM_MODULES} | tr ' ' '\n' | tee -a brcm_modlist.txt > /dev/null 2>&1
-	for MODLIST in `cat brcm_modlist.txt`; do
-		if [[ `grep -w "${MODLIST}" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "${MODLIST}" >> "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"; fi
-		rm -f brcm_modlist.txt
-	done
-fi
-}
-
 # boot firmware
 broadcom_extra_git (){
 FIRMWARE="https://github.com/raspberrypi/firmware.git"
@@ -53,6 +29,42 @@ if "$RPI_FW_CHK"; then
 else
 	echo -e "RPI FW Check, Failed."; echo ""
 	exit 1
+fi
+}
+
+# enable additional modules
+broadcom_extra_modules (){
+if [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	# remove localversion
+	if [[ `grep -w "CONFIG_LOCALVERSION=" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then sed -i 's/CONFIG_LOCALVERSION=/# CONFIG_LOCALVERSION=/g' arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+	# hardcode i2c-dev
+	if [[ `grep -w "CONFIG_I2C_CHARDEV=m" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then sed -i 's/CONFIG_I2C_CHARDEV=m/CONFIG_I2C_CHARDEV=y/g' arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+fi
+
+BRCM_MODULES="CONFIG_MODULE_SIG=y CONFIG_CIFS_POSIX=y CONFIG_EFI=y CONFIG_DMI=y CONFIG_SYSFB_SIMPLEFB=y \n
+	CONFIG_EFI_ARMSTUB_DTB_LOADER=y CONFIG_EFI_BOOTLOADER_CONTROL=y CONFIG_RESET_ATTACK_MITIGATION=y \n
+	CONFIG_NVME_HWMON=y CONFIG_ZRAM_BACKEND_LZ4=y CONFIG_ZRAM_BACKEND_LZ4HC=y CONFIG_ZRAM_BACKEND_ZSTD=y \n
+	CONFIG_ZRAM_BACKEND_DEFLATE=y CONFIG_ZRAM_BACKEND_LZO=y"
+
+if [[ -v "BRCM_MODULES" ]] && [[ ! -z "$BRCM_MODULES" ]]; then
+	# insert additional modules
+	echo -e ${BRCM_MODULES} | tr ' ' '\n' | tee -a brcm_modlist.txt > /dev/null 2>&1
+	for MODLIST in `cat brcm_modlist.txt`; do
+		if [[ `grep -w "${MODLIST}" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "${MODLIST}" >> "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"; fi
+		rm -f brcm_modlist.txt
+	done
+fi
+}
+
+broadcom_extra_git_patching (){
+if [[ -f "arch/${ARCH}/Kconfig" ]] && [[ "$ARCH" == "arm64" ]]; then
+	# REVERT: arm64/Kconfig: Don't set DMA_BOUNCE_UNALIGNED_KMALLOC
+	# If enabled, DMA_BOUNCE_UNALIGNED_KMALLOC causes the swiotlb buffers (64MB, by default) to be allocated, even on systems
+	# where the DMA controller can reach all of RAM.
+	sed -i 's/	# select DMA_BOUNCE_UNALIGNED_KMALLOC/	select DMA_BOUNCE_UNALIGNED_KMALLOC/g' arch/arm64/Kconfig
+fi
+if [[ -f "../../${LPATCHESALL}/${LINUX_VERSION}/002-scripts-Makefile.package-PHONY-intdeb-pkg.patch" ]]; then
+	for i in ../../${LPATCHESALL}/${LINUX_VERSION}/002-scripts-Makefile.package-PHONY-intdeb-pkg.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 fi
 }
 
