@@ -190,6 +190,12 @@ if [ -d $tmpdir/$linux_path ]; then
 			cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
 		fi
 	fi
+	# fixup broadcom overlays
+	if [ "$platform" = "broadcom" ] && [ -d "$tmpdir/usr/lib/$linux_name/overlays" ]; then
+		rm -fdr "$tmpdir/$linux_path/overlays"
+		rm -fdr "$tmpdir/$boot_path/overlays"
+		mv -f "$tmpdir/usr/lib/$linux_name/overlays" "$tmpdir/$boot_path/overlays"
+	fi
 fi
 
 # Install initramfs post-update script
