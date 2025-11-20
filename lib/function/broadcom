@@ -270,13 +270,13 @@ fi
 
 eeprom_support (){
 echo ""
+apt install binutils flashrom pciutils python3 python3-pycryptodome -y
 ERURL="https://archive.raspberrypi.org/debian/pool/main/r/rpi-eeprom/"
 CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/pios/trixie/debian/changelog"
 mkdir -p ~/eeprom; cd ~/eeprom
 find_eeprom
 CTRL=`ar t rpi-eeprom_${EEPROM_VERSION}-1_all.deb | grep "control"`
 if [[ -f "rpi-eeprom_${EEPROM_VERSION}-1_all.deb" ]]; then
-	apt install binutils flashrom pciutils python3 python3-pycryptodome -y
 	ar x rpi-eeprom_${EEPROM_VERSION}-1_all.deb; rm -f {data.tar.xz,debian-binary}
 	mkdir tmp; mv ${CTRL} tmp/; cd tmp
 	tar xf ${CTRL}; rm ${CTRL}
