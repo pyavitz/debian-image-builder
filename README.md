@@ -23,6 +23,9 @@ Odroid N2+
 Radxa Zero
 X96-AIR	GBIT / QCOM
 
+# Broadcom
+Raspberry Pi 4 / 5
+
 # ROCKCHIP
 FriendlyElec NanoPi R3S / LTS
 Radxa Zero 3W
