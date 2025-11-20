@@ -10,6 +10,7 @@ if [[ "$HOST_MACHINE" == "Ubuntu" ]]; then
 else
 	LOOP=`grep -o 'loop.p.' <<<"$KPARTX"`
 fi
+sleep .25
 if [[ "$P_VALUE" == "p1" ]]; then shrink_p1; fi
 if [[ "$P_VALUE" == "p2" ]]; then shrink_p2; fi
 }
@@ -51,7 +52,7 @@ if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "$ROOTFS" > /dev/null 2>&1
 mkdir -p ${ROOTFS_LABEL}
 sleep .50
 mount "${ROOTFS}" ${ROOTFS_LABEL}
-sleep .50
+sleep 1
 calculate
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
 mkdir -p "$IMAGE_FOLDER"
@@ -68,12 +69,14 @@ umount ${ROOTFS_LABEL}
 sleep .75
 rm -fdr ${ROOTFS_LABEL}
 kpartx -d shrink.img
+sleep .50
 rm -f shrink.img
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
 if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
 if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
 p1_fstab > /dev/null 2>&1
 umount p1
+sleep .50
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "${IMAGE_LOOP_DEV_ROOTFS}" > /dev/null 2>&1; fi
 losetup -d "${IMAGE_LOOP_DEV}"
 mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
@@ -95,8 +98,9 @@ if [[ "$EFI" == "true" ]]; then mkdir -p EFI; else mkdir -p BOOT; fi
 mkdir -p ${ROOTFS_LABEL}
 sleep .50
 if [[ "$EFI" == "true" ]]; then mount "${EFI_BOOT}" EFI; else mount "${BOOT}" BOOT; fi
+sleep 1
 mount "${ROOTFS}" ${ROOTFS_LABEL}
-sleep .50
+sleep 1
 calculate
 if [ $RAM -ne 0 ]; then IMAGE_FOLDER="ram/"; fi
 mkdir -p "$IMAGE_FOLDER"
@@ -119,6 +123,7 @@ umount ${ROOTFS_LABEL}
 sleep .75
 rm -fdr BOOT EFI; rm -fdr ${ROOTFS_LABEL}
 kpartx -d shrink.img
+sleep .50
 rm -f shrink.img
 if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
 if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
@@ -127,6 +132,7 @@ if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/nu
 if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]]; then brcm_cmdline; config_dot_txt; fi
 p2_fstab > /dev/null 2>&1
 umount p2; umount p1
+sleep .50
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "${IMAGE_LOOP_DEV_ROOTFS}" > /dev/null 2>&1; fi
 losetup -d "${IMAGE_LOOP_DEV}"
 mv "${IMAGE_FOLDER}${IMAGE_FILE_NAME}" "${IMAGE_FILE_NAME}"
