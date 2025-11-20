@@ -3,9 +3,7 @@
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
-if [[ -f "/etc/opt/board.txt" ]]; then
-	. /etc/opt/board.txt
-fi
+if [[ -f "/etc/opt/board.txt" ]]; then . /etc/opt/board.txt; fi
 
 ROOTFS=`findmnt -v -n -o SOURCE /`
 BLOCK=`findmnt -v -n -o SOURCE / | sed 's/\/dev\///' | sed 's/..$//'`
@@ -25,15 +23,9 @@ if [[ `findmnt -v -n -o SOURCE / | grep "sd"` ]]; then
 fi
 bash growpart $NODE $PART
 sleep .50
-if [[ "$FSTYPE" == "ext4" ]]; then
-	resize2fs $ROOTFS
-fi
-if [[ "$FSTYPE" == "btrfs" ]]; then
-	btrfs filesystem resize max /
-fi
-if [[ "$FSTYPE" == "xfs" ]]; then
-	xfs_growfs -d /
-fi
+if [[ "$FSTYPE" == "ext4" ]]; then resize2fs $ROOTFS; fi
+if [[ "$FSTYPE" == "btrfs" ]]; then btrfs filesystem resize max /; fi
+if [[ "$FSTYPE" == "xfs" ]]; then xfs_growfs -d /; fi
 # reboot if read-only root partition detected
 if [[ ! -z `mount | grep "on / type ext4 (ro,"` ]]; then
 	echo ""
@@ -72,6 +64,14 @@ if [[ `findmnt -v -n /boot/efi | grep -w "vfat"` ]]; then
 	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
 	sleep .50
 	mount /boot/efi
+fi
+if [[ `findmnt -v -n /boot/broadcom | grep -w "vfat"` ]]; then
+	BOOT=`findmnt -v -n -o SOURCE /boot/broadcom`
+	umount /boot/broadcom
+	sleep .50
+	bash fsck.fat -trawl $BOOT > /dev/null 2>&1
+	sleep .50
+	mount /boot/broadcom
 fi
 
 # clean

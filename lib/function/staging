@@ -5,13 +5,11 @@ if [[ "$BOOT_EXT4" == "true" ]]; then EXTFS="ext4"; BOOTFS="mkfs.${EXTFS} -L"; f
 if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then EXTFS="ext4"; BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$PETITBOOT" == "true" ]]; then EXTFS="ext2"; BOOTFS="mkfs.${EXTFS} -L"; fi
 if [[ "$BOOT_VFAT" == "true" ]]; then BOOTFS="mkfs.fat -F 32 -n"; fi
-if [[ "$EFI" == "true" ]]; then
-	BOOT_LABEL="EFI"
-	ROOTFS_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
-else
-	BOOT_LABEL="BOOT"
-	ROOTFS_LABEL="ROOTFS"
-fi
+# boot label
+if [[ "$EFI" == "true" ]]; then BOOT_LABEL="EFI"; else if [[ "$FAMILY" =~ ^(broadcom)$ ]]; then BOOT_LABEL="FIRMWARE"; BOOT_LABEL="BOOT"; fi; fi
+# rootfs label
+ROOTFS_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
+# filesystems
 if [[ "$P_VALUE" == "p2" ]]; then MAKE_BOOTFS="${BOOTFS} ${BOOT_LABEL} ${IMAGE_LOOP_DEV_BOOT}"; fi
 if [[ "$FSTYPE" == "ext4" ]]; then
 	MAKE_ROOTFS="mkfs.ext4 -L ${ROOTFS_LABEL} ${IMAGE_LOOP_DEV_ROOTFS}"
