@@ -253,7 +253,7 @@ fi
 
 # ROOT PARTITION VARIABLES
 if [[ "$R_FSTYPE" =~ ^(btrfs|ext4|f2fs|xfs)$ ]]; then
-	DISTRO=`cat /etc/os-release | grep -w NAME | sed 's/NAME=//g' | sed 's/"//g' | sed 's/ GNU\/Linux//g'`
+	ROOTFS_LABEL=`echo "${DISTRO}" | sed -e 's/.*/\U&/'`
 	if [[ "$R_FSTYPE" == "btrfs" ]]; then
 		MAKE_ROOTFS="mkfs.btrfs -f -L ${ROOTFS_LABEL} ${DEVICE_NODE}${P_ROOTFS}"
 		MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /transfer/${P_ROOTFS}"
