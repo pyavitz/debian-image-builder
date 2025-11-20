@@ -474,6 +474,7 @@ if [[ `command -v nmtui` ]]; then
 		"S)" "Software          Third-party software installers" \
 		"M)" "Miscellaneous     System settings" \
 		"" "" \
+		"K)" "Kernel            Edit boot configuration file" \
 		"U)" "Update            Menu interface configuration tool" \
 		"Q)" "Quit .." 3>&2 2>&1 1>&3
 	)
@@ -496,6 +497,7 @@ else
 		"S)" "Software          Third-party software installers" \
 		"M)" "Miscellaneous     System settings" \
 		"" "" \
+		"K)" "Kernel            Edit boot configuration file" \
 		"U)" "Update            Menu interface configuration tool" \
 		"Q)" "Quit .." 3>&2 2>&1 1>&3
 	)
@@ -682,6 +684,15 @@ case $CHOICE in
 		done
 		;;
 	"")
+		;;
+	"K)")
+		if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
+			sudo nano /boot/extlinux/extlinux.conf
+		elif [[ -f "/boot/uconfig.txt" ]]; then
+			sudo nano /boot/uconfig.txt
+		elif [[ -f "/boot/broadcom/config.txt" ]]; then
+			sudo nano /boot/broadcom/config.txt
+		fi
 		;;
 	"U)")
 		MENUDIR="/usr/local/bin/"
