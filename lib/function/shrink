@@ -130,7 +130,22 @@ if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/nu
 if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
 if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
 if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]]; then brcm_cmdline; config_dot_txt; fi
+if [[ "$EFI" == "true" ]] && [[ "$FAMILY" == "generic" ]]; then
+	P_EFI="${P_VALUE}/boot/efi"
+	mkdir -p ${P_EFI}
+	mount -o bind p1 ${P_EFI}
+	mount -o bind /dev ${P_VALUE}/dev
+	mount -o bind /dev/pts ${P_VALUE}/dev/pts
+	uefi # shrink script function
+	if [ $VERBOSE -eq 1 ]; then chroot ${P_VALUE} /root/uefi,sh; else chroot ${P_VALUE} /root/uefi,sh > /dev/null 2>&1; fi
+	umount ${P_VALUE}/dev/pts
+	umount ${P_VALUE}/dev
+	umount ${P_EFI}
+	rm -f /root/uefi,sh
+	sleep .50
+fi
 p2_fstab > /dev/null 2>&1
+sleep 1
 umount p2; umount p1
 sleep .50
 if [[ "$FSTYPE" == "ext4" ]]; then fsck.${FSTYPE} -pf "${IMAGE_LOOP_DEV_ROOTFS}" > /dev/null 2>&1; fi

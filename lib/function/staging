@@ -111,7 +111,7 @@ PART_OFFSET="${OFFSET}"
 # don't support EFI on raspberrypi
 if [[ "$FAMILY" == "broadcom" ]]; then EFI="false"; fi
 # boot partition size
-if [[ "$EFI" == "true" ]]; then BSIZE="128MiB"; else BSIZE="512MiB"; fi
+if [[ "$EFI" == "true" ]]; then BSIZE="256MiB"; else BSIZE="512MiB"; fi
 # partition values
 if [[ "$P_VALUE" == "p1" ]]; then P_ROOTFS="p1"; single_partition; fi
 if [[ "$P_VALUE" == "p2" ]]; then P_BOOT="p1"; P_ROOTFS="p2"; dual_partition; fi
@@ -401,6 +401,28 @@ label ${CAP_DISTRO} ${CAP_RELEASE}
 	${EXTLINUX_FDTOVERLAYS}
 	${CMDLINE}
 EOF
+}
+
+uefi (){
+cat <<EOF > "${P_VALUE}/root/uefi,sh"
+#!/usr/bin/env bash
+# grub fixup script
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+mount -t proc proc proc/
+mount -t sysfs sys sys/
+
+grub-install --removable
+sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="'"${CONSOLE} ${LOGLEVEL} ${EXTRA}"'"/' /etc/default/grub
+update-grub
+umount /proc /sys
+
+exit 0
+EOF
+chmod +x ${P_VALUE}/root/uefi,sh
 }
 
 # odroid boot script and env file

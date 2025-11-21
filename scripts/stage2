@@ -179,15 +179,11 @@ if [ $USCRIPTS -eq 1 ]; then uscripts_stage2; fi
 cd ~
 if [[ "$EFI" == "true" ]]; then
 	mkdir -p /etc/initramfs/post-update.d
-	if [[ "$FAMILY" == "generic" ]]; then
-		mv -f /root/99-uefi-generic /etc/initramfs/post-update.d/99-uefi
-	else
-		mv -f /root/99-uefi /etc/initramfs/post-update.d/
-	fi
+	mv -f /root/99-uefi /etc/initramfs/post-update.d/
 	chmod +x /etc/initramfs/post-update.d/99-uefi
 	chown root:root /etc/initramfs/post-update.d/99-uefi
-else
-	rm -f /root/99-uefi*
+	# not required
+	if [[ "$FAMILY" == "generic" ]]; then rm -f /etc/initramfs/post-update.d/99-uefi; fi
 fi
 
 # alsa asound.state file
@@ -407,6 +403,12 @@ cd ~
 dpkg -i *.deb
 rm -f *.deb
 sleep 1s
+if [[ "$EFI" == "true" ]] && [[ "$FAMILY" == "generic" ]]; then
+	mkdir -p /boot/efi/EFI/BOOT
+	grub-install --removable
+	sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="'"${CONSOLE} ${LOGLEVEL} ${EXTRA}"'"/' /etc/default/grub
+	update-grub
+fi
 # take note of linux kernel release
 if [ -f /usr/src/linux-headers-*/include/config/kernel.release ]; then
 	KERNEL_RELEASE=`cat /usr/src/linux-headers-*/include/config/kernel.release`
@@ -417,7 +419,7 @@ echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.release
 if [[ "$EFI" == "true" ]]; then
 	# 99-uefi uses /etc/opt/board.txt, this script does not.
 	# re-source /root/board.txt to ensure no confusion.
-	. /root/board.txt
+	if [[ "$FAMILY" == "generic" ]]; then :; else . /root/board.txt; fi
 fi
 
 # system.journal corrupted or uncleanly shut down, renaming and replacing
