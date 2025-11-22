@@ -87,6 +87,7 @@ echo -e ", done."
 }
 
 shrink_p2 (){
+if [[ "$EFI" == "true" ]]; then OLD_PARTUUID="$ROOT_PARTUUID"; fi
 B_LOOP=`echo "$LOOP" | sed -n '1p'`
 R_LOOP=`echo "$LOOP" | sed -n '2p'`
 BOOT_LOOP="/dev/mapper/$B_LOOP"
@@ -130,13 +131,14 @@ if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/nu
 if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
 if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
 if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]]; then brcm_cmdline; config_dot_txt; fi
-if [[ "$EFI" == "true" ]] && [[ "$FAMILY" == "generic" ]]; then
+if [[ "$EFI" == "true" ]]; then
 	P_EFI="${P_VALUE}/boot/efi"
 	mkdir -p ${P_EFI}
 	mount -o bind p1 ${P_EFI}
 	mount -o bind /dev ${P_VALUE}/dev
 	mount -o bind /dev/pts ${P_VALUE}/dev/pts
 	update_grub_sh # grub fixup
+	if [[ "$FAMILY" == "generic" ]]; then :; else sed -i "s/root=PARTUUID=${OLD_PARTUUID}/root=PARTUUID=${ROOT_PARTUUID}/g" ${P_VALUE}/etc/grub.d/40_custom; fi
 	if [ $VERBOSE -eq 1 ]; then chroot ${P_VALUE} /root/update_grub.sh; else chroot ${P_VALUE} /root/update_grub.sh > /dev/null 2>&1; fi
 	umount ${P_VALUE}/dev/pts
 	umount ${P_VALUE}/dev

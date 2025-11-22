@@ -63,6 +63,45 @@ DEBIAN_FW="firmware-linux-nonfree firmware-linux bluez-firmware \
 
 UBUNTU_FW="linux-firmware-mediatek-aiot"
 
+# custom grub menu entry
+custom_40 (){
+source /etc/opt/board.txt
+if [[ "$FSTYPE" == "ext4" ]]; then
+	FSMOD="ext2"
+	ROOT_FSTYPE="rootfstype=ext4"
+	CMDLINE="linux /boot/Image ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA}"
+	INITRD="initrd /boot/initrd.gz"
+	DEVICETREE="devicetree /boot/${FAMILY}/${DTB}.dtb"
+elif [[ "$FSTYPE" == "btrfs" ]]; then
+	FSMOD="btrfs"
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+	CMDLINE="linux /@/boot/Image ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA}"
+	INITRD="initrd /@/boot/initrd.gz"
+	DEVICETREE="devicetree /@/boot/${FAMILY}/${DTB}.dtb"
+elif [[ "$FSTYPE" == "xfs" ]]; then
+	FSMOD="xfs"
+	ROOT_FSTYPE="rootfstype=xfs"
+	CMDLINE="linux /boot/Image ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA}"
+	INITRD="initrd /boot/initrd.gz"
+	DEVICETREE="devicetree /boot/${FAMILY}/${DTB}.dtb"
+fi
+if [[ "$GPT" == "true" ]]; then PTYPE="gpt"; else PTYPE="msdos"; fi
+tee -a /etc/grub.d/40_custom <<EOF
+menuentry "${DEFAULT_MOTD}" {
+	insmod gzio
+	insmod part_${PTYPE}
+	insmod ${FSMOD}
+	echo "Loading kernel ..."
+	${CMDLINE}
+	echo "Loading ramdisk ..."
+	${INITRD}
+	echo "Loading devicetree ..."
+	${DEVICETREE}
+}
+EOF
+sed -i "s/^GRUB_DEFAULT=.*/GRUB_DEFAULT=2/" /etc/default/grub
+}
+
 # user scripts (stage1 and stage2)
 uscripts_pre-stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then
