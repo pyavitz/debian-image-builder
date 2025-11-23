@@ -63,8 +63,8 @@ DEBIAN_FW="firmware-linux-nonfree firmware-linux bluez-firmware \
 
 UBUNTU_FW="linux-firmware-mediatek-aiot"
 
-# custom grub menu entry
-custom_40 (){
+# board grub menu entry
+board_09 (){
 source /etc/opt/board.txt
 if [[ "$FSTYPE" == "ext4" ]]; then
 	FSMOD="ext2"
@@ -86,7 +86,10 @@ elif [[ "$FSTYPE" == "xfs" ]]; then
 	DEVICETREE="devicetree /boot/${FAMILY}/${DTB}.dtb"
 fi
 if [[ "$GPT" == "true" ]]; then PTYPE="gpt"; else PTYPE="msdos"; fi
-tee -a /etc/grub.d/40_custom <<EOF
+cat <<EOF > /etc/grub.d/09_$BOARD
+#!/bin/sh
+exec tail -n +3 $0
+
 menuentry "${DEFAULT_MOTD}" {
 	insmod gzio
 	insmod part_${PTYPE}
@@ -99,7 +102,9 @@ menuentry "${DEFAULT_MOTD}" {
 	${DEVICETREE}
 }
 EOF
-#sed -i "s/^GRUB_DEFAULT=.*/GRUB_DEFAULT=2/" /etc/default/grub
+chmod +x /etc/grub.d/09_$BOARD
+# fixup exec tail
+sed -i 's/\/root\/stage2/$0/g' /etc/grub.d/09_$BOARD
 }
 
 # user scripts (stage1 and stage2)

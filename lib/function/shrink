@@ -138,7 +138,7 @@ if [[ "$EFI" == "true" ]]; then
 	mount -o bind /dev ${P_VALUE}/dev
 	mount -o bind /dev/pts ${P_VALUE}/dev/pts
 	update_grub_sh # grub fixup
-	if [[ "$FAMILY" == "generic" ]]; then :; else sed -i "s/root=PARTUUID=${OLD_PARTUUID}/root=PARTUUID=${ROOT_PARTUUID}/g" ${P_VALUE}/etc/grub.d/40_custom; fi
+	if [[ -f "${P_VALUE}/etc/grub.d/09_$BOARD" ]]; then sed -i "s/root=PARTUUID=${OLD_PARTUUID}/root=PARTUUID=${ROOT_PARTUUID}/g" ${P_VALUE}/etc/grub.d/09_$BOARD; fi
 	if [ $VERBOSE -eq 1 ]; then chroot ${P_VALUE} /root/update_grub.sh; else chroot ${P_VALUE} /root/update_grub.sh > /dev/null 2>&1; fi
 	umount ${P_VALUE}/dev/pts
 	umount ${P_VALUE}/dev
