@@ -397,7 +397,11 @@ rm -f *.deb
 sleep 1s
 if [[ "$EFI" == "true" ]]; then
 	mkdir -p /boot/efi/EFI/BOOT
-	grub-install --removable
+	if [[ "$DISTRO" == "ubuntu" ]]; then
+		grub-install --target=${ARCH}-efi --efi-directory=/boot/efi --bootloader-id=ubuntu
+	else
+		grub-install --removable
+	fi
 	sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="'"${CONSOLE} ${LOGLEVEL} ${EXTRA}"'"/' /etc/default/grub
 	sed -i 's/^#GRUB_DISABLE_OS_PROBER=false.*/GRUB_DISABLE_OS_PROBER=true/' /etc/default/grub
 	# create custom grub menu entry with device tree variable

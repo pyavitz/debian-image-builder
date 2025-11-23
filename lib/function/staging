@@ -410,6 +410,8 @@ cat <<EOF > "${P_VALUE}/root/update_grub.sh"
 #!/usr/bin/env bash
 # grub fixup script
 
+DISTRO="$DISTRO"
+
 set -o errexit
 set -o pipefail
 set -o nounset
@@ -417,8 +419,11 @@ set -o nounset
 mount -t proc proc proc/
 mount -t sysfs sys sys/
 
-grub-install --removable
-sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="'"${CONSOLE} ${LOGLEVEL} ${EXTRA}"'"/' /etc/default/grub
+if [[ "$DISTRO" == "ubuntu" ]]; then
+	grub-install --target=${ARCH}-efi --efi-directory=/boot/efi --bootloader-id=ubuntu
+else
+	grub-install --removable
+fi
 update-grub
 umount /proc /sys
 
