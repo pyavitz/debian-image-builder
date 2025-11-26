@@ -201,15 +201,17 @@ user_patches
 # clean
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
-# add dtclist initrd and headers-byteshift.patch
-if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/headers-byteshift.patch" ]] && [[ -f "../../packaging/initrd" ]]; then
+# add dtclist and initrd
+if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]]; then
 	mv ../../dtclist.txt dtclist.txt
-	cp -f ../../packaging/{headers-byteshift.patch,initrd} .
+	cp -f ../../packaging/initrd .
 	sed -i 's/^ARCH=.*/ARCH="'"${ARCH}"'"/' initrd
 else
 	echo -e "lib/function/patching: An essential builddeb file is missing."
 	exit 1
 fi
+# Add headers-byteshift.patch (legacy packaging)
+if [[ "$LEGACY_PACKAGING" == "true" ]]; then cp -f ../../packaging/legacy/headers-byteshift.patch .; fi
 # custom linux logo
 if [[ -v "LINUX_LOGO" ]] && [[ ! -z "$LINUX_LOGO" ]]; then
 	if [[ -f "../../packaging/logo/${LINUX_LOGO}" ]]; then cp -f "../../packaging/logo/${LINUX_LOGO}" "drivers/video/logo/logo_linux_clut224.ppm"; fi
