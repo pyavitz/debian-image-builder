@@ -35,6 +35,7 @@ COMPILER_CLANG=`echo ${COMPILER} | sed 's/[0-9]//g' | sed 's/-//g'`
 if [[ "$COMPILER_CLANG" == "clang" ]]; then
 	# if not the host default the user must install and define the version of choice
 	if [[ `command -v clang` ]]; then :; else apt install -y clang; fi
+	if [[ `command -v lld` ]]; then :; else apt install -y lld llvm; fi
 	# builder doesn't support compiling armel with clang
 	if [[ "$ARCH_EXT" == "armel" ]]; then COMPILER_CLANG="gcc"; COMPILER="gcc"; fi
 fi
