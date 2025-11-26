@@ -1,6 +1,29 @@
 #!/bin/sh
+#
+# builddeb 1.3
+# Copyright 2003 Wichert Akkerman <wichert@wiggy.net>
+# Edited by Patrick Yavitz <pyavitz@gmail.com>
+#
+# Simple script to generate a deb package for a Linux kernel. All the
+# complexity of what to do with a kernel after it is installed or removed
+# is left to other scripts and packages: they can install scripts in the
+# /etc/kernel/{pre,post}{inst,rm}.d/ directories (or an alternative location
+# specified in KDEB_HOOKDIR) that will be called on package install and
+# removal.
 
-set -e
+set -eu
+
+# Builddeb dependencies
+if [ -f "scripts/package/pkgvars" ]; then
+	. scripts/package/pkgvars
+else
+	echo "Missing scripts/package/pkgvars!"
+	exit 1
+fi
+if [ ! -f "dtclist.txt" ]; then echo "Missing dtclist.txt!"; exit 1; fi
+if [ ! -f "initrd" ]; then echo "Missing initrd!"; exit 1; fi
+
+packagename=$linux_name
 
 is_enabled() {
 	grep -q "^$1=y" include/config/auto.conf
@@ -14,217 +37,137 @@ if_enabled_echo() {
 	fi
 }
 
-create_package() {
-	local pname="$1" pdir="$2"
+install_linux_image () {
+	pname=$1
+	pdir=debian/$1
 
-	mkdir -m 755 -p "$pdir/DEBIAN"
-	mkdir -p "$pdir/usr/share/doc/$pname"
-	cp debian/copyright "$pdir/usr/share/doc/$pname/"
-	cp debian/changelog "$pdir/usr/share/doc/$pname/changelog.Debian"
-	gzip -9 "$pdir/usr/share/doc/$pname/changelog.Debian"
-	sh -c "cd '$pdir'; find . -type f ! -path './DEBIAN/*' -printf '%P\0' \
-		| xargs -r0 md5sum > DEBIAN/md5sums"
-
-	# Fix ownership and permissions
-	chown -R root:root "$pdir"
-	chmod -R go-w "$pdir"
-	# in case we are in a restrictive umask environment like 0077
-	chmod -R a+rX "$pdir"
-
-	# Create the package
-	dpkg-gencontrol -p$pname -P"$pdir"
-	dpkg-deb -Z$compression --build "$pdir" ..
-}
-
-# Builddeb dependencies
-if [ -f "scripts/package/pkgvars" ]; then
-	. scripts/package/pkgvars
-else
-	echo "Missing scripts/package/pkgvars!"
-	exit 1
-fi
-if [ ! -f "dtclist.txt" ]; then echo "Missing dtclist.txt!"; exit 1; fi
-if [ ! -f "initrd" ]; then echo "Missing initrd!"; exit 1; fi
-if [ ! -f "headers-byteshift.patch" ]; then echo "Missing headers-byteshift.patch!"; exit 1; fi
-
-version=$KERNELRELEASE
-tmpdir="$objtree/debian/tmp"
-kernel_headers_dir="$objtree/debian/hdrtmp"
-libc_headers_dir="$objtree/debian/headertmp"
-dbg_dir="$objtree/debian/dbgtmp"
-libc_headers_packagename=linux-libc-dev
-dbg_packagename=$packagename-dbg
-packagename=$linux_name
-kernel_headers_packagename=$headers_name
-
-if [ "$ARCH" = "um" ] ; then
-	packagename=user-mode-linux-$version
-fi
-
-# Not all arches have the same installed path in debian
-# XXX: have each arch Makefile export a variable of the canonical image install
-# path instead
-case $ARCH in
-um)
-	installed_image_path="usr/bin/linux-$version"
-	;;
-parisc|mips|powerpc)
-	installed_image_path="boot/vmlinux-$version"
-	;;
-*)
-	installed_image_path="boot/vmlinuz-$version"
-esac
-
-BUILD_DEBUG=$(if_enabled_echo CONFIG_DEBUG_INFO Yes)
-
-# Setup the directory structure
-rm -rf "$tmpdir" "$kernel_headers_dir" "$libc_headers_dir" "$dbg_dir" $objtree/debian/files
-mkdir -m 755 -p "$tmpdir/DEBIAN"
-mkdir -p "$tmpdir/lib" "$tmpdir/boot"
-mkdir -p "$kernel_headers_dir/lib/modules/$version/"
-
-# Build and install the kernel
-if [ "$ARCH" = "um" ] ; then
-	mkdir -p "$tmpdir/usr/lib/uml/modules/$version" "$tmpdir/usr/bin" "$tmpdir/usr/share/doc/$packagename"
-	$MAKE linux
-	cp System.map "$tmpdir/usr/lib/uml/modules/$version/System.map"
-	cp $KCONFIG_CONFIG "$tmpdir/usr/share/doc/$packagename/config"
-	gzip "$tmpdir/usr/share/doc/$packagename/config"
-else
-	cp System.map "$tmpdir/boot/System.map-$version"
-	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
-	# Defined in pkgvars
-	cp arch/$karch/boot/$kimage "$tmpdir/boot/Image"
-	if [ "$platform" = "broadcom" ]; then
-		mkdir -p "$tmpdir/$boot_path"
-		cp arch/$karch/boot/$kimage "$tmpdir/$boot_path/kernel8.img"
-		cp arch/$karch/boot/$kimage "$tmpdir/$boot_path/kernel_2712.img"
-		install -m 0644 firmware/bootcode.bin "$tmpdir/$boot_path"
-		install -m 0644 firmware/fixup*.dat "$tmpdir/$boot_path"
-		install -m 0644 firmware/start*.elf "$tmpdir/$boot_path"
-		if [ -f firmware/LICENCE.broadcom ]; then install -m 0644 firmware/LICENCE.broadcom "$tmpdir/$boot_path"; fi
-		if [ -f firmware/COPYING.linux ]; then install -m 0644 firmware/COPYING.linux "$tmpdir/$boot_path"; fi
-	fi
-fi
-cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
-
-if is_enabled CONFIG_OF_EARLY_FLATTREE; then
 	# Only some architectures with OF support have this target
-	if [ -d "${srctree}/arch/$SRCARCH/boot/dts" ]; then
-		$MAKE -f $srctree/Makefile INSTALL_DTBS_PATH="$tmpdir/usr/lib/$packagename" dtbs_install
+	if is_enabled CONFIG_OF_EARLY_FLATTREE && [ -d "${srctree}/arch/${SRCARCH}/boot/dts" ]; then
+		${MAKE} -f ${srctree}/Makefile INSTALL_DTBS_PATH="${pdir}/usr/lib/${packagename}" dtbs_install
 	fi
-fi
 
-if is_enabled CONFIG_MODULES; then
-	INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_install
-	rm -f "$tmpdir/lib/modules/$version/build"
-	rm -f "$tmpdir/lib/modules/$version/source"
-	if [ "$ARCH" = "um" ] ; then
-		mv "$tmpdir/lib/modules/$version"/* "$tmpdir/usr/lib/uml/modules/$version/"
-		rmdir "$tmpdir/lib/modules/$version"
-	fi
-	if [ -n "$BUILD_DEBUG" ] ; then
-		for module in $(find $tmpdir/lib/modules/ -name *.ko -printf '%P\n'); do
-			module=lib/modules/$module
-			mkdir -p $(dirname $dbg_dir/usr/lib/debug/$module)
-			# only keep debug symbols in the debug file
-			$OBJCOPY --only-keep-debug $tmpdir/$module $dbg_dir/usr/lib/debug/$module
-			# strip original module from debug symbols
-			$OBJCOPY --strip-debug $tmpdir/$module
-			# then add a link to those
-			$OBJCOPY --add-gnu-debuglink=$dbg_dir/usr/lib/debug/$module $tmpdir/$module
-		done
+	${MAKE} -f ${srctree}/Makefile INSTALL_MOD_PATH="${pdir}" INSTALL_MOD_STRIP=1 modules_install
+	rm -f "${pdir}/lib/modules/${KERNELRELEASE}/build"
 
-		# resign stripped modules
-		if is_enabled CONFIG_MODULE_SIG_ALL; then
-			INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_sign
-		fi
-	fi
-fi
-
-if [ "$ARCH" != "um" ]; then
-	$MAKE -f $srctree/Makefile headers
-	$MAKE -f $srctree/Makefile headers_install INSTALL_HDR_PATH="$libc_headers_dir/usr"
-	# move asm headers to /usr/include/<libc-machine>/asm to match the structure
-	# used by Debian-based distros (to support multi-arch)
-	host_arch=$(dpkg-architecture -a$(cat debian/arch) -qDEB_HOST_MULTIARCH)
-	mkdir $libc_headers_dir/usr/include/$host_arch
-	mv $libc_headers_dir/usr/include/asm $libc_headers_dir/usr/include/$host_arch/
-fi
-
-# Update dtb list
-for dtclist in `cat dtclist.txt`; do ls $tmpdir/$linux_path/$dtclist 2>/dev/null | tee -a dtclist.new > /dev/null 2>&1; done
-grep ".dtb" "dtclist.txt" | echo "  CHKLIST `wc -l`"
-rm -f "dtclist.txt"; mv -f "dtclist.new" "dtclist.txt"
-
-# Installing dtb files
-if [ -d $tmpdir/$linux_path ]; then
-	mkdir -p "$tmpdir/$boot_path"
-	grep ".dtb" "dtclist.txt" | echo "  CHKINST `wc -l`"
-	grep ".dtb" "dtclist.txt" | sed 's/^/  DTBINST /' | sed "s/.\/debian\/tmp\/usr\/lib\/$linux_name/boot/g" | sort -n -t _ -k 2
-	for dtclist in `cat dtclist.txt`; do cp -r "$dtclist" 2>/dev/null "$tmpdir/$boot_path"; done
-	rm -f dtclist.txt
-	# install overlays
-	if ls arch/$karch/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
-		mkdir -p "$tmpdir/$linux_path/overlays"
-		cp -r arch/$karch/boot/dts/overlays/*.dtbo "$tmpdir/$linux_path/overlays"
-	fi
-	# install mainline overlays
-	if ls arch/$karch/boot/dts/$platform/*.dtbo > /dev/null 2>&1; then
-		mkdir -p "$tmpdir/$linux_path/overlays"
-		cp -r arch/$karch/boot/dts/$platform/*.dtbo "$tmpdir/$linux_path/overlays"
-	fi
-	# install git overlays
-	if ls $tmpdir/$linux_path/*.dtbo > /dev/null 2>&1; then
-		mkdir -p "$tmpdir/$linux_path/overlays"
-		mv -f $tmpdir/$linux_path/*.dtbo "$tmpdir/$linux_path/overlays"
-	fi
-	if [ -d "$tmpdir/$linux_path/overlays" ]; then
-		mkdir -p "$tmpdir/$boot_path/overlays"
-		cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
+	# Install the kernel
+	if [ "${ARCH}" = um ] ; then
+		mkdir -p "${pdir}/usr/lib/uml/modules"
+		mv "${pdir}/lib/modules/${KERNELRELEASE}" "${pdir}/usr/lib/uml/modules/${KERNELRELEASE}"
+		mkdir -p "${pdir}/usr/bin" "${pdir}/usr/share/doc/${pname}"
+		cp System.map "${pdir}/usr/lib/uml/modules/${KERNELRELEASE}/System.map"
+		cp ${KCONFIG_CONFIG} "${pdir}/usr/share/doc/${pname}/config"
+		gzip "${pdir}/usr/share/doc/${pname}/config"
 	else
-		# check for vendor overlays
-		if [ -d "$tmpdir/$linux_path/overlay" ]; then
-			mkdir -p "$tmpdir/$boot_path/overlays"
-			mv -f "$tmpdir/$linux_path/overlay" "$tmpdir/$linux_path/overlays"
-			cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
+		mkdir -p "${pdir}/boot"
+		cp System.map "${pdir}/boot/System.map-${KERNELRELEASE}"
+		cp ${KCONFIG_CONFIG} "${pdir}/boot/config-${KERNELRELEASE}"
+		cp arch/$karch/boot/$kimage "${pdir}/boot/Image"
+		if [ "$platform" = "broadcom" ]; then
+			mkdir -p "${pdir}/$boot_path"
+			cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel8.img"
+			cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel_2712.img"
+			install -m 0644 firmware/bootcode.bin "${pdir}/$boot_path"
+			install -m 0644 firmware/fixup*.dat "${pdir}/$boot_path"
+			install -m 0644 firmware/start*.elf "${pdir}/$boot_path"
+			if [ -f firmware/LICENCE.broadcom ]; then install -m 0644 firmware/LICENCE.broadcom "${pdir}/$boot_path"; fi
+			if [ -f firmware/COPYING.linux ]; then install -m 0644 firmware/COPYING.linux "${pdir}/$boot_path"; fi
 		fi
 	fi
-	# fixup broadcom overlays
-	if [ "$platform" = "broadcom" ] && [ -d "$tmpdir/usr/lib/$linux_name/overlays" ]; then
-		rm -fdr "$tmpdir/$linux_path/overlays"
-		rm -fdr "$tmpdir/$boot_path/overlays"
-		mv -f "$tmpdir/usr/lib/$linux_name/overlays" "$tmpdir/$boot_path/overlays"
+
+	# Update dtb list
+	for dtclist in `cat dtclist.txt`; do ls ${pdir}/$linux_path/$dtclist 2>/dev/null | tee -a dtclist.new > /dev/null 2>&1; done
+	#grep ".dtb" "dtclist.txt" | echo "  CHKLIST `wc -l`"
+	rm -f "dtclist.txt"; mv -f "dtclist.new" "dtclist.txt"
+
+	# Installing dtb files
+	if [ -d ${pdir}/$linux_path ]; then
+		mkdir -p "${pdir}/$boot_path"
+		#grep ".dtb" "dtclist.txt" | echo "  CHKINST `wc -l`"
+		#grep ".dtb" "dtclist.txt" | sed 's/^/  DTBINST /' | sed "s/.\/debian\/tmp\/usr\/lib\/$linux_name/boot/g" | sort -n -t _ -k 2
+		for dtclist in `cat dtclist.txt`; do cp -r "$dtclist" 2>/dev/null "${pdir}/$boot_path"; done
+		rm -f dtclist.txt
+		# add overlays
+		if ls arch/$karch/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
+			mkdir -p "${pdir}/$linux_path/overlays"
+			cp -r arch/$karch/boot/dts/overlays/*.dtbo "${pdir}/$linux_path/overlays"
+		fi
+		# add mainline overlays
+		if ls arch/$karch/boot/dts/$platform/*.dtbo > /dev/null 2>&1; then
+			mkdir -p "${pdir}/$linux_path/overlays"
+			cp -r arch/$karch/boot/dts/$platform/*.dtbo "${pdir}/$linux_path/overlays"
+		fi
+		# add git overlays
+		if ls ${pdir}/$linux_path/*.dtbo > /dev/null 2>&1; then
+			mkdir -p "${pdir}/$linux_path/overlays"
+			mv -f ${pdir}/$linux_path/*.dtbo "${pdir}/$linux_path/overlays"
+		fi
+		# install overlays
+		if [ -d "${pdir}/$linux_path/overlays" ]; then
+			mkdir -p "${pdir}/$boot_path/overlays"
+			cp -r "${pdir}/$linux_path/overlays" "${pdir}/$boot_path"
+		else
+			# check for vendor overlays
+			if [ -d "${pdir}/$linux_path/overlay" ]; then
+				mkdir -p "${pdir}/$boot_path/overlays"
+				mv -f "${pdir}/$linux_path/overlay" "${pdir}/$linux_path/overlays"
+				cp -r "${pdir}/$linux_path/overlays" "${pdir}/$boot_path"
+			fi
+		fi
+		# fixup broadcom overlays
+		if [ "$platform" = "broadcom" ] && [ -d "${pdir}/usr/lib/$linux_name/overlays" ]; then
+			rm -fdr "${pdir}/$linux_path/overlays"
+			rm -fdr "${pdir}/$boot_path/overlays"
+			mv -f "${pdir}/usr/lib/$linux_name/overlays" "${pdir}/$boot_path/overlays"
+		fi
 	fi
-fi
 
-# Install initramfs post-update script
-mkdir -p "$tmpdir/etc/initramfs/post-update.d"
-mv -f "initrd" "$tmpdir/etc/initramfs/post-update.d/99-initrd"
-chmod 755 "$tmpdir/etc/initramfs/post-update.d/99-initrd"
+	# Install initramfs post-update script
+	mkdir -p "${pdir}/etc/initramfs/post-update.d"
+	mv -f "initrd" "${pdir}/etc/initramfs/post-update.d/99-initrd"
+	chmod 755 "${pdir}/etc/initramfs/post-update.d/99-initrd"
 
-# Install the maintainer scripts
-debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
-for script in postinst postrm preinst prerm ; do
-	mkdir -p "$tmpdir$debhookdir/$script.d"
-	cat <<EOF > "$tmpdir/DEBIAN/$script"
-#!/bin/sh
+	# Not all arches have the same installed path in debian
+	# XXX: have each arch Makefile export a variable of the canonical image install
+	# path instead
+	case "${SRCARCH}" in
+	um)
+		installed_image_path="usr/bin/linux-${KERNELRELEASE}";;
+	parisc|mips|powerpc)
+		installed_image_path="boot/vmlinux-${KERNELRELEASE}";;
+	*)
+		installed_image_path="boot/vmlinuz-${KERNELRELEASE}";;
+	esac
+	cp "$(${MAKE} -s -f ${srctree}/Makefile image_name)" "${pdir}/${installed_image_path}"
 
-set -e
+	# Install the maintainer scripts
+	# Note: hook scripts under /etc/kernel are also executed by official Debian
+	# kernel packages, as well as kernel packages built using make-kpkg.
+	# make-kpkg sets $INITRD to indicate whether an initramfs is wanted, and
+	# so do we; recent versions of dracut and initramfs-tools will obey this.
+	debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
+	for script in postinst postrm preinst prerm; do
+		mkdir -p "${pdir}${debhookdir}/${script}.d"
 
-# Pass maintainer script parameters to hook scripts
-export DEB_MAINT_PARAMS="\$*"
+		mkdir -p "${pdir}/DEBIAN"
+		cat <<-EOF > "${pdir}/DEBIAN/${script}"
+		#!/bin/sh
 
-# Tell initramfs builder whether it's wanted
-export INITRD=$(if_enabled_echo CONFIG_BLK_DEV_INITRD Yes No)
+		set -e
 
-test -d $debhookdir/$script.d && run-parts --arg="$version" --arg="/$installed_image_path" $debhookdir/$script.d
-exit 0
-EOF
-	chmod 755 "$tmpdir/DEBIAN/$script"
-done
+		# Pass maintainer script parameters to hook scripts
+		export DEB_MAINT_PARAMS="\$*"
 
-cat <<EOF > "$tmpdir/DEBIAN/preinst"
+		# Tell initramfs builder whether it's wanted
+		export INITRD=$(if_enabled_echo CONFIG_BLK_DEV_INITRD Yes No)
+
+		test -d ${debhookdir}/${script}.d && run-parts --arg="${KERNELRELEASE}" --arg="/${installed_image_path}" ${debhookdir}/${script}.d
+		exit 0
+		EOF
+		chmod 755 "${pdir}/DEBIAN/${script}"
+	done
+
+# clean boot directory
+cat <<EOF > "${pdir}/DEBIAN/preinst"
 #!/bin/bash
 
 set -e
@@ -238,96 +181,69 @@ rm -f /etc/initramfs/post-update.d/99-initrd
 sync
 exit 0
 EOF
-chmod 755 "$tmpdir/DEBIAN/preinst"
-
-# Build kernel header package
-(cd $srctree; find . -name Makefile\* -o -name Kconfig\* -o -name \*.pl) > "$objtree/debian/hdrsrcfiles"
-(cd $srctree; find arch/*/include include scripts -type f -o -type l) >> "$objtree/debian/hdrsrcfiles"
-(cd $srctree; find arch/$SRCARCH -name module.lds -o -name Kbuild.platforms -o -name Platform) >> "$objtree/debian/hdrsrcfiles"
-(cd $srctree; find $(find arch/$SRCARCH -name include -o -name scripts -type d) -type f) >> "$objtree/debian/hdrsrcfiles"
-if is_enabled CONFIG_STACK_VALIDATION; then
-	(cd $objtree; find tools/objtool -type f -executable) >> "$objtree/debian/hdrobjfiles"
-fi
-(cd $objtree; find arch/$SRCARCH/include Module.symvers include scripts -type f) >> "$objtree/debian/hdrobjfiles"
-if is_enabled CONFIG_GCC_PLUGINS; then
-	(cd $objtree; find scripts/gcc-plugins -name \*.so -o -name gcc-common.h) >> "$objtree/debian/hdrobjfiles"
-fi
-destdir=$kernel_headers_dir/usr/src/linux-headers-$version
-mkdir -p "$destdir"
-(cd $srctree; tar -c -f - -T -) < "$objtree/debian/hdrsrcfiles" | (cd $destdir; tar -xf -)
-(cd $objtree; tar -c -f - -T -) < "$objtree/debian/hdrobjfiles" | (cd $destdir; tar -xf -)
-(cd $objtree; cp $KCONFIG_CONFIG $destdir/.config) # copy .config manually to be where it's expected to be
-ln -sf "/usr/src/linux-headers-$version" "$kernel_headers_dir/lib/modules/$version/build"
-rm -f "$objtree/debian/hdrsrcfiles" "$objtree/debian/hdrobjfiles"
-
-# amlogic t7
-if [ -d "$srctree/common_drivers/include" ]; then cp -r "$srctree/common_drivers/include" "$destdir/common_drivers/include"; fi
-if [ -f "$srctree/common_drivers/header_include.mk" ]; then cp -f "$srctree/common_drivers/header_include.mk" "$destdir/common_drivers/header_include.mk"; fi
-# kernel headers postinst script
-cp -f "headers-byteshift.patch" "$destdir/"
-cp -f "$srctree/scripts/module.lds" "$destdir/"
-cp -f "$srctree/scripts/mod/modpost" "$destdir/"
-mkdir -p "$kernel_headers_dir/DEBIAN"
-cat <<EOF > "$kernel_headers_dir/DEBIAN/postinst"
-#!/bin/bash
-
-set -e
-
-clean_headers (){
-find -type f -exec touch {} +
-echo 'y' | make ARCH=$karch M=scripts clean
-patch -p1 < headers-byteshift.patch
-if [ ! -f scripts/module.lds ]; then install -m 0644 module.lds scripts/; fi
-echo 'y' | make ARCH=$karch -j\$(grep -c 'processor' /proc/cpuinfo) -s scripts
-if [ ! -f scripts/mod/modpost ]; then install -m 0755 modpost scripts/mod/; fi
-echo 'y' | make ARCH=$karch -j\$(grep -c 'processor' /proc/cpuinfo) -s M=scripts/mod/
-rm -f {.config.old,headers-byteshift.patch,module.lds,modpost}
+chmod 755 "${pdir}/DEBIAN/preinst"
 }
 
-# compile headers
-cd /usr/src/linux-headers-$version
-echo -e "Compiling headers ..."
-clean_headers > /dev/null 2>&1
+install_linux_image_dbg () {
+	pdir=debian/$1
 
-sync
-exit 0
-EOF
-chmod 755 "$kernel_headers_dir/DEBIAN/postinst"
+	# Parse modules.order directly because 'make modules_install' may sign,
+	# compress modules, and then run unneeded depmod.
+	if is_enabled CONFIG_MODULES; then
+		while read -r mod; do
+			mod="${mod%.o}.ko"
+			dbg="${pdir}/usr/lib/debug/lib/modules/${KERNELRELEASE}/kernel/${mod}"
+			buildid=$("${READELF}" -n "${mod}" | sed -n 's@^.*Build ID: \(..\)\(.*\)@\1/\2@p')
+			link="${pdir}/usr/lib/debug/.build-id/${buildid}.debug"
 
-# kernel headers preinst script
-mkdir -p $kernel_headers_dir/DEBIAN
-cat <<EOF > "$kernel_headers_dir/DEBIAN/preinst"
-#!/bin/bash
+			mkdir -p "${dbg%/*}" "${link%/*}"
+			"${OBJCOPY}" --only-keep-debug "${mod}" "${dbg}"
+			ln -sf --relative "${dbg}" "${link}"
+		done < modules.order
+	fi
 
-set -e
-
-# remove old linux headers
-rm -fdr /usr/src/linux-headers-*
-
-sync
-exit 0
-EOF
-chmod 755 "$kernel_headers_dir/DEBIAN/preinst"
-
-if [ "$ARCH" != "um" ]; then
-	create_package "$kernel_headers_packagename" "$kernel_headers_dir"
-	create_package "$libc_headers_packagename" "$libc_headers_dir"
-fi
-
-create_package "$packagename" "$tmpdir"
-
-if [ -n "$BUILD_DEBUG" ] ; then
 	# Build debug package
 	# Different tools want the image in different locations
 	# perf
-	mkdir -p $dbg_dir/usr/lib/debug/lib/modules/$version/
-	cp vmlinux $dbg_dir/usr/lib/debug/lib/modules/$version/
+	mkdir -p ${pdir}/usr/lib/debug/lib/modules/${KERNELRELEASE}/
+	cp vmlinux ${pdir}/usr/lib/debug/lib/modules/${KERNELRELEASE}/
 	# systemtap
-	mkdir -p $dbg_dir/usr/lib/debug/boot/
-	ln -s ../lib/modules/$version/vmlinux $dbg_dir/usr/lib/debug/boot/vmlinux-$version
+	mkdir -p ${pdir}/usr/lib/debug/boot/
+	ln -s ../lib/modules/${KERNELRELEASE}/vmlinux ${pdir}/usr/lib/debug/boot/vmlinux-${KERNELRELEASE}
 	# kdump-tools
-	ln -s lib/modules/$version/vmlinux $dbg_dir/usr/lib/debug/vmlinux-$version
-	create_package "$dbg_packagename" "$dbg_dir"
-fi
+	ln -s lib/modules/${KERNELRELEASE}/vmlinux ${pdir}/usr/lib/debug/vmlinux-${KERNELRELEASE}
+}
 
-exit 0
+install_kernel_headers () {
+	pdir=debian/$1
+	version=${1#linux-headers-}
+
+	CC="${DEB_HOST_GNU_TYPE}-gcc" "${srctree}/scripts/package/install-extmod-build" "${pdir}/usr/src/linux-headers-${KERNELRELEASE}"
+
+	mkdir -p $pdir/lib/modules/${KERNELRELEASE}/
+	ln -s /usr/src/linux-headers-${KERNELRELEASE} $pdir/lib/modules/${KERNELRELEASE}/build
+}
+
+install_libc_headers () {
+	pdir=debian/$1
+
+	$MAKE -f $srctree/Makefile headers_install INSTALL_HDR_PATH=$pdir/usr
+
+	# move asm headers to /usr/include/<libc-machine>/asm to match the structure
+	# used by Debian-based distros (to support multi-arch)
+	mkdir "$pdir/usr/include/${DEB_HOST_MULTIARCH}"
+	mv "$pdir/usr/include/asm" "$pdir/usr/include/${DEB_HOST_MULTIARCH}"
+}
+
+package=$1
+
+case "${package}" in
+*-dbg)
+	install_linux_image_dbg "${package}";;
+linux-image-*|user-mode-linux-*)
+	install_linux_image "${package}";;
+linux-libc-dev)
+	install_libc_headers "${package}";;
+linux-headers-*)
+	install_kernel_headers "${package}";;
+esac

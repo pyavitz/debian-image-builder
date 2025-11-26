@@ -1,11 +1,19 @@
 #!/bin/bash
 
 compile (){
-# native or cross
+if [[ `dpkg -l | grep debhelper` ]]; then :; else apt update; apt install -y debhelper; fi
+# native
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "riscv64" ]] && [[ "$ARCH" == "riscv" ]]; then CROSSCOMPILE="0"; fi
-if [[ "$HOST_ARCH" == "aarch64"  ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then CROSSCOMPILE="1"; fi
-if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then CROSSCOMPILE="1"; fi
+# cross
+if [[ "$HOST_ARCH" == "aarch64"  ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then
+	CROSSCOMPILE="1"
+	if [[ `dpkg -l | grep libssl-dev:${ARCH_EXT}` ]]; then :; else dpkg --add-architecture ${ARCH_EXT}; apt update; apt install -y libssl-dev:${ARCH_EXT}; fi
+fi
+if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then
+	CROSSCOMPILE="1"
+	if [[ `dpkg -l | grep libssl-dev:${ARCH_EXT}` ]]; then :; else dpkg --add-architecture ${ARCH_EXT}; apt update; apt install -y libssl-dev:${ARCH_EXT}; fi
+fi
 }
 
 uboot_compilers (){
