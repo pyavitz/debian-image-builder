@@ -47,7 +47,7 @@ else
 fi
 echo -en "${TXT}Checking Host Machine:${FIN} "
 sleep .50
-if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|trixie|jammy|noble)$ ]]; then
+if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|trixie|jammy|noble|resolute)$ ]]; then
 	echo -en "${PNK}[${FIN}${GRN}${HOST_PRETTY}${FIN}${PNK}]${FIN}"
 	echo ""
 else
