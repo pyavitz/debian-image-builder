@@ -1,3 +1,5 @@
+### **Ubuntu x86_64 users take notice.** [READ ME](https://github.com/pyavitz/debian-image-builder/commit/2fcc11e3fde75f6ff1cdb86b42b4eafc57467f99)
+
 <details>
 <summary><h3>Boards</h3></summary>
 
@@ -40,7 +42,7 @@ BananaPi BPI-F3
 
 ### Supported Hosts: Debian Trixie and Ubuntu Noble Numbat
 * **Debian Trixie** (arm arm64 riscv) (recommended)
-* **Ubuntu Noble Numbat** (arm arm64 riscv) (recommended)
+* **Ubuntu Noble Numbat** (arm arm64 riscv)
 
 **Install options:**
 * Run the `./install.sh` script (recommended)
