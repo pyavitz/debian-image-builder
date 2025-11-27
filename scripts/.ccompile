@@ -86,6 +86,20 @@ sudo debconf-apt-progress -- apt install -y \
 	ccache gcc-riscv64-linux-gnu gcc-14-riscv64-linux-gnu xxd debhelper
 }
 
+resolute-ccompile (){
+sudo debconf-apt-progress -- apt install -y \
+	build-essential bison bc git dialog patch dosfstools zip unzip parted \
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-dev swig fakeroot mmdebstrap fdisk \
+	lzop lz4 aria2 pv gcc-arm-none-eabi distro-info-data lsb-release u-boot-tools \
+	python-is-python3 python-dev-is-python3 python3-distutils-extra libelf-dev kpartx \
+	crossbuild-essential-arm64 crossbuild-essential-armhf gcc-aarch64-linux-gnu \
+	gcc-arm-linux-gnueabihf colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+	python3-setuptools python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools \
+	gcc-15-plugin-dev figlet gcc-or1k-elf gcc-riscv64-linux-gnu clang ccache xz-utils \
+	zstd gcc dh-python xxd debhelper
+}
+
 if [[ "$HOST_ARCH" == "aarch64" ]]; then
 	echo -e ""
 	echo -e "You are running: $HOST_ARCH"
@@ -93,7 +107,7 @@ if [[ "$HOST_ARCH" == "aarch64" ]]; then
 	exit 0
 fi
 
-if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|trixie|jammy|noble)$ ]]; then
+if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|trixie|jammy|noble|resolute)$ ]]; then
 	echo ""
 	${HOST_CODENAME}-ccompile
 else
