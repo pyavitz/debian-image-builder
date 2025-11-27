@@ -1,18 +1,71 @@
 #!/bin/bash
 
+# compile cross or native
 compile (){
-if [[ `dpkg -l | grep debhelper` ]]; then :; else apt update; apt install -y debhelper; fi
+# cross
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then CROSSCOMPILE="1"; fi
+if [[ "$HOST_ARCH" == "x86_64" ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then CROSSCOMPILE="1"; fi
 # native
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" == "arm64" ]]; then CROSSCOMPILE="0"; fi
 if [[ "$HOST_ARCH" == "riscv64" ]] && [[ "$ARCH" == "riscv" ]]; then CROSSCOMPILE="0"; fi
-# cross
-if [[ "$HOST_ARCH" == "aarch64"  ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then
-	CROSSCOMPILE="1"
-	if [[ `dpkg -l | grep libssl-dev:${ARCH_EXT}` ]]; then :; else dpkg --add-architecture ${ARCH_EXT}; apt update; apt install -y libssl-dev:${ARCH_EXT}; fi
+}
+
+# x86_64 ubuntu source list
+ubuntu_cross_source (){
+echo ""
+echo "Adding source file: /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources"
+source mirror.txt
+mkdir -p /etc/apt/sources.list.d
+rm -f /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources
+tee /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources <<EOF
+Types: deb
+URIs: ${UBUNTU_MIRROR}
+Architectures: armhf arm64 riscv64
+Suites: ${HOST_CODENAME} ${HOST_CODENAME}-updates ${HOST_CODENAME}-backports
+Components: main restricted universe multiverse
+Enabled: yes
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: ${UBUNTU_MIRROR}
+Architectures: armhf arm64 riscv64
+Suites: ${HOST_CODENAME}-security
+Components: main restricted universe multiverse
+Enabled: yes
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+EOF
+}
+
+# add the needed architectures for upstream linux compilation
+upstream_linux_packaging (){
+if [[ `dpkg -l | grep debhelper` ]]; then :; else apt update; apt install -y debhelper; fi
+if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then
+	if [[ `dpkg -l | grep libssl-dev:${ARCH_EXT}` ]]; then
+		:;
+	else
+		dpkg --add-architecture ${ARCH_EXT}
+		apt update
+		apt install -y libssl-dev:${ARCH_EXT}
+	fi
 fi
-if [[ "$HOST_ARCH" == "x86_64"  ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then
-	CROSSCOMPILE="1"
-	if [[ `dpkg -l | grep libssl-dev:${ARCH_EXT}` ]]; then :; else dpkg --add-architecture ${ARCH_EXT}; apt update; apt install -y libssl-dev:${ARCH_EXT}; fi
+if [[ "$HOST_ARCH" == "x86_64" ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then
+	if [[ `dpkg -l | grep libssl-dev:${ARCH_EXT}` ]]; then
+		:;
+	else
+		if [[ "$HOST_MACHINE" == "Ubuntu" ]]; then
+			ubuntu_cross_source
+			apt update
+			dpkg --add-architecture ${ARCH_EXT}
+			apt install -y libssl-dev:${ARCH_EXT}
+			echo "Removing source file: /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources"
+			rm -f /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources
+			echo ""
+		else
+			dpkg --add-architecture ${ARCH_EXT}
+			apt update
+			apt install -y libssl-dev:${ARCH_EXT}
+		fi
+	fi
 fi
 }
 
