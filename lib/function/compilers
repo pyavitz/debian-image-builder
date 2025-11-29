@@ -78,7 +78,7 @@ fi
 COMPILER_CLANG=`echo ${COMPILER} | sed 's/[0-9]//g' | sed 's/-//g'`
 if [[ "$COMPILER_CLANG" == "clang" || "$COMPILER" == "gcc" ]]; then
 	CVER=`readlink /usr/bin/gcc | sed "s/[^0-9.]*//g" | sed 's/\.//g'`
-	COMPILER="gcc-${CVER}"
+	if [[ `type ${FAMILY}_uboot_compiler` ]] &>/dev/null; then ${FAMILY}_uboot_compiler; else COMPILER="gcc-${CVER}"; fi
 fi
 # ccache
 if [ $CCACHE -eq 1 ]; then
