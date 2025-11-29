@@ -107,6 +107,17 @@ chmod +x /etc/grub.d/09_$BOARD
 sed -i 's/\/root\/stage2/$0/g' /etc/grub.d/09_$BOARD
 }
 
+# add support for upstream qemu-user
+qemu_user_static (){
+STATIC_NEXT=`echo $STATIC | sed 's/-static//g'`
+if [[ `command -v $STATIC_NEXT` ]] && [[ ! `command -v ${STATIC}` ]]; then STATIC="${STATIC_NEXT}"; fi
+if [[ ! `command -v ${STATIC}` ]]; then
+	echo -e "Missing depends: ${STATIC}"
+	echo -e "Run ./install.sh or create an Issue on github"
+	exit 1
+fi
+}
+
 # user scripts (stage1 and stage2)
 uscripts_pre-stage1 (){
 if [[ -f "files/userscripts/uscripts" ]]; then

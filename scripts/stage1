@@ -71,12 +71,7 @@ if [[ "$P_VALUE" == "p1" ]] && [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then
 	exit 0
 fi
 # check for qemu
-if [[ "$HOST_CODENAME" == "resolute" ]]; then STATIC_NEXT=`echo $STATIC | sed 's/-static//g'`; STATIC="${STATIC_NEXT}"; fi
-if [[ ! `command -v ${STATIC}` ]]; then
-	echo -e "Missing depends: ${STATIC}"
-	echo -e "Run ./install.sh"
-	exit 1
-fi
+qemu_user_static
 # start
 CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
 CAP_RELEASE=`echo "${DISTRO_VERSION}" | sed -e "s/\b\(.\)/\u\1/g"`
