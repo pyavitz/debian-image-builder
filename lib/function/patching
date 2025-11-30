@@ -189,7 +189,7 @@ fi
 
 linux_patching (){
 # packaging
-linux_packaging
+if [[ "$LINUX_PACKAGING" == "true" ]]; then linux_packaging; fi
 # patching
 if [[ "$LINUX_PATCHING" == "true" ]] && [[ "$FORCE_GIT" == "false" ]] && [[ "$GIT_PATCHING" == "false" ]]; then
 	apply; check_log
@@ -202,13 +202,10 @@ user_patches
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 # add dtclist and initrd
-if [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]]; then
+if [[ "$LINUX_PACKAGING" == "true" ]] && [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]]; then
 	mv ../../dtclist.txt dtclist.txt
 	cp -f ../../packaging/initrd .
 	sed -i 's/^ARCH=.*/ARCH="'"${ARCH}"'"/' initrd
-else
-	echo -e "lib/function/patching: An essential builddeb file is missing."
-	exit 1
 fi
 # Add headers-byteshift.patch (legacy packaging)
 if [[ "$LEGACY_PACKAGING" == "true" ]]; then cp -f ../../packaging/legacy/headers-byteshift.patch .; fi

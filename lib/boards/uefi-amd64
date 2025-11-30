@@ -1,65 +1,61 @@
 #!/bin/bash
 
 # architecture
-ARCH="arm64"
-ARCH_EXT="arm64"
+ARCH="x86"
+ARCH_EXT="amd64"
 DEBARCH=""
-CROSS_COMPILE="aarch64-linux-gnu-"
+CROSS_COMPILE="x86_64-linux-gnu-"
 ROOTFS_ARCH="rootfs-${ARCH_EXT}"
-STATIC="qemu-aarch64-static"
+STATIC="qemu-x86_64-static"
 
 # device information
-SERIES="meson-g12b"
-FAMILY="amlogic"
-FAMILY_EXT="odroid"
-DTB="${SERIES}-odroid-n2l"
+SERIES="uefi-amd64"
+FAMILY="generic"
+FAMILY_EXT="uefi"
+DTB="${SERIES}"
 
 # default config
-LINUX_DEFCONFIG="meson64_defconfig"
-UBOOT_DEFCONFIG="odroid-n2l_defconfig"
+LINUX_DEFCONFIG="uefi-amd64_defconfig"
+UBOOT_DEFCONFIG=""
 
 # partition layout
 BOOT_EXT4="false" # change P_VALUE to p2 if enabled
-BOOT_VFAT="false" # change P_VALUE to p2 if enabled
-EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
-GPT="false" # set to true if rockchip
-OFFSET="4MiB"
-P_VALUE="p1" # p1 = single partition
+BOOT_VFAT="true" # change P_VALUE to p2 if enabled
+EFI="true" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="true" # set to true if rockchip or uefi generic
+OFFSET="1MiB"
+P_VALUE="p2" # p1 = single partition
 
 # boot options
 BOOTCMD="false"
 BOOTINI="false"
 BOOTSCR="boot.cmd" # define name of boot.cmd / boot.ini (files/boot/scripts)
-EXTLINUX="true" # default
+EXTLINUX="false" # default
 PETITBOOT="false" # obsolete
 
-# firmware image package
-RUN_FIP="${SERIES}-s922x"
-BOARD_FIP="odroid-n2l"
-
 # output
-BOARD="odroidn2l"
+BOARD="${SERIES}"
 OUTPUT="output/${BOARD}"
 
 # extlinux and bootcmd
-BOOT_KERNEL="Image"
-BOOT_INITRD="uInitrd"
+BOOT_KERNEL=""
+BOOT_INITRD=""
 BOOTCMD_FDTOVERLAYS="#overlays="
 EXTLINUX_FDTOVERLAYS="#fdtoverlays"
 
 # cmdline
-CONSOLE="console=tty1 console=ttyAML0,115200n8"
+CONSOLE="console=tty1"
 LOGLEVEL="loglevel=1"
-EXTRA="net.ifnames=0 no_console_suspend clk_ignore_unused usb-storage.quirks=0x152d:0x0576:u"
-
-# Serial
-DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyAML0 115200 vt100"
+EXTRA="net.ifnames=0"
 
 # motd
-DEFAULT_MOTD="Odroid N2L"
+DEFAULT_MOTD="UEFI amd64"
+
+# customize
+MODULES_LOAD=""
 
 # patches
-LINUX_PATCHING="true"
+LINUX_PATCHING="false"
 UBOOT_PATCHDIR="patches/uboot"
 LINUX_PATCHDIR="patches/${FAMILY}"
 
@@ -67,11 +63,11 @@ LINUX_PATCHDIR="patches/${FAMILY}"
 IMG_EXP="${DTB}-*.img*"
 
 # uboot logo
-RANDOM_LOGO="true"
+RANDOM_LOGO=""
 
 # precompiled
 PRECOMPILED_UBOOT="false"
-PKGVERSION="2015.01"
+PKGVERSION=""
 PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
 
 # force git
@@ -86,20 +82,20 @@ GIT_PATCHING="false"
 GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
 
 # override userdata file
-FORCE_VERSION="true"
+FORCE_VERSION="false"
 FORCE_LINUX_VERSION=""
-FORCE_UBOOT_VERSION="v2025.01"
+FORCE_UBOOT_VERSION=""
 
 # devicetree and platform
 DEVICETREE="${DTB}.dtb"
 PLATFORM="${FAMILY}"
 
 # kernel package name (if shared patching set to true)
-COMMON_PKG="true"
-COMMON_PKGNAME="amlogic"
+COMMON_PKG="false"
+COMMON_PKGNAME=""
 
 # build old kernel headers package (not recommended)
 LEGACY_PACKAGING="false"
 
 # use builder kernel packaging (recommended)
-LINUX_PACKAGING="true"
+LINUX_PACKAGING="false"
