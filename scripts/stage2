@@ -50,9 +50,13 @@ echo -n "${TIMEZONE}" > /etc/timezone
 apt upgrade -y
 apt dist-upgrade -y
 if [[ "$MINIMAL_ROOTFS" == "true" ]]; then PKGS_FULL=""; fi
-if [[ "$ARCH" == "x86" ]]; then EXTRA_FIRMWARE="true"; UBUNTU_FW="linux-firmware"; fi
+# enable extra firmware via custom.txt file
 if [[ "$EXTRA_FIRMWARE" == "false" ]]; then DEBIAN_FW=""; UBUNTU_FW=""; fi
+# enable firmware on uefi generic builds (force var to true)
+if [[ "$FAMILY" == "generic" ]]; then EXTRA_FIRMWARE="true"; UBUNTU_FW="linux-firmware"; fi
+# out of the box this firmware is not required (force var to false)
 if [[ "$FAMILY" == "broadcom" ]]; then DEBIAN_FW=""; UBUNTU_FW=""; fi
+# don't autoremove packages if distro release is labeled unstable.
 if [[ "$DISTRO_VERSION" =~ ^(ceres|sid|testing|unstable)$ ]]; then :; else apt autoremove -y; fi
 # network variables
 if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
@@ -324,7 +328,7 @@ if [ $USERACCT -eq 0 ]; then
 fi
 
 # firmware
-if [[ ! "$ARCH" == "x86" ]]; then
+if [[ ! "$FAMILY" == "generic" ]]; then
 	if [[ "$FAMILY" == "broadcom" ]]; then install_brcm_firmware; else install_firmware; fi
 fi
 if [[ `type ${FAMILY}_extra_firmware` ]] &>/dev/null; then ${FAMILY}_extra_firmware; fi
