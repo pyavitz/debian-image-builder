@@ -391,13 +391,20 @@ echo ""
 apt update
 apt upgrade -y
 if [[ "$EFI" == "true" ]]; then apt install -y grub-efi; fi
-apt -y clean
-apt -y autoclean
-sleep 1s
-cd ~
-dpkg -i *.deb
-rm -f *.deb
-sleep 1s
+if [[ "$GENERIC_KERNEL" == "true" ]]; then
+	if [[ "$DISTRO" == "ubuntu" ]]; then INST_GEN_KERNEL="linux-image-generic"; else INST_GEN_KERNEL="linux-image-${ARCH_EXT}"; fi
+	apt install -y ${INST_GEN_KERNEL}
+	apt -y clean
+	apt -y autoclean
+else
+	apt -y clean
+	apt -y autoclean
+	sleep .50
+	cd ~
+	dpkg -i *.deb
+	rm -f *.deb
+	sleep .50
+fi
 if [[ "$EFI" == "true" ]]; then
 	mkdir -p /boot/efi/EFI/BOOT
 	if [[ "$DISTRO" == "ubuntu" ]]; then

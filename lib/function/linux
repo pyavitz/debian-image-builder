@@ -163,16 +163,6 @@ if [[ "$LINUX_PACKAGING" == "true" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
 	chmod +x scripts/package/{builddeb,mkdebian}
 elif [[ "$LINUX_PACKAGING" == "false" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
 	cd ${KERNEL}-${VERSION}
-	# edit builddeb/mkdebian build script (linux-image-$VERSION-$ARCH_EXT)
-	# note: this has the potential of not working using the stable and rc branches
-	sed -i 's/${pdir}\/usr\/src\/linux-headers-${version}/${pdir}\/usr\/src\/linux-headers-${KERNELRELEASE}/g' scripts/package/builddeb
-	sed -i 's/$pdir\/lib\/modules\/${version}/$pdir\/lib\/modules\/${KERNELRELEASE}/g' scripts/package/builddeb
-	sed -i 's/$pdir\/lib\/modules\/$version/$pdir\/lib\/modules\/${KERNELRELEASE}/g' scripts/package/builddeb
-	sed -i 's/\/usr\/src\/linux-headers-$version/\/usr\/src\/linux-headers-${KERNELRELEASE}/g' scripts/package/builddeb
-	sed -i 's/Package: $packagename-$version/Package: $packagename-$version-'$ARCH_EXT'/g' scripts/package/mkdebian
-	sed -i 's/Package: linux-headers-$version/Package: linux-headers-$version-'$ARCH_EXT'/g' scripts/package/mkdebian
-	sed -i 's/Package: $packagename-${KERNELRELEASE}/Package: $packagename-${KERNELRELEASE}-'$ARCH_EXT'/g' scripts/package/mkdebian
-	sed -i 's/Package: linux-headers-${KERNELRELEASE}/Package: linux-headers-${KERNELRELEASE}-'$ARCH_EXT'/g' scripts/package/mkdebian
 else
 	report_dir_error
 fi

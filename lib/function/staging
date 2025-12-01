@@ -158,6 +158,29 @@ tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
 }
 
+add_output (){
+# add u-boot and kernel debs
+if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
+	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
+else
+	cp ${OUTPUT}/linux-image-*.deb ${P_VALUE}/root
+	if [[ ! "$FAMILY" =~ ^(broadcom|generic)$ ]]; then cp ${OUTPUT}/u-boot-*.deb ${P_VALUE}/root; fi
+fi
+}
+
+check_output (){
+if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ "$FAMILY" =~ ^(broadcom|generic)$ ]]; then
+	:;
+elif [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/linux-*.deb` ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
+	:;
+else
+	echo -e "Missing u-boot or linux deb package"
+	echo -e ""
+	read -p "Press enter to continue."
+	exit 0
+fi
+}
+
 setup (){
 if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
 	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
@@ -230,12 +253,10 @@ EOF
 }
 
 files (){
-# add u-boot and kernel debs
-if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
-	cp -r ${OUTPUT}/*.deb ${P_VALUE}/root
+if [[ "$GENERIC_KERNEL" == "true" ]] && [[ "$BOARD" =~ ^(uefi-amd64|uefi-arm64) ]]; then
+	:; # bypass custom kernel debs
 else
-	cp ${OUTPUT}/linux-image-*.deb ${P_VALUE}/root
-	if [[ ! "$FAMILY" =~ ^(broadcom|generic)$ ]]; then cp ${OUTPUT}/u-boot-*.deb ${P_VALUE}/root; fi
+	add_output
 fi
 # add stage2 script
 cp scripts/stage2 ${P_VALUE}/root
@@ -247,6 +268,7 @@ cp lib/source ${P_VALUE}/root/source.txt
 echo "MINIMAL_ROOTFS=${MINIMAL_ROOTFS}" >> ${P_VALUE}/root/source.txt
 echo "EXTRA_FIRMWARE=${EXTRA_FIRMWARE}" >> ${P_VALUE}/root/source.txt
 echo "ROOT_PARTUUID=${ROOT_PARTUUID}" >> ${P_VALUE}/root/source.txt
+echo "GENERIC_KERNEL=${GENERIC_KERNEL}" >> ${P_VALUE}/root/source.txt
 cp board.txt ${P_VALUE}/root
 cp userdata.txt ${P_VALUE}/root
 # add misc files
