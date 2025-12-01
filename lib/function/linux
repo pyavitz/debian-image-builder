@@ -149,7 +149,7 @@ fi
 
 setup (){
 sleep .75
-if [[ -d "${KERNEL}-${VERSION}" ]]; then
+if [[ "$LINUX_PACKAGING" == "true" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
 	cd ${KERNEL}-${VERSION}
 	export ARCH=${ARCH}
 	# remove builddeb and mkdebian scripts
@@ -161,6 +161,8 @@ if [[ -d "${KERNEL}-${VERSION}" ]]; then
 		cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 	fi
 	chmod +x scripts/package/{builddeb,mkdebian}
+elif [[ "$LINUX_PACKAGING" == "false" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
+	cd ${KERNEL}-${VERSION}
 else
 	report_dir_error
 fi
