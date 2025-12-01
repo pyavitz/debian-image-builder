@@ -189,7 +189,7 @@ fi
 
 linux_patching (){
 # packaging
-if [[ "$LINUX_PACKAGING" == "true" ]]; then linux_packaging; fi
+if [[ "$DEFAULT_PACKAGING" == "true" ]]; then linux_packaging; fi
 # patching
 if [[ "$LINUX_PATCHING" == "true" ]] && [[ "$FORCE_GIT" == "false" ]] && [[ "$GIT_PATCHING" == "false" ]]; then
 	apply; check_log
@@ -202,7 +202,7 @@ user_patches
 if [[ `find . -name '*.orig'` ]]; then find . -name '*.orig' -delete; fi
 if [[ `find . -name '*.rej'` ]]; then find . -name '*.rej' -delete; fi
 # add dtclist and initrd
-if [[ "$LINUX_PACKAGING" == "true" ]] && [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]]; then
+if [[ "$DEFAULT_PACKAGING" == "true" ]] && [[ -f "../../dtclist.txt" ]] && [[ -f "../../packaging/initrd" ]]; then
 	mv ../../dtclist.txt dtclist.txt
 	cp -f ../../packaging/initrd .
 	sed -i 's/^ARCH=.*/ARCH="'"${ARCH}"'"/' initrd
