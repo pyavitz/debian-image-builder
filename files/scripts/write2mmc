@@ -24,21 +24,15 @@ else
 	WARNING_MSG="Your board is not supported."
 	WARNING
 fi
-if [[ "$FAMILY" =~ ^(allwinner|amlogic|freescale|rockchip|samsung|spacemit)$ ]]; then
+if [[ "$FAMILY" =~ ^(allwinner|amlogic|freescale|generic|rockchip|samsung|spacemit)$ ]]; then
 	:;
 else
 	PLATFORM=`echo $FAMILY | sed -e 's/\(.*\)/\U\1/'`
 	WARNING_MSG="The $PLATFORM platform is currently not supported."
 	WARNING
 fi
-if [[ "$EFI" == "true" || "$PETITBOOT" == "true" ]]; then
+if [[ "$PETITBOOT" == "true" ]]; then
 	WARNING_MSG="Only boards using BOOTCMD and EXTLINUX are currently supported at this time."
-	WARNING
-fi
-if [[ -d "/usr/lib/u-boot" ]]; then
-	UBOOT_DIR="/usr/lib/u-boot"
-else
-	WARNING_MSG="The '/usr/lib/u-boot' directory is missing?"
 	WARNING
 fi
 if [[ -f "/etc/default/write2mmc" ]]; then
@@ -60,7 +54,7 @@ $EE
 $EE "${BLD}Would you like to transfer the current install to another drive?${FIN}"
 $EN "${ITL}YES / NO:${FIN} "
 read CHOICE
-if [[ "$CHOICE" == "YES" || "$CHOICE" == "Yes" || "$CHOICE" == "yes" ]]; then
+if [[ "$CHOICE" =~ ^(yes|Yes|YES|k|ok|okay|sure)$ ]]; then
 	if [[ "$DISCLAIMER" == "true" ]]; then
 		export NEWT_COLORS='root=,black'
 		whiptail --title "DISCLAIMER" --msgbox "The write2mmc script can transfer your current install to other drives besides the eMMC. Being able to boot from USB or NVME depends more on the maturity of U-Boot, than the ability to write the OS to those drives." 0 0
@@ -122,6 +116,7 @@ fi
 if [[ `findmnt -v -n -o SOURCE /` ]]; then
 	CR_NODE=`findmnt -v -n -o SOURCE /`
 	CR_FSTYPE=`findmnt -v -n -o FSTYPE /`
+	OLD_PARTUUID=$(blkid -o export -- "${CR_NODE}" | sed -ne 's/^PARTUUID=//p') # just incase
 	$EN "ROOT: ${BLD}${CR_NODE}${FIN} "
 	$EE "FSTYPE: ${BLD}${CR_FSTYPE}${FIN}"
 fi
@@ -181,28 +176,32 @@ if [[ "$EMMC" == "$DEVICE_NODE" ]]; then
 else
 	EMMC_TRUE="false"	
 fi
-	
-# PARTITION SCHEME
-$EE ""
-$EE "${BLD}Select a Partition Scheme${FIN}"
-options=("One Partition" "Two Partitions")
-select opt in "${options[@]}"
-do
-	case $opt in
-		"One Partition")
-			P_VALUE="p1"
-			break
-			;;
-		"Two Partitions")
-			P_VALUE="p2"
-			break
-			;;
-		*) echo "invalid option $REPLY";;
-	esac
-done
+
+if [[ "$EFI" == "true" ]]; then
+	P_VALUE="p2"
+else
+	# PARTITION SCHEME
+	$EE ""
+	$EE "${BLD}Select a Partition Scheme${FIN}"
+	options=("One Partition" "Two Partitions")
+	select opt in "${options[@]}"
+	do
+		case $opt in
+			"One Partition")
+				P_VALUE="p1"
+				break
+				;;
+			"Two Partitions")
+				P_VALUE="p2"
+				break
+				;;
+			*) echo "invalid option $REPLY";;
+		esac
+	done
+fi
 
 # FILESYSTEM TYPES
-if [[ "$P_VALUE" == "p2" ]]; then
+if [[ "$EFI" == "false" ]] && [[ "$P_VALUE" == "p2" ]]; then
 	$EE ""
 	$EE "${BLD}Filesystem Types${FIN}"
 	$EE "${ITL}BOOT OPTIONS: ${FIN}vfat ext2 ext4"
@@ -211,6 +210,14 @@ if [[ "$P_VALUE" == "p2" ]]; then
 	$EN "BOOT Partition: "
 	read B_FSTYPE
 	$EN "ROOT Partition: "
+	read R_FSTYPE
+elif [[ "$EFI" == "true" ]]; then
+	$EE ""
+	$EE "${BLD}Filesystem Type${FIN}"
+	$EE "${ITL}ROOT OPTIONS: ${FIN}btrfs ext4 xfs"
+	$EE ""
+	$EN "ROOT Partition: "
+	B_FSTYPE="vfat"
 	read R_FSTYPE
 else
 	R_FSTYPE="ext4"
@@ -227,7 +234,11 @@ else
 			if [[ "$B_FSTYPE" == "vfat" ]]; then
 				LOADTYPE="fatload"
 				BOOTFS="mkfs.fat -F 32 -n"
-				BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+				if [[ "$EFI" == "true" ]]; then
+					BOOTFS_TABLE="/boot/efi	vfat	defaults,flush 0 2"
+				else
+					BOOTFS_TABLE="/boot	vfat	defaults,flush 0 2"
+				fi
 			fi
 			if [[ "$B_FSTYPE" =~ ^(ext2|ext4)$ ]]; then
 				LOADTYPE="${B_FSTYPE}load"
@@ -237,7 +248,11 @@ else
 			fi
 			P_BOOT="p1"
 			P_ROOTFS="p2"
-			BOOT_LABEL="BOOT"
+			if [[ "$EFI" == "true" ]]; then
+				BOOT_LABEL="EFI"
+			else
+				BOOT_LABEL="BOOT"
+			fi
 			if [[ `ls $DEVICE_NODE | grep "/dev/sd"` ]]; then
 				P_BOOT=`echo $P_BOOT | sed 's/p//g'`
 				P_ROOTFS=`echo $P_ROOTFS | sed 's/p//g'`
@@ -289,25 +304,7 @@ else
 fi
 
 # GUID PARTITION TABLE
-if [[ "$FAMILY" == "rockchip" ]]; then
-	$EE ""
-	$EE "${BLD}GUID Partition Table${FIN} (recommended)"
-	options=("Yes" "No")
-	select opt in "${options[@]}"
-	do
-		case $opt in
-			"Yes")
-				GPT="true"
-				break
-				;;
-			"No")
-				GPT="false"
-				break
-				;;
-			*) echo "invalid option $REPLY";;
-		esac
-	done
-fi
+if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]]; then GPT="true"; else GPT="false"; fi
 
 # SUMMARY
 $EE ""
@@ -316,9 +313,8 @@ $EE "Board: $DEFAULT_MOTD"
 $EN "Platform: "; $EE "$FAMILY" | sed -e 's/\(.*\)/\U\1/'
 $EE "Drive: $DEVICE_NODE"
 $EN "Partitions: "; $EE "$P_VALUE" | sed 's/p//g'
-if [[ "$FAMILY" == "rockchip" ]]; then
-	$EN "GPT: "; $EE "$GPT"
-fi
+$EE "UEFI: $EFI"
+if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]]; then $EN "GPT: "; $EE "$GPT"; fi
 $EE "eMMC Transfer: $EMMC_TRUE"
 if [[ "$P_VALUE" == "p2" ]]; then
 	$EN "BOOT FSTYPE: "; $EE "$B_FSTYPE"
@@ -404,9 +400,7 @@ if [[ "$B_FSTYPE" == "vfat" ]]; then
 		mkpart primary ext2 ${BSIZE} 100%
 		parted --script "${DEVICE_NODE}" set 1 boot on
 	fi
-	if [[ "$EFI" == "true" ]]; then
-		parted --script "${DEVICE_NODE}" set 1 esp on
-	fi
+	if [[ "$EFI" == "true" ]]; then parted --script "${DEVICE_NODE}" set 1 esp on; fi
 fi
 if [[ "$B_FSTYPE" == "ext2" || "$B_FSTYPE" == "ext4" ]]; then
 	if [[ "$GPT" == "true" ]]; then
@@ -431,9 +425,7 @@ if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
 	sleep .50
 	mount "${DEVICE_NODE}${P_BOOT}" /transfer/${P_BOOT}
 	mount "${DEVICE_NODE}${P_ROOTFS}" /transfer/${P_ROOTFS}
-	if [[ "$R_FSTYPE" == "btrfs" ]]; then
-		btrfs subvolume create /transfer/${P_ROOTFS}/@
-	fi
+	if [[ "$R_FSTYPE" == "btrfs" ]]; then btrfs subvolume create /transfer/${P_ROOTFS}/@; fi
 	sync
 	umount /transfer/${P_ROOTFS}
 	sleep .50
@@ -450,14 +442,14 @@ if [[ `ls "${DEVICE_NODE}${P_ROOTFS}"` ]]; then
 else
 	export NEWT_COLORS='root=,black'
 	whiptail --msgbox "    Partitioning failed!" 0 0
-	exit 0
+	exit 1
 fi
 }
 
 # OFFSET FIRST PARTITION BY
 PART_OFFSET="${OFFSET}"
 # BOOT PARTITION SIZE
-if [[ "$EFI" == "true" ]]; then BSIZE="128MiB"; else BSIZE="512MiB"; fi
+if [[ "$EFI" == "true" ]]; then BSIZE="256MiB"; else BSIZE="512MiB"; fi
 # SETUP PARTITIONS
 if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then
@@ -484,7 +476,7 @@ fi
 transfer (){
 cd /
 if [[ "$P_VALUE" == "p2" ]]; then
-	cp -ax /boot/* /transfer/${P_BOOT}/
+	if [[ "$EFI" == "false" ]]; then cp -ax /boot/* /transfer/${P_BOOT}/; fi
 	if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 		rm -f /transfer/${P_BOOT}/{aml_autoscript,aml_autoscript.cmd,s905_autoscript,s905_autoscript.cmd,chainload.bin}
 		rm -fdr /transfer/${P_BOOT}/{LOST.DIR,Android}
@@ -502,7 +494,8 @@ if [[ "$P_VALUE" == "p1" ]]; then
 		rm -fdr /transfer/${P_ROOTFS}/boot/{LOST.DIR,Android}
 	fi
 fi
-if [[ "$P_VALUE" == "p2" ]]; then rm -fdr /transfer/${P_ROOTFS}/boot/*; fi
+if [[ "$EFI" == "true" && "$P_VALUE" == "p2" ]]; then rm -fdr /transfer/${P_ROOTFS}/boot/efi/*; fi
+if [[ "$EFI" == "false" && "$P_VALUE" == "p2" ]]; then rm -fdr /transfer/${P_ROOTFS}/boot/*; fi
 }
 
 if [[ "$VERBOSITY" = "1" ]]; then
@@ -515,6 +508,7 @@ fi
 
 # FLASH U-BOOT
 flash_uboot (){
+UBOOT_DIR="/usr/lib/u-boot"
 $EE "Writing u-boot ..."
 sleep .75
 if [[ "$FAMILY" == "allwinner" ]]; then
@@ -604,19 +598,87 @@ if [[ `echo $NODE | grep "sd[a-z]"` ]] || [[ `echo $NODE | grep "nvme[0-9][a-z][
 	done
 fi
 
-if [[ "$VERBOSITY" = "1" ]]; then
-	flash_uboot
-else
-	$EN "Finishing "
-	flash_uboot > /dev/null 2>&1
+if [[ ! "$FAMILY" == "generic" ]]; then
+	if [[ "$VERBOSITY" = "1" ]]; then flash_uboot; else $EN "Finishing "; flash_uboot > /dev/null 2>&1; fi
 fi
 
 # Use user defined DEVICE_NODE
-if [[ -v "USER_DEVICE_NODE" && ! -z "$USER_DEVICE_NODE" ]]; then
-	DEVICE_NODE="${USER_DEVICE_NODE}"
-fi
+if [[ -v "USER_DEVICE_NODE" && ! -z "$USER_DEVICE_NODE" ]]; then DEVICE_NODE="${USER_DEVICE_NODE}"; fi
 
 # FINISH
+# Board grub menu entry
+board_09 (){
+rm -f /transfer/${P_ROOTFS}/etc/grub.d/09_$BOARD
+if [[ "$R_FSTYPE" == "ext4" ]]; then
+	FSMOD="ext2"
+	ROOT_FSTYPE="rootfstype=ext4"
+	CMDLINE="linux /boot/Image ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA}"
+	INITRD="initrd /boot/initrd.gz"
+	DEVICETREE="devicetree /boot/${FAMILY}/${DTB}.dtb"
+elif [[ "$R_FSTYPE" == "btrfs" ]]; then
+	FSMOD="btrfs"
+	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+	CMDLINE="linux /@/boot/Image ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA}"
+	INITRD="initrd /@/boot/initrd.gz"
+	DEVICETREE="devicetree /@/boot/${FAMILY}/${DTB}.dtb"
+elif [[ "$R_FSTYPE" == "xfs" ]]; then
+	FSMOD="xfs"
+	ROOT_FSTYPE="rootfstype=xfs"
+	CMDLINE="linux /boot/Image ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA}"
+	INITRD="initrd /boot/initrd.gz"
+	DEVICETREE="devicetree /boot/${FAMILY}/${DTB}.dtb"
+fi
+if [[ "$GPT" == "true" ]]; then PTYPE="gpt"; else PTYPE="msdos"; fi
+cat <<EOF > /transfer/${P_ROOTFS}/etc/grub.d/09_$BOARD
+#!/bin/sh
+exec tail -n +3 $0
+
+menuentry "${DEFAULT_MOTD}" {
+	insmod gzio
+	insmod part_${PTYPE}
+	insmod ${FSMOD}
+	echo "Loading kernel ..."
+	${CMDLINE}
+	echo "Loading ramdisk ..."
+	${INITRD}
+	echo "Loading devicetree ..."
+	${DEVICETREE}
+}
+EOF
+chmod +x /transfer/${P_ROOTFS}/etc/grub.d/09_$BOARD
+# fixup exec tail
+sed -i 's/\/usr\/local\/bin\/write2mmc/$0/g' /transfer/${P_ROOTFS}/etc/grub.d/09_$BOARD
+}
+
+update_grub_sh (){
+if [[ "$ARCH" == "x86" ]]; then ARCH="x86_64"; fi
+cat <<EOF > "/transfer/${P_ROOTFS}/root/update_grub.sh"
+#!/usr/bin/env bash
+# grub fixup script
+
+DISTRO="$DISTRO"
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+mount -t proc proc proc/
+mount -t sysfs sys sys/
+
+if [[ "$DISTRO" == "Ubuntu" ]]; then
+	grub-install --target=${ARCH}-efi --efi-directory=/boot/efi --bootloader-id=ubuntu
+else
+	grub-install --removable
+fi
+update-grub
+umount /proc /sys
+
+exit 0
+EOF
+chmod +x /transfer/${P_ROOTFS}/root/update_grub.sh
+if [[ "$ARCH" == "x86_64" ]]; then ARCH="x86"; fi
+}
+
 p1_boot (){
 $EE
 if [[ "$EXTLINUX" == "true" ]]; then
@@ -646,21 +708,36 @@ EOF
 
 p2_boot (){
 $EE
-if [[ "$EXTLINUX" == "true" ]]; then
+if [[ "$EXTLINUX" == "true" ]] && [[ -f "/transfer/${P_BOOT}/extlinux/extlinux.conf" ]]; then
 	$EE "extlinux.conf"
 	sed -i "/append/c\\	${CMDLINE}" /transfer/${P_BOOT}/extlinux/extlinux.conf
 	cat /transfer/${P_BOOT}/extlinux/extlinux.conf
 fi
-if [[ "$BOOTCMD" == "true" ]]; then
+if [[ "$BOOTCMD" == "true" ]] && [[ -f "/transfer/${P_BOOT}/boot.cmd" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
 	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
 	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_BOOT}/boot.cmd /transfer/${P_BOOT}/boot.scr
 fi
-if [[ "$BOOTINI" == "true" ]]; then
+if [[ "$BOOTINI" == "true" ]] && [[ -f "/transfer/${P_BOOT}/boot.ini" ]]; then
 	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
 	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
 	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
+fi
+if [[ "$EFI" == "true" ]]; then
+	P_EFI="/transfer/${P_ROOTFS}/boot/efi"
+	mkdir -p ${P_EFI}
+	mount -o bind /transfer/${P_BOOT} ${P_EFI}
+	mount -o bind /dev /transfer/${P_ROOTFS}/dev
+	mount -o bind /dev/pts /transfer/${P_ROOTFS}/dev/pts
+	update_grub_sh # grub fixup
+	if [[ -f "/transfer/${P_ROOTFS}/etc/grub.d/09_$BOARD" ]]; then board_09; fi
+	if [ "$VERBOSITY" = "1" ]; then chroot /transfer/${P_ROOTFS} /root/update_grub.sh; else chroot /transfer/${P_ROOTFS} /root/update_grub.sh > /dev/null 2>&1; fi
+	umount /transfer/${P_ROOTFS}/dev/pts
+	umount /transfer/${P_ROOTFS}/dev
+	umount ${P_EFI}
+	rm -f /transfer/${P_ROOTFS}/root/update_grub.sh
+	sleep .50
 fi
 $EE
 $EE "fstab"
