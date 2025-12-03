@@ -4,21 +4,24 @@
 
 source /etc/opt/board.txt
 source /etc/default/dynamic-motd
+FIN="\033[0m"
 
 if [[ "$BRANDING" == "true" ]]; then
 	echo ""
 	toilet -f ${T_FONT} --filter ${T_FILTER} ${DEFAULT_MOTD}
 	echo ""
 else
-	if [[ -f "/proc/device-tree/model" ]]; then
+	if [[ -v "C_BRAND" && ! -z "$C_BRAND" && "$C_BRAND" == "true" ]]; then
+		echo -e "${B_FONT_STYLE}"
+		figlet ${B_POS} -f ${B_FONT} ${C_MOTD}
+		echo -e "${FIN}"
+	elif [[ -f "/proc/device-tree/model" ]]; then
 		MODEL=$(tr -d '\0' </proc/device-tree/model)
-		FIN="\033[0m"
 		echo -e "${B_FONT_STYLE}"
 		figlet ${B_POS} -f ${B_FONT} ${MODEL}
 		echo -e "${FIN}"
 	elif [[ `command -v dmidecode` ]]; then
 		MODEL=$(dmidecode -s system-product-name)
-		FIN="\033[0m"
 		echo -e "${B_FONT_STYLE}"
 		figlet ${B_POS} -f ${B_FONT} ${MODEL}
 		echo -e "${FIN}"
