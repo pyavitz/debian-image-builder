@@ -1,27 +1,52 @@
 #!/bin/bash
 
 ARCH=""
-INITRD="/boot/initrd.gz"
-INITRD_BRCM="/boot/broadcom/initrd.gz"
+INITRD="/boot/initrd.img"
+INITRD_BRCM="/boot/broadcom/initrd.img"
 UINITRD="/boot/uInitrd"
+
+# fixup boot conf files
+if [[ -f "/boot/broadcom/config.txt" ]]; then
+	if [[ `grep "initrd.gz" "/boot/broadcom/config.txt"` ]]; then
+		echo "Updating config.txt: Renaming initrd.gz to initrd.img"
+		sed  -i 's/initrd.gz/initrd.img/g' /boot/broadcom/config.txt
+	fi
+fi
+if [[ -f "/boot/extlinux/extlinux.conf" ]]; then
+	if [[ `grep "initrd.gz" "/boot/extlinux/extlinux.conf"` ]]; then
+		echo "Updating extlinux.conf: Renaming initrd.gz to initrd.img"
+		sed  -i 's/initrd.gz/initrd.img/g' /boot/extlinux/extlinux.conf
+	fi
+fi
+if [[ `ls "/etc/grub.d/09_*"` ]] > /dev/null 2>&1; then
+	source /etc/opt/board.txt
+	if [[ `grep "initrd.gz" "/etc/grub.d/09_$BOARD"` ]]; then
+		echo "Updating grub.cfg: Renaming initrd.gz to initrd.img"
+		sed  -i 's/initrd.gz/initrd.img/g' /etc/grub.d/09_$BOARD
+	fi
+fi
 
 failed (){
 echo >&2 "Error: $@"
-echo >&2 "uInitrd generation failed - exiting."
+echo >&2 "uInitrd generation failed. Exiting."
 exit 1
 }
 
 if [[ -d "/boot" ]] && [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
-	rm -fr /boot/{initrd.gz,initrd.img-*-bak}
+	rm -fr /boot/{initrd.img,initrd.img-*-bak}
 	if [[ -d "/boot/broadcom" ]]; then
 		echo "update-initramfs: Generating ${INITRD_BRCM}"
-		rm -f /boot/broadcom/initrd.gz
+		rm -f /boot/broadcom/initrd.img
 		cp -f /boot/initrd.img-* ${INITRD_BRCM}
 		rm -f /boot/firmware
 		ln -s /boot/broadcom /boot/firmware
 	else
 		echo "update-initramfs: Generating ${INITRD}"
-		cp -f /boot/initrd.img-* ${INITRD}
+		if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
+			cp -f /boot/initrd.img-* ${INITRD}
+		else
+			ln -s /boot/initrd.img-* ${INITRD}
+		fi
 	fi
 fi
 
