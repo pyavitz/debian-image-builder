@@ -45,7 +45,9 @@ if [[ -d "/boot" ]] && [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
 		if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
 			cp -f /boot/initrd.img-* ${INITRD}
 		else
-			ln -s /boot/initrd.img-* ${INITRD}
+			cd /boot
+			ln -s initrd.img-* initrd.img
+			cd "$OLDPWD"
 		fi
 	fi
 fi
