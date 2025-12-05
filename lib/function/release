@@ -9,7 +9,9 @@ source mirror.txt
 if [[ "$DISTRO" == "debian" ]]; then MIRROR="${DEBIAN_MIRROR}"
 elif [[ "$DISTRO" == "devuan" ]]; then MIRROR="${DEVUAN_MIRROR}"
 elif [[ "$DISTRO" == "kali" ]]; then MIRROR="${KALI_MIRROR}"
-elif [[ "$DISTRO" == "ubuntu" ]]; then MIRROR="${UBUNTU_MIRROR}"; fi
+elif [[ "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$ARCH" == "x86" ]]; then MIRROR="${UBUNTU_AMD64_MIRROR}"; else MIRROR="${UBUNTU_MIRROR}"; fi
+fi
 }
 
 # DEBIAN
@@ -90,10 +92,10 @@ EOF
 
 # UBUNTU
 ubuntu_release (){
-if [[ "$ARCH" == "x86" ]]; then MIRROR="http://archive.ubuntu.com/ubuntu/"; fi
 tee ${SOURCES_LIST} <<EOF
 Types: deb
 URIs: ${MIRROR}
+Architectures: ${ARCH_EXT}
 Suites: ${DISTRO_VERSION} ${DISTRO_VERSION}-updates ${DISTRO_VERSION}-backports
 Components: main restricted universe multiverse
 Enabled: yes
@@ -101,6 +103,7 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
 Types: deb
 URIs: ${MIRROR}
+Architectures: ${ARCH_EXT}
 Suites: ${DISTRO_VERSION}-security
 Components: main restricted universe multiverse
 Enabled: yes
