@@ -193,8 +193,6 @@ if [[ -f "/root/asound.conf" ]]; then mv -f /root/asound.conf /etc/asound.conf; 
 # led triggers
 if [[ -f "/root/led-trigger" ]]; then
 	mv -f /root/led-trigger /usr/local/sbin/led-trigger
-	chmod +x /usr/local/sbin/led-trigger
-	chown -R root:root /usr/local/sbin/
 fi
 
 # bluetooth helper
@@ -248,10 +246,6 @@ chmod +x /usr/bin/growpart
 chmod +x /usr/local/bin/*
 chown -R root:root /usr/local/bin/
 chown -R root:root /usr/local/sbin/
-if [[ "$BOARD" == "tinker" ]]; then
-	mv -f rtc-ds1307 /usr/local/sbin/
-	chmod +x /usr/local/sbin/rtc-ds1307
-fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	mkdir -p /etc/init.d;
 	mv -f firstboot.init /etc/init.d/firstboot
@@ -399,11 +393,8 @@ echo ""
 apt update
 apt upgrade -y
 if [[ "$EFI" == "true" ]]; then apt install -y grub-efi; fi
-if [[ "$GENERIC_KERNEL" == "true" ]]; then
-	if [[ "$DISTRO" == "ubuntu" ]]; then INST_GEN_KERNEL="linux-image-generic"; else INST_GEN_KERNEL="linux-image-${ARCH_EXT}"; fi
-	apt install -y ${INST_GEN_KERNEL}
-	apt -y clean
-	apt -y autoclean
+if [[ "$GENERIC_KERNEL" == "true" ]] && [[ "$FAMILY" == "generic" ]]; then
+	if [[ `type ${FAMILY}_linux_image` ]] &>/dev/null; then ${FAMILY}_linux_image; fi
 else
 	apt -y clean
 	apt -y autoclean
@@ -429,17 +420,12 @@ if [[ "$EFI" == "true" ]]; then
 	if [[ "$ARCH" == "x86_64" ]]; then ARCH="x86"; fi
 fi
 # take note of linux kernel release
-if [ -f /usr/src/linux-headers-*/include/config/kernel.release ]; then
+if [[ -f "/usr/src/linux-headers-*/include/config/kernel.release" ]]; then
 	KERNEL_RELEASE=`cat /usr/src/linux-headers-*/include/config/kernel.release`
 else
 	KERNEL_RELEASE=`ls /boot/config-* | sed 's/\/boot\/config-//g'`
 fi
 echo -e INSTALLED_KERNEL='"'$KERNEL_RELEASE'"' > /root/kernel.release
-if [[ "$EFI" == "true" ]]; then
-	# 99-uefi uses /etc/opt/board.txt, this script does not.
-	# re-source /root/board.txt to ensure no confusion.
-	if [[ "$FAMILY" == "generic" ]]; then :; else . /root/board.txt; fi
-fi
 
 # system.journal corrupted or uncleanly shut down, renaming and replacing
 if [[ -f "/etc/systemd/journald.conf" ]]; then
