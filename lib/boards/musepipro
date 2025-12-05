@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# architecture
+ARCH="riscv"
+ARCH_EXT="riscv64"
+DEBARCH=""
+CROSS_COMPILE="${ARCH_EXT}-linux-gnu-"
+ROOTFS_ARCH="rootfs-${ARCH_EXT}"
+STATIC="qemu-${ARCH_EXT}-static"
+
+# device information
+SERIES="m1"
+FAMILY="spacemit"
+FAMILY_EXT=""
+DTB="${SERIES}-muse-pi-pro"
+
+# default config
+LINUX_DEFCONFIG="k1-stable_defconfig"
+UBOOT_DEFCONFIG="k1_defconfig"
+
+# partition layout
+BOOT_EXT4="false" # change P_VALUE to p2 if enabled
+BOOT_VFAT="false" # change P_VALUE to p2 if enabled
+EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="false" # set to true if rockchip
+OFFSET="4MiB"
+P_VALUE="p1" # p1 = single partition
+
+# boot options
+BOOTCMD="false"
+BOOTINI="false"
+BOOTSCR="boot.cmd" # define name of boot.cmd / boot.ini (files/boot/scripts)
+EXTLINUX="true" # default
+PETITBOOT="false" # obsolete
+
+# output
+BOARD="musepipro"
+OUTPUT="output/${BOARD}"
+
+# extlinux and bootcmd
+BOOT_KERNEL="Image"
+BOOT_INITRD="uInitrd"
+BOOTCMD_FDTOVERLAYS="#overlays="
+EXTLINUX_FDTOVERLAYS="#fdtoverlays"
+
+# cmdline
+CONSOLE="earlycon=sbi console=tty1 console=ttyS0,115200"
+LOGLEVEL="loglevel=1"
+EXTRA="net.ifnames=0"
+
+# Serial
+DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyS0 115200 vt100"
+
+# motd
+DEFAULT_MOTD="Muse Pi Pro"
+
+# customize
+#MODULES_BLACKLIST="hci_uart"
+MODULES_LOAD="8852bs"
+
+# opensbi firmware
+OPENSBI_URL="https://gitee.com/bianbu-linux/opensbi.git" # vendor
+OPENSBI_TAG="k1-bl-v2.2.7-release" # tag or branch
+#OPENSBI_URL="https://github.com/cyyself/opensbi.git"
+#OPENSBI_TAG="k1-opensbi" # tag or branch
+OPENSBI_PLATFORM="generic"
+OPENSBI_DEFCONFIG="k1_defconfig" # vendor
+OPENSBI_FIRMWARE="build/platform/${OPENSBI_PLATFORM}/firmware/fw_dynamic.itb"
+OPENSBI_PATCHDIR="patches/opensbi/${OPENSBI_TAG}/${BOARD}"
+
+# kernel
+LINUX_EXTRA_FIRMWARE="files/firmware/${FAMILY}/esos.elf"
+
+# patches
+LINUX_PATCHING="false"
+UBOOT_PATCHDIR="patches/uboot"
+LINUX_PATCHDIR="patches/${FAMILY}"
+
+# image
+IMG_EXP="${DTB}-*.img*"
+
+# uboot logo
+RANDOM_LOGO="true"
+
+# precompiled
+PRECOMPILED_UBOOT="false"
+PKGVERSION=""
+PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
+
+# force git (https://github.com/jmontleon/linux-bianbu.git)
+FORCE_GIT="true"
+GIT_OWN="jmontleon"
+GIT_REPO="linux-bianbu"
+GIT_BRANCH="linux-6.17.y"
+GIT_URL="https://github.com"
+GIT_BLOB="blob"
+# git linux patching
+GIT_PATCHING="true"
+GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
+# u-boot (if variable not found ignore)
+GIT_UBOOT_TAG="k1-bl-v2.2.7-release" # tag or branch
+GIT_UBOOT_URL="https://gitee.com/bianbu-linux/uboot-2022.10.git -b ${GIT_UBOOT_TAG} ${BOARD}-u-boot-${GIT_UBOOT_TAG}"
+
+# override userdata file
+FORCE_VERSION="true"
+FORCE_LINUX_VERSION=""
+FORCE_UBOOT_VERSION="v2022.10"
+
+# devicetree and platform
+DEVICETREE="*.dtb"
+PLATFORM="${FAMILY}"
+
+# kernel package name (if shared patching set to true)
+COMMON_PKG="true"
+COMMON_PKGNAME="spacemit"
+
+# set for builddeb to package a specific kernel image
+CUSTOM_KERNEL_IMAGE="Image"
+
+# build old kernel headers package (not recommended)
+LEGACY_PACKAGING="false"
+
+# use builder kernel packaging (recommended)
+DEFAULT_PACKAGING="true"
