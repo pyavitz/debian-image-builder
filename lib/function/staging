@@ -490,13 +490,16 @@ if [[ "$ENABLE_BOOT_VFAT" == "true" ]]; then
 fi
 if [[ "$ENABLE_EFI" == "true" ]]; then
 	sed -i 's/EFI="false"/EFI="true"/g' board.txt
+	if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
+	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
+	if [[ `grep -w 'EXTLINUX="true"' "board.txt"` ]]; then sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt; fi
+	if [[ `grep -w 'BOOTCMD="true"' "board.txt"` ]]; then sed -i 's/BOOTCMD="true"/BOOTCMD="false"/g' board.txt; fi
+	if [[ `grep -w 'BOOTINI="true"' "board.txt"` ]]; then sed -i 's/BOOTINI="true"/BOOTCMD="false"/g' board.txt; fi
 	if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]] && [[ `grep -w 'GPT="false"' "board.txt"` ]]; then
 		sed -i 's/GPT="false"/GPT="true"/g' board.txt
 	fi
-	if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
-	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
 fi
-if [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]] && [[ "$ENABLE_PETITBOOT" == "true" ]]; then
+if [[ "$ENABLE_PETITBOOT" == "true" ]] && [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
 	sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt
 	sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt
 	sed -i 's/PETITBOOT="false"/PETITBOOT="true"/g' board.txt
