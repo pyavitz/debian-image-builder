@@ -42,25 +42,28 @@ if [[ "$VERSION" =~ ^([0-9].[0-9].y|[0-9].[0-9][0-9].y)$ ]]; then
 		rm -f revision.txt
 	fi
 else
-	if [[ "$VERSION" =~ ^(stable|rc)$ ]]; then
+	if [[ "$VERSION" =~ ^(next|stable|rc)$ ]]; then
 		URL="https://kernel.org"
+		NEXT=$(curl -s $URL | grep -A1 'linux-next:' | grep -oP '(?<=strong>).*(?=</strong.*)')
 		STABLE=$(curl -s $URL/releases.json | jq '.latest_stable.version' -r)
 		RC=$(curl -s $URL | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
-		if [[ "$VERSION" == "stable" ]]; then VERSION="${STABLE}"; else
-		if [[ "$VERSION" == "rc" ]]; then VERSION="${RC}"; fi; fi
+		if [[ "$VERSION" == "next" ]]; then VERSION="${NEXT}"
+		elif [[ "$VERSION" == "stable" ]]; then VERSION="${STABLE}"
+		elif [[ "$VERSION" == "rc" ]]; then VERSION="${RC}"; fi;
 	fi
 fi
 }
 
 download (){
 if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
+	GIT_NEXT="https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tag/?h=${VERSION}"
 	GIT_STABLE="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tag/?h=v${VERSION}"
 	GIT_TORVALDS="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tag/?h=v${VERSION}"
-	if [[ `wget -S --spider ${GIT_STABLE} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="stable"; else
-		if [[ `wget -S --spider ${GIT_TORVALDS} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="torvalds"; else
+	if [[ `wget -S --spider ${GIT_STABLE} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="stable"; GIT_BRANCH="linux"
+	elif [[ `wget -S --spider ${GIT_TORVALDS} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="torvalds"; GIT_BRANCH="linux"
+	elif [[ `wget -S --spider ${GIT_NEXT} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="next"; GIT_BRANCH="linux-next"; else
 			echo -e "The git branch v${VERSION} is not available?"; exit 0; fi
-	fi
-	GIT_URL="https://git.kernel.org/pub/scm/linux/kernel/git/${GIT_REPO}/linux.git"
+	GIT_URL="https://git.kernel.org/pub/scm/linux/kernel/git/${GIT_REPO}/${GIT_BRANCH}.git"
 	if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -d "${KERNEL}-${VERSION}.backup" ]]; then
 		echo -en "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"; echo -en "-${VERSION}:"
 		echo -en " Restoring"
@@ -77,7 +80,8 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		fi
 		echo -e "This may take a while ..."
 		echo ""
-		git clone -c advice.detachedHead=false --depth 1 -b v${VERSION} ${GIT_URL} ${KERNEL}-${VERSION}
+		if [[ "$GIT_REPO" == "next" ]]; then GIT_VERSION="${VERSION}"; else GIT_VERSION="v${VERSION}"; fi
+		git clone -c advice.detachedHead=false --depth 1 -b ${GIT_VERSION} ${GIT_URL} ${KERNEL}-${VERSION}
 		sleep .50
 		if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -f "${KERNEL}-${VERSION}/Makefile" ]]; then
 			echo -en "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"; echo -en "-${VERSION}:"
