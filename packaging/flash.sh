@@ -142,11 +142,9 @@ if [[ "$FAMILY" == "spacemit" ]] && [[ -f "${DIR}/bootinfo_emmc.bin" ]] && [[ -f
 		sleep .50
 		dd if="${DIR}/bootinfo_emmc.bin" of="/dev/${DEVICE}" bs=512 conv=notrunc
 		dd if="${DIR}/FSBL.bin" of="/dev/${DEVICE}" bs=512 seek=1 conv=notrunc
-		dd if="${DIR}/FSBL.bin" of="/dev/${DEVICE}" bs=512 seek=512 conv=notrunc
 	else
 		dd if="${DIR}/bootinfo_emmc.bin" of="${MMC}" bs=512 conv=notrunc
 		dd if="${DIR}/FSBL.bin" of="${MMC}" bs=512 seek=1 conv=notrunc
-		dd if="${DIR}/FSBL.bin" of="${MMC}" bs=512 seek=512 conv=notrunc
 	fi
 	dd if="${DIR}/fw_dynamic.bin" of="${MMC}" bs=512 seek=1280 conv=notrunc
 	dd if="${DIR}/u-boot.bin" of="${MMC}" bs=512 seek=2048 conv=notrunc
