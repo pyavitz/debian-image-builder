@@ -65,21 +65,21 @@ if [[ "$SERIES" == "amlogic-t7" ]]; then
 	${BOARD}_uboot_toolchain
 	GIT_UBOOT_HASH=`git ls-remote --heads ${GIT_UBOOT_URL} | grep -w "refs/heads/${GIT_UBOOT_TAG}" | sed -n '1p' | sed "s/refs\/heads\/${GIT_UBOOT_TAG}//g" | sed s/'\s'//g`
 	GIT_UBOOT_COMMIT="4a16015168d00d08487781fc914e048944554c6e"
-	if [[ ! "$GIT_UBOOT_COMMIT" == "$GIT_UBOOT_HASH" ]]; then rm -fdr ${BOARD}-u-boot-${GIT_UBOOT_TAG}; fi
-	if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-		echo -en "${BOARD}-u-boot-${GIT_UBOOT_TAG}:"
-		cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}
+	if [[ ! "$GIT_UBOOT_COMMIT" == "$GIT_UBOOT_HASH" ]]; then rm -fdr ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; fi
+	if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
+		echo -en "${FAMILY}-u-boot-${GIT_UBOOT_TAG}:"
+		cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}
 		make clean > /dev/null 2>&1
 		echo -en " Restoring"
-		cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
+		cd ..; cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
 		# Fake defconfig (required by builder)
 		touch u-boot/configs/${UBOOT_DEFCONFIG}
 		echo -e ", done."
 	else
-		git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${BOARD}-u-boot-${GIT_UBOOT_TAG}
-		if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-			cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}; make clean > /dev/null 2>&1; cd ..
-			cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
+		git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${FAMILY}-u-boot-${GIT_UBOOT_TAG}
+		if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
+			cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; make clean > /dev/null 2>&1; cd ..
+			cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
 			# Fake defconfig (required by builder)
 			touch u-boot/configs/${UBOOT_DEFCONFIG}
 		else
