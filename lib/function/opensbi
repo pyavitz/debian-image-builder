@@ -1,27 +1,27 @@
 #!/bin/bash
 
 opensbi_firmware (){
-if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]] && [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}.backup" ]]; then
-	echo -en "${BOARD}-opensbi-${OPENSBI_TAG}:"
+if [[ -d "${FAMILY}-opensbi-${OPENSBI_TAG}" ]] && [[ -d "${FAMILY}-opensbi-${OPENSBI_TAG}.backup" ]]; then
+	echo -en "${FAMILY}-opensbi-${OPENSBI_TAG}:"
 	echo -en " Restoring"
-	rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}
-	mv -f ${BOARD}-opensbi-${OPENSBI_TAG}.backup ${BOARD}-opensbi-${OPENSBI_TAG}
-	cd ${BOARD}-opensbi-${OPENSBI_TAG}
+	rm -fdr ${FAMILY}-opensbi-${OPENSBI_TAG}
+	mv -f ${FAMILY}-opensbi-${OPENSBI_TAG}.backup ${FAMILY}-opensbi-${OPENSBI_TAG}
+	cd ${FAMILY}-opensbi-${OPENSBI_TAG}
 	make clean
 	cd ..
-	cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
+	cp -r ${FAMILY}-opensbi-${OPENSBI_TAG} ${FAMILY}-opensbi-${OPENSBI_TAG}.backup
 	echo -e ", done."
 else
 	if [[ `wget -S --spider ${OPENSBI_URL} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-		rm -fdr ${BOARD}-opensbi-${OPENSBI_TAG}
-		git clone -c advice.detachedHead=false --depth=1 ${OPENSBI_URL} -b ${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}
-		if [[ -d "${BOARD}-opensbi-${OPENSBI_TAG}" ]]; then
-			cd ${BOARD}-opensbi-${OPENSBI_TAG}
+		rm -fdr ${FAMILY}-opensbi-${OPENSBI_TAG}
+		git clone -c advice.detachedHead=false --depth=1 ${OPENSBI_URL} -b ${OPENSBI_TAG} ${FAMILY}-opensbi-${OPENSBI_TAG}
+		if [[ -d "${FAMILY}-opensbi-${OPENSBI_TAG}" ]]; then
+			cd ${FAMILY}-opensbi-${OPENSBI_TAG}
 			make clean
 			cd ..
-			echo -en "${BOARD}-opensbi-${OPENSBI_TAG}:"
+			echo -en "${FAMILY}-opensbi-${OPENSBI_TAG}:"
 			echo -en " Creating backup"
-			cp -r ${BOARD}-opensbi-${OPENSBI_TAG} ${BOARD}-opensbi-${OPENSBI_TAG}.backup
+			cp -r ${FAMILY}-opensbi-${OPENSBI_TAG} ${FAMILY}-opensbi-${OPENSBI_TAG}.backup
 			echo -e ", done."
 		else
 			echo -e ", failed."
@@ -29,7 +29,7 @@ else
 		fi
 	fi
 fi
-cd ${BOARD}-opensbi-${OPENSBI_TAG}
+cd ${FAMILY}-opensbi-${OPENSBI_TAG}
 opensbi_patching
 if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
 if [[ -v "OPENSBI_DEFCONFIG" ]] && [[ ! -z "$OPENSBI_DEFCONFIG" ]]; then
