@@ -11,10 +11,9 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 		mv -f ${GIT_REPO}-${GIT_BRANCH}.backup ${GIT_REPO}-${GIT_BRANCH}
 		if [[ "$GIT_SHALLOW" == "false" ]]; then
 			cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean > /dev/null 2>&1; cd ..
-		else
-			cd ${GIT_REPO}-${GIT_BRANCH}; make clean > /dev/null 2>&1; cd ..
 		fi
 		cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
+		rm -fdr ${GIT_REPO}-${GIT_BRANCH}/.git # modern packaging picks up the most recent git commit
 		echo -e ", done."
 	else
 		echo -e "This may take a while ..."
@@ -24,11 +23,11 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 		if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -f "${GIT_REPO}-${GIT_BRANCH}/Makefile" ]]; then
 			cd ${GIT_REPO}-${GIT_BRANCH}
 			if [[ `type ${FAMILY}_extra_git` ]] &>/dev/null; then ${FAMILY}_extra_git; fi
-			rm -fdr .git # modern packaging picks up the most recent git commit
 			make clean > /dev/null 2>&1; cd ..
 			echo -en "${GIT_REPO}-${GIT_BRANCH}:"
 			echo -en " Creating backup"
 			cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
+			rm -fdr ${GIT_REPO}-${GIT_BRANCH}/.git # modern packaging picks up the most recent git commit
 			echo -e ", done."
 		else
 			echo -en "${GIT_REPO}-${GIT_BRANCH}:"
