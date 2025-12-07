@@ -13,15 +13,19 @@ if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	make clean
 	echo -en " Restoring"
 	cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
-	# They edit this file to much so lets just remove it and add our own
-	rm -f u-boot/board/spacemit/k1-x/k1-x.env
+	# replace board/spacemit/k1-x/k1-x.env
+	if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
+		cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
+	fi
 	echo -e ", done."
 else
 	git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL}
 	if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 		cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}; make clean; cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
-		# They edit this file to much so lets just remove it and add our own
-		rm -f u-boot/board/spacemit/k1-x/k1-x.env
+		# replace board/spacemit/k1-x/k1-x.env
+		if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
+			cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
+		fi
 	else
 		echo -e "${RED}Download Failed!${FIN}"
 		exit 1

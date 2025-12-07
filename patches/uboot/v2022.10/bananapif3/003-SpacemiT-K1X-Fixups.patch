@@ -1,57 +1,20 @@
-From 380e1a47a9a34a5f8c3bfa2fe67a5f95ca04d3e6 Mon Sep 17 00:00:00 2001
+From 5a58a660beb2d069a8533f8ac7ac7e5030b7d274 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sun, 10 Aug 2025 20:27:45 -0400
-Subject: [PATCH] Add syslinux and script support
-
-The board/spacemit/k1-x/k1-x.env file is deleted by the builder
-before the patch is applied.
+Date: Sun, 7 Dec 2025 08:03:51 -0500
+Subject: [PATCH] SpacemiT K1X Fixups
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- board/spacemit/k1-x/k1-x.env | 26 ++++++++++++++++++++++++++
- board/spacemit/k1-x/k1x.c    | 20 ++++++++++----------
- configs/k1_defconfig         |  1 +
- include/configs/k1-x.h       | 21 ++++++++++-----------
- 4 files changed, 47 insertions(+), 21 deletions(-)
- create mode 100644 board/spacemit/k1-x/k1-x.env
+ board/spacemit/k1-x/k1x.c | 20 ++++++++++----------
+ configs/k1_defconfig      |  1 +
+ include/configs/k1-x.h    | 21 ++++++++++-----------
+ 3 files changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/board/spacemit/k1-x/k1-x.env b/board/spacemit/k1-x/k1-x.env
-new file mode 100644
-index 00000000..67c5f1b7
---- /dev/null
-+++ b/board/spacemit/k1-x/k1-x.env
-@@ -0,0 +1,26 @@
-+// SYSLINUX and SCRIPT Support
-+autoboot=if test -e ${devtype} ${devnum}:${distro_bootpart} /extlinux/extlinux.conf; then \
-+		sysboot ${devtype} ${devnum}:${distro_bootpart} any 0x2000000 /extlinux/extlinux.conf; \
-+	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot/extlinux/extlinux.conf; then \
-+		sysboot ${devtype} ${devnum}:${distro_bootpart} any 0x2000000 /boot/extlinux/extlinux.conf; \
-+	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot.scr; then \
-+		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot.scr; source 0x2000000; \
-+	elif test -e ${devtype} ${devnum}:${distro_bootpart} /boot/boot.scr; then \
-+		load ${devtype} ${devnum}:${distro_bootpart} 0x2000000 /boot/boot.scr; source 0x2000000; \
-+	fi;
-+	nvme part; \
-+	if test -e nvme 0:1 /extlinux/extlinux.conf; then \
-+		sysboot nvme 0:1 any 0x2000000 /extlinux/extlinux.conf; \
-+	elif test -e nvme 0:1 /boot/extlinux/extlinux.conf; then \
-+		sysboot nvme 0:1 any 0x2000000 /boot/extlinux/extlinux.conf; \
-+	elif test -e nvme 0:1 /boot.scr; then \
-+		load nvme 0:1 0x2000000 /boot.scr; source 0x2000000; \
-+	elif test -e nvme 0:1 /boot/boot.scr; then \
-+		load nvme 0:1 0x2000000 /boot/boot.scr; source 0x2000000; \
-+	fi;
-+
-+bootcmd=echo "Loading K1-X Environment ..."; \
-+	echo ""; \
-+	echo "Running NVMe Scan ..."; \
-+	nvme scan; \
-+	run autoboot
 diff --git a/board/spacemit/k1-x/k1x.c b/board/spacemit/k1-x/k1x.c
-index b2fc28c8..4c788689 100644
+index c48b4e74..27661d32 100644
 --- a/board/spacemit/k1-x/k1x.c
 +++ b/board/spacemit/k1-x/k1x.c
-@@ -530,8 +530,8 @@ void _load_env_from_blk(struct blk_desc *dev_desc, const char *dev_name, int dev
+@@ -529,8 +529,8 @@ void _load_env_from_blk(struct blk_desc *dev_desc, const char *dev_name, int dev
  #endif
  	}
  
@@ -62,7 +25,7 @@ index b2fc28c8..4c788689 100644
  
  	/*load env.txt and import to uboot*/
  	memset((void *)CONFIG_SPL_LOAD_FIT_ADDRESS, 0, CONFIG_ENV_SIZE);
-@@ -734,7 +734,7 @@ void setenv_boot_mode(void)
+@@ -747,7 +747,7 @@ void setenv_boot_mode(void)
  	u32 boot_mode = get_boot_mode();
  	switch (boot_mode) {
  	case BOOT_MODE_NAND:
@@ -71,7 +34,7 @@ index b2fc28c8..4c788689 100644
  		break;
  	case BOOT_MODE_NOR:
  		char *blk_name;
-@@ -745,23 +745,23 @@ void setenv_boot_mode(void)
+@@ -758,23 +758,23 @@ void setenv_boot_mode(void)
  			return;
  		}
  
@@ -103,7 +66,7 @@ index b2fc28c8..4c788689 100644
  	}
  }
 diff --git a/configs/k1_defconfig b/configs/k1_defconfig
-index 4f419bc1..05337aaf 100644
+index 8861f32a..1b388a24 100644
 --- a/configs/k1_defconfig
 +++ b/configs/k1_defconfig
 @@ -291,3 +291,4 @@ CONFIG_PRINT_TIMESTAMP=y
@@ -160,5 +123,5 @@ index b15d2e0b..7d720797 100644
  
  
 -- 
-2.43.0
+2.47.3
 
