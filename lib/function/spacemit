@@ -2,17 +2,17 @@
 
 # ATF BINARY AND FIRMWARE
 fw_dynamic (){ # place file.
-if [[ -f "../${BOARD}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" ]]; then cp "../${BOARD}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" .; else report_opensbi_error; fi
+if [[ -f "../${FAMILY}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" ]]; then cp "../${FAMILY}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" .; else report_opensbi_error; fi
 }
 
 # U-BOOT
 spacemit_uboot_download (){
-if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-	echo -en "${BOARD}-u-boot-${GIT_UBOOT_TAG}:"
-	cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}
+if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
+	echo -en "${FAMILY}-u-boot-${GIT_UBOOT_TAG}:"
+	cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}
 	make clean
 	echo -en " Restoring"
-	cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
+	cd ..; cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
 	# replace board/spacemit/k1-x/k1-x.env
 	if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
 		cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
@@ -20,8 +20,8 @@ if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	echo -e ", done."
 else
 	git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL}
-	if [[ -d "${BOARD}-u-boot-${GIT_UBOOT_TAG}" ]]; then
-		cd ${BOARD}-u-boot-${GIT_UBOOT_TAG}; make clean; cd ..; cp -r ${BOARD}-u-boot-${GIT_UBOOT_TAG} u-boot
+	if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
+		cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; make clean; cd ..; cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
 		# replace board/spacemit/k1-x/k1-x.env
 		if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
 			cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${BOARD}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
