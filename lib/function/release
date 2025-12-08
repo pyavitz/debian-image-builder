@@ -95,7 +95,7 @@ ubuntu_release (){
 tee ${SOURCES_LIST} <<EOF
 Types: deb
 URIs: ${MIRROR}
-Architectures: ${ARCH_EXT}
+#Architectures: ${ARCH_EXT}
 Suites: ${DISTRO_VERSION} ${DISTRO_VERSION}-updates ${DISTRO_VERSION}-backports
 Components: main restricted universe multiverse
 Enabled: yes
@@ -103,12 +103,13 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
 Types: deb
 URIs: ${MIRROR}
-Architectures: ${ARCH_EXT}
+#Architectures: ${ARCH_EXT}
 Suites: ${DISTRO_VERSION}-security
 Components: main restricted universe multiverse
 Enabled: yes
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 EOF
+if [[ "$ARCH" == "x86" ]]; then sed -i 's/#Architectures/Architectures/g' ${SOURCES_LIST}; fi
 }
 
 choose_release (){
