@@ -35,13 +35,11 @@ exit 1
 if [[ -d "/boot" ]] && [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
 	rm -fr /boot/{initrd.img,initrd.img-*-bak}
 	if [[ -d "/boot/broadcom" ]]; then
-		echo "update-initramfs: Generating ${INITRD_BRCM}"
 		rm -f /boot/broadcom/initrd.img
 		cp -f /boot/initrd.img-* ${INITRD_BRCM}
 		rm -f /boot/firmware
 		ln -s /boot/broadcom /boot/firmware
 	else
-		echo "update-initramfs: Generating ${INITRD}"
 		if [[ `findmnt -v -n /boot | grep -w "vfat"` ]]; then
 			cp -f /boot/initrd.img-* ${INITRD}
 		else
@@ -52,8 +50,8 @@ if [[ -d "/boot" ]] && [[ `ls  /boot/initrd.img-*` ]] > /dev/null 2>&1; then
 	fi
 fi
 
-if [ "$#" -eq 2 ]; then
-	if [ ! -z "$1" ] && [ -f "$2" ]; then
+if [[ ! -f "/boot/broadcom/config.txt" ]] && [[ "$#" -eq 2 ]]; then
+	if [[ ! -z "$1" ]] && [[ -f "$2" ]]; then
 		NAME="initramfs-$1"
 		FILE="$2"
 		echo "update-initramfs: Generating ${UINITRD}"
@@ -62,8 +60,6 @@ if [ "$#" -eq 2 ]; then
 	else
 		failed
 	fi
-else
-	failed
 fi
 
 exit 0
