@@ -4,6 +4,15 @@
 <summary><h3>Boards</h3></summary>
 
 ```py
+RISC-V Notice:
+Ubuntu 25.10/26.04 requires the RVA23 instruction set architecture (ISA) baseline
+for its RISC-V builds, a move to support newer, more capable hardware with features
+like vector and hypervisor extensions, aligning the OS with the evolving RISC-V
+ecosystem for better performance and compatibility, though this means it won't run
+on most older RISC-V boards, which remain supported by Ubuntu 24.04 LTS
+
+--
+
 (*) Work in progress
 
 # ALLWINNER
@@ -35,8 +44,9 @@ Radxa Zero 3W
 # SAMSUNG
 Odroid XU4
 
-# SPACEMIT
+# SPACEMIT (Debian Trixie and Ubuntu Noble)
 BananaPi BPI-F3
+MusePi Pro
 ```
 </details>
 
