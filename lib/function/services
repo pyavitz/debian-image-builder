@@ -244,28 +244,6 @@ if [[ "$BOARD" =~ ^(odroidn2|odroidn2l|odroidn2plus)$ ]]; then
 	chown root:root /usr/bin/irq-tweaks
 fi
 
-bananapi_systemd (){
-tee /etc/systemd/system/tweaks.service <<EOF
-[Unit]
-Description=BananaPi System Tweaks
-ConditionFileIsExecutable=/usr/bin/tweaks
-After=systemd-remount-fs.service sysinit.target local-fs.target
-Before=rc-local.service
-
-[Service]
-Type=forking
-ExecStart=/usr/bin/tweaks > /dev/null 2>&1
-TimeoutSec=0
-RemainAfterExit=yes
-StandardOutput=journal+console
-StandardError=journal+console
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable tweaks
-}
-
 lepotato_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
@@ -354,6 +332,28 @@ tee /etc/systemd/system/tweaks.service <<EOF
 Description=Radxa Zero System Tweaks
 ConditionFileIsExecutable=/usr/bin/tweaks
 After=systemd-remount-fs.service sysinit.target local-fs.target network.target bluetooth.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/tweaks > /dev/null 2>&1
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
+spacemit_systemd (){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=SpacemiT System Tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
 
 [Service]
 Type=forking
@@ -497,10 +497,10 @@ if [[ "$DISTRO" == "devuan" ]]; then
 	chmod +x /etc/init.d/tweaks
 	chown root:root /etc/init.d/tweaks
 else
-	if [[ "$BOARD" =~ ^(bananapif3)$ ]]; then bananapi_systemd; fi
 	if [[ "$BOARD" =~ ^(cubietruck|cuboxi|lepotato|radxazero)$ ]]; then ${BOARD}_systemd; fi
 	if [[ "$BOARD" =~ ^(nanopir5c|nanopir5s)$ ]]; then nanopi5_systemd; fi
 	if [[ "$BOARD" =~ ^(orangepi3|orangepi3lts)$ ]]; then orangepi3_systemd; fi
+	if [[ "$FAMILY" =~ ^(spacemit)$ ]]; then ${FAMILY}_systemd; fi
 	if [[ "$FAMILY_EXT" =~ ^(ac2xx|bananapi|odroid)$ ]]; then ${FAMILY_EXT}_systemd; fi
 	#if [[ "$SERIES" =~ ^(rk3566)$ ]]; then rockchip_systemd; fi
 fi
