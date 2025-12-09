@@ -14,7 +14,7 @@
 #include "k1-x_thermal_cooling.dtsi"
 
 / {
-	model = "spacemit k1-x MUSE-Pi-Pro board";
+	model = "MusePi Pro";
 	modules_usrload = "8852bs";
 
 	cpus: cpus {
@@ -159,7 +159,7 @@
 
 		bt_pwrseq: bt-pwrseq {
 			compatible = "spacemit,bt-pwrseq";
-			reset-gpios     = <&gpio 63 0>;
+			reset-gpios = <&gpio 63 GPIO_ACTIVE_HIGH>;
 		};
 	};
 
@@ -182,10 +182,18 @@
 	status = "okay";
 };
 
+/* Bluetooth */
 &uart2 {
-	pinctrl-names = "default";
+ 	status = "okay";
 	pinctrl-0 = <&pinctrl_uart2>;
-	status = "okay";
+	pinctrl-names = "default";
+	uart-has-rtscts;
+
+	bluetooth {
+		compatible = "realtek,rtl8723ds-bt";
+		device-wake-gpios = <&gpio 64 GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&gpio 65 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &pwm14 {
@@ -201,11 +209,11 @@
 	spacemit-dpu-escclk = <76800000>;
 	dsi_1v2-supply = <&ldo_5>;
 	vin-supply-names = "dsi_1v2";
-	status = "okay";
+	status = "disabled";
 };
 
 &dsi2 {
-	status = "okay";
+	status = "disabled";
 	force-attached = "lcd_tc358762xbg_dpi_800x480";
 
 	ports {
@@ -231,7 +239,7 @@
 };
 
 &lcds {
-	status = "okay";
+	status = "disabled";
 };
 
 &dpu_online2_hdmi {
@@ -310,7 +318,7 @@
 &i2c5 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c5_0>;
-	status = "okay";
+	status = "disabled";
 
 	raspits-panel@45 {
 		status = "okay";
@@ -957,7 +965,7 @@
 &qspi {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_qspi>;
-	status = "okay";
+	status = "disabled";
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
