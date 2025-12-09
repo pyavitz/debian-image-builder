@@ -11,6 +11,11 @@ like vector and hypervisor extensions, aligning the OS with the evolving RISC-V
 ecosystem for better performance and compatibility, though this means it won't run
 on most older RISC-V boards, which remain supported by Ubuntu 24.04 LTS
 
+Generic Notice:
+If you are not interested in building a custom kernel and would like to just
+produce a quick image. Enable in custom.txt > GENERIC_KERNEL="true" and run
+the command `make rootfs image board=uefi-amd64`. This "should" pull the latest
+kernel via apt.
 --
 
 (*) Work in progress
@@ -37,6 +42,10 @@ X96-AIR	GBIT / QCOM
 # Broadcom
 Raspberry Pi 4 / 5
 
+# Generic
+UEFI-ARM64
+UEFI-X86_64
+
 # ROCKCHIP
 FriendlyElec NanoPi R3S / LTS
 Radxa Zero 3W
@@ -46,7 +55,7 @@ Odroid XU4
 
 # SPACEMIT (Debian Trixie and Ubuntu Noble)
 BananaPi BPI-F3
-MusePi Pro
+SpacemiT MusePi Pro
 ```
 </details>
 
