@@ -48,6 +48,11 @@ if [[ -f "bootinfo_emmc.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.it
 	cp -f FSBL.bin ../../${OUTPUT}/
 	cp -f fw_dynamic.itb ../../${OUTPUT}/fw_dynamic.bin
 	cp -f u-boot.itb ../../${OUTPUT}/u-boot.bin
+	# add spi bins
+	chmod o+r u-boot-env-default.bin
+	cp -f bootinfo_spinor.bin ../../${OUTPUT}/
+	cp -f u-boot-env-default.bin ../../${OUTPUT}/
+	echo "https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing" > ../../${OUTPUT}/flash-spi.txt
 	uboot_packaging
 else
 	report_error
@@ -71,9 +76,12 @@ uboot_output
 
 spacemit_uboot_packaging (){
 cp -f bootinfo_emmc.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+cp -f bootinfo_spinor.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 cp -f FSBL.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/fw_dynamic.bin
 cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+cp -f u-boot-env-default.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+echo "https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing" > ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/flash-spi.txt
 }
 
 # LINUX
