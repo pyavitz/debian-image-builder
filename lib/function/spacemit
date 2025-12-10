@@ -6,6 +6,14 @@ if [[ -f "../${FAMILY}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" ]]; then cp "
 }
 
 # U-BOOT
+spacemit_uboot_config (){
+if [[ "$BOARD" =~ ^(musepipro)$ ]]; then
+	if [[ `grep -w "# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set" "configs/${UBOOT_DEFCONFIG}"` ]]; then
+		sed -i 's/# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set/CONFIG_SPI_FLASH_USE_4K_SECTORS=y/g' configs/${UBOOT_DEFCONFIG}
+	fi
+fi
+}
+
 spacemit_uboot_download (){
 if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	echo -en "${FAMILY}-u-boot-${GIT_UBOOT_TAG}:"
