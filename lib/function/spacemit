@@ -1,5 +1,31 @@
 #!/bin/bash
 
+spacemit_spi_howto (){
+cat <<EOF > "../../${OUTPUT}/flash-spi-howto.txt"
+# https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing
+
+# Connect unit to PC ...
+fastboot devices -l 
+dfu-device             DFU download
+ usb:1-3
+
+# Stage Boot ...
+fastboot stage FSBL.bin
+fastboot continue
+fastboot stage u-boot.bin
+fastboot continue
+
+# Flash to SPI ...
+#fastboot flash mtd partition_2M.json # In my testing flashing the json incurs an error?
+fastboot flash bootinfo bootinfo_spinor.bin
+fastboot flash fsbl FSBL.bin
+fastboot flash env u-boot-env-default.bin
+fastboot flash opensbi fw_dynamic.bin
+fastboot flash uboot u-boot.bin
+fastboot reboot
+EOF
+}
+
 # ATF BINARY AND FIRMWARE
 fw_dynamic (){ # place file.
 if [[ -f "../${FAMILY}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" ]]; then cp "../${FAMILY}-opensbi-${OPENSBI_TAG}/${OPENSBI_FIRMWARE}" .; else report_opensbi_error; fi
@@ -52,7 +78,7 @@ if [[ -f "bootinfo_emmc.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.it
 	chmod o+r u-boot-env-default.bin
 	cp -f bootinfo_spinor.bin ../../${OUTPUT}/
 	cp -f u-boot-env-default.bin ../../${OUTPUT}/
-	echo "https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing" > ../../${OUTPUT}/flash-spi.txt
+	spacemit_spi_howto
 	uboot_packaging
 else
 	report_error
@@ -81,7 +107,6 @@ cp -f FSBL.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
 cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/fw_dynamic.bin
 cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
 cp -f u-boot-env-default.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-echo "https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing" > ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/flash-spi.txt
 }
 
 # LINUX
