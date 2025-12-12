@@ -76,8 +76,38 @@ else
 fi
 }
 
+save_defconfig (){
+if [[ -f "defconfig" ]]; then
+	echo ""
+	mkdir -p ../../$OUTPUT/
+	cp -f defconfig ../../$OUTPUT/uboot-${BOARD}_defconfig
+	ls -ls ../../$OUTPUT/uboot-${BOARD}_defconfig | sed 's/..\/..\///g'
+fi
+}
+
 menuconfig (){
+echo ""
+echo_menuconfig
+sleep .50
 ubuild "menuconfig"
+sleep .25
+ubuild "savedefconfig"
+echo "# ${DEFAULT_MOTD} defconfig saved."
+options=("Continue" "Quit")
+select opt in "${options[@]}"
+do
+	case $opt in
+		"Continue")
+			save_defconfig
+			break
+			;;
+		"Quit")
+			save_defconfig
+			exit 0
+			;;
+		*) echo "invalid option $REPLY";;
+	esac
+done
 }
 
 builddeb (){
