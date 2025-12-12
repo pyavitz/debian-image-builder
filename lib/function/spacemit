@@ -1,6 +1,43 @@
 #!/bin/bash
 
 spacemit_spi_howto (){
+cat <<EOF > "../../${OUTPUT}/partition_2M.json"
+{
+  "version": "1.0",
+  "format": "mtd",
+  "partitions": [
+    {
+      "name": "bootinfo",
+      "offset": "0",
+      "size": "128K",
+      "image": "bootinfo_spinor.bin"
+    },
+    {
+      "name": "fsbl",
+      "offset": "128K",
+      "size": "256K",
+      "image": "FSBL.bin"
+    },
+    {
+      "name": "env",
+      "offset": "384K",
+      "size": "64K"
+    },
+    {
+      "name": "opensbi",
+      "offset": "448K",
+      "size": "192K",
+      "image": "fw_dynamic.bin"
+    },
+    {
+      "name": "uboot",
+      "offset": "640K",
+      "size": "-",
+      "image": "u-boot.bin"
+    }
+  ]
+}
+EOF
 cat <<EOF > "../../${OUTPUT}/flash-spi-howto.txt"
 # https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing
 
@@ -12,16 +49,24 @@ dfu-device             DFU download
 # Stage Boot ...
 fastboot stage FSBL.bin
 fastboot continue
+sleep .75
 fastboot stage u-boot.bin
 fastboot continue
+sleep .75
 
 # Flash to SPI ...
-#fastboot flash mtd partition_2M.json # In my testing flashing the json incurs an error?
+fastboot flash mtd partition_2M.json
+sleep .75
 fastboot flash bootinfo bootinfo_spinor.bin
+sleep .75
 fastboot flash fsbl FSBL.bin
+sleep .75
 fastboot flash env u-boot-env-default.bin
+sleep .75
 fastboot flash opensbi fw_dynamic.bin
+sleep .75
 fastboot flash uboot u-boot.bin
+sleep .75
 fastboot reboot
 EOF
 }
