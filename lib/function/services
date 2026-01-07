@@ -244,6 +244,28 @@ if [[ "$BOARD" =~ ^(odroidn2|odroidn2l|odroidn2plus)$ ]]; then
 	chown root:root /usr/bin/irq-tweaks
 fi
 
+bananapi_systemd (){
+tee /etc/systemd/system/tweaks.service <<EOF
+[Unit]
+Description=BananaPi System Tweaks
+ConditionFileIsExecutable=/usr/bin/tweaks
+After=systemd-remount-fs.service sysinit.target local-fs.target
+Before=rc-local.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/tweaks > /dev/null 2>&1
+TimeoutSec=0
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable tweaks
+}
+
 lepotato_systemd (){
 tee /etc/systemd/system/tweaks.service <<EOF
 [Unit]
