@@ -478,9 +478,11 @@ if [[ "$FSTYPE" =~ ^(btrfs|xfs)$ ]]; then
 	# U-Boot doesn't support booting directly from these fstypes so force a boot partition
 	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
 fi
-if [[ "$ENABLE_BOOTCMD" == "true" ]] && [[ "$ENABLE_PETITBOOT" == "false" ]]; then
-	if [[ `grep -w 'EXTLINUX="true"' "board.txt"` ]]; then sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt; fi
-	if [[ `grep -w 'BOOTCMD="false"' "board.txt"` ]]; then sed -i 's/BOOTCMD="false"/BOOTCMD="true"/g' board.txt; fi
+if [[ ! `grep -w 'FAMILY="broadcom"' "board.txt"` ]]; then
+	if [[ "$ENABLE_BOOTCMD" == "true" ]] && [[ "$ENABLE_PETITBOOT" == "false" ]]; then
+		if [[ `grep -w 'EXTLINUX="true"' "board.txt"` ]]; then sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt; fi
+		if [[ `grep -w 'BOOTCMD="false"' "board.txt"` ]]; then sed -i 's/BOOTCMD="false"/BOOTCMD="true"/g' board.txt; fi
+	fi
 fi
 if [[ "$ENABLE_BOOT_EXT4" == "true" ]]; then
 	if [[ `grep -w 'BOOT_EXT4="false"' "board.txt"` ]]; then sed -i 's/BOOT_EXT4="false"/BOOT_EXT4="true"/g' board.txt; fi
@@ -490,15 +492,17 @@ if [[ "$ENABLE_BOOT_VFAT" == "true" ]]; then
 	if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
 	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
 fi
-if [[ "$ENABLE_EFI" == "true" ]]; then
-	sed -i 's/EFI="false"/EFI="true"/g' board.txt
-	if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
-	if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
-	if [[ `grep -w 'EXTLINUX="true"' "board.txt"` ]]; then sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt; fi
-	if [[ `grep -w 'BOOTCMD="true"' "board.txt"` ]]; then sed -i 's/BOOTCMD="true"/BOOTCMD="false"/g' board.txt; fi
-	if [[ `grep -w 'BOOTINI="true"' "board.txt"` ]]; then sed -i 's/BOOTINI="true"/BOOTCMD="false"/g' board.txt; fi
-	if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]] && [[ `grep -w 'GPT="false"' "board.txt"` ]]; then
-		sed -i 's/GPT="false"/GPT="true"/g' board.txt
+if [[ ! `grep -w 'FAMILY="broadcom"' "board.txt"` ]]; then
+	if [[ "$ENABLE_EFI" == "true" ]]; then
+		sed -i 's/EFI="false"/EFI="true"/g' board.txt
+		if [[ `grep -w 'BOOT_VFAT="false"' "board.txt"` ]]; then sed -i 's/BOOT_VFAT="false"/BOOT_VFAT="true"/g' board.txt; fi
+		if [[ `grep -w 'P_VALUE="p1"' "board.txt"` ]]; then sed -i 's/P_VALUE="p1"/P_VALUE="p2"/g' board.txt; fi
+		if [[ `grep -w 'EXTLINUX="true"' "board.txt"` ]]; then sed -i 's/EXTLINUX="true"/EXTLINUX="false"/g' board.txt; fi
+		if [[ `grep -w 'BOOTCMD="true"' "board.txt"` ]]; then sed -i 's/BOOTCMD="true"/BOOTCMD="false"/g' board.txt; fi
+		if [[ `grep -w 'BOOTINI="true"' "board.txt"` ]]; then sed -i 's/BOOTINI="true"/BOOTCMD="false"/g' board.txt; fi
+		if [[ `grep -w 'FAMILY="rockchip"' "board.txt"` ]] && [[ `grep -w 'GPT="false"' "board.txt"` ]]; then
+			sed -i 's/GPT="false"/GPT="true"/g' board.txt
+		fi
 	fi
 fi
 if [[ "$ENABLE_PETITBOOT" == "true" ]] && [[ `grep -w 'FAMILY_EXT="odroid"' "board.txt"` ]]; then
