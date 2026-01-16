@@ -114,8 +114,8 @@ Release:				# Debian: bookworm, trixie, testing, unstable and sid
 Network Manager			# 1 networkmanager | 0 ifupdown
 
 U-Boot and Linux
-U-Boot:					# Default: v2025.01
-Branch:					# Default: 6.12.y
+U-Boot:					# Default: v2026.01
+Branch:					# Default: 6.18.y
 Build:					# Kernel build version number
 Menuconfig:				# Run uboot and kernel menuconfig
 Compiler:				# GNU Compiler Collection / Clang
