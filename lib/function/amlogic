@@ -16,8 +16,7 @@ if [[ ! -z $RUN_FIP ]] && [[ -f "u-boot.bin" ]]; then
 		mkdir -p ../../${OUTPUT}/
 		cp -f u-boot.bin ../../${OUTPUT}/chainload.bin
 	fi
-	echo -en "Firmware Image Package ${PNK}[${FIN}${WHT}"${RUN_FIP}"${FIN}${PNK}]${FIN} "
-	echo -e "${PNK}[${FIN}${WHT}"${BOARD_FIP}"${FIN}${PNK}]${FIN}"
+	echo -e "Firmware Image Package: ${RUN_FIP}, ${BOARD_FIP}."
 	export FIPDIR=$PWD/fip
 	mkdir -p fip
 	cp -f ../amlogic-boot-fip/${BOARD_FIP}/* fip/
@@ -56,6 +55,7 @@ if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 fi
 }
 
+# LINUX
 amlogic_extra_wireless (){
 if [[ "$EXTRA_WIFI" == "true" ]]; then
 	if [[ `ls ../../${WIRELESSPATCHES}/rtl8189fs/*.patch` ]] > /dev/null 2>&1; then
@@ -109,6 +109,41 @@ fi
 if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
 	mkdir -p ${P_VALUE}/usr/local/bin
 	cp files/blob/vfdservice ${P_VALUE}/usr/local/bin/
+fi
+}
+
+flash_tool_part (){
+if [[ "$P_VALUE" == "p1" ]]; then
+	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
+		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
+		ROOTFS="/dev/mapper/${LOOP}"
+		sleep .50
+		rm -fr rootfs.PARTITION bootloader.PARTITION
+		dd if=${ROOTFS} bs=1M > rootfs.PARTITION
+		cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
+		sleep .50
+		kpartx -d ${IMAGE_FILE_NAME}
+	fi
+fi
+if [[ "$P_VALUE" == "p2" ]]; then
+	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
+		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
+		B_LOOP=`echo "$LOOP" | sed -n '1p'`
+		R_LOOP=`echo "$LOOP" | sed -n '2p'`
+		BOOT_LOOP="/dev/mapper/$B_LOOP"
+		ROOTFS_LOOP="/dev/mapper/$R_LOOP"
+		BOOT="${BOOT_LOOP}"
+		ROOTFS="${ROOTFS_LOOP}"
+		sleep .50
+		rm -fr rootfs.PARTITION bootloader.PARTITION
+		dd if=${BOOT} bs=1M > boot.PARTITION
+		dd if=${ROOTFS} bs=1M > rootfs.PARTITION
+		cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
+		sleep .50
+		kpartx -d ${IMAGE_FILE_NAME}
+	fi
 fi
 }
 
@@ -219,39 +254,4 @@ exit 0
 EOF
 chmod +x /etc/initramfs/post-update.d/99-uimage
 chown root:root /etc/initramfs/post-update.d/99-uimage
-}
-
-flash_tool_part (){
-if [[ "$P_VALUE" == "p1" ]]; then
-	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
-		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
-		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
-		ROOTFS="/dev/mapper/${LOOP}"
-		sleep .50
-		rm -fr rootfs.PARTITION bootloader.PARTITION
-		dd if=${ROOTFS} bs=1M > rootfs.PARTITION
-		cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
-		sleep .50
-		kpartx -d ${IMAGE_FILE_NAME}
-	fi
-fi
-if [[ "$P_VALUE" == "p2" ]]; then
-	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
-		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
-		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
-		B_LOOP=`echo "$LOOP" | sed -n '1p'`
-		R_LOOP=`echo "$LOOP" | sed -n '2p'`
-		BOOT_LOOP="/dev/mapper/$B_LOOP"
-		ROOTFS_LOOP="/dev/mapper/$R_LOOP"
-		BOOT="${BOOT_LOOP}"
-		ROOTFS="${ROOTFS_LOOP}"
-		sleep .50
-		rm -fr rootfs.PARTITION bootloader.PARTITION
-		dd if=${BOOT} bs=1M > boot.PARTITION
-		dd if=${ROOTFS} bs=1M > rootfs.PARTITION
-		cp ${OUTPUT}/u-boot.bin bootloader.PARTITION
-		sleep .50
-		kpartx -d ${IMAGE_FILE_NAME}
-	fi
-fi
 }
