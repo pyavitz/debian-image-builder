@@ -528,8 +528,9 @@ if [ $COMPRESS_IMG -eq 1 ]; then
 	if [[ "$IMG_COMPRESSION" == "xz" ]]; then xz -zev --threads=${CORES} ${OUTPUT}/image/${IMAGE_FIN_NAME}; fi
 	if [[ "$IMG_COMPRESSION" == "zst" ]]; then zstd -z --ultra --fast=10 -19 -T${CORES} --rm ${OUTPUT}/image/${IMAGE_FIN_NAME}; fi
 	if [[ -f "${OUTPUT}/image/${IMAGE_FIN_NAME}.${IMG_COMPRESSION}" ]]; then
-		sha256sum ${OUTPUT}/image/${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${OUTPUT}/image/${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
-		sha256sum --check ${OUTPUT}/image/${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
+		cd ${OUTPUT}/image
+		sha256sum ${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
+		sha256sum --check ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
 	fi
 fi
 }
