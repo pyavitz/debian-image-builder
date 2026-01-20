@@ -182,12 +182,13 @@ fi
 }
 
 setup (){
+TARBALL_OUTPUT="output/tarball"
 if [[ "$MINIMAL_ROOTFS" == "false" ]]; then
 	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-${ROOTFS_ARCH}.tar.xz
 else
 	RELEASE_TARBALL=${DISTRO}-${DISTRO_VERSION}-minimal-${ROOTFS_ARCH}.tar.xz
 fi
-if [[ ! -f "${RELEASE_TARBALL}" ]]; then
+if [[ ! -f "${TARBALL_OUTPUT}/${RELEASE_TARBALL}" ]]; then
 	echo -e "${YLW}Missing ${RELEASE_TARBALL}${FIN}?"
 	make clean > /dev/null 2>&1
 	exit 1
@@ -195,7 +196,7 @@ fi
 if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
 if [ $VERBOSE -eq 1 ]; then uuid; else uuid > /dev/null 2>&1; fi
 echo -en "Extracting: ${RELEASE_TARBALL}"
-tar -xf ${RELEASE_TARBALL} -C ${P_VALUE}/
+tar -xf ${TARBALL_OUTPUT}/${RELEASE_TARBALL} -C ${P_VALUE}/
 echo -e ", done."
 mkdir -p ${P_VALUE}/etc/apt/apt.conf.d ${P_VALUE}/etc/dpkg/dpkg.cfg.d
 echo "force-unsafe-io" > "${P_VALUE}/etc/dpkg/dpkg.cfg.d/dpkg-unsafe-io"
@@ -531,6 +532,7 @@ if [ $COMPRESS_IMG -eq 1 ]; then
 		cd ${OUTPUT}/image
 		sha256sum ${IMAGE_FIN_NAME}.${IMG_COMPRESSION} > ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
 		sha256sum --check ${IMAGE_FIN_NAME}.${IMG_COMPRESSION}.sha256
+		cd ../../..
 	fi
 fi
 }
