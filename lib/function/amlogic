@@ -113,10 +113,10 @@ fi
 }
 
 flash_tool_part (){
-rm -fdr ${OUTPUT}/aml-flash-tool
-mkdir -p ${OUTPUT}/aml-flash-tool
 if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+		rm -fdr ${OUTPUT}/aml-flash-tool
+		mkdir -p ${OUTPUT}/aml-flash-tool
 		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
 		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
 		ROOTFS="/dev/mapper/${LOOP}"
@@ -129,6 +129,8 @@ if [[ "$P_VALUE" == "p1" ]]; then
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ -f "${IMAGE_FILE_NAME}" ]] && [[ "$BOARD" == "gateway-gz80x" ]]; then
+		rm -fdr ${OUTPUT}/aml-flash-tool
+		mkdir -p ${OUTPUT}/aml-flash-tool
 		KPARTX="$(kpartx -av ${IMAGE_FILE_NAME})"
 		LOOP=`grep -o 'loop[0-9]\+p.' <<<"$KPARTX"`
 		B_LOOP=`echo "$LOOP" | sed -n '1p'`
