@@ -3,14 +3,15 @@
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-if [[ -f "/etc/default/openvfd" ]]; then . /etc/default/openvfd; fi
-
-if [[ "$PING" == "true" ]]; then
-	until ping -nq -c3 8.8.8.8; do
-		service ntp stop
-		ntpd -gq
-		service ntp start
-	done
+if [[ -f "/etc/default/openvfd" ]]; then
+	. /etc/default/openvfd
+	if [[ "$PING" == "true" ]]; then
+		until ping -nq -c3 8.8.8.8; do
+			service ntp stop
+			ntpd -gq
+			service ntp start
+		done
+	fi
 fi
 
 vfd_gpio_clk='0,64,0'
