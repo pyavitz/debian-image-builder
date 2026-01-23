@@ -107,8 +107,13 @@ if [[ "$BOARD" == "gateway-gz80x" ]]; then
 fi
 # openvfd binary (auxdisplay)
 if [[ "$FAMILY_EXT" == "ac2xx" ]]; then
+	mkdir -p ${P_VALUE}/etc/default
 	mkdir -p ${P_VALUE}/usr/local/bin
 	cp files/blob/vfdservice ${P_VALUE}/usr/local/bin/
+	cat <<EOF > "${P_VALUE}/etc/default/openvfd"
+# Wait for Network
+PING="true"
+EOF
 fi
 }
 
@@ -203,7 +208,7 @@ if [[ "$BOARD" == "x96air" ]]; then
 	echo "# HDMI" >> /etc/udev/rules.d/10-openvfd-led.rules
 	echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DEVNAME}=="/dev/dri/card0", RUN+="/usr/local/sbin/hdmi-led-trigger"' >> /etc/udev/rules.d/10-openvfd-led.rules
 	# hdmi helper script
-	cat <<EOF > /usr/local/sbin/hdmi-led-trigger
+	cat <<EOF > "/usr/local/sbin/hdmi-led-trigger"
 #!/bin/bash
 
 sleep .90
