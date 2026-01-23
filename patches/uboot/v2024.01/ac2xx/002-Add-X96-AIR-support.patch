@@ -1,41 +1,44 @@
-From 84067969c30e83f92e243d27f9db5c46b10d6185 Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@xxxxx.com>
-Date: Sun, 28 Jan 2024 07:50:40 -0500
-Subject: [PATCH] arch: arm: dts: meson-sm1-h96-max
+From 7bac54ceb8b4457a69686ebc3232a02bfc2647e3 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sun, 28 Jan 2024 07:40:54 -0500
+Subject: [PATCH] Add X96-AIR support
 
-H96-MAX X3
+X96-AIR GBIT
 
 Author: Neil Armstrong <narmstrong@baylibre.com>
 Author: Christian Hewitt <christianshewitt@gmail.com>
-Editor: Patrick Yavitz <pyavitz@xxxxx.com>
-Signed-off-by: Patrick Yavitz <pyavitz@xxxxx.com>
+Editor: flippy <flippy@sina.com>
+Editor: Patrick Yavitz <pyavitz@gmail.com>
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- arch/arm/dts/Makefile                      |   1 +
- arch/arm/dts/meson-sm1-h96-max-u-boot.dtsi |   7 +
- arch/arm/dts/meson-sm1-h96-max.dts         | 179 +++++++++++++++++++++
- configs/x96max-x3_defconfig                |  82 ++++++++++
- 4 files changed, 269 insertions(+)
- create mode 100644 arch/arm/dts/meson-sm1-h96-max-u-boot.dtsi
- create mode 100644 arch/arm/dts/meson-sm1-h96-max.dts
- create mode 100644 configs/x96max-x3_defconfig
+ arch/arm/dts/Makefile                         |   3 +-
+ .../dts/meson-sm1-x96-air-gbit-u-boot.dtsi    |   7 +
+ arch/arm/dts/meson-sm1-x96-air-gbit.dts       | 188 ++++++++++++++++++
+ configs/x96air-gbit_defconfig                 |  82 ++++++++
+ 4 files changed, 279 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
+ create mode 100644 arch/arm/dts/meson-sm1-x96-air-gbit.dts
+ create mode 100644 configs/x96air-gbit_defconfig
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index 9a8ece4808..efb9136075 100644
+index 9d28a485be..9a8ece4808 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
-@@ -247,6 +247,7 @@ dtb-$(CONFIG_ARCH_MESON) += \
- 	meson-g12b-radxa-zero2.dtb \
- 	meson-sm1-bananapi-m2-pro.dtb \
- 	meson-sm1-bananapi-m5.dtb \
-+	meson-sm1-h96-max.dtb \
+@@ -250,7 +250,8 @@ dtb-$(CONFIG_ARCH_MESON) += \
  	meson-sm1-khadas-vim3l.dtb \
  	meson-sm1-odroid-c4.dtb \
  	meson-sm1-odroid-hc4.dtb \
-diff --git a/arch/arm/dts/meson-sm1-h96-max-u-boot.dtsi b/arch/arm/dts/meson-sm1-h96-max-u-boot.dtsi
+-	meson-sm1-sei610.dtb
++	meson-sm1-sei610.dtb \
++	meson-sm1-x96-air-gbit.dtb
+ dtb-$(CONFIG_ARCH_TEGRA) += tegra20-harmony.dtb \
+ 	tegra20-medcom-wide.dtb \
+ 	tegra20-paz00.dtb \
+diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
 new file mode 100644
 index 0000000000..8ebc1caa4a
 --- /dev/null
-+++ b/arch/arm/dts/meson-sm1-h96-max-u-boot.dtsi
++++ b/arch/arm/dts/meson-sm1-x96-air-gbit-u-boot.dtsi
 @@ -0,0 +1,7 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -44,16 +47,18 @@ index 0000000000..8ebc1caa4a
 + */
 +
 +#include "meson-sm1-u-boot.dtsi"
-diff --git a/arch/arm/dts/meson-sm1-h96-max.dts b/arch/arm/dts/meson-sm1-h96-max.dts
+diff --git a/arch/arm/dts/meson-sm1-x96-air-gbit.dts b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
 new file mode 100644
-index 0000000000..5ac417ac3f
+index 0000000000..59ee523040
 --- /dev/null
-+++ b/arch/arm/dts/meson-sm1-h96-max.dts
-@@ -0,0 +1,179 @@
++++ b/arch/arm/dts/meson-sm1-x96-air-gbit.dts
+@@ -0,0 +1,188 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2019 BayLibre SAS. All rights reserved.
 + * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
++ * Copyright (c) 2021 flippy <flippy@sina.com>
++ * Copyright (c) 2024 Patrick Yavitz <pyavitz@gmail.com>
 + */
 +
 +/dts-v1/;
@@ -62,12 +67,12 @@ index 0000000000..5ac417ac3f
 +#include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 +
 +/ {
-+	compatible = "haochuangyi,h96-max", "amlogic,sm1";
-+	model = "Shenzhen Haochuangyi Technology Co., Ltd H96 Max";
++	compatible = "amediatech,x96-air-gbit", "amlogic,sm1";
++	model = "Shenzhen Amediatech Technology Co., Ltd X96 Air";
 +
 +	sound {
 +		compatible = "amlogic,axg-sound-card";
-+		model = "H96-MAX";
++		model = "X96-AIR";
 +		audio-aux-devs = <&tdmout_b>;
 +		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
 +				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
@@ -157,7 +162,6 @@ index 0000000000..5ac417ac3f
 +
 +&ext_mdio {
 +	external_phy: ethernet-phy@0 {
-+		/* Realtek RTL8211F (0x001cc916) */
 +		reg = <0>;
 +		max-speed = <1000>;
 +
@@ -199,6 +203,11 @@ index 0000000000..5ac417ac3f
 +	status = "okay";
 +};
 +
++/* SDIO */
++&sd_emmc_a {
++	/delete-property/ sd-uhs-sdr104;
++};
++
 +&usb {
 +	status = "okay";
 +};
@@ -218,22 +227,25 @@ index 0000000000..5ac417ac3f
 +	uart-has-rtscts;
 +
 +	bluetooth {
-+		compatible = "brcm,bcm43438-bt";
-+		shutdown-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
-+		max-speed = <2000000>;
++		compatible = "realtek,rtl8822cs-bt";
++		max-speed = <1500000>;
 +		clocks = <&wifi32k>;
 +		clock-names = "lpo";
++		enable-gpios  = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
++		host-wake-gpios = <&gpio GPIOX_18 GPIO_ACTIVE_HIGH>;
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
 +	};
 +};
 +
 +&mali {
 +	mali-supply=<&vddgpu>;
 +};
-diff --git a/configs/h96max-x3_defconfig b/configs/h96max-x3_defconfig
+diff --git a/configs/x96air-gbit_defconfig b/configs/x96air-gbit_defconfig
 new file mode 100644
-index 0000000000..d445f69d5d
+index 0000000000..866d12371a
 --- /dev/null
-+++ b/configs/x96max-x3_defconfig
++++ b/configs/x96air-gbit_defconfig
 @@ -0,0 +1,82 @@
 +CONFIG_ARM=y
 +CONFIG_SYS_BOARD="ac2xx"
@@ -242,11 +254,11 @@ index 0000000000..d445f69d5d
 +CONFIG_NR_DRAM_BANKS=1
 +CONFIG_ENV_SIZE=0x2000
 +CONFIG_DM_GPIO=y
-+CONFIG_DEFAULT_DEVICE_TREE="meson-sm1-h96-max"
++CONFIG_DEFAULT_DEVICE_TREE="meson-sm1-x96-air-gbit"
 +CONFIG_MESON_G12A=y
 +CONFIG_DEBUG_UART_BASE=0xff803000
 +CONFIG_DEBUG_UART_CLOCK=24000000
-+CONFIG_IDENT_STRING=" h96-max"
++CONFIG_IDENT_STRING=" x96-air-gbit"
 +CONFIG_SYS_LOAD_ADDR=0x1000000
 +CONFIG_DEBUG_UART=y
 +CONFIG_HAS_CUSTOM_SYS_INIT_SP_ADDR=y
