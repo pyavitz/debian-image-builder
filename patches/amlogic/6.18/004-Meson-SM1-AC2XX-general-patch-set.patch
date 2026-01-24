@@ -1,7 +1,7 @@
-From dc44052eb1abb0064d9c50f7abb5457a39395220 Mon Sep 17 00:00:00 2001
+From 8000a53d4f31777a251d32d6c8d66b3eda0ada1e Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Wed, 13 Nov 2024 10:26:47 -0500
-Subject: [PATCH] arch: arm64: dts: amlogic: meson-sm1-ac2xx: tv boxes
+Date: Sat, 24 Jan 2026 07:56:11 -0500
+Subject: [PATCH] Meson SM1 AC2XX general patch set
 
 H96-MAX X3
 X96-AIR GBIT
@@ -10,14 +10,14 @@ Added support: spdif jack i2c1 openvfd jl2xx1
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  36 ++++
- .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 202 +++++++++++++++++-
+ .../boot/dts/amlogic/meson-sm1-ac2xx.dtsi     |  37 ++++
+ .../boot/dts/amlogic/meson-sm1-h96-max.dts    | 204 +++++++++++++++++-
  .../dts/amlogic/meson-sm1-x96-air-gbit.dts    | 176 ++++++++++++++-
  .../boot/dts/amlogic/meson-sm1-x96-air.dts    | 166 +++++++++++++-
- 4 files changed, 560 insertions(+), 20 deletions(-)
+ 4 files changed, 563 insertions(+), 20 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
-index d1fa8b8bf795..3442c1e0bcce 100644
+index d1fa8b8bf795..b88101c38e1e 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
 @@ -2,6 +2,7 @@
@@ -28,7 +28,15 @@ index d1fa8b8bf795..3442c1e0bcce 100644
   *
   * AC200/AC202 = S905D3
   * AC213/AC214 = S905X3
-@@ -80,6 +81,21 @@ emmc_1v8: regulator-emmc-1v8 {
+@@ -21,6 +22,7 @@ aliases {
+ 
+ 	chosen {
+ 		stdout-path = "serial0:115200n8";
++		kaslr-seed = <0xfeedbeef 0xc0def00d>;
+ 	};
+ 
+ 	emmc_pwrseq: emmc-pwrseq {
+@@ -80,6 +82,21 @@ emmc_1v8: regulator-emmc-1v8 {
  		regulator-always-on;
  	};
  
@@ -50,7 +58,7 @@ index d1fa8b8bf795..3442c1e0bcce 100644
  	vddao_3v3: regulator-vddao-3v3 {
  		compatible = "regulator-fixed";
  		regulator-name = "VDDAO_3V3";
-@@ -114,6 +130,15 @@ vddio_ao1v8: regulator-vddio-ao1v8 {
+@@ -114,6 +131,15 @@ vddio_ao1v8: regulator-vddio-ao1v8 {
  		regulator-always-on;
  	};
  
@@ -66,7 +74,7 @@ index d1fa8b8bf795..3442c1e0bcce 100644
  	sdio_pwrseq: sdio-pwrseq {
  		compatible = "mmc-pwrseq-simple";
  		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
-@@ -121,6 +146,13 @@ sdio_pwrseq: sdio-pwrseq {
+@@ -121,6 +147,13 @@ sdio_pwrseq: sdio-pwrseq {
  		clock-names = "ext_clock";
  	};
  
@@ -80,7 +88,7 @@ index d1fa8b8bf795..3442c1e0bcce 100644
  	wifi32k: wifi32k {
  		compatible = "pwm-clock";
  		#clock-cells = <0>;
-@@ -195,6 +227,10 @@ &ir {
+@@ -195,6 +228,10 @@ &ir {
  	pinctrl-names = "default";
  };
  
@@ -92,7 +100,7 @@ index d1fa8b8bf795..3442c1e0bcce 100644
  	status = "okay";
  	pinctrl-0 = <&pwm_ao_a_pins>;
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
-index 7b3a014d4cde..c188e75e5e0b 100644
+index 7b3a014d4cde..a8b551a51998 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-h96-max.dts
 @@ -2,25 +2,66 @@
@@ -381,7 +389,7 @@ index 7b3a014d4cde..c188e75e5e0b 100644
  &uart_A {
  	status = "okay";
  
-@@ -139,7 +325,7 @@ &uart_A {
+@@ -139,10 +325,12 @@ &uart_A {
  	uart-has-rtscts;
  
  	bluetooth {
@@ -390,8 +398,13 @@ index 7b3a014d4cde..c188e75e5e0b 100644
  		shutdown-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
  		max-speed = <2000000>;
  		clocks = <&wifi32k>;
+ 		clock-names = "lpo";
++		vbat-supply = <&vddao_3v3>;
++		vddio-supply = <&vddio_ao1v8>;
+ 	};
+ };
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
-index e4a3a2a8ad06..272100824617 100644
+index e4a3a2a8ad06..e53156e1e6ba 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air-gbit.dts
 @@ -2,25 +2,43 @@
@@ -648,7 +661,7 @@ index e4a3a2a8ad06..272100824617 100644
 +	};
 +};
 diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
-index fff92e0d6dd5..d3d9c92b2bd0 100644
+index fff92e0d6dd5..02de015f12a8 100644
 --- a/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 +++ b/arch/arm64/boot/dts/amlogic/meson-sm1-x96-air.dts
 @@ -2,25 +2,43 @@
@@ -885,31 +898,6 @@ index fff92e0d6dd5..d3d9c92b2bd0 100644
 +		vddio-supply = <&vddio_ao1v8>;
 +	};
 +};
--- 
-2.39.5
-
-From c868bb12f9082ae389e55b78c0bae4e2ba6e77fe Mon Sep 17 00:00:00 2001
-From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Fri, 23 Jan 2026 09:28:33 -0500
-Subject: [PATCH] Add KASLR SEED
-
-Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
----
- arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
-index f2d8e4cd29ca..b88101c38e1e 100644
---- a/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
-+++ b/arch/arm64/boot/dts/amlogic/meson-sm1-ac2xx.dtsi
-@@ -22,6 +22,7 @@ aliases {
- 
- 	chosen {
- 		stdout-path = "serial0:115200n8";
-+		kaslr-seed = <0xfeedbeef 0xc0def00d>;
- 	};
- 
- 	emmc_pwrseq: emmc-pwrseq {
 -- 
 2.51.0
 
