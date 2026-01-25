@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# architecture
+ARCH="arm"
+ARCH_EXT="armhf"
+DEBARCH=""
+CROSS_COMPILE="arm-linux-gnueabihf-"
+ROOTFS_ARCH="rootfs-${ARCH_EXT}"
+STATIC="qemu-arm-static"
+
+# device information
+SERIES="bcm2709"
+FAMILY="broadcom"
+FAMILY_EXT="raspberrypi"
+DTB="${SERIES}-rpi-3-b"
+
+# default config
+LINUX_DEFCONFIG="bcm2709_defconfig"
+#UBOOT_DEFCONFIG="_defconfig"
+
+# partition layout
+BOOT_EXT4="false" # change P_VALUE to p2 if enabled
+BOOT_VFAT="true" # change P_VALUE to p2 if enabled
+EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="false" # set to true if rockchip
+OFFSET="4MiB"
+P_VALUE="p2" # p1 = single partition
+
+# boot options
+BOOTCMD="false"
+BOOTINI="false"
+BOOTSCR="boot.cmd" # define name of boot.cmd / boot.ini (files/boot/scripts)
+EXTLINUX="false" # default
+PETITBOOT="false" # obsolete
+
+# output
+BOARD="raspberrypi3"
+OUTPUT="output/${BOARD}"
+
+# extlinux and bootcmd
+BOOT_KERNEL="Image"
+BOOT_INITRD="initrd.img"
+BOOTCMD_FDTOVERLAYS="#overlays="
+EXTLINUX_FDTOVERLAYS="#fdtoverlays"
+
+# cmdline
+CONSOLE="console=serial0,115200 console=tty1"
+LOGLEVEL="loglevel=1"
+EXTRA="net.ifnames=0"
+
+# Serial
+DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L serial0 115200 vt100"
+
+# motd
+DEFAULT_MOTD="Raspberry Pi 3"
+
+# customize
+MODULES_LOAD="#bcm2835-v4l2 drivetemp #i2c-dev snd_bcm2835"
+
+# patches
+LINUX_PATCHING="false"
+UBOOT_PATCHDIR="patches/uboot"
+LINUX_PATCHDIR="patches/${FAMILY}"
+
+# image
+IMG_EXP="${DTB}-*.img*"
+
+# uboot logo
+RANDOM_LOGO="true"
+
+# precompiled
+PRECOMPILED_UBOOT="false"
+PKGVERSION=""
+PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
+
+# force git (https://github.com/raspberrypi/linux)
+FORCE_GIT="true"
+GIT_OWN="raspberrypi"
+GIT_REPO="linux"
+GIT_BRANCH="rpi-${VERSION}"
+GIT_URL="https://github.com"
+GIT_BLOB="blob"
+# git patching
+GIT_PATCHING="true"
+GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
+
+# override userdata file
+FORCE_VERSION="false"
+FORCE_LINUX_VERSION=""
+FORCE_UBOOT_VERSION=""
+
+# devicetree and platform
+DEVICETREE="bcm2709*.dtb"
+PLATFORM="${FAMILY}"
+
+# kernel package name (if shared patching set to true)
+COMMON_PKG="true"
+COMMON_PKGNAME="broadcom"
+
+# build old kernel headers package (not recommended)
+LEGACY_PACKAGING="false"
+
+# use builder kernel packaging (recommended)
+DEFAULT_PACKAGING="true"
