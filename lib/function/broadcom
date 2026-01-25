@@ -227,6 +227,19 @@ flash_uboot (){
 echo ""
 }
 
+# raspberrypi 4/5 xorg conf
+xorg_v3d_conf (){
+mkdir -p ${P_VALUE}/etc/X11/xorg.conf.d
+cat <<EOF > "${P_VALUE}/etc/X11/xorg.conf.d/99-v3d.conf"
+Section "OutputClass"
+	Identifier "vc4"
+	MatchDriver "vc4"
+	Driver "modesetting"
+	Option "PrimaryGPU" "true"
+EndSection
+EOF
+}
+
 # STAGE2
 # firmware
 install_brcm_firmware (){

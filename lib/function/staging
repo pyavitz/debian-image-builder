@@ -317,16 +317,8 @@ fi
 # raspberrypi addons
 if [[ "$FAMILY" == "broadcom" ]] && [[ -d "files/bsp/${BOARD}" ]]; then
 	mkdir -p ${P_VALUE}/etc/udev/rules.d
-	mkdir -p ${P_VALUE}/etc/X11/xorg.conf.d
 	cp -r files/bsp/${BOARD}/etc/udev/rules.d/*.rules ${P_VALUE}/etc/udev/rules.d/
-	cat <<EOF > "${P_VALUE}/etc/X11/xorg.conf.d/99-v3d.conf"
-Section "OutputClass"
-	Identifier "vc4"
-	MatchDriver "vc4"
-	Driver "modesetting"
-	Option "PrimaryGPU" "true"
-EndSection
-EOF
+	if [[ "$BOARD" =~ ^(raspberrypi4|raspberrypi5)$ ]]; then xorg_v3d_conf; fi
 fi
 # do not accept new conf files in an unattended install (remove file at the end of stage2)
 mkdir -p ${P_VALUE}/etc/apt/apt.conf.d
