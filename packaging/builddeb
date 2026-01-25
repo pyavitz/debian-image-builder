@@ -20,6 +20,12 @@ else
 	echo "Missing scripts/package/pkgvars!"
 	exit 1
 fi
+if [ -f "scripts/package/overlays" ]; then
+	. scripts/package/overlays
+else
+	echo "Missing scripts/package/overlays!"
+	exit 1
+fi
 if [ ! -f "dtclist.txt" ]; then echo "Missing dtclist.txt!"; exit 1; fi
 if [ ! -f "initrd" ]; then echo "Missing initrd!"; exit 1; fi
 
@@ -76,49 +82,20 @@ install_linux_image () {
 
 	# Update dtb list
 	for dtclist in `cat dtclist.txt`; do ls ${pdir}/$linux_path/$dtclist 2>/dev/null | tee -a dtclist.new > /dev/null 2>&1; done
-	#grep ".dtb" "dtclist.txt" | echo "  CHKLIST `wc -l`"
 	rm -f "dtclist.txt"; mv -f "dtclist.new" "dtclist.txt"
 
 	# Installing dtb files
 	if [ -d ${pdir}/$linux_path ]; then
 		mkdir -p "${pdir}/$boot_path"
-		#grep ".dtb" "dtclist.txt" | echo "  CHKINST `wc -l`"
-		#grep ".dtb" "dtclist.txt" | sed 's/^/  DTBINST /' | sed "s/.\/debian\/tmp\/usr\/lib\/$linux_name/boot/g" | sort -n -t _ -k 2
 		for dtclist in `cat dtclist.txt`; do cp -r "$dtclist" 2>/dev/null "${pdir}/$boot_path"; done
 		rm -f dtclist.txt
-		# add overlays
-		if ls arch/$karch/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
-			mkdir -p "${pdir}/$linux_path/overlays"
-			cp -r arch/$karch/boot/dts/overlays/*.dtbo "${pdir}/$linux_path/overlays"
-		fi
-		# add mainline overlays
-		if ls arch/$karch/boot/dts/$platform/*.dtbo > /dev/null 2>&1; then
-			mkdir -p "${pdir}/$linux_path/overlays"
-			cp -r arch/$karch/boot/dts/$platform/*.dtbo "${pdir}/$linux_path/overlays"
-		fi
-		# add git overlays
-		if ls ${pdir}/$linux_path/*.dtbo > /dev/null 2>&1; then
-			mkdir -p "${pdir}/$linux_path/overlays"
-			mv -f ${pdir}/$linux_path/*.dtbo "${pdir}/$linux_path/overlays"
-		fi
-		# install overlays
-		if [ -d "${pdir}/$linux_path/overlays" ]; then
-			mkdir -p "${pdir}/$boot_path/overlays"
-			cp -r "${pdir}/$linux_path/overlays" "${pdir}/$boot_path"
-		else
-			# check for vendor overlays
-			if [ -d "${pdir}/$linux_path/overlay" ]; then
-				mkdir -p "${pdir}/$boot_path/overlays"
-				mv -f "${pdir}/$linux_path/overlay" "${pdir}/$linux_path/overlays"
-				cp -r "${pdir}/$linux_path/overlays" "${pdir}/$boot_path"
-			fi
-		fi
-		# fixup broadcom overlays
-		if [ "$platform" = "broadcom" ] && [ -d "${pdir}/usr/lib/$linux_name/overlays" ]; then
-			rm -fdr "${pdir}/$linux_path/overlays"
-			rm -fdr "${pdir}/$boot_path/overlays"
-			mv -f "${pdir}/usr/lib/$linux_name/overlays" "${pdir}/$boot_path/overlays"
-		fi
+	fi
+
+	# install overlays
+	if [ "$platform" = "broadcom" ] && [ -d "${pdir}/usr/lib/$linux_name/overlays" ]; then
+		cp -fr "${pdir}/usr/lib/$linux_name/overlays" "${pdir}/$boot_path/overlays"
+	else
+		linux_packaging_overlays
 	fi
 
 	# Install initramfs post-update script
