@@ -70,8 +70,12 @@ install_linux_image () {
 		cp arch/$karch/boot/$kimage "${pdir}/boot/Image"
 		if [ "$platform" = "broadcom" ]; then
 			mkdir -p "${pdir}/$boot_path"
-			cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel8.img"
-			cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel_2712.img"
+			if [ "${karch}" = "arm" ]; then
+				cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel7.img"
+			elif [ "${karch}" = "arm64" ]; then
+				cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel8.img"
+				cp arch/$karch/boot/$kimage "${pdir}/$boot_path/kernel_2712.img"
+			fi
 			install -m 0644 firmware/bootcode.bin "${pdir}/$boot_path"
 			install -m 0644 firmware/fixup*.dat "${pdir}/$boot_path"
 			install -m 0644 firmware/start*.elf "${pdir}/$boot_path"
