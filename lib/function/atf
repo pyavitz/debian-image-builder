@@ -4,7 +4,7 @@
 arm_trusted_firmware (){
 GIT_ATF_URL="https://github.com/ARM-software/arm-trusted-firmware.git"
 if [[ "$FAMILY_EXT" =~ ^(sun50i|rk356x|rk358x)$ ]]; then
-	atf_download; cd arm-trusted-firmware-${ATF_TAG}; atf_patching; echo ""
+	atf_download; cd arm-trusted-firmware; atf_patching; echo ""
 	if [ $CROSSCOMPILE -eq 1 ]; then
 		echo -e "${GRN}  CC${FIN}"
 		echo -e "  GCC     ${CROSS_COMPILE}${COMPILER}"
@@ -20,15 +20,14 @@ fi
 }
 
 atf_download (){
-if [[ -d "arm-trusted-firmware-${ATF_TAG}" ]] && [[ -d "arm-trusted-firmware-${ATF_TAG}.backup" ]]; then
+if [[ -d "arm-trusted-firmware-${ATF_TAG}" ]]; then
 	echo -en "Trusted Firmware-A ${ATF_TAG}:"
 	echo -en " Restoring"
-	rm -fdr arm-trusted-firmware-${ATF_TAG}
-	mv -f arm-trusted-firmware-${ATF_TAG}.backup arm-trusted-firmware-${ATF_TAG}
+	rm -fdr arm-trusted-firmware
 	cd arm-trusted-firmware-${ATF_TAG}
 	make realclean > /dev/null 2>&1
 	cd ..
-	cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware-${ATF_TAG}.backup
+	cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware
 	echo -e ", done."
 else
 	if [[ `wget -S --spider https://github.com/ARM-software/arm-trusted-firmware/blob/master/Makefile 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
@@ -40,8 +39,8 @@ else
 			cd arm-trusted-firmware-${ATF_TAG}
 			make realclean > /dev/null 2>&1
 			cd ..
-			echo -en ", creating backup"
-			cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware-${ATF_TAG}.backup
+			echo -en ", creating work dir"
+			cp -r arm-trusted-firmware-${ATF_TAG} arm-trusted-firmware
 			echo -e ", done."
 		else
 			echo -e ", failed."
