@@ -1,24 +1,22 @@
 #!/bin/bash
 # LINUX KERNEL VARIABLES AND FUNCTIONS
 
-DOWNLOAD="aria2c -c --download-result=hide --console-log-level=error --disable-ipv6=true --summary-interval=0 --show-files=false"
-
 sources_dir (){
 mkdir -p ${SRC}
 cp -f board.txt ${SRC}/
 cd ${SRC}
+rm -fdr linux
+if [[ `ls *.backup` ]] > /dev/null 2>&1; then
+	echo -en "Performing maintenance"
+	make purge
+	echo -e ", done."
+fi
 }
 
 report_dir_error (){
-echo "NOTICE: Directory ${KERNEL}-${VERSION} is MIA. Please make a report."
+echo -e "NOTICE: Directory ${KERNEL} is MIA. Please make a report."
 echo ""
-exit 0
-}
-
-report_tarball_error (){
-echo "NOTICE: Tarball ${KERNEL}-${VERSION} is MIA. Please make a report."
-echo ""
-exit 0
+exit 1
 }
 
 linux_prng (){
@@ -64,20 +62,13 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 	elif [[ `wget -S --spider ${GIT_NEXT} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then GIT_REPO="next"; GIT_BRANCH="linux-next"; else
 			echo -e "The git branch v${VERSION} is not available?"; exit 0; fi
 	GIT_URL="https://git.kernel.org/pub/scm/linux/kernel/git/${GIT_REPO}/${GIT_BRANCH}.git"
-	if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -d "${KERNEL}-${VERSION}.backup" ]]; then
+	if [[ -d "${KERNEL}-${VERSION}" ]]; then
 		echo -en "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"; echo -en "-${VERSION}:"
 		echo -en " Restoring"
-		rm -fdr ${KERNEL}-${VERSION}
-		cp -r ${KERNEL}-${VERSION}.backup ${KERNEL}-${VERSION}
+		rm -fdr ${KERNEL}
+		cp -r ${KERNEL}-${VERSION} ${KERNEL}
 		echo -e ", done."
 	else
-		if [[ -d "${KERNEL}-${VERSION}" ]]; then
-			echo -en "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"; echo -en "-${VERSION}:"
-			echo -en " Removing"
-			rm -fdr ${KERNEL}-${VERSION}
-			echo -e ", done.${FIN}${PNK}]${FIN}"
-			echo ""
-		fi
 		echo -e "This may take a while ..."
 		echo ""
 		if [[ "$GIT_REPO" == "next" ]]; then GIT_VERSION="${VERSION}"; else GIT_VERSION="v${VERSION}"; fi
@@ -85,8 +76,9 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		sleep .50
 		if [[ -d "${KERNEL}-${VERSION}" ]] && [[ -f "${KERNEL}-${VERSION}/Makefile" ]]; then
 			echo -en "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"; echo -en "-${VERSION}:"
-			echo -en " Creating backup"
-			cp -r ${KERNEL}-${VERSION} ${KERNEL}-${VERSION}.backup
+			echo -en " Creating work dir"
+			if [[ -d "${KERNEL}" ]]; then rm -fdr ${KERNEL}; fi
+			cp -r ${KERNEL}-${VERSION} ${KERNEL}
 			echo -e ", done."
 		else
 			echo -en "${KERNEL}" | sed -e "s/\b\(.\)/\u\1/g"; echo -en "-${VERSION}:"
@@ -96,65 +88,15 @@ if [[ -n "$GIT_KERNELORG" ]] && [[ "$GIT_KERNELORG" == "true" ]]; then
 		fi
 	fi
 else
-	download_tarball
-fi
-}
-
-download_tarball (){
-if [[ -d "${KERNEL}-${VERSION}" ]]; then
-	echo -en "${KERNEL}-${VERSION}" | sed -e "s/\b\(.\)/\u\1/g"
-	echo -en " ${PNK}[${FIN}${YLW}removing${FIN}${PNK}]${FIN}"
-	rm -fdr ${KERNEL}-${VERSION}
-	echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-	echo ""
-fi
-KERNELORG="https://git.kernel.org/torvalds/t/"
-if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-	if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
-		echo_extract
-		pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-	else
-		echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
-		${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.gz
-		echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-		if [[ -f "${KERNEL}-${VERSION}.tar.gz" ]]; then
-			echo ""
-			echo_extract
-			pv ${KERNEL}-${VERSION}.tar.gz | tar -xzf - -C .
-		else
-			report_tarball_error
-		fi
-	fi
-else
-	RELEASE=`echo "$VERSION" | sed 's@^[^0-9]*\([0-9]\+\).*@\1@'`
-	KERNELORG="https://cdn.kernel.org/pub/linux/kernel/v${RELEASE}.x/"
-	if [[ `wget -S --spider ${KERNELORG}${KERNEL}-${VERSION}.tar.xz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
-		if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-			echo_extract
-			pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
-		else
-			echo -e "${WHT}Downloading ${KERNEL}-${VERSION}${FIN} ..."
-			${DOWNLOAD} ${KERNELORG}${KERNEL}-${VERSION}.tar.xz
-			echo -e " ${PNK}[${FIN}${GRN}done${FIN}${PNK}]${FIN}"
-			if [[ -f "${KERNEL}-${VERSION}.tar.xz" ]]; then
-				echo ""
-				echo_extract
-				pv ${KERNEL}-${VERSION}.tar.xz | tar -xJ ${KERNEL}-${VERSION}
-			else
-				report_tarball_error
-			fi
-		fi
-	else
-		echo -e "${KERNEL}-${VERSION} is not available."
-		exit 0
-	fi
+	echo -e 'GIT_KERNELORG="false" is depreciated'
+	exit 1
 fi
 }
 
 setup (){
 sleep .75
-if [[ "$DEFAULT_PACKAGING" == "true" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
-	cd ${KERNEL}-${VERSION}
+if [[ "$DEFAULT_PACKAGING" == "true" ]] && [[ -d "${KERNEL}" ]]; then
+	cd ${KERNEL}
 	export ARCH=${ARCH}
 	# remove builddeb and mkdebian scripts
 	rm -f scripts/package/{builddeb,mkdebian}
@@ -165,8 +107,8 @@ if [[ "$DEFAULT_PACKAGING" == "true" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
 		cp -fr ../../packaging/{builddeb,mkdebian} scripts/package/
 	fi
 	chmod +x scripts/package/{builddeb,mkdebian}
-elif [[ "$DEFAULT_PACKAGING" == "false" ]] && [[ -d "${KERNEL}-${VERSION}" ]]; then
-	cd ${KERNEL}-${VERSION}
+elif [[ "$DEFAULT_PACKAGING" == "false" ]] && [[ -d "${KERNEL}" ]]; then
+	cd ${KERNEL}
 	# edit builddeb/mkdebian build script (linux-image-$VERSION-$ARCH_EXT)
 	# note: this has the potential of not working using the stable and rc branches
 	sed -i 's/${pdir}\/usr\/src\/linux-headers-${version}/${pdir}\/usr\/src\/linux-headers-${KERNELRELEASE}/g' scripts/package/builddeb

@@ -4,16 +4,15 @@ git_download (){
 if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRANCH} 2>&1 | grep -w "refs/heads/${GIT_BRANCH}"` ]]; then
 	git_option
 	if [[ "$GIT_SHALLOW" == "true" ]]; then git_verify; fi
-	if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]] && [[ -d "${GIT_REPO}-${GIT_BRANCH}.backup" ]]; then
+	if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]]; then
 		echo -en "${GIT_REPO}-${GIT_BRANCH}:"
 		echo -en " Restoring"
-		rm -fdr ${GIT_REPO}-${GIT_BRANCH}
-		mv -f ${GIT_REPO}-${GIT_BRANCH}.backup ${GIT_REPO}-${GIT_BRANCH}
 		if [[ "$GIT_SHALLOW" == "false" ]]; then
 			cd ${GIT_REPO}-${GIT_BRANCH}; git pull -q; make clean > /dev/null 2>&1; cd ..
 		fi
-		cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
-		rm -fdr ${GIT_REPO}-${GIT_BRANCH}/.git # modern packaging picks up the most recent git commit
+		rm -fdr ${KERNEL}
+		cp -r ${GIT_REPO}-${GIT_BRANCH} ${KERNEL}
+		rm -fdr ${KERNEL}/.git # modern packaging picks up the most recent git commit
 		echo -e ", done."
 	else
 		echo -e "This may take a while ..."
@@ -25,28 +24,29 @@ if [[ `git ls-remote --heads ${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git -b ${GIT_BRAN
 			if [[ `type ${FAMILY}_extra_git` ]] &>/dev/null; then ${FAMILY}_extra_git; fi
 			make clean > /dev/null 2>&1; cd ..
 			echo -en "${GIT_REPO}-${GIT_BRANCH}:"
-			echo -en " Creating backup"
-			cp -r ${GIT_REPO}-${GIT_BRANCH} ${GIT_REPO}-${GIT_BRANCH}.backup
-			rm -fdr ${GIT_REPO}-${GIT_BRANCH}/.git # modern packaging picks up the most recent git commit
+			echo -en " Creating work dir"
+			if [[ -d "${KERNEL}" ]]; then rm -fdr ${KERNEL}; fi
+			cp -r ${GIT_REPO}-${GIT_BRANCH} ${KERNEL}
+			rm -fdr ${KERNEL}/.git # modern packaging picks up the most recent git commit
 			echo -e ", done."
 		else
 			echo -en "${GIT_REPO}-${GIT_BRANCH}:"
 			echo -en " Download"
 			echo -e ", failed."
-			exit 0
+			exit 1
 		fi
 	fi
 else
 	echo ""
 	echo -e "The git branch ${GIT_BRANCH} is not available?"
-	exit 0
+	exit 1
 fi
 }
 
 git_setup (){
 sleep .75
-if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]]; then
-	cd ${GIT_REPO}-${GIT_BRANCH}
+if [[ -d "${KERNEL}" ]]; then
+	cd ${KERNEL}
 	export ARCH=${ARCH}
 	# remove builddeb and mkdebian scripts
 	rm -f scripts/package/{builddeb,mkdebian}
@@ -58,9 +58,9 @@ if [[ -d "${GIT_REPO}-${GIT_BRANCH}" ]]; then
 	fi
 	chmod +x scripts/package/{builddeb,mkdebian}
 else
-	echo "NOTICE: Directory ${GIT_REPO}-${GIT_BRANCH} is MIA. Please make a report."
+	echo "NOTICE: Directory ${KERNEL} is MIA. Please make a report."
 	echo ""
-	exit 0
+	exit 1
 fi
 }
 
