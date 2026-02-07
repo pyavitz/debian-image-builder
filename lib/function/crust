@@ -1,14 +1,5 @@
 #!/bin/bash
 
-crust_defconfig (){
-if [[ "$BOARD" == "orangepi3lts" && ! -f "configs/${CRUST_DEFCONFIG}" ]]; then
-	echo "CONFIG_PLATFORM_H6=y" > configs/${CRUST_DEFCONFIG}
-	echo "CONFIG_CIR=y" >> configs/${CRUST_DEFCONFIG}
-	echo "CONFIG_I2C_PINS_PL0_PL1=y" >> configs/${CRUST_DEFCONFIG}
-	echo "CONFIG_MFD_AXP20X=y" >> configs/${CRUST_DEFCONFIG}
-fi
-}
-
 crust_firmware (){
 # https://github.com/crust-firmware/crust
 # apt install gcc-or1k-elf
@@ -47,7 +38,6 @@ if [[ "$SERIES" =~ ^(sun8i-h2-plus|sun8i-h3|sun50i-a64|sun50i-h5|sun50i-h6)$ ]];
 	fi
 	echo ""
 	cd crust
-	crust_defconfig
 	if [[ -f "configs/${CRUST_DEFCONFIG}" ]]; then
 		if [ $CROSSCOMPILE -eq 1 ]; then echo -e "${GRN}  CC${FIN}"; else echo -e "${GRN}  NC${FIN}"; fi
 		make -j${CORES} ARCH=${ARCH} CROSS_COMPILE=or1k-elf- ${CRUST_DEFCONFIG}
