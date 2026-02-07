@@ -2,6 +2,7 @@
 source lib/boards/$1
 source userdata.txt
 MAKE_OUTPUT="output/$1"
+ROOTFS_OUTPUT="output/tarball/${DISTRO}-${DISTRO_VERSION}*${ROOTFS_ARCH}*"
 BTITLE=`echo $FAMILY: $DEFAULT_MOTD: $ARCH_EXT | sed -e 's/\(.*\)/\U\1/'`
 TITLE=`echo $DEFAULT_MOTD`
 DIALOG_CANCEL=1
@@ -50,7 +51,7 @@ while true; do
 			else
 				make "all" "board=$1"
 			fi
-			dialog --backtitle "$BTITLE" --prgbox "Results:" "ls $MAKE_OUTPUT/image/$IMG_EXP ${DISTRO}-${DISTRO_VERSION}*${ROOTFS_ARCH}* $MAKE_OUTPUT/" 30 75
+			dialog --backtitle "$BTITLE" --prgbox "Results:" "ls $MAKE_OUTPUT/image/$IMG_EXP $ROOTFS_OUTPUT $MAKE_OUTPUT/" 30 75
 			exit 0
 			;;
 		2 )
@@ -85,7 +86,7 @@ while true; do
 			else
 				make "rootfs" "board=$1"
 			fi
-			dialog --backtitle "$BTITLE" --prgbox "Results:" "ls ${DISTRO}-${DISTRO_VERSION}*${ROOTFS_ARCH}*" 30 75
+			dialog --backtitle "$BTITLE" --prgbox "Results:" "ls $ROOTFS_OUTPUT" 30 75
 			;;
 		5 )
 			if [ $LOGGING -eq 1 ]; then
