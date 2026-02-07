@@ -1,5 +1,5 @@
 #!/bin/bash
-LOG_DIR="../../output/logs"
+LOG_DIR="../../output/${BOARD}/logs"
 
 # check log and report
 check_log (){
@@ -14,7 +14,7 @@ if [[ -f "${LOG_FILE}" ]]; then
 	if [[ `grep "FAILED" "${LOG_FILE}"` ]]; then
 		FAILED="true"
 		grep "FAILED" "${LOG_FILE}" | echo -en ", Failed (`wc -l`)"
-		if [ $VERBOSE -eq 1 ]; then echo -en " ${WHT}log: ${PATHTOFILE}${FIN}"; exit 0; fi
+		if [[ "$FAILED" == "true" ]]; then echo -en " ${WHT}log: ${PATHTOFILE}${FIN}"; exit 1; fi
 	else
 		FAILED="false"
 	fi
@@ -117,7 +117,7 @@ fi
 
 # linux apply patches
 apply (){
-LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+LOG_FILE="${LOG_DIR}/${BOARD}-linux-patch.log"
 LOG_TITLE="Linux ${VERSION}"
 patch_log
 echo "" >> ${LOG_FILE}
@@ -165,7 +165,7 @@ fi
 }
 
 git_apply (){
-LOG_FILE="${LOG_DIR}/${BOARD}-patch.log"
+LOG_FILE="${LOG_DIR}/${BOARD}-${GIT_OWN}-${GIT_REPO}-patch.log"
 LOG_TITLE="${GIT_URL}/${GIT_OWN}/${GIT_REPO}.git ${GIT_REPO}-${GIT_BRANCH}"
 patch_log
 echo "" >> ${LOG_FILE}
