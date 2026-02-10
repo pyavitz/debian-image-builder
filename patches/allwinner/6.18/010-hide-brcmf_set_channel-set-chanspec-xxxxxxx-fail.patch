@@ -1,0 +1,29 @@
+From 9df739ae07d769bf9b35b7368cbc7c091699de0a Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sat, 23 Nov 2024 09:37:47 -0500
+Subject: [PATCH] hide brcmf_set_channel set chanspec xxxxxxx fail
+
+On early kernel revs setting the reg domain fixed the problem. But on 6.12.y
+using Debian Trixie the error persist, so lets comment out.
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 349aa3439502..c720598d328e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -8070,7 +8070,7 @@ brcmf_set_channel(struct brcmf_cfg80211_info *cfg, struct ieee80211_channel *cha
+ 	if (chspec != INVCHANSPEC) {
+ 		err = brcmf_fil_iovar_int_set(ifp, "chanspec", chspec);
+ 		if (err) {
+-			brcmf_err("set chanspec 0x%04x fail, reason %d\n", chspec, err);
++			//brcmf_err("set chanspec 0x%04x fail, reason %d\n", chspec, err);
+ 			err = -EINVAL;
+ 		}
+ 	} else {
+-- 
+2.39.5
+

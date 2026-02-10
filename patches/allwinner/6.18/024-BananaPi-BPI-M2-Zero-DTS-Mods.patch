@@ -1,0 +1,53 @@
+From b660436fb10f29ab12ed53d932e6f289750d6e94 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Wed, 3 Sep 2025 11:40:18 -0400
+Subject: [PATCH] BananaPi BPI-M2-Zero DTS Mods
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../dts/allwinner/sun8i-h2-plus-bananapi-m2-zero.dts | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/boot/dts/allwinner/sun8i-h2-plus-bananapi-m2-zero.dts b/arch/arm/boot/dts/allwinner/sun8i-h2-plus-bananapi-m2-zero.dts
+index d3a7c9fa23e4..6a52c196fe42 100644
+--- a/arch/arm/boot/dts/allwinner/sun8i-h2-plus-bananapi-m2-zero.dts
++++ b/arch/arm/boot/dts/allwinner/sun8i-h2-plus-bananapi-m2-zero.dts
+@@ -12,9 +12,10 @@
+ 
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
++#include <dt-bindings/leds/common.h>
+ 
+ / {
+-	model = "Banana Pi BPI-M2-Zero";
++	model = "BananaPi BPI-M2-Zero";
+ 	compatible = "sinovoip,bpi-m2-zero", "allwinner,sun8i-h2-plus";
+ 
+ 	aliases {
+@@ -40,10 +41,11 @@ hdmi_con_in: endpoint {
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+-		pwr_led {
+-			label = "bananapi-m2-zero:red:pwr";
++		led-0 {
++			color = <LED_COLOR_ID_RED>;
++			function = LED_FUNCTION_STATUS;
+ 			gpios = <&r_pio 0 10 GPIO_ACTIVE_LOW>; /* PL10 */
+-			default-state = "on";
++			linux,default-trigger = "heartbeat";
+ 		};
+ 	};
+ 
+@@ -257,7 +259,7 @@ &r_pio {
+ };
+ 
+ &usb_otg {
+-	dr_mode = "otg";
++	dr_mode = "peripheral";
+ 	status = "okay";
+ };
+ 
+-- 
+2.43.0
+

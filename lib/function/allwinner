@@ -58,11 +58,16 @@ cp -f u-boot-sunxi-with-spl.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/l
 
 # LINUX
 allwinner_extra_patching (){
-# allwinner: all
-if [[ "$FAMILY" == "allwinner" ]] && [[ -d "../../${LINUX_PATCHDIR}/all" ]]; then
+if [[ -d "../../${LINUX_PATCHDIR}/all" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/all/*.patch` ]] > /dev/null 2>&1; then
 		echo "# ${LINUX_PATCHDIR}/all" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
 		for i in ../../${LINUX_PATCHDIR}/all/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
+if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}/drm" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/drm/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}/drm" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/drm/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
 	fi
 fi
 if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}/dts/${ARCH}" ]]; then
