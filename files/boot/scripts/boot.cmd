@@ -4,24 +4,6 @@ setenv rootfstype ""
 setenv kernel ""
 setenv initramfs ""
 
-setenv nvme_boot "false"
-setenv nvme_devtype "nvme"
-setenv nvme_devnum "0"
-setenv nvme_bootpart "1"
-
-# Force nvme boot
-if test "${nvme_boot}" = true; then
-	if test -e ${nvme_devtype} ${nvme_devnum}:${nvme_bootpart} /boot.scr; then
-		setenv devtype $nvme_devtype
-		setenv devnum $nvme_devnum
-		setenv distro_bootpart $nvme_bootpart
-	elif test -e ${nvme_devtype} ${nvme_devnum}:${nvme_bootpart} /boot/boot.scr; then
-		setenv devtype $nvme_devtype
-		setenv devnum $nvme_devnum
-		setenv distro_bootpart $nvme_bootpart
-	fi
-fi
-
 # Load uconfig.txt
 if test -e ${devtype} ${devnum}:${distro_bootpart} uconfig.txt; then
 	setenv uconfig "uconfig.txt"
