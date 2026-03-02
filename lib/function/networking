@@ -14,16 +14,6 @@ install -Dm644 UPDATE.mem /lib/firmware/renesas_usb_fw.mem
 rm -f UPDATE.mem
 git clone --depth=1 -q -b realtek https://github.com/pyavitz/firmware.git
 rm -fdr firmware/{.git,README.md}; cp -fr firmware/* /lib/firmware; rm -fdr firmware
-if [[ `curl -I https://kernel.googlesource.com 2>&1 | grep 'HTTP/2 200'` ]]; then
-	mkdir -p /lib/firmware/rtl_nic
-	wget -cq https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git/+archive/refs/heads/main/rtl_nic.tar.gz -P /lib/firmware/rtl_nic
-	if [[ -f "/lib/firmware/rtl_nic/rtl_nic.tar.gz" ]]; then
-		tar xf /lib/firmware/rtl_nic/rtl_nic.tar.gz -C /lib/firmware/rtl_nic
-		rm -f /lib/firmware/rtl_nic/rtl_nic.tar.gz
-	fi
-else
-	echo "ERR: rtl_nic, https://kernel.googlesource.com is down."
-fi
 cd /lib/firmware
 if [[ ! -f "/lib/firmware/dvb-fe-xc4000-1.4.1.fw" ]]; then ${ARIA2} https://github.com/armbian/firmware/raw/master/dvb-fe-xc4000-1.4.1.fw; fi
 if [[ ! -f "/lib/firmware/xc3028-v27.fw" ]]; then ${ARIA2} https://github.com/armbian/firmware/raw/master/xc3028-v27.fw; fi
