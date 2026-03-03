@@ -1,0 +1,929 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:22 +0100
+Subject: [PATCH 01/10] dt-bindings: mmc: spacemit,sdhci: add AIB voltage
+ switching registers
+
+Add SpacemiT K1 AIB register properties for UHS voltage switching
+support:
+
+- spacemit,aib-mmc1-io-reg: AIB MMC1 IO register address for voltage
+  switching
+- spacemit,apbc-asfar-reg: APBC ASFAR register address for AIB access
+- spacemit,apbc-assar-reg: APBC ASSAR register address for AIB access
+
+These properties enable the driver to perform voltage switching between
+3.3V and 1.8V required for UHS SD card modes.
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml b/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml
+index 13d9382058fbc1c12be1024d1c550f04a825673c..4d6590aa8262009b6e5697a04b45cf3736c0fa42 100644
+--- a/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml
++++ b/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml
+@@ -32,6 +32,18 @@ properties:
+       - const: core
+       - const: io
+ 
++  spacemit,aib-mmc1-io-reg:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: AIB MMC1 IO register address for voltage switching
++
++  spacemit,apbc-asfar-reg:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: APBC ASFAR register address for AIB access
++
++  spacemit,apbc-assar-reg:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: APBC ASSAR register address for AIB access
++
+ required:
+   - compatible
+   - reg
+@@ -50,4 +62,7 @@ examples:
+       interrupt-parent = <&plic>;
+       clocks = <&clk_apmu 10>, <&clk_apmu 13>;
+       clock-names = "core", "io";
++      spacemit,aib-mmc1-io-reg = <0xd401e81c>;
++      spacemit,apbc-asfar-reg = <0xd4015050>;
++      spacemit,apbc-assar-reg = <0xd4015054>;
+     };
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:23 +0100
+Subject: [PATCH 02/10] mmc: sdhci-of-k1: enable essential clock
+ infrastructure for SD operation
+
+Ensure SD card pins receive clock signals by enabling pad clock
+generation and overriding automatic clock gating. Required for all SD
+operation modes.
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-k1.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
+index 0cc97e23a2f9c7b2f9376318a8a7ebb860571504..b703b78282ed8d89183c816477c149c0a565618a 100644
+--- a/drivers/mmc/host/sdhci-of-k1.c
++++ b/drivers/mmc/host/sdhci-of-k1.c
+@@ -20,6 +20,13 @@
+ #include "sdhci.h"
+ #include "sdhci-pltfm.h"
+ 
++#define SPACEMIT_SDHC_OP_EXT_REG	0x108
++#define  SDHC_OVRRD_CLK_OEN		BIT(11)
++#define  SDHC_FORCE_CLK_ON		BIT(12)
++
++#define SPACEMIT_SDHC_LEGACY_CTRL_REG	0x10C
++#define  SDHC_GEN_PAD_CLK_ON		BIT(6)
++
+ #define SPACEMIT_SDHC_MMC_CTRL_REG	0x114
+ #define  SDHC_MISC_INT_EN		BIT(1)
+ #define  SDHC_MISC_INT			BIT(2)
+@@ -100,6 +107,10 @@ static void spacemit_sdhci_reset(struct sdhci_host *host, u8 mask)
+ 
+ 	if (!(host->mmc->caps2 & MMC_CAP2_NO_MMC))
+ 		spacemit_sdhci_setbits(host, SDHC_MMC_CARD_MODE, SPACEMIT_SDHC_MMC_CTRL_REG);
++
++	spacemit_sdhci_setbits(host, SDHC_GEN_PAD_CLK_ON, SPACEMIT_SDHC_LEGACY_CTRL_REG);
++	spacemit_sdhci_setbits(host, SDHC_OVRRD_CLK_OEN | SDHC_FORCE_CLK_ON,
++			       SPACEMIT_SDHC_OP_EXT_REG);
+ }
+ 
+ static void spacemit_sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned int timing)
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:24 +0100
+Subject: [PATCH 03/10] mmc: sdhci-of-k1: add regulator framework support
+
+Add regulator framework support for voltage switching operations. This
+enables proper PMIC control for UHS voltage switching between 3.3V and
+1.8V signaling levels.
+
+- Add regulator supply parsing
+- Implement voltage switching callback
+- Enable mmc regulator framework integration
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-k1.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
+index b703b78282ed8d89183c816477c149c0a565618a..c260cb89704ae7a25bec0f07831d495553405bbd 100644
+--- a/drivers/mmc/host/sdhci-of-k1.c
++++ b/drivers/mmc/host/sdhci-of-k1.c
+@@ -216,6 +216,12 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
+ 			       SPACEMIT_SDHC_PHY_CTRL_REG);
+ }
+ 
++static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
++						      struct mmc_ios *ios)
++{
++	return sdhci_start_signal_voltage_switch(mmc, ios);
++}
++
+ static inline int spacemit_sdhci_get_clocks(struct device *dev,
+ 					    struct sdhci_pltfm_host *pltfm_host)
+ {
+@@ -291,6 +297,12 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
+ 
+ 	host->mmc->caps |= MMC_CAP_NEED_RSP_BUSY;
+ 
++	ret = mmc_regulator_get_supply(host->mmc);
++	if (ret)
++		dev_warn(dev, "Failed to get regulators: %d\n", ret);
++
++	host->mmc_host_ops.start_signal_voltage_switch = spacemit_sdhci_start_signal_voltage_switch;
++
+ 	ret = spacemit_sdhci_get_clocks(dev, pltfm_host);
+ 	if (ret)
+ 		goto err_pltfm;
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:25 +0100
+Subject: [PATCH 04/10] mmc: sdhci-of-k1: add pinctrl state switching for
+ voltage changes
+
+Add support for switching pinctrl states during voltage transitions to
+ensure proper pin drive strength and configuration for different I/O
+voltage domains (3.3V vs 1.8V).
+
+Pinctrl states are optional and the driver degrades gracefully if they
+are not defined in the device tree. This allows boards to enable proper
+pin drive strength optimization for UHS-I modes without breaking
+existing functionality.
+
+The pinctrl setup uses:
+- "default" state for 3.3V operation (higher drive strength)
+- "state_uhs" state for 1.8V operation (lower drive strength)
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-k1.c | 59 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 58 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
+index c260cb89704ae7a25bec0f07831d495553405bbd..2a982bca2a50ca96f43af7b4de5bc4fb4b5b195b 100644
+--- a/drivers/mmc/host/sdhci-of-k1.c
++++ b/drivers/mmc/host/sdhci-of-k1.c
+@@ -15,6 +15,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/pinctrl/consumer.h>
+ #include <linux/platform_device.h>
+ 
+ #include "sdhci.h"
+@@ -70,6 +71,9 @@
+ struct spacemit_sdhci_host {
+ 	struct clk *clk_core;
+ 	struct clk *clk_io;
++	struct pinctrl *pinctrl;
++	struct pinctrl_state *pinctrl_default;
++	struct pinctrl_state *pinctrl_uhs;
+ };
+ 
+ /* All helper functions will update clr/set while preserve rest bits */
+@@ -219,7 +223,42 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
+ static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
+ 						      struct mmc_ios *ios)
+ {
+-	return sdhci_start_signal_voltage_switch(mmc, ios);
++	struct sdhci_host *host = mmc_priv(mmc);
++	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
++	struct spacemit_sdhci_host *sdhst = sdhci_pltfm_priv(pltfm_host);
++	struct pinctrl_state *state;
++	int ret;
++
++	ret = sdhci_start_signal_voltage_switch(mmc, ios);
++	if (ret)
++		return ret;
++
++	/* Select appropriate pinctrl state based on signal voltage */
++	if (sdhst->pinctrl) {
++		switch (ios->signal_voltage) {
++		case MMC_SIGNAL_VOLTAGE_330:
++			state = sdhst->pinctrl_default;
++			break;
++		case MMC_SIGNAL_VOLTAGE_180:
++			state = sdhst->pinctrl_uhs;
++			break;
++		default:
++			dev_warn(mmc_dev(mmc), "unsupported voltage %d\n", ios->signal_voltage);
++			return 0;
++		}
++
++		if (state) {
++			ret = pinctrl_select_state(sdhst->pinctrl, state);
++			if (ret) {
++				dev_warn(mmc_dev(mmc), "failed to select pinctrl state: %d\n", ret);
++				return 0;
++			}
++			dev_dbg(mmc_dev(mmc), "switched to %s pinctrl state\n",
++				ios->signal_voltage == MMC_SIGNAL_VOLTAGE_180 ? "UHS" : "default");
++		}
++	}
++
++	return 0;
+ }
+ 
+ static inline int spacemit_sdhci_get_clocks(struct device *dev,
+@@ -301,6 +340,24 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		dev_warn(dev, "Failed to get regulators: %d\n", ret);
+ 
++	sdhst = sdhci_pltfm_priv(pltfm_host);
++	sdhst->pinctrl = devm_pinctrl_get(dev);
++	if (!IS_ERR(sdhst->pinctrl)) {
++		sdhst->pinctrl_default = pinctrl_lookup_state(sdhst->pinctrl, "default");
++		if (IS_ERR(sdhst->pinctrl_default))
++			sdhst->pinctrl_default = NULL;
++
++		sdhst->pinctrl_uhs = pinctrl_lookup_state(sdhst->pinctrl, "state_uhs");
++		if (IS_ERR(sdhst->pinctrl_uhs))
++			sdhst->pinctrl_uhs = NULL;
++
++		dev_dbg(dev, "pinctrl setup: default=%p, uhs=%p\n",
++			sdhst->pinctrl_default, sdhst->pinctrl_uhs);
++	} else {
++		sdhst->pinctrl = NULL;
++		dev_dbg(dev, "pinctrl not available, voltage switching will work without it\n");
++	}
++
+ 	host->mmc_host_ops.start_signal_voltage_switch = spacemit_sdhci_start_signal_voltage_switch;
+ 
+ 	ret = spacemit_sdhci_get_clocks(dev, pltfm_host);
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:26 +0100
+Subject: [PATCH 05/10] mmc: sdhci-of-k1: add AIB register support for
+ voltage switching
+
+Add support for SpacemiT K1 Analog Interface Block (AIB) register
+programming required for proper UHS voltage switching. The AIB register
+controls SoC-level voltage domain coordination between the SDHCI
+controller and I/O pins.
+
+- Add AIB register address parsing from device tree
+- Implement authentication sequence for secure register access
+- Add voltage domain switching for 3.3V/1.8V operation
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-k1.c | 60 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
+index 2a982bca2a50ca96f43af7b4de5bc4fb4b5b195b..9425bde6a72541bd628997e91f957072a6266c25 100644
+--- a/drivers/mmc/host/sdhci-of-k1.c
++++ b/drivers/mmc/host/sdhci-of-k1.c
+@@ -68,12 +68,19 @@
+ #define  SDHC_PHY_DRIVE_SEL		GENMASK(2, 0)
+ #define  SDHC_RX_BIAS_CTRL		BIT(5)
+ 
++#define  MMC1_IO_V18EN			BIT(2)
++#define  AKEY_ASFAR			0xBABA
++#define  AKEY_ASSAR			0xEB10
++
+ struct spacemit_sdhci_host {
+ 	struct clk *clk_core;
+ 	struct clk *clk_io;
+ 	struct pinctrl *pinctrl;
+ 	struct pinctrl_state *pinctrl_default;
+ 	struct pinctrl_state *pinctrl_uhs;
++	u32 aib_mmc1_io_reg;
++	u32 apbc_asfar_reg;
++	u32 apbc_assar_reg;
+ };
+ 
+ /* All helper functions will update clr/set while preserve rest bits */
+@@ -220,6 +227,47 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
+ 			       SPACEMIT_SDHC_PHY_CTRL_REG);
+ }
+ 
++static void spacemit_sdhci_set_aib_mmc1_io(struct sdhci_host *host, int signal_voltage)
++{
++	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
++	struct spacemit_sdhci_host *sdhst = sdhci_pltfm_priv(pltfm_host);
++	void __iomem *aib_reg, *asfar_reg, *assar_reg;
++	u32 reg_value;
++
++	if (!sdhst->aib_mmc1_io_reg || !sdhst->apbc_asfar_reg || !sdhst->apbc_assar_reg)
++		return;
++
++	asfar_reg = ioremap(sdhst->apbc_asfar_reg, 4);
++	assar_reg = ioremap(sdhst->apbc_assar_reg, 4);
++	aib_reg = ioremap(sdhst->aib_mmc1_io_reg, 4);
++
++	if (!asfar_reg || !assar_reg || !aib_reg) {
++		dev_err(mmc_dev(host->mmc), "Failed to map AIB registers\n");
++		goto cleanup;
++	}
++
++	writel(AKEY_ASFAR, asfar_reg);
++	writel(AKEY_ASSAR, assar_reg);
++	reg_value = readl(aib_reg);
++
++	if (signal_voltage == MMC_SIGNAL_VOLTAGE_180)
++		reg_value |= MMC1_IO_V18EN;
++	else
++		reg_value &= ~MMC1_IO_V18EN;
++
++	writel(AKEY_ASFAR, asfar_reg);
++	writel(AKEY_ASSAR, assar_reg);
++	writel(reg_value, aib_reg);
++
++cleanup:
++	if (aib_reg)
++		iounmap(aib_reg);
++	if (asfar_reg)
++		iounmap(asfar_reg);
++	if (assar_reg)
++		iounmap(assar_reg);
++}
++
+ static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
+ 						      struct mmc_ios *ios)
+ {
+@@ -233,6 +281,8 @@ static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
+ 	if (ret)
+ 		return ret;
+ 
++	spacemit_sdhci_set_aib_mmc1_io(host, ios->signal_voltage);
++
+ 	/* Select appropriate pinctrl state based on signal voltage */
+ 	if (sdhst->pinctrl) {
+ 		switch (ios->signal_voltage) {
+@@ -341,6 +391,16 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
+ 		dev_warn(dev, "Failed to get regulators: %d\n", ret);
+ 
+ 	sdhst = sdhci_pltfm_priv(pltfm_host);
++
++	if (of_property_read_u32(dev->of_node, "spacemit,aib-mmc1-io-reg", &sdhst->aib_mmc1_io_reg))
++		sdhst->aib_mmc1_io_reg = 0;
++
++	if (of_property_read_u32(dev->of_node, "spacemit,apbc-asfar-reg", &sdhst->apbc_asfar_reg))
++		sdhst->apbc_asfar_reg = 0;
++
++	if (of_property_read_u32(dev->of_node, "spacemit,apbc-assar-reg", &sdhst->apbc_assar_reg))
++		sdhst->apbc_assar_reg = 0;
++
+ 	sdhst->pinctrl = devm_pinctrl_get(dev);
+ 	if (!IS_ERR(sdhst->pinctrl)) {
+ 		sdhst->pinctrl_default = pinctrl_lookup_state(sdhst->pinctrl, "default");
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:27 +0100
+Subject: [PATCH 06/10] mmc: sdhci-of-k1: add SDR tuning infrastructure
+
+Add register definitions and delay line control functions to prepare for
+SDR50/SDR104 tuning support:
+
+- Add tuning register definitions (RX_CFG, DLINE_CTRL, DLINE_CFG)
+- Add delay line control helper functions
+- Add tuning preparation function
+
+This infrastructure prepares for implementing the SDR tuning algorithm
+while maintaining all existing functionality.
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-k1.c | 62 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+
+diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
+index 9425bde6a72541bd628997e91f957072a6266c25..34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff 100644
+--- a/drivers/mmc/host/sdhci-of-k1.c
++++ b/drivers/mmc/host/sdhci-of-k1.c
+@@ -72,6 +72,23 @@
+ #define  AKEY_ASFAR			0xBABA
+ #define  AKEY_ASSAR			0xEB10
+ 
++#define SPACEMIT_SDHC_RX_CFG_REG        0x118
++#define  SDHC_RX_SDCLK_SEL0_MASK        GENMASK(1, 0)
++#define  SDHC_RX_SDCLK_SEL1_MASK        GENMASK(3, 2)
++#define  SDHC_RX_SDCLK_SEL1             FIELD_PREP(SDHC_RX_SDCLK_SEL1_MASK, 1)
++
++#define SPACEMIT_SDHC_DLINE_CTRL_REG    0x130
++#define  SDHC_DLINE_PU                  BIT(0)
++#define  SDHC_RX_DLINE_CODE_MASK        GENMASK(23, 16)
++#define  SDHC_TX_DLINE_CODE_MASK        GENMASK(31, 24)
++
++#define SPACEMIT_SDHC_DLINE_CFG_REG     0x134
++#define  SDHC_RX_DLINE_REG_MASK         GENMASK(7, 0)
++#define  SDHC_RX_DLINE_GAIN             BIT(8)
++#define  SDHC_TX_DLINE_REG_MASK         GENMASK(23, 16)
++
++#define SPACEMIT_RX_DLINE_REG		9
++
+ struct spacemit_sdhci_host {
+ 	struct clk *clk_core;
+ 	struct clk *clk_io;
+@@ -102,6 +119,50 @@ static inline void spacemit_sdhci_clrsetbits(struct sdhci_host *host, u32 clr, u
+ 	sdhci_writel(host, val, reg);
+ }
+ 
++static void spacemit_sdhci_set_rx_delay(struct sdhci_host *host, u8 delay)
++{
++	spacemit_sdhci_clrsetbits(host, SDHC_RX_DLINE_CODE_MASK,
++				  FIELD_PREP(SDHC_RX_DLINE_CODE_MASK, delay),
++				  SPACEMIT_SDHC_DLINE_CTRL_REG);
++}
++
++static void spacemit_sdhci_set_tx_delay(struct sdhci_host *host, u8 delay)
++{
++	spacemit_sdhci_clrsetbits(host, SDHC_TX_DLINE_CODE_MASK,
++				  FIELD_PREP(SDHC_TX_DLINE_CODE_MASK, delay),
++				  SPACEMIT_SDHC_DLINE_CTRL_REG);
++}
++
++static void spacemit_sdhci_set_tx_dline_reg(struct sdhci_host *host, u8 dline_reg)
++{
++	spacemit_sdhci_clrsetbits(host, SDHC_TX_DLINE_REG_MASK,
++				  FIELD_PREP(SDHC_TX_DLINE_REG_MASK, dline_reg),
++				  SPACEMIT_SDHC_DLINE_CFG_REG);
++}
++
++static void spacemit_sdhci_tx_tuning_prepare(struct sdhci_host *host)
++{
++	spacemit_sdhci_setbits(host, SDHC_TX_MUX_SEL, SPACEMIT_SDHC_TX_CFG_REG);
++	spacemit_sdhci_setbits(host, SDHC_DLINE_PU, SPACEMIT_SDHC_DLINE_CTRL_REG);
++	udelay(5);
++}
++
++static void spacemit_sdhci_prepare_tuning(struct sdhci_host *host)
++{
++	spacemit_sdhci_clrsetbits(host, SDHC_RX_DLINE_REG_MASK,
++				  FIELD_PREP(SDHC_RX_DLINE_REG_MASK, SPACEMIT_RX_DLINE_REG),
++				  SPACEMIT_SDHC_DLINE_CFG_REG);
++
++	spacemit_sdhci_setbits(host, SDHC_DLINE_PU, SPACEMIT_SDHC_DLINE_CTRL_REG);
++	udelay(5);
++
++	spacemit_sdhci_clrsetbits(host, SDHC_RX_SDCLK_SEL1_MASK, SDHC_RX_SDCLK_SEL1,
++				  SPACEMIT_SDHC_RX_CFG_REG);
++
++	if (host->mmc->ios.timing == MMC_TIMING_MMC_HS200)
++		spacemit_sdhci_setbits(host, SDHC_HS200_USE_RFIFO, SPACEMIT_SDHC_PHY_FUNC_REG);
++}
++
+ static void spacemit_sdhci_reset(struct sdhci_host *host, u8 mask)
+ {
+ 	sdhci_reset(host, mask);
+@@ -335,6 +396,7 @@ static const struct sdhci_ops spacemit_sdhci_ops = {
+ 	.set_bus_width		= sdhci_set_bus_width,
+ 	.set_clock		= spacemit_sdhci_set_clock,
+ 	.set_uhs_signaling	= spacemit_sdhci_set_uhs_signaling,
++	.platform_execute_tuning = spacemit_sdhci_execute_tuning,
+ };
+ 
+ static const struct sdhci_pltfm_data spacemit_sdhci_k1_pdata = {
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:28 +0100
+Subject: [PATCH 07/10] mmc: sdhci-of-k1: add comprehensive SDR tuning
+ support
+Precedence: bulk
+
+Implement software tuning algorithm to enable UHS-I SDR modes for SD
+card operation. This adds both TX and RX delay line tuning based on the
+SpacemiT K1 controller capabilities.
+
+Key features:
+- Conditional tuning: only tune when SD card is present and for
+  high-speed modes (≥100MHz)
+- TX tuning: configure transmit delay line with default values
+  (dline_reg=0, delaycode=127) to ensure optimal signal output timing
+- RX tuning: test full delay range (0-255) with window detection
+  algorithm to find optimal receive timing
+- Retry mechanism: multiple fallback delays within optimal window for
+  improved reliability
+- Complete register support: add delay line control and configuration
+  register definitions for fine-grained timing control
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-k1.c | 118 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 118 insertions(+)
+
+diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
+index 34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff..95b016bfb5598acea4166257d12af54d945a0c13 100644
+--- a/drivers/mmc/host/sdhci-of-k1.c
++++ b/drivers/mmc/host/sdhci-of-k1.c
+@@ -88,6 +88,12 @@
+ #define  SDHC_TX_DLINE_REG_MASK         GENMASK(23, 16)
+ 
+ #define SPACEMIT_RX_DLINE_REG		9
++#define SPACEMIT_RX_TUNE_DELAY_MIN	0x0
++#define SPACEMIT_RX_TUNE_DELAY_MAX	0xFF
++#define SPACEMIT_RX_TUNE_DELAY_STEP	0x1
++
++#define SPACEMIT_TX_TUNING_DLINE_REG	0x00
++#define SPACEMIT_TX_TUNING_DELAYCODE	127
+ 
+ struct spacemit_sdhci_host {
+ 	struct clk *clk_core;
+@@ -256,6 +262,118 @@ static unsigned int spacemit_sdhci_clk_get_max_clock(struct sdhci_host *host)
+ 	return clk_get_rate(pltfm_host->clk);
+ }
+ 
++static int spacemit_sdhci_execute_tuning(struct sdhci_host *host, u32 opcode)
++{
++	int ret = 0;
++	int i;
++	bool pass_window[SPACEMIT_RX_TUNE_DELAY_MAX + 1] = {false};
++	int pass_len = 0, pass_start = 0, max_pass_len = 0, max_pass_start = 0;
++	u8 final_delay;
++	struct mmc_host *mmc = host->mmc;
++	struct mmc_ios ios = mmc->ios;
++
++	/*
++	 * Tuning is required for SDR50/SDR104, HS200/HS400 cards and
++	 * if clock frequency is greater than 100MHz in these modes.
++	 */
++	if (host->clock < 100 * 1000 * 1000 ||
++	    !(ios.timing == MMC_TIMING_MMC_HS200 ||
++	      ios.timing == MMC_TIMING_UHS_SDR50 ||
++	      ios.timing == MMC_TIMING_UHS_SDR104))
++		return 0;
++
++	if (!(mmc->caps2 & MMC_CAP2_NO_SD) && !mmc->ops->get_cd(mmc))
++		return 0;
++
++	if (mmc->caps2 & MMC_CAP2_NO_MMC) {
++		spacemit_sdhci_set_tx_dline_reg(host, SPACEMIT_TX_TUNING_DLINE_REG);
++		spacemit_sdhci_set_tx_delay(host, SPACEMIT_TX_TUNING_DELAYCODE);
++		spacemit_sdhci_tx_tuning_prepare(host);
++
++		dev_dbg(mmc_dev(host->mmc), "TX tuning: dline_reg=%d, delaycode=%d\n",
++			SPACEMIT_TX_TUNING_DLINE_REG, SPACEMIT_TX_TUNING_DELAYCODE);
++	}
++
++	spacemit_sdhci_prepare_tuning(host);
++
++	for (i = SPACEMIT_RX_TUNE_DELAY_MIN; i <= SPACEMIT_RX_TUNE_DELAY_MAX;
++	     i += SPACEMIT_RX_TUNE_DELAY_STEP) {
++		spacemit_sdhci_set_rx_delay(host, i);
++
++		ret = mmc_send_tuning(host->mmc, opcode, NULL);
++		pass_window[i] = (ret == 0);
++
++		dev_dbg(mmc_dev(host->mmc), "RX delay %d: %s\n",
++			i, pass_window[i] ? "pass" : "fail");
++	}
++
++	for (i = SPACEMIT_RX_TUNE_DELAY_MIN; i <= SPACEMIT_RX_TUNE_DELAY_MAX;
++	     i += SPACEMIT_RX_TUNE_DELAY_STEP) {
++		if (pass_window[i]) {
++			if (pass_len == 0)
++				pass_start = i;
++			pass_len++;
++		} else {
++			if (pass_len > max_pass_len) {
++				max_pass_len = pass_len;
++				max_pass_start = pass_start;
++			}
++			pass_len = 0;
++		}
++	}
++
++	if (pass_len > max_pass_len) {
++		max_pass_len = pass_len;
++		max_pass_start = pass_start;
++	}
++
++	if (max_pass_len < 3) {
++		dev_err(mmc_dev(host->mmc), "Tuning failed: no stable window found\n");
++		return -EIO;
++	}
++
++	final_delay = max_pass_start + max_pass_len / 2;
++	spacemit_sdhci_set_rx_delay(host, final_delay);
++	ret = mmc_send_tuning(host->mmc, opcode, NULL);
++	if (ret) {
++		u8 retry_delays[] = {
++			max_pass_start + max_pass_len / 4,
++			max_pass_start + (3 * max_pass_len) / 4,
++			max_pass_start,
++			max_pass_start + max_pass_len - 1
++		};
++		int retry_count = ARRAY_SIZE(retry_delays);
++
++		dev_warn(mmc_dev(mmc), "Primary delay %d failed, trying alternatives\n",
++			 final_delay);
++
++		for (i = 0; i < retry_count; i++) {
++			if (retry_delays[i] >= SPACEMIT_RX_TUNE_DELAY_MIN &&
++			    retry_delays[i] <= SPACEMIT_RX_TUNE_DELAY_MAX) {
++				spacemit_sdhci_set_rx_delay(host, retry_delays[i]);
++				ret = mmc_send_tuning(host->mmc, opcode, NULL);
++				if (!ret) {
++					final_delay = retry_delays[i];
++					dev_info(mmc_dev(mmc), "Retry successful with delay %d\n",
++						 final_delay);
++					break;
++				}
++			}
++		}
++
++		if (ret) {
++			dev_err(mmc_dev(mmc), "All retry attempts failed\n");
++			return -EIO;
++		}
++	}
++
++	dev_dbg(mmc_dev(host->mmc),
++		"Tuning successful: window %d-%d, using delay %d\n",
++		max_pass_start, max_pass_start + max_pass_len - 1, final_delay);
++
++	return 0;
++}
++
+ static int spacemit_sdhci_pre_select_hs400(struct mmc_host *mmc)
+ {
+ 	struct sdhci_host *host = mmc_priv(mmc);
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:29 +0100
+Subject: [PATCH 08/10] riscv: dts: spacemit: k1: add SD card controller and
+ pinctrl support
+
+Add SD card controller infrastructure for SpacemiT K1 SoC with complete
+pinctrl support for both standard and UHS modes.
+
+- Add sdhci0 controller definition with clocks, resets and interrupts
+- Add mmc1_cfg pinctrl for 3.3V standard SD operation
+- Add mmc1_uhs_cfg pinctrl for 1.8V UHS high-speed operation
+- Configure appropriate drive strength and power-source properties
+
+This provides complete SD card infrastructure that K1-based boards can
+enable.
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ arch/riscv/boot/dts/spacemit/k1-pinctrl.dtsi | 40 ++++++++++++++++++++++++++++
+ arch/riscv/boot/dts/spacemit/k1.dtsi         | 13 +++++++++
+ 2 files changed, 53 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-pinctrl.dtsi b/arch/riscv/boot/dts/spacemit/k1-pinctrl.dtsi
+index b13dcb10f4d66022d27307de73a6ea3287e97441..8d82011f1af666fb78c282a2abcc0cb88f962053 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-pinctrl.dtsi
++++ b/arch/riscv/boot/dts/spacemit/k1-pinctrl.dtsi
+@@ -570,4 +570,44 @@ pwm14-1-pins {
+ 			drive-strength = <32>;
+ 		};
+ 	};
++
++	mmc1_cfg: mmc1-cfg {
++		mmc1-data-cmd-pins {
++			pinmux = <K1_PADCONF(104, 0)>,   /* mmc1_d3 */
++				 <K1_PADCONF(105, 0)>,   /* mmc1_d2 */
++				 <K1_PADCONF(106, 0)>,   /* mmc1_d1 */
++				 <K1_PADCONF(107, 0)>,   /* mmc1_d0 */
++				 <K1_PADCONF(108, 0)>;   /* mmc1_cmd */
++			bias-pull-up = <1>;
++			drive-strength = <7>;
++			power-source = <3300>;
++		};
++
++		mmc1-clk-pins {
++			pinmux = <K1_PADCONF(109, 0)>;   /* mmc1_clk */
++			bias-pull-down = <1>;
++			drive-strength = <7>;
++			power-source = <3300>;
++		};
++	};
++
++	mmc1_uhs_cfg: mmc1-uhs-cfg {
++		mmc1-data-cmd-pins {
++			pinmux = <K1_PADCONF(104, 0)>,   /* mmc1_d3 */
++				 <K1_PADCONF(105, 0)>,   /* mmc1_d2 */
++				 <K1_PADCONF(106, 0)>,   /* mmc1_d1 */
++				 <K1_PADCONF(107, 0)>,   /* mmc1_d0 */
++				 <K1_PADCONF(108, 0)>;   /* mmc1_cmd */
++			bias-pull-up = <1>;
++			drive-strength = <13>;
++			power-source = <1800>;
++		};
++
++		mmc1-clk-pins {
++			pinmux = <K1_PADCONF(109, 0)>;   /* mmc1_clk */
++			bias-pull-down = <1>;
++			drive-strength = <13>;
++			power-source = <1800>;
++		};
++	};
+ };
+diff --git a/arch/riscv/boot/dts/spacemit/k1.dtsi b/arch/riscv/boot/dts/spacemit/k1.dtsi
+index 529ec68e9c23eb2a93c04e9ccd3f22a01c4cc4ff..1e9e4f4f41c196326f20c0e5ae6721ea85ea5091 100644
+--- a/arch/riscv/boot/dts/spacemit/k1.dtsi
++++ b/arch/riscv/boot/dts/spacemit/k1.dtsi
+@@ -1207,6 +1207,19 @@ emmc: mmc@d4281000 {
+ 				interrupts = <101>;
+ 				status = "disabled";
+ 			};
++
++			sdhci0: mmc@d4280000 {
++				compatible = "spacemit,k1-sdhci";
++				reg = <0x0 0xd4280000 0x0 0x200>;
++				clocks = <&syscon_apmu CLK_SDH_AXI>,
++					 <&syscon_apmu CLK_SDH0>;
++				clock-names = "core", "io";
++				resets = <&syscon_apmu RESET_SDH_AXI>,
++					 <&syscon_apmu RESET_SDH0>;
++				reset-names = "axi", "sdh";
++				interrupts = <99>;
++				status = "disabled";
++			};
+ 		};
+ 	};
+ };
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:30 +0100
+Subject: [PATCH 09/10] riscv: dts: spacemit: k1-orangepi-rv2: add PMIC and
+ power infrastructure
+
+Add Spacemit P1 PMIC configuration and board power infrastructure for
+voltage regulation support.
+
+- Add board power regulators (12V input, 4V rail)
+- Enable I2C8 for PMIC communication
+- Configure PMIC with buck4 (vmmc) and aldo1 (vqmmc) regulators
+- Set up regulator constraints for SD card operation
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts | 48 ++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
+index 7b7331cb3c726f11d597f81917f3a3f5fc21e1b9..414b03f5e6480f05f5d7eeaaa0afb4e86425ae36 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
+@@ -19,6 +19,25 @@ aliases {
+ 		ethernet1 = &eth1;
+ 	};
+ 
++	reg_dc_in: dc-in-12v {
++		compatible = "regulator-fixed";
++		regulator-name = "dc_in_12v";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_vcc_4v: vcc-4v {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc_4v";
++		regulator-min-microvolt = <4000000>;
++		regulator-max-microvolt = <4000000>;
++		regulator-boot-on;
++		regulator-always-on;
++		vin-supply = <&reg_dc_in>;
++	};
++
+ 	chosen {
+ 		stdout-path = "serial0";
+ 	};
+@@ -92,3 +111,32 @@ &uart0 {
+ 	pinctrl-0 = <&uart0_2_cfg>;
+ 	status = "okay";
+ };
++
++&i2c8 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c8_cfg>;
++	status = "okay";
++
++	pmic@41 {
++		compatible = "spacemit,p1";
++		reg = <0x41>;
++		interrupts = <64>;
++		vin-supply = <&reg_vcc_4v>;
++
++		regulators {
++			sd_vmmc: buck4 {
++				regulator-min-microvolt = <500000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-ramp-delay = <5000>;
++				regulator-always-on;
++			};
++
++			sd_vqmmc: aldo1 {
++				regulator-min-microvolt = <500000>;
++				regulator-max-microvolt = <3400000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++		};
++	};
++};
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Iker Pedrosa <ikerpedrosam@gmail.com>
+Date: Mon, 02 Mar 2026 16:13:31 +0100
+Subject: [PATCH 10/10] riscv: dts: spacemit: k1-orangepi-rv2: add SD card
+ support with UHS modes
+
+Add complete SD card controller support with UHS high-speed modes.
+
+- Enable sdhci0 controller with 4-bit bus width
+- Configure card detect GPIO with inversion
+- Connect vmmc-supply to buck4 for 3.3V card power
+- Connect vqmmc-supply to aldo1 for 1.8V/3.3V I/O switching
+- Add dual pinctrl states for voltage-dependent pin configuration
+- Add AIB register properties for hardware voltage switching
+- Support UHS-I SDR25, SDR50, and SDR104 modes
+
+This enables full SD card functionality including high-speed UHS modes
+for improved performance.
+
+Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
+---
+ arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
+index 414b03f5e6480f05f5d7eeaaa0afb4e86425ae36..f22f7427b3370a6b6c1cd8360b33efc2a285f8d0 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
+@@ -140,3 +140,24 @@ sd_vqmmc: aldo1 {
+ 		};
+ 	};
+ };
++
++&sdhci0 {
++	pinctrl-names = "default", "state_uhs";
++	pinctrl-0 = <&mmc1_cfg>;
++	pinctrl-1 = <&mmc1_uhs_cfg>;
++	bus-width = <4>;
++	cd-gpios = <&gpio K1_GPIO(80) GPIO_ACTIVE_HIGH>;
++	cd-inverted;
++	no-sdio;
++	disable-wp;
++	cap-sd-highspeed;
++	vmmc-supply = <&sd_vmmc>;
++	vqmmc-supply = <&sd_vqmmc>;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	spacemit,aib-mmc1-io-reg = <0xD401E81C>;
++	spacemit,apbc-asfar-reg = <0xD4015050>;
++	spacemit,apbc-assar-reg = <0xD4015054>;
++	status = "okay";
++};
+
+-- 
+2.53.0
+
