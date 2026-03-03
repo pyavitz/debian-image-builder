@@ -1,0 +1,67 @@
+From e44cc0fd749ee2e908d30220edcbeaa7a9b6ebc9 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Mon, 2 Mar 2026 13:48:46 -0500
+Subject: [PATCH] BananaPi BPI-F3: Add SDCARD support
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../boot/dts/spacemit/k1-bananapi-f3.dts      | 26 +++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
+index a33298bf61a9..5ea7dcb064c6 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
+@@ -222,7 +222,7 @@ buck3_1v8: buck3 {
+ 				regulator-always-on;
+ 			};
+ 
+-			buck4 {
++			sd_vmmc: buck4 {
+ 				regulator-min-microvolt = <500000>;
+ 				regulator-max-microvolt = <3300000>;
+ 				regulator-ramp-delay = <5000>;
+@@ -243,10 +243,11 @@ buck6 {
+ 				regulator-always-on;
+ 			};
+ 
+-			aldo1 {
++			sd_vqmmc: aldo1 {
+ 				regulator-min-microvolt = <500000>;
+ 				regulator-max-microvolt = <3400000>;
+ 				regulator-boot-on;
++				regulator-always-on;
+ 			};
+ 
+ 			aldo2 {
+@@ -335,6 +336,27 @@ &pcie2 {
+ 	status = "okay";
+ };
+ 
++&sdhci0 {
++	pinctrl-names = "default", "state_uhs";
++	pinctrl-0 = <&mmc1_cfg>;
++	pinctrl-1 = <&mmc1_uhs_cfg>;
++	bus-width = <4>;
++	cd-gpios = <&gpio K1_GPIO(80) GPIO_ACTIVE_HIGH>;
++	cd-inverted;
++	no-sdio;
++	disable-wp;
++	cap-sd-highspeed;
++	vmmc-supply = <&sd_vmmc>;
++	vqmmc-supply = <&sd_vqmmc>;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	spacemit,aib-mmc1-io-reg = <0xD401E81C>;
++	spacemit,apbc-asfar-reg = <0xD4015050>;
++	spacemit,apbc-assar-reg = <0xD4015054>;
++	status = "okay";
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_2_cfg>;
+-- 
+2.51.0
+
