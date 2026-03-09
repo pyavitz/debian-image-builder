@@ -1,18 +1,38 @@
-From a3076a1480366415497634467c4d59c1653f25fc Mon Sep 17 00:00:00 2001
+From 3d0d9ec2cd7f71de2a0d2a74435629e25192d9ba Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 9 Mar 2026 09:03:12 -0400
+Date: Mon, 9 Mar 2026 11:38:30 -0400
 Subject: [PATCH] BananaPi BPI-F3: Add SD card support
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../boot/dts/spacemit/k1-bananapi-f3.dts      | 24 +++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+ .../boot/dts/spacemit/k1-bananapi-f3.dts      | 31 ++++++++++++++++---
+ 1 file changed, 27 insertions(+), 4 deletions(-)
 
 diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-index 5971605754b3..7872ff97c987 100644
+index a33298bf61a9..5fca6e5491cb 100644
 --- a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
 +++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-@@ -214,7 +214,7 @@ buck3_1v8: buck3 {
+@@ -7,15 +7,17 @@
+ #include "k1-pinctrl.dtsi"
+ 
+ / {
+-	model = "Banana Pi BPI-F3";
++	model = "BananaPi BPI-F3";
+ 	compatible = "bananapi,bpi-f3", "spacemit,k1";
+ 
+ 	aliases {
+ 		ethernet0 = &eth0;
+ 		ethernet1 = &eth1;
+-		serial0 = &uart0;
+ 		i2c2 = &i2c2;
+ 		i2c8 = &i2c8;
++		mmc0 = &sdhci0;
++		mmc2 = &emmc;
++		serial0 = &uart0;
+ 	};
+ 
+ 	chosen {
+@@ -222,7 +224,7 @@ buck3_1v8: buck3 {
  				regulator-always-on;
  			};
  
@@ -21,7 +41,7 @@ index 5971605754b3..7872ff97c987 100644
  				regulator-min-microvolt = <500000>;
  				regulator-max-microvolt = <3300000>;
  				regulator-ramp-delay = <5000>;
-@@ -235,10 +235,11 @@ buck6 {
+@@ -243,10 +245,11 @@ buck6 {
  				regulator-always-on;
  			};
  
@@ -34,7 +54,7 @@ index 5971605754b3..7872ff97c987 100644
  			};
  
  			aldo2 {
-@@ -327,6 +328,25 @@ &pcie2 {
+@@ -335,6 +338,26 @@ &pcie2 {
  	status = "okay";
  };
  
@@ -45,6 +65,7 @@ index 5971605754b3..7872ff97c987 100644
 +	bus-width = <4>;
 +	cd-gpios = <&gpio K1_GPIO(80) GPIO_ACTIVE_HIGH>;
 +	cd-inverted;
++	broken-cd;
 +	cap-sd-highspeed;
 +	disable-wp;
 +	no-mmc;
