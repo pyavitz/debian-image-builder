@@ -1,18 +1,18 @@
-From e44cc0fd749ee2e908d30220edcbeaa7a9b6ebc9 Mon Sep 17 00:00:00 2001
+From a3076a1480366415497634467c4d59c1653f25fc Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 2 Mar 2026 13:48:46 -0500
-Subject: [PATCH] BananaPi BPI-F3: Add SDCARD support
+Date: Mon, 9 Mar 2026 09:03:12 -0400
+Subject: [PATCH] BananaPi BPI-F3: Add SD card support
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../boot/dts/spacemit/k1-bananapi-f3.dts      | 26 +++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ .../boot/dts/spacemit/k1-bananapi-f3.dts      | 24 +++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
 diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-index a33298bf61a9..5ea7dcb064c6 100644
+index 5971605754b3..7872ff97c987 100644
 --- a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
 +++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-@@ -222,7 +222,7 @@ buck3_1v8: buck3 {
+@@ -214,7 +214,7 @@ buck3_1v8: buck3 {
  				regulator-always-on;
  			};
  
@@ -21,7 +21,7 @@ index a33298bf61a9..5ea7dcb064c6 100644
  				regulator-min-microvolt = <500000>;
  				regulator-max-microvolt = <3300000>;
  				regulator-ramp-delay = <5000>;
-@@ -243,10 +243,11 @@ buck6 {
+@@ -235,10 +235,11 @@ buck6 {
  				regulator-always-on;
  			};
  
@@ -34,7 +34,7 @@ index a33298bf61a9..5ea7dcb064c6 100644
  			};
  
  			aldo2 {
-@@ -335,6 +336,27 @@ &pcie2 {
+@@ -327,6 +328,25 @@ &pcie2 {
  	status = "okay";
  };
  
@@ -45,17 +45,15 @@ index a33298bf61a9..5ea7dcb064c6 100644
 +	bus-width = <4>;
 +	cd-gpios = <&gpio K1_GPIO(80) GPIO_ACTIVE_HIGH>;
 +	cd-inverted;
-+	no-sdio;
-+	disable-wp;
 +	cap-sd-highspeed;
-+	vmmc-supply = <&sd_vmmc>;
-+	vqmmc-supply = <&sd_vqmmc>;
++	disable-wp;
++	no-mmc;
++	no-sdio;
 +	sd-uhs-sdr25;
 +	sd-uhs-sdr50;
 +	sd-uhs-sdr104;
-+	spacemit,aib-mmc1-io-reg = <0xD401E81C>;
-+	spacemit,apbc-asfar-reg = <0xD4015050>;
-+	spacemit,apbc-assar-reg = <0xD4015054>;
++	vmmc-supply = <&sd_vmmc>;
++	vqmmc-supply = <&sd_vqmmc>;
 +	status = "okay";
 +};
 +
@@ -63,5 +61,5 @@ index a33298bf61a9..5ea7dcb064c6 100644
  	pinctrl-names = "default";
  	pinctrl-0 = <&uart0_2_cfg>;
 -- 
-2.51.0
+2.53.0
 
