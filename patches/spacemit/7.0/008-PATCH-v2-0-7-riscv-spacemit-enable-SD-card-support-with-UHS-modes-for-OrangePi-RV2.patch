@@ -1,65 +1,84 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:22 +0100
-Subject: [PATCH 01/10] dt-bindings: mmc: spacemit,sdhci: add AIB voltage
- switching registers
+Subject: [PATCH v2 0/7] riscv: spacemit: enable SD card support with UHS
+ modes for OrangePi RV2
+Date: Mon, 09 Mar 2026 12:40:10 +0100
 
-Add SpacemiT K1 AIB register properties for UHS voltage switching
-support:
+This series enables complete SD card support for the Spacemit K1-based
+OrangePi RV2 board, including UHS (Ultra High Speed) modes for
+high-performance SD card operation.
 
-- spacemit,aib-mmc1-io-reg: AIB MMC1 IO register address for voltage
-  switching
-- spacemit,apbc-asfar-reg: APBC ASFAR register address for AIB access
-- spacemit,apbc-assar-reg: APBC ASSAR register address for AIB access
+Background
 
-These properties enable the driver to perform voltage switching between
-3.3V and 1.8V required for UHS SD card modes.
+The Spacemit K1 SoC includes an SDHCI controller capable of supporting
+SD cards up to UHS-I speeds (SDR104 at 208MHz). However, mainline
+currently lacks basic SD controller configuration, SDHCI driver
+enhancements for voltage switching and tuning, and power management
+infrastructure.
+
+Implementation
+
+The series enables SD card support through coordinated layers:
+
+- Hardware infrastructure (patches 1-2): Device tree bindings for voltage
+switching hardware and essential clock infrastructure.
+- SDHCI driver enhancements (patches 3-7): Regulator framework
+integration, pinctrl state switching for voltage domains, AIB register
+programming, and comprehensive SDR tuning support for reliable UHS
+operation.
+- SoC and board integration (patches 8-10): Complete K1 SoC controller
+definitions, PMIC power infrastructure, and OrangePi RV2 board enablement
+with full UHS support.
+
+This transforms the OrangePi RV2 from having no SD card support to full
+UHS-I capability, enabling high-performance storage up to 208MHz.
 
 Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
 ---
- Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Changes in v2:
+- Removed custom AIB voltage switching code per maintainer feedback. The
+  existing pinctrl driver already handles AIB voltage switching
+  automatically via power-source property changes during UHS mode
+  transitions. This eliminates code duplication.
+- Squashed regulator and pinctrl commits into single voltage switching
+  implementation.
+- Moved voltage switching callback from dynamic probe assignment to
+  static sdhci_ops declaration. Removed redundant SDHCI core call since
+  the framework handles standard voltage switching automatically.
+- Made clock override (SDHC_OVRRD_CLK_OEN | SDHC_FORCE_CLK_ON)
+  conditional for SD/SDIO cards only. This follows vendor driver pattern
+  of differentiating SD and eMMC card handling.
+- Include no-mmc property for SD card.
+- Link to v1: https://lore.kernel.org/r/20260302-orangepi-sd-card-uhs-v1-0-89c219973c0c@gmail.com
 
-diff --git a/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml b/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml
-index 13d9382058fbc1c12be1024d1c550f04a825673c..4d6590aa8262009b6e5697a04b45cf3736c0fa42 100644
---- a/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml
-+++ b/Documentation/devicetree/bindings/mmc/spacemit,sdhci.yaml
-@@ -32,6 +32,18 @@ properties:
-       - const: core
-       - const: io
- 
-+  spacemit,aib-mmc1-io-reg:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: AIB MMC1 IO register address for voltage switching
-+
-+  spacemit,apbc-asfar-reg:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: APBC ASFAR register address for AIB access
-+
-+  spacemit,apbc-assar-reg:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: APBC ASSAR register address for AIB access
-+
- required:
-   - compatible
-   - reg
-@@ -50,4 +62,7 @@ examples:
-       interrupt-parent = <&plic>;
-       clocks = <&clk_apmu 10>, <&clk_apmu 13>;
-       clock-names = "core", "io";
-+      spacemit,aib-mmc1-io-reg = <0xd401e81c>;
-+      spacemit,apbc-asfar-reg = <0xd4015050>;
-+      spacemit,apbc-assar-reg = <0xd4015054>;
-     };
+---
+Iker Pedrosa (7):
+      mmc: sdhci-of-k1: enable essential clock infrastructure for SD operation
+      mmc: sdhci-of-k1: add regulator and pinctrl voltage switching support
+      mmc: sdhci-of-k1: add SDR tuning infrastructure
+      mmc: sdhci-of-k1: add comprehensive SDR tuning support
+      riscv: dts: spacemit: k1: add SD card controller and pinctrl support
+      riscv: dts: spacemit: k1-orangepi-rv2: add PMIC and power infrastructure
+      riscv: dts: spacemit: k1-orangepi-rv2: add SD card support with UHS modes
 
+ arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts |  67 ++++++
+ arch/riscv/boot/dts/spacemit/k1-pinctrl.dtsi     |  40 ++++
+ arch/riscv/boot/dts/spacemit/k1.dtsi             |  13 ++
+ drivers/mmc/host/sdhci-of-k1.c                   | 252 +++++++++++++++++++++++
+ 4 files changed, 372 insertions(+)
+---
+base-commit: ec1fb4e55df47ed043ab2ccc6787e39b9d67e49b
+change-id: 20260226-orangepi-sd-card-uhs-0ecb05839b0c
+
+Best regards,
 -- 
-2.53.0
+Iker Pedrosa <ikerpedrosam@gmail.com>
 
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:23 +0100
-Subject: [PATCH 02/10] mmc: sdhci-of-k1: enable essential clock
+Date: Mon, 09 Mar 2026 12:40:11 +0100
+Subject: [PATCH v2 1/7] mmc: sdhci-of-k1: enable essential clock
  infrastructure for SD operation
 
 Ensure SD card pins receive clock signals by enabling pad clock
@@ -68,11 +87,11 @@ operation modes.
 
 Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
 ---
- drivers/mmc/host/sdhci-of-k1.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/mmc/host/sdhci-of-k1.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
-index 0cc97e23a2f9c7b2f9376318a8a7ebb860571504..b703b78282ed8d89183c816477c149c0a565618a 100644
+index 0cc97e23a2f9c7b2f9376318a8a7ebb860571504..585c7eca6ebf253aac466dd37cef029deb63f692 100644
 --- a/drivers/mmc/host/sdhci-of-k1.c
 +++ b/drivers/mmc/host/sdhci-of-k1.c
 @@ -20,6 +20,13 @@
@@ -89,14 +108,16 @@ index 0cc97e23a2f9c7b2f9376318a8a7ebb860571504..b703b78282ed8d89183c816477c149c0
  #define SPACEMIT_SDHC_MMC_CTRL_REG	0x114
  #define  SDHC_MISC_INT_EN		BIT(1)
  #define  SDHC_MISC_INT			BIT(2)
-@@ -100,6 +107,10 @@ static void spacemit_sdhci_reset(struct sdhci_host *host, u8 mask)
+@@ -100,6 +107,12 @@ static void spacemit_sdhci_reset(struct sdhci_host *host, u8 mask)
  
  	if (!(host->mmc->caps2 & MMC_CAP2_NO_MMC))
  		spacemit_sdhci_setbits(host, SDHC_MMC_CARD_MODE, SPACEMIT_SDHC_MMC_CTRL_REG);
 +
 +	spacemit_sdhci_setbits(host, SDHC_GEN_PAD_CLK_ON, SPACEMIT_SDHC_LEGACY_CTRL_REG);
-+	spacemit_sdhci_setbits(host, SDHC_OVRRD_CLK_OEN | SDHC_FORCE_CLK_ON,
-+			       SPACEMIT_SDHC_OP_EXT_REG);
++
++	if (host->mmc->caps2 & MMC_CAP2_NO_MMC)
++		spacemit_sdhci_setbits(host, SDHC_OVRRD_CLK_OEN | SDHC_FORCE_CLK_ON,
++				       SPACEMIT_SDHC_OP_EXT_REG);
  }
  
  static void spacemit_sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned int timing)
@@ -107,83 +128,29 @@ index 0cc97e23a2f9c7b2f9376318a8a7ebb860571504..b703b78282ed8d89183c816477c149c0
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:24 +0100
-Subject: [PATCH 03/10] mmc: sdhci-of-k1: add regulator framework support
+Date: Mon, 09 Mar 2026 12:40:12 +0100
+Subject: [PATCH v2 2/7] mmc: sdhci-of-k1: add regulator and pinctrl voltage
+ switching support
 
-Add regulator framework support for voltage switching operations. This
-enables proper PMIC control for UHS voltage switching between 3.3V and
-1.8V signaling levels.
+Add voltage switching infrastructure for UHS-I modes by integrating both
+regulator framework (for supply voltage control) and pinctrl state
+switching (for pin drive strength optimization).
 
-- Add regulator supply parsing
-- Implement voltage switching callback
-- Enable mmc regulator framework integration
+- Add regulator supply parsing and voltage switching callback
+- Add optional pinctrl state switching between "default" (3.3V) and
+  "state_uhs" (1.8V) configurations
+- Enable coordinated voltage and pin configuration changes for UHS modes
 
-Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
----
- drivers/mmc/host/sdhci-of-k1.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
-index b703b78282ed8d89183c816477c149c0a565618a..c260cb89704ae7a25bec0f07831d495553405bbd 100644
---- a/drivers/mmc/host/sdhci-of-k1.c
-+++ b/drivers/mmc/host/sdhci-of-k1.c
-@@ -216,6 +216,12 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
- 			       SPACEMIT_SDHC_PHY_CTRL_REG);
- }
- 
-+static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
-+						      struct mmc_ios *ios)
-+{
-+	return sdhci_start_signal_voltage_switch(mmc, ios);
-+}
-+
- static inline int spacemit_sdhci_get_clocks(struct device *dev,
- 					    struct sdhci_pltfm_host *pltfm_host)
- {
-@@ -291,6 +297,12 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
- 
- 	host->mmc->caps |= MMC_CAP_NEED_RSP_BUSY;
- 
-+	ret = mmc_regulator_get_supply(host->mmc);
-+	if (ret)
-+		dev_warn(dev, "Failed to get regulators: %d\n", ret);
-+
-+	host->mmc_host_ops.start_signal_voltage_switch = spacemit_sdhci_start_signal_voltage_switch;
-+
- 	ret = spacemit_sdhci_get_clocks(dev, pltfm_host);
- 	if (ret)
- 		goto err_pltfm;
-
--- 
-2.53.0
-
-
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:25 +0100
-Subject: [PATCH 04/10] mmc: sdhci-of-k1: add pinctrl state switching for
- voltage changes
-
-Add support for switching pinctrl states during voltage transitions to
-ensure proper pin drive strength and configuration for different I/O
-voltage domains (3.3V vs 1.8V).
-
-Pinctrl states are optional and the driver degrades gracefully if they
-are not defined in the device tree. This allows boards to enable proper
-pin drive strength optimization for UHS-I modes without breaking
-existing functionality.
-
-The pinctrl setup uses:
-- "default" state for 3.3V operation (higher drive strength)
-- "state_uhs" state for 1.8V operation (lower drive strength)
+This provides complete voltage switching support while maintaining
+backward compatibility when pinctrl states are not defined.
 
 Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
 ---
- drivers/mmc/host/sdhci-of-k1.c | 59 +++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 58 insertions(+), 1 deletion(-)
+ drivers/mmc/host/sdhci-of-k1.c | 59 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
 diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
-index c260cb89704ae7a25bec0f07831d495553405bbd..2a982bca2a50ca96f43af7b4de5bc4fb4b5b195b 100644
+index 585c7eca6ebf253aac466dd37cef029deb63f692..8af117a8e271c04a80d8dc7bb5ce12075652dd7a 100644
 --- a/drivers/mmc/host/sdhci-of-k1.c
 +++ b/drivers/mmc/host/sdhci-of-k1.c
 @@ -15,6 +15,7 @@
@@ -204,20 +171,17 @@ index c260cb89704ae7a25bec0f07831d495553405bbd..2a982bca2a50ca96f43af7b4de5bc4fb
  };
  
  /* All helper functions will update clr/set while preserve rest bits */
-@@ -219,7 +223,42 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
- static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
- 						      struct mmc_ios *ios)
- {
--	return sdhci_start_signal_voltage_switch(mmc, ios);
-+	struct sdhci_host *host = mmc_priv(mmc);
+@@ -218,6 +222,42 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
+ 			       SPACEMIT_SDHC_PHY_CTRL_REG);
+ }
+ 
++static void spacemit_sdhci_voltage_switch(struct sdhci_host *host)
++{
 +	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
 +	struct spacemit_sdhci_host *sdhst = sdhci_pltfm_priv(pltfm_host);
++	struct mmc_ios *ios = &host->mmc->ios;
 +	struct pinctrl_state *state;
 +	int ret;
-+
-+	ret = sdhci_start_signal_voltage_switch(mmc, ios);
-+	if (ret)
-+		return ret;
 +
 +	/* Select appropriate pinctrl state based on signal voltage */
 +	if (sdhst->pinctrl) {
@@ -229,28 +193,38 @@ index c260cb89704ae7a25bec0f07831d495553405bbd..2a982bca2a50ca96f43af7b4de5bc4fb
 +			state = sdhst->pinctrl_uhs;
 +			break;
 +		default:
-+			dev_warn(mmc_dev(mmc), "unsupported voltage %d\n", ios->signal_voltage);
-+			return 0;
++			dev_warn(mmc_dev(host->mmc), "unsupported voltage %d\n",
++				 ios->signal_voltage);
++			return;
 +		}
 +
 +		if (state) {
 +			ret = pinctrl_select_state(sdhst->pinctrl, state);
 +			if (ret) {
-+				dev_warn(mmc_dev(mmc), "failed to select pinctrl state: %d\n", ret);
-+				return 0;
++				dev_warn(mmc_dev(host->mmc),
++					 "failed to select pinctrl state: %d\n", ret);
++				return;
 +			}
-+			dev_dbg(mmc_dev(mmc), "switched to %s pinctrl state\n",
++			dev_dbg(mmc_dev(host->mmc), "switched to %s pinctrl state\n",
 +				ios->signal_voltage == MMC_SIGNAL_VOLTAGE_180 ? "UHS" : "default");
 +		}
 +	}
++}
 +
-+	return 0;
- }
- 
  static inline int spacemit_sdhci_get_clocks(struct device *dev,
-@@ -301,6 +340,24 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
- 	if (ret)
- 		dev_warn(dev, "Failed to get regulators: %d\n", ret);
+ 					    struct sdhci_pltfm_host *pltfm_host)
+ {
+@@ -242,6 +282,7 @@ static const struct sdhci_ops spacemit_sdhci_ops = {
+ 	.set_bus_width		= sdhci_set_bus_width,
+ 	.set_clock		= spacemit_sdhci_set_clock,
+ 	.set_uhs_signaling	= spacemit_sdhci_set_uhs_signaling,
++	.voltage_switch         = spacemit_sdhci_voltage_switch,
+ };
+ 
+ static const struct sdhci_pltfm_data spacemit_sdhci_k1_pdata = {
+@@ -293,6 +334,24 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
+ 
+ 	host->mmc->caps |= MMC_CAP_NEED_RSP_BUSY;
  
 +	sdhst = sdhci_pltfm_priv(pltfm_host);
 +	sdhst->pinctrl = devm_pinctrl_get(dev);
@@ -270,132 +244,9 @@ index c260cb89704ae7a25bec0f07831d495553405bbd..2a982bca2a50ca96f43af7b4de5bc4fb
 +		dev_dbg(dev, "pinctrl not available, voltage switching will work without it\n");
 +	}
 +
- 	host->mmc_host_ops.start_signal_voltage_switch = spacemit_sdhci_start_signal_voltage_switch;
- 
  	ret = spacemit_sdhci_get_clocks(dev, pltfm_host);
-
--- 
-2.53.0
-
-
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:26 +0100
-Subject: [PATCH 05/10] mmc: sdhci-of-k1: add AIB register support for
- voltage switching
-
-Add support for SpacemiT K1 Analog Interface Block (AIB) register
-programming required for proper UHS voltage switching. The AIB register
-controls SoC-level voltage domain coordination between the SDHCI
-controller and I/O pins.
-
-- Add AIB register address parsing from device tree
-- Implement authentication sequence for secure register access
-- Add voltage domain switching for 3.3V/1.8V operation
-
-Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
----
- drivers/mmc/host/sdhci-of-k1.c | 60 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
-
-diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
-index 2a982bca2a50ca96f43af7b4de5bc4fb4b5b195b..9425bde6a72541bd628997e91f957072a6266c25 100644
---- a/drivers/mmc/host/sdhci-of-k1.c
-+++ b/drivers/mmc/host/sdhci-of-k1.c
-@@ -68,12 +68,19 @@
- #define  SDHC_PHY_DRIVE_SEL		GENMASK(2, 0)
- #define  SDHC_RX_BIAS_CTRL		BIT(5)
- 
-+#define  MMC1_IO_V18EN			BIT(2)
-+#define  AKEY_ASFAR			0xBABA
-+#define  AKEY_ASSAR			0xEB10
-+
- struct spacemit_sdhci_host {
- 	struct clk *clk_core;
- 	struct clk *clk_io;
- 	struct pinctrl *pinctrl;
- 	struct pinctrl_state *pinctrl_default;
- 	struct pinctrl_state *pinctrl_uhs;
-+	u32 aib_mmc1_io_reg;
-+	u32 apbc_asfar_reg;
-+	u32 apbc_assar_reg;
- };
- 
- /* All helper functions will update clr/set while preserve rest bits */
-@@ -220,6 +227,47 @@ static void spacemit_sdhci_pre_hs400_to_hs200(struct mmc_host *mmc)
- 			       SPACEMIT_SDHC_PHY_CTRL_REG);
- }
- 
-+static void spacemit_sdhci_set_aib_mmc1_io(struct sdhci_host *host, int signal_voltage)
-+{
-+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
-+	struct spacemit_sdhci_host *sdhst = sdhci_pltfm_priv(pltfm_host);
-+	void __iomem *aib_reg, *asfar_reg, *assar_reg;
-+	u32 reg_value;
-+
-+	if (!sdhst->aib_mmc1_io_reg || !sdhst->apbc_asfar_reg || !sdhst->apbc_assar_reg)
-+		return;
-+
-+	asfar_reg = ioremap(sdhst->apbc_asfar_reg, 4);
-+	assar_reg = ioremap(sdhst->apbc_assar_reg, 4);
-+	aib_reg = ioremap(sdhst->aib_mmc1_io_reg, 4);
-+
-+	if (!asfar_reg || !assar_reg || !aib_reg) {
-+		dev_err(mmc_dev(host->mmc), "Failed to map AIB registers\n");
-+		goto cleanup;
-+	}
-+
-+	writel(AKEY_ASFAR, asfar_reg);
-+	writel(AKEY_ASSAR, assar_reg);
-+	reg_value = readl(aib_reg);
-+
-+	if (signal_voltage == MMC_SIGNAL_VOLTAGE_180)
-+		reg_value |= MMC1_IO_V18EN;
-+	else
-+		reg_value &= ~MMC1_IO_V18EN;
-+
-+	writel(AKEY_ASFAR, asfar_reg);
-+	writel(AKEY_ASSAR, assar_reg);
-+	writel(reg_value, aib_reg);
-+
-+cleanup:
-+	if (aib_reg)
-+		iounmap(aib_reg);
-+	if (asfar_reg)
-+		iounmap(asfar_reg);
-+	if (assar_reg)
-+		iounmap(assar_reg);
-+}
-+
- static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
- 						      struct mmc_ios *ios)
- {
-@@ -233,6 +281,8 @@ static int spacemit_sdhci_start_signal_voltage_switch(struct mmc_host *mmc,
  	if (ret)
- 		return ret;
- 
-+	spacemit_sdhci_set_aib_mmc1_io(host, ios->signal_voltage);
-+
- 	/* Select appropriate pinctrl state based on signal voltage */
- 	if (sdhst->pinctrl) {
- 		switch (ios->signal_voltage) {
-@@ -341,6 +391,16 @@ static int spacemit_sdhci_probe(struct platform_device *pdev)
- 		dev_warn(dev, "Failed to get regulators: %d\n", ret);
- 
- 	sdhst = sdhci_pltfm_priv(pltfm_host);
-+
-+	if (of_property_read_u32(dev->of_node, "spacemit,aib-mmc1-io-reg", &sdhst->aib_mmc1_io_reg))
-+		sdhst->aib_mmc1_io_reg = 0;
-+
-+	if (of_property_read_u32(dev->of_node, "spacemit,apbc-asfar-reg", &sdhst->apbc_asfar_reg))
-+		sdhst->apbc_asfar_reg = 0;
-+
-+	if (of_property_read_u32(dev->of_node, "spacemit,apbc-assar-reg", &sdhst->apbc_assar_reg))
-+		sdhst->apbc_assar_reg = 0;
-+
- 	sdhst->pinctrl = devm_pinctrl_get(dev);
- 	if (!IS_ERR(sdhst->pinctrl)) {
- 		sdhst->pinctrl_default = pinctrl_lookup_state(sdhst->pinctrl, "default");
+ 		goto err_pltfm;
 
 -- 
 2.53.0
@@ -403,8 +254,8 @@ index 2a982bca2a50ca96f43af7b4de5bc4fb4b5b195b..9425bde6a72541bd628997e91f957072
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:27 +0100
-Subject: [PATCH 06/10] mmc: sdhci-of-k1: add SDR tuning infrastructure
+Date: Mon, 09 Mar 2026 12:40:13 +0100
+Subject: [PATCH v2 3/7] mmc: sdhci-of-k1: add SDR tuning infrastructure
 
 Add register definitions and delay line control functions to prepare for
 SDR50/SDR104 tuning support:
@@ -418,16 +269,16 @@ while maintaining all existing functionality.
 
 Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
 ---
- drivers/mmc/host/sdhci-of-k1.c | 62 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+ drivers/mmc/host/sdhci-of-k1.c | 61 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
 diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
-index 9425bde6a72541bd628997e91f957072a6266c25..34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff 100644
+index 8af117a8e271c04a80d8dc7bb5ce12075652dd7a..79cb7c8d0b6d9c4206bf01721651c8efe8a173c9 100644
 --- a/drivers/mmc/host/sdhci-of-k1.c
 +++ b/drivers/mmc/host/sdhci-of-k1.c
-@@ -72,6 +72,23 @@
- #define  AKEY_ASFAR			0xBABA
- #define  AKEY_ASSAR			0xEB10
+@@ -68,6 +68,23 @@
+ #define  SDHC_PHY_DRIVE_SEL		GENMASK(2, 0)
+ #define  SDHC_RX_BIAS_CTRL		BIT(5)
  
 +#define SPACEMIT_SDHC_RX_CFG_REG        0x118
 +#define  SDHC_RX_SDCLK_SEL0_MASK        GENMASK(1, 0)
@@ -449,7 +300,7 @@ index 9425bde6a72541bd628997e91f957072a6266c25..34a1b9c359193be7dd5f07d1f3d6565b
  struct spacemit_sdhci_host {
  	struct clk *clk_core;
  	struct clk *clk_io;
-@@ -102,6 +119,50 @@ static inline void spacemit_sdhci_clrsetbits(struct sdhci_host *host, u32 clr, u
+@@ -95,6 +112,50 @@ static inline void spacemit_sdhci_clrsetbits(struct sdhci_host *host, u32 clr, u
  	sdhci_writel(host, val, reg);
  }
  
@@ -500,14 +351,6 @@ index 9425bde6a72541bd628997e91f957072a6266c25..34a1b9c359193be7dd5f07d1f3d6565b
  static void spacemit_sdhci_reset(struct sdhci_host *host, u8 mask)
  {
  	sdhci_reset(host, mask);
-@@ -335,6 +396,7 @@ static const struct sdhci_ops spacemit_sdhci_ops = {
- 	.set_bus_width		= sdhci_set_bus_width,
- 	.set_clock		= spacemit_sdhci_set_clock,
- 	.set_uhs_signaling	= spacemit_sdhci_set_uhs_signaling,
-+	.platform_execute_tuning = spacemit_sdhci_execute_tuning,
- };
- 
- static const struct sdhci_pltfm_data spacemit_sdhci_k1_pdata = {
 
 -- 
 2.53.0
@@ -515,10 +358,9 @@ index 9425bde6a72541bd628997e91f957072a6266c25..34a1b9c359193be7dd5f07d1f3d6565b
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:28 +0100
-Subject: [PATCH 07/10] mmc: sdhci-of-k1: add comprehensive SDR tuning
+Date: Mon, 09 Mar 2026 12:40:14 +0100
+Subject: [PATCH v2 4/7] mmc: sdhci-of-k1: add comprehensive SDR tuning
  support
-Precedence: bulk
 
 Implement software tuning algorithm to enable UHS-I SDR modes for SD
 card operation. This adds both TX and RX delay line tuning based on the
@@ -538,14 +380,14 @@ Key features:
 
 Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
 ---
- drivers/mmc/host/sdhci-of-k1.c | 118 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 118 insertions(+)
+ drivers/mmc/host/sdhci-of-k1.c | 119 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 119 insertions(+)
 
 diff --git a/drivers/mmc/host/sdhci-of-k1.c b/drivers/mmc/host/sdhci-of-k1.c
-index 34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff..95b016bfb5598acea4166257d12af54d945a0c13 100644
+index 79cb7c8d0b6d9c4206bf01721651c8efe8a173c9..d903851b9be0e1d21a2b30636f5e63a52cad0dc2 100644
 --- a/drivers/mmc/host/sdhci-of-k1.c
 +++ b/drivers/mmc/host/sdhci-of-k1.c
-@@ -88,6 +88,12 @@
+@@ -84,6 +84,12 @@
  #define  SDHC_TX_DLINE_REG_MASK         GENMASK(23, 16)
  
  #define SPACEMIT_RX_DLINE_REG		9
@@ -558,7 +400,7 @@ index 34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff..95b016bfb5598acea4166257d12af54d
  
  struct spacemit_sdhci_host {
  	struct clk *clk_core;
-@@ -256,6 +262,118 @@ static unsigned int spacemit_sdhci_clk_get_max_clock(struct sdhci_host *host)
+@@ -251,6 +257,118 @@ static unsigned int spacemit_sdhci_clk_get_max_clock(struct sdhci_host *host)
  	return clk_get_rate(pltfm_host->clk);
  }
  
@@ -677,6 +519,14 @@ index 34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff..95b016bfb5598acea4166257d12af54d
  static int spacemit_sdhci_pre_select_hs400(struct mmc_host *mmc)
  {
  	struct sdhci_host *host = mmc_priv(mmc);
+@@ -344,6 +462,7 @@ static const struct sdhci_ops spacemit_sdhci_ops = {
+ 	.set_clock		= spacemit_sdhci_set_clock,
+ 	.set_uhs_signaling	= spacemit_sdhci_set_uhs_signaling,
+ 	.voltage_switch         = spacemit_sdhci_voltage_switch,
++	.platform_execute_tuning = spacemit_sdhci_execute_tuning,
+ };
+ 
+ static const struct sdhci_pltfm_data spacemit_sdhci_k1_pdata = {
 
 -- 
 2.53.0
@@ -684,9 +534,9 @@ index 34a1b9c359193be7dd5f07d1f3d6565b5f40e7ff..95b016bfb5598acea4166257d12af54d
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:29 +0100
-Subject: [PATCH 08/10] riscv: dts: spacemit: k1: add SD card controller and
- pinctrl support
+Date: Mon, 09 Mar 2026 12:40:15 +0100
+Subject: [PATCH v2 5/7] riscv: dts: spacemit: k1: add SD card controller
+ and pinctrl support
 
 Add SD card controller infrastructure for SpacemiT K1 SoC with complete
 pinctrl support for both standard and UHS modes.
@@ -785,8 +635,8 @@ index 529ec68e9c23eb2a93c04e9ccd3f22a01c4cc4ff..1e9e4f4f41c196326f20c0e5ae6721ea
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:30 +0100
-Subject: [PATCH 09/10] riscv: dts: spacemit: k1-orangepi-rv2: add PMIC and
+Date: Mon, 09 Mar 2026 12:40:16 +0100
+Subject: [PATCH v2 6/7] riscv: dts: spacemit: k1-orangepi-rv2: add PMIC and
  power infrastructure
 
 Add Spacemit P1 PMIC configuration and board power infrastructure for
@@ -872,8 +722,8 @@ index 7b7331cb3c726f11d597f81917f3a3f5fc21e1b9..414b03f5e6480f05f5d7eeaaa0afb4e8
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Iker Pedrosa <ikerpedrosam@gmail.com>
-Date: Mon, 02 Mar 2026 16:13:31 +0100
-Subject: [PATCH 10/10] riscv: dts: spacemit: k1-orangepi-rv2: add SD card
+Date: Mon, 09 Mar 2026 12:40:17 +0100
+Subject: [PATCH v2 7/7] riscv: dts: spacemit: k1-orangepi-rv2: add SD card
  support with UHS modes
 
 Add complete SD card controller support with UHS high-speed modes.
@@ -883,7 +733,6 @@ Add complete SD card controller support with UHS high-speed modes.
 - Connect vmmc-supply to buck4 for 3.3V card power
 - Connect vqmmc-supply to aldo1 for 1.8V/3.3V I/O switching
 - Add dual pinctrl states for voltage-dependent pin configuration
-- Add AIB register properties for hardware voltage switching
 - Support UHS-I SDR25, SDR50, and SDR104 modes
 
 This enables full SD card functionality including high-speed UHS modes
@@ -891,14 +740,14 @@ for improved performance.
 
 Signed-off-by: Iker Pedrosa <ikerpedrosam@gmail.com>
 ---
- arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 diff --git a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
-index 414b03f5e6480f05f5d7eeaaa0afb4e86425ae36..f22f7427b3370a6b6c1cd8360b33efc2a285f8d0 100644
+index 414b03f5e6480f05f5d7eeaaa0afb4e86425ae36..361135269801f436703b6f1d768c91325a52f07f 100644
 --- a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
 +++ b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
-@@ -140,3 +140,24 @@ sd_vqmmc: aldo1 {
+@@ -140,3 +140,22 @@ sd_vqmmc: aldo1 {
  		};
  	};
  };
@@ -910,6 +759,7 @@ index 414b03f5e6480f05f5d7eeaaa0afb4e86425ae36..f22f7427b3370a6b6c1cd8360b33efc2
 +	bus-width = <4>;
 +	cd-gpios = <&gpio K1_GPIO(80) GPIO_ACTIVE_HIGH>;
 +	cd-inverted;
++	no-mmc;
 +	no-sdio;
 +	disable-wp;
 +	cap-sd-highspeed;
@@ -918,9 +768,6 @@ index 414b03f5e6480f05f5d7eeaaa0afb4e86425ae36..f22f7427b3370a6b6c1cd8360b33efc2
 +	sd-uhs-sdr25;
 +	sd-uhs-sdr50;
 +	sd-uhs-sdr104;
-+	spacemit,aib-mmc1-io-reg = <0xD401E81C>;
-+	spacemit,apbc-asfar-reg = <0xD4015050>;
-+	spacemit,apbc-assar-reg = <0xD4015054>;
 +	status = "okay";
 +};
 
