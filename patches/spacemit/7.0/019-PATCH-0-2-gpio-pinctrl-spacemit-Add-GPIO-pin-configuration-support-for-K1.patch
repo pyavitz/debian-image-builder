@@ -1,0 +1,147 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Junhui Liu <junhui.liu@pigmoral.tech>
+Subject: [PATCH 0/2] gpio/pinctrl: spacemit: Add GPIO pin configuration
+ support for K1
+Date: Thu, 12 Mar 2026 16:42:41 +0800
+
+This add GPIO pin configuration support for the Spacemit K1 SoC. Some
+use cases require configuring pin attributes like pull-up/down when using
+GPIO lines.
+
+A practical example is the SD card detection pin on the Banana Pi BPI-F3
+board. Since it lacks an external pull-up circuit, the pin must be
+configured with an internal pull-up to function correctly. Such
+configurations can be specified directly in the devicetree:
+
+    cd-gpios = <&gpio K1_GPIO(80) (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+
+To address this, add the set_config() callback to the gpio-spacemit-k1
+driver to enable pin configuration through pinctrl, and modify the
+pinctrl driver to return -ENOTSUPP instead of -EINVAL for unsupported
+parameters, allowing the GPIO subsystem to gracefully handle them.
+
+---
+Junhui Liu (2):
+      pinctrl: spacemit: return -ENOTSUPP for unsupported pin configurations
+      gpio: spacemit-k1: Add set_config callback support
+
+ drivers/gpio/gpio-spacemit-k1.c       |  1 +
+ drivers/pinctrl/spacemit/pinctrl-k1.c | 21 ++++++++++++---------
+ 2 files changed, 13 insertions(+), 9 deletions(-)
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Junhui Liu <junhui.liu@pigmoral.tech>
+Date: Thu, 12 Mar 2026 16:42:42 +0800
+Subject: [PATCH 1/2] pinctrl: spacemit: return -ENOTSUPP for unsupported
+ pin configurations
+
+Return -ENOTSUPP instead of -EINVAL when encountering unsupported pin
+configuration parameters. This is more logical and allows the GPIO
+subsystem to gracefully handle unsupported parameters via functions like
+gpio_set_config_with_argument_optional(), which specifically ignores
+-ENOTSUPP but treats others as failure.
+
+Signed-off-by: Junhui Liu <junhui.liu@pigmoral.tech>
+---
+ drivers/pinctrl/spacemit/pinctrl-k1.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pinctrl/spacemit/pinctrl-k1.c b/drivers/pinctrl/spacemit/pinctrl-k1.c
+index 62cab6f6cd0a..b0be62b1c816 100644
+--- a/drivers/pinctrl/spacemit/pinctrl-k1.c
++++ b/drivers/pinctrl/spacemit/pinctrl-k1.c
+@@ -674,7 +674,7 @@ static int spacemit_pinconf_get(struct pinctrl_dev *pctldev,
+ 			arg = 0;
+ 		break;
+ 	default:
+-		return -EINVAL;
++		return -ENOTSUPP;
+ 	}
+ 
+ 	*config = pinconf_to_config_packed(param, arg);
+@@ -740,7 +740,7 @@ static int spacemit_pinconf_generate_config(struct spacemit_pinctrl *pctrl,
+ 			}
+ 			break;
+ 		default:
+-			return -EINVAL;
++			return -ENOTSUPP;
+ 		}
+ 	}
+ 
+@@ -814,10 +814,12 @@ static int spacemit_pinconf_set(struct pinctrl_dev *pctldev,
+ 	struct spacemit_pinctrl *pctrl = pinctrl_dev_get_drvdata(pctldev);
+ 	const struct spacemit_pin *spin = spacemit_get_pin(pctrl, pin);
+ 	u32 value;
++	int ret;
+ 
+-	if (spacemit_pinconf_generate_config(pctrl, spin, pctrl->data->dconf,
+-					     configs, num_configs, &value))
+-		return -EINVAL;
++	ret = spacemit_pinconf_generate_config(pctrl, spin, pctrl->data->dconf,
++					       configs, num_configs, &value);
++	if (ret)
++		return ret;
+ 
+ 	return spacemit_pin_set_config(pctrl, pin, value);
+ }
+@@ -831,16 +833,17 @@ static int spacemit_pinconf_group_set(struct pinctrl_dev *pctldev,
+ 	const struct spacemit_pin *spin;
+ 	const struct group_desc *group;
+ 	u32 value;
+-	int i;
++	int i, ret;
+ 
+ 	group = pinctrl_generic_get_group(pctldev, gsel);
+ 	if (!group)
+ 		return -EINVAL;
+ 
+ 	spin = spacemit_get_pin(pctrl, group->grp.pins[0]);
+-	if (spacemit_pinconf_generate_config(pctrl, spin, pctrl->data->dconf,
+-					     configs, num_configs, &value))
+-		return -EINVAL;
++	ret = spacemit_pinconf_generate_config(pctrl, spin, pctrl->data->dconf,
++					       configs, num_configs, &value);
++	if (ret)
++		return ret;
+ 
+ 	for (i = 0; i < group->grp.npins; i++)
+ 		spacemit_pin_set_config(pctrl, group->grp.pins[i], value);
+
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Junhui Liu <junhui.liu@pigmoral.tech>
+Date: Thu, 12 Mar 2026 16:42:43 +0800
+Subject: [PATCH 2/2] gpio: spacemit-k1: Add set_config callback support
+
+Assign gpiochip_generic_config() to the set_config() callback to support
+pin configuration through the GPIO subsystem. This allows users to
+configure GPIO pin attributes like pull-up/down when specifying a GPIO
+line in the Device Tree.
+
+Signed-off-by: Junhui Liu <junhui.liu@pigmoral.tech>
+---
+ drivers/gpio/gpio-spacemit-k1.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpio/gpio-spacemit-k1.c b/drivers/gpio/gpio-spacemit-k1.c
+index dbd2e81094b9..5fe813b7f9bb 100644
+--- a/drivers/gpio/gpio-spacemit-k1.c
++++ b/drivers/gpio/gpio-spacemit-k1.c
+@@ -228,6 +228,7 @@ static int spacemit_gpio_add_bank(struct spacemit_gpio *sg,
+ 	gc->label		= dev_name(dev);
+ 	gc->request		= gpiochip_generic_request;
+ 	gc->free		= gpiochip_generic_free;
++	gc->set_config		= gpiochip_generic_config;
+ 	gc->ngpio		= SPACEMIT_NR_GPIOS_PER_BANK;
+ 	gc->base		= -1;
+ 	gc->of_gpio_n_cells	= 3;
+
+-- 
+2.53.0
+
