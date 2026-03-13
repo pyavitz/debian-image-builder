@@ -79,8 +79,9 @@ fi
 
 # STAGE1
 flash_uboot (){
+if [[ "$BOARD" == "gateway-gz80x" ]]; then AML_EMMC="true"; fi
 if [[ "AML_EMMC" == "true" ]]; then
-	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 seek=1
 else
 	dd if=${OUTPUT}/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=1 count=442
 	dd if=${OUTPUT}/u-boot.bin.sd.bin of="${IMAGE_LOOP_DEV}" conv=fsync bs=512 skip=1 seek=1
