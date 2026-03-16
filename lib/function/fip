@@ -3,6 +3,9 @@
 # DOWNLOAD
 download_fip (){
 if [[ -d "amlogic-boot-fip" ]]; then
+	if [[ ! `git -C amlogic-boot-fip branch  | grep "* pyavitz"` ]]; then rm -fdr amlogic-boot-fip; fi
+fi
+if [[ -d "amlogic-boot-fip" ]]; then
 	echo -en "Firmware Image Package:"
 	cd amlogic-boot-fip
 	git config pull.rebase false
@@ -13,7 +16,7 @@ if [[ -d "amlogic-boot-fip" ]]; then
 else
 	echo -en "Firmware Image Package:"
 	echo -en " Cloning"
-	git clone -q https://github.com/pyavitz/amlogic-boot-fip.git
+	git clone -q -b pyavitz https://github.com/pyavitz/amlogic-boot-fip.git
 	if [[ -d "amlogic-boot-fip" ]]; then
 		echo -e ", done."
 	else
