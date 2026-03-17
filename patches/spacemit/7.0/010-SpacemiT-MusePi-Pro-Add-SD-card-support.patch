@@ -1,15 +1,15 @@
-From eedc54e1ac907748632bc8d4901a4e3f1314c61b Mon Sep 17 00:00:00 2001
+From 12bb0a78865cf924a94aaf2f68e209707917c101 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 9 Mar 2026 11:40:23 -0400
+Date: Mon, 16 Mar 2026 21:12:58 -0400
 Subject: [PATCH] SpacemiT MusePi Pro: Add SD card support
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../riscv/boot/dts/spacemit/k1-musepi-pro.dts | 27 +++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
+ .../riscv/boot/dts/spacemit/k1-musepi-pro.dts | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
 diff --git a/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts b/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts
-index 561938f398f7..1acb59b4a539 100644
+index 561938f398f7..48dbea6b7433 100644
 --- a/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts
 +++ b/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts
 @@ -19,6 +19,8 @@ aliases {
@@ -21,28 +21,14 @@ index 561938f398f7..1acb59b4a539 100644
  		serial0 = &uart0;
  	};
  
-@@ -236,7 +238,7 @@ buck3_1v8: buck3 {
- 				regulator-always-on;
- 			};
- 
--			buck4: buck4 {
-+			sd_vmmc: buck4 {
- 				regulator-min-microvolt = <500000>;
- 				regulator-max-microvolt = <3300000>;
- 				regulator-ramp-delay = <5000>;
-@@ -257,10 +259,11 @@ buck6 {
- 				regulator-always-on;
- 			};
- 
--			aldo1: aldo1 {
-+			sd_vqmmc: aldo1 {
+@@ -260,6 +262,7 @@ buck6 {
+ 			aldo1: aldo1 {
  				regulator-min-microvolt = <500000>;
  				regulator-max-microvolt = <3400000>;
- 				regulator-boot-on;
 +				regulator-always-on;
+ 				regulator-boot-on;
  			};
  
- 			aldo2 {
 @@ -349,6 +352,26 @@ &pcie2 {
  	status = "okay";
  };
@@ -62,8 +48,8 @@ index 561938f398f7..1acb59b4a539 100644
 +	sd-uhs-sdr25;
 +	sd-uhs-sdr50;
 +	sd-uhs-sdr104;
-+	vmmc-supply = <&sd_vmmc>;
-+	vqmmc-supply = <&sd_vqmmc>;
++	vmmc-supply = <&buck4>;
++	vqmmc-supply = <&aldo1>;
 +	status = "okay";
 +};
 +

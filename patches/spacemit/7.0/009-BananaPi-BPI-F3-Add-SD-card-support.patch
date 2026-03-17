@@ -1,15 +1,15 @@
-From 3d0d9ec2cd7f71de2a0d2a74435629e25192d9ba Mon Sep 17 00:00:00 2001
+From 2597ead966867067e7332476c0b46ea887107bc0 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 9 Mar 2026 11:38:30 -0400
+Date: Mon, 16 Mar 2026 21:10:36 -0400
 Subject: [PATCH] BananaPi BPI-F3: Add SD card support
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- .../boot/dts/spacemit/k1-bananapi-f3.dts      | 31 ++++++++++++++++---
- 1 file changed, 27 insertions(+), 4 deletions(-)
+ .../boot/dts/spacemit/k1-bananapi-f3.dts      | 46 ++++++++++---------
+ 1 file changed, 25 insertions(+), 21 deletions(-)
 
 diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
-index a33298bf61a9..5fca6e5491cb 100644
+index 882153cb6beb..f258d3a17c55 100644
 --- a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
 +++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
 @@ -7,15 +7,17 @@
@@ -32,28 +32,14 @@ index a33298bf61a9..5fca6e5491cb 100644
  	};
  
  	chosen {
-@@ -222,7 +224,7 @@ buck3_1v8: buck3 {
- 				regulator-always-on;
- 			};
- 
--			buck4 {
-+			sd_vmmc: buck4 {
- 				regulator-min-microvolt = <500000>;
- 				regulator-max-microvolt = <3300000>;
- 				regulator-ramp-delay = <5000>;
-@@ -243,10 +245,11 @@ buck6 {
- 				regulator-always-on;
- 			};
- 
--			aldo1 {
-+			sd_vqmmc: aldo1 {
+@@ -246,6 +248,7 @@ buck6 {
+ 			aldo1: aldo1 {
  				regulator-min-microvolt = <500000>;
  				regulator-max-microvolt = <3400000>;
- 				regulator-boot-on;
 +				regulator-always-on;
+ 				regulator-boot-on;
  			};
  
- 			aldo2 {
 @@ -335,6 +338,26 @@ &pcie2 {
  	status = "okay";
  };
@@ -73,14 +59,37 @@ index a33298bf61a9..5fca6e5491cb 100644
 +	sd-uhs-sdr25;
 +	sd-uhs-sdr50;
 +	sd-uhs-sdr104;
-+	vmmc-supply = <&sd_vmmc>;
-+	vqmmc-supply = <&sd_vqmmc>;
++	vmmc-supply = <&buck4>;
++	vqmmc-supply = <&aldo1>;
 +	status = "okay";
 +};
 +
  &uart0 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&uart0_2_cfg>;
+@@ -367,22 +390,3 @@ hub_3_0: hub@2 {
+ 		reset-gpios = <&gpio K1_GPIO(124) GPIO_ACTIVE_LOW>;
+ 	};
+ };
+-
+-&sdhci0 {
+-	pinctrl-names = "default", "state_uhs";
+-	pinctrl-0 = <&mmc1_cfg>;
+-	pinctrl-1 = <&mmc1_uhs_cfg>;
+-	bus-width = <4>;
+-	cd-gpios = <&gpio K1_GPIO(80) GPIO_ACTIVE_HIGH>;
+-	cd-inverted;
+-	no-mmc;
+-	no-sdio;
+-	disable-wp;
+-	cap-sd-highspeed;
+-	vmmc-supply = <&buck4>;
+-	vqmmc-supply = <&aldo1>;
+-	sd-uhs-sdr25;
+-	sd-uhs-sdr50;
+-	sd-uhs-sdr104;
+-	status = "okay";
+-};
 -- 
 2.53.0
 
