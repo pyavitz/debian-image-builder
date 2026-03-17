@@ -29,53 +29,49 @@ index 0a607a1e3ca1d..542d378cdcd1f 100644
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Troy Mitchell <troy.mitchell@linux.dev>
-Date: Wed, 11 Mar 2026 10:51:55 +0800
-Subject: [PATCH RFC] riscv: disable local interrupts and stop other CPUs
- before restart
+Date: Tue, 17 Mar 2026 16:48:06 +0800
+Subject: [PATCH v2] riscv: disable local interrupts and stop other CPUs
+ before reboot/shutdown
 
-Currently, the RISC-V implementation of machine_restart() directly calls
-do_kernel_restart() without disabling local interrupts or stopping other
-CPUs. This missing architectural setup causes fatal issues for systems
-that rely on external peripherals (e.g., I2C PMICs) to execute the system
-restart when CONFIG_PREEMPT_RCU is enabled.
+Currently, the RISC-V implementation of machine_restart(), machine_halt(),
+and machine_power_off() invokes the kernel teardown chains (e.g.,
+do_kernel_restart()) with local interrupts enabled and other CPUs still
+running.
 
-When a restart handler relies on the I2C subsystem, the I2C core checks
-i2c_in_atomic_xfer_mode() to decide whether to use the sleepable xfer
-or the polling atomic_xfer. This check evaluates to true if
-(!preemptible() || irqs_disabled()).
+This implementation fails to provide a deterministic execution environment
+for registered handlers in the restart or power-off notifier chains. These
+chains are intended to be executed in a strict atomic and single-threaded
+context.
 
-During do_kernel_restart(), the restart handlers are invoked via
-atomic_notifier_call_chain(), which holds an RCU read lock.
-The behavior diverges based on the preemption model:
-1. Under CONFIG_PREEMPT_VOLUNTARY or CONFIG_PREEMPT_NONE, rcu_read_lock()
-   implicitly disables preemption. preemptible() evaluates to false, and
-   the I2C core correctly routes to the atomic, polling transfer path.
-2. Under CONFIG_PREEMPT_RCU, rcu_read_lock() does NOT disable preemption.
-   Since machine_restart() left local interrupts enabled, irqs_disabled()
-   is false, and preempt_count is 0. Consequently, preemptible() evaluates
-   to true.
+Specifically, under CONFIG_PREEMPT_RCU, rcu_read_lock() does not increment
+the preempt_count. If local interrupts remain enabled, the environment
+is not guaranteed to be atomic. This can lead to a context misidentification
+within generic kernel teardown code, causing it to incorrectly enter
+non-atomic paths (such as attempting to acquire sleeping locks), which
+results in fatal "scheduling while atomic" splats or system hangs.
 
-As a result, the I2C core falsely assumes a sleepable context and routes
-the transfer to the standard master_xfer path. This inevitably triggers a
-schedule() call while holding the RCU read lock, resulting in a fatal splat:
-"Voluntary context switch within RCU read-side critical section!" and
-a system hang.
+Additionally, stopping other CPUs ensures the primary CPU has exclusive
+access to the hardware state during the final teardown phase, preventing
+unpredictable interference from other active cores.
 
-Align RISC-V with other major architectures (e.g., ARM64) by adding
-local_irq_disable() and smp_send_stop() to machine_restart().
-- local_irq_disable() guarantees a strict atomic context, forcing sub-
-  systems like I2C to always fall back to polling mode.
-- smp_send_stop() ensures exclusive hardware access by quiescing other
-  CPUs, preventing them from holding bus locks (e.g., I2C spinlocks)
-  during the final restart phase.
+Align RISC-V with other major architectures by disabling local interrupts
+and stopping other CPUs at the beginning of the shutdown sequences. This
+guarantees the architectural expectations of the kernel's restart and
+power-off handlers are met.
 
 Signed-off-by: Troy Mitchell <troy.mitchell@linux.dev>
 ---
- arch/riscv/kernel/reset.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Changes in v2:
+- expand the fix to cover machine_halt() and machine_power_off() for
+  architectural consistency.
+- update commit message
+- Link to v1: https://lore.kernel.org/r/20260311-v7-0-rc1-rv-dis-int-before-restart-v1-1-bc46b4351cac@linux.dev
+---
+ arch/riscv/kernel/reset.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/arch/riscv/kernel/reset.c b/arch/riscv/kernel/reset.c
-index 912288572226..7a5dcfdc3674 100644
+index 912288572226..8c48466c50e9 100644
 --- a/arch/riscv/kernel/reset.c
 +++ b/arch/riscv/kernel/reset.c
 @@ -5,6 +5,7 @@
@@ -86,18 +82,35 @@ index 912288572226..7a5dcfdc3674 100644
  
  static void default_power_off(void)
  {
-@@ -17,6 +18,10 @@ EXPORT_SYMBOL(pm_power_off);
+@@ -17,18 +18,27 @@ EXPORT_SYMBOL(pm_power_off);
  
  void machine_restart(char *cmd)
  {
-+	/* Disable interrupts first */
 +	local_irq_disable();
 +	smp_send_stop();
 +
  	do_kernel_restart(cmd);
  	while (1);
  }
+ 
+ void machine_halt(void)
+ {
++	local_irq_disable();
++	smp_send_stop();
++
+ 	do_kernel_power_off();
+ 	default_power_off();
+ }
+ 
+ void machine_power_off(void)
+ {
++	local_irq_disable();
++	smp_send_stop();
++
+ 	do_kernel_power_off();
+ 	default_power_off();
+ }
 
 -- 
-2.52.0
+2.53.0
 
