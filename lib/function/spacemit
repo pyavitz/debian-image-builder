@@ -79,14 +79,16 @@ if [[ -f "../opensbi/${OPENSBI_FIRMWARE}" ]]; then cp "../opensbi/${OPENSBI_FIRM
 
 # U-BOOT
 spacemit_uboot_config (){
-if [[ "$BOARD" =~ ^(musepipro)$ ]]; then
-	if [[ `grep -w "# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set" "configs/${UBOOT_DEFCONFIG}"` ]]; then
-		sed -i 's/# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set/CONFIG_SPI_FLASH_USE_4K_SECTORS=y/g' configs/${UBOOT_DEFCONFIG}
-	fi
+if [[ `grep -w "# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set" "configs/${UBOOT_DEFCONFIG}"` ]]; then
+	sed -i 's/# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set/CONFIG_SPI_FLASH_USE_4K_SECTORS=y/g' configs/${UBOOT_DEFCONFIG}
 fi
 }
 
 spacemit_uboot_download (){
+if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
+	if [[ ! `git -C ${FAMILY}-u-boot-${GIT_UBOOT_TAG} remote -v | grep "${GIT_UBOOT_URL}"` ]]; then
+		rm -fdr u-boot ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; fi
+fi
 if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	echo -en "${FAMILY}-u-boot-${GIT_UBOOT_TAG}:"
 	cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}
@@ -99,7 +101,7 @@ if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	fi
 	echo -e ", done."
 else
-	git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL}
+	git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${FAMILY}-u-boot-${GIT_UBOOT_TAG}
 	if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 		cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; make clean; cd ..; cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
 		# replace board/spacemit/k1-x/k1-x.env

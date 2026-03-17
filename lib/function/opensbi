@@ -2,6 +2,10 @@
 
 opensbi_firmware (){
 if [[ -d "${FAMILY}-opensbi-${OPENSBI_TAG}" ]]; then
+	if [[ ! `git -C ${FAMILY}-opensbi-${OPENSBI_TAG} remote -v | grep "${OPENSBI_URL}"` ]]; then
+		rm -fdr opensbi ${FAMILY}-opensbi-${OPENSBI_TAG}; fi
+fi
+if [[ -d "${FAMILY}-opensbi-${OPENSBI_TAG}" ]]; then
 	echo -en "${FAMILY}-opensbi-${OPENSBI_TAG}:"
 	echo -en " Restoring"
 	rm -fdr opensbi
