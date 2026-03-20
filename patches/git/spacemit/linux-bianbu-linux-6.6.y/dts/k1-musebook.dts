@@ -14,7 +14,17 @@
 
 / {
 	model = "SpacemiT Musebook";
-	modules_usrload = "rtw89_core, rtw89_pci, rtw89_8852b, rtw89_8852be";
+
+	charger: charger@b {
+		compatible = "sbs,sbs-charger-virtual";
+		battery-name = "sbs-5-000b";
+		power-supplies = <&battery>;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 swiotlb=65536 driver_async_probe=spacemit-hdmi-drv,i2c-spacemit-k1x,ri2c-spacemit-k1x,k1xccic,sdhci-spacemit,k1x-dwc-pcie,pxa2xx-uart rdinit=/init";
+		stdout-path = "serial0:115200n8";
+	};
 
 	cpus: cpus {
 		#address-cells = <1>;
@@ -78,6 +88,15 @@
 		};
 	};
 
+	dc_12v: dc-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "dc_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
 	memory@0 {
 		device_type = "memory";
 		reg = <0x0 0x00000000 0x0 0x80000000>;
@@ -114,39 +133,6 @@
 		};
 	};
 
-	chosen {
-		bootargs = "console=ttyS0,115200n8 swiotlb=65536 rdinit=/init";
-		stdout-path = "serial0:115200n8";
-	};
-
-	dc_12v: dc-12v {
-		compatible = "regulator-fixed";
-		regulator-name = "dc_12v";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <12000000>;
-		regulator-max-microvolt = <12000000>;
-	};
-
-	vcc4v0_baseboard: vcc4v0-baseboard {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc4v0_baseboard";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <4000000>;
-		regulator-max-microvolt = <4000000>;
-		vin-supply = <&dc_12v>;
-	};
-
-	spacemit_lid:spacemit_lid {
-		compatible = "spacemit,k1x-lid";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_hall_wakeup>;
-		lid-gpios = <&gpio 74 0>;
-		interrupts-extended = <&gpio 74 1
-				&pinctrl 300>;
-	};
-
 	rf_pwrseq: rf-pwrseq {
 		compatible = "spacemit,rf-pwrseq";
 		status = "okay";
@@ -162,10 +148,24 @@
 		};
 	};
 
-	charger: charger@b {
-		compatible = "sbs,sbs-charger-virtual";
-		battery-name = "sbs-5-000b";
-		power-supplies = <&battery>;
+
+	spacemit_lid:spacemit_lid {
+		compatible = "spacemit,k1x-lid";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_hall_wakeup>;
+		lid-gpios = <&gpio 74 0>;
+		interrupts-extended = <&gpio 74 1
+				&pinctrl 300>;
+	};
+
+	vcc4v0_baseboard: vcc4v0-baseboard {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc4v0_baseboard";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <4000000>;
+		regulator-max-microvolt = <4000000>;
+		vin-supply = <&dc_12v>;
 	};
 };
 
