@@ -111,6 +111,7 @@ cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
 if is_enabled CONFIG_OF_EARLY_FLATTREE; then
 	# Only some architectures with OF support have this target
 	if [ -d "${srctree}/arch/$SRCARCH/boot/dts" ]; then
+		mkdir -p "$tmpdir/usr/lib/$packagename"
 		$MAKE -f $srctree/Makefile INSTALL_DTBS_PATH="$tmpdir/usr/lib/$packagename" dtbs_install
 	fi
 fi
@@ -154,7 +155,7 @@ fi
 
 # Update dtb list
 for dtclist in `cat dtclist.txt`; do ls $tmpdir/$linux_path/$dtclist 2>/dev/null | tee -a dtclist.new > /dev/null 2>&1; done
-grep ".dtb" "dtclist.txt" | echo "  CHKLIST `wc -l`"
+#grep ".dtb" "dtclist.txt" | echo "  CHKLIST `wc -l`"
 rm -f "dtclist.txt"; mv -f "dtclist.new" "dtclist.txt"
 
 # Installing dtb files
