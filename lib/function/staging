@@ -320,6 +320,13 @@ if [[ "$FAMILY" == "broadcom" ]] && [[ -d "files/bsp/${BOARD}" ]]; then
 	cp -r files/bsp/${BOARD}/etc/udev/rules.d/*.rules ${P_VALUE}/etc/udev/rules.d/
 	if [[ "$BOARD" =~ ^(raspberrypi4|raspberrypi5)$ ]]; then xorg_v3d_conf; fi
 fi
+# bianbu grub fixup
+if [[ "$EFI" == "true" && "$DISTRO" == "bianbu" ]]; then
+	if [[ -f "files/bsp/${DISTRO}/etc/grub.d/10_linux-${DISTRO_VERSION}" ]]; then
+		cp files/bsp/${DISTRO}/etc/grub.d/10_linux-${DISTRO_VERSION} ${P_VALUE}/root/10_linux-${DISTRO_VERSION}
+		chmod +x ${P_VALUE}/root/10_linux-${DISTRO_VERSION}
+	fi
+fi
 # do not accept new conf files in an unattended install (remove file at the end of stage2)
 mkdir -p ${P_VALUE}/etc/apt/apt.conf.d
 echo 'Dpkg::Options {"--force-confold";};' > ${P_VALUE}/etc/apt/apt.conf.d/71debconf
@@ -436,7 +443,7 @@ set -o nounset
 mount -t proc proc proc/
 mount -t sysfs sys sys/
 
-if [[ "$DISTRO" == "ubuntu" ]]; then
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then
 	grub-install --target=${ARCH}-efi --efi-directory=/boot/efi --bootloader-id=ubuntu
 else
 	grub-install --removable

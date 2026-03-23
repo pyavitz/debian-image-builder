@@ -9,7 +9,7 @@ echo ""
 mount -t proc proc proc/
 mount -t sysfs sys sys/
 
-if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then rm -f /etc/resolv.conf; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
@@ -50,7 +50,7 @@ if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi
 	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} dbus-user-session resolvconf haveged ${KALI_PKGS} ${PKGS_FULL}
 fi
-if [[ "$DISTRO" == "ubuntu" ]]; then
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then
 	if [[ "$DISTRO_VERSION" =~ ^(focal|jammy)$ ]]; then RESOLV="resolvconf"; else RESOLV="systemd-resolved"; fi
 	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5 netplug ${PKGS_FULL}
 fi
@@ -58,6 +58,6 @@ fi
 apt -y clean
 apt -y autoclean
 
-if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then rm -f /etc/resolv.conf; fi
 umount /proc
 umount /sys
