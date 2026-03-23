@@ -17,7 +17,7 @@ mount -t sysfs sys sys/
 
 export DEBIAN_FRONTEND="noninteractive"
 
-if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then rm -f /etc/resolv.conf; fi
 echo "nameserver ${NAMESERVER1}" > /etc/resolv.conf
 echo "nameserver ${NAMESERVER2}" >> /etc/resolv.conf
 
@@ -73,7 +73,7 @@ if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} dbus-user-session resolvconf haveged ${KALI_PKGS} ${NETWORKING} ${PKGS_FULL}
 fi
-if [[ "$DISTRO" == "ubuntu" ]]; then
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then
 	if [[ "$DISTRO_VERSION" == "focal" || "$ARCH" == "arm" ]] || [[ "$ARCH" == "riscv" ]]; then UBUNTU_FW=""; fi
 	if [[ "$DISTRO_VERSION" =~ ^(focal|jammy)$ ]]; then RESOLV="resolvconf"; else RESOLV="systemd-resolved"; fi
 	apt install -y ${PKGS} ${USER_PKGS} ${RESOLV} ${WIRELESS} rng-tools5 netplug ${UBUNTU_FW} ${NETWORKING} ${PKGS_FULL}
@@ -84,7 +84,7 @@ if [[ "$DISTRO" == "ubuntu" ]]; then
 	fi
 fi
 # apt clean
-if [[ "$DISTRO" == "ubuntu" ]]; then
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then
 	if [[ -f "/etc/update-motd.d/88-esm-announce" ]]; then
 		rm -f /etc/update-motd.d/88-esm-announce
 		echo '#!/bin/sh' > /etc/update-motd.d/88-esm-announce
@@ -196,7 +196,7 @@ if [[ -f "/root/led-trigger" ]]; then
 fi
 
 # bluetooth helper
-if [[ "$DISTRO" =~ ^(debian|ubuntu|kali)$ ]]; then rfkill_unblock_all_service > /dev/null 2>&1; fi
+if [[ "$DISTRO" =~ ^(bianbu|debian|ubuntu|kali)$ ]]; then rfkill_unblock_all_service > /dev/null 2>&1; fi
 if [[ `type ${FAMILY}_bluetooth` ]] &>/dev/null; then ${FAMILY}_bluetooth; fi
 
 # linux modules
@@ -331,6 +331,9 @@ if [[ ! "$FAMILY" == "generic" ]]; then
 fi
 if [[ `type ${FAMILY}_extra_firmware` ]] &>/dev/null; then ${FAMILY}_extra_firmware; fi
 
+# extra package support
+if [[ `type ${FAMILY}_extra_packages` ]] &>/dev/null; then ${FAMILY}_extra_packages; fi
+
 # network setup
 if [ $VERBOSE -eq 1 ]; then
 	wireless_conf
@@ -342,7 +345,7 @@ if [ $VERBOSE -eq 1 ]; then
 		ifupdown_credentials
 		router_ifupdown
 	fi
-	if [[ "$DISTRO" =~ ^(debian|kali|raspbian|ubuntu)$ ]]; then
+	if [[ "$DISTRO" =~ ^(bianbu|debian|kali|raspbian|ubuntu)$ ]]; then
 		credentials_service
 	fi
 else
@@ -355,7 +358,7 @@ else
 		ifupdown_credentials > /dev/null 2>&1
 		router_ifupdown > /dev/null 2>&1
 	fi
-	if [[ "$DISTRO" =~ ^(debian|kali|raspbian|ubuntu)$ ]]; then
+	if [[ "$DISTRO" =~ ^(bianbu|debian|kali|raspbian|ubuntu)$ ]]; then
 		credentials_service > /dev/null 2>&1
 	fi
 fi
@@ -384,7 +387,7 @@ fi
 
 # raspberrypi eeprom
 if [[ "$FAMILY" == "broadcom" && "$ARCH" == "arm64" ]]; then eeprom_support; fi
-#if [[ ! "$DISTRO" == "ubuntu" && "$FAMILY" == "broadcom" ]]; then eeprom_support; else apt install -y libraspberrypi-bin rpi-eeprom; fi
+#if [[ ! [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]] && "$FAMILY" == "broadcom" ]]; then eeprom_support; else apt install -y libraspberrypi-bin rpi-eeprom; fi
 
 # uimage
 if [[ "$BOARD" == "odroidc1" ]]; then make_uimage; fi
@@ -393,7 +396,14 @@ if [[ "$BOARD" == "odroidc1" ]]; then make_uimage; fi
 echo ""
 apt update
 apt upgrade -y
-if [[ "$EFI" == "true" ]]; then apt install -y grub-efi; fi
+if [[ "$EFI" == "true" ]]; then
+	apt install -y grub-efi
+	# bianbu grub fixup
+	if [[ $DISTRO == "bianbu" ]] && [[ -f "/root/10_linux-${DISTRO_VERSION}" ]]; then
+		rm -f /etc/grub.d/10_linux
+		mv /root/10_linux-${DISTRO_VERSION} /etc/grub.d/10_linux
+	fi
+fi
 if [[ "$GENERIC_KERNEL" == "true" ]] && [[ "$FAMILY" == "generic" ]]; then
 	if [[ `type ${FAMILY}_linux_image` ]] &>/dev/null; then ${FAMILY}_linux_image; fi
 else
@@ -407,7 +417,7 @@ else
 fi
 if [[ "$EFI" == "true" ]]; then
 	mkdir -p /boot/efi/EFI/BOOT
-	if [[ "$DISTRO" == "ubuntu" ]]; then
+	if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then
 	if [[ "$ARCH" == "x86" ]]; then ARCH="x86_64"; fi
 	if [[ "$ARCH" == "riscv" ]]; then ARCH="riscv64"; fi
 		grub-install --target=${ARCH}-efi --efi-directory=/boot/efi --bootloader-id=ubuntu
@@ -439,7 +449,7 @@ if [[ -f "/etc/systemd/journald.conf" ]]; then
 fi
 
 # whiptail color palette
-if [[ "$DISTRO" == "ubuntu" ]]; then
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then
 	mkdir -p /etc/newt
 	cat <<EOF > "/etc/newt/palette.dark"
 root=,black
@@ -495,6 +505,6 @@ chown -R root:root /usr/local/sbin/
 # finish
 rm -f /etc/apt/apt.conf.d/71debconf
 rm -fdr /*usr-is-merged*
-if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
+if [[ "$DISTRO" =~ ^(bianbu|ubuntu)$ ]]; then rm -f /etc/resolv.conf; fi
 sleep .50
 umount /proc /sys
