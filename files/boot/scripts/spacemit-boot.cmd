@@ -21,7 +21,7 @@ if test "${product_name}" = "k1-x_deb1"; then
 elif test "${product_name}" = "k1-x_MUSE-Book"; then
 	setenv bootlabel "SpacemiT MUSE Book"
 	setenv fdtfile "k1-musebook.dtb";
-elif test "${product_name}" = "k1-x_MUSE-Pi"; then
+elif test "${product_name}" = "k1-x_MUSE-Pi-Pro"; then
 	setenv bootlabel "SpacemiT MusePi Pro"
 	setenv fdtfile "k1-musepi-pro.dtb";
 fi
