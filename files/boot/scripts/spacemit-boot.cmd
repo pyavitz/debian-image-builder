@@ -41,7 +41,7 @@ elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/boot.scr; then
 	part uuid ${devtype} ${devnum}:1 uuid
 fi
 
-setenv bootargs "${console} rw root=PARTUUID=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait init=/sbin/init"
+setenv bootargs "${console} rw root=PARTUUID=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
 
 setenv loading ""
 ${loading} ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd} \

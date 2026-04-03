@@ -4,10 +4,9 @@ source lib/source
 validation
 source lib/function/rootfs
 source lib/function/release
-# override the board file
+source userdata.txt
 if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 sleep .50
-source userdata.txt
 source custom.txt
 # clean
 if [[ -d "sysroot" ]] || [[ -d "p1" ]] || [[ -d "BOOT" ]] || [[ -f "shrink.img" ]]; then make clean; clear -x; fi
@@ -58,6 +57,7 @@ sysroot_setup
 mount -o bind /dev ${P_VALUE}/dev
 mount -o bind /dev/pts ${P_VALUE}/dev/pts
 cp -f lib/source ${P_VALUE}/root/source.txt
+cp -r lib/function/${FAMILY} ${P_VALUE}/root/${FAMILY}.txt
 echo "MINIMAL_ROOTFS=${MINIMAL_ROOTFS}" >> ${P_VALUE}/root/source.txt
 cp -f {scripts/rootfs-extra,userdata.txt,board.txt} ${P_VALUE}/root/
 chroot ${P_VALUE} /root/rootfs-extra
