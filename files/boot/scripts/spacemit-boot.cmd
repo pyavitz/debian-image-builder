@@ -17,13 +17,22 @@ env import -t ${scriptaddr} ${filesize}
 # Set device tree binary
 if test "${product_name}" = "k1-x_deb1"; then
 	setenv bootlabel "BananaPi BPI-F3"
-	setenv fdtfile "k1-bananapi-f3.dtb";
+	setenv fdtfile "k1-bananapi-f3.dtb"
 elif test "${product_name}" = "k1-x_MUSE-Book"; then
 	setenv bootlabel "SpacemiT MUSE Book"
-	setenv fdtfile "k1-musebook.dtb";
+	setenv fdtfile "k1-musebook.dtb"
 elif test "${product_name}" = "k1-x_MUSE-Pi-Pro"; then
 	setenv bootlabel "SpacemiT MusePi Pro"
-	setenv fdtfile "k1-musepi-pro.dtb";
+	setenv fdtfile "k1-musepi-pro.dtb"
+elif test -e ${devtype} ${devnum}:${distro_bootpart} ${platform}/${product_name}.dtb; then
+	setenv bootlabel "${product_name}"
+	setenv fdtfile "${product_name}.dtb"
+elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${platform}/${product_name}.dtb; then
+	setenv bootlabel "${product_name}"
+	setenv fdtfile "${product_name}.dtb"
+else
+	setenv bootlabel "k1-x_spl"
+	setenv fdtfile "k1-x_spl.dtb"	
 fi
 
 # Set boot variables
