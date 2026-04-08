@@ -1,0 +1,43 @@
+#!/bin/bash
+
+run_function2 (){
+# board=spacemit
+if [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" == "noble" ]]; then
+	if [[ ! `command -v tasksel` ]]; then apt install -y tasksel; fi
+	apt-get install --reinstall debconf
+	dpkg-reconfigure tasksel
+	echo -en "Installing GNOME ..."
+	apt install -y task-gnome-desktop gnome-initial-setup
+	apt purge -y gnome-games evolution fwupd libreoffice-math libreoffice-calc libreoffice-draw libreoffice-impress --autoremove
+	systemctl set-default graphical.target
+fi
+# board=musebook
+if [[ "$DISTRO" == "debian" && "$DISTRO_VERSION" == "trixie" ]]; then
+	wget -O- http://archive.spacemit.com/bianbu/bianbu-archive-keyring.gpg | gpg --dearmor | tee /usr/share/keyrings/bianbu-archive-keyring.gpg > /dev/null
+	cp /usr/share/keyrings/bianbu-archive-keyring.gpg /etc/apt/trusted.gpg.d/
+	cat > /etc/apt/sources.list.d/bianbu.sources <<EOF
+Types: deb deb-src
+URIs: http://archive.spacemit.com/debian/
+Suites: trixie
+Components: main
+Signed-By: /usr/share/keyrings/bianbu-archive-keyring.gpg
+EOF
+	cat > /etc/apt/preferences.d/bianbu <<EOF
+Package: *
+Pin: release o=Spacemit, n=trixie
+Pin-Priority: 1100
+EOF
+	apt update
+	if [[ ! `command -v tasksel` ]]; then apt install -y tasksel; fi
+	apt-get install --reinstall debconf
+	dpkg-reconfigure tasksel
+	apt -y --allow-downgrades upgrade --autoremove
+	apt -y install img-gpu-powervr k1x-vpu-firmware k1x-cam mpv mpp libegl1-mesa libglapi-mesa \
+	libgbm1 libgbm-dev libegl-mesa0 libgl1-mesa-dri libgles2-mesa libgl1-mesa-glx libglx-mesa0 \
+	libosmesa6 libwayland-egl1-mesa mesa-common-dev mesa-vdpau-drivers mesa-vulkan-drivers \
+	v4l-utils task-gnome-desktop gnome-initial-setup chromium-browser-stable
+	apt purge -y gnome-games evolution fwupd libreoffice-math libreoffice-calc libreoffice-draw libreoffice-impress --autoremove
+	systemctl set-default graphical.target
+	gsettings set org.gnome.desktop.peripherals.touchpad click-method 'areas'
+fi
+}
