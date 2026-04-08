@@ -61,8 +61,10 @@ if [[ "$DISTRO_VERSION" =~ ^(ceres|sid|testing|unstable)$ ]]; then :; else apt a
 # network variables
 if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
 if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager"; else NETWORKING="ifupdown"; fi
+# variable populated by ${FAMILY}_extra_packages
+EXTRA_PKGS=""
 # extra platform package support
-if [[ `type ${FAMILY}_extra_packages` ]] &>/dev/null; then ${FAMILY}_extra_packages else EXTRA_PKGS=""; fi
+if [[ `type ${FAMILY}_extra_packages` ]] &>/dev/null; then ${FAMILY}_extra_packages; fi
 # install base and extra packages
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
 	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} resolvconf haveged netplug ${NETWORKING} ${PKGS_FULL} ${EXTRA_PKGS}
