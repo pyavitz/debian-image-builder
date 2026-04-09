@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# architecture
+ARCH="arm64"
+ARCH_EXT="arm64"
+DEBARCH=""
+CROSS_COMPILE="aarch64-linux-gnu-"
+ROOTFS_ARCH="rootfs-${ARCH_EXT}"
+STATIC="qemu-aarch64-static"
+
+# device information
+SERIES="rk3566"
+FAMILY="rockchip"
+FAMILY_EXT="rk356x"
+DTB="${SERIES}-nanopi-r3s-lts"
+
+# default config
+LINUX_DEFCONFIG="rockchip64_defconfig"
+UBOOT_DEFCONFIG="nanopi-r3s-lts-rk3566_defconfig"
+
+# partition layout
+BOOT_EXT4="false" # change P_VALUE to p2 if enabled
+BOOT_VFAT="false" # change P_VALUE to p2 if enabled
+EFI="false" # change P_VALUE to p2 and BOOT_VFAT to true if enabled
+GPT="true" # set to true if rockchip
+OFFSET="16MiB"
+P_VALUE="p1" # p1 = single partition
+
+# boot options
+BOOTCMD="false"
+BOOTINI="false"
+BOOTSCR="boot.cmd" # define name of boot.cmd / boot.ini (files/boot/scripts)
+EXTLINUX="true" # default
+PETITBOOT="false" # obsolete
+
+# arm trusted firmware
+ATF_EN="false"
+ATF_TAG="lts-v2.12.5"
+ATF_PLAT="rk3568"
+ATF_EXT="PLAT=${ATF_PLAT} bl31"
+RKBIN_COMMIT="a8008bfe3c9296f6e44d5aa221e865e450ed921d"
+RKBIN_DIR="rkbin-${RKBIN_COMMIT}/bin/rk35"
+RKBIN_ELF="rk3568_bl31_v1.44.elf"
+RKBIN_RAM="rk3566_ddr_1056MHz_v1.21.bin"
+
+# output
+BOARD="nanopir3s"
+OUTPUT="output/${BOARD}"
+
+# extlinux and bootcmd
+BOOT_KERNEL="Image"
+BOOT_INITRD="uInitrd"
+BOOTCMD_FDTOVERLAYS="#overlays="
+EXTLINUX_FDTOVERLAYS="#fdtoverlays"
+
+# cmdline
+CONSOLE="console=tty1 console=ttyS2,1500000n8"
+LOGLEVEL="loglevel=1"
+EXTRA="net.ifnames=0 cma=16M"
+
+# Serial
+DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyS2 1500000 vt100"
+
+# motd
+DEFAULT_MOTD="FriendlyElec NanoPi R3S LTS"
+
+# customize
+#MODULES_BLACKLIST=""
+#MODULES_LOAD=""
+
+# patches
+LINUX_PATCHING="true"
+UBOOT_PATCHDIR="patches/uboot"
+LINUX_PATCHDIR="patches/${FAMILY}"
+
+# image
+IMG_EXP="${DTB}-*.img*"
+
+# uboot logo
+RANDOM_LOGO="false"
+
+# u-boot-rockchip.bin
+UBOOT_RK_BIN="true"
+
+# precompiled
+PRECOMPILED_UBOOT="false"
+PKGVERSION=""
+PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
+
+# force git
+FORCE_GIT="false"
+GIT_OWN=""
+GIT_REPO=""
+GIT_BRANCH=""
+GIT_URL=""
+GIT_BLOB=""
+# git patching
+GIT_PATCHING="false"
+GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
+
+# override userdata file
+FORCE_VERSION="true"
+FORCE_LINUX_VERSION="6.18.y"
+FORCE_UBOOT_VERSION="v2026.04"
+
+# devicetree and platform
+DEVICETREE="${DTB}.dtb"
+PLATFORM="${FAMILY}"
+
+# kernel package name (if shared patching set to true)
+COMMON_PKG="true"
+COMMON_PKGNAME="rockchip"
+
+# build old kernel headers package (not recommended)
+LEGACY_PACKAGING="false"
+
+# use builder kernel packaging (recommended)
+DEFAULT_PACKAGING="true"
