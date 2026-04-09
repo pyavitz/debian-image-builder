@@ -69,7 +69,7 @@ EOF
 
 router_udev_rules (){
 mkdir -p /etc/udev/rules.d
-if [[ "$BOARD" =~ ^(nanopir3s)$ ]]; then
+if [[ "$BOARD" =~ ^(nanopir3s|nanopir3slts)$ ]]; then
 	echo 'SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth0", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' > /etc/udev/rules.d/10-nanopi-led.rules
 	echo 'SUBSYSTEM=="leds", KERNEL=="green:lan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="eth1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"' >> /etc/udev/rules.d/10-nanopi-led.rules
 fi
@@ -81,7 +81,7 @@ fi
 }
 
 router_ifupdown (){
-if [[ "$BOARD" =~ ^(bananapif3|bananapim2s|orangepir1|nanopir1|nanopir3s|dfa)$ ]]; then
+if [[ "$BOARD" =~ ^(bananapif3|bananapim2s|orangepir1|nanopir1|nanopir3s|nanopir3slts|dfa)$ ]]; then
 	if [[ -f "/etc/network/interfaces" ]]; then
 		sed -i 's/#allow-hotplug eth1/allow-hotplug eth1/g' /etc/network/interfaces
 		sed -i 's/#iface eth1 inet dhcp/iface eth1 inet dhcp/g' /etc/network/interfaces
