@@ -207,6 +207,7 @@ ifdef force
 endif
 ifdef legacy
 	@echo 'FORCE_LEGACY_PACKAGING="$(legacy)"' >> ignore.txt
+endif
 ifdef patching
 	@echo 'LINUX_PATCHING="$(patching)"' >> ignore.txt
 endif
