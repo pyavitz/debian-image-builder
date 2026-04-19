@@ -22,3 +22,26 @@ if [ -d "${pdir}/$linux_path/overlays" ]; then
 	cp -r "${pdir}/$linux_path/overlays" "${pdir}/$boot_path"
 fi
 }
+
+linux_legacy_packaging_overlays (){
+# add custom overlays
+if ls arch/$karch/boot/dts/overlays/*.dtbo > /dev/null 2>&1; then
+	mkdir -p "$tmpdir/$linux_path/overlays"
+	cp -r arch/$karch/boot/dts/overlays/*.dtbo "$tmpdir/$linux_path/overlays"
+fi
+# add mainline overlays
+if ls arch/$karch/boot/dts/$platform/*.dtbo > /dev/null 2>&1; then
+	mkdir -p "$tmpdir/$linux_path/overlays"
+	cp -r arch/$karch/boot/dts/$platform/*.dtbo "$tmpdir/$linux_path/overlays"
+fi
+# add git overlays
+if ls $tmpdir/$linux_path/*.dtbo > /dev/null 2>&1; then
+	mkdir -p "$tmpdir/$linux_path/overlays"
+	mv -f $tmpdir/$linux_path/*.dtbo "$tmpdir/$linux_path/overlays"
+fi
+# install overlays
+if [ -d "$tmpdir/$linux_path/overlays" ]; then
+	mkdir -p "$tmpdir/$boot_path/overlays"
+	cp -r "$tmpdir/$linux_path/overlays" "$tmpdir/$boot_path"
+fi
+}
