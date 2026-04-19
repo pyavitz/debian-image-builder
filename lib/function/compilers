@@ -2,6 +2,9 @@
 
 # compile cross or native
 compile (){
+# clang
+COMPILER_CLANG=`echo ${COMPILER} | sed 's/[0-9]//g' | sed 's/-//g'`
+if [[ "$COMPILER_CLANG" == "clang" ]]; then LEGACY_PACKAGING="true"; fi
 # cross
 if [[ "$HOST_ARCH" == "aarch64" ]] && [[ "$ARCH" =~ ^(arm|riscv)$ ]]; then CROSSCOMPILE="1"; fi
 if [[ "$HOST_ARCH" == "x86_64" ]] && [[ "$ARCH" =~ ^(arm|arm64|riscv)$ ]]; then CROSSCOMPILE="1"; fi
@@ -76,7 +79,6 @@ if [ $CCACHE -eq 1 ]; then
 	if [[ `command -v ccache` ]]; then :; else apt install -y ccache; fi
 fi
 # force gnu compiler collection
-COMPILER_CLANG=`echo ${COMPILER} | sed 's/[0-9]//g' | sed 's/-//g'`
 if [[ "$COMPILER_CLANG" == "clang" || "$COMPILER" == "gcc" ]]; then
 	CVER=`readlink /usr/bin/gcc | sed "s/[^0-9.]*//g" | sed 's/\.//g'`
 	if [[ `type ${FAMILY}_uboot_compiler` ]] &>/dev/null; then ${FAMILY}_uboot_compiler; else COMPILER="gcc-${CVER}"; fi
@@ -93,7 +95,6 @@ fi
 
 linux_compilers (){
 # install and setup compilers
-COMPILER_CLANG=`echo ${COMPILER} | sed 's/[0-9]//g' | sed 's/-//g'`
 if [[ "$COMPILER_CLANG" == "clang" ]]; then
 	# if not the host default the user must install and define the version of choice
 	if [[ `command -v clang` ]]; then :; else apt install -y clang; fi
@@ -114,7 +115,6 @@ fi
 if [[ "$COMPILER_CLANG" == "clang" ]]; then
 	CLANG="1"
 	CLANG_LLVM=`echo LLVM=${COMPILER} LLVM_IAS=1 | sed 's/clang//g'`
-	FORCE_LEGACY_PACKAGING="true" # compile headers
 else
 	CLANG="0"	
 fi

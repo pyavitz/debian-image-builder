@@ -15,7 +15,6 @@ if [[ -f "ignore.txt" ]]; then . ignore.txt; rm -f ignore.txt; fi
 # debug switch
 if [ $VERBOSE -eq 1 ]; then set -x; fi
 if [[ -v "SPOOF_HOST" && ! -z "$SPOOF_HOST" ]]; then HOST_CODENAME="${SPOOF_HOST}"; fi
-if [[ -v "FORCE_LEGACY_PACKAGING" && ! -z "$FORCE_LEGACY_PACKAGING" ]]; then LEGACY_PACKAGING="${FORCE_LEGACY_PACKAGING}"; fi
 source lib/function/${FAMILY}
 if [[ -f "lib/function/${SERIES}" ]]; then . lib/function/${SERIES}; fi
 source lib/function/wireless
@@ -29,6 +28,7 @@ fi
 if [[ `type ${FAMILY}_bsp` ]] &>/dev/null; then ${FAMILY}_bsp; fi
 # compile native or cross
 compile
+if [[ -v "FORCE_LEGACY_PACKAGING" && ! -z "$FORCE_LEGACY_PACKAGING" ]]; then LEGACY_PACKAGING="${FORCE_LEGACY_PACKAGING}"; fi
 # upstream kernel packaging
 if [[ "$LEGACY_PACKAGING" == "false" ]]; then upstream_linux_packaging; fi
 LINUX_VERSION=`echo "$VERSION" | sed -e 's/^\(.\{4\}\).*/\1/' | sed 's/-//g' | sed -r 's/\.$//'`
