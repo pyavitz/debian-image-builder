@@ -204,6 +204,20 @@ install_kernel_headers () {
 
 	mkdir -p $pdir/lib/modules/${KERNELRELEASE}/
 	ln -s /usr/src/linux-headers-${KERNELRELEASE} $pdir/lib/modules/${KERNELRELEASE}/build
+
+# clean kernel headers
+mkdir -p ${pdir}/DEBIAN
+cat <<EOF > "${pdir}/DEBIAN/preinst"
+#!/bin/bash
+
+set -e
+
+rm -fdr /usr/src/linux-headers-*
+
+sync
+exit 0
+EOF
+chmod 755 "${pdir}/DEBIAN/preinst"
 }
 
 install_libc_headers () {
