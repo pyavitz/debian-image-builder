@@ -30,9 +30,6 @@ elif test -e ${devtype} ${devnum}:${distro_bootpart} ${platform}/${product_name}
 elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${platform}/${product_name}.dtb; then
 	setenv bootlabel "${product_name}"
 	setenv fdtfile "${product_name}.dtb"
-else
-	setenv bootlabel "k1-x_spl"
-	setenv fdtfile "k1-x_spl.dtb"	
 fi
 
 # Set boot variables
