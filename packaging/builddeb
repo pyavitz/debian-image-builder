@@ -148,22 +148,22 @@ install_linux_image () {
 		chmod 755 "${pdir}/DEBIAN/${script}"
 	done
 
-# clean boot directory
-cat <<EOF > "${pdir}/DEBIAN/preinst"
-#!/bin/bash
+	# clean boot directory
+	cat <<-EOF > "${pdir}/DEBIAN/preinst"
+	#!/bin/bash
 
-set -e
+	set -e
 
-rm -fr /boot/{Image*,vmlinuz-*,System.map-*,config-*}
-rm -fr /boot/{initrd.img,initrd.gz,uInitrd,initrd.img-*}
-rm -fr /boot/$platform/{Image,kernel*.img,*.dtb,initrd.img,initrd.gz,bootcode.bin,fixup*.dat,start*.elf,LICENCE.broadcom,COPYING.linux};
-rm -fdr /boot/$platform/overlays
-rm -f /etc/initramfs/post-update.d/99-initrd
+	rm -fr /boot/{Image*,vmlinuz-*,System.map-*,config-*}
+	rm -fr /boot/{initrd.img,initrd.gz,uInitrd,initrd.img-*}
+	rm -fr /boot/$platform/{Image,kernel*.img,*.dtb,initrd.img,initrd.gz,bootcode.bin,fixup*.dat,start*.elf,LICENCE.broadcom,COPYING.linux};
+	rm -fdr /boot/$platform/overlays
+	rm -f /etc/initramfs/post-update.d/99-initrd
 
-sync
-exit 0
-EOF
-chmod 755 "${pdir}/DEBIAN/preinst"
+	sync
+	exit 0
+	EOF
+	chmod 755 "${pdir}/DEBIAN/preinst"
 }
 
 install_linux_image_dbg () {
@@ -205,19 +205,19 @@ install_kernel_headers () {
 	mkdir -p $pdir/lib/modules/${KERNELRELEASE}/
 	ln -s /usr/src/linux-headers-${KERNELRELEASE} $pdir/lib/modules/${KERNELRELEASE}/build
 
-# clean kernel headers
-mkdir -p ${pdir}/DEBIAN
-cat <<EOF > "${pdir}/DEBIAN/preinst"
-#!/bin/bash
+	# clean kernel headers
+	mkdir -p ${pdir}/DEBIAN
+	cat <<-EOF > "${pdir}/DEBIAN/preinst"
+	#!/bin/bash
 
-set -e
+	set -e
 
-rm -fdr /usr/src/linux-headers-*
+	if [[ -f "/usr/src/linux-headers-uname-r/tools/include/tools/le_byteshift.h" ]]; then rm -fdr /usr/src/linux-headers-*; fi
 
-sync
-exit 0
-EOF
-chmod 755 "${pdir}/DEBIAN/preinst"
+	exit 0
+	EOF
+	sed -i 's/uname-r/`uname -r`/g' "${pdir}/DEBIAN/preinst"
+	chmod 755 "${pdir}/DEBIAN/preinst"
 }
 
 install_libc_headers () {
