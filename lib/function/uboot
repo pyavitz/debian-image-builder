@@ -48,22 +48,17 @@ fi
 }
 
 download (){
-if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
-	echo -en "U-Boot-${UBOOT_VERSION}"
-	echo -e ", found."
-else
-	download_uboot
-fi
+if [[ ! -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then download_uboot; fi
 }
 
 extract (){
-echo ""
-echo_extract
 if [[ -f "u-boot-${UBOOT_VERSION}.tar.gz" ]]; then
-	pv u-boot-${UBOOT_VERSION}.tar.gz | tar -xzf - -C .
+	echo -en "Extracting u-boot-${UBOOT_VERSION}.tar.gz"
+	tar xf "u-boot-${UBOOT_VERSION}.tar.gz"
+	echo -e ", done."
 	mv -f u-boot-${UBOOT_VERSION} u-boot
 else
-	echo -e "Missing u-boot-${UBOOT_VERSION} tarball."
+	echo -e "u-boot-${UBOOT_VERSION} was not found."
 	exit 1
 fi
 }
