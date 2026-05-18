@@ -18,6 +18,9 @@ env import -t ${scriptaddr} ${filesize}
 if test "${product_name}" = "k1-x_deb1"; then
 	setenv bootlabel "BananaPi BPI-F3"
 	setenv fdtfile "k1-bananapi-f3.dtb"
+elif test "${product_name}" = "k1-x_milkv-jupiter"; then
+	setenv bootlabel "Milk-V Jupiter"
+	setenv fdtfile "k1-milkv-jupiter.dtb"
 elif test "${product_name}" = "k1-x_MUSE-Book"; then
 	setenv bootlabel "SpacemiT MUSE Book"
 	setenv fdtfile "k1-musebook.dtb"
