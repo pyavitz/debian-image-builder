@@ -241,16 +241,15 @@ EOF
 }
 
 # STAGE2
-# ubuntu apt preferences
 apt_preferences (){
-CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
-echo ""
-tee /etc/apt/preferences <<EOF
+if [[ "$DISTRO" =~ ^(ubuntu)$ ]]; then
+	mkdir -p /etc/apt
+	cat <<EOF > "/etc/apt/preferences"
 Package: rpi-eeprom linux-firmware linux-firmware-raspi2 pi-bluetooth raspberrypi-sys-mods
-Pin: release o=${CAP_DISTRO}
+Pin: release o=Ubuntu
 Pin-Priority: 1
 EOF
-echo "Done."
+fi
 }
 
 # firmware
