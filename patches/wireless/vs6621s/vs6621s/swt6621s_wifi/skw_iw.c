@@ -192,6 +192,11 @@ static int skw_keep_active_rule_save(struct skw_core *skw,
 	}
 
 	if (kp) {
+		if (kp->payload_len > SIZE_MAX - sizeof(*kp)) {
+			ret = -EINVAL;
+			return ret;
+		}
+
 		if (kp_set.rule[idx])
 			SKW_KFREE(kp_set.rule[idx]);
 
