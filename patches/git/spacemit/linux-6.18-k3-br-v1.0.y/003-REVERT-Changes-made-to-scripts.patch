@@ -1,0 +1,1059 @@
+From 8bab8a1d64ac291c1888def435641b902c5dbd89 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Mon, 25 May 2026 08:40:41 -0400
+Subject: [PATCH] REVERT: Changes made to scripts
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ scripts/Makefile.build            |  28 +--
+ scripts/Makefile.package          |   2 +-
+ scripts/Makefile.vmlinux          |   3 +-
+ scripts/build_kernel.sh           | 318 ------------------------------
+ scripts/build_rootfs.sh           |  41 ----
+ scripts/cc-can-link.sh            |   2 +-
+ scripts/gendwarfksyms/dwarf.c     |   4 +-
+ scripts/gendwarfksyms/symbols.c   |   5 +-
+ scripts/generate_rust_analyzer.py |  40 +++-
+ scripts/kconfig/nconf-cfg.sh      |  11 +-
+ scripts/kernel-doc.py             |  26 ++-
+ scripts/mod/devicetable-offsets.c |   3 +
+ scripts/mod/file2alias.c          |   9 +
+ scripts/mod/modpost.c             |   4 +
+ scripts/package/builddeb          |  40 +---
+ scripts/package/debian/rules      |  20 +-
+ scripts/package/generic           |  16 --
+ scripts/package/kernel.spec       |  65 ++++--
+ scripts/package/mkdebian          |  29 ---
+ scripts/package/mkspec            |  38 +++-
+ 20 files changed, 187 insertions(+), 517 deletions(-)
+ delete mode 100755 scripts/build_kernel.sh
+ delete mode 100755 scripts/build_rootfs.sh
+ delete mode 100644 scripts/package/generic
+
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 52c08c4eb0b9..0c838c467c76 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -356,7 +356,7 @@ $(obj)/%.o: $(obj)/%.rs FORCE
+ quiet_cmd_rustc_rsi_rs = $(RUSTC_OR_CLIPPY_QUIET) $(quiet_modtag) $@
+       cmd_rustc_rsi_rs = \
+ 	$(rust_common_cmd) -Zunpretty=expanded $< >$@; \
+-	command -v $(RUSTFMT) >/dev/null && $(RUSTFMT) $@
++	command -v $(RUSTFMT) >/dev/null && $(RUSTFMT) --config-path $(srctree)/.rustfmt.toml $@
+ 
+ $(obj)/%.rsi: $(obj)/%.rs FORCE
+ 	+$(call if_changed_dep,rustc_rsi_rs)
+@@ -527,18 +527,6 @@ ifneq ($(userprogs),)
+ include $(srctree)/scripts/Makefile.userprogs
+ endif
+ 
+-ifneq ($(need-dtbslist)$(dtb-y)$(dtb-)$(filter %.dtb %.dtb.o %.dtbo.o,$(targets)),)
+-include $(srctree)/scripts/Makefile.dtbs
+-endif
+-
+-# Build
+-# ---------------------------------------------------------------------------
+-
+-$(obj)/: $(if $(KBUILD_BUILTIN), $(targets-for-builtin)) \
+-	 $(if $(KBUILD_MODULES), $(targets-for-modules)) \
+-	 $(subdir-ym) $(always-y)
+-	@:
+-
+ # Single targets
+ # ---------------------------------------------------------------------------
+ 
+@@ -568,6 +556,20 @@ FORCE:
+ targets += $(filter-out $(single-subdir-goals), $(MAKECMDGOALS))
+ targets := $(filter-out $(PHONY), $(targets))
+ 
++# Now that targets is fully known, include dtb rules if needed
++ifneq ($(need-dtbslist)$(dtb-y)$(dtb-)$(filter %.dtb %.dtb.o %.dtbo.o,$(targets)),)
++include $(srctree)/scripts/Makefile.dtbs
++endif
++
++# Build
++# Needs to be after the include of Makefile.dtbs, which updates always-y
++# ---------------------------------------------------------------------------
++
++$(obj)/: $(if $(KBUILD_BUILTIN), $(targets-for-builtin)) \
++	 $(if $(KBUILD_MODULES), $(targets-for-modules)) \
++	 $(subdir-ym) $(always-y)
++	@:
++
+ # Read all saved command lines and dependencies for the $(targets) we
+ # may be building above, using $(if_changed{,_dep}). As an
+ # optimization, we don't need to read them if the target does not
+diff --git a/scripts/Makefile.package b/scripts/Makefile.package
+index 973bf83abe5f..74bcb9e7f7a4 100644
+--- a/scripts/Makefile.package
++++ b/scripts/Makefile.package
+@@ -128,7 +128,7 @@ deb-pkg srcdeb-pkg bindeb-pkg:
+ 	$(if $(findstring source, $(build-type)), \
+ 		--unsigned-source --compression=$(KDEB_SOURCE_COMPRESS)) \
+ 	$(if $(findstring binary, $(build-type)), \
+-		-R'$(MAKE) -f debian/rules' -j1 -a$$(cat debian/arch) \
++		-R'$(MAKE) -f debian/rules' -j1 -a$$(cat debian/arch), \
+ 		--no-check-builddeps) \
+ 	$(DPKG_FLAGS))
+ 
+diff --git a/scripts/Makefile.vmlinux b/scripts/Makefile.vmlinux
+index cd788cac9d91..276c3134a563 100644
+--- a/scripts/Makefile.vmlinux
++++ b/scripts/Makefile.vmlinux
+@@ -113,7 +113,8 @@ vmlinux: vmlinux.unstripped FORCE
+ # what kmod expects to parse.
+ quiet_cmd_modules_builtin_modinfo = GEN     $@
+       cmd_modules_builtin_modinfo = $(cmd_objcopy); \
+-                                    sed -i 's/\x00\+$$/\x00/g' $@
++                                    sed -i 's/\x00\+$$/\x00/g' $@; \
++                                    chmod -x $@
+ 
+ OBJCOPYFLAGS_modules.builtin.modinfo := -j .modinfo -O binary
+ 
+diff --git a/scripts/build_kernel.sh b/scripts/build_kernel.sh
+deleted file mode 100755
+index 212330fcf93a..000000000000
+--- a/scripts/build_kernel.sh
++++ /dev/null
+@@ -1,318 +0,0 @@
+-#!/bin/bash -e
+-
+-PACKAGE_SRC_NAME="linux-riscv-spacemit-generic"
+-CONFIG_FILE="k3_bianbu_defconfig"
+-CLEAN_CMD="make distclean && make -C tools/perf clean &&
+-    VERSION=\$(grep -oP '^VERSION\\s*=\\s*\\K\\d+' Makefile)
+-    PATCHLEVEL=\$(grep -oP '^PATCHLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    SUBLEVEL=\$(grep -oP '^SUBLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    export KERNELRELEASE=\$VERSION.\$PATCHLEVEL.\$SUBLEVEL &&
+-    rm -f ../linux-headers-\$KERNELRELEASE_*_riscv64.deb &&
+-    rm -f ../linux-image-\$KERNELRELEASE_*_riscv64.deb &&
+-    rm -f ../linux-image-\$KERNELRELEASE-dbg_*_riscv64.deb &&
+-    rm -f ../linux-tools-\$KERNELRELEASE_*_riscv64.deb &&
+-    rm -f ../linux-libc-dev_*_riscv64.deb &&
+-    rm -f ../linux-tools-common_*_all.deb &&
+-    rm -f ../${PACKAGE_SRC_NAME}_*_riscv64.*
+-"
+-BUILD_CMD="make $CONFIG_FILE && make -j\${JOBS:-\$(nproc)}"
+-BUILD_DEB_CMD="sed -i '/CONFIG_INITRAMFS_SOURCE=/d' arch/riscv/configs/$CONFIG_FILE &&
+-    make $CONFIG_FILE &&
+-    VERSION=\$(grep -oP '^VERSION\\s*=\\s*\\K\\d+' Makefile)
+-    PATCHLEVEL=\$(grep -oP '^PATCHLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    SUBLEVEL=\$(grep -oP '^SUBLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    export KERNELRELEASE=\$VERSION.\$PATCHLEVEL.\$SUBLEVEL
+-    export LOCALVERSION=\"-generic\"
+-    KDEB_SOURCENAME=$PACKAGE_SRC_NAME \\
+-    KDEB_PKGVERSION=\$KERNELRELEASE-\$(TZ=Asia/Shanghai date +\"%Y%m%d%H%M%S\") \\
+-    KDEB_CHANGELOG_DIST=resolute-porting \\
+-    make -j\${JOBS:-\$(nproc)} bindeb-pkg
+-"
+-
+-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+-SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+-SOURCE_PARENT_DIR="$(cd "$SOURCE_DIR/.." && pwd)"
+-DOCKER_REPO="${DOCKER_REPO:-harbor.spacemit.com/bianbu}"
+-IMAGE_NAME="${IMAGE_NAME:-k3-bsp-builder:latest}"
+-CROSS_COMPILE="${CROSS_COMPILE:-riscv64-unknown-linux-gnu-}"
+-TOOLCHAIN_PATH="${TOOLCHAIN_PATH:-/opt/spacemit-toolchain-linux-glibc-x86_64-v1.2.2/bin}"
+-DIRECT_BUILD="${DIRECT_BUILD:-0}"
+-JOBS=""
+-
+-CLEAN=false
+-BUILD_DEB=false
+-ACTION="build"
+-DEBUG=false
+-
+-# Function to handle symlinks within git directory
+-handle_git_internal_symlinks() {
+-    local git_dir="$1"
+-    local container_git_dir="$2"
+-    local -n git_mounts_ref="$3"  # Reference to the git mounts array
+-    [ "$DEBUG" = true ] && echo "Scanning for symlinks in git directory: $git_dir"
+-    # Find all symlinks in the git directory
+-    while IFS= read -r -d '' symlink; do
+-        if [ -L "$symlink" ]; then
+-            local real_target
+-            real_target="$(readlink -f "$symlink")"
+-            local relative_path="${symlink#$git_dir/}"
+-            local container_target="$container_git_dir/$relative_path"
+-            if [ -e "$real_target" ]; then
+-                [ "$DEBUG" = true ] && echo "Found symlink: $relative_path -> $real_target"
+-                # Store mounts in the array - add both -v and the mount path
+-                git_mounts_ref+=("-v" "$real_target:$container_target")
+-            else
+-                [ "$DEBUG" = true ] && echo "Warning: Broken symlink found: $symlink -> $real_target"
+-            fi
+-        fi
+-    done < <(find "$git_dir" -type l -print0 2>/dev/null)
+-}
+-
+-# Function to setup all container volume mounts (including git handling)
+-setup_volume_mounts() {
+-    local project_dir="$1"
+-    local package_dir="$2"
+-    local git_path="$package_dir/.git"
+-    local container_base
+-    container_base="/workspace/$(basename "$package_dir")"
+-    # Local git_mounts array for this function
+-    local git_mounts=()
+-    [ "$DEBUG" = true ] && echo "Setting up container volume mounts..."
+-    # Initialize with basic mounts
+-    VOLUME_MOUNTS=("-v" "$project_dir:/workspace" "-w" "$container_base")
+-    # Handle git directory if exists
+-    if [ -e "$git_path" ]; then
+-        local actual_git_dir
+-        local container_git_path="$container_base/.git"
+-        if [ -L "$git_path" ]; then
+-            [ "$DEBUG" = true ] && echo "Detected .git as symbolic link, resolving real git directory..."
+-            actual_git_dir="$(readlink -f "$git_path")"
+-            if [ ! -d "$actual_git_dir" ]; then
+-            echo "Error: Cannot find real git directory: $actual_git_dir"
+-            echo "Please ensure the git repository is accessible."
+-                exit 1
+-            fi
+-            # Set up main git directory mount
+-            git_mounts+=("-v" "$actual_git_dir:$container_git_path")
+-            [ "$DEBUG" = true ] && echo "Will mount real git directory: $actual_git_dir -> $container_git_path"
+-        elif [ -d "$git_path" ]; then
+-            [ "$DEBUG" = true ] && echo "Found normal .git directory"
+-            actual_git_dir="$git_path"
+-            # For normal directories, no additional mount needed as it's part of the main project mount
+-        else
+-            [ "$DEBUG" = true ] && echo "Warning: .git exists but is neither a directory nor a symlink"
+-            actual_git_dir=""
+-        fi
+-        # Handle symlinks within the git directory
+-        if [ -n "$actual_git_dir" ]; then
+-            handle_git_internal_symlinks "$actual_git_dir" "$container_git_path" git_mounts
+-        fi
+-    else
+-        [ "$DEBUG" = true ] && echo "Warning: No .git directory found, some git operations may fail"
+-    fi
+-    # Add all git mounts (both main directory and internal symlinks)
+-    if [ ${#git_mounts[@]} -gt 0 ]; then
+-        VOLUME_MOUNTS+=("${git_mounts[@]}")
+-        [ "$DEBUG" = true ] && echo "Added $(( ${#git_mounts[@]} / 2 )) git-related mounts"
+-    fi
+-    [ "$DEBUG" = true ] && echo "Total volume mounts configured: $(( (${#VOLUME_MOUNTS[@]} + 1) / 2 ))"
+-    # fix this function will exit if bash set -e
+-    return 0
+-}
+-
+-# Setup container volume mounts (includes git handling)
+-setup_volume_mounts "$SOURCE_PARENT_DIR" "$SOURCE_DIR"
+-
+-usage() {
+-    echo "Container-based build wrapper (universal version)"
+-    echo "Usage: $(basename "$0") [OPTIONS] [COMMAND]"
+-    echo ""
+-    echo "Options:"
+-    echo "  -c, --clean          Clean build (CLEAN_CMD before BUILD[_DEB]_CMD)"
+-    echo "  -d, --deb            Build DEB packages (BUILD_DEB_CMD)"
+-    echo "  -h, --help           Show this help message"
+-    echo "  -j, --jobs NUM       Number of parallel jobs (default: nproc)"
+-    echo "  -x, --debug          Enable debug output (show docker command)"
+-    echo ""
+-    echo "Commands (run inside container):"
+-    echo "  build               Build (BUILD_CMD, default)"
+-    echo "  shell               Interactive shell"
+-    echo ""
+-    echo "Examples:"
+-    echo "  $(basename "$0")                    # Build in container"
+-    echo "  $(basename "$0") -c -d              # Clean build with DEB packages"
+-    echo "  $(basename "$0") shell              # Interactive container shell"
+-}
+-
+-# Parse command line arguments
+-while [[ $# -gt 0 ]]; do
+-    case $1 in
+-        -c|--clean)
+-            CLEAN=true
+-            shift
+-            ;;
+-        -d|--deb)
+-            BUILD_DEB=true
+-            shift
+-            ;;
+-        -h|--help)
+-            usage
+-            exit 0
+-            ;;
+-        -j|--jobs)
+-            JOBS="$2"
+-            shift 2
+-            ;;
+-        -x|--debug)
+-            DEBUG=true
+-            shift
+-            ;;
+-        build|shell)
+-            ACTION="$1"
+-            shift
+-            ;;
+-        *)
+-            echo "Unknown option: $1"
+-            usage
+-            exit 1
+-            ;;
+-    esac
+-done
+-
+-if [[ -n "$JOBS" && ! "$JOBS" =~ ^[1-9][0-9]*$ ]]; then
+-    echo "Invalid jobs value: $JOBS (must be a positive integer)"
+-    exit 1
+-fi
+-
+-# Check if Docker is available
+-if [ -z "$DIRECT_BUILD" ] || [ "$DIRECT_BUILD" = "0" ]; then
+-    if ! command -v docker &> /dev/null; then
+-        echo "Error: Docker not found. Please install Docker."
+-        exit 1
+-    fi
+-fi
+-
+-# Set DEBEMAIL and DEBFULLNAME environment variable
+-if [ -z "$DEBEMAIL" ]; then
+-    if [ -n "$MAIL" ]; then
+-        DEBEMAIL="$MAIL"
+-    else
+-        DEBEMAIL="$(id -nu)@$(hostname -f 2>/dev/null || hostname)"
+-    fi
+-fi
+-
+-if [ -z "$DEBFULLNAME" ]; then
+-    if [ -n "$NAME" ]; then
+-        DEBFULLNAME="$NAME"
+-    elif echo "$DEBEMAIL" | grep -qE '^([^<]+)\s*<[^>]+>$'; then
+-        # If DEBEMAIL matches "name <email>", extract name as DEBFULLNAME
+-        DEBFULLNAME="$(echo "$DEBEMAIL" | sed -n 's/^\([^<][^<]*\)<.*$/\1/p' | sed 's/[[:space:]]*$//')"
+-    else
+-        DEBFULLNAME="$(id -nu)"
+-    fi
+-fi
+-
+-CONTAINER_ENV=("-e" "ARCH=riscv" "-e" "CROSS_COMPILE=$CROSS_COMPILE" "-e" "PATH=$TOOLCHAIN_PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" "-e" "DEBEMAIL=$DEBEMAIL" "-e" "DEBFULLNAME=$DEBFULLNAME")
+-if [[ -n "$JOBS" ]]; then
+-    CONTAINER_ENV+=("-e" "JOBS=$JOBS")
+-fi
+-
+-# Function to create user permission files for container
+-create_user_files() {
+-    local current_user current_group
+-    current_user="$(whoami):x:$(id -u):$(id -g):$(whoami),,,:/home/$(whoami):/bin/bash"
+-    current_group="$(id -gn):x:$(id -g):"
+-    # Create or update .passwd and .group files
+-    if [ ! -f "$SOURCE_DIR/.passwd" ] || \
+-       [ ! -f "$SOURCE_DIR/.group" ] || \
+-       [ "$current_user" != "$(grep "^$(whoami):" "$SOURCE_DIR/.passwd" 2>/dev/null)" ] || \
+-       [ "$current_group" != "$(grep "^$(id -gn):" "$SOURCE_DIR/.group" 2>/dev/null)" ]; then
+-        cp /etc/passwd "$SOURCE_DIR/.passwd.tmp"
+-        cp /etc/group "$SOURCE_DIR/.group.tmp"
+-        if ! grep -q "^$(whoami):" "$SOURCE_DIR/.passwd.tmp"; then
+-            echo "$current_user" >> "$SOURCE_DIR/.passwd.tmp"
+-        fi
+-        if ! grep -q "^$(id -gn):" "$SOURCE_DIR/.group.tmp"; then
+-            echo "$current_group" >> "$SOURCE_DIR/.group.tmp"
+-        fi
+-        mv "$SOURCE_DIR/.passwd.tmp" "$SOURCE_DIR/.passwd"
+-        mv "$SOURCE_DIR/.group.tmp" "$SOURCE_DIR/.group"
+-    fi
+-}
+-
+-# Create user permission files
+-create_user_files
+-
+-# Function to run command in container
+-run_in_container() {
+-    local cmd="$1"
+-    if [ "$DEBUG" = true ]; then
+-        echo "--- Docker/Podman full command ---"
+-        local full_cmd
+-        full_cmd="docker run --rm -it --init"
+-        for v in "${VOLUME_MOUNTS[@]}"; do
+-            full_cmd+=" $v"
+-        done
+-        for e in "${CONTAINER_ENV[@]}"; do
+-            full_cmd+=" $e"
+-        done
+-        full_cmd+=" -v $SOURCE_DIR/.passwd:/etc/passwd:ro"
+-        full_cmd+=" -v $SOURCE_DIR/.group:/etc/group:ro"
+-        full_cmd+=" -u $(id -u):$(id -g)"
+-        full_cmd+=" $DOCKER_REPO/$IMAGE_NAME"
+-        full_cmd+=" bash -c \"$cmd\""
+-        echo "$full_cmd"
+-        echo "--- End docker command ---"
+-    fi
+-    docker run --rm -it --init \
+-        "${VOLUME_MOUNTS[@]}" \
+-        "${CONTAINER_ENV[@]}" \
+-        -v "$SOURCE_DIR/.passwd:/etc/passwd:ro" \
+-        -v "$SOURCE_DIR/.group:/etc/group:ro" \
+-        -u "$(id -u):$(id -g)" \
+-        "$DOCKER_REPO/$IMAGE_NAME" \
+-        bash -c "$cmd"
+-}
+-
+-# Run command directly or in container based on DIRECT_BUILD
+-run_command() {
+-    local cmd="$1"
+-    if [ -n "$DIRECT_BUILD" ] && [ "$DIRECT_BUILD" != "0" ]; then
+-        [ "$DEBUG" = true ] &&  echo "[DIRECT_BUILD] Executing locally: $cmd"
+-        command -v riscv64-unknown-linux-gnu-gcc > /dev/null || \
+-        (echo "Install cross compile and add to PATH" && exit 1)
+-        export ARCH=riscv
+-        export CROSS_COMPILE=riscv64-unknown-linux-gnu-
+-        if [[ -n "$JOBS" ]]; then
+-            export JOBS
+-        fi
+-        bash -c "$cmd"
+-    else
+-        [ "$DEBUG" = true ] && echo "Building in container..."
+-        run_in_container "$cmd"
+-    fi
+-}
+-
+-# Execute container actions
+-case "$ACTION" in
+-    build)
+-        if [[ "$CLEAN" == true ]]; then
+-            run_command "$CLEAN_CMD"
+-        fi
+-        if [[ "$BUILD_DEB" == true ]]; then
+-            run_command "$BUILD_DEB_CMD"
+-        else
+-            run_command "$BUILD_CMD"
+-        fi
+-        echo "Build completed successfully!"
+-        ;;
+-    shell)
+-        run_in_container "bash"
+-        echo "Container shell session ended."
+-        ;;
+-    *)
+-        echo "Unknown action: $ACTION"
+-        usage
+-        exit 1
+-        ;;
+-esac
+diff --git a/scripts/build_rootfs.sh b/scripts/build_rootfs.sh
+deleted file mode 100755
+index 918ed3f9d7f8..000000000000
+--- a/scripts/build_rootfs.sh
++++ /dev/null
+@@ -1,41 +0,0 @@
+-#!/bin/bash
+-
+-set -e
+-
+-function generate_rootfs()
+-{
+-    if [ -d rootfs ] ; then
+-    	(cd rootfs; find . | fakeroot cpio -o -Hnewc | gzip > ../"$1")
+-    else
+-    	echo "rootfs not exist"
+-    	exit 1
+-    fi
+-}
+-
+-function extract_rootfs()
+-{
+-    if [ -f "$1" ] ; then
+-    	rm -rf rootfs && mkdir rootfs
+-    	gzip -dc $1 | (cd rootfs; fakeroot cpio -i)
+-    else
+-    	echo "$1 not exist"
+-    	exit 1
+-    fi
+-}
+-
+-if [ $# -ne 2 ]; then
+-	echo -e "please input correct parameters"
+-	echo -e "\t[build.sh -e rootfs.cpio.gz] Extract the rootfs template to rootfs folder"
+-	echo -e "\tthen make some changes in the rootfs folder"
+-	echo -e "\t[build.sh -c rootfs.cpio.gz] Generate the rootfs from the rootfs folder"
+-	exit 1
+-fi
+-
+-if [ "$1" = "-e" ] ; then
+-	extract_rootfs $2
+-elif [ "$1" = "-c" ] ; then
+-	generate_rootfs $2
+-else
+-	echo "Argument is invalid!!!"
+-	exit 1
+-fi
+diff --git a/scripts/cc-can-link.sh b/scripts/cc-can-link.sh
+index e67fd8d7b684..58dc7dd6d556 100755
+--- a/scripts/cc-can-link.sh
++++ b/scripts/cc-can-link.sh
+@@ -5,7 +5,7 @@ cat << "END" | $@ -Werror -Wl,--fatal-warnings -x c - -o /dev/null >/dev/null 2>
+ #include <stdio.h>
+ int main(void)
+ {
+-	printf("");
++	printf("\n");
+ 	return 0;
+ }
+ END
+diff --git a/scripts/gendwarfksyms/dwarf.c b/scripts/gendwarfksyms/dwarf.c
+index 3538a7d9cb07..e76d732f5f60 100644
+--- a/scripts/gendwarfksyms/dwarf.c
++++ b/scripts/gendwarfksyms/dwarf.c
+@@ -750,6 +750,7 @@ static void process_enumerator_type(struct state *state, struct die *cache,
+ 				    Dwarf_Die *die)
+ {
+ 	bool overridden = false;
++	unsigned long override;
+ 	Dwarf_Word value;
+ 
+ 	if (stable) {
+@@ -761,7 +762,8 @@ static void process_enumerator_type(struct state *state, struct die *cache,
+ 			return;
+ 
+ 		overridden = kabi_get_enumerator_value(
+-			state->expand.current_fqn, cache->fqn, &value);
++			state->expand.current_fqn, cache->fqn, &override);
++		value = override;
+ 	}
+ 
+ 	process_list_comma(state, cache);
+diff --git a/scripts/gendwarfksyms/symbols.c b/scripts/gendwarfksyms/symbols.c
+index ecddcb5ffcdf..42cd27c9cec4 100644
+--- a/scripts/gendwarfksyms/symbols.c
++++ b/scripts/gendwarfksyms/symbols.c
+@@ -3,6 +3,7 @@
+  * Copyright (C) 2024 Google LLC
+  */
+ 
++#include <inttypes.h>
+ #include "gendwarfksyms.h"
+ 
+ #define SYMBOL_HASH_BITS 12
+@@ -242,7 +243,7 @@ static void elf_for_each_global(int fd, elf_symbol_callback_t func, void *arg)
+ 				error("elf_getdata failed: %s", elf_errmsg(-1));
+ 
+ 			if (shdr->sh_entsize != sym_size)
+-				error("expected sh_entsize (%lu) to be %zu",
++				error("expected sh_entsize (%" PRIu64 ") to be %zu",
+ 				      shdr->sh_entsize, sym_size);
+ 
+ 			nsyms = shdr->sh_size / shdr->sh_entsize;
+@@ -292,7 +293,7 @@ static void set_symbol_addr(struct symbol *sym, void *arg)
+ 		hash_add(symbol_addrs, &sym->addr_hash,
+ 			 symbol_addr_hash(&sym->addr));
+ 
+-		debug("%s -> { %u, %lx }", sym->name, sym->addr.section,
++		debug("%s -> { %u, %" PRIx64 " }", sym->name, sym->addr.section,
+ 		      sym->addr.address);
+ 	} else if (sym->addr.section != addr->section ||
+ 		   sym->addr.address != addr->address) {
+diff --git a/scripts/generate_rust_analyzer.py b/scripts/generate_rust_analyzer.py
+index fc27f0cca752..852444352657 100755
+--- a/scripts/generate_rust_analyzer.py
++++ b/scripts/generate_rust_analyzer.py
+@@ -61,7 +61,6 @@ def generate_crates(srctree, objtree, sysroot_src, external_src, cfgs, core_edit
+         display_name,
+         deps,
+         cfg=[],
+-        edition="2021",
+     ):
+         append_crate(
+             display_name,
+@@ -69,13 +68,37 @@ def generate_crates(srctree, objtree, sysroot_src, external_src, cfgs, core_edit
+             deps,
+             cfg,
+             is_workspace_member=False,
+-            edition=edition,
++            # Miguel Ojeda writes:
++            #
++            # > ... in principle even the sysroot crates may have different
++            # > editions.
++            # >
++            # > For instance, in the move to 2024, it seems all happened at once
++            # > in 1.87.0 in these upstream commits:
++            # >
++            # >     0e071c2c6a58 ("Migrate core to Rust 2024")
++            # >     f505d4e8e380 ("Migrate alloc to Rust 2024")
++            # >     0b2489c226c3 ("Migrate proc_macro to Rust 2024")
++            # >     993359e70112 ("Migrate std to Rust 2024")
++            # >
++            # > But in the previous move to 2021, `std` moved in 1.59.0, while
++            # > the others in 1.60.0:
++            # >
++            # >     b656384d8398 ("Update stdlib to the 2021 edition")
++            # >     06a1c14d52a8 ("Switch all libraries to the 2021 edition")
++            #
++            # Link: https://lore.kernel.org/all/CANiq72kd9bHdKaAm=8xCUhSHMy2csyVed69bOc4dXyFAW4sfuw@mail.gmail.com/
++            #
++            # At the time of writing all rust versions we support build the
++            # sysroot crates with the same edition. We may need to relax this
++            # assumption if future edition moves span multiple rust versions.
++            edition=core_edition,
+         )
+ 
+     # NB: sysroot crates reexport items from one another so setting up our transitive dependencies
+     # here is important for ensuring that rust-analyzer can resolve symbols. The sources of truth
+     # for this dependency graph are `(sysroot_src / crate / "Cargo.toml" for crate in crates)`.
+-    append_sysroot_crate("core", [], cfg=crates_cfgs.get("core", []), edition=core_edition)
++    append_sysroot_crate("core", [], cfg=crates_cfgs.get("core", []))
+     append_sysroot_crate("alloc", ["core"])
+     append_sysroot_crate("std", ["alloc", "core"])
+     append_sysroot_crate("proc_macro", ["core", "std"])
+@@ -83,7 +106,7 @@ def generate_crates(srctree, objtree, sysroot_src, external_src, cfgs, core_edit
+     append_crate(
+         "compiler_builtins",
+         srctree / "rust" / "compiler_builtins.rs",
+-        [],
++        ["core"],
+     )
+ 
+     append_crate(
+@@ -102,7 +125,7 @@ def generate_crates(srctree, objtree, sysroot_src, external_src, cfgs, core_edit
+     append_crate(
+         "pin_init_internal",
+         srctree / "rust" / "pin-init" / "internal" / "src" / "lib.rs",
+-        [],
++        ["std", "proc_macro"],
+         cfg=["kernel"],
+         is_proc_macro=True,
+     )
+@@ -110,7 +133,7 @@ def generate_crates(srctree, objtree, sysroot_src, external_src, cfgs, core_edit
+     append_crate(
+         "pin_init",
+         srctree / "rust" / "pin-init" / "src" / "lib.rs",
+-        ["core", "pin_init_internal", "macros"],
++        ["core", "compiler_builtins", "pin_init_internal", "macros"],
+         cfg=["kernel"],
+     )
+ 
+@@ -169,7 +192,7 @@ def generate_crates(srctree, objtree, sysroot_src, external_src, cfgs, core_edit
+             append_crate(
+                 name,
+                 path,
+-                ["core", "kernel"],
++                ["core", "kernel", "pin_init"],
+                 cfg=cfg,
+             )
+ 
+@@ -192,9 +215,6 @@ def main():
+         level=logging.INFO if args.verbose else logging.WARNING
+     )
+ 
+-    # Making sure that the `sysroot` and `sysroot_src` belong to the same toolchain.
+-    assert args.sysroot in args.sysroot_src.parents
+-
+     rust_project = {
+         "crates": generate_crates(args.srctree, args.objtree, args.sysroot_src, args.exttree, args.cfgs, args.core_edition),
+         "sysroot": str(args.sysroot),
+diff --git a/scripts/kconfig/nconf-cfg.sh b/scripts/kconfig/nconf-cfg.sh
+index a20290b1a37d..4d08453f9bdb 100755
+--- a/scripts/kconfig/nconf-cfg.sh
++++ b/scripts/kconfig/nconf-cfg.sh
+@@ -6,8 +6,9 @@ set -eu
+ cflags=$1
+ libs=$2
+ 
+-PKG="ncursesw menuw panelw"
+-PKG2="ncurses menu panel"
++# Keep library order for static linking (HOSTCC='cc -static')
++PKG="menuw panelw ncursesw"
++PKG2="menu panel ncurses"
+ 
+ if [ -n "$(command -v ${HOSTPKG_CONFIG})" ]; then
+ 	if ${HOSTPKG_CONFIG} --exists $PKG; then
+@@ -28,19 +29,19 @@ fi
+ # find ncurses by pkg-config.)
+ if [ -f /usr/include/ncursesw/ncurses.h ]; then
+ 	echo -D_GNU_SOURCE -I/usr/include/ncursesw > ${cflags}
+-	echo -lncursesw -lmenuw -lpanelw > ${libs}
++	echo -lmenuw -lpanelw -lncursesw > ${libs}
+ 	exit 0
+ fi
+ 
+ if [ -f /usr/include/ncurses/ncurses.h ]; then
+ 	echo -D_GNU_SOURCE -I/usr/include/ncurses > ${cflags}
+-	echo -lncurses -lmenu -lpanel > ${libs}
++	echo -lmenu -lpanel -lncurses > ${libs}
+ 	exit 0
+ fi
+ 
+ if [ -f /usr/include/ncurses.h ]; then
+ 	echo -D_GNU_SOURCE > ${cflags}
+-	echo -lncurses -lmenu -lpanel > ${libs}
++	echo -lmenu -lpanel -lncurses > ${libs}
+ 	exit 0
+ fi
+ 
+diff --git a/scripts/kernel-doc.py b/scripts/kernel-doc.py
+index d9fe2bcbd39c..a6bb180b13d6 100755
+--- a/scripts/kernel-doc.py
++++ b/scripts/kernel-doc.py
+@@ -116,6 +116,8 @@ SRC_DIR = os.path.dirname(os.path.realpath(__file__))
+ 
+ sys.path.insert(0, os.path.join(SRC_DIR, LIB_DIR))
+ 
++WERROR_RETURN_CODE = 3
++
+ DESC = """
+ Read C language source or header FILEs, extract embedded documentation comments,
+ and print formatted documentation to standard output.
+@@ -176,7 +178,21 @@ class MsgFormatter(logging.Formatter):
+         return logging.Formatter.format(self, record)
+ 
+ def main():
+-    """Main program"""
++    """
++    Main program.
++
++    By default, the return value is:
++
++    - 0: success or Python version is not compatible with
++      kernel-doc.  If -Werror is not used, it will also
++      return 0 if there are issues at kernel-doc markups;
++
++    - 1: an abnormal condition happened;
++
++    - 2: argparse issued an error;
++
++    - 3: -Werror is used, and one or more unfiltered parse warnings happened.
++    """
+ 
+     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
+                                      description=DESC)
+@@ -323,16 +339,12 @@ def main():
+ 
+     if args.werror:
+         print("%s warnings as errors" % error_count)    # pylint: disable=C0209
+-        sys.exit(error_count)
++        sys.exit(WERROR_RETURN_CODE)
+ 
+     if args.verbose:
+         print("%s errors" % error_count)                # pylint: disable=C0209
+ 
+-    if args.none:
+-        sys.exit(0)
+-
+-    sys.exit(error_count)
+-
++    sys.exit(0)
+ 
+ # Call main method
+ if __name__ == "__main__":
+diff --git a/scripts/mod/devicetable-offsets.c b/scripts/mod/devicetable-offsets.c
+index d3d00e85edf7..0470ba7c796d 100644
+--- a/scripts/mod/devicetable-offsets.c
++++ b/scripts/mod/devicetable-offsets.c
+@@ -198,6 +198,9 @@ int main(void)
+ 	DEVID(cpu_feature);
+ 	DEVID_FIELD(cpu_feature, feature);
+ 
++	DEVID(mcb_device_id);
++	DEVID_FIELD(mcb_device_id, device);
++
+ 	DEVID(mei_cl_device_id);
+ 	DEVID_FIELD(mei_cl_device_id, name);
+ 	DEVID_FIELD(mei_cl_device_id, uuid);
+diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
+index b3333560b95e..4e99393a35f1 100644
+--- a/scripts/mod/file2alias.c
++++ b/scripts/mod/file2alias.c
+@@ -1110,6 +1110,14 @@ static void do_cpu_entry(struct module *mod, void *symval)
+ 	module_alias_printf(mod, false, "cpu:type:*:feature:*%04X*", feature);
+ }
+ 
++/* Looks like: mcb:16zN */
++static void do_mcb_entry(struct module *mod, void *symval)
++{
++	DEF_FIELD(symval, mcb_device_id, device);
++
++	module_alias_printf(mod, false, "mcb:16z%03d", device);
++}
++
+ /* Looks like: mei:S:uuid:N:* */
+ static void do_mei_entry(struct module *mod, void *symval)
+ {
+@@ -1444,6 +1452,7 @@ static const struct devtable devtable[] = {
+ 	{"mipscdmm", SIZE_mips_cdmm_device_id, do_mips_cdmm_entry},
+ 	{"x86cpu", SIZE_x86_cpu_id, do_x86cpu_entry},
+ 	{"cpu", SIZE_cpu_feature, do_cpu_entry},
++	{"mcb", SIZE_mcb_device_id, do_mcb_entry},
+ 	{"mei", SIZE_mei_cl_device_id, do_mei_entry},
+ 	{"rapidio", SIZE_rio_device_id, do_rio_entry},
+ 	{"ulpi", SIZE_ulpi_device_id, do_ulpi_entry},
+diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+index 47c8aa2a6939..133dfa16308a 100644
+--- a/scripts/mod/modpost.c
++++ b/scripts/mod/modpost.c
+@@ -602,6 +602,10 @@ static int ignore_undef_symbol(struct elf_info *info, const char *symname)
+ 		/* Special register function linked on all modules during final link of .ko */
+ 		if (strstarts(symname, "_restgpr0_") ||
+ 		    strstarts(symname, "_savegpr0_") ||
++		    strstarts(symname, "_restgpr1_") ||
++		    strstarts(symname, "_savegpr1_") ||
++		    strstarts(symname, "_restfpr_") ||
++		    strstarts(symname, "_savefpr_") ||
+ 		    strstarts(symname, "_restvr_") ||
+ 		    strstarts(symname, "_savevr_") ||
+ 		    strcmp(symname, ".TOC.") == 0)
+diff --git a/scripts/package/debian/rules b/scripts/package/debian/rules
+index 0e5122b31e5b..a417a7f8bbc1 100755
+--- a/scripts/package/debian/rules
++++ b/scripts/package/debian/rules
+@@ -5,7 +5,7 @@
+ export DEB_RULES_REQUIRES_ROOT := no
+ 
+ include debian/rules.vars
+-srctree = $(abs_srctree)
++
+ ifneq (,$(filter-out parallel=1,$(filter parallel=%,$(DEB_BUILD_OPTIONS))))
+     NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+     MAKEFLAGS += -j$(NUMJOBS)
+@@ -27,15 +27,13 @@ make-opts = ARCH=$(ARCH) KERNELRELEASE=$(KERNELRELEASE) \
+     $(addprefix KBUILD_BUILD_VERSION=,$(revision)) \
+     $(addprefix CROSS_COMPILE=,$(CROSS_COMPILE))
+ 
+-binary-targets := $(addprefix binary-, image image-dbg headers libc-dev tools tools-common)
++binary-targets := $(addprefix binary-, image image-dbg headers libc-dev)
+ 
+ all-packages = $(shell dh_listpackages)
+ image-package = $(filter linux-image-% user-%, $(filter-out %-dbg, $(all-packages)))
+ image-dbg-package = $(filter %-dbg, $(all-packages))
+ libc-dev-package = $(filter linux-libc-dev, $(all-packages))
+ headers-package = $(filter linux-headers-%, $(all-packages))
+-tools-package = $(filter linux-tools-$(KERNELRELEASE), $(all-packages))
+-tools-common-package = $(filter linux-tools-common, $(all-packages))
+ 
+ mk-files = $(patsubst binary-%,debian/%.files,$1)
+ package = $($(@:binary-%=%-package))
+@@ -45,17 +43,6 @@ package = $($(@:binary-%=%-package))
+ # which package is being processed in the build log.
+ DH_OPTIONS = -p$(package)
+ 
+-PERF_BUILD_OPTS := prefix=/usr HAVE_NO_LIBBFD=1 HAVE_CPLUS_DEMANGLE_SUPPORT=1 CROSS_COMPILE=$(CROSS_COMPILE) NO_LIBPYTHON=1 NO_LIBPERL=1 WERROR=0
+-
+-# Conditional flags based on whether it's a cross-compile
+-ifeq ("$(DEB_BUILD_GNU_TYPE)", "$(DEB_HOST_GNU_TYPE)")
+-	# Building for the host
+-	ADDITIONAL_OPTS :=
+-else
+-	# Cross-compiling
+-	ADDITIONAL_OPTS := NO_LIBELF=1 NO_LIBTRACEEVENT=1
+-endif
+-
+ # Note: future removal of KDEB_COMPRESS
+ # dpkg-deb >= 1.21.10 supports the DPKG_DEB_COMPRESSOR_TYPE environment
+ # variable, which provides the same functionality as KDEB_COMPRESS. The
+@@ -91,15 +78,12 @@ build-indep:
+ build-arch:
+ 	$(Q)$(MAKE) $(make-opts) olddefconfig
+ 	$(Q)$(MAKE) $(make-opts) $(if $(filter um,$(ARCH)),,headers) all
+-	$(Q)$(MAKE) $(PERF_BUILD_OPTS) $(ADDITIONAL_OPTS) -C tools/perf
+-	$(Q)$(MAKE) $(PERF_BUILD_OPTS) $(ADDITIONAL_OPTS) man -C tools/perf
+ 
+ .PHONY: clean
+ clean:
+ 	$(Q)dh_clean
+ 	$(Q)rm -rf debian/deb-env.vars* debian/*.files
+ 	$(Q)$(MAKE) ARCH=$(ARCH) clean
+-	$(Q)$(MAKE) clean -C tools/perf
+ 
+ # If DEB_HOST_ARCH is empty, it is likely that debian/rules was executed
+ # directly. Run 'dpkg-architecture --print-set --print-format=make' to
+diff --git a/scripts/package/generic b/scripts/package/generic
+deleted file mode 100644
+index cb58942279c3..000000000000
+--- a/scripts/package/generic
++++ /dev/null
+@@ -1,16 +0,0 @@
+-#!/bin/bash
+-full_version=$(uname -r)
+-
+-# First check for a fully qualified version.
+-this="/usr/lib/linux-tools/$full_version/$(basename "$0")"
+-if [ -f "$this" ]; then
+-exec "$this" "$@"
+-fi
+-
+-# Give them a hint as to what to install.
+-echo "WARNING: $(basename $0) not found for kernel $full_version" >&2
+-echo "" >&2
+-echo "  You may need to install the following packages for this specific kernel:" >&2
+-echo "    linux-tools-$full_version" >&2
+-
+-exit 2
+diff --git a/scripts/package/kernel.spec b/scripts/package/kernel.spec
+index 98f206cb7c60..b3c956205af0 100644
+--- a/scripts/package/kernel.spec
++++ b/scripts/package/kernel.spec
+@@ -45,7 +45,19 @@ This package provides kernel headers and makefiles sufficient to build modules
+ against the %{version} kernel package.
+ %endif
+ 
+-%if %{with_debuginfo}
++%if %{with_debuginfo_manual}
++%package debuginfo
++Summary: Debug information package for the Linux kernel
++Group: Development/Debug
++AutoReq: 0
++AutoProv: 1
++%description debuginfo
++This package provides debug information for the kernel image and modules from the
++%{version} package.
++%define install_mod_strip 1
++%endif
++
++%if %{with_debuginfo_rpm}
+ # list of debuginfo-related options taken from distribution kernel.spec
+ # files
+ %undefine _include_minidebuginfo
+@@ -59,11 +71,6 @@ against the %{version} kernel package.
+ %global _missing_build_ids_terminate_build 1
+ %global _no_recompute_build_ids 1
+ %{debug_package}
+-%endif
+-# some (but not all) versions of rpmbuild emit %%debug_package with
+-# %%install. since we've already emitted it manually, that would cause
+-# a package redefinition error. ensure that doesn't happen
+-%define debug_package %{nil}
+ 
+ # later, we make all modules executable so that find-debuginfo.sh strips
+ # them up. but they don't actually need to be executable, so remove the
+@@ -74,6 +81,13 @@ against the %{version} kernel package.
+ 	%{__os_install_post} \
+ 	find %{buildroot}/lib/modules/%{KERNELRELEASE} -name "*.ko" -type f \\\
+ 		| xargs --no-run-if-empty chmod u-x
++%else
++%define __spec_install_post /usr/lib/rpm/brp-compress || :
++%endif
++# some (but not all) versions of rpmbuild emit %%debug_package with
++# %%install. since we've already emitted it manually, that would cause
++# a package redefinition error. ensure that doesn't happen
++%define debug_package %{nil}
+ 
+ %prep
+ %setup -q -n linux
+@@ -87,7 +101,7 @@ patch -p1 < %{SOURCE2}
+ mkdir -p %{buildroot}/lib/modules/%{KERNELRELEASE}
+ cp $(%{make} %{makeflags} -s image_name) %{buildroot}/lib/modules/%{KERNELRELEASE}/vmlinuz
+ # DEPMOD=true makes depmod no-op. We do not package depmod-generated files.
+-%{make} %{makeflags} INSTALL_MOD_PATH=%{buildroot} DEPMOD=true modules_install
++%{make} %{makeflags} INSTALL_MOD_PATH=%{buildroot} %{?install_mod_strip:INSTALL_MOD_STRIP=1} DEPMOD=true modules_install
+ %{make} %{makeflags} INSTALL_HDR_PATH=%{buildroot}/usr headers_install
+ cp System.map %{buildroot}/lib/modules/%{KERNELRELEASE}
+ cp .config %{buildroot}/lib/modules/%{KERNELRELEASE}/config
+@@ -118,22 +132,43 @@ ln -fns /usr/src/kernels/%{KERNELRELEASE} %{buildroot}/lib/modules/%{KERNELRELEA
+ 	echo "%exclude /lib/modules/%{KERNELRELEASE}/build"
+ } > %{buildroot}/kernel.list
+ 
++%if 0%{with_debuginfo_manual}%{with_debuginfo_rpm} > 0
++# copying vmlinux directly to the debug directory means it will not get
++# stripped (but its source paths will still be collected + fixed up)
++mkdir -p %{buildroot}/usr/lib/debug/lib/modules/%{KERNELRELEASE}
++cp vmlinux %{buildroot}/usr/lib/debug/lib/modules/%{KERNELRELEASE}
++%endif
++
++%if %{with_debuginfo_rpm}
+ # make modules executable so that find-debuginfo.sh strips them. this
+ # will be undone later in %%__spec_install_post
+ find %{buildroot}/lib/modules/%{KERNELRELEASE} -name "*.ko" -type f \
+ 	| xargs --no-run-if-empty chmod u+x
++%endif
+ 
+-%if %{with_debuginfo}
+-# copying vmlinux directly to the debug directory means it will not get
+-# stripped (but its source paths will still be collected + fixed up)
+-mkdir -p %{buildroot}/usr/lib/debug/lib/modules/%{KERNELRELEASE}
+-cp vmlinux %{buildroot}/usr/lib/debug/lib/modules/%{KERNELRELEASE}
++%if %{with_debuginfo_manual}
++echo /usr/lib/debug/lib/modules/%{KERNELRELEASE}/vmlinux > %{buildroot}/debuginfo.list
++while read -r mod; do
++	mod="${mod%.o}.ko"
++	dbg="%{buildroot}/usr/lib/debug/lib/modules/%{KERNELRELEASE}/kernel/${mod}"
++	buildid=$("${READELF:-readelf}" -n "${mod}" | sed -n 's@^.*Build ID: \(..\)\(.*\)@\1/\2@p')
++	link="%{buildroot}/usr/lib/debug/.build-id/${buildid}.debug"
++
++	mkdir -p "${dbg%/*}" "${link%/*}"
++	"${OBJCOPY:-objcopy}" --only-keep-debug "${mod}" "${dbg}"
++	ln -sf --relative "${dbg}" "${link}"
++
++	echo "${dbg#%{buildroot}}" >> %{buildroot}/debuginfo.list
++	echo "${link#%{buildroot}}" >> %{buildroot}/debuginfo.list
++done < modules.order
+ %endif
+ 
+ %clean
+ rm -rf %{buildroot}
++%if %{with_debuginfo_rpm}
+ rm -f debugfiles.list debuglinks.list debugsourcefiles.list debugsources.list \
+ 	elfbins.list
++%endif
+ 
+ %post
+ if [ -x /usr/bin/kernel-install ]; then
+@@ -172,3 +207,9 @@ fi
+ /usr/src/kernels/%{KERNELRELEASE}
+ /lib/modules/%{KERNELRELEASE}/build
+ %endif
++
++%if %{with_debuginfo_manual}
++%files -f %{buildroot}/debuginfo.list debuginfo
++%defattr (-, root, root)
++%exclude /debuginfo.list
++%endif
+diff --git a/scripts/package/mkspec b/scripts/package/mkspec
+index c7375bfc25a9..c604f8c174e2 100755
+--- a/scripts/package/mkspec
++++ b/scripts/package/mkspec
+@@ -23,15 +23,47 @@ else
+ echo '%define with_devel 0'
+ fi
+ 
++# use %{debug_package} machinery to generate -debuginfo
++with_debuginfo_rpm=0
++# manually generate -debuginfo package
++with_debuginfo_manual=0
+ # debuginfo package generation uses find-debuginfo.sh under the hood,
+ # which only works on uncompressed modules that contain debuginfo
+ if grep -q CONFIG_DEBUG_INFO=y include/config/auto.conf &&
+    (! grep -q CONFIG_MODULE_COMPRESS=y include/config/auto.conf) &&
+    (! grep -q CONFIG_DEBUG_INFO_SPLIT=y include/config/auto.conf); then
+-echo '%define with_debuginfo %{?_without_debuginfo: 0} %{?!_without_debuginfo: 1}'
+-else
+-echo '%define with_debuginfo 0'
++	# If module signing is enabled (which may be required to boot with
++	# lockdown enabled), the find-debuginfo.sh machinery cannot be used
++	# because the signatures will be stripped off the modules. However, due
++	# to an rpm bug in versions prior to 4.20.0
++	#
++	#     https://github.com/rpm-software-management/rpm/issues/3057
++	#     https://github.com/rpm-software-management/rpm/commit/49f906998f3cf1f4152162ca61ac0869251c380f
++	#
++	# We cannot provide our own debuginfo package because it does not listen
++	# to our custom files list, failing the build due to unpackaged files.
++	# Manually generate the debug info package if using rpm 4.20.0. If not
++	# using rpm 4.20.0, avoid generating a -debuginfo package altogether,
++	# as it is not safe.
++	if grep -q CONFIG_MODULE_SIG=y include/config/auto.conf; then
++		rpm_ver_str=$(rpm --version 2>/dev/null)
++		# Split the version on spaces
++		IFS=' '
++		set -- $rpm_ver_str
++		if [ "${1:-}" = RPM -a "${2:-}" = version ]; then
++			IFS=.
++			set -- $3
++			rpm_ver=$(( 1000000 * $1 + 10000 * $2 + 100 * $3 + ${4:-0} ))
++			if [ "$rpm_ver" -ge 4200000 ]; then
++				with_debuginfo_manual='%{?_without_debuginfo:0}%{?!_without_debuginfo:1}'
++			fi
++		fi
++	else
++		with_debuginfo_rpm='%{?_without_debuginfo:0}%{?!_without_debuginfo:1}'
++	fi
+ fi
++echo "%define with_debuginfo_manual $with_debuginfo_manual"
++echo "%define with_debuginfo_rpm $with_debuginfo_rpm"
+ 
+ cat<<EOF
+ %define ARCH ${ARCH}
+-- 
+2.53.0
+
