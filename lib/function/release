@@ -6,7 +6,8 @@ SOURCES_LIST="${P_VALUE}/etc/apt/sources.list.d/${DISTRO}.sources"
 
 mirrors (){
 source mirror.txt
-if [[ "$DISTRO" == "bianbu" ]]; then MIRROR="https://archive.spacemit.com/bianbu/"
+if [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" == "noble" ]]; then MIRROR="https://archive.spacemit.com/bianbu/";
+elif [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" == "resolute" ]]; then MIRROR="https://archive.spacemit.com/bianbu4/";
 elif [[ "$DISTRO" == "debian" ]]; then MIRROR="${DEBIAN_MIRROR}"
 elif [[ "$DISTRO" == "devuan" ]]; then MIRROR="${DEVUAN_MIRROR}"
 elif [[ "$DISTRO" == "kali" ]]; then MIRROR="${KALI_MIRROR}"
@@ -26,8 +27,16 @@ Suites: noble/snapshots/v2.3 noble-security/snapshots/v2.3 noble-updates/snapsho
 Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/bianbu-archive-keyring.gpg
 EOF
+elif [[ "$DISTRO_VERSION" =~ ^(resolute)$ ]]; then
+	tee ${SOURCES_LIST} <<EOF
+Types: deb
+URIs: ${MIRROR}
+Suites: resolute resolute-security resolute-updates resolute-backports resolute-porting resolute-customization
+Components: main universe restricted multiverse
+Signed-By: /usr/share/keyrings/bianbu-archive-keyring.gpg
+EOF
 else
-	echo -e "Only Bianbu Noble is supported at this time."
+	echo -e "Only Bianbu Noble and Resolute supported at this time."
 	exit 1
 fi
 }

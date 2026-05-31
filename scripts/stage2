@@ -151,7 +151,12 @@ if [ $USERACCT -eq 0 ]; then
 	adduser --verbose ${USERNAME} disk
 	adduser --verbose ${USERNAME} plugdev
 	adduser --verbose ${USERNAME} netdev
-	adduser --verbose ${USERNAME} bluetooth
+	if [[ `grep -w "bluetooth" "/etc/group"` ]]; then
+		adduser --verbose ${USERNAME} bluetooth
+	else
+		groupadd bluetooth
+		adduser --verbose ${USERNAME} bluetooth
+	fi
 	adduser --verbose ${USERNAME} input
 	adduser --verbose ${USERNAME} tty
 	adduser --verbose ${USERNAME} i2c
