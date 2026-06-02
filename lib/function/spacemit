@@ -119,8 +119,18 @@ cat <<EOF > "../../${OUTPUT}/partition_4M.json"
 }
 EOF
 cat <<EOF > "../../${OUTPUT}/flash-spi-howto.txt"
-# Connect unit to PC ...
-fastboot devices -l 
+# Boot the unit and erase the SPI ...
+sudo apt install -y mtd-utils
+sudo flash_eraseall /dev/mtd0
+sudo flash_eraseall /dev/mtd1
+sudo flash_eraseall /dev/mtd2
+sudo flash_eraseall /dev/mtd3
+sudo flash_eraseall /dev/mtd4
+sudo flash_eraseall /dev/mtd5
+sudo flash_eraseall /dev/mtd6
+
+# Connect unit OTG to PC and reboot ...
+fastboot devices -l
 dfu-device             DFU download
  usb:1-3
 
