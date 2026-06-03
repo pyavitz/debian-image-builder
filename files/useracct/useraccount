@@ -17,7 +17,12 @@ adduser ${USERNAME} video
 adduser ${USERNAME} disk
 adduser ${USERNAME} plugdev
 adduser ${USERNAME} netdev
-adduser ${USERNAME} bluetooth
+if [[ `grep -w "bluetooth" "/etc/group"` ]]; then
+	adduser --verbose ${USERNAME} bluetooth
+else
+	groupadd bluetooth
+	adduser --verbose ${USERNAME} bluetooth
+fi
 adduser ${USERNAME} input
 adduser ${USERNAME} tty
 adduser ${USERNAME} i2c

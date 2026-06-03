@@ -2,6 +2,7 @@
 
 source lib/source
 
+#debian
 bullseye-ncompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch dosfstools zip unzip qemu parted \
@@ -31,19 +32,33 @@ sudo debconf-apt-progress -- apt install -y \
 }
 
 trixie-ncompile (){
-sudo debconf-apt-progress -- apt install -y \
-	build-essential bison bc git dialog patch dosfstools zip unzip parted \
-	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
-	device-tree-compiler libfdt-dev python3-dev swig fakeroot mmdebstrap fdisk \
-	lzop lz4 aria2 pv gcc-arm-none-eabi distro-info-data lsb-release u-boot-tools \
-	python-is-python3 python-dev-is-python3 python3-distutils-extra libelf-dev kpartx \
-	crossbuild-essential-armhf crossbuild-essential-armel gcc-arm-linux-gnueabihf \
-	gcc-arm-linux-gnueabi colorized-logs gdisk jq wget btrfs-progs xfsprogs dh-python \
-	python3-setuptools python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools xxd \
-	gcc-14-plugin-dev figlet gcc-or1k-elf gcc-riscv64-linux-gnu clang ccache xz-utils zstd gcc \
-	debhelper libdw-dev
+if [[ "$HOST_ARCH" =~ ^(aarch64)$ ]]; then
+	sudo debconf-apt-progress -- apt install -y \
+		build-essential bison bc git dialog patch dosfstools zip unzip parted \
+		debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+		device-tree-compiler libfdt-dev python3-dev swig fakeroot mmdebstrap fdisk \
+		lzop lz4 aria2 pv gcc-arm-none-eabi distro-info-data lsb-release u-boot-tools \
+		python-is-python3 python-dev-is-python3 python3-distutils-extra libelf-dev kpartx \
+		crossbuild-essential-armhf crossbuild-essential-armel gcc-arm-linux-gnueabihf \
+		gcc-arm-linux-gnueabi colorized-logs gdisk jq wget btrfs-progs xfsprogs dh-python \
+		python3-setuptools python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools xxd \
+		gcc-14-plugin-dev figlet gcc-or1k-elf gcc-riscv64-linux-gnu clang ccache xz-utils zstd gcc \
+		debhelper libdw-dev
+elif [[ "$HOST_ARCH" =~ ^(riscv64)$ ]]; then
+	sudo debconf-apt-progress -- apt install -y \
+		build-essential bison bc git dialog patch dosfstools zip unzip parted \
+		debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+		device-tree-compiler libfdt-dev python3-dev swig fakeroot mmdebstrap fdisk \
+		lzop lz4 aria2 pv distro-info-data lsb-release u-boot-tools \
+		python-is-python3 python-dev-is-python3 python3-distutils-extra libelf-dev kpartx \
+		colorized-logs gdisk jq wget btrfs-progs xfsprogs dh-python \
+		python3-setuptools python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools xxd \
+		gcc-14-plugin-dev figlet gcc-or1k-elf clang ccache xz-utils zstd gcc \
+		debhelper libdw-dev
+fi
 }
 
+# ubuntu
 jammy-ncompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch make dosfstools zip unzip \
@@ -63,40 +78,66 @@ sudo debconf-apt-progress -- apt install -y \
 }
 
 noble-ncompile (){
-sudo debconf-apt-progress -- apt install -y \
-	build-essential bison bc git dialog patch make dosfstools zip unzip \
-	debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
-	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
-	python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
-	gcc-arm-none-eabi distro-info-data lsb-release zstd xxd \
-	python-dev-is-python3 kpartx debian-archive-keyring debian-keyring \
-	python3-setuptools python3-distutils-extra fdisk mmdebstrap \
-	dh-python 2to3 python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
-	python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
-	crossbuild-essential-armhf crossbuild-essential-armel \
-	gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi \
-	gcc-12-arm-linux-gnueabi gcc-13-arm-linux-gnueabi gcc-14-arm-linux-gnueabi \
-	gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
-	gcc-12-arm-linux-gnueabihf gcc-13-arm-linux-gnueabihf gcc-14-arm-linux-gnueabihf \
-	libelf-dev gcc-9-plugin-dev gcc-10-plugin-dev gcc-11-plugin-dev gcc-12-plugin-dev \
-	gcc-13-plugin-dev gcc-14-plugin-dev gcc-9 gcc-10 gcc-11 gcc-12 gcc-13 gcc-14 ccache \
-	gcc-riscv64-linux-gnu gcc-14-riscv64-linux-gnu debhelper libdw-dev
+if [[ "$HOST_ARCH" =~ ^(aarch64)$ ]]; then
+	sudo debconf-apt-progress -- apt install -y \
+		build-essential bison bc git dialog patch make dosfstools zip unzip \
+		debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
+		libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
+		python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
+		gcc-arm-none-eabi distro-info-data lsb-release zstd xxd \
+		python-dev-is-python3 kpartx debian-archive-keyring debian-keyring \
+		python3-setuptools python3-distutils-extra fdisk mmdebstrap \
+		dh-python 2to3 python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+		python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
+		crossbuild-essential-armhf crossbuild-essential-armel \
+		gcc-9-arm-linux-gnueabi gcc-10-arm-linux-gnueabi gcc-11-arm-linux-gnueabi \
+		gcc-12-arm-linux-gnueabi gcc-13-arm-linux-gnueabi gcc-14-arm-linux-gnueabi \
+		gcc-9-arm-linux-gnueabihf gcc-10-arm-linux-gnueabihf gcc-11-arm-linux-gnueabihf \
+		gcc-12-arm-linux-gnueabihf gcc-13-arm-linux-gnueabihf gcc-14-arm-linux-gnueabihf \
+		libelf-dev gcc-9-plugin-dev gcc-10-plugin-dev gcc-11-plugin-dev gcc-12-plugin-dev \
+		gcc-13-plugin-dev gcc-14-plugin-dev gcc-9 gcc-10 gcc-11 gcc-12 gcc-13 gcc-14 ccache \
+		gcc-riscv64-linux-gnu gcc-14-riscv64-linux-gnu debhelper libdw-dev
+elif [[ "$HOST_ARCH" =~ ^(riscv64)$ ]]; then
+	sudo debconf-apt-progress -- apt install -y \
+		build-essential bison bc git dialog patch make dosfstools zip unzip \
+		debootstrap qemu-user-static rsync libelf-dev kmod cpio flex \
+		libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
+		python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools zstd xxd \
+		python-dev-is-python3 kpartx debian-archive-keyring debian-keyring lsb-release \
+		python3-setuptools python3-distutils-extra fdisk mmdebstrap distro-info-data \
+		dh-python 2to3 python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+		python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
+		libelf-dev gcc-14-plugin-dev gcc ccache debhelper libdw-dev
+fi
 }
 
 resolute-ncompile (){
-sudo debconf-apt-progress -- apt install -y \
-	build-essential bison bc git dialog patch make dosfstools zip unzip \
-	debootstrap qemu-user-binfmt rsync libelf-dev kmod cpio flex \
-	libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
-	python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
-	gcc-arm-none-eabi distro-info-data lsb-release zstd xxd \
-	python-dev-is-python3 kpartx debian-archive-keyring debian-keyring \
-	python3-setuptools python3-distutils-extra fdisk mmdebstrap \
-	dh-python python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
-	python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
-	crossbuild-essential-armhf gcc-arm-linux-gnueabi gcc-14-plugin-dev gcc-15-plugin-dev \
-	gcc-arm-linux-gnueabihf libelf-dev gcc gcc-14 ccache gcc-riscv64-linux-gnu \
-	debhelper binfmt-support libdw-dev
+if [[ "$HOST_ARCH" =~ ^(aarch64)$ ]]; then
+	sudo debconf-apt-progress -- apt install -y \
+		build-essential bison bc git dialog patch make dosfstools zip unzip \
+		debootstrap qemu-user-binfmt rsync libelf-dev kmod cpio flex \
+		libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
+		python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools \
+		gcc-arm-none-eabi distro-info-data lsb-release zstd xxd \
+		python-dev-is-python3 kpartx debian-archive-keyring debian-keyring \
+		python3-setuptools python3-distutils-extra fdisk mmdebstrap \
+		dh-python python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+		python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
+		crossbuild-essential-armhf gcc-arm-linux-gnueabi gcc-14-plugin-dev gcc-15-plugin-dev \
+		gcc-arm-linux-gnueabihf libelf-dev gcc gcc-14 ccache gcc-riscv64-linux-gnu \
+		debhelper binfmt-support libdw-dev
+elif [[ "$HOST_ARCH" =~ ^(riscv64)$ ]]; then
+	sudo debconf-apt-progress -- apt install -y \
+		build-essential bison bc git dialog patch make dosfstools zip unzip \
+		debootstrap qemu-user-binfmt rsync libelf-dev kmod cpio flex lsb-release \
+		libssl-dev libncurses5-dev parted device-tree-compiler libfdt-dev \
+		python3-dev swig fakeroot lzop lz4 aria2 pv u-boot-tools distro-info-data \
+		python-dev-is-python3 kpartx debian-archive-keyring debian-keyring \
+		python3-setuptools python3-distutils-extra fdisk mmdebstrap zstd xxd \
+		dh-python python-is-python3 colorized-logs gdisk jq wget btrfs-progs xfsprogs \
+		python3-pyelftools curl libgnutls28-dev uuu uuid-dev mtools figlet gcc-or1k-elf \
+		gcc-15-plugin-dev libelf-dev gcc ccache debhelper binfmt-support libdw-dev
+fi
 }
 
 if [[ "$HOST_ARCH" == "x86_64" ]]; then

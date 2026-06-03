@@ -1,6 +1,6 @@
 #!/bin/bash
 
-spacemit_spi_howto (){
+k1_spi_flash (){
 cat <<EOF > "../../${OUTPUT}/partition_2M.json"
 {
   "version": "1.0",
@@ -40,8 +40,6 @@ cat <<EOF > "../../${OUTPUT}/partition_2M.json"
 }
 EOF
 cat <<EOF > "../../${OUTPUT}/flash-spi-howto.txt"
-# https://bianbu-linux.spacemit.com/en/device/boot/#norblk-device-flashing
-
 # Connect unit to PC ...
 fastboot devices -l 
 dfu-device             DFU download
@@ -72,6 +70,96 @@ fastboot reboot
 EOF
 }
 
+k3_spi_flash (){
+cat <<EOF > "../../${OUTPUT}/partition_4M.json"
+{
+  "version": "1.0",
+  "format": "mtd",
+  "partitions": [
+    {
+      "name": "bootinfo",
+      "comment": "contain address and size info of fsbl, MUST not change its position",
+      "offset": "0",
+      "size": "128K",
+      "image": "bootinfo_spinor.bin"
+    },
+    {
+      "name": "fsbl",
+      "comment": "its offset was designated by bootinfo",
+      "offset": "128K",
+      "size": "512K",
+      "image": "FSBL.bin"
+    },
+    {
+      "name": "env",
+      "comment": "uboot env data partition, MUST not change its offset and size",
+      "offset": "640K",
+      "size": "64K",
+      "image": "u-boot-env-default.bin"
+    },
+    {
+      "name": "esos",
+      "offset": "704K",
+      "size": "1M",
+      "image": "esos.bin"
+    },
+    {
+      "name": "opensbi",
+      "offset": "1728K",
+      "size": "384K",
+      "image": "fw_dynamic.bin"
+    },
+    {
+      "name": "uboot",
+      "offset": "2112K",
+      "size": "3M",
+      "image": "u-boot.bin"
+    }
+  ]
+}
+EOF
+cat <<EOF > "../../${OUTPUT}/flash-spi-howto.txt"
+# Boot the unit and erase the SPI ...
+sudo apt install -y mtd-utils
+sudo flash_eraseall /dev/mtd0
+sudo flash_eraseall /dev/mtd1
+sudo flash_eraseall /dev/mtd2
+sudo flash_eraseall /dev/mtd3
+sudo flash_eraseall /dev/mtd4
+sudo flash_eraseall /dev/mtd5
+sudo flash_eraseall /dev/mtd6
+
+# Connect unit OTG to PC and reboot ...
+fastboot devices -l
+dfu-device             DFU download
+ usb:1-3
+
+# Stage Boot (Wait a few seconds between each STAGE)
+fastboot stage FSBL.bin
+fastboot continue
+
+fastboot stage u-boot.bin
+fastboot continue
+
+# Flash to SPI ...
+fastboot flash mtd partition_4M.json
+sleep .75
+fastboot flash bootinfo bootinfo_spinor.bin
+sleep .75
+fastboot flash fsbl FSBL.bin
+sleep .75
+fastboot flash env u-boot-env-default.bin
+sleep .75
+fastboot flash esos esos.bin
+sleep .75
+fastboot flash opensbi fw_dynamic.bin
+sleep .75
+fastboot flash uboot u-boot.bin
+sleep .75
+fastboot reboot
+EOF
+}
+
 # ATF BINARY AND FIRMWARE
 fw_dynamic (){ # place file.
 if [[ -f "../opensbi/${OPENSBI_FIRMWARE}" ]]; then cp "../opensbi/${OPENSBI_FIRMWARE}" .; else report_opensbi_error; fi
@@ -87,6 +175,17 @@ if [[ -f "../opensbi/${OPENSBI_FIRMWARE}" ]]; then cp "../opensbi/${OPENSBI_FIRM
 #fi
 #}
 
+spacemit_uboot_env (){
+# replace board/spacemit/k1-x/k1-x.env
+if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
+	cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
+fi
+# replace board/spacemit/k3/k3.env
+if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/k3.env" ]] && [[ "u-boot/board/spacemit/k3/k3.env" ]]; then
+	cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY_EXT}/k3.env" "u-boot/board/spacemit/k3/k3.env"
+fi
+}
+
 spacemit_uboot_download (){
 if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	if [[ ! `git -C ${FAMILY}-u-boot-${GIT_UBOOT_TAG} remote -v | grep "${GIT_UBOOT_URL}"` ]]; then
@@ -98,19 +197,13 @@ if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 	make clean
 	echo -en " Restoring"
 	cd ..; cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
-	# replace board/spacemit/k1-x/k1-x.env
-	if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
-		cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
-	fi
+	spacemit_uboot_env
 	echo -e ", done."
 else
 	git clone -c advice.detachedHead=false --depth=1 ${GIT_UBOOT_URL} -b ${GIT_UBOOT_TAG} ${FAMILY}-u-boot-${GIT_UBOOT_TAG}
 	if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 		cd ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; make clean; cd ..; cp -r ${FAMILY}-u-boot-${GIT_UBOOT_TAG} u-boot
-		# replace board/spacemit/k1-x/k1-x.env
-		if [[ -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY}/k1-x.env" ]] && [[ "u-boot/board/spacemit/k1-x/k1-x.env" ]]; then
-			cp -f "../${UBOOT_PATCHDIR}/${UBOOT_VERSION}/${FAMILY}/k1-x.env" "u-boot/board/spacemit/k1-x/k1-x.env"
-		fi
+		spacemit_uboot_env
 	else
 		echo -e "${RED}Download Failed!${FIN}"
 		exit 1
@@ -119,7 +212,8 @@ fi
 }
 
 uboot_output (){
-if [[ -f "bootinfo_emmc.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.itb" ]] && [[ -f "FSBL.bin" ]]; then
+if [[ "$FAMILY_EXT" == "spacemit-k1" ]] && \
+	[[ -f "bootinfo_emmc.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.itb" ]] && [[ -f "FSBL.bin" ]]; then
 	mkdir -p ../../${OUTPUT}
 	cp -f bootinfo_emmc.bin ../../${OUTPUT}/
 	cp -f FSBL.bin ../../${OUTPUT}/
@@ -129,7 +223,23 @@ if [[ -f "bootinfo_emmc.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.it
 	chmod o+r u-boot-env-default.bin
 	cp -f bootinfo_spinor.bin ../../${OUTPUT}/
 	cp -f u-boot-env-default.bin ../../${OUTPUT}/
-	spacemit_spi_howto
+	k1_spi_flash
+	uboot_packaging
+elif [[ "$FAMILY_EXT" == "spacemit-k3" ]] && \
+	[[ -f "bootinfo_block.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.itb" ]] && [[ -f "FSBL.bin" ]]; then
+	mkdir -p ../../${OUTPUT}
+	cp -f bootinfo_block.bin ../../${OUTPUT}/
+	cp -f FSBL.bin ../../${OUTPUT}/
+	cp -f fw_dynamic.itb ../../${OUTPUT}/fw_dynamic.bin
+	cp -f u-boot.itb ../../${OUTPUT}/u-boot.bin
+	# add spi bins
+	chmod o+r u-boot-env-default.bin
+	cp -f bootinfo_spinand.bin ../../${OUTPUT}/
+	cp -f bootinfo_spinor.bin ../../${OUTPUT}/
+	cp -f u-boot-env-default.bin ../../${OUTPUT}/
+	# add esos
+	cp -f ../../files/firmware/${FAMILY_EXT}/esos.itb ../../${OUTPUT}/esos.bin
+	k3_spi_flash
 	uboot_packaging
 else
 	report_error
@@ -152,12 +262,24 @@ uboot_output
 }
 
 spacemit_uboot_packaging (){
-cp -f bootinfo_emmc.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-cp -f bootinfo_spinor.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-cp -f FSBL.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
-cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/fw_dynamic.bin
-cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
-cp -f u-boot-env-default.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+if [[ "$FAMILY_EXT" == "spacemit-k1" ]]; then
+	cp -f bootinfo_emmc.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f bootinfo_spinor.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f FSBL.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/fw_dynamic.bin
+	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+	cp -f u-boot-env-default.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+elif [[ "$FAMILY_EXT" == "spacemit-k3" ]]; then
+	cp -f bootinfo_block.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f bootinfo_spinand.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f bootinfo_spinor.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f FSBL.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	cp -f fw_dynamic.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/fw_dynamic.bin
+	cp -f u-boot.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/u-boot.bin
+	cp -f u-boot-env-default.bin ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/
+	# add esos
+	cp -f ../../files/firmware/${FAMILY_EXT}/esos.itb ${PKGNAME}_${PKGVERSION}-${BV}_${ARCH_EXT}/usr/lib/${PKGNAME}/esos.bin
+fi
 }
 
 # LINUX
@@ -176,16 +298,21 @@ fi
 
 # STAGE1
 flash_uboot (){
-dd if=${OUTPUT}/bootinfo_emmc.bin of="${IMAGE_LOOP_DEV}" bs=512 conv=notrunc
-dd if=${OUTPUT}/FSBL.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1 conv=notrunc
-dd if=${OUTPUT}/fw_dynamic.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1280 conv=notrunc
-dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=2048 conv=notrunc
+if [[ "$FAMILY_EXT" == "spacemit-k1" ]]; then
+	dd if=${OUTPUT}/bootinfo_emmc.bin of="${IMAGE_LOOP_DEV}" bs=512 conv=notrunc
+	dd if=${OUTPUT}/FSBL.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1 conv=notrunc
+	dd if=${OUTPUT}/fw_dynamic.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=1280 conv=notrunc
+	dd if=${OUTPUT}/u-boot.bin of="${IMAGE_LOOP_DEV}" bs=512 seek=2048 conv=notrunc
+fi
 }
 
 spacemit_stage1_extra_firmware (){
-if [[ "$FAMILY" == "spacemit" ]]; then
+if [[ "$FAMILY" == "spacemit-k1" ]]; then
 	mkdir -p ${P_VALUE}/lib/firmware
 	cp -r files/firmware/spacemit/esos.elf ${P_VALUE}/lib/firmware/
+elif [[ "$FAMILY" == "spacemit-k3" ]]; then
+	mkdir -p ${P_VALUE}/lib/firmware
+	cp -r files/firmware/spacemit/*.elf ${P_VALUE}/lib/firmware/
 fi
 }
 
@@ -195,5 +322,10 @@ if [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" == "noble" ]]; then
 	EXTRA_PKGS="zsh img-gpu-powervr k1x-vpu-firmware k1x-cam libegl1-mesa libglapi-mesa libgbm1 \
 	libgbm-dev libegl-mesa0 libgl1-mesa-dri libgles2-mesa libgl1-mesa-glx libglx-mesa0 libosmesa6 \
 	libwayland-egl1-mesa mesa-common-dev mesa-vdpau-drivers mesa-vulkan-drivers v4l-utils mpp mpv"
+elif [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" == "resolute" ]]; then
+	EXTRA_PKGS="zsh img-gpu-powervr k3x-vpu-firmware k3x-cam libegl1-mesa libglapi-mesa libgbm1 \
+	libgbm-dev libegl-mesa0 libgl1-mesa-dri libgles2-mesa libgl1-mesa-glx libglx-mesa0 libosmesa6 \
+	libwayland-egl1-mesa mesa-common-dev mesa-vdpau-drivers mesa-vulkan-drivers v4l-utils mpp mpv \
+	k3-pico-itx-ec-firmware"
 fi
 }
