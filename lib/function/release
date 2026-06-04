@@ -6,7 +6,8 @@ SOURCES_LIST="${P_VALUE}/etc/apt/sources.list.d/${DISTRO}.sources"
 
 mirrors (){
 source mirror.txt
-if [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" =~ ^(noble|resolute)$ ]]; then MIRROR="https://archive.spacemit.com";
+if [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" =~ ^(noble)$ ]]; then MIRROR="${BIANBU_MIRROR}";
+elif [[ "$DISTRO" == "bianbu" && "$DISTRO_VERSION" =~ ^(resolute)$ ]]; then MIRROR="${BIANBU4_MIRROR}";
 elif [[ "$DISTRO" == "debian" ]]; then MIRROR="${DEBIAN_MIRROR}"
 elif [[ "$DISTRO" == "devuan" ]]; then MIRROR="${DEVUAN_MIRROR}"
 elif [[ "$DISTRO" == "kali" ]]; then MIRROR="${KALI_MIRROR}"
@@ -19,19 +20,17 @@ fi
 bianbu_release (){
 # https://docs.bit-brick.com/docs/k1/os/desktop/bianbu_desktop_2.2
 if [[ "$DISTRO_VERSION" =~ ^(noble)$ ]]; then
-	BIANBU_VERSION="bianbu"
 	tee ${SOURCES_LIST} <<EOF
 Types: deb
-URIs: ${MIRROR}/${BIANBU_VERSION}/
+URIs: ${MIRROR}
 Suites: noble/snapshots/v2.3 noble-security/snapshots/v2.3 noble-updates/snapshots/v2.3 noble-porting/snapshots/v2.3 noble-customization/snapshots/v2.3 bianbu-v2.3-updates
 Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/bianbu-archive-keyring.gpg
 EOF
 elif [[ "$DISTRO_VERSION" =~ ^(resolute)$ ]]; then
-	BIANBU_VERSION="bianbu4"
 	tee ${SOURCES_LIST} <<EOF
 Types: deb
-URIs: ${MIRROR}/${BIANBU_VERSION}/
+URIs: ${MIRROR}
 Suites: resolute resolute-security resolute-updates resolute-backports resolute-porting resolute-customization
 Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/bianbu-archive-keyring.gpg
