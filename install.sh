@@ -58,8 +58,8 @@ else
 fi
 echo ""
 echo -e "${TXT}Starting install${FIN} ..."
-if [[ "$HOST_ARCH" =~ ^(aarch64|x86_64)$ ]]; then
-	if [[ "$HOST_ARCH" == "aarch64" ]]; then CMD="ncompile"; else CMD="ccompile"; fi
+if [[ "$HOST_ARCH" =~ ^(aarch64|riscv64|x86_64)$ ]]; then
+	if [[ "$HOST_ARCH" =~ ^(aarch64|riscv64)$ ]]; then CMD="ncompile"; else CMD="ccompile"; fi
 	sudo apt update; sudo apt upgrade -y; make ${CMD}
 else
 	echo -e "ARCH: $HOST_ARCH is not supported by this script."
