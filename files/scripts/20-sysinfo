@@ -14,6 +14,9 @@ CPU1M=`lscpu | grep "CPU max MHz" | sed -n 2p | sed 's/CPU max MHz://g' | sed -r
 if [[ -f "/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_cur_freq" ]]; then
 	CPU1C=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_cur_freq | sed 's/...$//');
 fi
+if [[ -f "/sys/devices/system/cpu/cpu8/cpufreq/cpuinfo_cur_freq" ]]; then
+	CPU2C=$(cat /sys/devices/system/cpu/cpu8/cpufreq/cpuinfo_cur_freq | sed 's/...$//');
+fi
 if [[ -f "/sys/class/thermal/thermal_zone0/temp" ]]; then
 	CPU0T=$(cat /sys/class/thermal/thermal_zone0/temp|cut -c1-2);
 fi
@@ -59,7 +62,12 @@ echo -en "Frequency:   "$CPU0C; echo -e "MHz"
 disp_cpu2 (){
 echo -en "Processors:  "$CPU0; echo -en " @ $CPU0M"; echo -en "MHz $CPU0T°C"
 echo -en "," $CPU1; echo -en " @ $CPU1M"; echo -e "MHz $CPU1T°C"
-echo -en "Frequencies: "$CPU0C; echo -en "MHz $CPU1C"; echo -e "MHz"
+if [[ "$PRESENT" =~ ^(0-15)$ ]]; then
+	# spacemit k3
+	echo -en "Frequencies: "$CPU2C; echo -en "MHz $CPU0C"; echo -e "MHz"
+else
+	echo -en "Frequencies: "$CPU0C; echo -en "MHz $CPU1C"; echo -e "MHz"
+fi
 }
 
 cpu_hwinfo (){
