@@ -304,7 +304,9 @@ else
 fi
 
 # GUID PARTITION TABLE
-if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]]; then GPT="true"; else GPT="false"; fi
+if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]] || \
+	[[ "$BOARD" =~ ^(picoitx)$ ]]; then GPT="true"; else GPT="false";
+fi
 
 # SUMMARY
 $EE ""
@@ -314,7 +316,9 @@ $EN "Platform: "; $EE "$FAMILY" | sed -e 's/\(.*\)/\U\1/'
 $EE "Drive: $DEVICE_NODE"
 $EN "Partitions: "; $EE "$P_VALUE" | sed 's/p//g'
 $EE "UEFI: $EFI"
-if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]]; then $EN "GPT: "; $EE "$GPT"; fi
+if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]] || \
+	[[ "$BOARD" =~ ^(picoitx)$ ]]; then $EN "GPT: "; $EE "$GPT";
+fi
 $EE "eMMC Transfer: $EMMC_TRUE"
 if [[ "$P_VALUE" == "p2" ]]; then
 	$EN "BOOT FSTYPE: "; $EE "$B_FSTYPE"
