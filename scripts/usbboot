@@ -6,21 +6,14 @@ source userdata.txt
 source lib/function/${FAMILY}
 
 if [[ -d "sysroot" ]] || [[ -d "p1" ]]; then make clean; clear -x; fi
-if [[ "$PLATFORM" == "allwinner" || "$PLATFORM" == "amlogic" ]]; then
-	:;
-else
+if [[ ! "$PLATFORM" =~ ^(allwinner|amlogic|spacemit)$ ]]; then
 	echo "${PLATFORM} is not supported."
 	exit 1
 fi
-if [[ -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
-	:;
-else
+if [[ ! -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
 	echo -e "Missing u-boot package"
 	exit 1
 fi
-# parted offset conversion
-if [[ "$OFFSET" =~ ^(4096|8192)$ ]]; then IMG_OFFSET="4MiB"; fi
-if [[ "$OFFSET" == "32768" ]]; then IMG_OFFSET="16MiB"; fi
 
 P_BOOT="p1"
 IMAGE_FOLDER="img/"
@@ -37,7 +30,7 @@ partition (){
 truncate -s 32MB "${IMAGE_FOLDER}${USB_BOOT_IMAGE}"
 parted --script "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" \
 mklabel msdos \
-mkpart primary fat32 ${IMG_OFFSET} 100%
+mkpart primary fat32 ${OFFSET} 100%
 parted --script "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" set 1 boot on
 IMAGE_LOOP_DEV="$(losetup --show -P -f ${IMAGE_FOLDER}${USB_BOOT_IMAGE})"
 IMAGE_LOOP_DEV_BOOT="${IMAGE_LOOP_DEV}${P_BOOT}"
@@ -48,11 +41,18 @@ $MAKE_BOOTFS
 mount "${IMAGE_LOOP_DEV_BOOT}" ${P_BOOT}
 flash_uboot
 sync
-if [[ -f "${BOOT_SCRIPT}" ]]; then
+if [[ -f "${BOOT_SCRIPT}" ]] && [[ "$PLATFORM" =~ ^(allwinner|amlogic)$ ]]; then
 	cp -f ${BOOT_SCRIPT} p1/boot.cmd
 	echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> p1/boot.cmd
 	mkimage -C none -A ${ARCH} -T script -d p1/boot.cmd p1/boot.scr
 	sleep .50
+	umount ${P_BOOT}
+	losetup -d "${IMAGE_LOOP_DEV}"
+	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
+	rmdir "${IMAGE_FOLDER}"
+	rmdir p1
+	echo ""
+elif [[ -f "${BOOT_SCRIPT}" ]] && [[ "$PLATFORM" =~ ^(spacemit)$ ]]; then
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
 	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
