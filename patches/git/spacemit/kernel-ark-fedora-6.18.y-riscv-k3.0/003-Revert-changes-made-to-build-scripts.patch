@@ -1,0 +1,490 @@
+From 1a00336cfc1881dd969fc31a29cb98d2dd94c893 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sun, 5 Jul 2026 15:23:09 -0400
+Subject: [PATCH] Revert changes made to build scripts
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ scripts/Makefile.package     |   2 +-
+ scripts/build_kernel.sh      | 318 -----------------------------------
+ scripts/build_rootfs.sh      |  41 -----
+ scripts/package/debian/rules |  20 +--
+ scripts/package/generic      |  16 --
+ 5 files changed, 3 insertions(+), 394 deletions(-)
+ delete mode 100755 scripts/build_kernel.sh
+ delete mode 100755 scripts/build_rootfs.sh
+ delete mode 100644 scripts/package/generic
+
+diff --git a/scripts/Makefile.package b/scripts/Makefile.package
+index 973bf83ab..74bcb9e7f 100644
+--- a/scripts/Makefile.package
++++ b/scripts/Makefile.package
+@@ -128,7 +128,7 @@ deb-pkg srcdeb-pkg bindeb-pkg:
+ 	$(if $(findstring source, $(build-type)), \
+ 		--unsigned-source --compression=$(KDEB_SOURCE_COMPRESS)) \
+ 	$(if $(findstring binary, $(build-type)), \
+-		-R'$(MAKE) -f debian/rules' -j1 -a$$(cat debian/arch) \
++		-R'$(MAKE) -f debian/rules' -j1 -a$$(cat debian/arch), \
+ 		--no-check-builddeps) \
+ 	$(DPKG_FLAGS))
+ 
+diff --git a/scripts/build_kernel.sh b/scripts/build_kernel.sh
+deleted file mode 100755
+index 212330fcf..000000000
+--- a/scripts/build_kernel.sh
++++ /dev/null
+@@ -1,318 +0,0 @@
+-#!/bin/bash -e
+-
+-PACKAGE_SRC_NAME="linux-riscv-spacemit-generic"
+-CONFIG_FILE="k3_bianbu_defconfig"
+-CLEAN_CMD="make distclean && make -C tools/perf clean &&
+-    VERSION=\$(grep -oP '^VERSION\\s*=\\s*\\K\\d+' Makefile)
+-    PATCHLEVEL=\$(grep -oP '^PATCHLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    SUBLEVEL=\$(grep -oP '^SUBLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    export KERNELRELEASE=\$VERSION.\$PATCHLEVEL.\$SUBLEVEL &&
+-    rm -f ../linux-headers-\$KERNELRELEASE_*_riscv64.deb &&
+-    rm -f ../linux-image-\$KERNELRELEASE_*_riscv64.deb &&
+-    rm -f ../linux-image-\$KERNELRELEASE-dbg_*_riscv64.deb &&
+-    rm -f ../linux-tools-\$KERNELRELEASE_*_riscv64.deb &&
+-    rm -f ../linux-libc-dev_*_riscv64.deb &&
+-    rm -f ../linux-tools-common_*_all.deb &&
+-    rm -f ../${PACKAGE_SRC_NAME}_*_riscv64.*
+-"
+-BUILD_CMD="make $CONFIG_FILE && make -j\${JOBS:-\$(nproc)}"
+-BUILD_DEB_CMD="sed -i '/CONFIG_INITRAMFS_SOURCE=/d' arch/riscv/configs/$CONFIG_FILE &&
+-    make $CONFIG_FILE &&
+-    VERSION=\$(grep -oP '^VERSION\\s*=\\s*\\K\\d+' Makefile)
+-    PATCHLEVEL=\$(grep -oP '^PATCHLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    SUBLEVEL=\$(grep -oP '^SUBLEVEL\\s*=\\s*\\K\\d+' Makefile)
+-    export KERNELRELEASE=\$VERSION.\$PATCHLEVEL.\$SUBLEVEL
+-    export LOCALVERSION=\"-generic\"
+-    KDEB_SOURCENAME=$PACKAGE_SRC_NAME \\
+-    KDEB_PKGVERSION=\$KERNELRELEASE-\$(TZ=Asia/Shanghai date +\"%Y%m%d%H%M%S\") \\
+-    KDEB_CHANGELOG_DIST=resolute-porting \\
+-    make -j\${JOBS:-\$(nproc)} bindeb-pkg
+-"
+-
+-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+-SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+-SOURCE_PARENT_DIR="$(cd "$SOURCE_DIR/.." && pwd)"
+-DOCKER_REPO="${DOCKER_REPO:-harbor.spacemit.com/bianbu}"
+-IMAGE_NAME="${IMAGE_NAME:-k3-bsp-builder:latest}"
+-CROSS_COMPILE="${CROSS_COMPILE:-riscv64-unknown-linux-gnu-}"
+-TOOLCHAIN_PATH="${TOOLCHAIN_PATH:-/opt/spacemit-toolchain-linux-glibc-x86_64-v1.2.2/bin}"
+-DIRECT_BUILD="${DIRECT_BUILD:-0}"
+-JOBS=""
+-
+-CLEAN=false
+-BUILD_DEB=false
+-ACTION="build"
+-DEBUG=false
+-
+-# Function to handle symlinks within git directory
+-handle_git_internal_symlinks() {
+-    local git_dir="$1"
+-    local container_git_dir="$2"
+-    local -n git_mounts_ref="$3"  # Reference to the git mounts array
+-    [ "$DEBUG" = true ] && echo "Scanning for symlinks in git directory: $git_dir"
+-    # Find all symlinks in the git directory
+-    while IFS= read -r -d '' symlink; do
+-        if [ -L "$symlink" ]; then
+-            local real_target
+-            real_target="$(readlink -f "$symlink")"
+-            local relative_path="${symlink#$git_dir/}"
+-            local container_target="$container_git_dir/$relative_path"
+-            if [ -e "$real_target" ]; then
+-                [ "$DEBUG" = true ] && echo "Found symlink: $relative_path -> $real_target"
+-                # Store mounts in the array - add both -v and the mount path
+-                git_mounts_ref+=("-v" "$real_target:$container_target")
+-            else
+-                [ "$DEBUG" = true ] && echo "Warning: Broken symlink found: $symlink -> $real_target"
+-            fi
+-        fi
+-    done < <(find "$git_dir" -type l -print0 2>/dev/null)
+-}
+-
+-# Function to setup all container volume mounts (including git handling)
+-setup_volume_mounts() {
+-    local project_dir="$1"
+-    local package_dir="$2"
+-    local git_path="$package_dir/.git"
+-    local container_base
+-    container_base="/workspace/$(basename "$package_dir")"
+-    # Local git_mounts array for this function
+-    local git_mounts=()
+-    [ "$DEBUG" = true ] && echo "Setting up container volume mounts..."
+-    # Initialize with basic mounts
+-    VOLUME_MOUNTS=("-v" "$project_dir:/workspace" "-w" "$container_base")
+-    # Handle git directory if exists
+-    if [ -e "$git_path" ]; then
+-        local actual_git_dir
+-        local container_git_path="$container_base/.git"
+-        if [ -L "$git_path" ]; then
+-            [ "$DEBUG" = true ] && echo "Detected .git as symbolic link, resolving real git directory..."
+-            actual_git_dir="$(readlink -f "$git_path")"
+-            if [ ! -d "$actual_git_dir" ]; then
+-            echo "Error: Cannot find real git directory: $actual_git_dir"
+-            echo "Please ensure the git repository is accessible."
+-                exit 1
+-            fi
+-            # Set up main git directory mount
+-            git_mounts+=("-v" "$actual_git_dir:$container_git_path")
+-            [ "$DEBUG" = true ] && echo "Will mount real git directory: $actual_git_dir -> $container_git_path"
+-        elif [ -d "$git_path" ]; then
+-            [ "$DEBUG" = true ] && echo "Found normal .git directory"
+-            actual_git_dir="$git_path"
+-            # For normal directories, no additional mount needed as it's part of the main project mount
+-        else
+-            [ "$DEBUG" = true ] && echo "Warning: .git exists but is neither a directory nor a symlink"
+-            actual_git_dir=""
+-        fi
+-        # Handle symlinks within the git directory
+-        if [ -n "$actual_git_dir" ]; then
+-            handle_git_internal_symlinks "$actual_git_dir" "$container_git_path" git_mounts
+-        fi
+-    else
+-        [ "$DEBUG" = true ] && echo "Warning: No .git directory found, some git operations may fail"
+-    fi
+-    # Add all git mounts (both main directory and internal symlinks)
+-    if [ ${#git_mounts[@]} -gt 0 ]; then
+-        VOLUME_MOUNTS+=("${git_mounts[@]}")
+-        [ "$DEBUG" = true ] && echo "Added $(( ${#git_mounts[@]} / 2 )) git-related mounts"
+-    fi
+-    [ "$DEBUG" = true ] && echo "Total volume mounts configured: $(( (${#VOLUME_MOUNTS[@]} + 1) / 2 ))"
+-    # fix this function will exit if bash set -e
+-    return 0
+-}
+-
+-# Setup container volume mounts (includes git handling)
+-setup_volume_mounts "$SOURCE_PARENT_DIR" "$SOURCE_DIR"
+-
+-usage() {
+-    echo "Container-based build wrapper (universal version)"
+-    echo "Usage: $(basename "$0") [OPTIONS] [COMMAND]"
+-    echo ""
+-    echo "Options:"
+-    echo "  -c, --clean          Clean build (CLEAN_CMD before BUILD[_DEB]_CMD)"
+-    echo "  -d, --deb            Build DEB packages (BUILD_DEB_CMD)"
+-    echo "  -h, --help           Show this help message"
+-    echo "  -j, --jobs NUM       Number of parallel jobs (default: nproc)"
+-    echo "  -x, --debug          Enable debug output (show docker command)"
+-    echo ""
+-    echo "Commands (run inside container):"
+-    echo "  build               Build (BUILD_CMD, default)"
+-    echo "  shell               Interactive shell"
+-    echo ""
+-    echo "Examples:"
+-    echo "  $(basename "$0")                    # Build in container"
+-    echo "  $(basename "$0") -c -d              # Clean build with DEB packages"
+-    echo "  $(basename "$0") shell              # Interactive container shell"
+-}
+-
+-# Parse command line arguments
+-while [[ $# -gt 0 ]]; do
+-    case $1 in
+-        -c|--clean)
+-            CLEAN=true
+-            shift
+-            ;;
+-        -d|--deb)
+-            BUILD_DEB=true
+-            shift
+-            ;;
+-        -h|--help)
+-            usage
+-            exit 0
+-            ;;
+-        -j|--jobs)
+-            JOBS="$2"
+-            shift 2
+-            ;;
+-        -x|--debug)
+-            DEBUG=true
+-            shift
+-            ;;
+-        build|shell)
+-            ACTION="$1"
+-            shift
+-            ;;
+-        *)
+-            echo "Unknown option: $1"
+-            usage
+-            exit 1
+-            ;;
+-    esac
+-done
+-
+-if [[ -n "$JOBS" && ! "$JOBS" =~ ^[1-9][0-9]*$ ]]; then
+-    echo "Invalid jobs value: $JOBS (must be a positive integer)"
+-    exit 1
+-fi
+-
+-# Check if Docker is available
+-if [ -z "$DIRECT_BUILD" ] || [ "$DIRECT_BUILD" = "0" ]; then
+-    if ! command -v docker &> /dev/null; then
+-        echo "Error: Docker not found. Please install Docker."
+-        exit 1
+-    fi
+-fi
+-
+-# Set DEBEMAIL and DEBFULLNAME environment variable
+-if [ -z "$DEBEMAIL" ]; then
+-    if [ -n "$MAIL" ]; then
+-        DEBEMAIL="$MAIL"
+-    else
+-        DEBEMAIL="$(id -nu)@$(hostname -f 2>/dev/null || hostname)"
+-    fi
+-fi
+-
+-if [ -z "$DEBFULLNAME" ]; then
+-    if [ -n "$NAME" ]; then
+-        DEBFULLNAME="$NAME"
+-    elif echo "$DEBEMAIL" | grep -qE '^([^<]+)\s*<[^>]+>$'; then
+-        # If DEBEMAIL matches "name <email>", extract name as DEBFULLNAME
+-        DEBFULLNAME="$(echo "$DEBEMAIL" | sed -n 's/^\([^<][^<]*\)<.*$/\1/p' | sed 's/[[:space:]]*$//')"
+-    else
+-        DEBFULLNAME="$(id -nu)"
+-    fi
+-fi
+-
+-CONTAINER_ENV=("-e" "ARCH=riscv" "-e" "CROSS_COMPILE=$CROSS_COMPILE" "-e" "PATH=$TOOLCHAIN_PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" "-e" "DEBEMAIL=$DEBEMAIL" "-e" "DEBFULLNAME=$DEBFULLNAME")
+-if [[ -n "$JOBS" ]]; then
+-    CONTAINER_ENV+=("-e" "JOBS=$JOBS")
+-fi
+-
+-# Function to create user permission files for container
+-create_user_files() {
+-    local current_user current_group
+-    current_user="$(whoami):x:$(id -u):$(id -g):$(whoami),,,:/home/$(whoami):/bin/bash"
+-    current_group="$(id -gn):x:$(id -g):"
+-    # Create or update .passwd and .group files
+-    if [ ! -f "$SOURCE_DIR/.passwd" ] || \
+-       [ ! -f "$SOURCE_DIR/.group" ] || \
+-       [ "$current_user" != "$(grep "^$(whoami):" "$SOURCE_DIR/.passwd" 2>/dev/null)" ] || \
+-       [ "$current_group" != "$(grep "^$(id -gn):" "$SOURCE_DIR/.group" 2>/dev/null)" ]; then
+-        cp /etc/passwd "$SOURCE_DIR/.passwd.tmp"
+-        cp /etc/group "$SOURCE_DIR/.group.tmp"
+-        if ! grep -q "^$(whoami):" "$SOURCE_DIR/.passwd.tmp"; then
+-            echo "$current_user" >> "$SOURCE_DIR/.passwd.tmp"
+-        fi
+-        if ! grep -q "^$(id -gn):" "$SOURCE_DIR/.group.tmp"; then
+-            echo "$current_group" >> "$SOURCE_DIR/.group.tmp"
+-        fi
+-        mv "$SOURCE_DIR/.passwd.tmp" "$SOURCE_DIR/.passwd"
+-        mv "$SOURCE_DIR/.group.tmp" "$SOURCE_DIR/.group"
+-    fi
+-}
+-
+-# Create user permission files
+-create_user_files
+-
+-# Function to run command in container
+-run_in_container() {
+-    local cmd="$1"
+-    if [ "$DEBUG" = true ]; then
+-        echo "--- Docker/Podman full command ---"
+-        local full_cmd
+-        full_cmd="docker run --rm -it --init"
+-        for v in "${VOLUME_MOUNTS[@]}"; do
+-            full_cmd+=" $v"
+-        done
+-        for e in "${CONTAINER_ENV[@]}"; do
+-            full_cmd+=" $e"
+-        done
+-        full_cmd+=" -v $SOURCE_DIR/.passwd:/etc/passwd:ro"
+-        full_cmd+=" -v $SOURCE_DIR/.group:/etc/group:ro"
+-        full_cmd+=" -u $(id -u):$(id -g)"
+-        full_cmd+=" $DOCKER_REPO/$IMAGE_NAME"
+-        full_cmd+=" bash -c \"$cmd\""
+-        echo "$full_cmd"
+-        echo "--- End docker command ---"
+-    fi
+-    docker run --rm -it --init \
+-        "${VOLUME_MOUNTS[@]}" \
+-        "${CONTAINER_ENV[@]}" \
+-        -v "$SOURCE_DIR/.passwd:/etc/passwd:ro" \
+-        -v "$SOURCE_DIR/.group:/etc/group:ro" \
+-        -u "$(id -u):$(id -g)" \
+-        "$DOCKER_REPO/$IMAGE_NAME" \
+-        bash -c "$cmd"
+-}
+-
+-# Run command directly or in container based on DIRECT_BUILD
+-run_command() {
+-    local cmd="$1"
+-    if [ -n "$DIRECT_BUILD" ] && [ "$DIRECT_BUILD" != "0" ]; then
+-        [ "$DEBUG" = true ] &&  echo "[DIRECT_BUILD] Executing locally: $cmd"
+-        command -v riscv64-unknown-linux-gnu-gcc > /dev/null || \
+-        (echo "Install cross compile and add to PATH" && exit 1)
+-        export ARCH=riscv
+-        export CROSS_COMPILE=riscv64-unknown-linux-gnu-
+-        if [[ -n "$JOBS" ]]; then
+-            export JOBS
+-        fi
+-        bash -c "$cmd"
+-    else
+-        [ "$DEBUG" = true ] && echo "Building in container..."
+-        run_in_container "$cmd"
+-    fi
+-}
+-
+-# Execute container actions
+-case "$ACTION" in
+-    build)
+-        if [[ "$CLEAN" == true ]]; then
+-            run_command "$CLEAN_CMD"
+-        fi
+-        if [[ "$BUILD_DEB" == true ]]; then
+-            run_command "$BUILD_DEB_CMD"
+-        else
+-            run_command "$BUILD_CMD"
+-        fi
+-        echo "Build completed successfully!"
+-        ;;
+-    shell)
+-        run_in_container "bash"
+-        echo "Container shell session ended."
+-        ;;
+-    *)
+-        echo "Unknown action: $ACTION"
+-        usage
+-        exit 1
+-        ;;
+-esac
+diff --git a/scripts/build_rootfs.sh b/scripts/build_rootfs.sh
+deleted file mode 100755
+index 918ed3f9d..000000000
+--- a/scripts/build_rootfs.sh
++++ /dev/null
+@@ -1,41 +0,0 @@
+-#!/bin/bash
+-
+-set -e
+-
+-function generate_rootfs()
+-{
+-    if [ -d rootfs ] ; then
+-    	(cd rootfs; find . | fakeroot cpio -o -Hnewc | gzip > ../"$1")
+-    else
+-    	echo "rootfs not exist"
+-    	exit 1
+-    fi
+-}
+-
+-function extract_rootfs()
+-{
+-    if [ -f "$1" ] ; then
+-    	rm -rf rootfs && mkdir rootfs
+-    	gzip -dc $1 | (cd rootfs; fakeroot cpio -i)
+-    else
+-    	echo "$1 not exist"
+-    	exit 1
+-    fi
+-}
+-
+-if [ $# -ne 2 ]; then
+-	echo -e "please input correct parameters"
+-	echo -e "\t[build.sh -e rootfs.cpio.gz] Extract the rootfs template to rootfs folder"
+-	echo -e "\tthen make some changes in the rootfs folder"
+-	echo -e "\t[build.sh -c rootfs.cpio.gz] Generate the rootfs from the rootfs folder"
+-	exit 1
+-fi
+-
+-if [ "$1" = "-e" ] ; then
+-	extract_rootfs $2
+-elif [ "$1" = "-c" ] ; then
+-	generate_rootfs $2
+-else
+-	echo "Argument is invalid!!!"
+-	exit 1
+-fi
+diff --git a/scripts/package/debian/rules b/scripts/package/debian/rules
+index 0e5122b31..a417a7f8b 100755
+--- a/scripts/package/debian/rules
++++ b/scripts/package/debian/rules
+@@ -5,7 +5,7 @@
+ export DEB_RULES_REQUIRES_ROOT := no
+ 
+ include debian/rules.vars
+-srctree = $(abs_srctree)
++
+ ifneq (,$(filter-out parallel=1,$(filter parallel=%,$(DEB_BUILD_OPTIONS))))
+     NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+     MAKEFLAGS += -j$(NUMJOBS)
+@@ -27,15 +27,13 @@ make-opts = ARCH=$(ARCH) KERNELRELEASE=$(KERNELRELEASE) \
+     $(addprefix KBUILD_BUILD_VERSION=,$(revision)) \
+     $(addprefix CROSS_COMPILE=,$(CROSS_COMPILE))
+ 
+-binary-targets := $(addprefix binary-, image image-dbg headers libc-dev tools tools-common)
++binary-targets := $(addprefix binary-, image image-dbg headers libc-dev)
+ 
+ all-packages = $(shell dh_listpackages)
+ image-package = $(filter linux-image-% user-%, $(filter-out %-dbg, $(all-packages)))
+ image-dbg-package = $(filter %-dbg, $(all-packages))
+ libc-dev-package = $(filter linux-libc-dev, $(all-packages))
+ headers-package = $(filter linux-headers-%, $(all-packages))
+-tools-package = $(filter linux-tools-$(KERNELRELEASE), $(all-packages))
+-tools-common-package = $(filter linux-tools-common, $(all-packages))
+ 
+ mk-files = $(patsubst binary-%,debian/%.files,$1)
+ package = $($(@:binary-%=%-package))
+@@ -45,17 +43,6 @@ package = $($(@:binary-%=%-package))
+ # which package is being processed in the build log.
+ DH_OPTIONS = -p$(package)
+ 
+-PERF_BUILD_OPTS := prefix=/usr HAVE_NO_LIBBFD=1 HAVE_CPLUS_DEMANGLE_SUPPORT=1 CROSS_COMPILE=$(CROSS_COMPILE) NO_LIBPYTHON=1 NO_LIBPERL=1 WERROR=0
+-
+-# Conditional flags based on whether it's a cross-compile
+-ifeq ("$(DEB_BUILD_GNU_TYPE)", "$(DEB_HOST_GNU_TYPE)")
+-	# Building for the host
+-	ADDITIONAL_OPTS :=
+-else
+-	# Cross-compiling
+-	ADDITIONAL_OPTS := NO_LIBELF=1 NO_LIBTRACEEVENT=1
+-endif
+-
+ # Note: future removal of KDEB_COMPRESS
+ # dpkg-deb >= 1.21.10 supports the DPKG_DEB_COMPRESSOR_TYPE environment
+ # variable, which provides the same functionality as KDEB_COMPRESS. The
+@@ -91,15 +78,12 @@ build-indep:
+ build-arch:
+ 	$(Q)$(MAKE) $(make-opts) olddefconfig
+ 	$(Q)$(MAKE) $(make-opts) $(if $(filter um,$(ARCH)),,headers) all
+-	$(Q)$(MAKE) $(PERF_BUILD_OPTS) $(ADDITIONAL_OPTS) -C tools/perf
+-	$(Q)$(MAKE) $(PERF_BUILD_OPTS) $(ADDITIONAL_OPTS) man -C tools/perf
+ 
+ .PHONY: clean
+ clean:
+ 	$(Q)dh_clean
+ 	$(Q)rm -rf debian/deb-env.vars* debian/*.files
+ 	$(Q)$(MAKE) ARCH=$(ARCH) clean
+-	$(Q)$(MAKE) clean -C tools/perf
+ 
+ # If DEB_HOST_ARCH is empty, it is likely that debian/rules was executed
+ # directly. Run 'dpkg-architecture --print-set --print-format=make' to
+diff --git a/scripts/package/generic b/scripts/package/generic
+deleted file mode 100644
+index cb5894227..000000000
+--- a/scripts/package/generic
++++ /dev/null
+@@ -1,16 +0,0 @@
+-#!/bin/bash
+-full_version=$(uname -r)
+-
+-# First check for a fully qualified version.
+-this="/usr/lib/linux-tools/$full_version/$(basename "$0")"
+-if [ -f "$this" ]; then
+-exec "$this" "$@"
+-fi
+-
+-# Give them a hint as to what to install.
+-echo "WARNING: $(basename $0) not found for kernel $full_version" >&2
+-echo "" >&2
+-echo "  You may need to install the following packages for this specific kernel:" >&2
+-echo "    linux-tools-$full_version" >&2
+-
+-exit 2
+-- 
+2.53.0
+
