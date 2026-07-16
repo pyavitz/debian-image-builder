@@ -59,19 +59,20 @@ if [[ "$FAMILY" == "broadcom" ]]; then DEBIAN_FW=""; UBUNTU_FW=""; apt_preferenc
 # don't autoremove packages if distro release is labeled unstable.
 if [[ "$DISTRO_VERSION" =~ ^(ceres|sid|testing|unstable)$ ]]; then :; else apt autoremove -y; fi
 # network variables
+if [[ "$DISTRO_VERSION" =~ ^(forky|testing|sid)$ ]]; then NETPLUG=""; else NETPLUG="netplug"; fi # need to rework all of this
 if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute|stonking)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
-if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager"; else NETWORKING="ifupdown"; fi
+if [ $NETWORKMANAGER -eq 1 ]; then NETWORKING="network-manager ${NETPLUG}"; else NETWORKING="ifupdown ${NETPLUG}"; fi
 # variable populated by ${FAMILY}_extra_packages
 EXTRA_PKGS=""
 # extra platform package support
 if [[ `type ${FAMILY}_extra_packages` ]] &>/dev/null; then ${FAMILY}_extra_packages; fi
 # install base and extra packages
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} resolvconf haveged netplug ${NETWORKING} ${PKGS_FULL} ${EXTRA_PKGS}
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} resolvconf haveged ${NETWORKING} ${PKGS_FULL} ${EXTRA_PKGS}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
-	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} openresolv haveged netplug ${NETWORKING} ${PKGS_FULL} ${EXTRA_PKGS}
+	apt install -y ${PKGS} ${USER_PKGS} ${DEBIAN_FW} ${WIRELESS} openresolv haveged ${NETWORKING} ${PKGS_FULL} ${EXTRA_PKGS}
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi

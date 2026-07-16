@@ -40,13 +40,14 @@ apt upgrade -y
 apt dist-upgrade -y
 if [[ "$MINIMAL_ROOTFS" == "true" ]]; then PKGS_FULL=""; fi
 if [[ `type ${FAMILY}_extra_packages` ]] &>/dev/null; then ${FAMILY}_extra_packages else EXTRA_PKGS=""; fi
+if [[ "$DISTRO_VERSION" =~ ^(forky|testing|sid)$ ]]; then NETPLUG=""; else NETPLUG="netplug"; fi # need to rework all of this
 if [[ "$DISTRO_VERSION" =~ ^(oracular|plucky|questing|resolute|stonking)$ ]]; then WIRELESS="iw"; else WIRELESS="iw wireless-tools"; fi
 if [[ "$DISTRO" =~ ^(debian|raspbian)$ ]]; then
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} resolvconf haveged netplug ${PKGS_FULL} ${EXTRA_PKGS}
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} resolvconf haveged ${NETPLUG} ${PKGS_FULL} ${EXTRA_PKGS}
 fi
 if [[ "$DISTRO" == "devuan" ]]; then
 	apt install -y openssh-client openssh-server --no-install-recommends
-	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} openresolv haveged netplug ${PKGS_FULL} ${EXTRA_PKGS}
+	apt install -y ${PKGS} ${USER_PKGS} ${WIRELESS} openresolv haveged ${NETPLUG} ${PKGS_FULL} ${EXTRA_PKGS}
 fi
 if [[ "$DISTRO" == "kali" ]]; then
 	if [[ "$ARCH" == "arm64" ]]; then KALI_PKGS="libical3"; else KALI_PKGS="libical3t64"; fi
