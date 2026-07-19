@@ -46,7 +46,7 @@ CCOMPILE=./scripts/.ccompile
 NCOMPILE=./scripts/.ncompile
 
 # miscellaneous
-CHECK=./scripts/check
+CHECK=./scripts/.check
 
 # BOARDS
 BOARDS=$(shell sudo rm -f board.txt; if [ -f lib/boards/${board} ]; then sudo cp lib/boards/${board} board.txt; fi)
