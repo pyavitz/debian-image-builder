@@ -62,4 +62,12 @@ if [[ ! -d "/boot/broadcom" ]] && [[ "$#" -eq 2 ]]; then
 	fi
 fi
 
+# Spoof /boot/dtb dir
+if [[ -f "/etc/opt/board.txt" ]]; then
+	. /etc/opt/board.txt
+	if [[ ! -e "/boot/dtb/${FAMILY}" ]] && [[ -d "/boot/${FAMILY}" ]]; then
+		mkdir -p /boot/dtb; cd /boot/dtb; ln -s ../${FAMILY} .
+	fi
+fi
+
 exit 0
