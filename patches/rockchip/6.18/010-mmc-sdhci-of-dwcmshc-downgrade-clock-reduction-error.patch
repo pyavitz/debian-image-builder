@@ -1,0 +1,33 @@
+From da051ee7aa3fcf28f04c508fef7767178a4adfd4 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sun, 26 Jul 2026 07:41:53 -0400
+Subject: [PATCH] mmc: sdhci of dwcmshc downgrade clock reduction error to
+ debug
+
+When the generic Linux MMC framework runs its standard
+initialization scripts, it forces a clock reduction check.
+The Rockchip driver intercepts this and intentionally prints
+a dev_err (error level) message to report that it aborted the
+downclocking to protect the high-speed link.
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ drivers/mmc/host/sdhci-of-dwcmshc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/sdhci-of-dwcmshc.c b/drivers/mmc/host/sdhci-of-dwcmshc.c
+index d7ad11a85bff..b40f694ccc66 100644
+--- a/drivers/mmc/host/sdhci-of-dwcmshc.c
++++ b/drivers/mmc/host/sdhci-of-dwcmshc.c
+@@ -613,7 +613,7 @@ static void dwcmshc_rk3568_set_clock(struct sdhci_host *host, unsigned int clock
+ 	if (clock <= 52000000) {
+ 		if (host->mmc->ios.timing == MMC_TIMING_MMC_HS200 ||
+ 		    host->mmc->ios.timing == MMC_TIMING_MMC_HS400) {
+-			dev_err(mmc_dev(host->mmc),
++			dev_dbg(mmc_dev(host->mmc),
+ 				"Can't reduce the clock below 52MHz in HS200/HS400 mode");
+ 			goto enable_clk;
+ 		}
+-- 
+2.53.0
+
