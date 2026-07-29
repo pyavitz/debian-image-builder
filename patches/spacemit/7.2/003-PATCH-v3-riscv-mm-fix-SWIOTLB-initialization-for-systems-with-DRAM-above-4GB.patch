@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Troy Mitchell <troy.mitchell@linux.dev>
-Date: Wed, 29 Apr 2026 19:41:54 +0800
-Subject: [PATCH v2] riscv: mm: fix SWIOTLB initialization for systems with
+Date: Mon, 27 Jul 2026 01:08:44 -0700
+Subject: [PATCH v3] riscv: mm: fix SWIOTLB initialization for systems with
  DRAM above 4GB
 
 On RISC-V platforms where the entire physical memory (DRAM) resides
@@ -19,12 +19,12 @@ this by adding a check to ensure `memblock_start_of_DRAM()` is actually
 below the 32-bit limit before enforcing 32-bit SWIOTLB.
 
 2. kmalloc() bounce buffer allocation failure on non-coherent systems:
-For non-coherent hardware, a bounce buffer is still mandatory for
-cache-line-aligned kmalloc(), even if 32-bit DMA bouncing is skipped.
-Without the `SWIOTLB_ANY` flag, swiotlb_init() defaults to allocating
-from low memory, which fails completely when DRAM only exists in high
-memory. By appending `SWIOTLB_ANY` to swiotlb_flags, the allocator is
-permitted to allocate this alignment buffer from high memory.
+For non-coherent DMA, kmalloc() buffers whose sizes are not
+cache-line-aligned still require bouncing, even if 32-bit DMA bouncing
+is skipped. Without the `SWIOTLB_ANY` flag, swiotlb_init() defaults to
+allocating from low memory, which fails completely when DRAM only exists
+in high memory. By appending `SWIOTLB_ANY` to swiotlb_flags, the allocator
+is permitted to allocate this bounce buffer from high memory.
 
 With this patch, systems with non-coherent DMA and DRAM entirely above
 4GB can successfully map the software IO TLB in high memory and boot
@@ -33,6 +33,10 @@ normally.
 Tested-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
 Signed-off-by: Troy Mitchell <troy.mitchell@linux.dev>
 ---
+Changes in v3:
+- clarify when kmalloc() buffers require bouncing for non-coherent DMA
+- Link to v2: https://patch.msgid.link/20260429-fix-riscv-swiotlb-v2-1-fa99dfdfc94d@linux.dev
+
 Changes in v2:
 - add Anirudh's TB tag
 - Link to v1: https://lore.kernel.org/r/20260331-fix-riscv-swiotlb-v1-1-74dd5e6be0f1@linux.dev
@@ -44,11 +48,11 @@ To: Alexandre Ghiti <alex@ghiti.fr>
 Cc: linux-riscv@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 ---
- arch/riscv/mm/init.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ arch/riscv/mm/init.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/arch/riscv/mm/init.c b/arch/riscv/mm/init.c
-index 811e03786c56..3244e4fba89c 100644
+index 811e03786c56..7459e1fdb04a 100644
 --- a/arch/riscv/mm/init.c
 +++ b/arch/riscv/mm/init.c
 @@ -168,7 +168,9 @@ static void print_vm_layout(void) { }
@@ -62,7 +66,7 @@ index 811e03786c56..3244e4fba89c 100644
  #ifdef CONFIG_FLATMEM
  	BUG_ON(!mem_map);
  #endif /* CONFIG_FLATMEM */
-@@ -176,17 +178,21 @@ void __init arch_mm_preinit(void)
+@@ -176,17 +178,22 @@ void __init arch_mm_preinit(void)
  	if (IS_ENABLED(CONFIG_DMA_BOUNCE_UNALIGNED_KMALLOC) && !swiotlb &&
  	    dma_cache_alignment != 1) {
  		/*
@@ -71,10 +75,11 @@ index 811e03786c56..3244e4fba89c 100644
 -		 * non-coherent platforms.
 +		 * No 32-bit DMA bouncing needed (either all DRAM is within
 +		 * the 32-bit limit, or it all starts above it), but
-+		 * non-coherent hardware still requires cache-line-aligned
-+		 * bounce buffers for kmalloc().  Use SWIOTLB_ANY so that the
-+		 * buffer can be allocated from high memory when DRAM starts
-+		 * above dma32_phys_limit.  Allocate ~1 MB per 1 GB of RAM.
++		 * kmalloc() buffers whose sizes are not cache-line-aligned
++		 * still require bouncing for non-coherent DMA.  Use
++		 * SWIOTLB_ANY so that the buffer can be allocated from high
++		 * memory when DRAM starts above dma32_phys_limit.  Allocate
++		 * ~1 MB per 1 GB of RAM.
  		 */
  		unsigned long size =
  			DIV_ROUND_UP(memblock_phys_mem_size(), 1024);
@@ -89,6 +94,12 @@ index 811e03786c56..3244e4fba89c 100644
  	print_vm_layout();
  }
 
--- 
-2.53.0
+---
+base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
+change-id: 20260331-fix-riscv-swiotlb-6f1c226071d1
+
+Best regards,
+--  
+Troy Mitchell <troy.mitchell@linux.dev>
+
 
