@@ -1,0 +1,234 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Subject: [PATCH 1/6] riscv: dts: spacemit: k1-bananapi-f3: fix maximum CPU core voltage
+Date: Wed, 29 Jul 2026 17:02:18 +0200
+
+On the Banana Pi BPI-F3 board, the buck1 and buck2 voltage regulators,
+which supply the CPU core voltage, are configured with a maximum output
+voltage of 3.45V, while the highest operating point requires only
+1.050V. This means that a kernel bug, OPP misconfiguration, or
+privileged userspace could request a voltage above the safe operating
+limit, causing possible permanent CPU damage.
+
+Set the maximum regulator voltage to 1.050V instead.
+
+Fixes: 09a412d39748 ("riscv: dts: spacemit: define regulator constraints")
+Link: https://sashiko.dev/#/message/20260728211020.1248676-2-aurelien%40aurel32.net
+Cc: stable@vger.kernel.org
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+---
+ arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
+index e2961b7e0a3eb..58035d886bf67 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-bananapi-f3.dts
+@@ -237,14 +237,14 @@ pmic@41 {
+ 		regulators {
+ 			buck1_0v9: buck1 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+ 
+ 			buck2 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Subject: [PATCH 2/6] riscv: dts: spacemit: k1-milkv-jupiter: fix maximum CPU core voltage
+Date: Wed, 29 Jul 2026 17:02:19 +0200
+
+On the Milk-V Jupiter board, the buck1 and buck2 voltage regulators,
+which supply the CPU core voltage, are configured with a maximum output
+voltage of 3.45V, while the highest operating point requires only
+1.050V. This means that a kernel bug, OPP misconfiguration, or
+privileged userspace could request a voltage above the safe operating
+limit, causing possible permanent CPU damage.
+
+Set the maximum regulator voltage to 1.050V instead.
+
+Fixes: 7d307daa12b1 ("riscv: dts: spacemit: Define the P1 PMIC regulators for Milk-V Jupiter")
+Link: https://sashiko.dev/#/message/20260728211020.1248676-2-aurelien%40aurel32.net
+Cc: stable@vger.kernel.org
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+---
+ arch/riscv/boot/dts/spacemit/k1-milkv-jupiter.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-milkv-jupiter.dts b/arch/riscv/boot/dts/spacemit/k1-milkv-jupiter.dts
+index b61f5995ec771..c76b91ecb914d 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-milkv-jupiter.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-milkv-jupiter.dts
+@@ -211,14 +211,14 @@ pmic@41 {
+ 		regulators {
+ 			buck1 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+ 
+ 			buck2 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Subject: [PATCH 4/6] riscv: dts: spacemit: k1-musepi-pro: fix maximum CPU core voltage
+Date: Wed, 29 Jul 2026 17:02:21 +0200
+
+On the MusePi Pro board, the buck1 and buck2 voltage regulators, which
+supply the CPU core voltage, are configured with a maximum output
+voltage of 3.45V, while the highest operating point requires only
+1.050V. This means that a kernel bug, OPP misconfiguration, or
+privileged userspace could request a voltage above the safe operating
+limit, causing possible permanent CPU damage.
+
+Set the maximum regulator voltage to 1.050V instead.
+
+Fixes: e2dac7c7a3a8 ("riscv: dts: spacemit: k1-musepi-pro: add PMIC and power infrastructure")
+Link: https://sashiko.dev/#/message/20260728211020.1248676-2-aurelien%40aurel32.net
+Cc: stable@vger.kernel.org
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+---
+ arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts b/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts
+index 3078ffb5cb878..246f8f2ab62b9 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-musepi-pro.dts
+@@ -180,14 +180,14 @@ pmic@41 {
+ 		regulators {
+ 			buck1 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+ 
+ 			buck2 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Subject: [PATCH 3/6] riscv: dts: spacemit: k1-orangepi-rv2: fix maximum CPU core voltage
+Date: Wed, 29 Jul 2026 17:02:20 +0200
+
+On the OrangePi RV2 board, the buck1 and buck2 voltage regulators, which
+supply the CPU core voltage, are configured with a maximum output
+voltage of 3.45V, while the highest operating point requires only
+1.050V. This means that a kernel bug, OPP misconfiguration, or
+privileged userspace could request a voltage above the safe operating
+limit, causing possible permanent CPU damage.
+
+Set the maximum regulator voltage to 1.050V instead.
+
+Fixes: c02c047b925c ("riscv: dts: spacemit: Define the P1 PMIC regulators for OrangePi RV2")
+Link: https://sashiko.dev/#/message/20260728211020.1248676-2-aurelien%40aurel32.net
+Cc: stable@vger.kernel.org
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+---
+ arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
+index 7c49bce427f30..b907a1396b21f 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-orangepi-rv2.dts
+@@ -164,14 +164,14 @@ pmic@41 {
+ 		regulators {
+ 			buck1 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+ 
+ 			buck2 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+-- 
+2.53.0
+
+
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aurelien Jarno <aurelien@aurel32.net>
+Subject: [PATCH 5/6] riscv: dts: spacemit: k1-orangepi-r2s: fix maximum CPU core voltage
+Date: Wed, 29 Jul 2026 17:02:22 +0200
+
+On the OrangePi R2S board, the buck1 and buck2 voltage regulators, which
+supply the CPU core voltage, are configured with a maximum output
+voltage of 3.45V, while the highest operating point requires only
+1.050V. This means that a kernel bug, OPP misconfiguration, or
+privileged userspace could request a voltage above the safe operating
+limit, causing possible permanent CPU damage.
+
+Set the maximum regulator voltage to 1.050V instead.
+
+Fixes: 793cc54475b4 ("riscv: dts: spacemit: enable PMIC on OrangePi R2S")
+Link: https://sashiko.dev/#/message/20260728211020.1248676-2-aurelien%40aurel32.net
+Cc: stable@vger.kernel.org
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+---
+ arch/riscv/boot/dts/spacemit/k1-orangepi-r2s.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k1-orangepi-r2s.dts b/arch/riscv/boot/dts/spacemit/k1-orangepi-r2s.dts
+index 24591f7c3d236..2d1ba34cb00e2 100644
+--- a/arch/riscv/boot/dts/spacemit/k1-orangepi-r2s.dts
++++ b/arch/riscv/boot/dts/spacemit/k1-orangepi-r2s.dts
+@@ -134,14 +134,14 @@ pmic@41 {
+ 		regulators {
+ 			buck1 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+ 
+ 			buck2 {
+ 				regulator-min-microvolt = <500000>;
+-				regulator-max-microvolt = <3450000>;
++				regulator-max-microvolt = <1050000>;
+ 				regulator-ramp-delay = <5000>;
+ 				regulator-always-on;
+ 			};
+-- 
+2.53.0
+
