@@ -5414,6 +5414,9 @@ static int skw_change_bss(struct wiphy *wiphy, struct net_device *ndev,
 }
 
 static int skw_set_monitor_channel(struct wiphy *wiphy,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 12, 0)
+		struct net_device *,
+#endif
 		struct cfg80211_chan_def *chandef)
 {
 	return skw_cmd_monitor(wiphy, chandef, SKW_MONITOR_COMMON);

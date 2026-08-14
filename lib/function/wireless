@@ -142,28 +142,28 @@ EOF
 fi
 
 # RTL8821CU
-if [[ "$FAMILY" =~ ^(allwinner)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
-	DRIVER_INFO="Realtek 8821CU"
-	DRIVER="rtl8821cu"
-	DRIVER_URL="https://github.com/morrownr/8821cu-20210916.git"
-	driver_download
-	rm -fdr ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
-	mkdir -p ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
-	cp -fr ${DRIVER}/{core,hal,include,os_dep,platform} ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
-	cp -fr ${DRIVER}/{Kconfig,Makefile,halmac.mk,rtl8821c.mk} ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
-	echo "obj-\$(CONFIG_RTL8821CU) += rtl8821cu/" >> ${KERNEL}/drivers/net/wireless/realtek/Makefile
-	cat <<EOF > ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}/Kconfig
-config RTL8821CU
-	tristate "Realtek 8821C USB support"
-	depends on USB
-	default m
-	help
-	  Help message of RTL8821CU
-EOF
-	sed -i "s/CONFIG_RTW_DEBUG = y/CONFIG_RTW_DEBUG = n/g" ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}/Makefile
-	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8821cu\/Kconfig"' \
-		"${KERNEL}/drivers/net/wireless/realtek/Kconfig"
-fi
+#if [[ "$FAMILY" =~ ^(allwinner)$ ]] && [[ "$EXTRA_WIFI" == "true" ]]; then
+#	DRIVER_INFO="Realtek 8821CU"
+#	DRIVER="rtl8821cu"
+#	DRIVER_URL="https://github.com/morrownr/8821cu-20210916.git"
+#	driver_download
+#	rm -fdr ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
+#	mkdir -p ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
+#	cp -fr ${DRIVER}/{core,hal,include,os_dep,platform} ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
+#	cp -fr ${DRIVER}/{Kconfig,Makefile,halmac.mk,rtl8821c.mk} ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}
+#	echo "obj-\$(CONFIG_RTL8821CU) += rtl8821cu/" >> ${KERNEL}/drivers/net/wireless/realtek/Makefile
+#	cat <<EOF > ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}/Kconfig
+#config RTL8821CU
+#	tristate "Realtek 8821C USB support"
+#	depends on USB
+#	default m
+#	help
+#	  Help message of RTL8821CU
+#EOF
+#	sed -i "s/CONFIG_RTW_DEBUG = y/CONFIG_RTW_DEBUG = n/g" ${KERNEL}/drivers/net/wireless/realtek/${DRIVER}/Makefile
+#	sed -i '/source "drivers\/net\/wireless\/realtek\/rtl818x\/Kconfig"/a source "drivers\/net\/wireless\/realtek\/rtl8821cu\/Kconfig"' \
+#		"${KERNEL}/drivers/net/wireless/realtek/Kconfig"
+#fi
 
 # RTW88 DEVEL
 if [[ "$RTW88_DEVEL" == "true" ]] && [[ "$EXTRA_WIFI" == "true" ]]; then

@@ -1,0 +1,81 @@
+From 58a2fc308d5cd38a99d495c8771720597b7e1144 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Thu, 13 Aug 2026 23:52:43 -0400
+Subject: [PATCH] AIC8800: SDIO: Fixup linux 6.12.y
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ .../wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c    | 2 +-
+ .../net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c    | 8 ++++----
+ .../wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c    | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c b/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c
+index 658979c535a2..aadc743a8235 100644
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_bsp/aic_bsp_driver.c
+@@ -471,7 +471,7 @@ void rwnx_rx_handle_msg(struct aic_sdio_dev *sdiodev, struct ipc_e2a_msg *msg)
+ }
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
+ MODULE_IMPORT_NS("VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ #else
+ MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c
+index 4773735ffe64..a5ed8de8df8e 100644
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_main.c
+@@ -3423,7 +3423,7 @@ static int rwnx_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+  * configured at firmware level.
+  */
+ static int rwnx_cfg80211_set_monitor_channel(struct wiphy *wiphy,
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 13, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 12, 0)
+ 											 struct net_device *,
+ #endif
+ 											 struct cfg80211_chan_def *chandef)
+@@ -3480,7 +3480,7 @@ static int rwnx_cfg80211_set_monitor_channel(struct wiphy *wiphy,
+ 
+ int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy,
+                                              struct cfg80211_chan_def *chandef){
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 13, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 12, 0)
+     return rwnx_cfg80211_set_monitor_channel(wiphy, NULL, chandef);
+ #else
+     return rwnx_cfg80211_set_monitor_channel(wiphy, chandef);
+@@ -3918,7 +3918,7 @@ static int rwnx_cfg80211_get_channel(struct wiphy *wiphy,
+ 
+ 	if (rwnx_vif->vif_index == rwnx_hw->monitor_vif) {
+ 		//retrieve channel from firmware
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 13, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION (6, 12, 0)
+ 		rwnx_cfg80211_set_monitor_channel(wiphy, NULL, NULL);
+ #else
+ 		rwnx_cfg80211_set_monitor_channel(wiphy, NULL);
+@@ -6105,7 +6105,7 @@ static void __exit rwnx_mod_exit(void)
+ 
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
+ MODULE_IMPORT_NS("VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ #else
+ MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
+diff --git a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c
+index 33bc63bd4057..169496607cc6 100644
+--- a/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c
++++ b/drivers/net/wireless/aic8800_sdio/aic8800_fdrv/rwnx_platform.c
+@@ -540,7 +540,7 @@ static int rwnx_plat_tl4_fw_upload(struct rwnx_plat *rwnx_plat, u8 *fw_addr,
+ #endif
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
+ MODULE_IMPORT_NS("VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ #else
+ MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
+-- 
+2.53.0
+
