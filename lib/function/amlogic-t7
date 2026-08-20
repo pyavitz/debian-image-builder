@@ -64,7 +64,7 @@ amlogic_uboot_download (){
 if [[ "$SERIES" == "amlogic-t7" ]]; then
 	${BOARD}_uboot_toolchain
 	GIT_UBOOT_HASH=`git ls-remote --heads ${GIT_UBOOT_URL} | grep -w "refs/heads/${GIT_UBOOT_TAG}" | sed -n '1p' | sed "s/refs\/heads\/${GIT_UBOOT_TAG}//g" | sed s/'\s'//g`
-	GIT_UBOOT_COMMIT="4a16015168d00d08487781fc914e048944554c6e"
+	GIT_UBOOT_COMMIT="a7b06ca0498f2da0faf14e75148b5075c84d7381" # mainline branch
 	if [[ ! "$GIT_UBOOT_COMMIT" == "$GIT_UBOOT_HASH" ]]; then rm -fdr ${FAMILY}-u-boot-${GIT_UBOOT_TAG}; fi
 	if [[ -d "${FAMILY}-u-boot-${GIT_UBOOT_TAG}" ]]; then
 		echo -en "${FAMILY}-u-boot-${GIT_UBOOT_TAG}:"
@@ -117,30 +117,30 @@ fi
 }
 
 # LINUX
-amlogic_linux_compiler (){
-if [[ "$HOST_CODENAME" == "resolute" ]] && [[ "$SERIES" == "amlogic-t7" ]]; then
-	if [[ "$HOST_ARCH" == "aarch64" ]]; then
-		if [[ `dpkg -l | grep gcc-14-base:arm64` ]]; then :; else apt install -y gcc-14; fi
-	fi
-	COMPILER="gcc-14"
-fi
-}
+#amlogic_linux_compiler (){
+#if [[ "$HOST_CODENAME" == "resolute" ]] && [[ "$SERIES" == "amlogic-t7" ]]; then
+#	if [[ "$HOST_ARCH" == "aarch64" ]]; then
+#		if [[ `dpkg -l | grep gcc-14-base:arm64` ]]; then :; else apt install -y gcc-14; fi
+#	fi
+#	COMPILER="gcc-14"
+#fi
+#}
 
-amlogic_extra_git (){
-if [[ "$SERIES" == "amlogic-t7" ]]; then
-	if [[ -v "GIT_EXTRA" ]] && [[ ! -z "$GIT_EXTRA" ]]; then git clone --depth=1 ${GIT_EXTRA}; fi
-fi
-}
+#amlogic_extra_git (){
+#if [[ "$SERIES" == "amlogic-t7" ]]; then
+#	if [[ -v "GIT_EXTRA" ]] && [[ ! -z "$GIT_EXTRA" ]]; then git clone --depth=1 ${GIT_EXTRA}; fi
+#fi
+#}
 
-amlogic_extra_git_patching (){
+#amlogic_extra_git_patching (){
 # Drop in DTS
-if [[ "$SERIES" == "amlogic-t7" ]] && [[ "$FORCE_GIT" == "true" ]] && [[ -d "../../${GIT_PATCHDIR}/dts" ]]; then
-	if [[ `ls ../../${GIT_PATCHDIR}/dts/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
-		echo "# ${GIT_PATCHDIR}/dts" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
-		ls ../../${GIT_PATCHDIR}/dts/*.dts* | sed 's/..\/..\///g' >> ${LOG_FILE}
-		cp -fr ../../${GIT_PATCHDIR}/dts/*.dts* common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}
-		echo "" >> common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
-		cat ../../${GIT_PATCHDIR}/dts/Makefile >> common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
-	fi
-fi
-}
+#if [[ "$SERIES" == "amlogic-t7" ]] && [[ "$FORCE_GIT" == "true" ]] && [[ -d "../../${GIT_PATCHDIR}/dts" ]]; then
+#	if [[ `ls ../../${GIT_PATCHDIR}/dts/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
+#		echo "# ${GIT_PATCHDIR}/dts" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+#		ls ../../${GIT_PATCHDIR}/dts/*.dts* | sed 's/..\/..\///g' >> ${LOG_FILE}
+#		cp -fr ../../${GIT_PATCHDIR}/dts/*.dts* common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}
+#		echo "" >> common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+#		cat ../../${GIT_PATCHDIR}/dts/Makefile >> common_drivers/arch/${ARCH}/boot/dts/${PLATFORM}/Makefile
+#	fi
+#fi
+#}
