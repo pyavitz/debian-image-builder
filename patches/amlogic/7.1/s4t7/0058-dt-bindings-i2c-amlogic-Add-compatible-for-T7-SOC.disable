@@ -1,0 +1,39 @@
+From aa982060a75e96ce8d7b3fd19bf7a17c3055a53d Mon Sep 17 00:00:00 2001
+From: Ronald Claveau <linux-kernel-dev@aliel.fr>
+Date: Fri, 3 Apr 2026 18:08:35 +0200
+Subject: [PATCH 58/91] dt-bindings: i2c: amlogic: Add compatible for T7 SOC
+
+Add the T7 SOC compatible which fallback to AXG compatible.
+
+Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
+---
+ .../devicetree/bindings/i2c/amlogic,meson6-i2c.yaml | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/i2c/amlogic,meson6-i2c.yaml b/Documentation/devicetree/bindings/i2c/amlogic,meson6-i2c.yaml
+index c4cc8af18280..7b59b60b62e5 100644
+--- a/Documentation/devicetree/bindings/i2c/amlogic,meson6-i2c.yaml
++++ b/Documentation/devicetree/bindings/i2c/amlogic,meson6-i2c.yaml
+@@ -16,10 +16,15 @@ allOf:
+ 
+ properties:
+   compatible:
+-    enum:
+-      - amlogic,meson6-i2c # Meson6, Meson8 and compatible SoCs
+-      - amlogic,meson-gxbb-i2c # GXBB and compatible SoCs
+-      - amlogic,meson-axg-i2c # AXG and compatible SoCs
++    oneOf:
++      - items:
++          - enum:
++              - amlogic,t7-i2c
++          - const: amlogic,meson-axg-i2c
++      - enum:
++          - amlogic,meson6-i2c # Meson6, Meson8 and compatible SoCs
++          - amlogic,meson-gxbb-i2c # GXBB and compatible SoCs
++          - amlogic,meson-axg-i2c # AXG and compatible SoCs
+ 
+   reg:
+     maxItems: 1
+-- 
+2.53.0
+
