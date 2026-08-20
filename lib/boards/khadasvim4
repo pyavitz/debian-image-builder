@@ -12,11 +12,10 @@ STATIC="qemu-aarch64-static"
 SERIES="amlogic-t7"
 FAMILY="amlogic"
 FAMILY_EXT="khadas"
-DTB="${SERIES}-a311d2-khadas-vim4n"
+DTB="${SERIES}-a311d2-khadas-vim4"
 
 # default config
-LINUX_DEFCONFIG="amlogic-t7_defconfig"
-#LINUX_DEFCONFIG="amlogic-t7-5.15.170_defconfig"
+LINUX_DEFCONFIG="amlogic-s4t7_defconfig"
 UBOOT_DEFCONFIG="kvim4_defconfig"
 
 # partition layout
@@ -30,7 +29,7 @@ P_VALUE="p1" # p1 = single partition
 # boot options
 BOOTCMD="true"
 BOOTINI="false"
-BOOTSCR="${SERIES}-boot.cmd" # define name of boot.cmd / boot.ini (files/boot/scripts)
+BOOTSCR="boot.cmd" # define name of boot.cmd / boot.ini (files/boot/scripts)
 EXTLINUX="false" # default
 PETITBOOT="false" # obsolete
 
@@ -49,9 +48,9 @@ BOOTCMD_FDTOVERLAYS="#overlays="
 EXTLINUX_FDTOVERLAYS="#fdtoverlays"
 
 # cmdline
-CONSOLE="earlycon=aml-uart,0xfe078000 console=tty1 console=ttyS0,921600n8"
+CONSOLE="console=tty1 console=ttyS0,921600n8"
 LOGLEVEL="loglevel=1"
-EXTRA="net.ifnames=0 no_console_suspend fan=auto"
+EXTRA="net.ifnames=0 no_console_suspend pd_ignore_unused clk_ignore_unused"
 
 # Serial
 DEVUAN_SERIAL="T0:23:respawn:/sbin/getty -L ttyS0 921600 vt100"
@@ -63,7 +62,7 @@ DEFAULT_MOTD="Khadas VIM4"
 #MODULES_LOAD="drivetemp"
 
 # patches
-LINUX_PATCHING="false"
+LINUX_PATCHING="true"
 UBOOT_PATCHDIR="patches/uboot"
 LINUX_PATCHDIR="patches/${FAMILY}"
 
@@ -78,9 +77,8 @@ PRECOMPILED_UBOOT="false"
 PKGVERSION=""
 PRECOMPILED_UBOOT_DIR="files/boot/uboot/${BOARD}"
 
-# force git (https://github.com/khadas/linux.git)
-# devel (https://github.com/CoreELEC/linux-amlogic/tree/5.15.170_202508)
-FORCE_GIT="true"
+# force git (https://github.com/khadas/linux.git) (https://github.com/CoreELEC/u-boot.git)
+FORCE_GIT="false"
 GIT_OWN="khadas"
 GIT_REPO="linux"
 GIT_BRANCH="khadas-vims-5.15.y"
@@ -91,34 +89,34 @@ GIT_URL="https://github.com"
 GIT_BLOB="blob"
 GIT_EXTRA="${GIT_URL}/${GIT_OWN}/common_drivers.git --depth=1 -b ${GIT_BRANCH}"
 # git patching
-GIT_PATCHING="true"
+GIT_PATCHING="false"
 GIT_PATCHDIR="patches/git/${BOARD}/${GIT_REPO}-${GIT_BRANCH}"
-# u-boot (if variable GIT_UBOOT_URL not found ignore) (https://github.com/CoreELEC/u-boot.git)
-GIT_UBOOT_OWN="CoreELEC"
-GIT_UBOOT_TAG="khadas-vims-v2019.01" # tag or branch
+# u-boot (if variable GIT_UBOOT_URL not found ignore)
+GIT_UBOOT_OWN="khadas"
+GIT_UBOOT_TAG="khadas-vims-v2019.01-mainline" # tag or branch
 GIT_UBOOT_URL="${GIT_URL}/${GIT_UBOOT_OWN}/u-boot.git"
 
 # override userdata file
 FORCE_VERSION="true"
-FORCE_LINUX_VERSION=""
+FORCE_LINUX_VERSION="7.2.y"
 FORCE_UBOOT_VERSION="v2019.01"
 
 # devicetree and platform
-DEVICETREE="${DTB}.dtb amlogic-t7-a311d2-khadas-vim4.dtb t7c_a311d2_khadas_vim4n.dtb kvim4.dtb kvim4n.dtb"
+DEVICETREE="${DTB}.dtb amlogic-t7-a311d2-khadas-vim4n.dtb t7c_a311d2_khadas_vim4n.dtb kvim4.dtb kvim4n.dtb"
 PLATFORM="${FAMILY}"
 
 # kernel package name (if shared patching set to true)
-COMMON_PKG="false"
+COMMON_PKG="true"
 COMMON_PKGNAME="amlogic"
 
 # custom builddeb variables
 #CUSTOM_KERNEL_IMAGE="Image"
 #CUSTOM_BOOT_PATH="boot/dtb/${PLATFORM}"
 #CUSTOM_LINUX_PATH="usr/lib/linux-image-${COMMON_PKGNAME}" # common package
-CUSTOM_LINUX_PATH="usr/lib/linux-image-${SERIES}"
+#CUSTOM_LINUX_PATH="usr/lib/linux-image-${SERIES}"
 
 # build old kernel headers package (not recommended)
-LEGACY_PACKAGING="true"
+LEGACY_PACKAGING="false"
 
 # use builder kernel packaging (recommended)
 DEFAULT_PACKAGING="true"

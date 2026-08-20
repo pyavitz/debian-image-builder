@@ -2,7 +2,7 @@
 
 # U-BOOT
 amlogic_uboot_config (){
-if [[ "$BOARD" == "odroidn2" || "$BOARD" == "odroidn2l" || "$BOARD" == "odroidn2plus" ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
+if [[ "$BOARD" =~ ^(odroidn2|odroidn2l|odroidn2plus)$ ]] && [[ -f "configs/${UBOOT_DEFCONFIG}" ]]; then
 	echo "CONFIG_CPU=y" >> configs/${UBOOT_DEFCONFIG}
 	echo "CONFIG_SUPPORT_EMMC_RPMB=y" >> configs/${UBOOT_DEFCONFIG}
 	echo "CONFIG_MMC_HS200_SUPPORT=y" >> configs/${UBOOT_DEFCONFIG}
@@ -66,6 +66,12 @@ fi
 }
 
 amlogic_extra_patching (){
+if [[ -d "../../${LINUX_PATCHDIR}/${LINUX_VERSION}/s4t7" ]]; then
+	if [[ `ls ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/s4t7/*.patch` ]] > /dev/null 2>&1; then
+		echo "# ${LINUX_PATCHDIR}/${LINUX_VERSION}/s4t7" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
+		for i in ../../${LINUX_PATCHDIR}/${LINUX_VERSION}/s4t7/*.patch; do patch -N -p1 < $i; done >> ${LOG_FILE}
+	fi
+fi
 if [[ -d "../../${LINUX_PATCHDIR}/dts/${ARCH}" ]]; then
 	if [[ `ls ../../${LINUX_PATCHDIR}/dts/${ARCH}/{Makefile,*.dts}` ]] > /dev/null 2>&1; then
 		echo "# ${LINUX_PATCHDIR}/dts/${ARCH}" | sed -e 's/\(.*\)/\U\1/' >> ${LOG_FILE}
