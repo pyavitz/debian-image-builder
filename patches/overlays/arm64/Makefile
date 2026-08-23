@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
 dtbo-$(CONFIG_ARCH_MESON) += \
+	amlogic-a311d2-khadas-vim4-disable-sdio.dtbo \
 	meson-g12a-radxa-zero-gpio-8-led.dtbo \
 	meson-g12a-radxa-zero-gpio-10-led.dtbo \
 	meson-g12a-radxa-zero-i2c-ao-m0-gpioao-2-gpioao-3.dtbo \
