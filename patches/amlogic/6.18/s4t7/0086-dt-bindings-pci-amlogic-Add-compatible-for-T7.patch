@@ -1,0 +1,75 @@
+From f5468408c45e4fabcd9daa68050c28586e0a0fba Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Wed, 26 Aug 2026 07:06:07 -0400
+Subject: [PATCH] dt-bindings: pci: amlogic: Add compatible for T7
+
+The T7 PCIe controller is derived from the existing AXG/G12A DesignWare
+instantiation but imposes an additional security requirement: DMA
+transactions from PCIe endpoints must be confined to a pre-defined
+memory region enforced by BL31.
+
+Introduce a "memory-region" property tied to
+a restricted-dma-pool, and make it mandatory when the compatible
+contains "amlogic,t7-pcie".
+
+Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
+---
+ .../bindings/pci/amlogic,axg-pcie.yaml        | 21 +++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/amlogic,axg-pcie.yaml b/Documentation/devicetree/bindings/pci/amlogic,axg-pcie.yaml
+index c8258ef40328..e7dc480ef512 100644
+--- a/Documentation/devicetree/bindings/pci/amlogic,axg-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/amlogic,axg-pcie.yaml
+@@ -23,6 +23,7 @@ select:
+       enum:
+         - amlogic,axg-pcie
+         - amlogic,g12a-pcie
++        - amlogic,t7-pcie
+   required:
+     - compatible
+ 
+@@ -32,6 +33,7 @@ properties:
+       - enum:
+           - amlogic,axg-pcie
+           - amlogic,g12a-pcie
++          - amlogic,t7-pcie
+       - const: snps,dw-pcie
+ 
+   reg:
+@@ -83,6 +85,13 @@ properties:
+   power-domains:
+     maxItems: 1
+ 
++  memory-region:
++    maxItems: 1
++    description: |
++      phandle to a restricted DMA pool to be used for all devices behind
++      this controller. The regions should be defined according to
++      reserved-memory/shared-dma-pool.yaml.
++
+ required:
+   - compatible
+   - reg
+@@ -104,6 +113,18 @@ required:
+   - resets
+   - reset-names
+ 
++if:
++  properties:
++    compatible:
++      contains:
++        const: amlogic,t7-pcie
++then:
++  required:
++    - memory-region
++else:
++  properties:
++    memory-region: false
++
+ unevaluatedProperties: false
+ 
+ examples:
+-- 
+2.53.0
+
