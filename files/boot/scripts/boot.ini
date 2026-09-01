@@ -17,7 +17,7 @@ setenv fk_kvers "${prefix}/${kernel}"
 setenv initrd "${prefix}/${initramfs}"
 setenv fdtdir "${prefix}/${platform}"
 setenv user_overlay_dir "${prefix}/user-overlays"
-setenv bootargs "${console} rw root=${rootdev} rootfstype=${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait init=/sbin/init"
+setenv bootargs "${console} rw root=${rootdev} rootfstype=${rootfstype} loglevel=${loglevel} fsck.repair=yes ${extra} rootwait init=/sbin/init"
 
 load ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd}
 load ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers}
