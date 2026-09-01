@@ -110,8 +110,7 @@ if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ -f "kernel.release" ]]; then source kernel.release; fi
 	if [ $VERBOSE -eq 1 ]; then e4defrag -c ${P_VALUE}; else e4defrag -c ${P_VALUE} > /dev/null 2>&1; fi
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
-	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
-	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
+	if [[ "$BOOTCMD" == "true" || "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmdini > /dev/null 2>&1; fi
 	umount p1
 	echo ""
 	# finish
@@ -177,9 +176,8 @@ if [[ "$P_VALUE" == "p2" ]]; then
 		if [[ "$FSTYPE" == "xfs" ]]; then xfs_fsr ${P_VALUE} > /dev/null 2>&1; fi
 	fi
 	if [[ "$EXTLINUX" == "true" ]] && [[ "$EFI" == "false" ]]; then extlinux > /dev/null 2>&1; fi
-	if [[ "$BOOTCMD" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmd > /dev/null 2>&1; fi
+	if [[ "$BOOTCMD" == "true" || "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootcmdini > /dev/null 2>&1; fi
 	if [[ "$PETITBOOT" == "true" ]] && [[ "$EFI" == "false" ]]; then odroid_bootcmd > /dev/null 2>&1; fi
-	if [[ "$BOOTINI" == "true" ]] && [[ "$EFI" == "false" ]]; then bootini > /dev/null 2>&1; fi
 	if [[ "$FAMILY" == "broadcom" ]] && [[ "$EFI" == "false" ]]; then brcm_cmdline; config_dot_txt; fi
 	if [[ "$FAMILY_EXT" == "ac2xx" ]] && [[ "$AML_EMMC" == "false" ]]; then
 		cp -f ${OUTPUT}/chainload.bin p1/

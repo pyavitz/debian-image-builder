@@ -689,17 +689,25 @@ if [[ "$EXTLINUX" == "true" ]]; then
 	$EE "extlinux.conf"
 	sed -i "/append/c\\	${CMDLINE}" /transfer/${P_ROOTFS}/boot/extlinux/extlinux.conf
 	cat /transfer/${P_ROOTFS}/boot/extlinux/extlinux.conf
-fi
-if [[ "$BOOTCMD" == "true" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/uconfig.txt
+elif [[ "$BOOTCMD" == "true" ]]; then
+	if [[ -f "/transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt" ]]; then
+		sed -i 's/^rootfstype=.*/rootfstype='${R_FSTYPE}'/' /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
+	elif [[ -f "/transfer/${P_ROOTFS}/boot/uconfig.txt" ]]; then
+		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
+		sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/uconfig.txt
+	fi
 	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_ROOTFS}/boot/boot.cmd /transfer/${P_ROOTFS}/boot/boot.scr
-fi
-if [[ "$BOOTINI" == "true" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/uconfig.txt
+elif [[ "$BOOTINI" == "true" ]]; then
+	if [[ -f "/transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt" ]]; then
+		sed -i 's/^rootfstype=.*/rootfstype='${R_FSTYPE}'/' /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
+	elif [[ -f "/transfer/${P_ROOTFS}/boot/uconfig.txt" ]]; then
+		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
+		sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/uconfig.txt
+	fi
 fi
 $EE
 $EE "fstab"
@@ -716,19 +724,26 @@ if [[ "$EXTLINUX" == "true" ]] && [[ -f "/transfer/${P_BOOT}/extlinux/extlinux.c
 	$EE "extlinux.conf"
 	sed -i "/append/c\\	${CMDLINE}" /transfer/${P_BOOT}/extlinux/extlinux.conf
 	cat /transfer/${P_BOOT}/extlinux/extlinux.conf
-fi
-if [[ "$BOOTCMD" == "true" ]] && [[ -f "/transfer/${P_BOOT}/boot.cmd" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
+elif [[ "$BOOTCMD" == "true" ]]; then
+	if [[ -f "/transfer/${P_BOOT}/${FAMILY}Env.txt" ]]; then
+		sed 's/^rootfstype=*/rootfstype='${R_FSTYPE}'/' /transfer/${P_BOOT}/${FAMILY}Env.txt
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
+	elif [[ -f "/transfer/${P_BOOT}/uconfig.txt" ]]; then
+		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
+		sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
+	fi
 	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_BOOT}/boot.cmd /transfer/${P_BOOT}/boot.scr
-fi
-if [[ "$BOOTINI" == "true" ]] && [[ -f "/transfer/${P_BOOT}/boot.ini" ]]; then
-	sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
-	sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
-	sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
-fi
-if [[ "$EFI" == "true" ]]; then
+elif [[ "$BOOTINI" == "true" ]]; then
+	if [[ -f "/transfer/${P_BOOT}/${FAMILY}Env.txt" ]]; then
+		sed -i 's/^rootfstype=.*/rootfstype='${R_FSTYPE}'/' /transfer/${P_BOOT}/${FAMILY}Env.txt
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
+	elif [[ -f "/transfer/${P_BOOT}/uconfig.txt" ]]; then
+		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
+		sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
+		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/uconfig.txt
+	fi
+elif [[ "$EFI" == "true" ]]; then
 	P_EFI="/transfer/${P_ROOTFS}/boot/efi"
 	mkdir -p ${P_EFI}
 	mount -o bind /transfer/${P_BOOT} ${P_EFI}
