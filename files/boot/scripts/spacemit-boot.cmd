@@ -1,62 +1,50 @@
-# DEBIAN IMAGE BUILDER (SPACEMIT)
-
-setenv rootfstype ""
-setenv kernel ""
-setenv initramfs ""
-
-# Load uconfig.txt
-if test -e ${devtype} ${devnum}:${distro_bootpart} uconfig.txt; then
-	setenv uconfig "uconfig.txt"
-elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/uconfig.txt; then
-	setenv uconfig "boot/uconfig.txt"
-fi
-echo "Loading ${uconfig} from ${devtype} ${devnum}:${distro_bootpart} ..."
-load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${uconfig}
-env import -t ${scriptaddr} ${filesize}
-
-# Set device tree binary
-if test "${product_name}" = "k1-x_deb1"; then
-	setenv bootlabel "BananaPi BPI-F3"
-	setenv fdtfile "k1-bananapi-f3.dtb"
-elif test "${product_name}" = "k1-x_milkv-jupiter"; then
-	setenv bootlabel "Milk-V Jupiter"
-	setenv fdtfile "k1-milkv-jupiter.dtb"
-elif test "${product_name}" = "k1-x_MUSE-Book"; then
-	setenv bootlabel "SpacemiT MUSE Book"
-	setenv fdtfile "k1-musebook.dtb"
-elif test "${product_name}" = "k1-x_MUSE-Pi-Pro"; then
-	setenv bootlabel "SpacemiT MusePi Pro"
-	setenv fdtfile "k1-musepi-pro.dtb"
-elif test -e ${devtype} ${devnum}:${distro_bootpart} ${platform}/${product_name}.dtb; then
-	setenv bootlabel "${product_name}"
-	setenv fdtfile "${product_name}.dtb"
-elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/${platform}/${product_name}.dtb; then
-	setenv bootlabel "${product_name}"
-	setenv fdtfile "${product_name}.dtb"
-fi
-
-# Set boot variables
 if test -e ${devtype} ${devnum}:${distro_bootpart} boot.scr; then
-	setenv fk_kvers ${kernel}
-	setenv initrd ${initramfs}
-	setenv fdtdir ${platform}
-	setenv user_overlay_dir user-overlays
+	setenv prefix ""
 	part uuid ${devtype} ${devnum}:2 uuid
 elif test -e ${devtype} ${devnum}:${distro_bootpart} boot/boot.scr; then
-	setenv fk_kvers boot/${kernel}
-	setenv initrd boot/${initramfs}
-	setenv fdtdir boot/${platform}
-	setenv user_overlay_dir boot/user-overlays
+	setenv prefix "boot"
 	part uuid ${devtype} ${devnum}:1 uuid
 fi
 
-setenv bootargs "${console} rw root=PARTUUID=${uuid} ${rootfstype} ${verbose} fsck.repair=yes ${extra} rootwait"
+setenv platform ""
+setenv user_env "${prefix}/${platform}Env.txt"
+echo "Loading environment (${devtype} ${devnum}:${distro_bootpart})"
+load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${user_env}
+env import -t ${scriptaddr} ${filesize}
 
-setenv loading ""
-${loading} ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd} \
-&& ${loading} ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers} \
-&& echo "Loading ${fdtdir}/${fdtfile} ..." \
-&& ${loading} ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr_r} ${fdtdir}/${fdtfile}
+if test "${product_name}" = "k1-x_deb1"; then
+	if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}/${platform}/k1-bananapi-f3.dtb; then
+		setenv bootlabel "BananaPi BPI-F3"
+		setenv fdtfile "k1-bananapi-f3.dtb"
+	fi
+elif test "${product_name}" = "k1-x_milkv-jupiter"; then
+	if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}/${platform}/k1-milkv-jupiter.dtb; then
+		setenv bootlabel "Milk-V Jupiter"
+		setenv fdtfile "k1-milkv-jupiter.dtb"
+	fi
+elif test "${product_name}" = "k1-x_MUSE-Book"; then
+	if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}/${platform}/k1-musebook.dtb; then
+		setenv bootlabel "SpacemiT MUSE Book"
+		setenv fdtfile "k1-musebook.dtb"
+	fi
+elif test "${product_name}" = "k1-x_MUSE-Pi-Pro"; then
+	if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}/${platform}/k1-musepi-pro.dtb; then
+		setenv bootlabel "SpacemiT MusePi Pro"
+		setenv fdtfile "k1-musepi-pro.dtb"
+	fi
+fi
+
+setenv rootdev "PARTUUID=${uuid}"
+setenv fk_kvers "${prefix}/${kernel}"
+setenv initrd "${prefix}/${initramfs}"
+setenv fdtdir "${prefix}/${platform}"
+setenv user_overlay_dir "${prefix}/user-overlays"
+setenv bootargs "${console} rw root=${rootdev} rootfstype=${rootfstype} loglevel=${loglevel} fsck.repair=yes ${extra} rootwait init=/sbin/init"
+
+load ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} ${initrd}
+load ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${fk_kvers}
+echo "Loading ${fdtfile} (${devtype} ${devnum}:${distro_bootpart})"
+load ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr_r} ${fdtdir}/${fdtfile}
 
 fdt addr ${fdt_addr_r}
 fdt resize 65536
@@ -73,7 +61,7 @@ if test -n ${user_overlays}; then
 	done
 fi
 
-echo "Booting $bootlabel from ${devtype} ${devnum}:${distro_bootpart} ..." \
+echo "Booting $bootlabel (${devtype} ${devnum}:${distro_bootpart})" \
 && booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}
 
 echo "Trying bootm ..." \
