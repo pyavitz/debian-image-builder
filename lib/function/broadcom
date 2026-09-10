@@ -3,6 +3,13 @@
 # boot firmware
 broadcom_extra_git (){
 FIRMWARE="https://github.com/raspberrypi/firmware.git"
+RPI_FW_CHK="true"
+RPI_FW=( "firmware/fixup4.dat" "firmware/fixup4cd.dat" "firmware/fixup4db.dat" "firmware/fixup4x.dat" "firmware/start4.elf" \
+	 "firmware/start4cd.elf" "firmware/start4db.elf" "firmware/start4x.elf" "firmware/bootcode.bin" "firmware/fixup.dat" \
+	 "firmware/fixup_cd.dat" "firmware/fixup_db.dat" "firmware/fixup_x.dat" "firmware/start.elf" "firmware/start_cd.elf" \
+	 "firmware/start_db.elf" "firmware/start_x.elf" )
+
+# download
 rm -fdr firmware
 git clone -q --depth=1 --filter=blob:none --sparse  ${FIRMWARE} boot-firmware
 cd boot-firmware
@@ -11,12 +18,8 @@ rm -fdr boot/{overlays,*.dtb,kernel*}
 mv boot ../firmware
 cd ..
 rm -fdr boot-firmware
-RPI_FW=( "firmware/fixup4.dat" "firmware/fixup4cd.dat" "firmware/fixup4db.dat" "firmware/fixup4x.dat" "firmware/start4.elf" \
-	 "firmware/start4cd.elf" "firmware/start4db.elf" "firmware/start4x.elf" "firmware/bootcode.bin" "firmware/fixup.dat" \
-	 "firmware/fixup_cd.dat" "firmware/fixup_db.dat" "firmware/fixup_x.dat" "firmware/start.elf" "firmware/start_cd.elf" \
-	 "firmware/start_db.elf" "firmware/start_x.elf" )
-RPI_FW_CHK="true"
 
+# verify
 for bins in "${RPI_FW[@]}"; do
 	if [[ ! -f "$bins" ]]; then
 		echo -e "Error: '$bins' missing."
@@ -24,15 +27,14 @@ for bins in "${RPI_FW[@]}"; do
 		break
 	fi
 done
-if "$RPI_FW_CHK"; then
-	:;
-else
-	echo -e "RPI FW Check, Failed."; echo ""
+if [[ "$RPI_FW_CHK" == "false" ]]; then
+	echo -e "Boot firmware failed to download."
+	echo ""
 	exit 1
 fi
 }
 
-# enable additional modules
+# edit defconfig
 broadcom_extra_modules (){
 if [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	# remove localversion
@@ -43,6 +45,7 @@ if [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
 	if [[ `grep -w "CONFIG_BLK_DEV_DM=m" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then sed -i 's/CONFIG_BLK_DEV_DM=m/CONFIG_BLK_DEV_DM=y/g' arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
 fi
 
+# enable modules
 BRCM_MODULES="CONFIG_MODULE_SIG=y CONFIG_CIFS_POSIX=y CONFIG_EFI=y CONFIG_DMI=y CONFIG_SYSFB_SIMPLEFB=y \n
 	CONFIG_EFI_ARMSTUB_DTB_LOADER=y CONFIG_EFI_BOOTLOADER_CONTROL=y CONFIG_RESET_ATTACK_MITIGATION=y \n
 	CONFIG_NVME_HWMON=y CONFIG_ZRAM_BACKEND_LZ4=y CONFIG_ZRAM_BACKEND_LZ4HC=y CONFIG_ZRAM_BACKEND_ZSTD=y \n
