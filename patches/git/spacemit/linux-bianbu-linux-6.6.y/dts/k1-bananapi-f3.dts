@@ -16,7 +16,7 @@
 	model = "BananaPi BPI-F3";
 
 	chosen {
-		bootargs = "earlycon=sbi console=ttyS0,115200n8 loglevel=6 swiotlb=65536 rdinit=/init";
+		bootargs = "earlycon=sbi console=ttyS0,115200n8 swiotlb=65536 rdinit=/init";
 		stdout-path = "serial0:115200n8";
 	};
 
@@ -26,10 +26,12 @@
 		timebase-frequency = <24000000>;
 
 		cpu_0: cpu@0 {
+			reg = <0>;
 			cpu-ai = "true";
 		};
 
 		cpu_1: cpu@1 {
+			reg = <1>;
 			cpu-ai = "true";
 		};
 
@@ -167,7 +169,7 @@
 
 		bt_pwrseq: bt-pwrseq {
 			compatible = "spacemit,bt-pwrseq";
-			reset-gpios     = <&gpio 63 0>;
+			reset-gpios = <&gpio 63 GPIO_ACTIVE_HIGH>;
 		};
 	};
 
@@ -192,7 +194,7 @@
 	pwdn-gpios = <&gpio 113 0>;
 	reset-gpios = <&gpio 111 0>;
 
-	status = "okay";
+	status = "disabled";
 };
 
 &backsensor_aux {
@@ -204,44 +206,39 @@
 
 &ccic0 {
 	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
-
-	status = "okay";
+	status = "disabled";
 };
 
 &ccic1 {
 	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
-
-	status = "okay";
+	status = "disabled";
 };
 
 &ccic2 {
 	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
-
-	status = "okay";
-};
-
-&csiphy0 {
-
-	status = "okay";
+	status = "disabled";
 };
 
 &combphy {
 	status = "okay";
 };
 
-&csiphy1 {
+&csiphy0 {
+	status = "disabled";
+};
 
+&csiphy1 {
 	status = "disabled";
 };
 
 &csiphy2 {
 	spacemit,bifmode-enable;
-
-	status = "okay";
+	status = "disabled";
 };
 
 &cpp {
 	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
+	status = "disabled";
 };
 
 &dpu_online2_dsi {
@@ -723,6 +720,7 @@
 
 &isp {
 	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
+	status = "disabled";
 };
 
 &lcds {
@@ -1118,7 +1116,7 @@
 	bluetooth {
 		compatible = "realtek,rtl8723ds-bt";
 		device-wake-gpios = <&gpio 64 GPIO_ACTIVE_HIGH>;
-		host-wake-gpios = <&gpio 65 GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&gpio 65 GPIO_ACTIVE_HIGH>;
 	};
 };
 
@@ -1172,4 +1170,5 @@
 
 &vi {
 	power-domains = <&power K1X_PMU_ISP_PWR_DOMAIN>;
+	status = "disabled";
 };
