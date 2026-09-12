@@ -28,14 +28,18 @@ fdt addr ${fdt_addr_r}
 fdt resize 65536
 if test -n ${overlays}; then
 	for dtoverlay in ${overlays}; do
-		echo "Applying ${dtoverlay} ..."
-		load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${fdtdir}/overlays/${dtoverlay}.dtbo && fdt apply ${scriptaddr}
+		if test -e ${devtype} ${devnum}:${distro_bootpart} ${fdtdir}/overlays/${dtoverlay}.dtbo; then
+			echo "Applying ${dtoverlay} ..."
+			load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${fdtdir}/overlays/${dtoverlay}.dtbo && fdt apply ${scriptaddr}
+		fi
 	done
 fi
 if test -n ${user_overlays}; then
 	for dtoverlay in ${user_overlays}; do
-		echo "Applying ${dtoverlay} ..."
-		load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${user_overlay_dir}/${dtoverlay}.dtbo && fdt apply ${scriptaddr}
+		if test -e ${devtype} ${devnum}:${distro_bootpart} ${user_overlay_dir}/${dtoverlay}.dtbo; then
+			echo "Applying ${dtoverlay} ..."
+			load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${user_overlay_dir}/${dtoverlay}.dtbo && fdt apply ${scriptaddr}
+		fi
 	done
 fi
 
