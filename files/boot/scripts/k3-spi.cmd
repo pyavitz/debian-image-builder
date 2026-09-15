@@ -2,7 +2,7 @@ setenv loadaddr 0x148000000
 echo "Checking execution state..."
 if load ${devtype} ${devnum}:${distro_bootpart} ${loadaddr} flash_done.txt; then
 	echo "===================================================="
-	echo " MATCH: 'flash_done.txt' detected on SD card."
+	echo " MATCH: 'flash_done.txt' detected!"
 	echo " SPI flash update already completed. Skipping sequence."
 	echo "===================================================="
 else
