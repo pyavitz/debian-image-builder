@@ -1,0 +1,45 @@
+From 7e6a8b31fdafb5ee915a9cc0d870770ff28615ea Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Mon, 14 Sep 2026 19:50:46 -0400
+Subject: [PATCH] board: spacemit: k3: Initialize miiphy early to fix EFI boot
+ access fault
+
+Call miiphy_init() directly inside board_init() for non-SPL builds.
+This ensures that the MII PHY networking layer is fully registered
+and populated before downstream EFI boot paths (like bootefi) attempt
+to query the network stack, permanently fixing an address access
+fault when booting without running manual network commands (dhcp/ping).
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ board/spacemit/k3/k3.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/board/spacemit/k3/k3.c b/board/spacemit/k3/k3.c
+index 49d99caf61..bfa57f1088 100644
+--- a/board/spacemit/k3/k3.c
++++ b/board/spacemit/k3/k3.c
+@@ -36,6 +36,7 @@
+ #include <u-boot/crc.h>
+ #include <linux/log2.h>
+ #include <spi_flash.h>
++#include <miiphy.h>
+ 
+ #ifdef CONFIG_ESPI
+ extern bool spacemit_espi_is_ready(void);
+@@ -758,6 +759,12 @@ int board_init(void)
+ 		printf("Warn: Failed to init RT7451 retimer (err=%d)\n", ret);
+ #endif
+ 
++#if !defined(CONFIG_SPL_BUILD) && defined(CONFIG_CMD_NET)
++	/* Force MII PHY network layers to initialize early 
++	to prevent an EFI access fault crash */
++	miiphy_init(); 
++#endif
++
+ 	return 0;
+ }
+ 
+-- 
+2.53.0
+
