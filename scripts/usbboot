@@ -4,8 +4,8 @@ validation
 if [[ -f "board.txt" ]]; then . board.txt; else noboard; fi
 source userdata.txt
 source lib/function/${FAMILY}
-
-if [[ -d "sysroot" ]] || [[ -d "p1" ]]; then make clean; clear -x; fi
+P_BOOT="p1"
+if [[ -d "sysroot" ]] || [[ -d "${P_BOOT}" ]]; then make clean; clear -x; fi
 if [[ ! "$PLATFORM" =~ ^(allwinner|amlogic|spacemit)$ ]]; then
 	echo "${PLATFORM} is not supported."
 	exit 1
@@ -14,11 +14,15 @@ if [[ ! -d "output/${BOARD}" ]] && [[ `ls output/${BOARD}/u-boot-*.deb` ]]; then
 	echo -e "Missing u-boot package"
 	exit 1
 fi
-
-P_BOOT="p1"
 IMAGE_FOLDER="img/"
-USB_BOOT_IMAGE="${DTB}-usb-boot.img"
-BOOT_LABEL="BOOT"
+if [[ "$FAMILY_EXT" == "spacemit-k3" ]]; then
+	USB_BOOT_IMAGE="${DTB}-usb-spi-update.img"
+	BOOT_LABEL="UPDATE"
+else
+	USB_BOOT_IMAGE="${DTB}-usb-boot.img"
+	BOOT_LABEL="BOOT"
+fi
+
 BOOTFS="mkfs -t vfat -n"
 BOOT_SCRIPT="files/boot/scripts/usbboot.cmd"
 if [[ -f "$USB_BOOT_IMAGE" ]]; then rm -f $USB_BOOT_IMAGE; fi
@@ -42,22 +46,36 @@ mount "${IMAGE_LOOP_DEV_BOOT}" ${P_BOOT}
 flash_uboot
 sync
 if [[ -f "${BOOT_SCRIPT}" ]] && [[ "$PLATFORM" =~ ^(allwinner|amlogic)$ ]]; then
-	cp -f ${BOOT_SCRIPT} p1/boot.cmd
-	echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> p1/boot.cmd
-	mkimage -C none -A ${ARCH} -T script -d p1/boot.cmd p1/boot.scr
+	cp -f ${BOOT_SCRIPT} ${P_BOOT}/boot.cmd
+	echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> ${P_BOOT}/boot.cmd
+	mkimage -C none -A ${ARCH} -T script -d ${P_BOOT}/boot.cmd ${P_BOOT}/boot.scr
 	sleep .50
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
 	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
 	rmdir "${IMAGE_FOLDER}"
-	rmdir p1
+	rmdir ${P_BOOT}
 	echo ""
 elif [[ -f "${BOOT_SCRIPT}" ]] && [[ "$PLATFORM" =~ ^(spacemit)$ ]]; then
+	if [[ "$FAMILY_EXT" == "spacemit-k3" ]]; then
+		cp -f files/boot/scripts/k3-spi.cmd ${P_BOOT}/boot.cmd
+		echo "# mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr" >> ${P_BOOT}/boot.cmd
+		mkimage -C none -A ${ARCH} -T script -d ${P_BOOT}/boot.cmd ${P_BOOT}/boot.scr
+		sleep .50
+		cp -f output/${BOARD}/partition_4M.json ${P_BOOT}/
+		cp -f output/${BOARD}/bootinfo_spinor.bin ${P_BOOT}/
+		cp -f output/${BOARD}/FSBL.bin ${P_BOOT}/
+		cp -f output/${BOARD}/u-boot-env-default.bin ${P_BOOT}/
+		cp -f output/${BOARD}/esos.bin ${P_BOOT}/
+		cp -f output/${BOARD}/fw_dynamic.bin ${P_BOOT}/
+		cp -f output/${BOARD}/u-boot.bin ${P_BOOT}/
+		sync
+	fi
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
 	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
 	rmdir "${IMAGE_FOLDER}"
-	rmdir p1
+	rmdir ${P_BOOT}
 	echo ""
 else
 	echo -e "${BOOT_SCRIPT}"
@@ -66,7 +84,7 @@ else
 	losetup -d "${IMAGE_LOOP_DEV}"
 	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
 	rmdir "${IMAGE_FOLDER}"
-	rmdir p1
+	rmdir ${P_BOOT}
 	echo ""
 	rm -f $USB_BOOT_IMAGE
 	exit 0
