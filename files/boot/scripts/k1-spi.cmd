@@ -1,5 +1,6 @@
+# Run the following from the u-boot CLI.
 # usb start
-# load usb 0:1 0x10000000 boot.scr; source 0x10000000
+# load usb 0:1 ${kernel_addr_r} boot.scr; source ${kernel_addr_r}
 
 setenv devnum 0
 setenv distro_bootpart 1
@@ -49,6 +50,8 @@ else
 		echo "------------------------------------------------------------------"
 		echo "Verified flashing sequence complete! Ready for reboot."
 		echo "------------------------------------------------------------------"
+		sleep 3
+		reset
 	else
 		echo "ERROR: SPI Flash not found. Halting sequence."
 	fi
