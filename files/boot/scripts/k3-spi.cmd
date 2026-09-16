@@ -45,8 +45,10 @@ else
 			sleep 3
 		fi
 		echo "------------------------------------------------------------------"
-		echo "Verified flashing sequence complete! Ready for reboot."
+		echo "Verified flashing sequence complete! Resetting."
 		echo "------------------------------------------------------------------"
+		sleep 2
+		reset
 	else
 		echo "ERROR: SPI Flash not found. Halting sequence."
 	fi
