@@ -20,12 +20,12 @@ if [[ "$FAMILY" == "spacemit" ]]; then
 	BOOT_LABEL="UPDATE"
 else
 	USB_BOOT_IMAGE="${DTB}-usb-boot.img"
-	BOOT_LABEL="BOOT"
+	BOOT_LABEL="USB_BOOT"
 fi
 
 BOOTFS="mkfs -t vfat -n"
 BOOT_SCRIPT="files/boot/scripts/usbboot.cmd"
-if [[ -f "$USB_BOOT_IMAGE" ]]; then rm -f $USB_BOOT_IMAGE; fi
+if [[ -f "output/${BOARD}/image/${USB_BOOT_IMAGE}" ]]; then rm -f output/${BOARD}/image/${USB_BOOT_IMAGE}; fi
 echo -en "${FAMILY}: " | sed -e 's/\(.*\)/\U\1/'
 echo -e "${DEFAULT_MOTD}" | sed -e 's/\(.*\)/\U\1/'
 mkdir -p "$IMAGE_FOLDER"
@@ -52,7 +52,8 @@ if [[ -f "${BOOT_SCRIPT}" ]] && [[ "$PLATFORM" =~ ^(allwinner|amlogic)$ ]]; then
 	sleep .50
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
-	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
+	mkdir -p "output/${BOARD}/image"
+	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "output/${BOARD}/image/${USB_BOOT_IMAGE}"
 	rmdir "${IMAGE_FOLDER}"
 	rmdir ${P_BOOT}
 	echo ""
@@ -72,7 +73,8 @@ elif [[ -f "${BOOT_SCRIPT}" ]] && [[ "$PLATFORM" =~ ^(spacemit)$ ]]; then
 	sync
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
-	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
+	mkdir -p "output/${BOARD}/image"
+	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "output/${BOARD}/image/${USB_BOOT_IMAGE}"
 	rmdir "${IMAGE_FOLDER}"
 	rmdir ${P_BOOT}
 	echo ""
@@ -81,7 +83,8 @@ else
 	sleep .50
 	umount ${P_BOOT}
 	losetup -d "${IMAGE_LOOP_DEV}"
-	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "${USB_BOOT_IMAGE}"
+	mkdir -p "output/${BOARD}/image"
+	mv "${IMAGE_FOLDER}${USB_BOOT_IMAGE}" "output/${BOARD}/image/${USB_BOOT_IMAGE}"
 	rmdir "${IMAGE_FOLDER}"
 	rmdir ${P_BOOT}
 	echo ""
@@ -91,6 +94,6 @@ fi
 }
 
 if [ $VERBOSE -eq 1 ]; then partition; else partition > /dev/null 2>&1; fi
-if [[ -f "${USB_BOOT_IMAGE}" ]]; then ls -ls $USB_BOOT_IMAGE; fi
+if [[ -f "output/${BOARD}/image/${USB_BOOT_IMAGE}" ]]; then ls -ls output/${BOARD}/image/${USB_BOOT_IMAGE}; fi
 
 exit 0
