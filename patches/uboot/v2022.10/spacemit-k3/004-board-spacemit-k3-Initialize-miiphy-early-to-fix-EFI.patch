@@ -1,6 +1,6 @@
-From 7e6a8b31fdafb5ee915a9cc0d870770ff28615ea Mon Sep 17 00:00:00 2001
+From f630cda4c0938f29237f5b71aec30a40678c2d9b Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Mon, 14 Sep 2026 19:50:46 -0400
+Date: Wed, 16 Sep 2026 21:20:14 -0400
 Subject: [PATCH] board: spacemit: k3: Initialize miiphy early to fix EFI boot
  access fault
 
@@ -16,18 +16,18 @@ Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/board/spacemit/k3/k3.c b/board/spacemit/k3/k3.c
-index 49d99caf61..bfa57f1088 100644
+index 42bc51f012..9bf3aca01b 100644
 --- a/board/spacemit/k3/k3.c
 +++ b/board/spacemit/k3/k3.c
-@@ -36,6 +36,7 @@
- #include <u-boot/crc.h>
- #include <linux/log2.h>
- #include <spi_flash.h>
+@@ -30,6 +30,7 @@
+ #include <fs.h>
+ #include <usb.h>
+ #include <part.h>
 +#include <miiphy.h>
- 
- #ifdef CONFIG_ESPI
- extern bool spacemit_espi_is_ready(void);
-@@ -758,6 +759,12 @@ int board_init(void)
+ #include <mmc.h>
+ #include "nfs_env.h"
+ #include <power/pmic.h>
+@@ -759,6 +760,12 @@ int board_init(void)
  		printf("Warn: Failed to init RT7451 retimer (err=%d)\n", ret);
  #endif
  
