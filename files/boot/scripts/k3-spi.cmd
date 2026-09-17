@@ -1,4 +1,8 @@
+setenv devnum 0
+setenv distro_bootpart 1
+setenv devtype usb
 setenv loadaddr 0x148000000
+
 echo "Checking execution state..."
 if load ${devtype} ${devnum}:${distro_bootpart} ${loadaddr} flash_done.txt; then
 	echo "===================================================="
