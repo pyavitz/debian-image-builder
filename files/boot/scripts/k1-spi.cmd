@@ -1,10 +1,19 @@
-# Run the following from the u-boot CLI.
+# Run the following "manually" from the u-boot CLI.
+#
+# Updating via USB
 # usb start
 # load usb 0:1 ${kernel_addr_r} boot.scr; source ${kernel_addr_r}
+#
+# Updating via SD card (Musebook)
+# load mmc 0:1 ${kernel_addr_r} boot.scr; source ${kernel_addr_r}
 
 setenv devnum "0"
 setenv distro_bootpart "1"
-setenv devtype "usb"
+if test "${product_name}" = "k1-x_MUSE-Book"; then
+	setenv devtype "mmc"
+else
+	setenv devtype "usb"
+fi
 setenv loadaddr "0x40000000"
 
 echo "Checking execution state..."

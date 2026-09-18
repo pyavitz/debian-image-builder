@@ -154,7 +154,11 @@ EOF
 spi_update_img (){
 # Create an SPI update IMG
 mkdir -p ../../${OUTPUT}/image
-IMG_PATH="../../${OUTPUT}/image/${DTB}-usb-spi-update.img"
+if [[ "$BOARD" == "musebook" ]]; then
+	IMG_PATH="../../${OUTPUT}/image/${DTB}-mmc-spi-update.img"
+else
+	IMG_PATH="../../${OUTPUT}/image/${DTB}-usb-spi-update.img"
+fi
 rm -f ${IMG_PATH}
 dd if=/dev/zero of="${IMG_PATH}" bs=1M count=10
 parted -s "${IMG_PATH}" mklabel gpt
