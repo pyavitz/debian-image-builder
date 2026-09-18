@@ -151,6 +151,30 @@ fastboot reboot
 EOF
 }
 
+spi_update_img (){
+# Create an SPI update IMG
+mkdir -p ../../${OUTPUT}/image
+IMG_PATH="../../${OUTPUT}/image/${DTB}-usb-spi-update.img"
+rm -f ${IMG_PATH}
+dd if=/dev/zero of="${IMG_PATH}" bs=1M count=10
+parted -s "${IMG_PATH}" mklabel gpt
+parted -s "${IMG_PATH}" mkpart primary fat32 1024KiB 100%
+mformat -i "${IMG_PATH}@@1024K" -F
+mlabel -i "${IMG_PATH}@@1024K" ::UPDATE
+mcopy -i "${IMG_PATH}@@1024K" {bootinfo_spinor.bin,FSBL.bin,u-boot-env-default.bin} ::/
+mcopy -i "${IMG_PATH}@@1024K" fw_dynamic.itb ::/fw_dynamic.bin
+mcopy -i "${IMG_PATH}@@1024K" u-boot.itb ::/u-boot.bin
+if [[ "$SERIES" == "k1" ]]; then
+	mcopy -i "${IMG_PATH}@@1024K" ../../${OUTPUT}/partition_2M.json ::/
+elif [[ "$SERIES" == "k3" ]]; then
+	mcopy -i "${IMG_PATH}@@1024K" ../../${OUTPUT}/partition_4M.json ::/
+	mcopy -i "${IMG_PATH}@@1024K" ../../files/firmware/${FAMILY_EXT}/esos.itb ::/esos.bin
+fi
+cp -f ../../files/boot/scripts/${SERIES}-spi.cmd boot.cmd
+mkimage -C none -A ${ARCH} -T script -d boot.cmd boot.scr
+mcopy -i "${IMG_PATH}@@1024K" {boot.cmd,boot.scr} ::/
+}
+
 # ATF BINARY AND FIRMWARE
 fw_dynamic (){ # place file.
 if [[ -f "../opensbi/${OPENSBI_FIRMWARE}" ]]; then cp "../opensbi/${OPENSBI_FIRMWARE}" .; else report_opensbi_error; fi
@@ -215,6 +239,7 @@ if [[ "$FAMILY_EXT" == "spacemit-k1" ]] && \
 	cp -f bootinfo_spinor.bin ../../${OUTPUT}/
 	cp -f u-boot-env-default.bin ../../${OUTPUT}/
 	k1_spi_flash
+	spi_update_img
 	uboot_packaging
 elif [[ "$FAMILY_EXT" == "spacemit-k3" ]] && \
 	[[ -f "bootinfo_block.bin" ]] && [[ -f "u-boot.itb" ]] && [[ -f "fw_dynamic.itb" ]] && [[ -f "FSBL.bin" ]]; then
@@ -231,6 +256,7 @@ elif [[ "$FAMILY_EXT" == "spacemit-k3" ]] && \
 	# add esos
 	cp -f ../../files/firmware/${FAMILY_EXT}/esos.itb ../../${OUTPUT}/esos.bin
 	k3_spi_flash
+	spi_update_img
 	uboot_packaging
 else
 	report_error
