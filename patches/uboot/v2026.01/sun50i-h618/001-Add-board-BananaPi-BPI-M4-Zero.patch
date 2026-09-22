@@ -1,14 +1,14 @@
-From c77d5ad2ba71d49534c3c643675c94bb09f345a2 Mon Sep 17 00:00:00 2001
+From 1b817226f79abb1ec9067388b83dddaf085d5a36 Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sun, 27 Jul 2025 07:11:47 -0400
+Date: Tue, 22 Sep 2026 09:12:40 -0400
 Subject: [PATCH] Add board BananaPi BPI-M4-Zero
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- configs/bananapi_m4zero_defconfig             |  30 +++
- .../sun50i-h618-bananapi-m4-zero.dts          |  74 +++++++
- .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 200 ++++++++++++++++++
- 3 files changed, 304 insertions(+)
+ configs/bananapi_m4zero_defconfig             |  30 ++
+ .../sun50i-h618-bananapi-m4-zero.dts          |  12 +
+ .../allwinner/sun50i-h618-bananapi-m4.dtsi    | 261 ++++++++++++++++++
+ 3 files changed, 303 insertions(+)
  create mode 100644 configs/bananapi_m4zero_defconfig
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4-zero.dts
  create mode 100644 dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4.dtsi
@@ -51,13 +51,13 @@ index 00000000000..6d70efd1a50
 +CONFIG_USB_MUSB_GADGET=y
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4-zero.dts b/dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4-zero.dts
 new file mode 100644
-index 00000000000..5d868eaaef9
+index 00000000000..574eff97c44
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4-zero.dts
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,12 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright (c) 2025 Patrick Yavitz <pyavitz@gmail.com>
++ * Copyright (c) 2026 Patrick Yavitz <pyavitz@gmail.com>
 + */
 +
 +/dts-v1/;
@@ -66,78 +66,16 @@ index 00000000000..5d868eaaef9
 +
 +/ {
 +	model = "BananaPi BPI-M4-Zero";
-+	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h618";
-+
-+	aliases {
-+		serial5 = &uart5;
-+	};
-+
-+	leds {
-+		compatible = "gpio-leds";
-+
-+		led-0 {
-+			color = <LED_COLOR_ID_RED>;
-+			function = LED_FUNCTION_STATUS;
-+			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>;	/* PC12 */
-+			linux,default-trigger = "heartbeat";
-+		};
-+	};
-+};
-+
-+/* Connected to an on-board RTL8821CU USB WiFi chip. */
-+&ehci1 {
-+	status = "disabled";
-+};
-+
-+&ehci3 {
-+	status = "okay";
-+};
-+
-+/* SDIO */
-+&mmc1 {
-+	status = "disabled";
-+	bus-width = <4>;
-+	max-frequency = <100000000>;
-+
-+	non-removable;
-+	disable-wp;
-+
-+	/* WiFi firmware requires power to be kept while in suspend */
-+	keep-power-in-suspend;
-+
-+	mmc-pwrseq = <&wifi_pwrseq>;
-+
-+	cd-gpios = <&pio 6 15 GPIO_ACTIVE_HIGH>; /* PG15 */
-+	vmmc-supply = <&reg_vcc3v3>;
-+
-+	sdio: wifi@1 {
-+		reg = <1>;
-+		compatible = "brcm,bcm4329-fmac";
-+	};
-+};
-+
-+&ohci3 {
-+	status = "okay";
-+};
-+
-+&usbotg {
-+	status = "okay";
-+	dr_mode = "peripheral";
-+};
-+
-+&usbphy {
-+	status = "okay";
-+	usb1_vbus-supply = <&reg_usb_vbus>;
 +};
 diff --git a/dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4.dtsi b/dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4.dtsi
 new file mode 100644
-index 00000000000..d0442ca9692
+index 00000000000..d6653e0ea37
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun50i-h618-bananapi-m4.dtsi
-@@ -0,0 +1,200 @@
+@@ -0,0 +1,261 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright (c) 2025 Patrick Yavitz <pyavitz@gmail.com>
++ * Copyright (c) 2026 Patrick Yavitz <pyavitz@gmail.com>
 + */
 +
 +/dts-v1/;
@@ -150,12 +88,26 @@ index 00000000000..d0442ca9692
 +#include <dt-bindings/leds/common.h>
 +
 +/ {
++	compatible = "sinovoip,bpi-m4-zero", "allwinner,sun50i-h618";
++
 +	aliases {
 +		serial0 = &uart0;
++		serial5 = &uart5;
 +	};
 +
 +	chosen {
 +		stdout-path = "serial0:115200n8";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-0 {
++			color = <LED_COLOR_ID_RED>;
++			function = LED_FUNCTION_STATUS;
++			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>;	/* PC12 */
++			linux,default-trigger = "heartbeat";
++		};
 +	};
 +
 +	reg_usb_vbus: regulator-usb-vbus {
@@ -209,6 +161,15 @@ index 00000000000..d0442ca9692
 +	cpu-supply = <&reg_dcdc2>;
 +};
 +
++/* Connected to an on-board RTL8821CU USB WiFi chip. */
++&ehci1 {
++	status = "disabled";
++};
++
++&ehci3 {
++	status = "okay";
++};
++
 +/* SD card */
 +&mmc0 {
 +	status = "okay";
@@ -219,6 +180,29 @@ index 00000000000..d0442ca9692
 +
 +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;	/* PF6 */
 +	vmmc-supply = <&reg_vcc3v3>;
++};
++
++/* SDIO */
++&mmc1 {
++	status = "disabled";
++	bus-width = <4>;
++	max-frequency = <100000000>;
++
++	non-removable;
++	disable-wp;
++
++	/* WiFi firmware requires power to be kept while in suspend */
++	keep-power-in-suspend;
++
++	mmc-pwrseq = <&wifi_pwrseq>;
++
++	cd-gpios = <&pio 6 15 GPIO_ACTIVE_HIGH>; /* PG15 */
++	vmmc-supply = <&reg_vcc3v3>;
++
++	sdio: wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4329-fmac";
++	};
 +};
 +
 +/* eMMC */
@@ -233,6 +217,10 @@ index 00000000000..d0442ca9692
 +
 +	vmmc-supply = <&reg_vcc3v3>;
 +	vqmmc-supply = <&reg_vcc1v8>;
++};
++
++&ohci3 {
++	status = "okay";
 +};
 +
 +&pio {
@@ -318,6 +306,7 @@ index 00000000000..d0442ca9692
 +	pinctrl-names = "default";
 +};
 +
++/* Bluetooth */
 +&uart1 {
 +	status = "disabled";
 +	pinctrl-0 = <&uart1_pins>;
@@ -335,6 +324,16 @@ index 00000000000..d0442ca9692
 +	pinctrl-0 = <&uart5_ph_pins>;
 +	pinctrl-names = "default";
 +};
++
++&usbotg {
++	status = "okay";
++	dr_mode = "peripheral";
++};
++
++&usbphy {
++	status = "okay";
++	usb1_vbus-supply = <&reg_usb_vbus>;
++};
 -- 
-2.43.0
+2.53.0
 
