@@ -51,13 +51,13 @@ EE="echo -e"
 EN="echo -en"
 
 $EE
-$EE "${BLD}Would you like to transfer the current install to another drive?${FIN}"
+$EE "${BLD}Would you like to transfer the current install to another block device?${FIN}"
 $EN "${ITL}YES / NO:${FIN} "
 read CHOICE
 if [[ "$CHOICE" =~ ^(yes|Yes|YES|k|ok|okay|sure)$ ]]; then
 	if [[ "$DISCLAIMER" == "true" ]]; then
 		export NEWT_COLORS='root=,black'
-		whiptail --title "DISCLAIMER" --msgbox "The write2mmc script can transfer your current install to other drives besides the eMMC. Being able to boot from USB or NVME depends more on the maturity of U-Boot, than the ability to write the OS to those drives." 0 0
+		whiptail --title "DISCLAIMER" --msgbox "The write2mmc script can transfer your current install to other devices besides the eMMC. Being able to boot from USB or NVME depends more on the maturity of U-Boot, than the ability to write the OS to those devices." 0 0
 		sed -i 's/DISCLAIMER="true"/DISCLAIMER="false"/g' /etc/default/write2mmc
 	fi
 else
@@ -126,7 +126,7 @@ if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1 || \
 	[[ `ls /dev/nvme*[0-9]` ]] > /dev/null 2>&1 || \
 		[[ `ls /dev/mmcblk[0-9]` ]] > /dev/null 2>&1; then
 	$EE ""
-	$EE "${BLD}${ITL}AVAILABLE DRIVES${FIN}"
+	$EE "${BLD}${ITL}AVAILABLE DEVICES${FIN}"
 	if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1; then
 		HD_CHK=`findmnt -v -n -o SOURCE / | sed 's/.$//'`
 		ls /dev/sd*[a-z]
@@ -148,13 +148,13 @@ if [[ `ls /dev/sd*[a-z]` ]] > /dev/null 2>&1 || \
 	fi
 else
 	$EE ""
-	$EE "There are no available drives to transfer to."
+	$EE "There are no available block devices to transfer to."
 	exit 0
 fi
 
-# CHOOSE DRIVE
+# CHOOSE DEVICE
 $EE ""
-$EE "${BLD}From the list of AVAILABLE DRIVES above, write in the device node"
+$EE "${BLD}From the list of AVAILABLE DEVICES above, write in the device node"
 $EN "you want to transfer the current install to:${FIN} "
 $EN "/dev/"
 read NODE
@@ -163,12 +163,12 @@ if [[ -e "$DEVICE_NODE" ]]; then
 	:;
 else
 	$EE
-	$EE "${BLD}WARNING:${FIN} The drive you selected is not available or invalid."
+	$EE "${BLD}WARNING:${FIN} The block device you selected is not available or invalid."
 	exit 0
 fi
 if [[ "$HD_CHK" == "$DEVICE_NODE" || "$NVME_CHK" == "$DEVICE_NODE" || "$MMC_CHK" == "$DEVICE_NODE" ]]; then
 	$EE
-	$EE "${BLD}WARNING:${FIN} The drive you selected is currently in use."
+	$EE "${BLD}WARNING:${FIN} The block device you selected is currently in use."
 	exit 0
 fi
 if [[ "$EMMC" == "$DEVICE_NODE" ]]; then
@@ -313,7 +313,7 @@ $EE ""
 $EE "${BLD}Summary List${FIN}"
 $EE "Board: $DEFAULT_MOTD"
 $EN "Platform: "; $EE "$FAMILY" | sed -e 's/\(.*\)/\U\1/'
-$EE "Drive: $DEVICE_NODE"
+$EE "Path: $DEVICE_NODE"
 $EN "Partitions: "; $EE "$P_VALUE" | sed 's/p//g'
 $EE "UEFI: $EFI"
 if [[ "$FAMILY" =~ ^(generic|rockchip)$ ]] || \
