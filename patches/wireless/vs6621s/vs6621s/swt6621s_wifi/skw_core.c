@@ -344,7 +344,8 @@ static netdev_tx_t skw_ndo_xmit(struct sk_buff *skb, struct net_device *ndev)
 	/* Mini frame size that HW support */
 	if (unlikely(skb->len <= 16)) {
 		skw_chip_dbg(skw->idx, "current: %s\n", current->comm);
-		skw_hex_dump("short skb", skb->data, skb->len, true);
+	    // Mute periodic DUMP messages that fill up dmesg buffer
+		skw_hex_dump("short skb", skb->data, skb->len, false/*true*/);
 
 		if (skb->len != ETH_HLEN || eth->h_proto != htons(ETH_P_IP))
 			SKW_BUG_ON(1);
