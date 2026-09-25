@@ -21,7 +21,8 @@ if [[ "$FSTYPE" == "btrfs" ]]; then
 	MAKE_ROOTFS="mkfs.btrfs -f -L ${ROOTFS_LABEL} ${IMAGE_LOOP_DEV_ROOTFS}"
 	MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${IMAGE_LOOP_DEV_ROOTFS} ${P_ROOTFS}"
 	ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
-	ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+	ROOT_FLAGS="rootflags=subvol=@"
+	ROOT_FSTYPE="rootfstype=btrfs ${ROOT_FLAGS}"
 fi
 if [[ "$FSTYPE" == "xfs" ]]; then
 	MAKE_ROOTFS="mkfs.xfs -f -L ${ROOTFS_LABEL} ${IMAGE_LOOP_DEV_ROOTFS}"
@@ -370,6 +371,7 @@ ${LOGLEVEL}
 ${BOOTCMD_FDTOVERLAYS}
 #user_overlays=
 EOF
+if [[ "$FSTYPE" == "btrfs" ]]; then sed -i "s/^extra=.*/extra=${EXTRA} ${ROOT_FLAGS}/" ${BOOT_PATH}/${PLATFORM}Env.txt; fi
 }
 
 extlinux (){
