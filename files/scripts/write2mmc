@@ -273,7 +273,8 @@ if [[ "$R_FSTYPE" =~ ^(btrfs|ext4|f2fs|xfs)$ ]]; then
 		MAKE_ROOTFS="mkfs.btrfs -f -L ${ROOTFS_LABEL} ${DEVICE_NODE}${P_ROOTFS}"
 		MOUNT_ROOTFS="mount -o compress=lzo,noatime,subvol=@ ${DEVICE_NODE}${P_ROOTFS} /transfer/${P_ROOTFS}"
 		ROOTFS_TABLE="btrfs	defaults,compress=lzo,noatime,subvol=@ 0 1"
-		ROOT_FSTYPE="rootfstype=btrfs rootflags=subvol=@"
+		ROOT_FLAGS="rootflags=subvol=@"
+		ROOT_FSTYPE="rootfstype=btrfs ${ROOT_FLAGS}"
 		RESIZEFS="btrfs filesystem resize max /transfer/${P_ROOTFS}"
 	fi
 	if [[ "$R_FSTYPE" == "ext4" ]]; then
@@ -691,7 +692,7 @@ if [[ "$EXTLINUX" == "true" ]]; then
 	cat /transfer/${P_ROOTFS}/boot/extlinux/extlinux.conf
 elif [[ "$BOOTCMD" == "true" ]]; then
 	if [[ -f "/transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt" ]]; then
-		sed -i 's/^rootfstype=.*/rootfstype='${R_FSTYPE}'/' /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
+		sed -i "s/^rootfstype=.*/rootfstype=${R_FSTYPE}/" /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
 		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
 	elif [[ -f "/transfer/${P_ROOTFS}/boot/uconfig.txt" ]]; then
 		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.cmd
@@ -701,7 +702,7 @@ elif [[ "$BOOTCMD" == "true" ]]; then
 	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_ROOTFS}/boot/boot.cmd /transfer/${P_ROOTFS}/boot/boot.scr
 elif [[ "$BOOTINI" == "true" ]]; then
 	if [[ -f "/transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt" ]]; then
-		sed -i 's/^rootfstype=.*/rootfstype='${R_FSTYPE}'/' /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
+		sed -i "s/^rootfstype=.*/rootfstype=${R_FSTYPE}/" /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
 		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_ROOTFS}/boot/${FAMILY}Env.txt
 	elif [[ -f "/transfer/${P_ROOTFS}/boot/uconfig.txt" ]]; then
 		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_ROOTFS}/boot/boot.ini
@@ -720,14 +721,19 @@ EOF
 
 p2_boot (){
 $EE
-if [[ "$EXTLINUX" == "true" ]] && [[ -f "/transfer/${P_BOOT}/extlinux/extlinux.conf" ]]; then
+if [[ "$EXTLINUX" == "true" ]]; then
 	$EE "extlinux.conf"
 	sed -i "/append/c\\	${CMDLINE}" /transfer/${P_BOOT}/extlinux/extlinux.conf
 	cat /transfer/${P_BOOT}/extlinux/extlinux.conf
 elif [[ "$BOOTCMD" == "true" ]]; then
 	if [[ -f "/transfer/${P_BOOT}/${FAMILY}Env.txt" ]]; then
-		sed 's/^rootfstype=*/rootfstype='${R_FSTYPE}'/' /transfer/${P_BOOT}/${FAMILY}Env.txt
+		sed -i "s/^rootfstype=.*/rootfstype=${R_FSTYPE}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
 		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
+		if [[ "$R_FSTYPE" == "btrfs" ]]; then
+			sed -i "s/^extra=.*/extra=${EXTRA} ${ROOT_FLAGS}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
+		else
+			sed -i "s/^extra=.*/extra=${EXTRA}/" /transfer/${P_BOOT}/${FAMILY}Env.txt			
+		fi
 	elif [[ -f "/transfer/${P_BOOT}/uconfig.txt" ]]; then
 		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
 		sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.cmd
@@ -736,8 +742,13 @@ elif [[ "$BOOTCMD" == "true" ]]; then
 	mkimage -C none -A ${ARCH} -T script -d /transfer/${P_BOOT}/boot.cmd /transfer/${P_BOOT}/boot.scr
 elif [[ "$BOOTINI" == "true" ]]; then
 	if [[ -f "/transfer/${P_BOOT}/${FAMILY}Env.txt" ]]; then
-		sed -i 's/^rootfstype=.*/rootfstype='${R_FSTYPE}'/' /transfer/${P_BOOT}/${FAMILY}Env.txt
+		sed -i "s/^rootfstype=.*/rootfstype=${R_FSTYPE}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
 		sed -i "s/^rootdev=.*/rootdev=PARTUUID=${ROOT_PARTUUID}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
+		if [[ "$R_FSTYPE" == "btrfs" ]]; then
+			sed -i "s/^extra=.*/extra=${EXTRA} ${ROOT_FLAGS}/" /transfer/${P_BOOT}/${FAMILY}Env.txt
+		else
+			sed -i "s/^extra=.*/extra=${EXTRA}/" /transfer/${P_BOOT}/${FAMILY}Env.txt			
+		fi
 	elif [[ -f "/transfer/${P_BOOT}/uconfig.txt" ]]; then
 		sed -i 's/^setenv rootfstype.*/setenv rootfstype "'"${ROOT_FSTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
 		sed -i 's/^setenv loading.*/setenv loading "'"${LOADTYPE}"'"/' /transfer/${P_BOOT}/boot.ini
@@ -768,6 +779,38 @@ tmpfs	/tmp		tmpfs	defaults,nosuid 0 0
 EOF
 }
 
+update_initramfs (){
+if [[ "$P_VALUE" == "p1" ]]; then
+	mount -o bind /dev /transfer/${P_ROOTFS}/dev
+	mount -o bind /dev/pts /transfer/${P_ROOTFS}/dev/pts
+	mount -o bind /proc /transfer/${P_ROOTFS}/proc
+	mount -o bind /sys /transfer/${P_ROOTFS}/sys
+	mount -o bind /run /transfer/${P_ROOTFS}/run
+	chroot /transfer/${P_ROOTFS} update-initramfs -u -k all
+	umount /transfer/${P_ROOTFS}/dev/pts /transfer/${P_ROOTFS}/dev /transfer/${P_ROOTFS}/proc /transfer/${P_ROOTFS}/sys /transfer/${P_ROOTFS}/run
+elif [[ "$P_VALUE" == "p2" ]]; then
+	mount -o bind /dev /transfer/${P_ROOTFS}/dev
+	mount -o bind /dev/pts /transfer/${P_ROOTFS}/dev/pts
+	mount -o bind /proc /transfer/${P_ROOTFS}/proc
+	mount -o bind /sys /transfer/${P_ROOTFS}/sys
+	mount -o bind /run /transfer/${P_ROOTFS}/run
+	if [[ "$EFI" == "true" ]]; then
+		mkdir -p /transfer/${P_ROOTFS}/boot/efi
+		mount -o bind /transfer/${P_BOOT} /transfer/${P_ROOTFS}/boot/efi
+	else
+		mkdir -p /transfer/${P_ROOTFS}/boot
+		mount -o bind /transfer/${P_BOOT} /transfer/${P_ROOTFS}/boot
+	fi
+	chroot /transfer/${P_ROOTFS} update-initramfs -u -k all
+	if [[ "$EFI" == "true" ]]; then
+		umount /transfer/${P_ROOTFS}/boot/efi
+	else
+		umount /transfer/${P_ROOTFS}/boot
+	fi
+	umount /transfer/${P_ROOTFS}/dev/pts /transfer/${P_ROOTFS}/dev /transfer/${P_ROOTFS}/proc /transfer/${P_ROOTFS}/sys /transfer/${P_ROOTFS}/run
+fi
+}
+
 BOOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_BOOT} | sed -ne 's/^UUID=//p')
 BOOT_PARTUUID=$(blkid -o export -- ${DEVICE_NODE}${P_BOOT} | sed -ne 's/^PARTUUID=//p')
 ROOT_UUID=$(blkid -o export -- ${DEVICE_NODE}${P_ROOTFS} | sed -ne 's/^UUID=//p')
@@ -776,11 +819,13 @@ if [[ -v "LOGLEVEL" ]]; then :; else LOGLEVEL="loglevel=1"; fi
 CMDLINE="append earlyprintk ${CONSOLE} rw root=PARTUUID=${ROOT_PARTUUID} rootwait ${ROOT_FSTYPE} fsck.repair=yes ${LOGLEVEL} ${EXTRA} init=/sbin/init"
 if [[ "$P_VALUE" == "p1" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then p1_boot; else p1_boot > /dev/null 2>&1; fi
+	if [[ "$VERBOSITY" = "1" ]]; then update_initramfs; else update_initramfs > /dev/null 2>&1; fi
 	umount /transfer/${P_ROOTFS}
 	rm -fdr /transfer
 fi
 if [[ "$P_VALUE" == "p2" ]]; then
 	if [[ "$VERBOSITY" = "1" ]]; then p2_boot; else p2_boot > /dev/null 2>&1; fi
+	if [[ "$VERBOSITY" = "1" ]]; then update_initramfs; else update_initramfs > /dev/null 2>&1; fi
 	umount /transfer/${P_BOOT}
 	umount /transfer/${P_ROOTFS}
 	rm -fdr /transfer
