@@ -49,7 +49,7 @@ dtbo-$(CONFIG_ARCH_SUNXI) += \
 	sunxi-h5-i2c1.dtbo \
 	sunxi-h5-i2c2.dtbo \
 	sunxi-h5-mbus-devfreq-driver.dtbo \
-	sunxi-h616-enable-gpu.dtbo \
+	sunxi-h616-gpu.dtbo \
 	sunxi-h616-i2c0.dtbo \
 	sunxi-h616-i2c1.dtbo \
 	sunxi-h616-i2c2.dtbo \
