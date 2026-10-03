@@ -20,8 +20,8 @@ echo ""
 echo "Adding source file: /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources"
 source mirror.txt
 mkdir -p /etc/apt/sources.list.d
-rm -f /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources
-tee /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources <<EOF
+if [[ ! -f "/etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources" ]]; then
+	tee /etc/apt/sources.list.d/${HOST_MACHINE}-ports.sources <<EOF
 Types: deb
 URIs: ${UBUNTU_MIRROR}
 Architectures: armhf arm64 riscv64
