@@ -1,0 +1,27 @@
+From c1d80d22481b803b3aa84081d41a406dfc4475f2 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Sat, 24 Jan 2026 09:13:29 -0500
+Subject: [PATCH] Don't warn unaligned sg offset %u, disabling descriptor DMA
+ for transfer
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ drivers/mmc/host/meson-gx-mmc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/meson-gx-mmc.c b/drivers/mmc/host/meson-gx-mmc.c
+index c7c067b9415a..38d1f14d4275 100644
+--- a/drivers/mmc/host/meson-gx-mmc.c
++++ b/drivers/mmc/host/meson-gx-mmc.c
+@@ -264,7 +264,7 @@ static void meson_mmc_get_transfer_mode(struct mmc_host *mmc,
+ 	for_each_sg(data->sg, sg, data->sg_len, i) {
+ 		/* check for 8 byte alignment */
+ 		if (sg->offset % 8) {
+-			dev_warn_once(mmc_dev(mmc),
++			dev_dbg(mmc_dev(mmc),
+ 				      "unaligned sg offset %u, disabling descriptor DMA for transfer\n",
+ 				      sg->offset);
+ 			return;
+-- 
+2.51.0
+
