@@ -1,0 +1,41 @@
+From 7a98ea1b7960e9c47a2acbdf04ac520557d61b06 Mon Sep 17 00:00:00 2001
+From: Patrick Yavitz <pyavitz@gmail.com>
+Date: Wed, 26 Aug 2026 11:27:41 -0400
+Subject: [PATCH] arm64: dts: amlogic: t7: khadas-vim4: Expand PCIe restricted
+ DMA pool to 64 MiB
+
+The previous 16 MiB restricted-dma-pool allocation is insufficient
+for modern DRAM-less NVMe SSDs utilizing Host Memory Buffer (HMB)
+technology. During initialization, the NVMe core driver requests
+a minimum of 32 MiB of system memory, causing allocation failures
+and disabling HMB optimization when restricted to the original pool size.
+
+Expand the 'pcie-dma-pool' node size to 64 MiB (0x4000000) to allow
+ample headroom for both kernel swiotlb streaming bounce buffers and
+device-level host memory requests.
+
+Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
+---
+ arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts b/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
+index 1acabfde0060..5c28c4cbad79 100644
+--- a/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
++++ b/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
+@@ -62,10 +62,10 @@ secmon_reserved_bl32: secmon@5300000 {
+ 			no-map;
+ 		};
+ 
+-		/* 16 MiB reserved for PCIe BL31 memory-protection via SMC */
++		/* 64 MiB reserved for PCIe BL31 memory-protection via SMC */
+ 		pcie_dma_pool: pcie-dma-pool {
+ 			compatible = "restricted-dma-pool";
+-			size = <0x0 0x1000000>;
++			size = <0x0 0x4000000>;
+ 			alignment = <0x0 0x400000>;
+ 			alloc-ranges = <0x0 0x0 0x0 0xe0000000>;
+ 		};
+-- 
+2.53.0
+
