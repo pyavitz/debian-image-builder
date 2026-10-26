@@ -157,6 +157,9 @@ endif
 ifdef compiler
 	@echo 'COMPILER="$(compiler)"' >> ignore.txt
 endif
+ifdef cores
+	@echo 'CORES="$(cores)"' >> ignore.txt
+endif
 ifdef menuconfig
 	@echo 'MENUCONFIG="$(menuconfig)"' >> ignore.txt
 endif
@@ -182,6 +185,9 @@ ifdef build
 endif
 ifdef compiler
 	@echo 'COMPILER="$(compiler)"' >> ignore.txt
+endif
+ifdef cores
+	@echo 'CORES="$(cores)"' >> ignore.txt
 endif
 ifdef extra_wifi
 	@echo 'EXTRA_WIFI="$(extra_wifi)"' >> ignore.txt
