@@ -135,8 +135,11 @@ if [[ -v "MODULES" ]] && [[ ! -z "$MODULES" ]]; then
 		rm -f modlist.txt
 	done
 fi
+if [ $CLANG -eq 1 ] && [[ "$LEGACY_PACKAGING" = "true" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
+	if [[ `grep -w "CONFIG_MODULE_SIG=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then sed -i 's/CONFIG_MODULE_SIG=y/#CONFIG_MODULE_SIG= is not set/g' arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+fi
 if [ $CLANG -eq 1 ] && [[ "$ARCH" == "arm64" ]] && [[ -f "arch/${ARCH}/configs/${LINUX_DEFCONFIG}" ]]; then
-	if [[ `grep -w "CONFIG_LTO_CLANG_THIN=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then :; else echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
+	if [[ ! `grep -w "CONFIG_LTO_CLANG_THIN=y" "arch/${ARCH}/configs/${LINUX_DEFCONFIG}"` ]]; then echo "CONFIG_LTO_CLANG_THIN=y" >> arch/${ARCH}/configs/${LINUX_DEFCONFIG}; fi
 fi
 }
 
