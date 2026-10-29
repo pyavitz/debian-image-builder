@@ -65,6 +65,11 @@ cat <<EOF > /etc/udev/rules.d/usb_modeswitch.rules
 # Realtek Semiconductor Corp. RTL8188GU 802.11n WLAN Adapter
 ATTR{idVendor}=="0bda", ATTR{idProduct}=="1a2b", RUN+="/usr/sbin/usb_modeswitch -K -v 0bda -p 1a2b"
 EOF
+if [[ "$BOARD" == "khadasvim4" ]]; then
+	cat <<EOF > /etc/modprobe.d/brcmfmac-wireless.conf
+options brcmfmac feature_disable=2 roamoff=1 p2pon=0
+EOF
+fi
 }
 
 router_udev_rules (){
