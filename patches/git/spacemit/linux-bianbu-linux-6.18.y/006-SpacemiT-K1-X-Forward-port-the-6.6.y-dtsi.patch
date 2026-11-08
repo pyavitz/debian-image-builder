@@ -1,18 +1,19 @@
-From 74ae18da184fb8afad2a663d1e14ecc2d6c0393f Mon Sep 17 00:00:00 2001
+From 047f6bb0781d0e0bd903c7912e2abb47047813bc Mon Sep 17 00:00:00 2001
 From: Patrick Yavitz <pyavitz@gmail.com>
-Date: Sat, 10 Oct 2026 03:30:41 -0400
+Date: Sun, 8 Nov 2026 14:08:34 -0500
 Subject: [PATCH] SpacemiT: K1-X: Forward port the 6.6.y dtsi
 
 Add r_uart0 node
 Fixup node status
+Disable jpu@c02f8000
 
 Signed-off-by: Patrick Yavitz <pyavitz@gmail.com>
 ---
- arch/riscv/boot/dts/spacemit/k1-x.dtsi | 103 ++++++++++++++++++++-----
- 1 file changed, 85 insertions(+), 18 deletions(-)
+ arch/riscv/boot/dts/spacemit/k1-x.dtsi | 106 ++++++++++++++++++++-----
+ 1 file changed, 87 insertions(+), 19 deletions(-)
 
 diff --git a/arch/riscv/boot/dts/spacemit/k1-x.dtsi b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
-index 8f411e7f0..e5293f27f 100644
+index 8f411e7f0..6d86ca6e0 100644
 --- a/arch/riscv/boot/dts/spacemit/k1-x.dtsi
 +++ b/arch/riscv/boot/dts/spacemit/k1-x.dtsi
 @@ -430,7 +430,7 @@ rcpu_mem_0: mem@c0800000 {
@@ -237,16 +238,27 @@ index 8f411e7f0..e5293f27f 100644
  			interconnect-names = "dma-mem";
  
  			interrupts = <143>, <147>;
-@@ -2422,7 +2481,7 @@ v2d@c0100000 {
+@@ -2422,8 +2481,9 @@ v2d@c0100000 {
  			interrupts = <86>;
  			interconnects = <&dram_range3>;
  			interconnect-names = "dma-mem";
 -			status = "ok";
 +			status = "okay";
  		};
++
  		jpu@c02f8000 {
  			compatible = "chip-media, jpu";
-@@ -2470,7 +2529,7 @@ imggpu: imggpu@cac00000 {
+ 			reg = <0 0xc02f8000 0 0x700>;
+@@ -2449,7 +2509,7 @@ jpu@c02f8000 {
+ 			interconnects = <&dram_range5>;
+ 			interconnect-names = "dma-mem";
+ 			clk,pm-runtime,no-sleep;
+-			status = "okay";
++			status = "disabled";
+ 		};
+ 
+ 		pwm_bl: lcd_backlight {
+@@ -2470,7 +2530,7 @@ imggpu: imggpu@cac00000 {
  			power-domains = <&power K1X_PMU_GPU_PWR_DOMAIN>;
  			interconnects = <&dram_range1>;
  			interconnect-names = "dma-mem";
@@ -255,7 +267,7 @@ index 8f411e7f0..e5293f27f 100644
  		};
  
  		spacemit_crypto_engine@d8600000 {
-@@ -2486,6 +2545,14 @@ spacemit_crypto_engine@d8600000 {
+@@ -2486,6 +2546,14 @@ spacemit_crypto_engine@d8600000 {
  			status = "okay";
  		};
  
